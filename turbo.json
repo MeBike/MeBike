@@ -36,6 +36,9 @@
     },
     "db:down:volumes": {
       "cache": false
+    },
+    "clean": {
+      "cache": false
     }
   }
 }

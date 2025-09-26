@@ -1,98 +1,132 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Hướng dẫn thiết lập và sử dụng Server (NestJS + Prisma + PostgreSQL)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Thiết lập môi trường
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+### 1. Cài đặt dependencies
 
 ```bash
-$ pnpm install
+pnpm install
 ```
 
-## Compile and run the project
+### 2. Thiết lập biến môi trường
+
+- Sao chép file `.env.example` thành `.env`
+- Điền thông tin kết nối cơ sở dữ liệu PostgreSQL
+
+### 3. Khởi động cơ sở dữ liệu PostgreSQL
 
 ```bash
-# development
-$ pnpm run start
+# Từ thư mục gốc của dự án
+turbo db:up
 
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+# Hoặc từ thư mục apps/server
+pnpm db:up
 ```
 
-## Run tests
+### 4. Tạo Prisma Client
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+turbo db:generate
 ```
 
-## Deployment
+## Các lệnh cơ sở dữ liệu
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Khởi động/dừng cơ sở dữ liệu
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Khởi động PostgreSQL
+turbo db:up
+
+# Dừng PostgreSQL (giữ dữ liệu)
+turbo db:down
+
+# Dừng và xóa dữ liệu
+turbo db:down:volumes
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Quản lý schema và migration
 
-## Resources
+```bash
+# Tạo migration mới và áp dụng
+turbo db:migrate
 
-Check out a few resources that may come in handy when working with NestJS:
+# Đẩy schema trực tiếp vào DB (không tạo migration)
+turbo db:push
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+# Reset cơ sở dữ liệu và migration
+turbo db:reset
 
-## Support
+# Mở Prisma Studio (GUI quản lý DB)
+turbo db:studio
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Tạo lại Prisma Client sau khi thay đổi schema
+turbo db:generate
+```
 
-## Stay in touch
+## Chạy ứng dụng
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Chế độ phát triển
 
-## License
+```bash
+# Từ thư mục gốc
+turbo dev --filter server
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Hoặc từ thư mục apps/server
+pnpm start:dev
+```
+
+### Build và chạy production
+
+```bash
+pnpm clean
+pnpm build
+pnpm start:prod
+```
+
+## Kiểm tra và định dạng code
+
+```bash
+# Lint code
+pnpm lint
+
+# Format code
+pnpm format
+
+# Chạy test
+pnpm test
+
+# Chạy test với watch mode
+pnpm test:watch
+
+# Coverage test
+pnpm test:cov
+
+# E2E test
+pnpm test:e2e
+```
+
+## Cấu hình kết nối cơ sở dữ liệu
+
+### Từ Docker Compose
+
+Trong file `docker-compose.yml`:
+
+- Database: `mebike`
+- User: `user`
+- Password: `password`
+- Port: `5432`
+
+Chuỗi kết nối: `postgresql://user:password@localhost:5432/mebike?schema=public`
+
+### Tùy chỉnh
+
+- Thay đổi thông tin trong `docker-compose.yml` nếu cần
+- Cập nhật `DATABASE_URL` trong `.env` tương ứng
+- Khởi động lại DB: `turbo db:down && turbo db:up`
+
+## Ghi chú
+
+- Đảm bảo Docker và Docker Compose đã được cài đặt
+- Turbo được cài đặt cục bộ trong monorepo, không cần cài đặt toàn cục
+- Sử dụng `turbo` từ thư mục gốc để chạy lệnh trên toàn bộ monorepo
+- Sử dụng `pnpm` từ thư mục `apps/server` để chạy lệnh cục bộ
