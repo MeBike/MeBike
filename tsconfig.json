@@ -1,0 +1,7 @@
+{
+  "extends": "@mebike/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "types": []
+  }
+}

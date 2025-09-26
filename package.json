@@ -1,0 +1,22 @@
+{
+  "name": "mebike",
+  "version": "1.0.0",
+  "description": "Project for  MeBike",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "build": "turbo run build",
+    "test": "turbo run test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.6.3",
+  "devDependencies": {
+    "@mebike/tsconfig": "workspace:*",
+    "turbo": "^2.5.6"
+  }
+}

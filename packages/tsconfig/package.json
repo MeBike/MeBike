@@ -1,0 +1,9 @@
+{
+  "name": "@mebike/tsconfig",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base.json": "./tsconfig.base.json"
+  }
+}
