@@ -120,7 +120,32 @@ pnpm test:cov
 pnpm test:e2e
 ```
 
-## Cấu hình kết nối cơ sở dữ liệu
+## Cấu hình Prisma
+
+### Chia tách schema (Schema Splitting)
+
+Dự án sử dụng `prisma.config.ts` để hỗ trợ chia tách schema thành nhiều file:
+
+- Schema được lưu trong thư mục `prisma/`
+- Có thể tạo nhiều file `.prisma` (ví dụ: `user.prisma`, `post.prisma`)
+- `prisma.config.ts` chỉ định đường dẫn schema để Prisma đọc tất cả file
+
+Ví dụ cấu trúc:
+
+```
+prisma/
+├── config.prisma    # Generator và datasource
+├── user.prisma      # Model User
+├── post.prisma      # Model Post
+└── ...
+```
+
+Sau khi thay đổi schema, chạy:
+
+```bash
+turbo db:generate
+turbo db:push
+```
 
 ### Từ Docker Compose
 
