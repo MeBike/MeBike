@@ -44,6 +44,21 @@ turbo db:down
 turbo db:down:volumes
 ```
 
+#### Giao diện web pgAdmin
+
+Sau khi khởi động DB, truy cập pgAdmin tại: http://localhost:8080
+
+- Email: admin@mebike.com
+- Password: admin
+
+Để kết nối đến PostgreSQL:
+
+- Host: postgres
+- Port: 5432
+- Database: mebike
+- Username: user
+- Password: password
+
 ### Quản lý schema và migration
 
 ```bash
