@@ -1,7 +1,6 @@
 import { Controller, Get } from "@nestjs/common";
 
-// eslint-disable-next-line unused-imports/no-unused-imports
-import { AppService } from "./app.service.js";
+import type { AppService } from "./app.service.js";
 
 @Controller()
 export class AppController {
