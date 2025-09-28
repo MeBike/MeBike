@@ -1,5 +1,5 @@
 import { ObjectType } from '@nestjs/graphql';
-import { ApiResponseType } from '@mebike/common';
+import { ApiResponseType } from '@mebike/shared';
 import { User } from './User';
 import { AuthPayload } from './AuthPayload';
 import { RefreshToken } from './RefreshToken';

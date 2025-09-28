@@ -6,6 +6,8 @@ import {
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginLandingPageLocalDefault,
 } from 'apollo-server-core';
+import * as Shared from '@mebike/shared';
+console.log(Shared);
 
 @Module({
   imports: [
