@@ -4,11 +4,16 @@ import { Observable, lastValueFrom } from 'rxjs';
 import { CreateUserInput } from './graphql/CreateUserInput';
 import { GRPC_PACKAGE, GRPC_SERVICES } from '@mebike/shared';
 import { LoginInput } from './graphql/Login';
+import {
+  LoginResponse,
+  ResfreshTokenResponse,
+  UserResponse,
+} from './graphql/UserResponse';
 
 interface AuthServiceClient {
-  LoginUser(data: LoginInput): Observable<any>;
-  CreateUser(data: CreateUserInput): Observable<any>;
-  RefreshToken(refreshToken: object): Observable<any>;
+  LoginUser(data: LoginInput): Observable<LoginResponse>;
+  CreateUser(data: CreateUserInput): Observable<UserResponse>;
+  RefreshToken(refreshToken: object): Observable<ResfreshTokenResponse>;
 }
 
 @Injectable()
