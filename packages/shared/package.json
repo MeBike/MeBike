@@ -1,0 +1,31 @@
+{
+  "name": "@mebike/shared",
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.6.3",
+  "description": "Shared schemas and types for MeBike apps.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@mebike/tsconfig": "workspace:*",
+    "typescript": "^5.6.3"
+  }
+}

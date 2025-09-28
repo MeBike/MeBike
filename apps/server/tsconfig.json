@@ -1,7 +1,7 @@
 {
   "extends": "@mebike/tsconfig/base.json",
   "compilerOptions": {
-    "incremental": true,
+    "incremental": false,
     "target": "ES2023",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -23,6 +23,7 @@
     "noFallthroughCasesInSwitch": false,
     "noImplicitAny": false,
     "declaration": true,
+    "noEmit": false,
     "outDir": "./dist",
     "removeComments": true,
     "sourceMap": true,
