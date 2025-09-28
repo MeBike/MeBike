@@ -35,6 +35,9 @@ importers:
       '@nestjs/platform-express':
         specifier: ^11.0.1
         version: 11.1.6(@nestjs/common@11.1.6(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.6)
+      add:
+        specifier: ^2.0.6
+        version: 2.0.6
       apollo-server-core:
         specifier: ^3.13.0
         version: 3.13.0(graphql@16.11.0)
@@ -234,7 +237,7 @@ importers:
         version: 29.4.4(@babel/core@7.28.4)(@jest/transform@30.1.2)(@jest/types@30.0.5)(babel-jest@30.1.2(@babel/core@7.28.4))(jest-util@30.0.5)(jest@30.1.3(@types/node@22.18.6)(ts-node@10.9.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(@types/node@22.18.6)(typescript@5.9.2)))(typescript@5.9.2)
       ts-loader:
         specifier: ^9.5.2
-        version: 9.5.4(typescript@5.9.2)(webpack@5.100.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack-cli@6.0.1(webpack@5.100.2)))
+        version: 9.5.4(typescript@5.9.2)(webpack@5.100.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack-cli@6.0.1))
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(@types/node@22.18.6)(typescript@5.9.2)
@@ -375,6 +378,9 @@ importers:
         specifier: ^4.0.1
         version: 4.0.1
     devDependencies:
+      '@mebike/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       '@types/passport-jwt':
         specifier: ^4.0.1
         version: 4.0.1
@@ -11203,7 +11209,7 @@ snapshots:
 
   tapable@2.2.3: {}
 
-  terser-webpack-plugin@5.3.14(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack@5.100.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack-cli@6.0.1(webpack@5.100.2))):
+  terser-webpack-plugin@5.3.14(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack@5.100.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack-cli@6.0.1)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
@@ -11307,6 +11313,16 @@ snapshots:
       jest-util: 30.0.5
 
   ts-loader@9.5.4(typescript@5.9.2)(webpack@5.100.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack-cli@6.0.1(webpack@5.100.2))):
+    dependencies:
+      chalk: 4.1.2
+      enhanced-resolve: 5.18.3
+      micromatch: 4.0.8
+      semver: 7.7.2
+      source-map: 0.7.6
+      typescript: 5.9.2
+      webpack: 5.100.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack-cli@6.0.1(webpack@5.100.2))
+
+  ts-loader@9.5.4(typescript@5.9.2)(webpack@5.100.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack-cli@6.0.1)):
     dependencies:
       chalk: 4.1.2
       enhanced-resolve: 5.18.3
@@ -11598,7 +11614,7 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.2
       tapable: 2.2.3
-      terser-webpack-plugin: 5.3.14(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack@5.100.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack-cli@6.0.1(webpack@5.100.2)))
+      terser-webpack-plugin: 5.3.14(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack@5.100.2(@swc/core@1.13.20(@swc/helpers@0.5.17))(webpack-cli@6.0.1))
       watchpack: 2.4.4
       webpack-sources: 3.3.3
     optionalDependencies:
