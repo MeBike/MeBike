@@ -16,9 +16,10 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSBluetoothPeripheralUsageDescription": "Allow MeBike to connect to your bike",
-        "NSBluetoothAlwaysUsageDescription": "Allow MeBike to connect to your bike"
-      }
-      
+        "NSBluetoothAlwaysUsageDescription": "Allow MeBike to connect to your bike",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.aaang123.mobile"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,6 +31,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "fe3621a0-88f9-4578-b1a7-e989bdb70c86"
+      }
     }
   }
 }
