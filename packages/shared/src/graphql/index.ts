@@ -1,1 +1,1 @@
-export * from "./api-response.type";
+export * from "./api-response.type.js";
