@@ -1,14 +1,14 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import type { ClientGrpc } from '@nestjs/microservices';
 import { Observable, lastValueFrom } from 'rxjs';
-import { CreateUserInput } from './graphql/CreateUserInput';
+import { CreateUserInput } from './graphql/create-user-nput';
 import { GRPC_PACKAGE, GRPC_SERVICES } from '@mebike/shared';
-import { LoginInput } from './graphql/Login';
+import { LoginInput } from './graphql/login';
 import {
   LoginResponse,
   ResfreshTokenResponse,
   UserResponse,
-} from './graphql/UserResponse';
+} from './graphql/user-response';
 
 interface AuthServiceClient {
   LoginUser(data: LoginInput): Observable<LoginResponse>;
@@ -37,7 +37,6 @@ export class AuthService implements OnModuleInit {
   }
 
   async refreshToken(refreshToken: string) {
-    console.log(refreshToken);
     return await lastValueFrom(this.userService.RefreshToken({ refreshToken }));
   }
 }

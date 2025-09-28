@@ -1,5 +1,5 @@
 import { InputType, OmitType, PartialType } from '@nestjs/graphql';
-import { CreateUserInput } from './CreateUserInput';
+import { CreateUserInput } from './create-user-nput';
 
 @InputType()
 export class LoginInput extends PartialType(

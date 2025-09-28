@@ -30,9 +30,8 @@ export class BaseGrpcHandler<
 
       try {
         await validateOrReject(dtoInstance);
-      }
-      catch (errors) {
-        const messages: string[] = (errors as any[]).flatMap(err =>
+      } catch (errors) {
+        const messages: string[] = (errors as any[]).flatMap((err) =>
           Object.values(err.constraints ?? {}),
         );
         throwGrpcError(SERVER_MESSAGE.VALIDATION_FAILED, messages);
@@ -42,8 +41,7 @@ export class BaseGrpcHandler<
     try {
       const result = await this.service.create(dto);
       return result;
-    }
-    catch (error: any) {
+    } catch (error: any) {
       // Lỗi field unique trùng
       if (error?.code === "P2002") {
         const fields: string[] = error.meta?.target ?? [];
@@ -93,12 +91,10 @@ export class BaseGrpcHandler<
 
       try {
         await validateOrReject(dtoInstance);
-      }
-      catch (errors: any) {
-        const messages: string[] = (errors as any[]).flatMap(err =>
+      } catch (errors: any) {
+        const messages: string[] = (errors as any[]).flatMap((err) =>
           Object.values(err.constraints ?? {}),
         );
-        console.log(messages);
         throwGrpcError(SERVER_MESSAGE.VALIDATION_FAILED, messages);
       }
     }
@@ -106,8 +102,7 @@ export class BaseGrpcHandler<
     try {
       const result = await this.service.update(id, dto);
       return result;
-    }
-    catch (error: any) {
+    } catch (error: any) {
       if (error?.code === "P2002") {
         const fields: string[] = error.meta?.target ?? [];
         const messages = fields.map((field) => {
