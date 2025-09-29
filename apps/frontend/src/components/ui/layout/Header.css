@@ -1,0 +1,10 @@
+.text_header {
+  font-size: 1.125rem; /* equivalent to text-lg */
+  font-weight: 600;     /* equivalent to font-semibold */
+  color: #1E293B;       /* equivalent to text-[#1E293B] */
+  transition-property: color;
+  transition-timing-function: ease-in-out;
+}
+.text_header:hover {
+  color: #2563EB;       /* equivalent to hover:text-[#2563EB] */
+}
