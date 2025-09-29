@@ -1,18 +1,24 @@
 #include <Arduino.h>
+#include <PubSubClient.h>
 
-// put function declarations here:
+
+#define WIFI_NAME_STR WIFI_NAME  
+#define WIFI_PASSWORD_STR WIFI_PASSWORD
 int myFunction(int, int);
-
-void setup() {
+void setup()
+{
+  PubSubClient client;
   // put your setup code here, to run once:
+  
   int result = myFunction(2, 3);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+void loop()
+{
 }
 
 // put function definitions here:
-int myFunction(int x, int y) {
+int myFunction(int x, int y)
+{
   return x + y;
 }
