@@ -27,7 +27,9 @@
     "db:studio": "prisma studio",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "db:down:volumes": "docker compose down -v"
+    "db:down:volumes": "docker compose down -v",
+    "compose:dev": "docker compose -f docker-compose.dev.yml up",
+    "compose:prod": "docker compose -f docker-compose.yml up"
   },
   "dependencies": {
     "@mebike/shared": "workspace:*",

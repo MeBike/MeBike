@@ -1,0 +1,36 @@
+services:
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    ports:
+      - "0.0.0.0:5672:5672"  # AMQP
+      - "0.0.0.0:15672:15672"  # Management UI
+      - "0.0.0.0:1883:1883"  # MQTT
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: password
+    command: ["sh", "-c", "rabbitmq-plugins enable rabbitmq_mqtt && rabbitmq-server"]
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - iot-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # iot-service:
+  #   build: .
+  #   ports:
+  #     - "3001:3001"
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #   networks:
+  #     - iot-network
+
+volumes:
+  rabbitmq_data:
+
+networks:
+  iot-network:
