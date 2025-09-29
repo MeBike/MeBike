@@ -17,7 +17,10 @@
     "clean": "turbo run clean"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@mebike/tsconfig": "workspace:*",
+    "prettier": "^3.4.2",
     "turbo": "^2.5.6"
   }
 }
