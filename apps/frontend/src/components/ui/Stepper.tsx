@@ -1,15 +1,14 @@
-"use client"; // Đánh dấu đây là Client Component vì chúng ta cần dùng state và event
+"use client"; 
 
 import React, { useState } from "react";
-
-// Dữ liệu cho các bước, dễ dàng thêm/bớt/sửa
+import Image from "next/image";
 const stepsData = [
   {
     id: 1,
     title: "Mở khóa",
     description:
       "Chạm vào nút 'Mở khóa', quét mã QR code để mở khóa xe đạp/khóa xe.",
-    image: "https://tngo.vn/image/use-1.png", // Thêm hình ảnh cho step
+    image: "https://tngo.vn/image/use-1.png", 
     icon: "🔓",
   },
   {
@@ -72,16 +71,19 @@ const Stepper = () => {
         ))}
       </div>
 
-      {/* Content Display */}
+    
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="flex flex-col lg:flex-row">
-          {/* Image Section */}
+      
           <div className="lg:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 p-8 flex items-center justify-center">
             <div className="text-center">
-              <img
+              <Image
                 src={stepsData[activeStep - 1].image}
                 alt={stepsData[activeStep - 1].title}
+                width={400}
+                height={400}
                 className="w-full h-full object-cover rounded-full"
+                priority={activeStep === 1}
               />
             </div>
           </div>

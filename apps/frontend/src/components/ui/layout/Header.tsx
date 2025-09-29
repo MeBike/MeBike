@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "../button";
 import { Logo as MetroLogo } from "@/components/logo";
 import { useRouter } from "next/navigation";

@@ -5,12 +5,9 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-
 import type { Station } from "../../../types/station";
 
 const Page = () => {
@@ -284,9 +281,9 @@ const Page = () => {
   ];
 
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
-  const [_, setBikeStation] = useState(
-    stations[0].bikeStation || null
-  );
+  const [, setBikeStation] = useState(
+  stations.length > 0 && stations[0].bikeStation ? stations[0].bikeStation : null
+);
   const handleStationClick = (station: Station) => {
     setSelectedStation(station);
     setBikeStation(station.bikeStation);
