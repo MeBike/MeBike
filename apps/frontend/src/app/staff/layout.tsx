@@ -53,16 +53,16 @@ function StaffSidebarContent() {
       items: [{ href: "/settings", icon: Settings, label: "Account Settings" }],
     },
   ];
-
+ type MenuItemProps = {
+    href: string;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    label: string;
+  };
   const MenuItem = ({
     href,
     icon: Icon,
     label,
-  }: {
-    href: string;
-    icon: any;
-    label: string;
-  }) => {
+  }: MenuItemProps) => {
     const content = (
       <a
         href={href}
