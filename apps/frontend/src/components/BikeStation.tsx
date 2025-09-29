@@ -7,12 +7,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { BikeStation, RentalSession, Station } from "../../types/station";
+import type { BikeStation,  Station } from "../../types/station";
 import { Bike, MapPin, Clock, Users } from "lucide-react";
-// Update the import path if useToast is located elsewhere, for example:
 import { toast } from "sonner";
 
-// Or create the file at src/hooks/useToast.ts if it doesn't exist.
 interface BikeStationInfoProps {
   station: Station;
   bikeStation: BikeStation;

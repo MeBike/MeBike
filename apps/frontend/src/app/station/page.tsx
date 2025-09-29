@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
+
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@radix-ui/react-separator";
-import { BikeStationInfo } from "@/components/BikeStation";
+
 
 import type { Station } from "../../../types/station";
 
@@ -285,7 +284,7 @@ const Page = () => {
   ];
 
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
-  const [bikeStation, setBikeStation] = useState(
+  const [_, setBikeStation] = useState(
     stations[0].bikeStation || null
   );
   const handleStationClick = (station: Station) => {

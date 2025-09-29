@@ -10,7 +10,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -124,7 +123,7 @@ function StaffSidebarContent() {
         </div>
       </SidebarHeader>
       <SidebarContent className={`${isCollapsed ? "px-2 py-6" : "px-4 py-6"}`}>
-        {menuItems.map((section, sectionIndex) => (
+        {menuItems.map((section, _) => (
           <SidebarGroup key={section.group} className="mb-8">
             {!isCollapsed && (
               <SidebarGroupLabel className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4 px-2">

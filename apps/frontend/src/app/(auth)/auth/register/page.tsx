@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Bike, Mail, Lock, Eye, EyeOff, Phone, User } from "lucide-react"; // Thêm icon User
+import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -74,7 +74,7 @@ const RegisterPage = () => {
             MetroBike
           </h1>
         </div>
-        {/* FIX: Thêm max-h, flex, flex-col để giới hạn chiều cao và quản lý layout */}
+      
         <Card className="shadow-floating border-0 bg-white/95 backdrop-blur-xl relative z-10 overflow-hidden animate-scale-in max-h-[90vh] flex flex-col">
           <div className="h-1 bg-gradient-metro rounded-t-lg"></div>
           <CardHeader className="space-y-2 text-center ">
@@ -85,25 +85,25 @@ const RegisterPage = () => {
               Nhập thông tin để tạo tài khoản mới
             </CardDescription>
           </CardHeader>
-          {/* FIX: Thêm overflow-y-auto để nội dung có thể cuộn */}
+        
           <CardContent className="space-y-4 overflow-y-auto">
-            {/* FIX: Sửa onSubmit thành handleRegister */}
+            
             <form onSubmit={handleRegister} className="space-y-4">
-              {/* Họ và tên */}
+            
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-medium">
                   Họ và tên
                 </Label>
                 <div className="relative">
-                  {/* FIX: Đổi icon thành User */}
+                 
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="fullName"
-                    name="fullName" // FIX: Thêm name để handleInputChange hoạt động
+                    name="fullName" 
                     type="text"
                     placeholder="Nguyễn Văn A"
-                    value={formData.fullName} // FIX: Lấy value từ formData
-                    onChange={handleInputChange} // FIX: Dùng handleInputChange
+                    value={formData.fullName} 
+                    onChange={handleInputChange} 
                     className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     required
                   />
@@ -161,7 +161,7 @@ const RegisterPage = () => {
                 </div>
               </div>
 
-              {/* Xác nhận mật khẩu */}
+             
               <div className="space-y-2">
                 <Label
                   htmlFor="confirmPassword"
@@ -195,7 +195,7 @@ const RegisterPage = () => {
                 </div>
               </div>
 
-              {/* Điều khoản */}
+         
               <div className="flex items-start space-x-3 pt-2">
                 <Checkbox
                   id="terms"
@@ -228,7 +228,7 @@ const RegisterPage = () => {
                 </label>
               </div>
 
-              {/* Nút Đăng ký */}
+    
               <div>
                 <Button
                   type="submit"

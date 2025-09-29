@@ -3,16 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Logo as MetroLogo } from "@/components/logo";
 import {
-  Bike,
+
   MapPin,
   Clock,
   Leaf,
   Smartphone,
-  CreditCard,
-  ArrowLeft,
+
   CheckCircle,
-  Users,
-  TrendingUp,
+
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/ui/layout/Header";
@@ -120,7 +118,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* Features Section */}
+     
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">

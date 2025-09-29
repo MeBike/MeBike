@@ -12,8 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Bike, Mail, Lock, Eye, EyeOff, Link } from "lucide-react";
-import { Logo as MetroLogo } from "@/components/logo";
+import { Bike, Mail, Lock, Eye, EyeOff} from "lucide-react";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -21,7 +20,7 @@ const Login = () => {
   const router = useRouter();
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Integrate with Supabase auth
+   
     console.log("Login with:", { email, password });
   };
 
