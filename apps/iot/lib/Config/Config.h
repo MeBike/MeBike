@@ -1,16 +1,16 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <Arduino.h>
+#include <string>
 
 struct AppConfig
 {
-    String wifiSsid;
-    String wifiPass;
-    String mqttBrokerIP;
+    std::string wifiSsid;
+    std::string wifiPass;
+    std::string mqttBrokerIP;
     int mqttPort;
-    String mqttUsername;
-    String mqttPassword;
+    std::string mqttUsername;
+    std::string mqttPassword;
 };
 
 AppConfig loadConfig();

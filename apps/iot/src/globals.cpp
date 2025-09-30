@@ -2,17 +2,19 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
 
+DeviceState currentState;
+
 namespace Global
 {
     WiFiClient espClient;
-    MQTTManager *mqttManager = nullptr;
-    const char *ssid = nullptr;
-    const char *password = nullptr;
+    std::unique_ptr<MQTTManager> mqttManager = nullptr;
+    std::string ssid;
+    std::string password;
 
     void initializeNetwork()
     {
         Log.info("Connecting to WiFi...");
-        WiFi.begin(ssid, password);
+        WiFi.begin(ssid.c_str(), password.c_str());
         while (WiFi.status() != WL_CONNECTED)
         {
             delay(500);
@@ -39,7 +41,7 @@ namespace Global
 
     void setupMQTT(const char *brokerIP, int port, const char *username, const char *pass)
     {
-        mqttManager = new MQTTManager(espClient, brokerIP, port, username, pass);
+        mqttManager.reset(new MQTTManager(espClient, brokerIP, port, username, pass));
         mqttManager->setCallback(mqttCallback);
         if (mqttManager->connect())
         {

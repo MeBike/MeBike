@@ -2,7 +2,7 @@
 #include <ArduinoLog.h>
 
 MQTTManager::MQTTManager(WiFiClient &wifiClient, const char *brokerIP, int port, const char *username, const char *password)
-    : _client(wifiClient), _brokerIP(brokerIP), _port(port), _username(username), _password(password) // constructor cpp la 
+    : _client(wifiClient), _brokerIP(brokerIP), _port(port), _username(username), _password(password) // constructor cpp la
 {
     _client.setServer(_brokerIP, _port);
 }

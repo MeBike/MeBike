@@ -45,15 +45,15 @@ AppConfig loadConfig()
 
             if (key == "WIFI_SSID")
             {
-                config.wifiSsid = value;
+                config.wifiSsid = value.c_str();
             }
             else if (key == "WIFI_PASS")
             {
-                config.wifiPass = value;
+                config.wifiPass = value.c_str();
             }
             else if (key == "MQTT_BROKER_IP")
             {
-                config.mqttBrokerIP = value;
+                config.mqttBrokerIP = value.c_str();
             }
             else if (key == "MQTT_PORT")
             {
@@ -61,11 +61,11 @@ AppConfig loadConfig()
             }
             else if (key == "MQTT_USERNAME")
             {
-                config.mqttUsername = value;
+                config.mqttUsername = value.c_str();
             }
             else if (key == "MQTT_PASSWORD")
             {
-                config.mqttPassword = value;
+                config.mqttPassword = value.c_str();
             }
         }
     }

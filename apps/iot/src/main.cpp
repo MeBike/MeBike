@@ -4,26 +4,38 @@
 #include <ArduinoLog.h>
 #include "Config.h"
 #include "globals.h"
+#include "StateMachine.h"
 
 void setup()
 {
 
   Serial.begin(74880);
-  delay(5000);
-
-  AppConfig config = loadConfig();
-  Global::ssid = config.wifiSsid.c_str();
-  Global::password = config.wifiPass.c_str();
-  Global::initializeNetwork(); // this thing first
-  Global::setupMQTT(config.mqttBrokerIP.c_str(), config.mqttPort, config.mqttUsername.c_str(), config.mqttPassword.c_str());
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-  Log.info("Setup is now stable. Ready to connect to WiFi and MQTT.\n");
+  delay(5000);
+  currentState = STATE_INIT;
+  AppConfig config = loadConfig();
+  Global::ssid = config.wifiSsid;
+  Global::password = config.wifiPass;
+  Global::initializeNetwork(); // this thing first
+  currentState = STATE_CONNECTING_WIFI;
+  Global::setupMQTT(config.mqttBrokerIP.c_str(), config.mqttPort, config.mqttUsername.c_str(), config.mqttPassword.c_str());
+  currentState = STATE_CONNECTED;
 }
 
 void loop()
 {
-  if (Global::mqttManager)
-    Global::mqttManager->loop();
-  Log.info("Loop is running\n");
-  delay(1000);
+  switch (currentState)
+  {
+  case STATE_CONNECTED:
+    handleConnectedState();
+    break;
+  case STATE_ERROR:
+    handleErrorState();
+    break;
+  default:
+    handleUnknownState();
+    break;
+  }
+  Log.info("Loop running in state %d\n", currentState);
+  delay(2000);
 }
