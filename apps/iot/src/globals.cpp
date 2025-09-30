@@ -17,9 +17,15 @@ namespace Global
         {
             delay(500);
         }
-        Log.info("Connected to WiFi! IP: %s\n", WiFi.localIP().toString().c_str());
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            Log.info("Connected to WiFi! IP: %s\n", WiFi.localIP().toString().c_str());
+        }
+        else
+        {
+            Log.error("WiFi connection failed\n");
+        }
     }
-
     void mqttCallback(char *topic, byte *payload, unsigned int length)
     {
         Log.info("Message arrived on topic: %s\n", topic);

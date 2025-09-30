@@ -17,7 +17,7 @@ client.on("connect", () => {
     }
   });
 
-  client.publish("esp/commands", "Hello from JS!", (err) => {
+  client.publish("esp/commands", "Hello from JS!TESTER", (err) => {
     if (err) {
       console.error("Publish error:", err);
     }

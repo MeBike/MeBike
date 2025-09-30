@@ -69,7 +69,7 @@ AppConfig loadConfig()
             }
         }
     }
-
+    Log.info("Loaded config from .env file:\n");
     file.close();
     return config;
 }
