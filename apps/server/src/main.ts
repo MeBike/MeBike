@@ -1,4 +1,3 @@
-import { UserSchema } from "@mebike/shared";
 import { NestFactory } from "@nestjs/core";
 
 import { AppModule } from "./app.module.js";
