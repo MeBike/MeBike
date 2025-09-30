@@ -1,24 +1,26 @@
 #include <Arduino.h>
+#include <WiFi.h>
 #include <PubSubClient.h>
+#include <ArduinoLog.h>
+#include "Config.h"
+#include "globals.h"
 
-
-#define WIFI_NAME_STR WIFI_NAME  
-#define WIFI_PASSWORD_STR WIFI_PASSWORD
-int myFunction(int, int);
 void setup()
 {
-  PubSubClient client;
-  // put your setup code here, to run once:
-  
-  int result = myFunction(2, 3);
+
+  Serial.begin(74880);
+  delay(5000);
+
+  AppConfig config = loadConfig();
+  Global::ssid = config.wifiSsid.c_str();
+  Global::password = config.wifiPass.c_str();
+  Global::initializeNetwork();
+  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  Log.info("Setup is now stable. Ready to connect to WiFi and MQTT.");
 }
 
 void loop()
 {
-}
-
-// put function definitions here:
-int myFunction(int x, int y)
-{
-  return x + y;
+  Log.info("Loop is running\n");
+  delay(1000);
 }
