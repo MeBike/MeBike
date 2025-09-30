@@ -3,11 +3,15 @@
 
 #include <Arduino.h>
 
-struct AppConfig {
+struct AppConfig
+{
     String wifiSsid;
     String wifiPass;
+    String mqttBrokerIP;
+    int mqttPort;
+    String mqttUsername;
+    String mqttPassword;
 };
-
 
 AppConfig loadConfig();
 

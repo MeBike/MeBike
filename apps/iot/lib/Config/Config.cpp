@@ -51,6 +51,22 @@ AppConfig loadConfig()
             {
                 config.wifiPass = value;
             }
+            else if (key == "MQTT_BROKER_IP")
+            {
+                config.mqttBrokerIP = value;
+            }
+            else if (key == "MQTT_PORT")
+            {
+                config.mqttPort = value.toInt();
+            }
+            else if (key == "MQTT_USERNAME")
+            {
+                config.mqttUsername = value;
+            }
+            else if (key == "MQTT_PASSWORD")
+            {
+                config.mqttPassword = value;
+            }
         }
     }
 
