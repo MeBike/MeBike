@@ -11,6 +11,9 @@ void setup()
 
   Serial.begin(74880);
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  Global::bufferedLogger.reset(new BufferedLogger());
+  Global::bufferedLogger->setTopic(Global::logTopic);
+  Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Local, "Buffered logger initialized");
   delay(5000);
   currentState = STATE_INIT;
   AppConfig config = loadConfig();
@@ -24,6 +27,10 @@ void setup()
 
 void loop()
 {
+  if (Global::bufferedLogger)
+  {
+    Global::bufferedLogger->loop();
+  }
   switch (currentState)
   {
   case STATE_CONNECTED:
@@ -49,5 +56,6 @@ void loop()
     break;
   }
   Log.info("Loop running in state %s (%d)\n", getStateName(currentState), currentState);
+  Global::bufferedLogger->logf(LogSeverity::Info, LogDestination::Local, "Loop running in state %s (%d)", getStateName(currentState), currentState);
   delay(2000);
 }

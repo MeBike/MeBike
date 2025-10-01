@@ -3,6 +3,11 @@
 #include "globals.h"
 #include "StateMachine.h"
 
+static const char *statusTopic()
+{
+    return Global::statusTopic.empty() ? "esp/status" : Global::statusTopic.c_str();
+}
+
 void CommandHandler::processCommand(const char *topic, const char *message)
 {
     Log.info("Processing command from topic %s: %s\n", topic, message);
@@ -68,7 +73,11 @@ void CommandHandler::handleStateCommand(const char *command)
         {
             char statusMsg[50];
             sprintf(statusMsg, "State changed to %d", targetState);
-            Global::mqttManager->publish("esp/status", statusMsg, false);
+            Global::mqttManager->publish(statusTopic(), statusMsg, false);
+        }
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->logf(LogSeverity::Info, LogDestination::Both, "Command state -> %d", targetState);
         }
     }
     else
@@ -92,6 +101,10 @@ void CommandHandler::handleBookingCommand(const char *command)
             {
                 Global::mqttManager->publish("esp/booking/status", "booked", false);
             }
+            if (Global::bufferedLogger)
+            {
+                Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Booking command: book");
+            }
         }
         else
         {
@@ -108,6 +121,10 @@ void CommandHandler::handleBookingCommand(const char *command)
             if (Global::mqttManager)
             {
                 Global::mqttManager->publish("esp/booking/status", "available", false);
+            }
+            if (Global::bufferedLogger)
+            {
+                Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Booking command: release");
             }
         }
         else
@@ -132,6 +149,10 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
             {
                 Global::mqttManager->publish("esp/maintenance/status", "in_progress", false);
             }
+            if (Global::bufferedLogger)
+            {
+                Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Maintenance command: start");
+            }
         }
         else
         {
@@ -148,6 +169,10 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
             if (Global::mqttManager)
             {
                 Global::mqttManager->publish("esp/maintenance/status", "completed", false);
+            }
+            if (Global::bufferedLogger)
+            {
+                Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Maintenance command: complete");
             }
         }
         else
@@ -168,7 +193,11 @@ void CommandHandler::handleStatusCommand(const char *command)
         {
             char statusMsg[100];
             sprintf(statusMsg, "Current state: %d", currentState);
-            Global::mqttManager->publish("esp/status", statusMsg, false);
+            Global::mqttManager->publish(statusTopic(), statusMsg, false);
+        }
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->logf(LogSeverity::Info, LogDestination::MQTT, "Status requested -> %d", currentState);
         }
     }
 }

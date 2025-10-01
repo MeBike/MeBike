@@ -12,6 +12,11 @@ static bool bookedStateEntryPublished = false;
 static bool maintainedStateEntryPublished = false;
 static bool unavailableStateEntryPublished = false;
 
+static const char *statusTopic()
+{
+    return Global::statusTopic.empty() ? "esp/status" : Global::statusTopic.c_str();
+}
+
 void resetStateEntryFlags()
 {
     availableStateEntryPublished = false;
@@ -40,16 +45,20 @@ void handleConnectedState()
         connectedStartTime = millis();
     }
 
-    // Wait 2 seconds for connection to stabilize, then go operational
+  
     if (millis() - connectedStartTime > 2000)
     {
         currentState = STATE_AVAILABLE;
         Log.info("Connection stable, transitioning to AVAILABLE state\n");
 
-        // Publish immediate status on state entry
+       
         if (Global::mqttManager)
         {
-            Global::mqttManager->publish("esp/status", "available", true);
+            Global::mqttManager->publish(statusTopic(), "available", true);
+        }
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> available (from CONNECTED)");
         }
     }
 }
@@ -83,7 +92,7 @@ void handleUnknownState()
 
 void handleAvailableState()
 {
-    // Maintain MQTT connection and check WiFi
+    
     if (Global::mqttManager)
         Global::mqttManager->loop();
 
@@ -95,32 +104,40 @@ void handleAvailableState()
         return;
     }
 
-    // Publish status immediately on state entry, then periodically
+   
     static unsigned long lastStatusPublish = 0;
 
     if (!availableStateEntryPublished)
     {
         if (Global::mqttManager)
         {
-            Global::mqttManager->publish("esp/status", "available", true);
+            Global::mqttManager->publish(statusTopic(), "available", true);
         }
         availableStateEntryPublished = true;
         lastStatusPublish = millis();
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> available");
+        }
     }
     else if (millis() - lastStatusPublish > 10000)
-    { // Every 10s
+    { 
         if (Global::mqttManager)
         {
-            Global::mqttManager->publish("esp/status", "available", true);
+            Global::mqttManager->publish(statusTopic(), "available", true);
         }
         lastStatusPublish = millis();
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Status heartbeat: available");
+        }
     }
-    // Add logic for booking commands via MQTT
+    
 }
 
 void handleBookedState()
 {
-    // Maintain MQTT connection and check WiFi
+   
     if (Global::mqttManager)
         Global::mqttManager->loop();
 
@@ -132,32 +149,40 @@ void handleBookedState()
         return;
     }
 
-    // Publish status immediately on state entry, then periodically
+    
     static unsigned long lastStatusPublish = 0;
 
     if (!bookedStateEntryPublished)
     {
         if (Global::mqttManager)
         {
-            Global::mqttManager->publish("esp/status", "booked", true);
+            Global::mqttManager->publish(statusTopic(), "booked", true);
         }
         bookedStateEntryPublished = true;
         lastStatusPublish = millis();
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> booked");
+        }
     }
     else if (millis() - lastStatusPublish > 10000)
     {
         if (Global::mqttManager)
         {
-            Global::mqttManager->publish("esp/status", "booked", true);
+            Global::mqttManager->publish(statusTopic(), "booked", true);
         }
         lastStatusPublish = millis();
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Status heartbeat: booked");
+        }
     }
-    // Add logic for return/unbook commands
+   
 }
 
 void handleMaintainedState()
 {
-    // Maintain MQTT connection and check WiFi
+    
     if (Global::mqttManager)
         Global::mqttManager->loop();
 
@@ -169,32 +194,40 @@ void handleMaintainedState()
         return;
     }
 
-    // Publish status immediately on state entry, then periodically
+   
     static unsigned long lastStatusPublish = 0;
 
     if (!maintainedStateEntryPublished)
     {
         if (Global::mqttManager)
         {
-            Global::mqttManager->publish("esp/status", "maintained", true);
+            Global::mqttManager->publish(statusTopic(), "maintained", true);
         }
         maintainedStateEntryPublished = true;
         lastStatusPublish = millis();
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> maintained");
+        }
     }
     else if (millis() - lastStatusPublish > 10000)
     {
         if (Global::mqttManager)
         {
-            Global::mqttManager->publish("esp/status", "maintained", true);
+            Global::mqttManager->publish(statusTopic(), "maintained", true);
         }
         lastStatusPublish = millis();
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Status heartbeat: maintained");
+        }
     }
-    // Add logic for maintenance completion
+  
 }
 
 void handleUnavailableState()
 {
-    // Maintain MQTT connection and check WiFi
+   
     if (Global::mqttManager)
         Global::mqttManager->loop();
 
@@ -206,25 +239,33 @@ void handleUnavailableState()
         return;
     }
 
-    // Publish status immediately on state entry, then periodically
+   
     static unsigned long lastStatusPublish = 0;
 
     if (!unavailableStateEntryPublished)
     {
         if (Global::mqttManager)
         {
-            Global::mqttManager->publish("esp/status", "unavailable", true);
+            Global::mqttManager->publish(statusTopic(), "unavailable", true);
         }
         unavailableStateEntryPublished = true;
         lastStatusPublish = millis();
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> unavailable");
+        }
     }
     else if (millis() - lastStatusPublish > 10000)
     {
         if (Global::mqttManager)
         {
-            Global::mqttManager->publish("esp/status", "unavailable", true);
+            Global::mqttManager->publish(statusTopic(), "unavailable", true);
         }
         lastStatusPublish = millis();
+        if (Global::bufferedLogger)
+        {
+            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Status heartbeat: unavailable");
+        }
     }
-    // Add logic for becoming available again
+ 
 }

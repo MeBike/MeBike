@@ -3,7 +3,10 @@
 
 #include <WiFi.h>
 #include <memory>
+#include <string>
+
 #include "MQTTManager.h"
+#include "BufferedLogger.h"
 enum DeviceState
 {
     // Connection states
@@ -25,8 +28,11 @@ const char *getStateName(DeviceState state);
 namespace Global
 {
     extern std::unique_ptr<MQTTManager> mqttManager;
+    extern std::unique_ptr<BufferedLogger> bufferedLogger;
     extern std::string ssid;
     extern std::string password;
+    extern std::string statusTopic;
+    extern std::string logTopic;
     void initializeNetwork();
     void mqttCallback(char *topic, byte *payload, unsigned int length);
     void setupMQTT(const char *brokerIP, int port, const char *username, const char *pass);

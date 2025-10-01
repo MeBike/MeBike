@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "*.css": "css",
-    "memory": "cpp"
+    "memory": "cpp",
+    "cstring": "cpp"
   }
 }

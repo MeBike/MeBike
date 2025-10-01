@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include "CommandHandler.h"
+#include "DeviceUtils.h"
 
 DeviceState currentState;
 
@@ -9,8 +10,11 @@ namespace Global
 {
     WiFiClient espClient;
     std::unique_ptr<MQTTManager> mqttManager = nullptr;
+    std::unique_ptr<BufferedLogger> bufferedLogger = nullptr;
     std::string ssid;
     std::string password;
+    std::string statusTopic = "esp/status";
+    std::string logTopic = "esp/logs";
 
     void initializeNetwork()
     {
@@ -23,6 +27,13 @@ namespace Global
         if (WiFi.status() == WL_CONNECTED)
         {
             Log.info("Connected to WiFi! IP: %s\n", WiFi.localIP().toString().c_str());
+            statusTopic = makeTopicWithMac("esp/status");
+            logTopic = makeTopicWithMac("esp/logs");
+            if (bufferedLogger)
+            {
+                bufferedLogger->setTopic(logTopic);
+            }
+            Log.info("Status topic set to %s\n", statusTopic.c_str());
         }
         else
         {
@@ -46,9 +57,13 @@ namespace Global
     {
         mqttManager.reset(new MQTTManager(espClient, brokerIP, port, username, pass));
         mqttManager->setCallback(mqttCallback);
+        if (bufferedLogger)
+        {
+            bufferedLogger->setMQTTManager(mqttManager.get());
+        }
         if (mqttManager->connect())
         {
-
+         
             mqttManager->subscribe("esp/commands/state");
             mqttManager->subscribe("esp/commands/booking");
             mqttManager->subscribe("esp/commands/maintenance");
@@ -56,7 +71,12 @@ namespace Global
 
             mqttManager->subscribe("esp/commands");
 
-            mqttManager->publish("esp/status", "ESP32 online", true);
+            const char *topic = statusTopic.empty() ? "esp/status" : statusTopic.c_str();
+            mqttManager->publish(topic, "ESP32 online", true);
+            if (bufferedLogger)
+            {
+                bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "MQTT connected and status published");
+            }
         }
     }
 }
