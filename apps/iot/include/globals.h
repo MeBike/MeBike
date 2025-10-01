@@ -2,15 +2,32 @@
 #define GLOBALS_H
 
 #include <WiFi.h>
-#include <PubSubClient.h>
+#include <memory>
+#include "MQTTManager.h"
+enum DeviceState
+{
+    // Connection states
+    STATE_INIT,
+    STATE_CONNECTING_WIFI,
+    STATE_CONNECTED,
+    STATE_ERROR,
+
+    // Operational states
+    STATE_AVAILABLE,  // Ready for use
+    STATE_BOOKED,     // In use/reserved
+    STATE_MAINTAINED, // Under maintenance
+    STATE_UNAVAILABLE // Offline or faulty
+};
+extern DeviceState currentState;
 
 namespace Global
 {
-    extern WiFiClient espClient;
-    extern PubSubClient client;
-    extern const char *ssid;
-    extern const char *password;
+    extern std::unique_ptr<MQTTManager> mqttManager;
+    extern std::string ssid;
+    extern std::string password;
     void initializeNetwork();
+    void mqttCallback(char *topic, byte *payload, unsigned int length);
+    void setupMQTT(const char *brokerIP, int port, const char *username, const char *pass);
 }
 
 #endif // GLOBALS_H

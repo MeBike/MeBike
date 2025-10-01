@@ -45,15 +45,31 @@ AppConfig loadConfig()
 
             if (key == "WIFI_SSID")
             {
-                config.wifiSsid = value;
+                config.wifiSsid = value.c_str();
             }
             else if (key == "WIFI_PASS")
             {
-                config.wifiPass = value;
+                config.wifiPass = value.c_str();
+            }
+            else if (key == "MQTT_BROKER_IP")
+            {
+                config.mqttBrokerIP = value.c_str();
+            }
+            else if (key == "MQTT_PORT")
+            {
+                config.mqttPort = value.toInt();
+            }
+            else if (key == "MQTT_USERNAME")
+            {
+                config.mqttUsername = value.c_str();
+            }
+            else if (key == "MQTT_PASSWORD")
+            {
+                config.mqttPassword = value.c_str();
             }
         }
     }
-
+    Log.info("Loaded config from .env file:\n");
     file.close();
     return config;
 }
