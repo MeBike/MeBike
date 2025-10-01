@@ -11,8 +11,8 @@ export class FetchHttpClient {
   private baseURL: string;
   private isRefreshing = false;
   private failedQueue: Array<{
-    resolve: (value: any) => void;
-    reject: (reason: any) => void;
+    resolve: (value: string | null) => void;
+    reject: (reason: Error) => void;
   }> = [];
   constructor(baseURL: string) {
     this.baseURL = baseURL;
@@ -42,7 +42,7 @@ export class FetchHttpClient {
     }
     return data.access_token;
   }
-  private processQueue(error: any, token: string | null = null) {
+  private processQueue(error: Error | null, token: string | null = null) {
     this.failedQueue.forEach(({ resolve, reject }) => {
       if (error) {
         reject(error);
@@ -111,7 +111,7 @@ export class FetchHttpClient {
           }
           return (await retryResponse.json()) as T;
         } catch (refreshError) {
-          this.processQueue(refreshError, null);
+          this.processQueue(refreshError instanceof Error ? refreshError : new Error(String(refreshError)), null);
           throw refreshError;
         } finally {
           this.isRefreshing = false;
