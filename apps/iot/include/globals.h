@@ -33,6 +33,11 @@ namespace Global
     extern std::string password;
     extern std::string statusTopic;
     extern std::string logTopic;
+    extern std::string commandStateTopic;
+    extern std::string commandBookingTopic;
+    extern std::string commandMaintenanceTopic;
+    extern std::string commandStatusTopic;
+    extern std::string commandRootTopic;
     void initializeNetwork();
     void mqttCallback(char *topic, byte *payload, unsigned int length);
     void setupMQTT(const char *brokerIP, int port, const char *username, const char *pass);

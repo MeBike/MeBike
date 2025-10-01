@@ -1,7 +1,17 @@
 #include "CommandHandler.h"
 #include <ArduinoLog.h>
+#include <cstring>
 #include "globals.h"
 #include "StateMachine.h"
+
+static bool matchesTopic(const char *incoming, const char *baseTopic, const std::string &deviceTopic)
+{
+    if (strcmp(incoming, baseTopic) == 0)
+    {
+        return true;
+    }
+    return !deviceTopic.empty() && strcmp(incoming, deviceTopic.c_str()) == 0;
+}
 
 static const char *statusTopic()
 {
@@ -13,19 +23,20 @@ void CommandHandler::processCommand(const char *topic, const char *message)
     Log.info("Processing command from topic %s: %s\n", topic, message);
 
     
-    if (strcmp(topic, "esp/commands/state") == 0 || strcmp(topic, "esp/commands") == 0)
+    if (matchesTopic(topic, "esp/commands/state", Global::commandStateTopic) ||
+        matchesTopic(topic, "esp/commands", Global::commandRootTopic))
     {
         handleStateCommand(message);
     }
-    else if (strcmp(topic, "esp/commands/booking") == 0)
+    else if (matchesTopic(topic, "esp/commands/booking", Global::commandBookingTopic))
     {
         handleBookingCommand(message);
     }
-    else if (strcmp(topic, "esp/commands/maintenance") == 0)
+    else if (matchesTopic(topic, "esp/commands/maintenance", Global::commandMaintenanceTopic))
     {
         handleMaintenanceCommand(message);
     }
-    else if (strcmp(topic, "esp/commands/status") == 0)
+    else if (matchesTopic(topic, "esp/commands/status", Global::commandStatusTopic))
     {
         handleStatusCommand(message);
     }

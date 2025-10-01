@@ -5,7 +5,7 @@
 #include "DeviceUtils.h"
 
 DeviceState currentState;
-
+//TODO: THIS IS TOO MUCH REPonsibilty
 namespace Global
 {
     WiFiClient espClient;
@@ -15,6 +15,11 @@ namespace Global
     std::string password;
     std::string statusTopic = "esp/status";
     std::string logTopic = "esp/logs";
+    std::string commandStateTopic = "esp/commands/state";
+    std::string commandBookingTopic = "esp/commands/booking";
+    std::string commandMaintenanceTopic = "esp/commands/maintenance";
+    std::string commandStatusTopic = "esp/commands/status";
+    std::string commandRootTopic = "esp/commands";
 
     void initializeNetwork()
     {
@@ -29,6 +34,11 @@ namespace Global
             Log.info("Connected to WiFi! IP: %s\n", WiFi.localIP().toString().c_str());
             statusTopic = makeTopicWithMac("esp/status");
             logTopic = makeTopicWithMac("esp/logs");
+            commandStateTopic = makeTopicWithMac("esp/commands/state");
+            commandBookingTopic = makeTopicWithMac("esp/commands/booking");
+            commandMaintenanceTopic = makeTopicWithMac("esp/commands/maintenance");
+            commandStatusTopic = makeTopicWithMac("esp/commands/status");
+            commandRootTopic = makeTopicWithMac("esp/commands");
             if (bufferedLogger)
             {
                 bufferedLogger->setTopic(logTopic);
@@ -50,7 +60,7 @@ namespace Global
         }
         Log.info("Message: %s\n", message.c_str());
 
-        CommandHandler::processCommand(topic, message.c_str());
+        CommandHandler::processCommand(topic, message.c_str()); // CHECK HERE FOR COMMANDD PROVCIDIEDS
     }
 
     void setupMQTT(const char *brokerIP, int port, const char *username, const char *pass)
@@ -63,13 +73,24 @@ namespace Global
         }
         if (mqttManager->connect())
         {
-         
+            // global
             mqttManager->subscribe("esp/commands/state");
             mqttManager->subscribe("esp/commands/booking");
             mqttManager->subscribe("esp/commands/maintenance");
             mqttManager->subscribe("esp/commands/status");
+            // INVIDIDUAL COMMANDS
+            if (!commandStateTopic.empty())
+                mqttManager->subscribe(commandStateTopic.c_str());
+            if (!commandBookingTopic.empty())
+                mqttManager->subscribe(commandBookingTopic.c_str());
+            if (!commandMaintenanceTopic.empty())
+                mqttManager->subscribe(commandMaintenanceTopic.c_str());
+            if (!commandStatusTopic.empty())
+                mqttManager->subscribe(commandStatusTopic.c_str());
 
             mqttManager->subscribe("esp/commands");
+            if (!commandRootTopic.empty())
+                mqttManager->subscribe(commandRootTopic.c_str());
 
             const char *topic = statusTopic.empty() ? "esp/status" : statusTopic.c_str();
             mqttManager->publish(topic, "ESP32 online", true);
