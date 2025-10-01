@@ -1,3 +1,3 @@
-import createConfig from "./create-config.js"
+import createConfig from "./create-config.js";
 
-export default createConfig()
+export default createConfig();

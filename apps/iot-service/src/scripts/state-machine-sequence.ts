@@ -19,7 +19,7 @@ import mqtt from "mqtt";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { env } from "../env";
+import { env } from "../config";
 
 const FALLBACK_SEQUENCE: IotStateCommand[] = [
   "booked",

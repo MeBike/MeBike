@@ -7,3 +7,4 @@ node_modules
 /docs
 dist
 .apps/iot-service/*.md
+apps/iot-service/folder.md

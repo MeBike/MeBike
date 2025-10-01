@@ -1,80 +1,84 @@
-import type {
-  IotCommandPayloadByTopic,
-  IotCommandTopic,
-} from "@mebike/shared";
-import type { MqttClient } from "mqtt";
+import { IOT_PUBLISH_TOPICS } from "@mebike/shared";
+import process from "node:process";
 
-import {
-  IOT_COMMAND_TOPICS,
-  IOT_PUBLISH_TOPICS,
-  IotBookingStatusMessageSchema,
-  IotMaintenanceStatusMessageSchema,
-  IotStatusMessageSchema,
-  topicWithMac,
-} from "@mebike/shared";
-import mqtt from "mqtt";
+import { env } from "./config";
+import { MqttConnectionManager } from "./connection";
+import { eventBus, EVENTS } from "./events";
+import { messageHandlers } from "./handlers";
+import { createCommandPublisher } from "./publishers";
+import { createDeviceManager, createStateMachineService } from "./services";
 
-import { env } from "./env";
+async function main() {
+  const connection = new MqttConnectionManager({
+    brokerUrl: env.MQTT_URL,
+    username: env.MQTT_USERNAME,
+    password: env.MQTT_PASSWORD,
+  });
 
-const brokerUrl = env.MQTT_URL;
-const username = env.MQTT_USERNAME;
-const password = env.MQTT_PASSWORD;
-const deviceMac = env.DEVICE_MAC || null;
+  // event listeners
+  eventBus.on(EVENTS.CONNECTION_ESTABLISHED, (data) => {
+    console.warn(`Connected to MQTT broker at ${data.brokerUrl}`);
+  });
 
-const client = mqtt.connect(brokerUrl, {
-  username,
-  password,
-});
+  eventBus.on(EVENTS.CONNECTION_ERROR, (data) => {
+    console.error("Connection error:", data.error);
+  });
 
-client.on("connect", () => {
-  console.warn(`Connected to MQTT broker at ${brokerUrl}`);
-  subscribeToTopics(client, deviceMac);
-  publishCommand(IOT_COMMAND_TOPICS.status, "request");
-});
+  // Sp connection event handlers
+  connection.onConnect(() => {
+    eventBus.emit(EVENTS.CONNECTION_ESTABLISHED, {
+      brokerUrl: env.MQTT_URL,
+      timestamp: new Date(),
+    });
+  });
 
-client.on("message", (topic, message) => {
-  const payload = message.toString();
+  connection.onError((error) => {
+    eventBus.emit(EVENTS.CONNECTION_ERROR, {
+      error,
+      timestamp: new Date(),
+    });
+  });
 
-  if (matchesTopic(topic, IOT_PUBLISH_TOPICS.status)) {
-    const parsed = IotStatusMessageSchema.safeParse(payload);
-    if (parsed.success) {
-      console.warn(`[status] ${topic}: ${parsed.data}`);
+  // p message handler
+  connection.onMessage((topic, message) => {
+    const payload = message.toString();
+
+    // Find and execute the appropriate handler
+    const handler = findHandlerForTopic(topic);
+    if (handler) {
+      handler(topic, payload);
     }
     else {
-      console.warn(`[status] ${topic}: ${payload} (unparsed)`);
+      console.warn(`Received on ${topic}: ${payload}`);
     }
-  }
-  else if (matchesTopic(topic, IOT_PUBLISH_TOPICS.logs)) {
-    console.warn(`[log] ${topic}: ${payload}`);
-  }
-  else if (matchesTopic(topic, IOT_PUBLISH_TOPICS.bookingStatus)) {
-    const parsed = IotBookingStatusMessageSchema.safeParse(payload);
-    if (parsed.success) {
-      console.warn(`[booking] ${topic}: ${parsed.data}`);
-    }
-    else {
-      console.warn(`[booking] ${topic}: ${payload} (unexpected format)`);
-    }
-  }
-  else if (matchesTopic(topic, IOT_PUBLISH_TOPICS.maintenanceStatus)) {
-    const parsed = IotMaintenanceStatusMessageSchema.safeParse(payload);
-    if (parsed.success) {
-      console.warn(`[maintenance] ${topic}: ${parsed.data}`);
-    }
-    else {
-      console.warn(`[maintenance] ${topic}: ${payload} (unexpected format)`);
-    }
-  }
-  else {
-    console.warn(`Received on ${topic}: ${payload}`);
-  }
-});
+  });
 
-client.on("error", (err) => {
-  console.error("Connection error:", err);
-});
+  // Connect to MQTT broker
+  await connection.connect();
 
-function subscribeToTopics(client: MqttClient, mac: string | null) {
+  const topics = getSubscriptionTopics(env.DEVICE_MAC);
+  await connection.subscribe(topics);
+
+  const _commandPublisher = createCommandPublisher(connection);
+  const _deviceManager = createDeviceManager(); // xai sao
+  const _stateMachine = createStateMachineService(_commandPublisher, {
+    deviceMac: env.DEVICE_MAC,
+    stepDelayMs: Number.parseInt(env.STATE_STEP_DELAY_MS, 10),
+    transitionTimeoutMs: Number.parseInt(env.STATE_TIMEOUT_MS, 10),
+  });
+
+  await _commandPublisher.requestStatus(env.DEVICE_MAC);
+
+  process.on("SIGINT", async () => {
+    console.warn("Shutting down...");
+    await connection.disconnect();
+    process.exit(0);
+  });
+
+  // await stateMachine.runSequence();
+}
+
+function getSubscriptionTopics(mac: string | undefined): string[] {
   const topics = new Set<string>();
   topics.add(IOT_PUBLISH_TOPICS.status);
   topics.add(IOT_PUBLISH_TOPICS.logs);
@@ -83,36 +87,27 @@ function subscribeToTopics(client: MqttClient, mac: string | null) {
   topics.add(IOT_PUBLISH_TOPICS.maintenanceStatus);
 
   if (mac) {
-    topics.add(topicWithMac(IOT_PUBLISH_TOPICS.status, mac));
-    topics.add(topicWithMac(IOT_PUBLISH_TOPICS.logs, mac));
+    //
   }
 
-  client.subscribe(Array.from(topics), (err) => {
-    if (err) {
-      console.error("Subscribe error:", err);
-    }
-    else {
-      console.warn("Subscribed to topics:", Array.from(topics).join(", "));
-    }
-  });
+  return Array.from(topics);
 }
 
-function publishCommand<T extends IotCommandTopic>(
-  topic: T,
-  payload: IotCommandPayloadByTopic[T],
-  mac: string | null = deviceMac,
-) {
-  const resolvedTopic = topicWithMac(topic, mac);
-  client.publish(resolvedTopic, payload, (err) => {
-    if (err) {
-      console.error("Publish error:", err);
+function findHandlerForTopic(topic: string): ((topic: string, payload: string) => void) | undefined {
+  if (messageHandlers[topic as keyof typeof messageHandlers]) {
+    return messageHandlers[topic as keyof typeof messageHandlers];
+  }
+
+  for (const [baseTopic, handler] of Object.entries(messageHandlers)) {
+    if (topic === baseTopic || topic.startsWith(`${baseTopic}/`)) {
+      return handler;
     }
-    else {
-      console.warn(`Command sent to ${resolvedTopic}: ${payload}`);
-    }
-  });
+  }
+
+  return undefined;
 }
 
-function matchesTopic(incoming: string, baseTopic: string) {
-  return incoming === baseTopic || incoming.startsWith(`${baseTopic}/`);
-}
+main().catch((error) => {
+  console.error("Application error:", error);
+  process.exit(1);
+});

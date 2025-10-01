@@ -1,4 +1,4 @@
-import antfu from "@antfu/eslint-config"
+import antfu from "@antfu/eslint-config";
 
 export default function createConfig(options, ...userConfigs) {
   return antfu(
@@ -6,6 +6,7 @@ export default function createConfig(options, ...userConfigs) {
       type: "app",
       typescript: true,
       formatters: true,
+      ignores: ["**/dist/**", "**/build/**", ".md"], // md file
       stylistic: {
         indent: 2,
         semi: true,
@@ -37,5 +38,5 @@ export default function createConfig(options, ...userConfigs) {
       },
     },
     ...userConfigs,
-  )
+  );
 }
