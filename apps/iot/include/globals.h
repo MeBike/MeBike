@@ -7,6 +7,8 @@
 
 #include "MQTTManager.h"
 #include "BufferedLogger.h"
+#include "network.h"
+#include "mqtt.h"
 enum DeviceState
 {
     // Connection states
@@ -27,6 +29,7 @@ const char *getStateName(DeviceState state);
 
 namespace Global
 {
+    extern WiFiClient espClient;
     extern std::unique_ptr<MQTTManager> mqttManager;
     extern std::unique_ptr<BufferedLogger> bufferedLogger;
     extern std::string ssid;
