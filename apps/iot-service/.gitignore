@@ -2,7 +2,7 @@
 dist/
 /build
 /out/
-
+.md
 # dev
 .yarn/
 !.yarn/patches
