@@ -13,7 +13,7 @@ void setup()
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   Global::bufferedLogger.reset(new BufferedLogger());
   Global::bufferedLogger->setTopic(Global::logTopic);
-  Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Local, "Buffered logger initialized");
+  Global::logInfoLocal("Buffered logger initialized");
   delay(5000);
   currentState = STATE_INIT;
   AppConfig config = loadConfig();
@@ -56,6 +56,6 @@ void loop()
     break;
   }
   Log.info("Loop running in state %s (%d)\n", getStateName(currentState), currentState);
-  Global::bufferedLogger->logf(LogSeverity::Info, LogDestination::Local, "Loop running in state %s (%d)", getStateName(currentState), currentState);
+  Global::logInfoMQTT("Loop running in state %s (%d)", getStateName(currentState), currentState);
   delay(2000);
 }

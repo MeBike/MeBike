@@ -14,19 +14,19 @@ std::string makeTopicWithMac(const std::string &baseTopic)
 {
     std::string sanitizedBase = baseTopic;
    
-    if (!sanitizedBase.empty() && sanitizedBase.back() == '/')
-    {
-        sanitizedBase.pop_back();
-    }
-
     std::string mac = getMacAddress();
     if (mac.empty())
     {
         return sanitizedBase;
     }
 
+    if (!sanitizedBase.empty() && sanitizedBase.back() == '/')
+    {
+        sanitizedBase.pop_back();
+    }
+
     sanitizedBase.reserve(sanitizedBase.size() + 1 + mac.size());
-    sanitizedBase.push_back('-');
+    sanitizedBase.push_back('/');
     sanitizedBase.append(mac);
     return sanitizedBase;
 }

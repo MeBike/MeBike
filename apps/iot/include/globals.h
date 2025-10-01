@@ -36,6 +36,64 @@ namespace Global
     void initializeNetwork();
     void mqttCallback(char *topic, byte *payload, unsigned int length);
     void setupMQTT(const char *brokerIP, int port, const char *username, const char *pass);
+
+    inline void logBuffered(LogSeverity severity, LogDestination destination, const std::string &message)
+    {
+        if (bufferedLogger)
+        {
+            bufferedLogger->log(severity, destination, message);
+        }
+    }
+
+    inline void logBuffered(LogSeverity severity, LogDestination destination, const char *message)
+    {
+        if (bufferedLogger && message)
+        {
+            bufferedLogger->log(severity, destination, message);
+        }
+    }
+
+    template <typename... Args>
+    inline void logBuffered(LogSeverity severity, LogDestination destination, const char *fmt, Args... args)
+    {
+        if (bufferedLogger && fmt)
+        {
+            bufferedLogger->logf(severity, destination, fmt, args...);
+        }
+    }
+
+    template <typename... Args>
+    inline void logInfoMQTT(const char *fmt, Args... args)
+    {
+        logBuffered(LogSeverity::Info, LogDestination::MQTT, fmt, args...);
+    }
+
+    template <typename... Args>
+    inline void logInfoBoth(const char *fmt, Args... args)
+    {
+        logBuffered(LogSeverity::Info, LogDestination::Both, fmt, args...);
+    }
+
+    template <typename... Args>
+    inline void logInfoLocal(const char *fmt, Args... args)
+    {
+        logBuffered(LogSeverity::Info, LogDestination::Local, fmt, args...);
+    }
+
+    inline void logInfoMQTT(const std::string &message)
+    {
+        logBuffered(LogSeverity::Info, LogDestination::MQTT, message);
+    }
+
+    inline void logInfoBoth(const std::string &message)
+    {
+        logBuffered(LogSeverity::Info, LogDestination::Both, message);
+    }
+
+    inline void logInfoLocal(const std::string &message)
+    {
+        logBuffered(LogSeverity::Info, LogDestination::Local, message);
+    }
 }
 
 #endif // GLOBALS_H

@@ -56,10 +56,7 @@ void handleConnectedState()
         {
             Global::mqttManager->publish(statusTopic(), "available", true);
         }
-        if (Global::bufferedLogger)
-        {
-            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> available (from CONNECTED)");
-        }
+        Global::logInfoBoth("Status -> available (from CONNECTED)");
     }
 }
 
@@ -115,10 +112,7 @@ void handleAvailableState()
         }
         availableStateEntryPublished = true;
         lastStatusPublish = millis();
-        if (Global::bufferedLogger)
-        {
-            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> available");
-        }
+        Global::logInfoBoth("Status -> available");
     }
     else if (millis() - lastStatusPublish > 10000)
     { 
@@ -127,10 +121,7 @@ void handleAvailableState()
             Global::mqttManager->publish(statusTopic(), "available", true);
         }
         lastStatusPublish = millis();
-        if (Global::bufferedLogger)
-        {
-            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Status heartbeat: available");
-        }
+        Global::logInfoMQTT("Status heartbeat: available");
     }
     
 }
@@ -160,10 +151,7 @@ void handleBookedState()
         }
         bookedStateEntryPublished = true;
         lastStatusPublish = millis();
-        if (Global::bufferedLogger)
-        {
-            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> booked");
-        }
+        Global::logInfoBoth("Status -> booked");
     }
     else if (millis() - lastStatusPublish > 10000)
     {
@@ -172,10 +160,7 @@ void handleBookedState()
             Global::mqttManager->publish(statusTopic(), "booked", true);
         }
         lastStatusPublish = millis();
-        if (Global::bufferedLogger)
-        {
-            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Status heartbeat: booked");
-        }
+        Global::logInfoMQTT("Status heartbeat: booked");
     }
    
 }
@@ -205,10 +190,7 @@ void handleMaintainedState()
         }
         maintainedStateEntryPublished = true;
         lastStatusPublish = millis();
-        if (Global::bufferedLogger)
-        {
-            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> maintained");
-        }
+        Global::logInfoBoth("Status -> maintained");
     }
     else if (millis() - lastStatusPublish > 10000)
     {
@@ -217,10 +199,7 @@ void handleMaintainedState()
             Global::mqttManager->publish(statusTopic(), "maintained", true);
         }
         lastStatusPublish = millis();
-        if (Global::bufferedLogger)
-        {
-            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Status heartbeat: maintained");
-        }
+        Global::logInfoMQTT("Status heartbeat: maintained");
     }
   
 }
@@ -250,10 +229,7 @@ void handleUnavailableState()
         }
         unavailableStateEntryPublished = true;
         lastStatusPublish = millis();
-        if (Global::bufferedLogger)
-        {
-            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "Status -> unavailable");
-        }
+        Global::logInfoBoth("Status -> unavailable");
     }
     else if (millis() - lastStatusPublish > 10000)
     {
@@ -262,10 +238,7 @@ void handleUnavailableState()
             Global::mqttManager->publish(statusTopic(), "unavailable", true);
         }
         lastStatusPublish = millis();
-        if (Global::bufferedLogger)
-        {
-            Global::bufferedLogger->log(LogSeverity::Info, LogDestination::MQTT, "Status heartbeat: unavailable");
-        }
+        Global::logInfoMQTT("Status heartbeat: unavailable");
     }
  
 }

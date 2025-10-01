@@ -8,7 +8,7 @@ BufferedLogger::BufferedLogger(unsigned long flushIntervalMs, size_t maxBuffered
     : _mqttManager(nullptr), _flushInterval(flushIntervalMs), _maxBufferedEntries(maxBufferedEntries), _lastFlush(0)
 {
 }
-
+// này là CPP Setter giống java nhưng CPP 
 void BufferedLogger::setMQTTManager(MQTTManager *manager)
 {
     _mqttManager = manager;
@@ -114,7 +114,7 @@ void BufferedLogger::flush()
     }
 
     std::string payload;
-    payload.reserve(_buffer.size() * 48);
+    payload.reserve(_buffer.size() * 48); 
 
     for (size_t i = 0; i < _buffer.size(); ++i)
     {
