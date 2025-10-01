@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import {
   Sidebar,
   SidebarProvider,
@@ -10,7 +11,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -124,7 +124,7 @@ function StaffSidebarContent() {
         </div>
       </SidebarHeader>
       <SidebarContent className={`${isCollapsed ? "px-2 py-6" : "px-4 py-6"}`}>
-        {menuItems.map((section, sectionIndex) => (
+        {menuItems.map((section,) => (
           <SidebarGroup key={section.group} className="mb-8">
             {!isCollapsed && (
               <SidebarGroupLabel className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4 px-2">
@@ -155,7 +155,7 @@ function StaffSidebarContent() {
           } p-3 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 transition-colors duration-200 cursor-pointer group`}
         >
           <div className="relative">
-            <img
+            <Image
               src="https://github.com/shadcn.png"
               alt="avatar"
               className="h-10 w-10 rounded-full border-2 border-slate-600 group-hover:border-blue-400 transition-colors duration-200"
@@ -197,9 +197,7 @@ export default function StaffLayout({
             <StaffSidebarContent />
           </Sidebar>
           <main className="flex-1 p-8 bg-white/80 backdrop-blur-sm">
-            {/* <div className="flex items-center gap-4 mb-8 p-0">
-              <SidebarTrigger className="h-10 w-10 hover:bg-gray-100 rounded-lg transition-colors duration-200" />
-            </div> */}
+            
             <div className=" p-6">{children}</div>
           </main>
         </div>
