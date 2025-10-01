@@ -58,14 +58,11 @@ export class FetchHttpClient {
     url: string,
     options: RequestInit & { params?: Record<string, string> } = {}
   ): Promise<T> {
-    // Build full URL
     let fullUrl = this.baseURL + url;
     if (options.params) {
       const query = new URLSearchParams(options.params).toString();
       fullUrl += `?${query}`;
     }
-
-    // Add headers
     const headers: Record<string, string> = {
       "Content-Type": "application/json;charset=UTF-8",
       ...(options.headers as Record<string, string> || {}),
@@ -85,15 +82,20 @@ export class FetchHttpClient {
         if (this.isRefreshing) {
           return new Promise((resolve, reject) => {
             this.failedQueue.push({ resolve, reject });
-          }).then(() => {
+          }).then(async () => {
             // Retry request với token mới
             const newToken = localStorage.getItem("access_token");
             if (newToken) {
               headers["Authorization"] = `Bearer ${newToken}`;
             }
-            return fetch(fullUrl, { ...options, headers }).then(res => res.json());
+            const res = await fetch(fullUrl, { ...options, headers });
+            if (!res.ok) {
+              throw new Error(`HTTP error ${res.status}`);
+            }
+            return await res.json();
           });
         }
+        
         this.isRefreshing = true;
         try {
           const newToken = await this.refreshAccessToken();
@@ -104,9 +106,10 @@ export class FetchHttpClient {
             ...options,
             headers,
           });
-          if (retryResponse.ok) {
-            return (await retryResponse.json()) as T;
+          if (!retryResponse.ok) {
+            throw new Error(`HTTP error ${retryResponse.status}`);
           }
+          return (await retryResponse.json()) as T;
         } catch (refreshError) {
           this.processQueue(refreshError, null);
           throw refreshError;
