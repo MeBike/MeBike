@@ -19,9 +19,16 @@ void setup()
   AppConfig config = loadConfig();
   Global::ssid = config.wifiSsid;
   Global::password = config.wifiPass;
-  Global::initializeNetwork(); // this thing first
-  currentState = STATE_CONNECTING_WIFI;
-  Global::setupMQTT(config.mqttBrokerIP.c_str(), config.mqttPort, config.mqttUsername.c_str(), config.mqttPassword.c_str());
+  if (!Global::initializeNetwork())
+  {
+    currentState = STATE_ERROR;
+    return;
+  }
+  if (!Global::setupMQTT(config.mqttBrokerIP.c_str(), config.mqttPort, config.mqttUsername.c_str(), config.mqttPassword.c_str()))
+  {
+    currentState = STATE_ERROR;
+    return;
+  }
   currentState = STATE_CONNECTED;
 }
 

@@ -3,6 +3,7 @@
 
 #include <PubSubClient.h>
 #include <WiFiClient.h>
+#include <string>
 
 class MQTTManager
 {
@@ -17,10 +18,10 @@ public:
 
 private:
     PubSubClient _client;
-    const char *_brokerIP;
+    std::string _brokerIP;
     int _port;
-    const char *_username;
-    const char *_password;
+    std::string _username;
+    std::string _password;
 };
 
 #endif // MQTTMANAGER_H

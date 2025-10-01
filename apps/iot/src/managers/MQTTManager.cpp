@@ -2,14 +2,14 @@
 #include <ArduinoLog.h>
 
 MQTTManager::MQTTManager(WiFiClient &wifiClient, const char *brokerIP, int port, const char *username, const char *password)
-    : _client(wifiClient), _brokerIP(brokerIP), _port(port), _username(username), _password(password) // constructor cpp la
+    : _client(wifiClient), _brokerIP(brokerIP), _port(port), _username(username), _password(password)
 {
-    _client.setServer(_brokerIP, _port);
+    _client.setServer(_brokerIP.c_str(), _port);
 }
 
 bool MQTTManager::connect()
 {
-    if (_client.connect("ESP32Client", _username, _password))
+    if (_client.connect("ESP32Client", _username.c_str(), _password.c_str()))
     {
         Log.info("Connected to MQTT broker\n");
         return true;

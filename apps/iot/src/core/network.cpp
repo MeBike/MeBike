@@ -8,10 +8,20 @@ bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &to
 {
     Log.info("Connecting to WiFi...");
     WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
+
+    const int maxAttempts = 20; 
+    int attempts = 0;
+
+    while (WiFi.status() != WL_CONNECTED && attempts < maxAttempts)
     {
         delay(500);
+        attempts++;
+        if (attempts % 4 == 0) //4000 % 4 = 0 so log every 2 seconds == every 4 attempts
+        { 
+            Log.info("WiFi connection attempt %d/%d...\n", attempts, maxAttempts);
+        }
     }
+
     if (WiFi.status() == WL_CONNECTED)
     {
         Log.info("Connected to WiFi! IP: %s\n", WiFi.localIP().toString().c_str());
@@ -27,7 +37,7 @@ bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &to
     }
     else
     {
-        Log.error("WiFi connection failed\n");
+        Log.error("WiFi connection failed after %d attempts. Check credentials and network.\n", maxAttempts);
         return false;
     }
 }

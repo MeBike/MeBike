@@ -21,7 +21,7 @@ namespace Global
     std::string commandStatusTopic = "esp/commands/status";
     std::string commandRootTopic = "esp/commands";
 
-    void initializeNetwork()
+    bool initializeNetwork()
     {
         NetworkTopics topics;
         if (::initializeNetwork(ssid.c_str(), password.c_str(), topics))
@@ -38,12 +38,14 @@ namespace Global
                 bufferedLogger->setTopic(logTopic);
             }
             Log.info("Status topic set to %s\n", statusTopic.c_str());
+            return true;
         }
+        return false;
     }
 
-    void setupMQTT(const char *brokerIP, int port, const char *username, const char *pass)
+    bool setupMQTT(const char *brokerIP, int port, const char *username, const char *pass)
     {
-        ::setupMQTT(brokerIP, port, username, pass, logTopic);
+        return ::setupMQTT(brokerIP, port, username, pass, logTopic);
     }
 }
 

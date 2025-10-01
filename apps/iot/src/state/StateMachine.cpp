@@ -38,24 +38,16 @@ void handleConnectedState()
         return;
     }
 
-    
     static unsigned long connectedStartTime = 0;
     if (connectedStartTime == 0)
     {
         connectedStartTime = millis();
     }
 
-  
     if (millis() - connectedStartTime > 2000)
     {
         currentState = STATE_AVAILABLE;
         Log.info("Connection stable, transitioning to AVAILABLE state\n");
-
-       
-        if (Global::mqttManager)
-        {
-            Global::mqttManager->publish(statusTopic(), "available", true);
-        }
         Global::logInfoBoth("Status -> available (from CONNECTED)");
     }
 }
@@ -89,7 +81,7 @@ void handleUnknownState()
 
 void handleAvailableState()
 {
-    
+
     if (Global::mqttManager)
         Global::mqttManager->loop();
 
@@ -101,7 +93,6 @@ void handleAvailableState()
         return;
     }
 
-   
     static unsigned long lastStatusPublish = 0;
 
     if (!availableStateEntryPublished)
@@ -115,7 +106,7 @@ void handleAvailableState()
         Global::logInfoBoth("Status -> available");
     }
     else if (millis() - lastStatusPublish > 10000)
-    { 
+    {
         if (Global::mqttManager)
         {
             Global::mqttManager->publish(statusTopic(), "available", true);
@@ -123,12 +114,11 @@ void handleAvailableState()
         lastStatusPublish = millis();
         Global::logInfoMQTT("Status heartbeat: available");
     }
-    
 }
 
 void handleBookedState()
 {
-   
+
     if (Global::mqttManager)
         Global::mqttManager->loop();
 
@@ -140,7 +130,6 @@ void handleBookedState()
         return;
     }
 
-    
     static unsigned long lastStatusPublish = 0;
 
     if (!bookedStateEntryPublished)
@@ -162,12 +151,11 @@ void handleBookedState()
         lastStatusPublish = millis();
         Global::logInfoMQTT("Status heartbeat: booked");
     }
-   
 }
 
 void handleMaintainedState()
 {
-    
+
     if (Global::mqttManager)
         Global::mqttManager->loop();
 
@@ -179,7 +167,6 @@ void handleMaintainedState()
         return;
     }
 
-   
     static unsigned long lastStatusPublish = 0;
 
     if (!maintainedStateEntryPublished)
@@ -201,12 +188,11 @@ void handleMaintainedState()
         lastStatusPublish = millis();
         Global::logInfoMQTT("Status heartbeat: maintained");
     }
-  
 }
 
 void handleUnavailableState()
 {
-   
+
     if (Global::mqttManager)
         Global::mqttManager->loop();
 
@@ -218,7 +204,6 @@ void handleUnavailableState()
         return;
     }
 
-   
     static unsigned long lastStatusPublish = 0;
 
     if (!unavailableStateEntryPublished)
@@ -240,5 +225,4 @@ void handleUnavailableState()
         lastStatusPublish = millis();
         Global::logInfoMQTT("Status heartbeat: unavailable");
     }
- 
 }

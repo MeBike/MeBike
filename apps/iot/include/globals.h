@@ -41,9 +41,9 @@ namespace Global
     extern std::string commandMaintenanceTopic;
     extern std::string commandStatusTopic;
     extern std::string commandRootTopic;
-    void initializeNetwork();
+    bool initializeNetwork();
     void mqttCallback(char *topic, byte *payload, unsigned int length);
-    void setupMQTT(const char *brokerIP, int port, const char *username, const char *pass);
+    bool setupMQTT(const char *brokerIP, int port, const char *username, const char *pass);
 
     inline void logBuffered(LogSeverity severity, LogDestination destination, const std::string &message)
     {

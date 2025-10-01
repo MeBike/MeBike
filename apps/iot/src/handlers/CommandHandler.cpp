@@ -22,7 +22,6 @@ void CommandHandler::processCommand(const char *topic, const char *message)
 {
     Log.info("Processing command from topic %s: %s\n", topic, message);
 
-    
     if (matchesTopic(topic, "esp/commands/state", Global::commandStateTopic) ||
         matchesTopic(topic, "esp/commands", Global::commandRootTopic))
     {
@@ -77,20 +76,19 @@ void CommandHandler::handleStateCommand(const char *command)
     if (canTransitionTo(targetState))
     {
         changeState(targetState);
-        Log.info("State changed to: %d\n", targetState);
+        Log.info("State changed to: %s\n", getStateName(targetState));
 
-       
         if (Global::mqttManager)
         {
             char statusMsg[50];
-            sprintf(statusMsg, "State changed to %d", targetState);
+            sprintf(statusMsg, "State changed to %s", getStateName(targetState));
             Global::mqttManager->publish(statusTopic(), statusMsg, false);
         }
-        Global::logInfoBoth("Command state -> %d", targetState);
+        Global::logInfoBoth("Command state -> %s", getStateName(targetState));
     }
     else
     {
-        Log.warning("Cannot transition to state %d from current state %d\n", targetState, currentState);
+        Log.warning("Cannot transition to state %s from current state %s\n", getStateName(targetState), getStateName(currentState));
     }
 }
 
@@ -107,13 +105,13 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish("esp/booking/status", "booked", false);
+                Global::mqttManager->publish(Global::commandBookingTopic.c_str(), "booked", false);
             }
             Global::logInfoMQTT("Booking command: book");
         }
         else
         {
-            Log.warning("Cannot book device in current state: %d\n", currentState);
+            Log.warning("Cannot book device in current state: %s\n", getStateName(currentState));
         }
     }
     else if (strcmp(command, "release") == 0)
@@ -125,13 +123,13 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish("esp/booking/status", "available", false);
+                Global::mqttManager->publish(Global::commandBookingTopic.c_str(), "available", false);
             }
             Global::logInfoMQTT("Booking command: release");
         }
         else
         {
-            Log.warning("Cannot release device in current state: %d\n", currentState);
+            Log.warning("Cannot release device in current state: %s\n", getStateName(currentState));
         }
     }
 }
@@ -155,7 +153,7 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
         }
         else
         {
-            Log.warning("Cannot start maintenance in current state: %d\n", currentState);
+            Log.warning("Cannot start maintenance in current state: %s\n", getStateName(currentState));
         }
     }
     else if (strcmp(command, "complete") == 0)
@@ -173,7 +171,7 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
         }
         else
         {
-            Log.warning("Cannot complete maintenance in current state: %d\n", currentState);
+            Log.warning("Cannot complete maintenance in current state: %s\n", getStateName(currentState));
         }
     }
 }
@@ -188,16 +186,16 @@ void CommandHandler::handleStatusCommand(const char *command)
         if (Global::mqttManager)
         {
             char statusMsg[100];
-            sprintf(statusMsg, "Current state: %d", currentState);
+            sprintf(statusMsg, "Current state: %s", getStateName(currentState));
             Global::mqttManager->publish(statusTopic(), statusMsg, false);
         }
-        Global::logInfoMQTT("Status requested -> %d", currentState);
+        Global::logInfoMQTT("Status requested -> %s", getStateName(currentState));
     }
 }
 
 bool CommandHandler::canTransitionTo(DeviceState newState)
 {
- 
+
     switch (currentState)
     {
     case STATE_AVAILABLE:
@@ -220,7 +218,7 @@ bool CommandHandler::canTransitionTo(DeviceState newState)
 
     case STATE_CONNECTED:
     case STATE_ERROR:
-        
+
         return (newState == STATE_AVAILABLE ||
                 newState == STATE_MAINTAINED ||
                 newState == STATE_UNAVAILABLE);
@@ -232,7 +230,7 @@ bool CommandHandler::canTransitionTo(DeviceState newState)
 
 void CommandHandler::changeState(DeviceState newState)
 {
-    Log.info("Changing state from %d to %d\n", currentState, newState);
+    Log.info("Changing state from %s to %s\n", getStateName(currentState), getStateName(newState));
     currentState = newState;
-    resetStateEntryFlags(); 
+    resetStateEntryFlags();
 }
