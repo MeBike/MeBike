@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { Station } from "../../../types/station";
-
+import Image from "next/image";
 const Page = () => {
   const stations: Station[] = [
     {
@@ -307,7 +307,7 @@ const Page = () => {
       {/* Header Section */}
       <div className="relative">
         <div className="w-full h-64 bg-gradient-to-r from-blue-600 to-green-600 relative overflow-hidden">
-          <img
+          <Image
             src="/cam-nang-Metro.jpeg"
             alt="Metro Guide"
             className="w-full h-full object-cover opacity-30"
