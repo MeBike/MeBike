@@ -20,6 +20,8 @@ enum DeviceState
 };
 extern DeviceState currentState;
 
+const char *getStateName(DeviceState state);
+
 namespace Global
 {
     extern std::unique_ptr<MQTTManager> mqttManager;

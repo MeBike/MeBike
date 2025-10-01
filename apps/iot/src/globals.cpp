@@ -39,7 +39,6 @@ namespace Global
         }
         Log.info("Message: %s\n", message.c_str());
 
-      
         CommandHandler::processCommand(topic, message.c_str());
     }
 
@@ -49,15 +48,40 @@ namespace Global
         mqttManager->setCallback(mqttCallback);
         if (mqttManager->connect())
         {
-         
+
             mqttManager->subscribe("esp/commands/state");
             mqttManager->subscribe("esp/commands/booking");
             mqttManager->subscribe("esp/commands/maintenance");
             mqttManager->subscribe("esp/commands/status");
-           
+
             mqttManager->subscribe("esp/commands");
 
             mqttManager->publish("esp/status", "ESP32 online", true);
         }
+    }
+}
+
+const char *getStateName(DeviceState state)
+{
+    switch (state)
+    {
+    case STATE_INIT:
+        return "INIT";
+    case STATE_CONNECTING_WIFI:
+        return "CONNECTING_WIFI";
+    case STATE_CONNECTED:
+        return "CONNECTED";
+    case STATE_ERROR:
+        return "ERROR";
+    case STATE_AVAILABLE:
+        return "AVAILABLE";
+    case STATE_BOOKED:
+        return "BOOKED";
+    case STATE_MAINTAINED:
+        return "MAINTAINED";
+    case STATE_UNAVAILABLE:
+        return "UNAVAILABLE";
+    default:
+        return "UNKNOWN";
     }
 }

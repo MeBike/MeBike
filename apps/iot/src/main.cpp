@@ -19,7 +19,7 @@ void setup()
   Global::initializeNetwork(); // this thing first
   currentState = STATE_CONNECTING_WIFI;
   Global::setupMQTT(config.mqttBrokerIP.c_str(), config.mqttPort, config.mqttUsername.c_str(), config.mqttPassword.c_str());
-  currentState = STATE_CONNECTED; 
+  currentState = STATE_CONNECTED;
 }
 
 void loop()
@@ -48,6 +48,6 @@ void loop()
     handleUnknownState();
     break;
   }
-  Log.info("Loop running in state %d\n", currentState);
+  Log.info("Loop running in state %s (%d)\n", getStateName(currentState), currentState);
   delay(2000);
 }
