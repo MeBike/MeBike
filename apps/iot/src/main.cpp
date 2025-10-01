@@ -19,7 +19,7 @@ void setup()
   Global::initializeNetwork(); // this thing first
   currentState = STATE_CONNECTING_WIFI;
   Global::setupMQTT(config.mqttBrokerIP.c_str(), config.mqttPort, config.mqttUsername.c_str(), config.mqttPassword.c_str());
-  currentState = STATE_CONNECTED;
+  currentState = STATE_CONNECTED; 
 }
 
 void loop()
@@ -31,6 +31,18 @@ void loop()
     break;
   case STATE_ERROR:
     handleErrorState();
+    break;
+  case STATE_AVAILABLE:
+    handleAvailableState();
+    break;
+  case STATE_BOOKED:
+    handleBookedState();
+    break;
+  case STATE_MAINTAINED:
+    handleMaintainedState();
+    break;
+  case STATE_UNAVAILABLE:
+    handleUnavailableState();
     break;
   default:
     handleUnknownState();

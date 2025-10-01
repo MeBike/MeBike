@@ -1,6 +1,7 @@
 #include "globals.h"
 #include <Arduino.h>
 #include <ArduinoLog.h>
+#include "CommandHandler.h"
 
 DeviceState currentState;
 
@@ -37,6 +38,9 @@ namespace Global
             message += (char)payload[i];
         }
         Log.info("Message: %s\n", message.c_str());
+
+      
+        CommandHandler::processCommand(topic, message.c_str());
     }
 
     void setupMQTT(const char *brokerIP, int port, const char *username, const char *pass)
@@ -45,7 +49,14 @@ namespace Global
         mqttManager->setCallback(mqttCallback);
         if (mqttManager->connect())
         {
+         
+            mqttManager->subscribe("esp/commands/state");
+            mqttManager->subscribe("esp/commands/booking");
+            mqttManager->subscribe("esp/commands/maintenance");
+            mqttManager->subscribe("esp/commands/status");
+           
             mqttManager->subscribe("esp/commands");
+
             mqttManager->publish("esp/status", "ESP32 online", true);
         }
     }

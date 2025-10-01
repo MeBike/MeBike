@@ -11,5 +11,11 @@ const unsigned long recoveryInterval = 5000;
 void handleConnectedState();
 void handleErrorState();
 void handleUnknownState();
+void handleAvailableState();
+void handleBookedState();
+void handleMaintainedState();
+void handleUnavailableState();
+
+void resetStateEntryFlags();
 
 #endif // STATEMACHINE_H

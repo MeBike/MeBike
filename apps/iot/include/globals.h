@@ -6,10 +6,17 @@
 #include "MQTTManager.h"
 enum DeviceState
 {
+    // Connection states
     STATE_INIT,
     STATE_CONNECTING_WIFI,
     STATE_CONNECTED,
-    STATE_ERROR
+    STATE_ERROR,
+
+    // Operational states
+    STATE_AVAILABLE,  // Ready for use
+    STATE_BOOKED,     // In use/reserved
+    STATE_MAINTAINED, // Under maintenance
+    STATE_UNAVAILABLE // Offline or faulty
 };
 extern DeviceState currentState;
 

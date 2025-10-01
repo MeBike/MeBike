@@ -107,6 +107,8 @@ Expected logs:
 - **Serial Monitor Issues**: Set baud to 74880, no flow control.
 - **Build Errors**: Run `platformio run --clean` to clear cache.
 
+
+
 ## Notes
 
 - The project uses dynamic memory for `MQTTManager` to load config at runtime.
