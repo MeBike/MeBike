@@ -113,34 +113,40 @@ void BufferedLogger::flush()
         return;
     }
 
-    std::string payload;
-    payload.reserve(_buffer.size() * 48); 
+    if (!_mqttManager->isConnected())
+    {
+        return;
+    }
+
+    std::vector<BufferedEntry> pending;
+    pending.reserve(_buffer.size());
 
     for (size_t i = 0; i < _buffer.size(); ++i)
     {
         const BufferedEntry &entry = _buffer[i];
         char timestampBuffer[16];
         snprintf(timestampBuffer, sizeof(timestampBuffer), "%lu", entry.timestamp);
-        payload.append(timestampBuffer);
-        payload.push_back(' ');
-        payload.append(severityLabel(entry.severity));
-        payload.append(": ");
-        payload.append(entry.message);
-        if (i + 1 < _buffer.size())
+
+        std::string payload = std::string(timestampBuffer) + " " + severityLabel(entry.severity) + ": " + entry.message;
+
+        if (!_mqttManager->publish(_topic.c_str(), payload.c_str(), false))
         {
-            payload.push_back('\n');
+            Log.warning("BufferedLogger failed to publish to %s\n", _topic.c_str());
+            pending.insert(pending.end(), _buffer.begin() + i, _buffer.end());
+            break;
         }
     }
 
-    if (!_mqttManager->publish(_topic.c_str(), payload.c_str(), false))
+    if (pending.empty())
     {
-        Log.warning("BufferedLogger failed to publish to %s\n", _topic.c_str());
-        return;
+        _buffer.clear();
+        _lastFlush = millis();
+        Log.verbose("BufferedLogger flushed %s\n", _topic.c_str());
     }
-
-    _buffer.clear();
-    _lastFlush = millis();
-    Log.verbose("BufferedLogger flushed %s\n", _topic.c_str());
+    else
+    {
+        _buffer.swap(pending);
+    }
 }
 
 void BufferedLogger::logToLocal(LogSeverity severity, const std::string &message)

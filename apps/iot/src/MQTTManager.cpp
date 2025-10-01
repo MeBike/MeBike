@@ -58,3 +58,8 @@ void MQTTManager::setCallback(void (*callback)(char *, byte *, unsigned int))
 {
     _client.setCallback(callback);
 }
+
+bool MQTTManager::isConnected()
+{
+    return _client.connected();
+}

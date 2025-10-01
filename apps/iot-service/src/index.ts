@@ -16,7 +16,14 @@ client.on("connect", () => {
       console.warn("Subscribed to esp/status");
     }
   });
-
+  client.subscribe("esp/logs/*", (err) => {
+    if (err) {
+      console.error("Subscribe error:", err);
+    }
+    else {
+      console.warn("Subscribed to esp/logs/*");
+    }
+  });
   client.publish("esp/commands", "Hello from JS!TESTER", (err) => {
     if (err) {
       console.error("Publish error:", err);

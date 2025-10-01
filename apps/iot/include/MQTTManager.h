@@ -13,6 +13,7 @@ public:
     bool publish(const char *topic, const char *message, bool retained = false);
     bool subscribe(const char *topic);
     void setCallback(void (*callback)(char *, byte *, unsigned int));
+    bool isConnected();
 
 private:
     PubSubClient _client;
