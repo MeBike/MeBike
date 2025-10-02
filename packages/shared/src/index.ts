@@ -1,5 +1,6 @@
-import { z } from "zod";
+import { z } from "./zod";
 
+export * from "./contracts/iot-service";
 export * from "./iot/topics";
 
 export const UserSchema = z.object({

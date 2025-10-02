@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "../zod";
 
 const COMMAND_ROOT = "esp/commands" as const;
 const STATUS_ROOT = "esp/status" as const;
@@ -89,12 +89,17 @@ export type IotPublishPayloadByTopic = {
 
 const MAC_SANITISE_REGEX = /[^A-F0-9]/gi;
 
-export function topicWithMac<T extends string>(baseTopic: T, rawMac?: string | null): T | `${T}/${string}` {
+export function normalizeMac(rawMac?: string | null): string | null {
   if (!rawMac) {
-    return baseTopic;
+    return null;
   }
 
   const mac = rawMac.replace(MAC_SANITISE_REGEX, "").toUpperCase();
+  return mac || null;
+}
+
+export function topicWithMac<T extends string>(baseTopic: T, rawMac?: string | null): T | `${T}/${string}` {
+  const mac = normalizeMac(rawMac);
   if (!mac) {
     return baseTopic;
   }

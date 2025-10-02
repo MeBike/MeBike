@@ -8,3 +8,4 @@ node_modules
 dist
 .apps/iot-service/*.md
 apps/iot-service/folder.md
+/hono
