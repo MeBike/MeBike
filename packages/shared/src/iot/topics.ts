@@ -10,6 +10,7 @@ export const IOT_COMMAND_TOPICS = {
   root: COMMAND_ROOT,
   state: `${COMMAND_ROOT}/state` as const,
   booking: `${COMMAND_ROOT}/booking` as const,
+  reservation: `${COMMAND_ROOT}/reservation` as const,
   maintenance: `${COMMAND_ROOT}/maintenance` as const,
   status: `${COMMAND_ROOT}/status` as const,
 } as const;
@@ -30,6 +31,8 @@ export type IotPublishTopic
 export const IOT_STATE_LABELS = [
   "available",
   "booked",
+  "reserved",
+  "broken",
   "maintained",
   "unavailable",
 ] as const;
@@ -39,9 +42,13 @@ export type IotStateLabel = (typeof IOT_STATE_LABELS)[number];
 export const IotStateCommandSchema = z.enum(IOT_STATE_LABELS);
 export type IotStateCommand = z.infer<typeof IotStateCommandSchema>;
 
-export const IOT_BOOKING_COMMANDS = ["book", "release"] as const;
+export const IOT_BOOKING_COMMANDS = ["book", "claim", "release"] as const;
 export const IotBookingCommandSchema = z.enum(IOT_BOOKING_COMMANDS);
 export type IotBookingCommand = z.infer<typeof IotBookingCommandSchema>;
+
+export const IOT_RESERVATION_COMMANDS = ["reserve", "cancel"] as const;
+export const IotReservationCommandSchema = z.enum(IOT_RESERVATION_COMMANDS);
+export type IotReservationCommand = z.infer<typeof IotReservationCommandSchema>;
 
 export const IOT_MAINTENANCE_COMMANDS = ["start", "complete"] as const;
 export const IotMaintenanceCommandSchema = z.enum(IOT_MAINTENANCE_COMMANDS);
@@ -76,6 +83,7 @@ export type IotCommandPayloadByTopic = {
   [IOT_COMMAND_TOPICS.root]: IotStateCommand;
   [IOT_COMMAND_TOPICS.state]: IotStateCommand;
   [IOT_COMMAND_TOPICS.booking]: IotBookingCommand;
+  [IOT_COMMAND_TOPICS.reservation]: IotReservationCommand;
   [IOT_COMMAND_TOPICS.maintenance]: IotMaintenanceCommand;
   [IOT_COMMAND_TOPICS.status]: IotStatusCommand;
 };
@@ -116,8 +124,10 @@ export const IotDeviceStateSchema = z.enum([
   "STATE_CONNECTING_WIFI",
   "STATE_CONNECTED",
   "STATE_ERROR",
+  "STATE_RESERVED",
   "STATE_AVAILABLE",
   "STATE_BOOKED",
+  "STATE_BROKEN",
   "STATE_MAINTAINED",
   "STATE_UNAVAILABLE",
 ]);
@@ -129,8 +139,10 @@ export const DEVICE_STATE_TO_STATUS: Record<IotDeviceState, IotStateLabel> = {
   STATE_CONNECTING_WIFI: "unavailable",
   STATE_CONNECTED: "available",
   STATE_ERROR: "unavailable",
+  STATE_RESERVED: "reserved",
   STATE_AVAILABLE: "available",
   STATE_BOOKED: "booked",
+  STATE_BROKEN: "broken",
   STATE_MAINTAINED: "maintained",
   STATE_UNAVAILABLE: "unavailable",
 };
@@ -140,8 +152,10 @@ export const IOT_DEVICE_STATE_ORDER = [
   "STATE_CONNECTING_WIFI",
   "STATE_CONNECTED",
   "STATE_ERROR",
+  "STATE_RESERVED",
   "STATE_AVAILABLE",
   "STATE_BOOKED",
+  "STATE_BROKEN",
   "STATE_MAINTAINED",
   "STATE_UNAVAILABLE",
 ] as const satisfies ReadonlyArray<IotDeviceState>;

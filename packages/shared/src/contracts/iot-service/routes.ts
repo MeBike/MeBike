@@ -9,6 +9,7 @@ import {
   ErrorResponseSchema,
   HealthResponseSchema,
   MaintenanceCommandBodySchema,
+  ReservationCommandBodySchema,
   StateCommandBodySchema,
   StatusCommandBodySchema,
 } from "./schemas";
@@ -182,6 +183,30 @@ export const sendMaintenanceCommandRoute = createRoute({
   },
 });
 
+export const sendReservationCommandRoute = createRoute({
+  method: "post",
+  path: "/v1/devices/:deviceId/commands/reservation",
+  summary: "Send a reservation command",
+  description: "Reserve or cancel reservation for a device.",
+  tags: ["Commands"],
+  request: {
+    params: z.object({
+      deviceId: DeviceIdSchema,
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: ReservationCommandBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    ...commandResponses,
+    ...commandErrorResponses,
+  },
+});
+
 export const requestStatusCommandRoute = createRoute({
   method: "post",
   path: "/v1/devices/:deviceId/commands/status",
@@ -214,6 +239,7 @@ export const iotServiceRoutes = {
   sendStateCommand: sendStateCommandRoute,
   sendBookingCommand: sendBookingCommandRoute,
   sendMaintenanceCommand: sendMaintenanceCommandRoute,
+  sendReservationCommand: sendReservationCommandRoute,
   requestStatusCommand: requestStatusCommandRoute,
 } as const;
 

@@ -9,15 +9,15 @@ bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &to
     Log.info("Connecting to WiFi...");
     WiFi.begin(ssid, password);
 
-    const int maxAttempts = 20; 
+    const int maxAttempts = 20;
     int attempts = 0;
 
     while (WiFi.status() != WL_CONNECTED && attempts < maxAttempts)
     {
         delay(500);
         attempts++;
-        if (attempts % 4 == 0) //4000 % 4 = 0 so log every 2 seconds == every 4 attempts
-        { 
+        if (attempts % 4 == 0) // 4000 % 4 = 0 so log every 2 seconds == every 4 attempts
+        {
             Log.info("WiFi connection attempt %d/%d...\n", attempts, maxAttempts);
         }
     }
@@ -29,6 +29,7 @@ bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &to
         topics.logTopic = makeTopicWithMac("esp/logs");
         topics.commandStateTopic = makeTopicWithMac("esp/commands/state");
         topics.commandBookingTopic = makeTopicWithMac("esp/commands/booking");
+        topics.commandReservationTopic = makeTopicWithMac("esp/commands/reservation");
         topics.commandMaintenanceTopic = makeTopicWithMac("esp/commands/maintenance");
         topics.commandStatusTopic = makeTopicWithMac("esp/commands/status");
         topics.commandRootTopic = makeTopicWithMac("esp/commands");
