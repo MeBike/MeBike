@@ -6,7 +6,7 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503,
 };
-
+import { saveAuthData , clearAuthData , getAccessToken , refreshAccessToken} from "../../utils/auth";
 export class FetchHttpClient {
   private baseURL: string;
   private isRefreshing = false;
@@ -17,31 +17,7 @@ export class FetchHttpClient {
   constructor(baseURL: string) {
     this.baseURL = baseURL;
   }
-  private async refreshAccessToken(): Promise<string> {
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (!refreshToken) {
-      throw new Error("No refresh token available");
-    }
-    const response = await fetch(`${this.baseURL}/auth/refresh`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    if (!response.ok) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-      window.location.href = "/login";
-      throw new Error("Refresh token expired");
-    }
-    const data = await response.json();
-    localStorage.setItem("access_token", data.access_token);
-    if (data.refresh_token) {
-      localStorage.setItem("refresh_token", data.refresh_token);
-    }
-    return data.access_token;
-  }
+
   private processQueue(error: Error | null, token: string | null = null) {
     this.failedQueue.forEach(({ resolve, reject }) => {
       if (error) {
@@ -68,7 +44,7 @@ export class FetchHttpClient {
       ...(options.headers as Record<string, string> || {}),
     };
 
-    const accessToken = localStorage.getItem("access_token");
+    const accessToken = getAccessToken();
     if (accessToken && !headers["Authorization"]) {
       headers["Authorization"] = `Bearer ${accessToken}`;
     }
@@ -78,13 +54,11 @@ export class FetchHttpClient {
         headers,
       });
       if (response.status === HTTP_STATUS.UNAUTHORIZED) {
-        // Nếu đang refresh token, thêm request vào queue
         if (this.isRefreshing) {
           return new Promise((resolve, reject) => {
             this.failedQueue.push({ resolve, reject });
           }).then(async () => {
-            // Retry request với token mới
-            const newToken = localStorage.getItem("access_token");
+            const newToken = getAccessToken();
             if (newToken) {
               headers["Authorization"] = `Bearer ${newToken}`;
             }
@@ -95,12 +69,10 @@ export class FetchHttpClient {
             return await res.json();
           });
         }
-        
         this.isRefreshing = true;
         try {
-          const newToken = await this.refreshAccessToken();
+          const newToken = await refreshAccessToken(this.baseURL);
           this.processQueue(null, newToken);
-          // Retry request với token mới
           headers["Authorization"] = `Bearer ${newToken}`;
           const retryResponse = await fetch(fullUrl, {
             ...options,
@@ -117,7 +89,6 @@ export class FetchHttpClient {
           this.isRefreshing = false;
         }
       }
-
       if (!response.ok) {
         switch (response.status) {
           case HTTP_STATUS.FORBIDDEN:
