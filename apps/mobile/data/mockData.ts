@@ -1,0 +1,338 @@
+
+import { Bike, Station, RentalSession } from '@/types/BikeTypes';
+
+export const mockBikes: Bike[] = [
+  // Hồ Gươm Station Bikes
+  {
+    id: 'bike-001',
+    qrCode: 'QR001',
+    batteryLevel: 85,
+    isAvailable: true,
+    location: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Hồ Gươm Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-001',
+    positionInStation: { x: 15, y: 20, slotNumber: 1 }
+  },
+  {
+    id: 'bike-002',
+    qrCode: 'QR002',
+    batteryLevel: 92,
+    isAvailable: true,
+    location: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Hồ Gươm Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-001',
+    positionInStation: { x: 25, y: 20, slotNumber: 2 }
+  },
+  {
+    id: 'bike-003',
+    qrCode: 'QR003',
+    batteryLevel: 67,
+    isAvailable: false,
+    location: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Hồ Gươm Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-001',
+    positionInStation: { x: 35, y: 20, slotNumber: 3 }
+  },
+  {
+    id: 'bike-004',
+    qrCode: 'QR004',
+    batteryLevel: 45,
+    isAvailable: true,
+    location: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Hồ Gươm Metro Station'
+    },
+    type: 'manual',
+    pricePerMinute: 2000,
+    stationId: 'station-001',
+    positionInStation: { x: 45, y: 20, slotNumber: 4 }
+  },
+  {
+    id: 'bike-005',
+    qrCode: 'QR005',
+    batteryLevel: 78,
+    isAvailable: true,
+    location: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Hồ Gươm Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-001',
+    positionInStation: { x: 55, y: 20, slotNumber: 5 }
+  },
+  {
+    id: 'bike-006',
+    qrCode: 'QR006',
+    batteryLevel: 0,
+    isAvailable: true,
+    location: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Hồ Gươm Metro Station'
+    },
+    type: 'manual',
+    pricePerMinute: 2000,
+    stationId: 'station-001',
+    positionInStation: { x: 65, y: 20, slotNumber: 6 }
+  },
+  {
+    id: 'bike-007',
+    qrCode: 'QR007',
+    batteryLevel: 89,
+    isAvailable: true,
+    location: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Hồ Gươm Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-001',
+    positionInStation: { x: 75, y: 20, slotNumber: 7 }
+  },
+  {
+    id: 'bike-008',
+    qrCode: 'QR008',
+    batteryLevel: 34,
+    isAvailable: true,
+    location: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Hồ Gươm Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-001',
+    positionInStation: { x: 85, y: 20, slotNumber: 8 }
+  },
+
+  // Tràng Tiền Station Bikes
+  {
+    id: 'bike-009',
+    qrCode: 'QR009',
+    batteryLevel: 91,
+    isAvailable: true,
+    location: {
+      latitude: 21.0245,
+      longitude: 105.8412,
+      address: 'Tràng Tiền Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-002',
+    positionInStation: { x: 20, y: 30, slotNumber: 1 }
+  },
+  {
+    id: 'bike-010',
+    qrCode: 'QR010',
+    batteryLevel: 56,
+    isAvailable: false,
+    location: {
+      latitude: 21.0245,
+      longitude: 105.8412,
+      address: 'Tràng Tiền Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-002',
+    positionInStation: { x: 30, y: 30, slotNumber: 2 }
+  },
+  {
+    id: 'bike-011',
+    qrCode: 'QR011',
+    batteryLevel: 73,
+    isAvailable: true,
+    location: {
+      latitude: 21.0245,
+      longitude: 105.8412,
+      address: 'Tràng Tiền Metro Station'
+    },
+    type: 'manual',
+    pricePerMinute: 2000,
+    stationId: 'station-002',
+    positionInStation: { x: 40, y: 30, slotNumber: 3 }
+  },
+  {
+    id: 'bike-012',
+    qrCode: 'QR012',
+    batteryLevel: 88,
+    isAvailable: true,
+    location: {
+      latitude: 21.0245,
+      longitude: 105.8412,
+      address: 'Tràng Tiền Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-002',
+    positionInStation: { x: 50, y: 30, slotNumber: 4 }
+  },
+  {
+    id: 'bike-013',
+    qrCode: 'QR013',
+    batteryLevel: 42,
+    isAvailable: true,
+    location: {
+      latitude: 21.0245,
+      longitude: 105.8412,
+      address: 'Tràng Tiền Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-002',
+    positionInStation: { x: 60, y: 30, slotNumber: 5 }
+  },
+
+  // Cầu Giấy Station Bikes
+  {
+    id: 'bike-014',
+    qrCode: 'QR014',
+    batteryLevel: 95,
+    isAvailable: true,
+    location: {
+      latitude: 21.0378,
+      longitude: 105.8342,
+      address: 'Cầu Giấy Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-003',
+    positionInStation: { x: 15, y: 25, slotNumber: 1 }
+  },
+  {
+    id: 'bike-015',
+    qrCode: 'QR015',
+    batteryLevel: 67,
+    isAvailable: true,
+    location: {
+      latitude: 21.0378,
+      longitude: 105.8342,
+      address: 'Cầu Giấy Metro Station'
+    },
+    type: 'electric',
+    pricePerMinute: 3000,
+    stationId: 'station-003',
+    positionInStation: { x: 25, y: 25, slotNumber: 2 }
+  },
+  {
+    id: 'bike-016',
+    qrCode: 'QR016',
+    batteryLevel: 0,
+    isAvailable: true,
+    location: {
+      latitude: 21.0378,
+      longitude: 105.8342,
+      address: 'Cầu Giấy Metro Station'
+    },
+    type: 'manual',
+    pricePerMinute: 2000,
+    stationId: 'station-003',
+    positionInStation: { x: 35, y: 25, slotNumber: 3 }
+  }
+];
+
+export const mockStations: Station[] = [
+  {
+    id: 'station-001',
+    name: 'Hồ Gươm Metro Station',
+    location: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Số 1 Đinh Tiên Hoàng, Hoàn Kiếm, Hà Nội'
+    },
+    availableBikes: 8,
+    totalSlots: 12,
+    isActive: true,
+    bikes: mockBikes.filter(bike => bike.stationId === 'station-001'),
+    layout: {
+      width: 100,
+      height: 60,
+      entrances: [
+        { x: 50, y: 5, type: 'main' },
+        { x: 10, y: 55, type: 'secondary' }
+      ]
+    }
+  },
+  {
+    id: 'station-002',
+    name: 'Tràng Tiền Metro Station',
+    location: {
+      latitude: 21.0245,
+      longitude: 105.8412,
+      address: 'Tràng Tiền, Hoàn Kiếm, Hà Nội'
+    },
+    availableBikes: 5,
+    totalSlots: 10,
+    isActive: true,
+    bikes: mockBikes.filter(bike => bike.stationId === 'station-002'),
+    layout: {
+      width: 80,
+      height: 50,
+      entrances: [
+        { x: 40, y: 5, type: 'main' }
+      ]
+    }
+  },
+  {
+    id: 'station-003',
+    name: 'Cầu Giấy Metro Station',
+    location: {
+      latitude: 21.0378,
+      longitude: 105.8342,
+      address: 'Cầu Giấy, Hà Nội'
+    },
+    availableBikes: 12,
+    totalSlots: 15,
+    isActive: true,
+    bikes: mockBikes.filter(bike => bike.stationId === 'station-003'),
+    layout: {
+      width: 120,
+      height: 70,
+      entrances: [
+        { x: 60, y: 5, type: 'main' },
+        { x: 20, y: 65, type: 'secondary' },
+        { x: 100, y: 65, type: 'secondary' }
+      ]
+    }
+  }
+];
+
+export const mockRentalHistory: RentalSession[] = [
+  {
+    id: 'rental-001',
+    bikeId: 'bike-001',
+    startTime: new Date('2024-01-15T08:30:00'),
+    endTime: new Date('2024-01-15T09:15:00'),
+    startLocation: {
+      latitude: 21.0285,
+      longitude: 105.8542,
+      address: 'Hồ Gươm Metro Station'
+    },
+    endLocation: {
+      latitude: 21.0245,
+      longitude: 105.8412,
+      address: 'Tràng Tiền Metro Station'
+    },
+    duration: 45,
+    cost: 135000,
+    status: 'completed'
+  }
+];
