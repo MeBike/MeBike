@@ -5,20 +5,22 @@ package auth;
 message User {
   string id = 1;
   string email = 2;
-  string name = 3;
-  int32 YOB = 4;
+  string fullName = 3;
+  string phoneNumber = 4;
+  string password = 5;
+  string role = 6;
 }
 
-message LoginUserRequest{
+message LoginUserRequest {
   string email = 1;
   string password = 2;
 }
 
 message CreateUserRequest {
   string email = 1;
-  string name = 2;
-  string password = 3;
-  int32 YOB = 4;
+  string fullName = 2;
+  string phoneNumber = 3;
+  string password = 4;
 }
 
 message Token {
@@ -26,7 +28,7 @@ message Token {
   string refreshToken = 2;
 }
 
-message LoginUserResponse{
+message LoginUserResponse {
   bool success = 1;
   string message = 2;
   Token data = 3;
@@ -50,11 +52,11 @@ message RefreshTokenRequest {
   string refreshToken = 1;
 }
 
-message RefreshToken{
+message RefreshToken {
   string accessToken = 1;
 }
 
-message ResfreshTokenResponse {
+message RefreshTokenResponse {
   bool success = 1;
   string message = 2;
   RefreshToken data = 3;
@@ -64,7 +66,7 @@ message ResfreshTokenResponse {
 service AuthService {
   rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
   rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
-  rpc RefreshToken(RefreshTokenRequest) returns (ResfreshTokenResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
 }
 
 message Empty {}

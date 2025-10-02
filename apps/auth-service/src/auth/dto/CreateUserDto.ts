@@ -6,11 +6,11 @@ export class CreateUserDto {
   email!: string;
 
   @IsNotEmpty()
-  full_name!: string;
+  fullName!: string;
 
   @IsNotEmpty()
   @Length(10, 10, { message: 'Phone Number must be 10 letters' })
-  phone_number!: string;
+  phoneNumber!: string;
 
   @MinLength(6)
   @IsNotEmpty()

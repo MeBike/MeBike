@@ -14,7 +14,7 @@ async function bootstrap() {
       options: {
         package: ['auth'],
         protoPath: [
-          join(__dirname, '../../../common/src/lib/proto/auth.proto'),
+          join(__dirname, '../../../packages/shared/src/proto/auth.proto'),
         ],
         url: `0.0.0.0:${process.env.AUTH_SERVICE_PORT}`,
       },

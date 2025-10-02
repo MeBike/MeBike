@@ -17,8 +17,8 @@ datasource db {
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique
-  full_name    String
-  phone_number String
+  fullName    String
+  phoneNumber String
   password     String
   role         String
   createdAt    DateTime @default(now())
