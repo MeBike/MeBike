@@ -22,6 +22,7 @@
       "bundleIdentifier": "com.aaang123.mobile"
     },
     "android": {
+      "package": "com.aaang123.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
