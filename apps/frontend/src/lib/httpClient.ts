@@ -17,7 +17,6 @@ export class FetchHttpClient {
   constructor(baseURL: string) {
     this.baseURL = baseURL;
   }
-
   private processQueue(error: Error | null, token: string | null = null) {
     this.failedQueue.forEach(({ resolve, reject }) => {
       if (error) {
@@ -26,10 +25,8 @@ export class FetchHttpClient {
         resolve(token);
       }
     });
-    
     this.failedQueue = [];
   }
-
   private async request<T>(
     url: string,
     options: RequestInit & { params?: Record<string, string> } = {}
@@ -43,7 +40,6 @@ export class FetchHttpClient {
       "Content-Type": "application/json;charset=UTF-8",
       ...(options.headers as Record<string, string> || {}),
     };
-
     const accessToken = getAccessToken();
     if (accessToken && !headers["Authorization"]) {
       headers["Authorization"] = `Bearer ${accessToken}`;

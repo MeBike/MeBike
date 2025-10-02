@@ -5,7 +5,7 @@ interface saveAuthDataProps{
     user_role : UserRole;
 }
 let accessTokenCache : string | null = null;
-  
+
 export const getAccessToken = ():string | null => {
     if(accessTokenCache){
         return accessTokenCache;
@@ -20,16 +20,12 @@ export const getAccessToken = ():string | null => {
 export const saveAuthData = (props: saveAuthDataProps) => {
     accessTokenCache = props.access_token;
     sessionStorage.setItem("access_token", props.access_token);
-    localStorage.setItem("user_role", props.user_role);
     document.cookie = `refresh_token=${props.refresh_token}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
-    document.cookie = `user_role=${props.user_role}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
 };
 export const clearAuthData = () => {
     accessTokenCache = null;
-    localStorage.removeItem("user_role");
     sessionStorage.removeItem("access_token");
     document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-    document.cookie = 'user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
 }
 export const getRefreshTokenFromCookie = ():string | null => {
     const match = document.cookie.match(new RegExp('(^| )refresh_token=([^;]+)'));
