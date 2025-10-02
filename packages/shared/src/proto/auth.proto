@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package auth;
+
+message User {
+  string id = 1;
+  string email = 2;
+  string name = 3;
+  int32 YOB = 4;
+}
+
+message LoginUserRequest{
+  string email = 1;
+  string password = 2;
+}
+
+message CreateUserRequest {
+  string email = 1;
+  string name = 2;
+  string password = 3;
+  int32 YOB = 4;
+}
+
+message Token {
+  string accessToken = 1;
+  string refreshToken = 2;
+}
+
+message LoginUserResponse{
+  bool success = 1;
+  string message = 2;
+  Token data = 3;
+  repeated string errors = 4;
+}
+
+message CreateUserResponse {
+  bool success = 1;
+  string message = 2;
+  User data = 3;
+  repeated string errors = 4;
+}
+
+message UsersResponse {
+  bool success = 1;
+  string message = 2;
+  repeated User data = 3; 
+}
+
+message RefreshTokenRequest {
+  string refreshToken = 1;
+}
+
+message RefreshToken{
+  string accessToken = 1;
+}
+
+message ResfreshTokenResponse {
+  bool success = 1;
+  string message = 2;
+  RefreshToken data = 3;
+  repeated string errors = 4;
+}
+
+service AuthService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (ResfreshTokenResponse);
+}
+
+message Empty {}

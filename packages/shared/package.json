@@ -22,10 +22,20 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/microservices": "^11.1.6",
+    "@nestjs/passport": "^11.0.5",
+    "@prisma/client": "^6.16.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "dotenv": "^17.2.1",
+    "passport-jwt": "^4.0.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@mebike/tsconfig": "workspace:*",
+    "@types/passport-jwt": "^4.0.1",
     "typescript": "^5.6.3"
   }
 }
