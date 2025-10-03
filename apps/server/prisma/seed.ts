@@ -23,8 +23,6 @@ async function main() {
       },
     });
   }
-
-  console.log("✅ Stations seeded successfully!");
 }
 
 main()
