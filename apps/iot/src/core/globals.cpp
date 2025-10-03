@@ -17,6 +17,7 @@ namespace Global
     std::string logTopic = "esp/logs";
     std::string commandStateTopic = "esp/commands/state";
     std::string commandBookingTopic = "esp/commands/booking";
+    std::string commandReservationTopic = "esp/commands/reservation";
     std::string commandMaintenanceTopic = "esp/commands/maintenance";
     std::string commandStatusTopic = "esp/commands/status";
     std::string commandRootTopic = "esp/commands";
@@ -30,6 +31,7 @@ namespace Global
             logTopic = topics.logTopic;
             commandStateTopic = topics.commandStateTopic;
             commandBookingTopic = topics.commandBookingTopic;
+            commandReservationTopic = topics.commandReservationTopic;
             commandMaintenanceTopic = topics.commandMaintenanceTopic;
             commandStatusTopic = topics.commandStatusTopic;
             commandRootTopic = topics.commandRootTopic;
@@ -61,10 +63,14 @@ const char *getStateName(DeviceState state)
         return "CONNECTED";
     case STATE_ERROR:
         return "ERROR";
+    case STATE_RESERVED:
+        return "RESERVED";
     case STATE_AVAILABLE:
         return "AVAILABLE";
     case STATE_BOOKED:
         return "BOOKED";
+    case STATE_BROKEN:
+        return "BROKEN";
     case STATE_MAINTAINED:
         return "MAINTAINED";
     case STATE_UNAVAILABLE:

@@ -40,17 +40,29 @@ void loop()
   }
   switch (currentState)
   {
+  case STATE_INIT:
+    handleInitState();
+    break;
+  case STATE_CONNECTING_WIFI:
+    handleConnectingWifiState();
+    break;
   case STATE_CONNECTED:
     handleConnectedState();
     break;
   case STATE_ERROR:
     handleErrorState();
     break;
+  case STATE_RESERVED:
+    handleReservedState();
+    break;
   case STATE_AVAILABLE:
     handleAvailableState();
     break;
   case STATE_BOOKED:
     handleBookedState();
+    break;
+  case STATE_BROKEN:
+    handleBrokenState();
     break;
   case STATE_MAINTAINED:
     handleMaintainedState();

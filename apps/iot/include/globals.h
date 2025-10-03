@@ -18,8 +18,10 @@ enum DeviceState
     STATE_ERROR,
 
     // Operational states
+    STATE_RESERVED,   //  đã bị thuê
     STATE_AVAILABLE,  // Ready for use
     STATE_BOOKED,     // In use/reserved
+    STATE_BROKEN,     // hư 
     STATE_MAINTAINED, // Under maintenance
     STATE_UNAVAILABLE // Offline or faulty
 };
@@ -38,6 +40,7 @@ namespace Global
     extern std::string logTopic;
     extern std::string commandStateTopic;
     extern std::string commandBookingTopic;
+    extern std::string commandReservationTopic;
     extern std::string commandMaintenanceTopic;
     extern std::string commandStatusTopic;
     extern std::string commandRootTopic;
