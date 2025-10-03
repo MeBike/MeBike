@@ -9,6 +9,7 @@ import {
   ErrorResponseSchema,
   HealthResponseSchema,
   MaintenanceCommandBodySchema,
+  ReservationCommandBodySchema,
   StateCommandBodySchema,
   StatusCommandBodySchema,
 } from "./schemas";
@@ -114,7 +115,11 @@ export const sendStateCommandRoute = createRoute({
   method: "post",
   path: "/v1/devices/:deviceId/commands/state",
   summary: "Send a state command",
-  description: "Change the operational state of a device.",
+  description:
+    "**Low-level state manipulation** for administrative purposes. "
+    + "Directly changes device state if transition is allowed by the state machine. "
+    + "Use workflow commands (booking, reservation, maintenance) for user-facing operations. "
+    + "Available states: available, reserved, booked, broken, maintained, unavailable.",
   tags: ["Commands"],
   request: {
     params: z.object({
@@ -138,7 +143,10 @@ export const sendBookingCommandRoute = createRoute({
   method: "post",
   path: "/v1/devices/:deviceId/commands/booking",
   summary: "Send a booking command",
-  description: "Trigger a booking workflow on the device.",
+  description:
+    "**User-facing booking workflow.** "
+    + "Commands: `book` (start using bike), `claim` (activate reservation), `release` (finish ride). "
+    + "Includes business logic and additional status publishing beyond simple state changes.",
   tags: ["Commands"],
   request: {
     params: z.object({
@@ -162,7 +170,10 @@ export const sendMaintenanceCommandRoute = createRoute({
   method: "post",
   path: "/v1/devices/:deviceId/commands/maintenance",
   summary: "Send a maintenance command",
-  description: "Update the maintenance state of a device.",
+  description:
+    "**Maintenance workflow.** "
+    + "Commands: `start` (begin maintenance), `complete` (return to service). "
+    + "Typically used by admins or automated systems to mark devices for servicing.",
   tags: ["Commands"],
   request: {
     params: z.object({
@@ -172,6 +183,33 @@ export const sendMaintenanceCommandRoute = createRoute({
       content: {
         "application/json": {
           schema: MaintenanceCommandBodySchema,
+        },
+      },
+    },
+  },
+  responses: {
+    ...commandResponses,
+    ...commandErrorResponses,
+  },
+});
+
+export const sendReservationCommandRoute = createRoute({
+  method: "post",
+  path: "/v1/devices/:deviceId/commands/reservation",
+  summary: "Send a reservation command",
+  description:
+    "**Reservation workflow.** "
+    + "Commands: `reserve` (hold bike for 5-15 min), `cancel` (cancel before claiming). "
+    + "Typically used before booking when user wants to ensure bike availability.",
+  tags: ["Commands"],
+  request: {
+    params: z.object({
+      deviceId: DeviceIdSchema,
+    }),
+    body: {
+      content: {
+        "application/json": {
+          schema: ReservationCommandBodySchema,
         },
       },
     },
@@ -214,6 +252,7 @@ export const iotServiceRoutes = {
   sendStateCommand: sendStateCommandRoute,
   sendBookingCommand: sendBookingCommandRoute,
   sendMaintenanceCommand: sendMaintenanceCommandRoute,
+  sendReservationCommand: sendReservationCommandRoute,
   requestStatusCommand: requestStatusCommandRoute,
 } as const;
 

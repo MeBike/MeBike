@@ -32,8 +32,8 @@ export default function LoginScreen() {
     // await signInWithEmail(email, password);
     // Alert.alert('Success', 'Login functionality will be implemented');
     
-    // Temporary: Go to StationDetail for testing
-    navigation.navigate('StationDetail', { stationId: 'station-001' });
+    // Sau khi đăng nhập, chuyển sang màn hình chọn trạm
+    navigation.navigate('StationSelect');
   };
 
   const handleGoogleLogin = async () => {
@@ -115,7 +115,7 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
 
-          <View style={styles.divider}>
+          {/* <View style={styles.divider}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>hoặc</Text>
             <View style={styles.dividerLine} />
@@ -128,7 +128,7 @@ export default function LoginScreen() {
           >
             <IconSymbol name="globe" size={20} color={BikeColors.textPrimary} />
             <Text style={styles.googleButtonText}>Đăng nhập với Google</Text>
-          </Pressable>
+          </Pressable> */}
 
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Chưa có tài khoản? </Text>

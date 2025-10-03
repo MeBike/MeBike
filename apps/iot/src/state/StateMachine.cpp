@@ -7,10 +7,15 @@
 unsigned long lastRecoveryAttempt = 0;
 int recoveryRetries = 0;
 
+unsigned long lastMqttReconnectAttempt = 0;
+int mqttReconnectRetries = 0;
+
 static bool availableStateEntryPublished = false;
 static bool bookedStateEntryPublished = false;
 static bool maintainedStateEntryPublished = false;
 static bool unavailableStateEntryPublished = false;
+static bool reservedStateEntryPublished = false;
+static bool brokenStateEntryPublished = false;
 
 static const char *statusTopic()
 {
@@ -23,6 +28,82 @@ void resetStateEntryFlags()
     bookedStateEntryPublished = false;
     maintainedStateEntryPublished = false;
     unavailableStateEntryPublished = false;
+    reservedStateEntryPublished = false;
+    brokenStateEntryPublished = false;
+}
+
+bool ensureMqttConnected()
+{
+    if (!Global::mqttManager)
+    {
+        return false;
+    }
+
+ 
+    if (Global::mqttManager->isConnected())
+    {
+        mqttReconnectRetries = 0;
+        return true;
+    }
+
+   
+    unsigned long now = millis();
+
+  
+    if (now - lastMqttReconnectAttempt < mqttReconnectInterval)
+    {
+        return false;
+    }
+
+    lastMqttReconnectAttempt = now;
+    mqttReconnectRetries++;
+
+    Log.warning("MQTT disconnected, attempting reconnection (attempt %d/%d)...\n",
+                mqttReconnectRetries, maxMqttReconnectRetries);
+
+    if (Global::mqttManager->connect())
+    {
+        Log.info("MQTT reconnected successfully!\n");
+
+      
+        if (!Global::commandStateTopic.empty())
+            Global::mqttManager->subscribe(Global::commandStateTopic.c_str());
+        if (!Global::commandBookingTopic.empty())
+            Global::mqttManager->subscribe(Global::commandBookingTopic.c_str());
+        if (!Global::commandReservationTopic.empty())
+            Global::mqttManager->subscribe(Global::commandReservationTopic.c_str());
+        if (!Global::commandMaintenanceTopic.empty())
+            Global::mqttManager->subscribe(Global::commandMaintenanceTopic.c_str());
+        if (!Global::commandStatusTopic.empty())
+            Global::mqttManager->subscribe(Global::commandStatusTopic.c_str());
+        if (!Global::commandRootTopic.empty())
+            Global::mqttManager->subscribe(Global::commandRootTopic.c_str());
+
+        
+        Global::mqttManager->subscribe("esp/commands/state");
+        Global::mqttManager->subscribe("esp/commands/booking");
+        Global::mqttManager->subscribe("esp/commands/reservation");
+        Global::mqttManager->subscribe("esp/commands/maintenance");
+        Global::mqttManager->subscribe("esp/commands/status");
+        Global::mqttManager->subscribe("esp/commands");
+
+        mqttReconnectRetries = 0;
+        Global::logInfoBoth("MQTT reconnected and resubscribed to topics");
+        return true;
+    }
+    else
+    {
+        Log.error("MQTT reconnection failed (state: %d)\n", mqttReconnectRetries);
+
+        
+        if (mqttReconnectRetries >= maxMqttReconnectRetries)
+        {
+            Log.error("Max MQTT reconnection attempts reached, entering ERROR state\n");
+            currentState = STATE_ERROR;
+            mqttReconnectRetries = 0;
+        }
+        return false;
+    }
 }
 
 void handleConnectedState()
@@ -52,6 +133,27 @@ void handleConnectedState()
     }
 }
 
+void handleInitState()
+{
+    Log.info("Initializing device...\n");
+    currentState = STATE_CONNECTING_WIFI;
+}
+
+void handleConnectingWifiState()
+{
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        currentState = STATE_CONNECTED;
+        Log.info("WiFi connected, transitioning to CONNECTED state\n");
+    }
+    else
+    {
+
+        Log.info("Attempting WiFi connection...\n");
+        WiFi.reconnect();
+    }
+}
+
 void handleErrorState()
 {
     if (millis() - lastRecoveryAttempt > recoveryInterval)
@@ -59,12 +161,25 @@ void handleErrorState()
         lastRecoveryAttempt = millis();
         recoveryRetries++;
         Log.info("Attempting recovery... (attempt %d/%d)\n", recoveryRetries, maxRecoveryRetries);
+
+      
         WiFi.reconnect();
+
         if (WiFi.status() == WL_CONNECTED)
         {
+            Log.info("WiFi recovered\n");
+
+      
+            if (Global::mqttManager && !Global::mqttManager->isConnected())
+            {
+                Log.info("Attempting MQTT reconnection after WiFi recovery...\n");
+                ensureMqttConnected();
+            }
+
             currentState = STATE_CONNECTED;
-            Log.info("Recovered to CONNECTED\n");
+            Log.info("Recovered to CONNECTED state\n");
             recoveryRetries = 0;
+            mqttReconnectRetries = 0;
         }
         else if (recoveryRetries >= maxRecoveryRetries)
         {
@@ -93,11 +208,14 @@ void handleAvailableState()
         return;
     }
 
+   
+    ensureMqttConnected();
+
     static unsigned long lastStatusPublish = 0;
 
     if (!availableStateEntryPublished)
     {
-        if (Global::mqttManager)
+        if (Global::mqttManager && Global::mqttManager->isConnected())
         {
             Global::mqttManager->publish(statusTopic(), "available", true);
         }
@@ -107,7 +225,7 @@ void handleAvailableState()
     }
     else if (millis() - lastStatusPublish > 10000)
     {
-        if (Global::mqttManager)
+        if (Global::mqttManager && Global::mqttManager->isConnected())
         {
             Global::mqttManager->publish(statusTopic(), "available", true);
         }
@@ -130,11 +248,14 @@ void handleBookedState()
         return;
     }
 
+   
+    ensureMqttConnected();
+
     static unsigned long lastStatusPublish = 0;
 
     if (!bookedStateEntryPublished)
     {
-        if (Global::mqttManager)
+        if (Global::mqttManager && Global::mqttManager->isConnected())
         {
             Global::mqttManager->publish(statusTopic(), "booked", true);
         }
@@ -144,7 +265,7 @@ void handleBookedState()
     }
     else if (millis() - lastStatusPublish > 10000)
     {
-        if (Global::mqttManager)
+        if (Global::mqttManager && Global::mqttManager->isConnected())
         {
             Global::mqttManager->publish(statusTopic(), "booked", true);
         }
@@ -167,11 +288,14 @@ void handleMaintainedState()
         return;
     }
 
+   
+    ensureMqttConnected();
+
     static unsigned long lastStatusPublish = 0;
 
     if (!maintainedStateEntryPublished)
     {
-        if (Global::mqttManager)
+        if (Global::mqttManager && Global::mqttManager->isConnected())
         {
             Global::mqttManager->publish(statusTopic(), "maintained", true);
         }
@@ -181,7 +305,7 @@ void handleMaintainedState()
     }
     else if (millis() - lastStatusPublish > 10000)
     {
-        if (Global::mqttManager)
+        if (Global::mqttManager && Global::mqttManager->isConnected())
         {
             Global::mqttManager->publish(statusTopic(), "maintained", true);
         }
@@ -204,11 +328,14 @@ void handleUnavailableState()
         return;
     }
 
+    
+    ensureMqttConnected();
+
     static unsigned long lastStatusPublish = 0;
 
     if (!unavailableStateEntryPublished)
     {
-        if (Global::mqttManager)
+        if (Global::mqttManager && Global::mqttManager->isConnected())
         {
             Global::mqttManager->publish(statusTopic(), "unavailable", true);
         }
@@ -218,11 +345,90 @@ void handleUnavailableState()
     }
     else if (millis() - lastStatusPublish > 10000)
     {
-        if (Global::mqttManager)
+        if (Global::mqttManager && Global::mqttManager->isConnected())
         {
             Global::mqttManager->publish(statusTopic(), "unavailable", true);
         }
         lastStatusPublish = millis();
         Global::logInfoMQTT("Status heartbeat: unavailable");
+    }
+}
+
+void handleReservedState()
+{
+    if (Global::mqttManager)
+        Global::mqttManager->loop();
+
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        currentState = STATE_ERROR;
+        Log.error("WiFi lost in RESERVED state, entering ERROR state\n");
+        recoveryRetries = 0;
+        return;
+    }
+
+    
+    ensureMqttConnected();
+
+    static unsigned long lastStatusPublish = 0;
+
+    if (!reservedStateEntryPublished)
+    {
+        if (Global::mqttManager && Global::mqttManager->isConnected())
+        {
+            Global::mqttManager->publish(statusTopic(), "reserved", true);
+        }
+        reservedStateEntryPublished = true;
+        lastStatusPublish = millis();
+        Global::logInfoBoth("Status -> reserved");
+    }
+    else if (millis() - lastStatusPublish > 10000)
+    {
+        if (Global::mqttManager && Global::mqttManager->isConnected())
+        {
+            Global::mqttManager->publish(statusTopic(), "reserved", true);
+        }
+        lastStatusPublish = millis();
+        Global::logInfoMQTT("Status heartbeat: reserved");
+    }
+}
+
+void handleBrokenState()
+{
+    if (Global::mqttManager)
+        Global::mqttManager->loop();
+
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        currentState = STATE_ERROR;
+        Log.error("WiFi lost in BROKEN state, entering ERROR state\n");
+        recoveryRetries = 0;
+        return;
+    }
+
+   
+    ensureMqttConnected();
+
+    static unsigned long lastStatusPublish = 0;
+
+    if (!brokenStateEntryPublished)
+    {
+        if (Global::mqttManager && Global::mqttManager->isConnected())
+        {
+            Global::mqttManager->publish(statusTopic(), "broken", true);
+        }
+        brokenStateEntryPublished = true;
+        lastStatusPublish = millis();
+        Global::logInfoBoth("Status -> broken");
+    }
+    else if (millis() - lastStatusPublish > 10000)
+    {
+        if (Global::mqttManager && Global::mqttManager->isConnected())
+        {
+            Global::mqttManager->publish(statusTopic(), "broken", true); // no eerror checjing truly fired and forgot
+            
+        }
+        lastStatusPublish = millis();
+        Global::logInfoMQTT("Status heartbeat: broken");
     }
 }

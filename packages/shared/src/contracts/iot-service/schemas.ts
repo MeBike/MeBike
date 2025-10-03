@@ -1,6 +1,7 @@
 import {
   IotBookingCommandSchema,
   IotMaintenanceCommandSchema,
+  IotReservationCommandSchema,
   IotStateCommandSchema,
   IotStatusCommandSchema,
   IotStatusMessageSchema,
@@ -54,6 +55,10 @@ export const MaintenanceCommandBodySchema = z.object({
   command: IotMaintenanceCommandSchema.openapi("IotMaintenanceCommand", { example: "start" }),
 });
 
+export const ReservationCommandBodySchema = z.object({
+  command: IotReservationCommandSchema.openapi("IotReservationCommand", { example: "reserve" }),
+});
+
 export const StatusCommandBodySchema = z.object({
   command: IotStatusCommandSchema.default("request").openapi("IotStatusCommand", { example: "request" }),
 }).partial();
@@ -65,6 +70,7 @@ export const CommandAcceptedResponseSchema = z.object({
     IotStateCommandSchema,
     IotBookingCommandSchema,
     IotMaintenanceCommandSchema,
+    IotReservationCommandSchema,
     IotStatusCommandSchema,
     z.string(),
   ]).openapi("CommandPayload", { example: "request" }),

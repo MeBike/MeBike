@@ -2,8 +2,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { IconSymbol } from './IconSymbol';
-import { BikeColors } from '@/constants/BikeColors';
-import { Station } from '@/types/BikeTypes';
+import { BikeColors } from '../constants/BikeColors';
+import { Station } from '../types/BikeTypes';
 
 interface StationCardProps {
   station: Station;
