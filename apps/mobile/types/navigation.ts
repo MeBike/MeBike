@@ -2,6 +2,7 @@
 export type RootStackParamList = {
   Booking:undefined;
   QR:undefined;
+  Profile:undefined;
   Main: undefined;
   Home: undefined;
   Login: undefined;

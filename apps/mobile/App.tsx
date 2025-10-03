@@ -13,6 +13,7 @@ import Booking from './screen/Booking';
 import StationDetailScreen from './screen/StationDetail';
 import StationSelectScreen from './styles/StationSelect';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Profile from './screen/Profile';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
 const BottomTab = () => {
@@ -34,7 +35,7 @@ const BottomTab = () => {
             options={{ 
               headerShown: false,
               tabBarIcon: ({ color, size }) => (
-                <Ionicons name="home-outline" size={size ?? 24} color={color ?? '#222'} />
+                <Ionicons name="qr-code-outline" size={size ?? 24} color={color ?? '#222'} />
               )
             }}
           />
@@ -47,7 +48,7 @@ const BottomTab = () => {
           )
         }}
       />
-      <Tab.Screen 
+      {/* <Tab.Screen 
         name="Booking" 
         component={Booking} 
         options={{ headerShown: false,
@@ -55,7 +56,15 @@ const BottomTab = () => {
             <Ionicons name="calendar-outline" size={size ?? 24} color={color ?? '#222'} />
           )
          }}
-      />
+      /> <Tab.Screen 
+        name="Profile" 
+        component={Profile} 
+        options={{ headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size ?? 24} color={color ?? '#222'} />
+          )
+         }}
+      /> */}
     </Tab.Navigator>
   );
 }
