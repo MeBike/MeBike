@@ -9,6 +9,7 @@ struct NetworkTopics
     std::string logTopic;
     std::string commandStateTopic;
     std::string commandBookingTopic;
+    std::string commandReservationTopic;
     std::string commandMaintenanceTopic;
     std::string commandStatusTopic;
     std::string commandRootTopic;

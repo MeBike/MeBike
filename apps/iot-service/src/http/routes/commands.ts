@@ -61,6 +61,26 @@ export function registerCommandRoutes(
     }, 202);
   });
 
+  app.openapi(iotServiceRoutes.sendReservationCommand, async (c) => {
+    const { deviceId } = c.req.valid("param");
+    const normalized = normalizeMac(deviceId);
+    if (!normalized) {
+      return c.json<ErrorResponse, 400>({
+        error: "Invalid device identifier",
+        details: { deviceId },
+      }, 400);
+    }
+
+    const { command } = c.req.valid("json");
+    await commandPublisher.sendReservationCommand(command, normalized);
+
+    return c.json<CommandAcceptedResponse, 202>({
+      deviceId: normalized,
+      topic: topicWithMac(IOT_COMMAND_TOPICS.reservation, normalized),
+      payload: command,
+    }, 202);
+  });
+
   app.openapi(iotServiceRoutes.sendMaintenanceCommand, async (c) => {
     const { deviceId } = c.req.valid("param");
     const normalized = normalizeMac(deviceId);
