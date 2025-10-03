@@ -32,8 +32,8 @@ export default function LoginScreen() {
     // await signInWithEmail(email, password);
     // Alert.alert('Success', 'Login functionality will be implemented');
     
-    // Temporary: Go to StationDetail for testing
-    navigation.navigate('StationDetail', { stationId: 'station-001' });
+    // Sau khi đăng nhập, chuyển sang màn hình chọn trạm
+    navigation.navigate('StationSelect');
   };
 
   const handleGoogleLogin = async () => {

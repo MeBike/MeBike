@@ -10,14 +10,14 @@ import LoginScreen from './screen/Login';
 import IntroScreen from './screen/Intro';
 import RegisterScreen from './screen/Register';
 import StationDetailScreen from './screen/StationDetail';
-
+import StationSelectScreen from './styles/StationSelect';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
     <NavigationContainer>
       <StatusBar style="auto" />
-      <Stack.Navigator initialRouteName="Home">
+  <Stack.Navigator initialRouteName="Home">
         <Stack.Screen 
           name="Home" 
           component={HomeScreen} 
@@ -49,6 +49,13 @@ export default function App() {
           component={StationDetailScreen} 
           options={{ 
             title: 'Chi tiết trạm',
+          }}
+        />
+        <Stack.Screen 
+          name="StationSelect" 
+          component={StationSelectScreen} 
+          options={{ 
+            title: 'Chọn trạm xe',
           }}
         />
         {/* Add more screens here as you create them */}
