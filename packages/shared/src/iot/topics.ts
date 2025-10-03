@@ -1,3 +1,33 @@
+/**
+ * IoT Device Command & Status Topics
+ *
+ * This module defines MQTT topics and command schemas for controlling IoT devices (ESP32 bikes).
+ *
+ * ## Command Types:
+ *
+ * ### State Commands (Low-level)
+ * Direct state manipulation - use for admin/debug purposes
+ * - Available states: available, reserved, booked, broken, maintained, unavailable
+ *
+ * ### Booking Commands (High-level workflow)
+ * User-facing booking operations with business logic:
+ * - `book`: Book available bike → STATE_BOOKED
+ * - `claim`: Claim reserved bike → STATE_BOOKED (only from RESERVED)
+ * - `release`: Release bike after use → STATE_AVAILABLE
+ *
+ * ### Reservation Commands (High-level workflow)
+ * Reservation workflow:
+ * - `reserve`: Hold bike for pickup → STATE_RESERVED
+ * - `cancel`: Cancel reservation → STATE_AVAILABLE
+ *
+ * ### Maintenance Commands (High-level workflow)
+ * Maintenance operations:
+ * - `start`: Begin maintenance → STATE_MAINTAINED
+ * - `complete`: Finish maintenance → STATE_AVAILABLE
+ *
+ * @see apps/iot-service/doc.md for detailed documentation
+ */
+
 import { z } from "../zod";
 
 const COMMAND_ROOT = "esp/commands" as const;

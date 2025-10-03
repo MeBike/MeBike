@@ -74,7 +74,12 @@ void loop()
     handleUnknownState();
     break;
   }
-  Log.info("Loop running in state %s (%d)\n", getStateName(currentState), currentState);
-  Global::logInfoMQTT("Loop running in state %s (%d)", getStateName(currentState), currentState);
-  delay(2000);
+
+  static DeviceState lastLoggedState = STATE_INIT;
+  if (currentState != lastLoggedState)
+  {
+    Log.info("State changed to %s (%d)\n", getStateName(currentState), currentState);
+    Global::logInfoMQTT("State changed to %s (%d)", getStateName(currentState), currentState);
+    lastLoggedState = currentState;
+  }
 }
