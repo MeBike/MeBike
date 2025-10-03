@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Ga Bến Thành",
+    "address": "Quận 1, TP.HCM",
+    "latitude": "10.7620",
+    "longitude": "106.6900"
+  },
+  {
+    "name": "Ga Nhà hát Thành phố",
+    "address": "Quận 1, TP.HCM",
+    "latitude": "10.7720",
+    "longitude": "106.6950"
+  },
+  {
+    "name": "Ga Ba Son",
+    "address": "Quận 1, TP.HCM",
+    "latitude": "10.7725",
+    "longitude": "106.7000"
+  },
+  {
+    "name": "Ga Công viên Văn Thánh",
+    "address": "Quận Bình Thạnh, TP.HCM",
+    "latitude": "10.7910",
+    "longitude": "106.7045"
+  },
+  {
+    "name": "Ga Tân Cảng",
+    "address": "Quận Bình Thạnh, TP.HCM",
+    "latitude": "10.7980",
+    "longitude": "106.7110"
+  },
+  {
+    "name": "Ga Thảo Điền",
+    "address": "Quận 2, TP.HCM",
+    "latitude": "10.8025",
+    "longitude": "106.7175"
+  },
+  {
+    "name": "Ga An Phú",
+    "address": "Quận 2, TP.HCM",
+    "latitude": "10.8080",
+    "longitude": "106.7230"
+  },
+  {
+    "name": "Ga Rạch Chiếc",
+    "address": "Quận 9, TP.HCM",
+    "latitude": "10.8145",
+    "longitude": "106.7295"
+  },
+  {
+    "name": "Ga Phước Long",
+    "address": "Quận 9, TP.HCM",
+    "latitude": "10.8200",
+    "longitude": "106.7350"
+  },
+  {
+    "name": "Ga Bình Thái",
+    "address": "Quận 9, TP.HCM",
+    "latitude": "10.8255",
+    "longitude": "106.7405"
+  },
+  {
+    "name": "Ga Thủ Đức",
+    "address": "TP. Thủ Đức, TP.HCM",
+    "latitude": "10.8310",
+    "longitude": "106.7460"
+  },
+  {
+    "name": "Ga Khu Công nghệ cao",
+    "address": "TP. Thủ Đức, TP.HCM",
+    "latitude": "10.8365",
+    "longitude": "106.7515"
+  },
+  {
+    "name": "Ga Đại học Quốc gia",
+    "address": "TP. Thủ Đức, TP.HCM",
+    "latitude": "10.8420",
+    "longitude": "106.7570"
+  },
+  {
+    "name": "Ga Bến xe Suối Tiên",
+    "address": "TP. Thủ Đức, TP.HCM",
+    "latitude": "10.8475",
+    "longitude": "106.7625"
+  }
+]

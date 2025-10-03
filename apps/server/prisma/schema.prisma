@@ -15,9 +15,21 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
+  id          String   @id @default(uuid()) @db.Uuid
+  email       String   @unique
+  phoneNumber String
+  fullName    String?
+  role        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Station {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  address   String
+  latitude  String
+  longitude String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

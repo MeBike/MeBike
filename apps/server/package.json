@@ -6,6 +6,9 @@
   "description": "",
   "author": "",
   "license": "UNLICENSED",
+  "prisma": {
+    "seed": "ts-node --project prisma/tsconfig.json prisma/seed.ts"
+  },
   "scripts": {
     "build": "prisma generate && nest build",
     "clean": "node -e \"const fs = require('fs'); if (fs.existsSync('dist')) fs.rmSync('dist', { recursive: true, force: true });\"",
