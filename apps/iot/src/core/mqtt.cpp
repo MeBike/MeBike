@@ -30,6 +30,7 @@ bool setupMQTT(const char *brokerIP, int port, const char *username, const char 
     {
         Global::mqttManager->subscribe("esp/commands/state");
         Global::mqttManager->subscribe("esp/commands/booking");
+        Global::mqttManager->subscribe("esp/commands/reservation");
         Global::mqttManager->subscribe("esp/commands/maintenance");
         Global::mqttManager->subscribe("esp/commands/status");
 
@@ -37,6 +38,8 @@ bool setupMQTT(const char *brokerIP, int port, const char *username, const char 
             Global::mqttManager->subscribe(Global::commandStateTopic.c_str());
         if (!Global::commandBookingTopic.empty())
             Global::mqttManager->subscribe(Global::commandBookingTopic.c_str());
+        if (!Global::commandReservationTopic.empty())
+            Global::mqttManager->subscribe(Global::commandReservationTopic.c_str());
         if (!Global::commandMaintenanceTopic.empty())
             Global::mqttManager->subscribe(Global::commandMaintenanceTopic.c_str());
         if (!Global::commandStatusTopic.empty())

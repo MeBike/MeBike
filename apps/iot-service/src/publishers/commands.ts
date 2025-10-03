@@ -33,6 +33,10 @@ export class CommandPublisher {
     await this.publishCommand("esp/commands/booking", command, mac);
   }
 
+  async sendReservationCommand(command: IotCommandPayloadByTopic["esp/commands/reservation"], mac?: string | null): Promise<void> {
+    await this.publishCommand("esp/commands/reservation", command, mac);
+  }
+
   async sendMaintenanceCommand(command: IotCommandPayloadByTopic["esp/commands/maintenance"], mac?: string | null): Promise<void> {
     await this.publishCommand("esp/commands/maintenance", command, mac);
   }

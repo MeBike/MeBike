@@ -5,6 +5,7 @@ export type RootStackParamList = {
   Intro: undefined;
   Register: undefined;
   StationDetail: { stationId: string };
+  StationSelect: undefined;
   Modal: undefined;
   FormSheet: undefined;
   TransparentModal: undefined;
