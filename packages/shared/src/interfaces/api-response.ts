@@ -5,7 +5,7 @@ export interface ApiResponse<T = any> {
   errors?: string[];
 }
 
-export interface ErrorResponse {
+export interface ErrorResponseClient {
   success: boolean;
   message: string;
   errors?: string[];

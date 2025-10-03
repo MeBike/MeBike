@@ -1,8 +1,8 @@
 import { BadRequestException } from '@nestjs/common';
-import { ErrorResponse } from '../interfaces/api-response';
+import { ErrorResponseClient } from '../interfaces/api-response';
 
 export function throwError(message: string, errors?: string[]): never {
-  const errorResponse: ErrorResponse = {
+  const errorResponse: ErrorResponseClient = {
     success: false,
     message,
     errors,

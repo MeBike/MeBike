@@ -5,8 +5,8 @@ import {
   ExceptionFilter,
 } from '@nestjs/common';
 import { RpcException } from '@nestjs/microservices';
-import { ErrorResponse } from '../interfaces/api-response';
 import { SERVER_MESSAGE } from '../constants/messages';
+import { ErrorResponseClient } from '../interfaces';
 
 @Catch()
 export class GrpcExceptionFilter implements ExceptionFilter {
@@ -15,7 +15,7 @@ export class GrpcExceptionFilter implements ExceptionFilter {
       const res: any = exception.getResponse();
       const messages = Array.isArray(res.message) ? res.message : [res.message];
 
-      const errorResponse: ErrorResponse = {
+      const errorResponse: ErrorResponseClient = {
         success: false,
         message: SERVER_MESSAGE.VALIDATION_FAILED,
         errors: messages,
