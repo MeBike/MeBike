@@ -14,9 +14,7 @@ import type { HomeScreenNavigationProp } from '../types/navigation';
 import { BikeColors } from '../constants/BikeColors';
 import { IconSymbol } from '../components/IconSymbol';
 import { LinearGradient } from 'expo-linear-gradient';
-
 const { width, height } = Dimensions.get('window');
-
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
