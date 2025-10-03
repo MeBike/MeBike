@@ -10,7 +10,7 @@ export class JwtServiceCustom {
     return this.jwtService.sign(payload, options);
   }
 
-  async decodeToken(token: string) {
+  async decodeToken(token: string): Promise<TokenPayload | null> {
     return this.jwtService.decode(token);
   }
 

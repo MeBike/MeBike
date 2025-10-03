@@ -13,7 +13,7 @@ import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { USER_MESSAGES } from '@mebike/shared';
 import { throwGrpcError } from '@mebike/shared';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { RpcException } from '@nestjs/microservices';
 import { PrismaClient } from '../../../server/src/generated/prisma';
 
@@ -71,14 +71,16 @@ export class AuthService extends BaseService<User, CreateUserDto, never> {
 
   async refreshToken(refreshToken: string) {
     try {
-      const decoded = await this.jwtService.verifyToken(refreshToken);
+      const decoded = (await this.jwtService.verifyToken(
+        refreshToken,
+      )) as TokenPayload;
       if (!decoded) {
         throwGrpcError(SERVER_MESSAGE.UNAUTHORIZED, [
           USER_MESSAGES.INVALID_REFRESH_TOKEN,
         ]);
       }
 
-      const { user_id, role } = decoded as TokenPayload;
+      const { user_id, role } = decoded;
       if (!user_id) {
         throwGrpcError(SERVER_MESSAGE.UNAUTHORIZED, [
           USER_MESSAGES.INVALID_TOKEN_PAYLOAD,
@@ -110,10 +112,10 @@ export class AuthService extends BaseService<User, CreateUserDto, never> {
   }
 
   async decodeToken(token: string) {
-    return this.jwtService.decodeToken(token);
+    return (await this.jwtService.decodeToken(token)) as TokenPayload;
   }
 
-  async verifyToken(token: string) {
-    return this.jwtService.verifyToken(token);
+  async verifyToken(token: string): Promise<TokenPayload> {
+    return (await this.jwtService.verifyToken(token)) as TokenPayload;
   }
 }

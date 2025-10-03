@@ -13,7 +13,7 @@ import type { User } from '../../../server/src/generated/prisma';
 import { USER_MESSAGES } from '@mebike/shared';
 import { LoginUserDto } from './dto/LoginUserDto';
 import { GRPC_SERVICES, USER_METHODS } from '@mebike/shared';
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 
 @Controller()
 export class AuthGrpcController {
@@ -26,7 +26,7 @@ export class AuthGrpcController {
   @GrpcMethod(GRPC_SERVICES.AUTH, USER_METHODS.CREATE)
   async createUser(data: CreateUserDto) {
     try {
-      const hashPassword = bcrypt.hashSync(data.password, 10);
+      const hashPassword: string = await bcrypt.hash(data.password, 10);
 
       const userData = { ...data, role: UserRole.USER, password: hashPassword };
 
