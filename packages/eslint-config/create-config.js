@@ -6,7 +6,13 @@ export default function createConfig(options, ...userConfigs) {
       type: "app",
       typescript: true,
       formatters: true,
-      ignores: ["**/dist/**", "**/build/**", ".md"], // md file
+      ignores: [
+        "**/dist/**",
+        "**/build/**",
+        "**/docs/**",
+        "**/*.md",
+        "**/node_modules/**",
+      ],
       stylistic: {
         indent: 2,
         semi: true,
