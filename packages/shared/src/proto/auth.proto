@@ -21,6 +21,7 @@ message CreateUserRequest {
   string fullName = 2;
   string phoneNumber = 3;
   string password = 4;
+  string confirmPassword = 5;
 }
 
 message Token {

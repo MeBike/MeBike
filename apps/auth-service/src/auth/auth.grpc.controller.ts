@@ -26,6 +26,11 @@ export class AuthGrpcController {
   @GrpcMethod(GRPC_SERVICES.AUTH, USER_METHODS.CREATE)
   async createUser(data: CreateUserDto) {
     try {
+      if (data.password !== data.confirmPassword) {
+        return throwGrpcError(SERVER_MESSAGE.BAD_REQUEST, [
+          'Password and Confirm Password do not match',
+        ]);
+      }
       const hashPassword: string = await bcrypt.hash(data.password, 10);
 
       const userData = { ...data, role: UserRole.USER, password: hashPassword };
