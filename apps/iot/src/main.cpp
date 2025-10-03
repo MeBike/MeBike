@@ -5,6 +5,7 @@
 #include "Config.h"
 #include "globals.h"
 #include "StateMachine.h"
+#include "NetworkManager.h"
 
 void setup()
 {
@@ -12,14 +13,14 @@ void setup()
   Serial.begin(74880);
   Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   Global::bufferedLogger.reset(new BufferedLogger());
-  Global::bufferedLogger->setTopic(Global::logTopic);
+  Global::bufferedLogger->setTopic("esp/logs"); // temporary
   Global::logInfoLocal("Buffered logger initialized");
   delay(5000);
   currentState = STATE_INIT;
   AppConfig config = loadConfig();
-  Global::ssid = config.wifiSsid;
-  Global::password = config.wifiPass;
-  if (!Global::initializeNetwork())
+  Global::networkManager.reset(new NetworkManager());
+  Global::networkManager->setCredentials(config.wifiSsid, config.wifiPass);
+  if (!Global::networkManager->initialize())
   {
     currentState = STATE_ERROR;
     return;
