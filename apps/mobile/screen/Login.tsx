@@ -115,7 +115,7 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
 
-          <View style={styles.divider}>
+          {/* <View style={styles.divider}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>hoặc</Text>
             <View style={styles.dividerLine} />
@@ -128,7 +128,7 @@ export default function LoginScreen() {
           >
             <IconSymbol name="globe" size={20} color={BikeColors.textPrimary} />
             <Text style={styles.googleButtonText}>Đăng nhập với Google</Text>
-          </Pressable>
+          </Pressable> */}
 
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Chưa có tài khoản? </Text>
