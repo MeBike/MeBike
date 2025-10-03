@@ -14,6 +14,8 @@ const envSchema = z.object({
   STATE_STEP_DELAY_MS: z.string(),
   STATE_TIMEOUT_MS: z.string(),
   STATE_SEQUENCE: z.string().optional(),
+  HTTP_PORT: z.coerce.number().default(3000),
+  HTTP_HOST: z.string().default("0.0.0.0"),
 });
 
 export type Env = z.infer<typeof envSchema>;
