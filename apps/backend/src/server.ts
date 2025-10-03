@@ -2,8 +2,9 @@ import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
 import process from "node:process";
-import databaseService from "./services/database.services";
+
 import usersRouter from "./routes/users.routes";
+import databaseService from "./services/database.services";
 
 config();
 
@@ -21,8 +22,9 @@ app.get("/", (req, res) => {
   res.send("Welcome to MeBike API");
 });
 
-app.use('/users', usersRouter)
+app.use("/users", usersRouter);
 
 app.listen(port, () => {
+  // eslint-disable-next-line no-console
   console.log(`MeBike Backend đang chạy tại http://localhost:${port}`);
 });

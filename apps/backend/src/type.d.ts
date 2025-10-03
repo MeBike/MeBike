@@ -5,7 +5,7 @@ import type User from "./models/schemas/user.schema";
 declare module "express" {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
   // prettier-ignore
-  interface Request {
+  type Request = {
     user?: User;
     decoded_authorization?: TokenPayLoad;
     decoded_refresh_token?: TokenPayLoad;

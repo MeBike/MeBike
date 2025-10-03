@@ -10,7 +10,8 @@ module.exports = {
   rules: {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": "warn",
-    // "@typescript-eslint/consistent-type-definitions": "off",
+    "@typescript-eslint/consistent-type-definitions": "off",
+    "ts/consistent-type-definitions": "off",
     "prettier/prettier": [
       "warn",
       {
