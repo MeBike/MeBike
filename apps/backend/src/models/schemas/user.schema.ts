@@ -14,7 +14,7 @@ type UserType = {
   username?: string;
   phone_number?: string;
   avatar?: string;
-  roleid: Role;
+  role: Role;
   created_at?: Date;
   updated_at?: Date;
 };
@@ -31,7 +31,7 @@ export default class User {
   username: string;
   phone_number: string;
   avatar: string;
-  roleid: Role;
+  role: Role;
   created_at: Date;
   updated_at: Date;
 
@@ -51,7 +51,7 @@ export default class User {
     this.username = user.username || "";
     this.phone_number = user.phone_number || "";
     this.avatar = user.avatar || "";
-    this.roleid = user.roleid || Role.User;
+    this.role = user.role || Role.User;
     this.created_at = user.created_at || localTime;
     this.updated_at = user.updated_at || localTime;
   }

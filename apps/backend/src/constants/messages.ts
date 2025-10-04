@@ -15,6 +15,8 @@ export const USERS_MESSAGES = {
   CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_8_TO_30: "Xác nhận mật khẩu phải có độ dài từ 8 đến 30 ký tự",
   CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD: "Mật khẩu xác nhận không khớp",
   REGISTER_SUCCESS: "Đăng ký thành công",
+  IMAGE_URL_MUST_BE_A_STRING: "URL hình ảnh phải là chuỗi",
+  IMAGE_URL_MUST_BE_VALID: "URL hình ảnh không hợp lệ",
   // đăng nhập messages
   EMAIL_OR_PASSWORD_IS_INCORRECT: "Email hoặc mật khẩu không chính xác",
   LOGIN_SUCCESS: "Đăng nhập thành công",

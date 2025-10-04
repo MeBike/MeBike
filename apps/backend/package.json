@@ -25,6 +25,7 @@
     "express": "^5.1.0",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.0",
     "nodemailer": "^7.0.6"
@@ -35,6 +36,7 @@
     "@types/express": "^5.0.0",
     "@types/express-serve-static-core": "^5.0.7",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/lodash": "^4.17.20",
     "@types/node": "^24.6.2",
     "@types/nodemailer": "^7.0.2",
     "eslint": "^9.36.0",

@@ -1,10 +1,14 @@
 import { ObjectId } from "mongodb";
 import process from "node:process";
+import nodemailer from "nodemailer";
 
-import type { UserVerifyStatus } from "~/constants/enums";
+import type { RegisterReqBody } from "~/models/requests/users.requests";
 
-import { TokenType } from "~/constants/enums";
+import { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
 import RefreshToken from "~/models/schemas/refresh-token.schemas";
+import User from "~/models/schemas/user.schema";
+import { hashPassword } from "~/utils/crypto";
+import { readEmailTemplate } from "~/utils/email-templates";
 import { signToken, verifyToken } from "~/utils/jwt";
 
 import databaseService from "./database.services";
@@ -14,6 +18,14 @@ class UsersService {
     return verifyToken({
       token: refresh_token,
       secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
+    });
+  }
+
+  private signEmailVerifyToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+    return signToken({
+      payload: { user_id, token_type: TokenType.EmailVerificationToken, verify },
+      options: { expiresIn: "1d" },
+      privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string,
     });
   }
 
@@ -60,6 +72,75 @@ class UsersService {
         iat,
       }),
     );
+    return { access_token, refresh_token };
+  }
+
+  async checkEmailExist(email: string) {
+    const user = await databaseService.users.findOne({ email });
+    return Boolean(user);
+  }
+
+  async register(payload: RegisterReqBody) {
+    const user_id = new ObjectId();
+    const email_verify_token = await this.signEmailVerifyToken({
+      user_id: user_id.toString(),
+      verify: UserVerifyStatus.Unverified,
+    });
+    await databaseService.users.insertOne(
+      new User({
+        ...payload,
+        _id: user_id,
+        fullname: payload.full_name,
+        username: `user${user_id.toString()}`,
+        email_verify_token,
+        password: hashPassword(payload.password),
+        role: Role.User,
+      }),
+    );
+    const [access_token, refresh_token] = await this.signAccessAndRefreshTokens({
+      user_id: user_id.toString(),
+      verify: UserVerifyStatus.Unverified,
+    });
+
+    const { exp, iat } = await this.decodeRefreshToken(refresh_token);
+
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({
+        token: refresh_token,
+        user_id: new ObjectId(user_id),
+        exp,
+        iat,
+      }),
+    );
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_APP,
+          pass: process.env.EMAIL_PASSWORD_APP,
+        },
+      });
+
+      const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`; // Đường dẫn xác nhận email
+
+      const htmlContent = readEmailTemplate("verify-email.html", {
+        full_name: payload.full_name,
+        verifyURL,
+      });
+
+      const mailOptions = {
+        from: `"MeBike" <${process.env.EMAIL_APP}>`,
+        to: payload.email,
+        subject: "Xác nhận đăng ký tài khoản MeBike",
+        html: htmlContent, // truyền nội dung html vào
+      };
+
+      transporter.sendMail(mailOptions);
+      console.log("Email verification sent successfully to:", payload.email);
+    }
+    catch (error) {
+      console.error("Error sending email:", error);
+    }
     return { access_token, refresh_token };
   }
 }
