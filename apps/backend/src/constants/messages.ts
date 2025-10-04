@@ -27,4 +27,8 @@ export const USERS_MESSAGES = {
   // forgot password messages
   USER_NOT_FOUND: "Không tìm thấy người dùng",
   CHECK_EMAIL_TO_RESET_PASSWORD: "Vui lòng kiểm tra email để đặt lại mật khẩu",
+  // verify forgot password token messages
+  FORGOT_PASSWORD_TOKEN_IS_REQUIRED: "Forgot password token là bắt buộc",
+  FORGOT_PASSWORD_TOKEN_IS_INCORRECT: "Forgot password token không chính xác",
+  VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS: "Xác thực forgot password token thành công",
 } as const;

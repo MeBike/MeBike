@@ -47,3 +47,9 @@ export async function forgotPasswordController(req: Request, res: Response) {
   });
   res.json(result);
 }
+
+export async function verifyForgotPasswordTokenController(req: Request, res: Response) {
+  res.json({
+    message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS,
+  });
+}
