@@ -1,6 +1,5 @@
 import { checkSchema } from "express-validator";
 import { ObjectId } from "mongodb";
-import { Error } from "mongoose";
 
 import { ReportStatus, ReportTypeEnum } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";

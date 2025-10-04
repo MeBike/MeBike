@@ -11,7 +11,7 @@ import reportService from "~/services/report.services";
 
 export async function createReportController(req: Request<ParamsDictionary, any, CreateReportReqBody>, res: Response) {
   const user = req.user as User;
-  const user_id = "68e13c4a4b8b1fc58edc5078";
+  const user_id = user._id as ObjectId;
 
   const result = await reportService.createReport({
     userID: user_id.toString(),
