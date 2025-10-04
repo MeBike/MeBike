@@ -18,11 +18,10 @@ export async function createReportController(req: Request<ParamsDictionary, any,
   res.json({ message: REPORTS_MESSAGES.CREATE_SUCCESS, result });
 }
 
-export async function updateReportStatusController(
-  req: Request<ParamsDictionary, any, CreateReportReqBody>,
-  res: Response,
-) {
-  const { reportID, newStatus } = req.params;
+export async function updateReportStatusController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const { reportID } = req.params;
+  const newStatus = req.body as ReportStatus;
+
   const result = await reportService.updateReportStatus({
     reportID: reportID.toString(),
     newStatus: newStatus as ReportStatus,

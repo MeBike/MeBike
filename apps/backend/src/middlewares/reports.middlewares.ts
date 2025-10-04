@@ -108,13 +108,43 @@ export const updateReportValidator = validate(
       },
     },
     newStatus: {
-      in: "params",
+      in: "body",
       notEmpty: {
         errorMessage: REPORTS_MESSAGES.STATUS_IS_REQUIRED,
       },
       isIn: {
         options: [Object.values(ReportStatus)],
         errorMessage: REPORTS_MESSAGES.INVALID_NEW_STATUS,
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const report = await databaseService.reports.findOne({
+            _id: new ObjectId(req.params?.reportID),
+          });
+
+          if (!report) {
+            throw new ErrorWithStatus({
+              status: HTTP_STATUS.NOT_FOUND,
+              message: REPORTS_MESSAGES.REPORT_NOT_FOUND.replace("%s", value),
+            });
+          }
+
+          const allowedStauts: Record<ReportStatus, ReportStatus[]> = {
+            [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
+            [ReportStatus.InProgress]: [ReportStatus.Resolved],
+            [ReportStatus.Resolved]: [],
+            [ReportStatus.Cancel]: [],
+          };
+
+          if (!allowedStauts[report.status].includes(value)) {
+            throw new ErrorWithStatus({
+              status: HTTP_STATUS.BAD_REQUEST,
+              message: REPORTS_MESSAGES.INVALID_NEW_STATUS,
+            });
+          }
+
+          return true;
+        },
       },
     },
   }),
