@@ -62,7 +62,7 @@ class DatabaseService {
   }
 
   get rentals(): Collection<Rental> {
-    return this.db.collection(process.env.DB_RENTAL_COLLECTION as string);
+    return this.db.collection(process.env.DB_RENTALS_COLLECTION as string);
   }
 }
 
