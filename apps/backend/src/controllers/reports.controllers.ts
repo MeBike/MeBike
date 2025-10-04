@@ -13,7 +13,11 @@ export async function createReportController(req: Request<ParamsDictionary, any,
   const user = req.user as User;
   const user_id = user._id as ObjectId;
 
-  const result = await reportService.createReport({ userID: user_id.toString(), payload: req.body });
+  const result = await reportService.createReport({
+    userID: user_id.toString(),
+    payload: req.body,
+    files: req.files as Express.Multer.File[],
+  });
 
   res.json({ message: REPORTS_MESSAGES.CREATE_SUCCESS, result });
 }

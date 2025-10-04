@@ -1,9 +1,9 @@
-import type { UploadApiResponse } from "cloudinary";
+import type { Buffer } from "node:buffer";
 
 import { v2 as cloudinary } from "cloudinary";
 import { ObjectId } from "mongodb";
-import fs from "node:fs";
 import process from "node:process";
+import { Readable } from "node:stream";
 import pLimit from "p-limit";
 
 import type { CreateReportReqBody } from "~/models/requests/reports.requests";
@@ -22,6 +22,13 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY!,
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
+
+function bufferToStream(buffer: Buffer) {
+  const readable = new Readable();
+  readable.push(buffer);
+  readable.push(null);
+  return readable;
+}
 
 class ReportService {
   async createReport({
@@ -57,18 +64,29 @@ class ReportService {
     if (payload.bike_id)
       reportData.bike_id = new ObjectId(payload.bike_id);
 
-    if (files && files.length === 0) {
+    if (files && files.length > 0) {
       const limit = pLimit(3);
       const media_urls = await Promise.all(
         files.map(file =>
           limit(async () => {
-            const fileUpload = await cloudinary.uploader.upload_large(file.path, {
-              resource_type: "auto",
-              folder: "reports",
-              chunk_size: 6_000_000,
-            });
-            fs.unlinkSync(file.path);
-            return (fileUpload as UploadApiResponse).secure_url;
+            const uploadStream = () =>
+              new Promise<string>((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                  {
+                    resource_type: "auto",
+                    folder: "reports",
+                    chunk_size: 6_000_000,
+                  },
+                  (error, result) => {
+                    if (error)
+                      return reject(error);
+                    resolve(result?.secure_url || "");
+                  },
+                );
+                bufferToStream(file.buffer).pipe(stream);
+              });
+
+            return await uploadStream();
           }),
         ),
       );
