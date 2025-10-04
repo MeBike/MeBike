@@ -36,3 +36,14 @@ export async function logoutController(req: Request<ParamsDictionary, any, Logou
   const result = await usersService.logout(refresh_token);
   res.json(result);
 }
+
+export async function forgotPasswordController(req: Request, res: Response) {
+  const { _id, email, fullname, verify } = req.user as User;
+  const result = await usersService.forgotPassword({
+    user_id: (_id as ObjectId).toString(),
+    email,
+    fullname,
+    verify,
+  });
+  res.json(result);
+}

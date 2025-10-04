@@ -24,4 +24,7 @@ export const USERS_MESSAGES = {
   ACCESS_TOKEN_IS_REQUIRED: "Access token là bắt buộc",
   USED_REFRESH_TOKEN_OR_NOT_EXIST: "Refresh token đã được sử dụng hoặc không tồn tại",
   LOGOUT_SUCCESS: "Đăng xuất thành công",
+  // forgot password messages
+  USER_NOT_FOUND: "Không tìm thấy người dùng",
+  CHECK_EMAIL_TO_RESET_PASSWORD: "Vui lòng kiểm tra email để đặt lại mật khẩu",
 } as const;

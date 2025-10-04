@@ -58,6 +58,14 @@ class UsersService {
     return Promise.all([this.signAccessToken({ user_id, verify }), this.signRefreshToken({ user_id, verify })]);
   }
 
+  private signForgotPasswordToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+    return signToken({
+      payload: { user_id, token_type: TokenType.ForgotPasswordToken, verify },
+      options: { expiresIn: "1d" },
+      privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
+    });
+  }
+
   async login({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
     const [access_token, refresh_token] = await this.signAccessAndRefreshTokens({
       user_id,
@@ -148,6 +156,64 @@ class UsersService {
   async logout(refresh_token: string) {
     await databaseService.refreshTokens.deleteOne({ token: refresh_token });
     return { message: USERS_MESSAGES.LOGOUT_SUCCESS };
+  }
+
+  async forgotPassword({
+    user_id,
+    verify,
+    email,
+    fullname,
+  }: {
+    user_id: string;
+    verify: UserVerifyStatus;
+    email: string;
+    fullname: string;
+  }) {
+    const forgot_password_token = await this.signForgotPasswordToken({
+      user_id,
+      verify,
+    });
+    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, [
+      {
+        $set: {
+          forgot_password_token,
+          updated_at: "$$NOW",
+        },
+      },
+    ]);
+
+    // mail
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_APP,
+          pass: process.env.EMAIL_PASSWORD_APP,
+        },
+      });
+
+      // const resetURL = `${process.env.FRONTEND_URL}/reset-password?token=${forgot_password_token}`
+      const resetURL = `${process.env.FRONTEND_URL}/auth/reset-password?token=${forgot_password_token}`;
+
+      const htmlContent = readEmailTemplate("forgot-password.html", {
+        userName: fullname,
+        resetURL,
+      });
+
+      const mailOptions = {
+        from: `"MeBike" <${process.env.EMAIL_APP}>`,
+        to: email,
+        subject: "Yêu cầu đặt lại mật khẩu cho tài khoản MeBike",
+        html: htmlContent,
+      };
+
+      transporter.sendMail(mailOptions);
+      console.log("Forgot password email sent successfully to:", email);
+    }
+    catch (error) {
+      console.error("Error sending forgot-password email:", error);
+    }
+    return { message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD };
   }
 }
 

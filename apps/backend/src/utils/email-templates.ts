@@ -19,7 +19,7 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
     <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
       <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
         <h1 style="color: ${MBIKE_PRIMARY_COLOR}; text-align: center;">MeBike</h1>
-        <h2>Xin chào ${data.first_name || "bạn"},</h2>
+        <h2>Xin chào ${data.fullname || "bạn"},</h2>
         <p>Cảm ơn bạn đã đăng ký tài khoản MeBike. Vui lòng nhấn vào nút bên dưới để xác nhận email của bạn:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${data.verifyURL || "#"}" style="background: ${MBIKE_PRIMARY_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Xác nhận đăng ký</a>
@@ -40,7 +40,7 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
     <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
       <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
         <h1 style="color: ${MBIKE_PRIMARY_COLOR}; text-align: center;">MeBike</h1>
-        <h2>Xin chào ${data.first_name || "bạn"},</h2>
+        <h2>Xin chào ${data.fullname || "bạn"},</h2>
         <p>Bạn đã yêu cầu đặt lại mật khẩu. Nhấn vào nút bên dưới để tiếp tục:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${data.resetURL || "#"}" style="background: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Đặt lại mật khẩu</a>
@@ -90,6 +90,6 @@ export function readEmailTemplate(templateName: string, data: TemplateData): str
       return fallbackTemplate(data);
     }
     // fallback chung nếu không có template cụ thể
-    return `Xin chào ${data.first_name || "bạn"}, cảm ơn bạn đã sử dụng dịch vụ của MeBike.`;
+    return `Xin chào ${data.fullname || "bạn"}, cảm ơn bạn đã sử dụng dịch vụ của MeBike.`;
   }
 }
