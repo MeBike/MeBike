@@ -18,29 +18,29 @@ export enum Role {
 }
 
 export enum ReportStatus {
-  Pending = "PENDING",
-  InProgress = "IN_PROGRESS",
-  Resolved = "RESOLVED",
-  Cancel = "Cancel",
+  Pending = "ĐANG CHỜ XỬ LÝ",
+  InProgress = "ĐANG XỬ LÝ",
+  Resolved = "ĐÃ GIẢI QUYẾT",
+  Cancel = "ĐÃ HỦY",
 }
 
 export enum ReportTypeEnum {
-  BikeDamage = "BIKE_DAMAGE",
-  BikeDirty = "BIKE_DIRTY",
+  BikeDamage = "XE HƯ HỎNG",
+  BikeDirty = "XE BẨN",
 
-  StationFull = "STATION_FULL",
-  StationNotAccepting = "STATION_NOT_ACCEPTING",
-  StationOffline = "STATION_OFFLINE",
+  StationFull = "TRẠM ĐẦY",
+  StationNotAccepting = "TRẠM KHÔNG NHẬN XE",
+  StationOffline = "TRẠM NGOẠI TUYẾN",
 
-  SosAccident = "SOS_ACCIDENT",
-  SosHealth = "SOS_HEALTH",
-  SosThreat = "SOS_THREAT",
-  Other = "OTHER",
+  SosAccident = "CẤP CỨU TAI NẠN",
+  SosHealth = "CẤP CỨU SỨC KHỎE",
+  SosThreat = "CẤP CỨU NGUY HIỂM",
+  Other = "KHÁC",
 }
 
 export enum RentalStatus {
-  Ongoing = "ONGOING",
-  Completed = "COMPLETED",
-  Cancelled = "CANCELLED",
-  Expired = "EXPIRED",
+  Ongoing = "ĐANG THUÊ",
+  Completed = "HOÀN THÀNH",
+  Cancelled = "ĐÃ HỦY",
+  Expired = "HẾT HẠN",
 }
