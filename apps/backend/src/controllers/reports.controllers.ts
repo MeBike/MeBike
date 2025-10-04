@@ -19,7 +19,10 @@ export async function createReportController(req: Request<ParamsDictionary, any,
     files: req.files as Express.Multer.File[],
   });
 
-  res.json({ message: REPORTS_MESSAGES.CREATE_SUCCESS, result });
+  res.json({
+    message: REPORTS_MESSAGES.CREATE_SUCCESS,
+    result: { acknowledged: true, insertedId: result._id },
+  });
 }
 
 export async function updateReportStatusController(req: Request<ParamsDictionary, any, any>, res: Response) {

@@ -53,6 +53,7 @@ class ReportService {
       status: ReportStatus.Pending,
       created_at: localTime,
       location: payload.location,
+      media_urls: [],
     };
 
     if (payload.station_id)
@@ -64,37 +65,46 @@ class ReportService {
     if (payload.bike_id)
       reportData.bike_id = new ObjectId(payload.bike_id);
 
-    if (files && files.length > 0) {
-      const limit = pLimit(3);
-      const media_urls = await Promise.all(
-        files.map(file =>
-          limit(async () => {
-            const uploadStream = () =>
-              new Promise<string>((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream(
-                  {
-                    resource_type: "auto",
-                    folder: "reports",
-                    chunk_size: 6_000_000,
-                  },
-                  (error, result) => {
-                    if (error)
-                      return reject(error);
-                    resolve(result?.secure_url || "");
-                  },
-                );
-                bufferToStream(file.buffer).pipe(stream);
-              });
+    await databaseService.reports.insertOne(new Report(reportData));
 
-            return await uploadStream();
-          }),
-        ),
-      );
-      reportData.media_urls = media_urls;
+    if (files && files.length > 0) {
+      ;(async () => {
+        try {
+          const limit = pLimit(3);
+          const media_urls = await Promise.all(
+            files.map(file =>
+              limit(async () => {
+                const uploadStream = () =>
+                  new Promise<string>((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                      {
+                        resource_type: "auto",
+                        folder: "reports",
+                        chunk_size: 6_000_000,
+                      },
+                      (error, result) => {
+                        if (error)
+                          return reject(error);
+                        resolve(result?.secure_url || "");
+                      },
+                    );
+                    bufferToStream(file.buffer).pipe(stream);
+                  });
+
+                return await uploadStream();
+              }),
+            ),
+          );
+
+          await databaseService.reports.updateOne({ _id: reportID }, { $set: { media_urls } });
+        }
+        catch (error) {
+          console.error("Upload background error:", error);
+        }
+      })();
     }
 
-    const result = await databaseService.reports.insertOne(new Report(reportData));
-    return result;
+    return { _id: reportID };
   }
 
   async updateReportStatus({ reportID, newStatus }: { reportID: string; newStatus: ReportStatus }) {
