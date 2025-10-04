@@ -21,3 +21,7 @@ export const USERS_MESSAGES = {
   EMAIL_OR_PASSWORD_IS_INCORRECT: "Email hoặc mật khẩu không chính xác",
   LOGIN_SUCCESS: "Đăng nhập thành công",
 } as const;
+
+export const RENTALS_MESSAGE = {
+  CREATE_SESSION_SUCCESS: "Tạo phiên thuê xe thành công",
+} as const;

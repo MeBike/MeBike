@@ -4,6 +4,7 @@ import express from "express";
 import process from "node:process";
 
 import { defaultErrorHandler } from "./middlewares/error.middlewares";
+import rentalsRouter from "./routes/rentals.routes";
 import usersRouter from "./routes/users.routes";
 import databaseService from "./services/database.services";
 
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/users", usersRouter);
+app.use("rentals", rentalsRouter);
 
 app.use(defaultErrorHandler);
 
