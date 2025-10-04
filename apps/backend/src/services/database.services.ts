@@ -5,6 +5,7 @@ import { MongoClient } from "mongodb";
 import process from "node:process";
 
 import type RefreshToken from "~/models/schemas/refresh-token.schemas";
+import type Report from "~/models/schemas/report.schema";
 import type Station from "~/models/schemas/station.schema";
 import type User from "~/models/schemas/user.schema";
 
@@ -48,6 +49,10 @@ class DatabaseService {
 
   get stations(): Collection<Station> {
     return this.db.collection(process.env.DB_STATIONS_COLLECTION as string);
+  }
+
+  get reports(): Collection<Report> {
+    return this.db.collection(process.env.DB_REPORTS_COLLECTION as string);
   }
 }
 

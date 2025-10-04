@@ -16,3 +16,24 @@ export enum Role {
   Staff = "STAFF",
   Admin = "ADMIN",
 }
+
+export enum ReportStatus {
+  Pending = "PENDING",
+  InProgress = "IN_PROGRESS",
+  Resolved = "RESOLVED",
+  Cancel = "Cancel",
+}
+
+export enum ReportTypeEnum {
+  BikeDamage = "BIKE_DAMAGE",
+  BikeDirty = "BIKE_DIRTY",
+
+  StationFull = "STATION_FULL",
+  StationNotAccepting = "STATION_NOT_ACCEPTING",
+  StationOffline = "STATION_OFFLINE",
+
+  SosAccident = "SOS_ACCIDENT",
+  SosHealth = "SOS_HEALTH",
+  SosThreat = "SOS_THREAT",
+  Other = "OTHER",
+}

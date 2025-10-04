@@ -21,3 +21,12 @@ export const USERS_MESSAGES = {
   EMAIL_OR_PASSWORD_IS_INCORRECT: "Email hoặc mật khẩu không chính xác",
   LOGIN_SUCCESS: "Đăng nhập thành công",
 } as const;
+
+export const REPORTS_MESSAGES = {
+  REPORT_NOT_FOUND: "Không tìm thấy sản phẩm với ID %s",
+  INVALID_NEW_STATUS: "Trạng thái mới không hợp lệ!",
+  CREATE_SUCCESS: "Tạo report thành công",
+  UPDATE_SUCCESS: "Update trạng thái report thành công!",
+  INVALID_REPORT_ID: "Report ID không hợp lệ!",
+  NOT_ACTIVE: "Report này hiện không tồn tại!",
+};
