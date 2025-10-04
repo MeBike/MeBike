@@ -44,5 +44,13 @@ export default function createConfig(options, ...userConfigs) {
       },
     },
     ...userConfigs,
+    {
+      // Chỉ áp dụng cho các file declaration (.d.ts)
+      files: ["**/*.d.ts"],
+      // Trong các file này, hãy tắt quy tắc đó đi
+      rules: {
+        "ts/consistent-type-definitions": "off",
+      },
+    },
   );
 }
