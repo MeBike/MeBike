@@ -5,7 +5,7 @@ import { omit } from "lodash";
 import HTTP_STATUS from "~/constants/http-status";
 import { EntityError, ErrorWithStatus } from "~/models/errors";
 
-export function defaultErrorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+export function defaultErrorHandler(err: any, req: Request, res: Response, _next: NextFunction) {
   if (err instanceof EntityError) {
     return res.status(err.status).json({
       message: err.message,

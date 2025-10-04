@@ -1,4 +1,3 @@
-import type { Request } from "express";
 import type { Meta, ParamSchema } from "express-validator";
 
 import bcrypt from "bcryptjs";
