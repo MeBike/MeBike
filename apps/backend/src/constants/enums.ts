@@ -16,3 +16,10 @@ export enum Role {
   Staff = "STAFF",
   Admin = "ADMIN",
 }
+
+export enum RentalStatus {
+  ONGOING = "ONGOING",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+  EXPIRED = "EXPIRED",
+}
