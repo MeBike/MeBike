@@ -38,4 +38,5 @@ export const REPORTS_MESSAGES = {
   INVALID_TYPE: "Loại report không hợp lệ!",
   MESSAGE_MUST_BE_STRING: "Mô tả không hợp lệ!",
   MESSAGE_TOO_LONG: "Mô tả chỉ chỉ khoảng 250 từ",
+  BIKE_NOT_IN_RENTAL: "Xe với ID %s không nằm trong phiên thuê",
 };

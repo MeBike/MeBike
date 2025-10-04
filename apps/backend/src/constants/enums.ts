@@ -37,3 +37,10 @@ export enum ReportTypeEnum {
   SosThreat = "SOS_THREAT",
   Other = "OTHER",
 }
+
+export enum RentalStatus {
+  Ongoing = "ONGOING",
+  Completed = "COMPLETED",
+  Cancelled = "CANCELLED",
+  Expired = "EXPIRED",
+}

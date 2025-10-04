@@ -51,33 +51,48 @@ export const createReportValidator = validate(
             _id: new ObjectId(value),
           });
           if (!bike) {
-            throw new Error(REPORTS_MESSAGES.BIKE_NOT_FOUND.replace("%s", value));
+            throw new ErrorWithStatus({
+              message: REPORTS_MESSAGES.BIKE_NOT_FOUND.replace("%s", value),
+              status: HTTP_STATUS.NOT_FOUND,
+            });
           }
           return true;
         },
       },
     },
-    // rental_id: {
-    //   in: ["body"],
-    //   optional: true,
-    //   notEmpty: {
-    //     errorMessage: REPORTS_MESSAGES.BIKE_ID_IS_REQUIRED,
-    //   },
-    //   isMongoId: {
-    //     errorMessage: REPORTS_MESSAGES.INVALID_BIKE_ID,
-    //   },
-    //   custom: {
-    //     options: async (value) => {
-    //       const bike = await databaseService.bikes.findOne({
-    //         _id: new ObjectId(value),
-    //       });
-    //       if (!bike) {
-    //         throw new Error(REPORTS_MESSAGES.BIKE_NOT_FOUND.replace("%s", value));
-    //       }
-    //       return true;
-    //     },
-    //   },
-    // },
+    rental_id: {
+      in: ["body"],
+      optional: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.BIKE_ID_IS_REQUIRED,
+      },
+      isMongoId: {
+        errorMessage: REPORTS_MESSAGES.INVALID_BIKE_ID,
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const rental = await databaseService.rentals.findOne({
+            _id: new ObjectId(value),
+          });
+          if (!rental) {
+            throw new ErrorWithStatus({
+              message: REPORTS_MESSAGES.BIKE_NOT_FOUND.replace("%s", value),
+              status: HTTP_STATUS.NOT_FOUND,
+            });
+          }
+
+          if (req.body.bike_id) {
+            if (rental.bike_id !== req.body.bike_id) {
+              throw new ErrorWithStatus({
+                message: REPORTS_MESSAGES.BIKE_NOT_IN_RENTAL.replace("%s", req.body.bike_id),
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
+            return true;
+          }
+        },
+      },
+    },
     type: {
       in: ["body"],
       notEmpty: {

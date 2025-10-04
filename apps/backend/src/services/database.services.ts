@@ -6,6 +6,7 @@ import process from "node:process";
 
 import type Bike from "~/models/schemas/bike.schema";
 import type RefreshToken from "~/models/schemas/refresh-token.schemas";
+import type Rental from "~/models/schemas/rental.schema";
 import type Report from "~/models/schemas/report.schema";
 import type Station from "~/models/schemas/station.schema";
 import type User from "~/models/schemas/user.schema";
@@ -58,6 +59,10 @@ class DatabaseService {
 
   get bikes(): Collection<Bike> {
     return this.db.collection(process.env.DB_BIKES_COLLECTION as string);
+  }
+
+  get rentals(): Collection<Rental> {
+    return this.db.collection(process.env.DB_RENTAL_COLLECTION as string);
   }
 }
 
