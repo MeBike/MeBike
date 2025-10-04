@@ -10,6 +10,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx --watch src/index.ts",
+    "openapi:generate": "tsx scripts/generate-openapi.ts",
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json --resolve-full-paths --resolve-full-extension .js",
     "start": "node dist/index.js",
     "compose:up": "docker compose up",

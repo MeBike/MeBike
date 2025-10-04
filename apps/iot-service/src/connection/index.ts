@@ -4,6 +4,8 @@ import mqtt from "mqtt";
 
 import type { ConnectionConfig, MqttConnection } from "./types";
 
+import { InfrastructureError } from "../middleware";
+
 export class MqttConnectionManager implements MqttConnection {
   public client: mqtt.MqttClient;
 
@@ -17,7 +19,12 @@ export class MqttConnectionManager implements MqttConnection {
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.client.on("connect", () => resolve());
-      this.client.on("error", reject);
+      this.client.on("error", (error) => {
+        reject(new InfrastructureError("Failed to connect to MQTT broker", {
+          brokerUrl: this.config.brokerUrl,
+          originalError: error.message,
+        }));
+      });
     });
   }
 
@@ -31,7 +38,10 @@ export class MqttConnectionManager implements MqttConnection {
     return new Promise((resolve, reject) => {
       this.client.subscribe(topics, (err) => {
         if (err) {
-          reject(err);
+          reject(new InfrastructureError("Failed to subscribe to MQTT topics", {
+            topics,
+            originalError: err.message,
+          }));
         }
         else {
           resolve();
@@ -44,7 +54,10 @@ export class MqttConnectionManager implements MqttConnection {
     return new Promise((resolve, reject) => {
       this.client.publish(topic, message, (err) => {
         if (err) {
-          reject(err);
+          reject(new InfrastructureError("Failed to publish MQTT message", {
+            topic,
+            originalError: err.message,
+          }));
         }
         else {
           resolve();

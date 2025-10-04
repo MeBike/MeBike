@@ -38,9 +38,50 @@ export const HealthResponseSchema = z.object({
   timestamp: z.string().datetime().openapi("HealthTimestamp", { example: "2024-01-01T00:00:00.000Z" }),
 });
 
+const ValidationIssueSchema = z.object({
+  path: z.string().openapi({ description: "Location of the invalid value", example: "command" }),
+  message: z.string().openapi({ description: "Why the value is invalid", example: "Invalid option: expected one of \"book\"|\"claim\"|\"release\"" }),
+  code: z.string().openapi({ description: "Zod issue code", example: "invalid_enum_value" }).optional(),
+  expected: z.any().optional(),
+  received: z.any().optional(),
+});
+
+export const ErrorDetailSchema = z.object({
+  code: z.string().openapi({ description: "Application specific error code", example: "VALIDATION_ERROR" }).optional(),
+  issues: z.array(ValidationIssueSchema).openapi({ description: "Detailed validation issues" }).optional(),
+}).catchall(z.any());
+
 export const ErrorResponseSchema = z.object({
-  error: z.string().openapi("ErrorMessage", { example: "Device not found" }),
-  details: z.record(z.string(), z.any()).optional(),
+  error: z.string().openapi("ErrorMessage", { example: "Invalid command payload" }),
+  details: ErrorDetailSchema.openapi("ErrorDetails", {
+    example: {
+      code: "VALIDATION_ERROR",
+      issues: [
+        {
+          path: "command",
+          message: "Invalid option: expected one of \"book\"|\"claim\"|\"release\"",
+          code: "invalid_enum_value",
+          received: "bookw",
+        },
+      ],
+    },
+  }).optional(),
+}).openapi("ErrorResponse", {
+  description: "Standard error payload returned by the IoT service.",
+  example: {
+    error: "Invalid command payload",
+    details: {
+      code: "VALIDATION_ERROR",
+      issues: [
+        {
+          path: "command",
+          message: "Invalid option: expected one of \"book\"|\"claim\"|\"release\"",
+          code: "invalid_enum_value",
+          received: "bookw",
+        },
+      ],
+    },
+  },
 });
 
 export const StateCommandBodySchema = z.object({
@@ -80,3 +121,4 @@ export type DeviceStatus = z.infer<typeof DeviceStatusSchema>;
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
 export type CommandAcceptedResponse = z.infer<typeof CommandAcceptedResponseSchema>;
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+export type ErrorDetail = z.infer<typeof ErrorDetailSchema>;

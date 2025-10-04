@@ -7,6 +7,8 @@ import { topicWithMac } from "@mebike/shared";
 
 import type { MqttConnection } from "../connection/types";
 
+import { InfrastructureError } from "../middleware";
+
 export class CommandPublisher {
   constructor(private connection: MqttConnection) {}
 
@@ -16,9 +18,22 @@ export class CommandPublisher {
     mac?: string | null,
   ): Promise<void> {
     const resolvedTopic = topicWithMac(topic, mac);
-    await this.connection.publish(resolvedTopic, payload);
 
-    console.warn(`Command sent to ${resolvedTopic}: ${payload}`);
+    try {
+      await this.connection.publish(resolvedTopic, payload);
+      console.warn(`Command sent to ${resolvedTopic}: ${payload}`);
+    }
+    catch (error) {
+      if (error instanceof InfrastructureError) {
+        throw error;
+      }
+
+      throw new InfrastructureError("Failed to publish command to device", {
+        topic: resolvedTopic,
+        payload,
+        originalError: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   async requestStatus(mac?: string | null): Promise<void> {
