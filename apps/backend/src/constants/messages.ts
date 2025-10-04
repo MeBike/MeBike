@@ -20,4 +20,8 @@ export const USERS_MESSAGES = {
   // đăng nhập messages
   EMAIL_OR_PASSWORD_IS_INCORRECT: "Email hoặc mật khẩu không chính xác",
   LOGIN_SUCCESS: "Đăng nhập thành công",
+  // logout messages
+  ACCESS_TOKEN_IS_REQUIRED: "Access token là bắt buộc",
+  USED_REFRESH_TOKEN_OR_NOT_EXIST: "Refresh token đã được sử dụng hoặc không tồn tại",
+  LOGOUT_SUCCESS: "Đăng xuất thành công",
 } as const;

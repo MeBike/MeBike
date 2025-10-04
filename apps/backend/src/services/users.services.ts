@@ -5,6 +5,7 @@ import nodemailer from "nodemailer";
 import type { RegisterReqBody } from "~/models/requests/users.requests";
 
 import { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
+import { USERS_MESSAGES } from "~/constants/messages";
 import RefreshToken from "~/models/schemas/refresh-token.schemas";
 import User from "~/models/schemas/user.schema";
 import { hashPassword } from "~/utils/crypto";
@@ -142,6 +143,11 @@ class UsersService {
       console.error("Error sending email:", error);
     }
     return { access_token, refresh_token };
+  }
+
+  async logout(refresh_token: string) {
+    await databaseService.refreshTokens.deleteOne({ token: refresh_token });
+    return { message: USERS_MESSAGES.LOGOUT_SUCCESS };
   }
 }
 

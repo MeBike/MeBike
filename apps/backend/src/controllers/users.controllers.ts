@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
 import type { ObjectId } from "mongodb";
 
-import type { LoginReqBody, RegisterReqBody } from "~/models/requests/users.requests";
+import type { LoginReqBody, LogoutReqBody, RegisterReqBody } from "~/models/requests/users.requests";
 import type User from "~/models/schemas/user.schema";
 
 import { USERS_MESSAGES } from "~/constants/messages";
@@ -29,4 +29,10 @@ export async function registerController(req: Request<ParamsDictionary, any, Reg
     message: USERS_MESSAGES.REGISTER_SUCCESS,
     result,
   });
+}
+
+export async function logoutController(req: Request<ParamsDictionary, any, LogoutReqBody>, res: Response) {
+  const { refresh_token } = req.body;
+  const result = await usersService.logout(refresh_token);
+  res.json(result);
 }

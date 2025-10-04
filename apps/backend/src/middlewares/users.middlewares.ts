@@ -1,11 +1,18 @@
+import type { Request } from "express";
 import type { Meta, ParamSchema } from "express-validator";
 
 import bcrypt from "bcryptjs";
 import { checkSchema } from "express-validator";
+import { JsonWebTokenError } from "jsonwebtoken";
+import { capitalize } from "lodash";
+import process from "node:process";
 
+import HTTP_STATUS from "~/constants/http-status";
 import { USERS_MESSAGES } from "~/constants/messages";
+import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import usersService from "~/services/users.services";
+import { verifyToken } from "~/utils/jwt";
 import { validate } from "~/utils/validation";
 
 const fullNameSchema: ParamSchema = {
@@ -147,6 +154,83 @@ export const registerValidator = validate(
         trim: true,
         isURL: {
           errorMessage: USERS_MESSAGES.IMAGE_URL_MUST_BE_VALID,
+        },
+      },
+    },
+    ["body"],
+  ),
+);
+
+export const accessTokenValidator = validate(
+  checkSchema(
+    {
+      Authorization: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            const accessToken = value.split(" ")[1];
+            if (!accessToken) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED,
+                status: HTTP_STATUS.UNAUTHORIZED,
+              });
+            }
+            try {
+              const decoded_authorization = await verifyToken({
+                token: accessToken,
+                secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
+              })
+              ;(req as Request).decoded_authorization = decoded_authorization;
+            }
+            catch (error) {
+              throw new ErrorWithStatus({
+                message: capitalize((error as JsonWebTokenError).message),
+                status: HTTP_STATUS.UNAUTHORIZED,
+              });
+            }
+            return true;
+          },
+        },
+      },
+    },
+    ["headers"],
+  ),
+);
+
+export const refreshTokenValidator = validate(
+  checkSchema(
+    {
+      refresh_token: {
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            try {
+              const [decoded_refresh_token, refresh_token] = await Promise.all([
+                verifyToken({ token: value, secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string }),
+                databaseService.refreshTokens.findOne({
+                  token: value,
+                }),
+              ]);
+
+              if (refresh_token === null) {
+                throw new ErrorWithStatus({
+                  message: USERS_MESSAGES.USED_REFRESH_TOKEN_OR_NOT_EXIST,
+                  status: HTTP_STATUS.UNAUTHORIZED,
+                });
+              }
+              ;(req as Request).decoded_refresh_token = decoded_refresh_token;
+            }
+            catch (error) {
+              if (error instanceof JsonWebTokenError) {
+                throw new ErrorWithStatus({
+                  message: capitalize((error as JsonWebTokenError).message),
+                  status: HTTP_STATUS.UNAUTHORIZED,
+                });
+              }
+              throw error;
+            }
+            return true;
+          },
         },
       },
     },

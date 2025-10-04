@@ -22,3 +22,7 @@ export type RegisterReqBody = {
   confirm_password: string;
   avatar?: string;
 };
+
+export type LogoutReqBody = {
+  refresh_token: string;
+};
