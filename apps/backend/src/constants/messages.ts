@@ -39,4 +39,10 @@ export const REPORTS_MESSAGES = {
   MESSAGE_MUST_BE_STRING: "Mô tả không hợp lệ!",
   MESSAGE_TOO_LONG: "Mô tả chỉ chỉ khoảng 250 từ",
   BIKE_NOT_IN_RENTAL: "Xe với ID %s không nằm trong phiên thuê",
+  STATION_ID_IS_REQUIRED: "ID của trạm là bắt buộc",
+  INVALID_STATION_ID: "ID của trạm không hợp lệ!",
+  RENTAL_NOT_FOUND: "Không tìm thấy thông tin của phiên thuê %s",
+  INVALID_RENTAL_ID: "ID của phiên thuê không hợp lệ!",
+  STATION_NOT_FOUND: "Không tìm thấy trạm với ID %s",
+  LOCATION_IS_REQUIRED: "Vị trí là bắt buộc!",
 };

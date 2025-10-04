@@ -35,86 +35,149 @@ export async function validateReportExists(reportId: string) {
 }
 
 export const createReportValidator = validate(
-  checkSchema({
-    bike_id: {
-      in: ["body"],
-      optional: true,
-      notEmpty: {
-        errorMessage: REPORTS_MESSAGES.BIKE_ID_IS_REQUIRED,
-      },
-      isMongoId: {
-        errorMessage: REPORTS_MESSAGES.INVALID_BIKE_ID,
-      },
-      custom: {
-        options: async (value) => {
-          const bike = await databaseService.bikes.findOne({
-            _id: new ObjectId(value),
-          });
-          if (!bike) {
-            throw new ErrorWithStatus({
-              message: REPORTS_MESSAGES.BIKE_NOT_FOUND.replace("%s", value),
-              status: HTTP_STATUS.NOT_FOUND,
-            });
-          }
-          return true;
+  checkSchema(
+    {
+      type: {
+        in: ["body"],
+        notEmpty: {
+          errorMessage: REPORTS_MESSAGES.TYPE_IS_REQUIRED,
+        },
+        isIn: {
+          options: [Object.values(ReportTypeEnum)],
+          errorMessage: REPORTS_MESSAGES.INVALID_TYPE,
         },
       },
-    },
-    rental_id: {
-      in: ["body"],
-      optional: true,
-      notEmpty: {
-        errorMessage: REPORTS_MESSAGES.BIKE_ID_IS_REQUIRED,
-      },
-      isMongoId: {
-        errorMessage: REPORTS_MESSAGES.INVALID_BIKE_ID,
-      },
-      custom: {
-        options: async (value, { req }) => {
-          const rental = await databaseService.rentals.findOne({
-            _id: new ObjectId(value),
-          });
-          if (!rental) {
-            throw new ErrorWithStatus({
-              message: REPORTS_MESSAGES.BIKE_NOT_FOUND.replace("%s", value),
-              status: HTTP_STATUS.NOT_FOUND,
-            });
-          }
 
-          if (req.body.bike_id) {
-            if (rental.bike_id !== req.body.bike_id) {
-              throw new ErrorWithStatus({
-                message: REPORTS_MESSAGES.BIKE_NOT_IN_RENTAL.replace("%s", req.body.bike_id),
-                status: HTTP_STATUS.NOT_FOUND,
+      message: {
+        in: ["body"],
+        isString: {
+          errorMessage: REPORTS_MESSAGES.MESSAGE_MUST_BE_STRING,
+        },
+        isLength: {
+          options: { max: 250 },
+          errorMessage: REPORTS_MESSAGES.MESSAGE_TOO_LONG,
+        },
+        trim: true,
+      },
+
+      bike_id: {
+        in: ["body"],
+        optional: true,
+        isMongoId: {
+          errorMessage: REPORTS_MESSAGES.INVALID_BIKE_ID,
+        },
+        custom: {
+          options: async (value, { req }) => {
+            if ([ReportTypeEnum.BikeDamage, ReportTypeEnum.BikeDirty].includes(req.body.type) && !value) {
+              throw new Error(REPORTS_MESSAGES.BIKE_ID_IS_REQUIRED);
+            }
+
+            if (value) {
+              const bike = await databaseService.bikes.findOne({
+                _id: new ObjectId(value),
               });
+              if (!bike) {
+                throw new ErrorWithStatus({
+                  message: REPORTS_MESSAGES.BIKE_NOT_FOUND.replace("%s", value),
+                  status: HTTP_STATUS.NOT_FOUND,
+                });
+              }
             }
             return true;
-          }
+          },
+        },
+      },
+
+      rental_id: {
+        in: ["body"],
+        optional: true,
+        isMongoId: {
+          errorMessage: REPORTS_MESSAGES.INVALID_RENTAL_ID,
+        },
+        custom: {
+          options: async (value, { req }) => {
+            if (value) {
+              const rental = await databaseService.rentals.findOne({
+                _id: new ObjectId(value),
+              });
+              if (!rental) {
+                throw new ErrorWithStatus({
+                  message: REPORTS_MESSAGES.RENTAL_NOT_FOUND.replace("%s", value),
+                  status: HTTP_STATUS.NOT_FOUND,
+                });
+              }
+
+              if (req.body.bike_id) {
+                if (String(rental.bike_id) !== req.body.bike_id) {
+                  throw new ErrorWithStatus({
+                    message: REPORTS_MESSAGES.BIKE_NOT_IN_RENTAL.replace("%s", req.body.bike_id),
+                    status: HTTP_STATUS.NOT_FOUND,
+                  });
+                }
+              }
+            }
+            return true;
+          },
+        },
+      },
+
+      station_id: {
+        in: ["body"],
+        optional: true,
+        isMongoId: {
+          errorMessage: REPORTS_MESSAGES.INVALID_STATION_ID,
+        },
+        custom: {
+          options: async (value, { req }) => {
+            if (
+              [ReportTypeEnum.StationFull, ReportTypeEnum.StationNotAccepting, ReportTypeEnum.StationOffline].includes(
+                req.body.type,
+              )
+              && !value
+            ) {
+              throw new ErrorWithStatus({
+                message: REPORTS_MESSAGES.STATION_ID_IS_REQUIRED,
+                status: HTTP_STATUS.BAD_REQUEST,
+              });
+            }
+
+            if (value) {
+              const station = await databaseService.stations.findOne({
+                _id: new ObjectId(value),
+              });
+              if (!station) {
+                throw new ErrorWithStatus({
+                  message: REPORTS_MESSAGES.STATION_NOT_FOUND.replace("%s", value),
+                  status: HTTP_STATUS.NOT_FOUND,
+                });
+              }
+            }
+            return true;
+          },
+        },
+      },
+      location: {
+        in: ["body"],
+        optional: true,
+        custom: {
+          options: (value, { req }) => {
+            if (
+              [ReportTypeEnum.SosAccident, ReportTypeEnum.SosHealth, ReportTypeEnum.SosThreat].includes(req.body.type)
+            ) {
+              if (!value || typeof value.latitude !== "number" || typeof value.longitude !== "number") {
+                throw new ErrorWithStatus({
+                  message: REPORTS_MESSAGES.LOCATION_IS_REQUIRED,
+                  status: HTTP_STATUS.BAD_REQUEST,
+                });
+              }
+            }
+            return true;
+          },
         },
       },
     },
-    type: {
-      in: ["body"],
-      notEmpty: {
-        errorMessage: REPORTS_MESSAGES.TYPE_IS_REQUIRED,
-      },
-      isIn: {
-        options: [Object.values(ReportTypeEnum)],
-        errorMessage: REPORTS_MESSAGES.INVALID_TYPE,
-      },
-    },
-    message: {
-      in: ["body"],
-      isString: {
-        errorMessage: REPORTS_MESSAGES.MESSAGE_MUST_BE_STRING,
-      },
-      isLength: {
-        options: { max: 250 },
-        errorMessage: REPORTS_MESSAGES.MESSAGE_TOO_LONG,
-      },
-      trim: true,
-    },
-  }),
+    ["body"],
+  ),
 );
 
 export const updateReportValidator = validate(
