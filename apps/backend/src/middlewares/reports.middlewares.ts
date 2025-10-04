@@ -1,5 +1,6 @@
 import { checkSchema } from "express-validator";
 import { ObjectId } from "mongodb";
+import { Error } from "mongoose";
 
 import { ReportStatus, ReportTypeEnum } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
@@ -62,14 +63,13 @@ export const createReportValidator = validate(
 
       bike_id: {
         in: ["body"],
-        optional: true,
-        isMongoId: {
-          errorMessage: REPORTS_MESSAGES.INVALID_BIKE_ID,
-        },
         custom: {
           options: async (value, { req }) => {
             if ([ReportTypeEnum.BikeDamage, ReportTypeEnum.BikeDirty].includes(req.body.type) && !value) {
-              throw new Error(REPORTS_MESSAGES.BIKE_ID_IS_REQUIRED);
+              throw new ErrorWithStatus({
+                message: REPORTS_MESSAGES.BIKE_ID_IS_REQUIRED,
+                status: HTTP_STATUS.BAD_REQUEST,
+              });
             }
 
             if (value) {
@@ -90,10 +90,6 @@ export const createReportValidator = validate(
 
       rental_id: {
         in: ["body"],
-        optional: true,
-        isMongoId: {
-          errorMessage: REPORTS_MESSAGES.INVALID_RENTAL_ID,
-        },
         custom: {
           options: async (value, { req }) => {
             if (value) {
@@ -123,10 +119,6 @@ export const createReportValidator = validate(
 
       station_id: {
         in: ["body"],
-        optional: true,
-        isMongoId: {
-          errorMessage: REPORTS_MESSAGES.INVALID_STATION_ID,
-        },
         custom: {
           options: async (value, { req }) => {
             if (
@@ -158,7 +150,6 @@ export const createReportValidator = validate(
       },
       location: {
         in: ["body"],
-        optional: true,
         custom: {
           options: (value, { req }) => {
             if (
