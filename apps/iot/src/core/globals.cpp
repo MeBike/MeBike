@@ -1,53 +1,16 @@
 #include "globals.h"
-#include <Arduino.h>
-#include <ArduinoLog.h>
-#include "CommandHandler.h"
-#include "DeviceUtils.h"
+#include "mqtt.h"
 
 DeviceState currentState;
-// TODO: THIS IS TOO MUCH REPonsibilty
 namespace Global
 {
-    WiFiClient espClient;
+    std::unique_ptr<NetworkManager> networkManager = nullptr;
     std::unique_ptr<MQTTManager> mqttManager = nullptr;
     std::unique_ptr<BufferedLogger> bufferedLogger = nullptr;
-    std::string ssid;
-    std::string password;
-    std::string statusTopic = "esp/status";
-    std::string logTopic = "esp/logs";
-    std::string commandStateTopic = "esp/commands/state";
-    std::string commandBookingTopic = "esp/commands/booking";
-    std::string commandReservationTopic = "esp/commands/reservation";
-    std::string commandMaintenanceTopic = "esp/commands/maintenance";
-    std::string commandStatusTopic = "esp/commands/status";
-    std::string commandRootTopic = "esp/commands";
-
-    bool initializeNetwork()
-    {
-        NetworkTopics topics;
-        if (::initializeNetwork(ssid.c_str(), password.c_str(), topics))
-        {
-            statusTopic = topics.statusTopic;
-            logTopic = topics.logTopic;
-            commandStateTopic = topics.commandStateTopic;
-            commandBookingTopic = topics.commandBookingTopic;
-            commandReservationTopic = topics.commandReservationTopic;
-            commandMaintenanceTopic = topics.commandMaintenanceTopic;
-            commandStatusTopic = topics.commandStatusTopic;
-            commandRootTopic = topics.commandRootTopic;
-            if (bufferedLogger)
-            {
-                bufferedLogger->setTopic(logTopic);
-            }
-            Log.info("Status topic set to %s\n", statusTopic.c_str());
-            return true;
-        }
-        return false;
-    }
 
     bool setupMQTT(const char *brokerIP, int port, const char *username, const char *pass)
     {
-        return ::setupMQTT(brokerIP, port, username, pass, logTopic);
+        return ::setupMQTT(brokerIP, port, username, pass, "");
     }
 }
 

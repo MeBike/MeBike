@@ -1,14 +1,13 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include <WiFi.h>
 #include <memory>
 #include <string>
 
+#include "NetworkManager.h"
 #include "MQTTManager.h"
 #include "BufferedLogger.h"
 #include "network.h"
-#include "mqtt.h"
 enum DeviceState
 {
     // Connection states
@@ -18,34 +17,29 @@ enum DeviceState
     STATE_ERROR,
 
     // Operational states
-    STATE_RESERVED,   //  đã bị thuê
-    STATE_AVAILABLE,  // Ready for use
-    STATE_BOOKED,     // In use/reserved
-    STATE_BROKEN,     // hư 
+    STATE_RESERVED,   //  đã bị thuê Bike held for pre-booking.
+    STATE_AVAILABLE,  //  Bike ready for rent/use
+    STATE_BOOKED,     // IN_USE (or BOOKED/RENTED in context): Bike currently rented/active. cái này giống in_use trong doc
+    STATE_BROKEN,     // hư
     STATE_MAINTAINED, // Under maintenance
     STATE_UNAVAILABLE // Offline or faulty
 };
+
 extern DeviceState currentState;
 
 const char *getStateName(DeviceState state);
 
 namespace Global
 {
-    extern WiFiClient espClient;
+    extern std::unique_ptr<NetworkManager> networkManager;
     extern std::unique_ptr<MQTTManager> mqttManager;
     extern std::unique_ptr<BufferedLogger> bufferedLogger;
-    extern std::string ssid;
-    extern std::string password;
-    extern std::string statusTopic;
-    extern std::string logTopic;
-    extern std::string commandStateTopic;
-    extern std::string commandBookingTopic;
-    extern std::string commandReservationTopic;
-    extern std::string commandMaintenanceTopic;
-    extern std::string commandStatusTopic;
-    extern std::string commandRootTopic;
-    bool initializeNetwork();
-    void mqttCallback(char *topic, byte *payload, unsigned int length);
+
+    inline const NetworkTopics &getTopics()
+    {
+        return networkManager->getTopics();
+    }
+
     bool setupMQTT(const char *brokerIP, int port, const char *username, const char *pass);
 
     inline void logBuffered(LogSeverity severity, LogDestination destination, const std::string &message)
