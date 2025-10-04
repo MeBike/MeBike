@@ -57,6 +57,27 @@ export const createReportValidator = validate(
         },
       },
     },
+    // rental_id: {
+    //   in: ["body"],
+    //   optional: true,
+    //   notEmpty: {
+    //     errorMessage: REPORTS_MESSAGES.BIKE_ID_IS_REQUIRED,
+    //   },
+    //   isMongoId: {
+    //     errorMessage: REPORTS_MESSAGES.INVALID_BIKE_ID,
+    //   },
+    //   custom: {
+    //     options: async (value) => {
+    //       const bike = await databaseService.bikes.findOne({
+    //         _id: new ObjectId(value),
+    //       });
+    //       if (!bike) {
+    //         throw new Error(REPORTS_MESSAGES.BIKE_NOT_FOUND.replace("%s", value));
+    //       }
+    //       return true;
+    //     },
+    //   },
+    // },
     type: {
       in: ["body"],
       notEmpty: {

@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { report } from "node:process";
 
 import type { CreateReportReqBody } from "~/models/requests/reports.requests";
 import type { ReportType } from "~/models/schemas/report.schema";
@@ -27,6 +28,8 @@ class ReportService {
       created_at: localTime,
     };
 
+    if (payload.rental_id)
+      reportData.rental_id = new ObjectId(payload.rental_id);
     if (userID)
       reportData.user_id = new ObjectId(userID);
     if (payload.bike_id)
