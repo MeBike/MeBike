@@ -4,7 +4,10 @@ import { config } from "dotenv";
 import { MongoClient } from "mongodb";
 import process from "node:process";
 
+import type Bike from "~/models/schemas/bike.schema";
 import type RefreshToken from "~/models/schemas/refresh-token.schemas";
+import type Rental from "~/models/schemas/rental.schema";
+import type Report from "~/models/schemas/report.schema";
 import type Station from "~/models/schemas/station.schema";
 import type User from "~/models/schemas/user.schema";
 
@@ -48,6 +51,18 @@ class DatabaseService {
 
   get stations(): Collection<Station> {
     return this.db.collection(process.env.DB_STATIONS_COLLECTION as string);
+  }
+
+  get reports(): Collection<Report> {
+    return this.db.collection(process.env.DB_REPORTS_COLLECTION as string);
+  }
+
+  get bikes(): Collection<Bike> {
+    return this.db.collection(process.env.DB_BIKES_COLLECTION as string);
+  }
+
+  get rentals(): Collection<Rental> {
+    return this.db.collection(process.env.DB_RENTALS_COLLECTION as string);
   }
 }
 

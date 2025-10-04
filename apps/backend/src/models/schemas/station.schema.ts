@@ -4,8 +4,8 @@ type StationType = {
   _id?: ObjectId;
   name: string;
   address: string;
-  latitude: string;
-  longitude: string;
+  latitude: number;
+  longitude: number;
   created_at?: Date;
   updated_at?: Date;
 };
@@ -14,8 +14,8 @@ export default class Station {
   _id?: ObjectId;
   name: string;
   address: string;
-  latitude: string;
-  longitude: string;
+  latitude: number;
+  longitude: number;
   created_at?: Date;
   updated_at?: Date;
 
