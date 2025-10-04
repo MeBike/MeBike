@@ -31,4 +31,7 @@ export const USERS_MESSAGES = {
   FORGOT_PASSWORD_TOKEN_IS_REQUIRED: "Forgot password token là bắt buộc",
   FORGOT_PASSWORD_TOKEN_IS_INCORRECT: "Forgot password token không chính xác",
   VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS: "Xác thực forgot password token thành công",
+  // reset password messages
+  NEW_PASSWORD_CANNOT_BE_THE_SAME_AS_OLD_PASSWORD: "Mật khẩu mới không được trùng với mật khẩu cũ",
+  RESET_PASSWORD_SUCCESS: "Đặt lại mật khẩu thành công",
 } as const;

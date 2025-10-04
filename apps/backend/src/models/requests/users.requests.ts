@@ -26,3 +26,9 @@ export type RegisterReqBody = {
 export type LogoutReqBody = {
   refresh_token: string;
 };
+
+export type resetPasswordReqBody = {
+  forgot_password_token: string;
+  password: string;
+  confirm_password: string;
+};

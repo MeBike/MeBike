@@ -173,14 +173,19 @@ class UsersService {
       user_id,
       verify,
     });
-    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, [
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
       {
         $set: {
           forgot_password_token,
-          updated_at: "$$NOW",
+          updated_at: localTime,
         },
       },
-    ]);
+    );
 
     // mail
     try {
@@ -214,6 +219,24 @@ class UsersService {
       console.error("Error sending forgot-password email:", error);
     }
     return { message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD };
+  }
+
+  async resetPassword({ user_id, password }: { user_id: string; password: string }) {
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          password: hashPassword(password),
+          forgot_password_token: "",
+          updated_at: localTime,
+        },
+      },
+    );
+    return { message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS };
   }
 }
 

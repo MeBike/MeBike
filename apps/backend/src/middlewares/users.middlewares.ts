@@ -303,6 +303,7 @@ export const verifyForgotPasswordTokenValidator = validate(
                   status: HTTP_STATUS.UNAUTHORIZED,
                 });
               }
+              (req as Request).user = user;
             }
             catch (error) {
               if (error instanceof JsonWebTokenError) {
@@ -313,6 +314,46 @@ export const verifyForgotPasswordTokenValidator = validate(
               }
               throw error;
             }
+            return true;
+          },
+        },
+      },
+    },
+    ["body"],
+  ),
+);
+
+export const resetPasswordValidator = validate(
+  checkSchema(
+    {
+      password: passwordSchema,
+      confirm_password: confirmPasswordSchema,
+    },
+    ["body"],
+  ),
+);
+
+export const checkNewPasswordValidator = validate(
+  checkSchema(
+    {
+      password: {
+        custom: {
+          options: (value: string, { req }: Meta) => {
+            const user = (req as Request).user;
+
+            if (!user || !user.password) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.USER_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
+
+            const isSameAsOldPassword = bcrypt.compareSync(value, user.password);
+
+            if (isSameAsOldPassword) {
+              throw new Error(USERS_MESSAGES.NEW_PASSWORD_CANNOT_BE_THE_SAME_AS_OLD_PASSWORD);
+            }
+
             return true;
           },
         },
