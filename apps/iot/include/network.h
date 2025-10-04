@@ -13,6 +13,7 @@ struct NetworkTopics
     std::string commandMaintenanceTopic;
     std::string commandStatusTopic;
     std::string commandRootTopic;
+    std::string maintenanceStatusTopic;
 };
 
 bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &topics);

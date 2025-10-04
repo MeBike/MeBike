@@ -19,37 +19,24 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
 
 bool setupMQTT(const char *brokerIP, int port, const char *username, const char *pass, const std::string &logTopic)
 {
-    Global::mqttManager.reset(new MQTTManager(Global::espClient, brokerIP, port, username, pass));
+    Global::mqttManager.reset(new MQTTManager(Global::networkManager->getWiFiClient(), brokerIP, port, username, pass));
     Global::mqttManager->setCallback(mqttCallback);
     if (Global::bufferedLogger)
     {
         Global::bufferedLogger->setMQTTManager(Global::mqttManager.get());
-        Global::bufferedLogger->setTopic(logTopic);
+        Global::bufferedLogger->setTopic(Global::getTopics().logTopic);
     }
     if (Global::mqttManager->connect())
     {
-        Global::mqttManager->subscribe("esp/commands/state");
-        Global::mqttManager->subscribe("esp/commands/booking");
-        Global::mqttManager->subscribe("esp/commands/reservation");
-        Global::mqttManager->subscribe("esp/commands/maintenance");
-        Global::mqttManager->subscribe("esp/commands/status");
+        const auto &topics = Global::getTopics();
+        Global::mqttManager->subscribe(topics.commandStateTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandBookingTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandReservationTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandMaintenanceTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandStatusTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandRootTopic.c_str());
 
-        if (!Global::commandStateTopic.empty())
-            Global::mqttManager->subscribe(Global::commandStateTopic.c_str());
-        if (!Global::commandBookingTopic.empty())
-            Global::mqttManager->subscribe(Global::commandBookingTopic.c_str());
-        if (!Global::commandReservationTopic.empty())
-            Global::mqttManager->subscribe(Global::commandReservationTopic.c_str());
-        if (!Global::commandMaintenanceTopic.empty())
-            Global::mqttManager->subscribe(Global::commandMaintenanceTopic.c_str());
-        if (!Global::commandStatusTopic.empty())
-            Global::mqttManager->subscribe(Global::commandStatusTopic.c_str());
-
-        Global::mqttManager->subscribe("esp/commands");
-        if (!Global::commandRootTopic.empty())
-            Global::mqttManager->subscribe(Global::commandRootTopic.c_str());
-
-        const char *topic = Global::statusTopic.empty() ? "esp/status" : Global::statusTopic.c_str();
+        const char *topic = Global::getTopics().statusTopic.c_str();
         Global::mqttManager->publish(topic, "ESP32 online", true);
         if (Global::bufferedLogger)
         {
