@@ -24,4 +24,10 @@ export const USERS_MESSAGES = {
 
 export const RENTALS_MESSAGE = {
   CREATE_SESSION_SUCCESS: "Tạo phiên thuê xe thành công",
+  INVALID_OBJECT_ID: "%s phải là 1 ObjectId hợp lệ",
+  REQUIRED_USER_ID: "Vui lòng nhập Id người dùng",
+  REQUIRED_BIKE_ID: "Vui lòng nhập Id xe đạp",
+  REQUIRED_START_STATION: "Vui lòng nhập trạm bắt đầu",
+  INVALID_DURATION: "Quãng đường không hợp lệ",
+  INVALID_TOTAL_PRICE: "Tổng tiền không hợp lệ",
 } as const;
