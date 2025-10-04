@@ -9,7 +9,7 @@ export type ReportType = {
   user_id?: ObjectId;
   bike_id?: ObjectId;
   type: ReportTypeEnum;
-  message?: string;
+  message: string;
   status?: ReportStatus;
   created_at?: Date;
 };
