@@ -5,6 +5,7 @@ import { MongoClient } from "mongodb";
 import process from "node:process";
 
 import type RefreshToken from "~/models/schemas/refresh-token.schemas";
+import type Station from "~/models/schemas/station.schema";
 import type User from "~/models/schemas/user.schema";
 
 config();
@@ -43,6 +44,10 @@ class DatabaseService {
 
   get refreshTokens(): Collection<RefreshToken> {
     return this.db.collection(process.env.DB_REFRESH_TOKENS_COLLECTION as string);
+  }
+
+  get stations(): Collection<Station> {
+    return this.db.collection(process.env.DB_STATIONS_COLLECTION as string);
   }
 }
 
