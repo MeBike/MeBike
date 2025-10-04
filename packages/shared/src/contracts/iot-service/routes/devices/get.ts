@@ -5,6 +5,7 @@ import {
   DeviceStatusSchema,
   ErrorResponseSchema,
 } from "../../schemas";
+import { deviceErrorResponses } from "./shared";
 
 export const getDeviceRoute = createRoute({
   method: "get",
@@ -42,5 +43,6 @@ export const getDeviceRoute = createRoute({
         },
       },
     },
+    ...deviceErrorResponses,
   },
 });

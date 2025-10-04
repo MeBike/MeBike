@@ -73,12 +73,21 @@ export function errorHandler(): MiddlewareHandler {
         const status: ErrorStatus = err.status ?? 400;
         return c.json(response, status);
       }
-      if (err instanceof Error && err.name === "InfrastructureError") {
+
+      if (err instanceof InfrastructureError) {
         const isDevelopment = env.NODE_ENV === "development";
+        const errorDetails = normalizeDetails(err.details) ?? {};
+
         return c.json<ErrorResponse, 500>(
           toErrorResponse(
             "A system error occurred. Please try again later.",
-            isDevelopment ? { code: "INFRASTRUCTURE_ERROR", detail: err.message } : { code: "INFRASTRUCTURE_ERROR" },
+            isDevelopment
+              ? {
+                  code: "INFRASTRUCTURE_ERROR",
+                  message: err.message,
+                  ...errorDetails,
+                }
+              : { code: "INFRASTRUCTURE_ERROR" },
           ),
           500,
         );

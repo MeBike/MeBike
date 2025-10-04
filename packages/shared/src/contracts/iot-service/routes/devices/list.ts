@@ -1,6 +1,7 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { DeviceStatusListSchema } from "../../schemas";
+import { deviceErrorResponses } from "./shared";
 
 export const listDevicesRoute = createRoute({
   method: "get",
@@ -17,5 +18,6 @@ export const listDevicesRoute = createRoute({
         },
       },
     },
+    ...deviceErrorResponses,
   },
 });
