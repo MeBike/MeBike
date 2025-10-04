@@ -19,7 +19,7 @@ static bool brokenStateEntryPublished = false;
 
 static const char *statusTopic()
 {
-    return Global::statusTopic.empty() ? "esp/status" : Global::statusTopic.c_str();
+    return Global::getTopics().statusTopic.c_str();
 }
 
 void resetStateEntryFlags()
@@ -39,17 +39,14 @@ bool ensureMqttConnected()
         return false;
     }
 
- 
     if (Global::mqttManager->isConnected())
     {
         mqttReconnectRetries = 0;
         return true;
     }
 
-   
     unsigned long now = millis();
 
-  
     if (now - lastMqttReconnectAttempt < mqttReconnectInterval)
     {
         return false;
@@ -65,27 +62,13 @@ bool ensureMqttConnected()
     {
         Log.info("MQTT reconnected successfully!\n");
 
-      
-        if (!Global::commandStateTopic.empty())
-            Global::mqttManager->subscribe(Global::commandStateTopic.c_str());
-        if (!Global::commandBookingTopic.empty())
-            Global::mqttManager->subscribe(Global::commandBookingTopic.c_str());
-        if (!Global::commandReservationTopic.empty())
-            Global::mqttManager->subscribe(Global::commandReservationTopic.c_str());
-        if (!Global::commandMaintenanceTopic.empty())
-            Global::mqttManager->subscribe(Global::commandMaintenanceTopic.c_str());
-        if (!Global::commandStatusTopic.empty())
-            Global::mqttManager->subscribe(Global::commandStatusTopic.c_str());
-        if (!Global::commandRootTopic.empty())
-            Global::mqttManager->subscribe(Global::commandRootTopic.c_str());
-
-        
-        Global::mqttManager->subscribe("esp/commands/state");
-        Global::mqttManager->subscribe("esp/commands/booking");
-        Global::mqttManager->subscribe("esp/commands/reservation");
-        Global::mqttManager->subscribe("esp/commands/maintenance");
-        Global::mqttManager->subscribe("esp/commands/status");
-        Global::mqttManager->subscribe("esp/commands");
+        const auto &topics = Global::getTopics();
+        Global::mqttManager->subscribe(topics.commandStateTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandBookingTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandReservationTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandMaintenanceTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandStatusTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandRootTopic.c_str());
 
         mqttReconnectRetries = 0;
         Global::logInfoBoth("MQTT reconnected and resubscribed to topics");
@@ -95,7 +78,6 @@ bool ensureMqttConnected()
     {
         Log.error("MQTT reconnection failed (state: %d)\n", mqttReconnectRetries);
 
-        
         if (mqttReconnectRetries >= maxMqttReconnectRetries)
         {
             Log.error("Max MQTT reconnection attempts reached, entering ERROR state\n");
@@ -162,14 +144,12 @@ void handleErrorState()
         recoveryRetries++;
         Log.info("Attempting recovery... (attempt %d/%d)\n", recoveryRetries, maxRecoveryRetries);
 
-      
         WiFi.reconnect();
 
         if (WiFi.status() == WL_CONNECTED)
         {
             Log.info("WiFi recovered\n");
 
-      
             if (Global::mqttManager && !Global::mqttManager->isConnected())
             {
                 Log.info("Attempting MQTT reconnection after WiFi recovery...\n");
@@ -208,7 +188,6 @@ void handleAvailableState()
         return;
     }
 
-   
     ensureMqttConnected();
 
     static unsigned long lastStatusPublish = 0;
@@ -248,7 +227,6 @@ void handleBookedState()
         return;
     }
 
-   
     ensureMqttConnected();
 
     static unsigned long lastStatusPublish = 0;
@@ -288,7 +266,6 @@ void handleMaintainedState()
         return;
     }
 
-   
     ensureMqttConnected();
 
     static unsigned long lastStatusPublish = 0;
@@ -328,7 +305,6 @@ void handleUnavailableState()
         return;
     }
 
-    
     ensureMqttConnected();
 
     static unsigned long lastStatusPublish = 0;
@@ -367,7 +343,6 @@ void handleReservedState()
         return;
     }
 
-    
     ensureMqttConnected();
 
     static unsigned long lastStatusPublish = 0;
@@ -406,7 +381,6 @@ void handleBrokenState()
         return;
     }
 
-   
     ensureMqttConnected();
 
     static unsigned long lastStatusPublish = 0;
@@ -426,7 +400,6 @@ void handleBrokenState()
         if (Global::mqttManager && Global::mqttManager->isConnected())
         {
             Global::mqttManager->publish(statusTopic(), "broken", true); // no eerror checjing truly fired and forgot
-            
         }
         lastStatusPublish = millis();
         Global::logInfoMQTT("Status heartbeat: broken");

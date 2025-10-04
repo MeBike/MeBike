@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import { Decimal128, Int32, ObjectId } from "mongodb";
 
 import { RentalStatus } from "~/constants/enums";
 
@@ -10,8 +10,8 @@ type RentalType = {
   end_station?: ObjectId;
   start_time: Date;
   end_time?: Date;
-  duration?: number;
-  total_price?: number;
+  duration?: Int32;
+  total_price?: Decimal128;
   status: RentalStatus;
   created_at?: Date;
   updated_at?: Date;
@@ -25,8 +25,8 @@ export default class Rental {
   end_station?: ObjectId;
   start_time: Date;
   end_time?: Date;
-  duration: number;
-  total_price: number;
+  duration: Int32;
+  total_price: Decimal128;
   status: RentalStatus;
   created_at?: Date;
   updated_at?: Date;
@@ -43,9 +43,9 @@ export default class Rental {
     this.end_station = rental.end_station ?? undefined;
     this.start_time = rental.start_time ?? localTime;
     this.end_time = rental.end_time ?? undefined;
-    this.duration = rental.duration ?? 0;
-    this.total_price = rental.total_price ?? 0;
-    this.status = rental.status ?? RentalStatus.ONGOING;
+    this.duration = rental.duration instanceof Int32 ? rental.duration : new Int32(rental.duration ?? 0);
+    this.total_price = rental.total_price instanceof Decimal128 ? rental.total_price : Decimal128.fromString(String(rental.total_price ?? 0));
+    this.status = rental.status ?? RentalStatus.Ongoing;
     this.created_at = rental.created_at || localTime;
     this.updated_at = rental.updated_at || localTime;
   }

@@ -1,3 +1,26 @@
+// Các quy tắc chuyển đổi trạng thái
+//
+// Nếu xe đang ở trạng thái RESERVED, nó chỉ có thể trở thành:
+// - AVAILABLE (nếu việc đặt trước bị hủy).
+// - BOOKED (nếu người dùng nhận xe).
+// Mọi chuyển đổi khác đều bị từ chối.
+//
+// Nếu xe đang ở trạng thái BOOKED (đang được sử dụng), nó chỉ có thể trở thành:
+// - AVAILABLE (khi người dùng trả xe).
+// - BROKEN, MAINTAINED, hoặc UNAVAILABLE (nếu có sự cố được báo cáo hoặc phát hiện).
+// Nó không thể được đặt trước hoặc thuê lại cho đến khi được trả lại.
+//
+// Nếu xe đang ở trạng thái BROKEN, nó chỉ có thể được chuyển sang:
+// - MAINTAINED hoặc UNAVAILABLE.
+// Nó không thể trở thành AVAILABLE hoặc được khách hàng sử dụng cho đến khi đã được bảo trì.
+//
+// Nếu xe đang trong trạng thái MAINTAINED, nó chỉ có thể trở thành:
+// - AVAILABLE (sau khi bảo trì hoàn tất).
+// - UNAVAILABLE.
+// Nó không thể được thuê, đặt trước, hoặc báo hỏng trực tiếp từ trạng thái này.
+//
+// Nếu xe đang ở trạng thái AVAILABLE, nó có thể chuyển sang hầu hết các trạng thái hoạt động khác (RESERVED, BOOKED, BROKEN, v.v.).
+
 #include "CommandHandler.h"
 #include <ArduinoLog.h>
 #include <cstring>
@@ -15,31 +38,31 @@ static bool matchesTopic(const char *incoming, const char *baseTopic, const std:
 
 static const char *statusTopic()
 {
-    return Global::statusTopic.empty() ? "esp/status" : Global::statusTopic.c_str();
+    return Global::getTopics().statusTopic.c_str();
 }
 
 void CommandHandler::processCommand(const char *topic, const char *message)
 {
     Log.info("Processing command from topic %s: %s\n", topic, message);
 
-    if (matchesTopic(topic, "esp/commands/state", Global::commandStateTopic) ||
-        matchesTopic(topic, "esp/commands", Global::commandRootTopic))
+    if (matchesTopic(topic, "esp/commands/state", Global::getTopics().commandStateTopic) ||
+        matchesTopic(topic, "esp/commands", Global::getTopics().commandRootTopic))
     {
         handleStateCommand(message);
     }
-    else if (matchesTopic(topic, "esp/commands/booking", Global::commandBookingTopic))
+    else if (matchesTopic(topic, "esp/commands/booking", Global::getTopics().commandBookingTopic))
     {
         handleBookingCommand(message);
     }
-    else if (matchesTopic(topic, "esp/commands/reservation", Global::commandReservationTopic))
+    else if (matchesTopic(topic, "esp/commands/reservation", Global::getTopics().commandReservationTopic))
     {
         handleReservationCommand(message);
     }
-    else if (matchesTopic(topic, "esp/commands/maintenance", Global::commandMaintenanceTopic))
+    else if (matchesTopic(topic, "esp/commands/maintenance", Global::getTopics().commandMaintenanceTopic))
     {
         handleMaintenanceCommand(message);
     }
-    else if (matchesTopic(topic, "esp/commands/status", Global::commandStatusTopic))
+    else if (matchesTopic(topic, "esp/commands/status", Global::getTopics().commandStatusTopic))
     {
         handleStatusCommand(message);
     }
@@ -53,7 +76,7 @@ void CommandHandler::handleStateCommand(const char *command)
 {
     Log.info("Handling state command: %s\n", command);
 
-    DeviceState targetState = currentState; // Default to current state
+    DeviceState targetState = currentState;
 
     if (strcmp(command, "available") == 0)
     {
@@ -110,14 +133,14 @@ void CommandHandler::handleBookingCommand(const char *command)
 
     if (strcmp(command, "book") == 0)
     {
-        if (currentState == STATE_AVAILABLE || currentState == STATE_RESERVED)
+        if (currentState == STATE_AVAILABLE || currentState == STATE_RESERVED) // nếu có hoặc người dùng muốn giữ chỗ
         {
             changeState(STATE_BOOKED);
             Log.info("Device booked successfully\n");
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::commandBookingTopic.c_str(), "booked", false);
+                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "booked", false);
             }
             Global::logInfoMQTT("Booking command: book");
         }
@@ -135,7 +158,7 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::commandBookingTopic.c_str(), "claimed", false);
+                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "claimed", false);
             }
             Global::logInfoMQTT("Booking command: claim");
         }
@@ -153,7 +176,7 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::commandBookingTopic.c_str(), "available", false);
+                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "available", false);
             }
             Global::logInfoMQTT("Booking command: release");
         }
@@ -177,7 +200,7 @@ void CommandHandler::handleReservationCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::commandReservationTopic.c_str(), "reserved", false);
+                Global::mqttManager->publish(Global::getTopics().commandReservationTopic.c_str(), "reserved", false);
             }
             Global::logInfoMQTT("Reservation command: reserve");
         }
@@ -195,7 +218,7 @@ void CommandHandler::handleReservationCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::commandReservationTopic.c_str(), "available", false);
+                Global::mqttManager->publish(Global::getTopics().commandReservationTopic.c_str(), "available", false);
             }
             Global::logInfoMQTT("Reservation command: cancel");
         }
@@ -219,7 +242,7 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish("esp/maintenance/status", "in_progress", false);
+                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic.c_str(), "in_progress", false);
             }
             Global::logInfoMQTT("Maintenance command: start");
         }
@@ -237,7 +260,7 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish("esp/maintenance/status", "completed", false);
+                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic.c_str(), "completed", false);
             }
             Global::logInfoMQTT("Maintenance command: complete");
         }
@@ -254,7 +277,6 @@ void CommandHandler::handleStatusCommand(const char *command)
 
     if (strcmp(command, "request") == 0)
     {
-        // Publish current status
         if (Global::mqttManager)
         {
             char statusMsg[100];
