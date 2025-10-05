@@ -33,6 +33,7 @@ bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &to
         topics.commandMaintenanceTopic = makeTopicWithMac("esp/commands/maintenance");
         topics.commandStatusTopic = makeTopicWithMac("esp/commands/status");
         topics.commandRootTopic = makeTopicWithMac("esp/commands");
+        topics.maintenanceStatusTopic = makeTopicWithMac("esp/maintenance/status");
         Log.info("Topics set with MAC address\n");
         return true;
     }
