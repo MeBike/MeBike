@@ -48,22 +48,31 @@ export const REPORTS_MESSAGES = {
 };
 
 export const RENTALS_MESSAGE = {
+  // Success action
   CREATE_SESSION_SUCCESS: "Tạo phiên thuê xe thành công",
+  GET_DETAIL_SUCCESS: "Xem chi tiết 1 phiên thuê xe thành công",
+  // Required data
   REQUIRED_USER_ID: "Vui lòng nhập Id người dùng",
   REQUIRED_BIKE_ID: "Vui lòng nhập Id xe đạp",
   REQUIRED_START_STATION: "Vui lòng nhập trạm bắt đầu",
   REQUIRED_END_STATION: "Vui lòng nhập trạm kết thúc",
   REQUIRED_ID: "Vui lòng nhập Id của phiên thuê",
+  // Invalid data
   INVALID_OBJECT_ID: "%s phải là 1 ObjectId hợp lệ",
   INVALID_DURATION: "Khoảng thời gian không hợp lệ (phải là số nguyên)",
   INVALID_TOTAL_PRICE: "Tổng tiền không hợp lệ (phải là số thực)",
+  // Not found object
+  USER_NOT_FOUND: "Không tìm thấy người dùng với Id %s",
   BIKE_NOT_FOUND: "Không tìm thấy xe đạp với Id %s",
   STATION_NOT_FOUND: "Không tìm thấy trạm với Id %s",
   BIKE_NOT_FOUND_IN_STATION: "Xe với Id %s không tồn tại trong trạm %s",
-  NOT_AVAILABLE_BIKE: "Xe chưa sẵn sàng để sử dụng",
   NOT_FOUND_ONGOING_RENTAL: "Không tìm thấy phiên thuê nào với Id %s đang diễn ra ở thời điểm hiện tại",
+  NOT_FOUND: "Không tìm thấy phiên thuê nào với Id %s",
+  // Not available
+  NOT_AVAILABLE_BIKE: "Xe chưa sẵn sàng để sử dụng",
 } as const;
 
 export const COMMON_MESSAGE = {
   CREATE_SESSION_FAIL: "Tạo phiên thất bại: ",
+  ACCESS_DENIED: "Bạn không có quyền truy cập tài nguyên này",
 };

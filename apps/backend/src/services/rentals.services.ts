@@ -3,7 +3,9 @@ import type { ObjectId } from "mongodb";
 import { Decimal128, Int32 } from "mongodb";
 
 import { BikeStatus, RentalStatus } from "~/constants/enums";
-import { COMMON_MESSAGE } from "~/constants/messages";
+import HTTP_STATUS from "~/constants/http-status";
+import { COMMON_MESSAGE, RENTALS_MESSAGE } from "~/constants/messages";
+import { ErrorWithStatus } from "~/models/errors";
 import Rental from "~/models/schemas/rental.schema";
 import { toObjectId } from "~/utils/string";
 
@@ -102,6 +104,97 @@ class RentalsService {
     finally {
       await session.endSession();
     }
+  }
+
+  // for staff/admin
+  async getDetailRental({ rental_id }: { rental_id: string | ObjectId }) {
+    const rental = await databaseService.rentals.findOne({
+      _id: toObjectId(rental_id),
+    });
+    if (!rental) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.NOT_FOUND.replace("%s", rental_id.toString()),
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+    await this.buildDetailResponse(rental);
+  }
+
+  // for user
+  async getMyDetailRental({
+    user_id,
+    rental_id,
+  }: {
+    user_id: ObjectId;
+    rental_id: string | ObjectId;
+  }) {
+    const rental = await databaseService.rentals.findOne({
+      _id: toObjectId(rental_id),
+    });
+    if (!rental) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.NOT_FOUND.replace("%s", rental_id.toString()),
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+    if (!rental.user_id.toString().localeCompare(user_id.toString())) {
+      throw new ErrorWithStatus({
+        message: COMMON_MESSAGE.ACCESS_DENIED,
+        status: HTTP_STATUS.FORBIDDEN,
+      });
+    }
+    await this.buildDetailResponse(rental);
+  }
+
+  async buildDetailResponse(rental: Rental) {
+    const user = await databaseService.users.findOne({ _id: rental.user_id });
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.USER_NOT_FOUND.replace("%s", rental.user_id.toString()),
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+
+    const bike = await databaseService.bikes.findOne({ _id: rental.bike_id });
+    if (!bike) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace("%s", rental.bike_id.toString()),
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+    const bikeStation = await databaseService.stations.findOne({ _id: bike.station_id });
+    if (!bikeStation) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace("%s", rental.start_station.toString()),
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+
+    const startStation = await databaseService.stations.findOne({ _id: rental.start_station });
+    if (!startStation) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace("%s", rental.start_station.toString()),
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+
+    let endStation = null;
+    if (rental.end_station) {
+      endStation = await databaseService.stations.findOne({ _id: rental.end_station });
+    }
+
+    const { password, email_verify_token, forgot_password_token, ...insensitiveUserData } = user;
+    const { station_id, ...restBike } = bike;
+    const { _id, user_id, bike_id, start_station, end_station, ...restRental } = rental;
+
+    return {
+      _id,
+      user: insensitiveUserData,
+      bike: restBike,
+      start_station: startStation,
+      end_station: endStation,
+      ...restRental,
+    };
   }
 
   generateDuration(start: Date, end: Date) {
