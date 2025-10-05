@@ -22,3 +22,34 @@ export type RegisterReqBody = {
   confirm_password: string;
   avatar?: string;
 };
+
+export type LogoutReqBody = {
+  refresh_token: string;
+};
+
+export type resetPasswordReqBody = {
+  forgot_password_token: string;
+  password: string;
+  confirm_password: string;
+};
+
+export type VerifyEmailReqBody = {
+  email_verify_token: string;
+};
+
+export type ChangePasswordReqBody = {
+  old_password: string;
+  password: string;
+  confirm_password: string;
+};
+
+export type UpdateMeReqBody = {
+  fullname?: string;
+  location?: string;
+  username?: string;
+  avatar?: string;
+};
+
+export type RefreshTokenReqBody = {
+  refresh_token: string;
+};

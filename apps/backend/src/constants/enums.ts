@@ -16,3 +16,31 @@ export enum Role {
   Staff = "STAFF",
   Admin = "ADMIN",
 }
+
+export enum ReportStatus {
+  Pending = "ĐANG CHỜ XỬ LÝ",
+  InProgress = "ĐANG XỬ LÝ",
+  Resolved = "ĐÃ GIẢI QUYẾT",
+  Cancel = "ĐÃ HỦY",
+}
+
+export enum ReportTypeEnum {
+  BikeDamage = "XE HƯ HỎNG",
+  BikeDirty = "XE BẨN",
+
+  StationFull = "TRẠM ĐẦY",
+  StationNotAccepting = "TRẠM KHÔNG NHẬN XE",
+  StationOffline = "TRẠM NGOẠI TUYẾN",
+
+  SosAccident = "CẤP CỨU TAI NẠN",
+  SosHealth = "CẤP CỨU SỨC KHỎE",
+  SosThreat = "CẤP CỨU NGUY HIỂM",
+  Other = "KHÁC",
+}
+
+export enum RentalStatus {
+  Ongoing = "ĐANG THUÊ",
+  Completed = "HOÀN THÀNH",
+  Cancelled = "ĐÃ HỦY",
+  Expired = "HẾT HẠN",
+}
