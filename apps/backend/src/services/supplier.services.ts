@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 
-import type { CreateSupplierReqBody } from "~/models/requests/suppliers.request";
+import type { CreateSupplierReqBody, UpdateSupplierReqBody } from "~/models/requests/suppliers.request";
 import type { SupplierType } from "~/models/schemas/supplier.schema";
 
 import { SupplierStatus } from "~/constants/enums";
@@ -33,7 +33,40 @@ class SupplierService {
     return result;
   }
 
-  async updateSupplier() {}
+  async updateSupplier({ id, payload }: { id: string; payload: UpdateSupplierReqBody }) {
+    const updateData: any = {};
+
+    if (payload.address) {
+      updateData["contact_info.address"] = payload.address;
+    }
+    if (payload.phone_number) {
+      updateData["contact_info.phone_number"] = payload.phone_number;
+    }
+    if (payload.name) {
+      updateData.name = payload.name;
+    }
+    if (payload.contract_fee) {
+      updateData.contract_fee = payload.contract_fee;
+    }
+
+    const result = await databaseService.suppliers.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: updateData },
+      { returnDocument: "after" },
+    );
+
+    return result;
+  }
+
+  async updateStatus({ id, newStatus }: { id: string; newStatus: SupplierStatus }) {
+    const result = await databaseService.suppliers.findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: { status: newStatus } },
+      { returnDocument: "after" },
+    );
+
+    return result;
+  }
 }
 
 const supplierService = new SupplierService();

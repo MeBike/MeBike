@@ -50,9 +50,3 @@ export enum SupplierStatus {
   INACTIVE = "NGƯNG HOẠT ĐỘNG",
   TERMINATE = "CHẤM DỨT HỢP ĐỒNG",
 }
-
-export enum ContractStatus {
-  ACTIVE = "HOẠT ĐỘNG",
-  EXPIRED = "HẾT HẠN",
-  TERMINATED = "CHẤM DỨT HỢP ĐỒNG",
-}

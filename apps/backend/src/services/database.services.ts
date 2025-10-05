@@ -5,7 +5,6 @@ import { MongoClient } from "mongodb";
 import process from "node:process";
 
 import type Bike from "~/models/schemas/bike.schema";
-import type Contract from "~/models/schemas/contract.schema";
 import type RefreshToken from "~/models/schemas/refresh-token.schemas";
 import type Rental from "~/models/schemas/rental.schema";
 import type Report from "~/models/schemas/report.schema";
@@ -69,10 +68,6 @@ class DatabaseService {
 
   get suppliers(): Collection<Supplier> {
     return this.db.collection(process.env.DB_SUPPLIERS_COLLECTION as string);
-  }
-
-  get contracts(): Collection<Contract> {
-    return this.db.collection(process.env.DB_CONTRACTS_COLLECTION as string);
   }
 }
 
