@@ -92,3 +92,27 @@ export async function emailVerifyTokenController(req: Request<ParamsDictionary, 
     result,
   });
 }
+
+export async function resendEmailVerifyController(req: Request, res: Response) {
+  const { user_id } = (req as Request).decoded_authorization as TokenPayLoad;
+  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) });
+  if (user === null) {
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.USER_NOT_FOUND,
+      status: 404,
+    });
+  }
+  if (user.verify === UserVerifyStatus.Verified && user.email_verify_token === "") {
+    return res.json({
+      message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE,
+    });
+  }
+  if (user.verify === UserVerifyStatus.Banned) {
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.USER_BANNED,
+      status: HTTP_STATUS.FORBIDDEN,
+    });
+  }
+  const result = await usersService.resendEmailVerify(user_id);
+  res.json(result);
+}

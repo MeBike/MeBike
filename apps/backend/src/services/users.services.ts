@@ -5,7 +5,9 @@ import nodemailer from "nodemailer";
 import type { RegisterReqBody } from "~/models/requests/users.requests";
 
 import { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
+import HTTP_STATUS from "~/constants/http-status";
 import { USERS_MESSAGES } from "~/constants/messages";
+import { ErrorWithStatus } from "~/models/errors";
 import RefreshToken from "~/models/schemas/refresh-token.schemas";
 import User from "~/models/schemas/user.schema";
 import { hashPassword } from "~/utils/crypto";
@@ -201,7 +203,7 @@ class UsersService {
       const resetURL = `${process.env.FRONTEND_URL}/auth/reset-password?token=${forgot_password_token}`;
 
       const htmlContent = readEmailTemplate("forgot-password.html", {
-        userName: fullname,
+        fullname,
         resetURL,
       });
 
@@ -265,6 +267,61 @@ class UsersService {
       }),
     );
     return { access_token, refresh_token };
+  }
+
+  async resendEmailVerify(user_id: string) {
+    const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) });
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+    const email_verify_token = await this.signEmailVerifyToken({
+      user_id,
+      verify: UserVerifyStatus.Unverified,
+    });
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+
+    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
+      $set: {
+        email_verify_token,
+        updated_at: localTime,
+      },
+    });
+    // mail
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_APP,
+          pass: process.env.EMAIL_PASSWORD_APP,
+        },
+      });
+      const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`;
+
+      // Sử dụng template 'resend-verify-email.html'
+      const htmlContent = readEmailTemplate("resend-verify-email.html", {
+        fullname: user.fullname, // Truyền tên người dùng vào template
+        verifyURL,
+      });
+
+      const mailOptions = {
+        from: `"MeBike" <${process.env.EMAIL_APP}>`,
+        to: user.email, // Gửi đến email của người dùng
+        subject: "Yêu cầu gửi lại email xác thực tài khoản MeBike",
+        html: htmlContent,
+      };
+
+      transporter.sendMail(mailOptions);
+      console.log("Resend verification email sent successfully to:", user.email);
+    }
+    catch (error) {
+      console.error("Error sending resend-verification email:", error);
+    }
+    return { message: USERS_MESSAGES.RESEND_EMAIL_VERIFY_SUCCESS };
   }
 }
 

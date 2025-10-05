@@ -39,4 +39,7 @@ export const USERS_MESSAGES = {
   EMAIL_ALREADY_VERIFIED_BEFORE: "Email đã được xác thực trước đó",
   EMAIL_VERIFY_TOKEN_IS_INCORRECT: "Email verify token không chính xác",
   VERIFY_EMAIL_SUCCESS: "Xác thực email thành công",
+  // resend verify email messages
+  USER_BANNED: "Người dùng đã bị cấm",
+  RESEND_EMAIL_VERIFY_SUCCESS: "Gửi lại email xác thực thành công",
 } as const;
