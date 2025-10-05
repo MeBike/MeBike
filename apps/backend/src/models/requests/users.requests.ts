@@ -42,3 +42,10 @@ export type ChangePasswordReqBody = {
   password: string;
   confirm_password: string;
 };
+
+export type UpdateMeReqBody = {
+  fullname?: string;
+  location?: string;
+  username?: string;
+  avatar?: string;
+};

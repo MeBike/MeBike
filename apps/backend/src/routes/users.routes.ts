@@ -1,7 +1,10 @@
 import { Router } from "express";
 
-import { changePasswordController, emailVerifyTokenController, forgotPasswordController, loginController, logoutController, registerController, resendEmailVerifyController, resetPasswordController, verifyForgotPasswordTokenController } from "~/controllers/users.controllers";
-import { accessTokenValidator, changePasswordValidator, checkNewPasswordValidator, emailVerifyTokenValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, verifiedUserValidator, verifyForgotPasswordTokenValidator } from "~/middlewares/users.middlewares";
+import type { UpdateMeReqBody } from "~/models/requests/users.requests";
+
+import { changePasswordController, emailVerifyTokenController, forgotPasswordController, getMeController, loginController, logoutController, registerController, resendEmailVerifyController, resetPasswordController, updateMeController, verifyForgotPasswordTokenController } from "~/controllers/users.controllers";
+import { filterMiddleware } from "~/middlewares/common.middlewares";
+import { accessTokenValidator, changePasswordValidator, checkNewPasswordValidator, emailVerifyTokenValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, updateMeValidator, verifiedUserValidator, verifyForgotPasswordTokenValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
 const usersRouter = Router();
@@ -31,5 +34,12 @@ usersRouter.put(
   changePasswordValidator,
   wrapAsync(changePasswordController),
 );
-
+usersRouter.get("/me", accessTokenValidator, wrapAsync(getMeController));
+usersRouter.patch(
+  "/me",
+  accessTokenValidator,
+  filterMiddleware<UpdateMeReqBody>(["fullname", "location", "username", "avatar"]),
+  updateMeValidator,
+  wrapAsync(updateMeController),
+);
 export default usersRouter;

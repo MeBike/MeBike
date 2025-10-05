@@ -47,4 +47,13 @@ export const USERS_MESSAGES = {
   OLD_PASSWORD_NOT_MATCH: "Mật khẩu cũ không khớp",
   NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD: "Mật khẩu mới phải khác với mật khẩu cũ",
   CHANGE_PASSWORD_SUCCESS: "Đổi mật khẩu thành công",
+  // get me messages
+  GET_ME_SUCCESS: "Lấy thông tin người dùng thành công",
+  UPDATE_ME_ERROR: "Cập nhật thông tin người dùng thất bại",
+  // update me messages
+  LOCATION_MUST_BE_A_STRING: "Vị trí phải là chuỗi",
+  LOCATION_LENGTH_MUST_BE_LESS_THAN_200: "Vị trí phải có độ dài nhỏ hơn 200 ký tự",
+  USERNAME_MUST_BE_A_STRING: "Tên người dùng phải là chuỗi",
+  USERNAME_ALREADY_EXISTS: "Tên người dùng đã tồn tại",
+  UPDATE_ME_SUCCESS: "Cập nhật thông tin người dùng thành công",
 } as const;

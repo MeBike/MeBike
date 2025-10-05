@@ -123,3 +123,22 @@ export async function changePasswordController(req: Request<ParamsDictionary, an
   const result = await usersService.changePassword(user_id, password);
   res.json(result);
 }
+
+export async function getMeController(req: Request, res: Response) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad;
+  const user = await usersService.getMe(user_id);
+  res.json({
+    message: USERS_MESSAGES.GET_ME_SUCCESS,
+    result: user,
+  });
+}
+
+export async function updateMeController(req: Request, res: Response) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad;
+  const { body } = req;
+  const result = await usersService.updateMe(user_id, body);
+  res.json({
+    message: USERS_MESSAGES.UPDATE_ME_SUCCESS,
+    result,
+  });
+}

@@ -13,6 +13,7 @@ import type { TokenPayLoad } from "~/models/requests/users.requests";
 import { UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { USERS_MESSAGES } from "~/constants/messages";
+import { REGEX_USERNAME } from "~/constants/regex";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import usersService from "~/services/users.services";
@@ -454,6 +455,60 @@ export const changePasswordValidator = validate(
         },
       } },
       confirm_password: confirmPasswordSchema,
+    },
+    ["body"],
+  ),
+);
+
+export const updateMeValidator = validate(
+  checkSchema(
+    {
+      fullname: {
+        optional: true,
+        ...fullNameSchema,
+        notEmpty: undefined,
+      },
+      location: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.LOCATION_MUST_BE_A_STRING,
+        },
+        trim: true,
+        isLength: {
+          options: {
+            min: 1,
+            max: 200,
+          },
+          errorMessage: USERS_MESSAGES.LOCATION_LENGTH_MUST_BE_LESS_THAN_200,
+        },
+      },
+      username: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.USERNAME_MUST_BE_A_STRING,
+        },
+        trim: true,
+        custom: {
+          options: async (value: string) => {
+            if (REGEX_USERNAME.test(value) === false) {
+              throw new Error(USERS_MESSAGES.USERNAME_MUST_BE_A_STRING);
+            }
+            const user = await databaseService.users.findOne({ username: value });
+
+            if (user) {
+              throw new Error(USERS_MESSAGES.USERNAME_ALREADY_EXISTS);
+            }
+            return true;
+          },
+        },
+      },
+      avatar: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.IMAGE_URL_MUST_BE_A_STRING,
+        },
+        trim: true,
+      },
     },
     ["body"],
   ),

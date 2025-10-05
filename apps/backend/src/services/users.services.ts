@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 import process from "node:process";
 import nodemailer from "nodemailer";
 
-import type { RegisterReqBody } from "~/models/requests/users.requests";
+import type { RegisterReqBody, UpdateMeReqBody } from "~/models/requests/users.requests";
 
 import { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
@@ -338,6 +338,54 @@ class UsersService {
     return {
       message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS,
     };
+  }
+
+  async getMe(user_id: string) {
+    const user = await databaseService.users.findOne(
+      { _id: new ObjectId(user_id) },
+      {
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0,
+        },
+      },
+    );
+    return user;
+  }
+
+  async updateMe(user_id: string, payload: UpdateMeReqBody) {
+    const _payload = payload;
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+    try {
+      const user = await databaseService.users.findOneAndUpdate(
+        { _id: new ObjectId(user_id) },
+        {
+          $set: {
+            ..._payload,
+            updated_at: localTime,
+          },
+        },
+        {
+          returnDocument: "after",
+          projection: {
+            password: 0,
+            email_verify_token: 0,
+            forgot_password_token: 0,
+          },
+        },
+      );
+      return user;
+    }
+    catch (error) {
+      console.error("Error updating user info:", error);
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.UPDATE_ME_ERROR,
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      });
+    }
   }
 }
 
