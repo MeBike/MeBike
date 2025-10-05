@@ -1,5 +1,8 @@
 import { z } from "./zod";
 
+export * as IotService from "./contracts/iot-service";
+export * as IotTopics from "./iot/topics";
+
 export * from "./contracts/iot-service";
 export * from "./iot/topics";
 

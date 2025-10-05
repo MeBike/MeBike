@@ -10,6 +10,24 @@
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./clients/iot-service": {
+      "types": "./dist/clients/iot-service/index.d.ts",
+      "import": "./dist/clients/iot-service/index.js",
+      "require": "./dist/clients/iot-service/index.js",
+      "default": "./dist/clients/iot-service/index.js"
+    },
+    "./clients/iot-service/client": {
+      "types": "./dist/clients/iot-service/client.d.ts",
+      "import": "./dist/clients/iot-service/client.js",
+      "require": "./dist/clients/iot-service/client.js",
+      "default": "./dist/clients/iot-service/client.js"
+    },
+    "./clients/iot-service/schemas": {
+      "types": "./dist/clients/iot-service/schemas/index.d.ts",
+      "import": "./dist/clients/iot-service/schemas/index.js",
+      "require": "./dist/clients/iot-service/schemas/index.js",
+      "default": "./dist/clients/iot-service/schemas/index.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",

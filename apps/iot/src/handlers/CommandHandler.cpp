@@ -235,7 +235,10 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
 
     if (strcmp(command, "start") == 0)
     {
-        if (currentState == STATE_AVAILABLE || currentState == STATE_UNAVAILABLE || currentState == STATE_BROKEN)
+        if (currentState == STATE_AVAILABLE ||
+            currentState == STATE_UNAVAILABLE ||
+            currentState == STATE_BROKEN ||
+            currentState == STATE_BOOKED)
         {
             changeState(STATE_MAINTAINED);
             Log.info("Maintenance mode started\n");
