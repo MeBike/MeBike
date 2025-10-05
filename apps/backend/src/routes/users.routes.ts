@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import type { UpdateMeReqBody } from "~/models/requests/users.requests";
 
-import { changePasswordController, emailVerifyTokenController, forgotPasswordController, getMeController, loginController, logoutController, registerController, resendEmailVerifyController, resetPasswordController, updateMeController, verifyForgotPasswordTokenController } from "~/controllers/users.controllers";
+import { changePasswordController, emailVerifyTokenController, forgotPasswordController, getMeController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, updateMeController, verifyForgotPasswordTokenController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
 import { accessTokenValidator, changePasswordValidator, checkNewPasswordValidator, emailVerifyTokenValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, updateMeValidator, verifiedUserValidator, verifyForgotPasswordTokenValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
@@ -42,4 +42,6 @@ usersRouter.patch(
   updateMeValidator,
   wrapAsync(updateMeController),
 );
+usersRouter.post("/refresh-token", refreshTokenValidator, wrapAsync(refreshController));
+
 export default usersRouter;

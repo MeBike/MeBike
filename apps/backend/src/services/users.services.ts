@@ -387,6 +387,29 @@ class UsersService {
       });
     }
   }
+
+  async refreshToken({
+    user_id,
+    verify,
+    refresh_token,
+    exp,
+  }: {
+    user_id: string;
+    verify: UserVerifyStatus;
+    refresh_token: string;
+    exp: number;
+  }) {
+    const [access_token, new_refresh_token] = await Promise.all([
+      this.signAccessToken({ user_id, verify }),
+      this.signRefreshToken({ user_id, verify, exp }),
+    ]);
+    const { iat } = await this.decodeRefreshToken(refresh_token);
+    await databaseService.refreshTokens.deleteOne({ token: refresh_token });
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({ user_id: new ObjectId(user_id), token: new_refresh_token, exp, iat }),
+    );
+    return { access_token, refresh_token: new_refresh_token };
+  }
 }
 
 const usersService = new UsersService();

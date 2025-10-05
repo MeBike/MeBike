@@ -3,7 +3,7 @@ import type { ParamsDictionary } from "express-serve-static-core";
 
 import { ObjectId } from "mongodb";
 
-import type { ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RegisterReqBody, resetPasswordReqBody, TokenPayLoad, VerifyEmailReqBody } from "~/models/requests/users.requests";
+import type { ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, resetPasswordReqBody, TokenPayLoad, VerifyEmailReqBody } from "~/models/requests/users.requests";
 import type User from "~/models/schemas/user.schema";
 
 import { UserVerifyStatus } from "~/constants/enums";
@@ -139,6 +139,16 @@ export async function updateMeController(req: Request, res: Response) {
   const result = await usersService.updateMe(user_id, body);
   res.json({
     message: USERS_MESSAGES.UPDATE_ME_SUCCESS,
+    result,
+  });
+}
+
+export async function refreshController(req: Request<ParamsDictionary, any, RefreshTokenReqBody>, res: Response, _next: NextFunction) {
+  const { refresh_token } = req.body;
+  const { user_id, verify, exp } = req.decoded_refresh_token as TokenPayLoad;
+  const result = await usersService.refreshToken({ user_id, verify, refresh_token, exp });
+  res.json({
+    message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESS,
     result,
   });
 }

@@ -49,3 +49,7 @@ export type UpdateMeReqBody = {
   username?: string;
   avatar?: string;
 };
+
+export type RefreshTokenReqBody = {
+  refresh_token: string;
+};
