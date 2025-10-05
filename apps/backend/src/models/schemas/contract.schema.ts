@@ -10,6 +10,7 @@ export type ContractType = {
   start_date: Date;
   end_date: Date;
   contract_fee: Decimal128;
+  image_url: string;
   status: ContractStatus;
   created_at?: Date;
   updated_at?: Date;
@@ -21,6 +22,7 @@ export default class Contract {
   start_date: Date;
   end_date: Date;
   contract_fee: Decimal128;
+  image_url: string;
   status: ContractStatus;
   created_at?: Date;
   updated_at?: Date;
@@ -35,6 +37,7 @@ export default class Contract {
     this.start_date = contract.start_date;
     this.end_date = contract.end_date;
     this.contract_fee = contract.contract_fee;
+    this.image_url = contract.image_url;
     this.status = contract.status || ContractStatus.ACTIVE;
     this.created_at = contract.created_at || localTime;
     this.updated_at = contract.updated_at || localTime;

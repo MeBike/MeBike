@@ -39,6 +39,7 @@ export const createReportValidator = validate(
     {
       type: {
         in: ["body"],
+        trim: true,
         notEmpty: {
           errorMessage: REPORTS_MESSAGES.TYPE_IS_REQUIRED,
         },
@@ -50,6 +51,7 @@ export const createReportValidator = validate(
 
       message: {
         in: ["body"],
+        trim: true,
         isString: {
           errorMessage: REPORTS_MESSAGES.MESSAGE_MUST_BE_STRING,
         },
@@ -57,11 +59,11 @@ export const createReportValidator = validate(
           options: { max: 250 },
           errorMessage: REPORTS_MESSAGES.MESSAGE_TOO_LONG,
         },
-        trim: true,
       },
 
       bike_id: {
         in: ["body"],
+        trim: true,
         custom: {
           options: async (value, { req }) => {
             if ([ReportTypeEnum.BikeDamage, ReportTypeEnum.BikeDirty].includes(req.body.type) && !value) {
@@ -89,6 +91,7 @@ export const createReportValidator = validate(
 
       rental_id: {
         in: ["body"],
+        trim: true,
         custom: {
           options: async (value, { req }) => {
             if (value) {
@@ -118,6 +121,7 @@ export const createReportValidator = validate(
 
       station_id: {
         in: ["body"],
+        trim: true,
         custom: {
           options: async (value, { req }) => {
             if (
@@ -149,6 +153,7 @@ export const createReportValidator = validate(
       },
       location: {
         in: ["body"],
+        trim: true,
         custom: {
           options: (value, { req }) => {
             if (
@@ -174,13 +179,13 @@ export const updateReportValidator = validate(
   checkSchema({
     reportID: {
       in: "params",
+      trim: true,
       notEmpty: {
         errorMessage: REPORTS_MESSAGES.REPORT_ID_IS_REQUIRED,
       },
       isMongoId: {
         errorMessage: REPORTS_MESSAGES.INVALID_REPORT_ID,
       },
-      trim: true,
       custom: {
         options: async (value) => {
           const report = await databaseService.reports.findOne({
@@ -198,6 +203,7 @@ export const updateReportValidator = validate(
     },
     newStatus: {
       in: "body",
+      trim: true,
       notEmpty: {
         errorMessage: REPORTS_MESSAGES.STATUS_IS_REQUIRED,
       },

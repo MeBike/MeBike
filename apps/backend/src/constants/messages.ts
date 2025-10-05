@@ -46,3 +46,21 @@ export const REPORTS_MESSAGES = {
   STATION_NOT_FOUND: "Không tìm thấy trạm với ID %s",
   LOCATION_IS_REQUIRED: "Vị trí là bắt buộc!",
 };
+
+export const SUPPLIER_MESSAGE = {
+  CREATE_SUCCESS: "Tạo nhà cung cấp thành công!",
+  NAME_IS_REQUIRED: "Tên nhà cung cấp là bắt buộc!",
+  NAME_IN_VALID: "Tên nhà cung cấp phải là chuỗi!",
+  NAME_TOO_LONG: "Tên nhà cung cấp không vượt quá 30 ký tự",
+  ADDRESS_IN_VALID: "Địa chỉ nhà cung cấp phải là chuỗi!",
+  ADDRESS_TOO_LONG: "Tên nhà cung cấp không vượt quá 250 ký tự",
+  PHONE_IN_VALID: "Số điện thoại nhà cung cấp phải là chuỗi!",
+  PHONE_NUMBER_INVALID: "Số điện thoại phải có 10 số",
+  FEE_IN_VALID: "Phí hợp đồng nhà cung cấp phải là số thập phân!",
+  START_DATE_IN_VALID: "Ngày bắt đầu hợp đồng nhà cung cấp phải là kiểu DATE",
+  START_DATE_AFTER: "Ngày bắt đầu hợp đồng phải trước ngày kết thúc của hợp đồng",
+  START_DATE_IN_PAST: "Ngày bắt đầu hợp đồng phải trước ngày hôm nay",
+  END_DATE_IN_VALID: "Ngày kết thúc hợp đồng nhà cung cấp phải là kiểu DATE",
+  END_DATE_1_MONTH: "Ngày kết thúc hợp đồng phải sau ngày bắt đầu hợp đồng 1 tháng",
+  CONTRACT_IMAGE_IS_REQUIRED: "Hình ảnh hợp đồng là bắt buộc",
+};

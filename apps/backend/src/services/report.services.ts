@@ -99,7 +99,7 @@ class ReportService {
           await databaseService.reports.updateOne({ _id: reportID }, { $set: { media_urls } });
         }
         catch (error) {
-          console.error("Upload background error:", error);
+          console.error("Upload report image error:", error);
         }
       })();
     }

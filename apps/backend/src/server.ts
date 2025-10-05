@@ -5,6 +5,7 @@ import process from "node:process";
 
 import { defaultErrorHandler } from "./middlewares/error.middlewares";
 import reportsRouter from "./routes/reports.routes";
+import suppliersRouter from "./routes/suppliers.routes";
 import usersRouter from "./routes/users.routes";
 import databaseService from "./services/database.services";
 
@@ -26,6 +27,7 @@ app.get("/", (req, res) => {
 
 app.use("/users", usersRouter);
 app.use("/reports", reportsRouter);
+app.use("/suppliers", suppliersRouter);
 
 app.use(defaultErrorHandler);
 

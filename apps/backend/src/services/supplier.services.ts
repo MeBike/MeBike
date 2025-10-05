@@ -1,20 +1,33 @@
-import { ObjectId } from "mongodb";
+import type { Buffer } from "node:buffer";
 
-import type { CreateContractReqBody } from "~/models/requests/contracts.requests";
-import type { CreateSupplierReqBody, UpdateSupplierReqBody } from "~/models/requests/suppliers.request";
+import { v2 as cloudinary } from "cloudinary";
+import { ObjectId } from "mongodb";
+import process from "node:process";
+import { Readable } from "node:stream";
+
+import type { CreateSupplierReqBody } from "~/models/requests/suppliers.request";
 import type { ContractType } from "~/models/schemas/contract.schema";
 import type { SupplierType } from "~/models/schemas/supplier.schema";
 
-import { ContractStatus, ReportStatus, SupplierStatus } from "~/constants/enums";
-import HTTP_STATUS from "~/constants/http-status";
-import { REPORTS_MESSAGES } from "~/constants/messages";
-import { ErrorWithStatus } from "~/models/errors";
-import Supplier from "~/models/schemas/supplier.schema";
+import { ContractStatus, SupplierStatus } from "~/constants/enums";
 
 import databaseService from "./database.services";
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
+
+function bufferToStream(buffer: Buffer) {
+  const readable = new Readable();
+  readable.push(buffer);
+  readable.push(null);
+  return readable;
+}
+
 class SupplierService {
-  async createSupplier({ payload }: { payload: CreateSupplierReqBody }) {
+  async createSupplier({ payload, image }: { payload: CreateSupplierReqBody; image: Express.Multer.File }) {
     const supplierID = new ObjectId();
     const contracts_id = new ObjectId();
     const currentDate = new Date();
@@ -39,49 +52,54 @@ class SupplierService {
       status: ContractStatus.ACTIVE,
       start_date: payload.start_date,
       end_date: payload.end_date,
+      image_url: "",
       created_at: localTime,
       updated_at: localTime,
     };
 
-    const result = await Promise.all([
+    await Promise.all([
       databaseService.suppliers.insertOne(supplierData),
       databaseService.contracts.insertOne(supplier_contracts),
     ]);
 
-    return result;
-  }
+    if (image) {
+      ;(async () => {
+        try {
+          const uploadStream = () =>
+            new Promise<string>((resolve, reject) => {
+              const stream = cloudinary.uploader.upload_stream(
+                {
+                  resource_type: "image",
+                  folder: "contracts",
+                  chunk_size: 6_000_000,
+                },
+                (error, result) => {
+                  if (error)
+                    return reject(error);
+                  resolve(result?.secure_url || "");
+                },
+              );
 
-  async updateSupplier({ supplierID, payload }: { supplierID: string; payload: UpdateSupplierReqBody }) {
-    const validTransitions: Record<ReportStatus, ReportStatus[]> = {
-      [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
-      [ReportStatus.InProgress]: [ReportStatus.Resolved],
-      [ReportStatus.Resolved]: [],
-      [ReportStatus.Cancel]: [],
-    };
+              bufferToStream(image.buffer).pipe(stream);
+            });
 
-    const findReport = await databaseService.reports.findOne({ _id: new ObjectId(reportID) });
-    if (!findReport) {
-      throw new ErrorWithStatus({
-        message: REPORTS_MESSAGES.REPORT_NOT_FOUND,
-        status: HTTP_STATUS.NOT_FOUND,
-      });
+          const imageUrl = await uploadStream();
+
+          await databaseService.contracts.updateOne(
+            { _id: contracts_id },
+            { $set: { image_url: imageUrl, updated_at: new Date() } },
+          );
+        }
+        catch (error) {
+          console.error("Upload contract image error:", error);
+        }
+      })();
     }
 
-    const currentStatus = findReport.status;
-    if (!validTransitions[currentStatus].includes(newStatus)) {
-      throw new ErrorWithStatus({
-        message: REPORTS_MESSAGES.INVALID_NEW_STATUS,
-        status: HTTP_STATUS.BAD_REQUEST,
-      });
-    }
-
-    const result = await databaseService.reports.findOneAndUpdate(
-      { _id: new ObjectId(reportID) },
-      { $set: { status: newStatus } },
-      { returnDocument: "after" },
-    );
-    return result;
+    return { _id: supplierID };
   }
+
+  async updateSupplier() {}
 }
 
 const supplierService = new SupplierService();
