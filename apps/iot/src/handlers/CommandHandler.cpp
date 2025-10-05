@@ -25,6 +25,7 @@
 #include <ArduinoLog.h>
 #include <cstring>
 #include "globals.h"
+#include "LEDStatusManager.h"
 #include "StateMachine.h"
 
 static bool matchesTopic(const char *incoming, const char *baseTopic, const std::string &deviceTopic)
@@ -340,5 +341,11 @@ void CommandHandler::changeState(DeviceState newState)
 {
     Log.info("Changing state from %s to %s\n", getStateName(currentState), getStateName(newState));
     currentState = newState;
+
+    if (Global::ledStatusManager)
+    {
+        Global::ledStatusManager->setStatus(newState);
+    }
+
     resetStateEntryFlags();
 }

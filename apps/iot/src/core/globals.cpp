@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "LEDStatusManager.h"
 #include "mqtt.h"
 
 DeviceState currentState;
@@ -7,6 +8,7 @@ namespace Global
     std::unique_ptr<NetworkManager> networkManager = nullptr;
     std::unique_ptr<MQTTManager> mqttManager = nullptr;
     std::unique_ptr<BufferedLogger> bufferedLogger = nullptr;
+    std::unique_ptr<LEDStatusManager> ledStatusManager = nullptr;
 
     bool setupMQTT(const char *brokerIP, int port, const char *username, const char *pass)
     {
