@@ -49,10 +49,21 @@ export const REPORTS_MESSAGES = {
 
 export const RENTALS_MESSAGE = {
   CREATE_SESSION_SUCCESS: "Tạo phiên thuê xe thành công",
-  INVALID_OBJECT_ID: "%s phải là 1 ObjectId hợp lệ",
   REQUIRED_USER_ID: "Vui lòng nhập Id người dùng",
   REQUIRED_BIKE_ID: "Vui lòng nhập Id xe đạp",
   REQUIRED_START_STATION: "Vui lòng nhập trạm bắt đầu",
-  INVALID_DURATION: "Quãng đường không hợp lệ",
-  INVALID_TOTAL_PRICE: "Tổng tiền không hợp lệ",
+  REQUIRED_END_STATION: "Vui lòng nhập trạm kết thúc",
+  REQUIRED_ID: "Vui lòng nhập Id của phiên thuê",
+  INVALID_OBJECT_ID: "%s phải là 1 ObjectId hợp lệ",
+  INVALID_DURATION: "Khoảng thời gian không hợp lệ (phải là số nguyên)",
+  INVALID_TOTAL_PRICE: "Tổng tiền không hợp lệ (phải là số thực)",
+  BIKE_NOT_FOUND: "Không tìm thấy xe đạp với Id %s",
+  STATION_NOT_FOUND: "Không tìm thấy trạm với Id %s",
+  BIKE_NOT_FOUND_IN_STATION: "Xe với Id %s không tồn tại trong trạm %s",
+  NOT_AVAILABLE_BIKE: "Xe chưa sẵn sàng để sử dụng",
+  NOT_FOUND_ONGOING_RENTAL: "Không tìm thấy phiên thuê nào với Id %s đang diễn ra ở thời điểm hiện tại",
 } as const;
+
+export const COMMON_MESSAGE = {
+  CREATE_SESSION_FAIL: "Tạo phiên thất bại: ",
+};
