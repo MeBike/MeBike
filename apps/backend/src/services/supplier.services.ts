@@ -35,7 +35,6 @@ class SupplierService {
     const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
 
     const supplierData: SupplierType = {
-      ...payload,
       _id: supplierID,
       name: payload.name,
       address: payload.address,
