@@ -2,9 +2,12 @@ import { ObjectId } from "mongodb";
 import process from "node:process";
 import nodemailer from "nodemailer";
 
-import type { RegisterReqBody } from "~/models/requests/users.requests";
+import type { RegisterReqBody, UpdateMeReqBody } from "~/models/requests/users.requests";
 
 import { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
+import HTTP_STATUS from "~/constants/http-status";
+import { USERS_MESSAGES } from "~/constants/messages";
+import { ErrorWithStatus } from "~/models/errors";
 import RefreshToken from "~/models/schemas/refresh-token.schemas";
 import User from "~/models/schemas/user.schema";
 import { hashPassword } from "~/utils/crypto";
@@ -55,6 +58,14 @@ class UsersService {
 
   private signAccessAndRefreshTokens({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
     return Promise.all([this.signAccessToken({ user_id, verify }), this.signRefreshToken({ user_id, verify })]);
+  }
+
+  private signForgotPasswordToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+    return signToken({
+      payload: { user_id, token_type: TokenType.ForgotPasswordToken, verify },
+      options: { expiresIn: "1d" },
+      privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
+    });
   }
 
   async login({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
@@ -142,6 +153,262 @@ class UsersService {
       console.error("Error sending email:", error);
     }
     return { access_token, refresh_token };
+  }
+
+  async logout(refresh_token: string) {
+    await databaseService.refreshTokens.deleteOne({ token: refresh_token });
+    return { message: USERS_MESSAGES.LOGOUT_SUCCESS };
+  }
+
+  async forgotPassword({
+    user_id,
+    verify,
+    email,
+    fullname,
+  }: {
+    user_id: string;
+    verify: UserVerifyStatus;
+    email: string;
+    fullname: string;
+  }) {
+    const forgot_password_token = await this.signForgotPasswordToken({
+      user_id,
+      verify,
+    });
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          forgot_password_token,
+          updated_at: localTime,
+        },
+      },
+    );
+
+    // mail
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_APP,
+          pass: process.env.EMAIL_PASSWORD_APP,
+        },
+      });
+
+      // const resetURL = `${process.env.FRONTEND_URL}/reset-password?token=${forgot_password_token}`
+      const resetURL = `${process.env.FRONTEND_URL}/auth/reset-password?token=${forgot_password_token}`;
+
+      const htmlContent = readEmailTemplate("forgot-password.html", {
+        fullname,
+        resetURL,
+      });
+
+      const mailOptions = {
+        from: `"MeBike" <${process.env.EMAIL_APP}>`,
+        to: email,
+        subject: "Yêu cầu đặt lại mật khẩu cho tài khoản MeBike",
+        html: htmlContent,
+      };
+
+      transporter.sendMail(mailOptions);
+      console.log("Forgot password email sent successfully to:", email);
+    }
+    catch (error) {
+      console.error("Error sending forgot-password email:", error);
+    }
+    return { message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD };
+  }
+
+  async resetPassword({ user_id, password }: { user_id: string; password: string }) {
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+
+    await databaseService.users.updateOne(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          password: hashPassword(password),
+          forgot_password_token: "",
+          updated_at: localTime,
+        },
+      },
+    );
+    return { message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS };
+  }
+
+  async verifyEmail(user_id: string) {
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+
+    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
+      $set: {
+        verify: UserVerifyStatus.Verified,
+        email_verify_token: "",
+        updated_at: localTime,
+      },
+    });
+    const [access_token, refresh_token] = await this.signAccessAndRefreshTokens({
+      user_id,
+      verify: UserVerifyStatus.Verified,
+    });
+    const { exp, iat } = await this.decodeRefreshToken(refresh_token);
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({
+        token: refresh_token,
+        user_id: new ObjectId(user_id),
+        exp,
+        iat,
+      }),
+    );
+    return { access_token, refresh_token };
+  }
+
+  async resendEmailVerify(user_id: string) {
+    const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) });
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+    const email_verify_token = await this.signEmailVerifyToken({
+      user_id,
+      verify: UserVerifyStatus.Unverified,
+    });
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+
+    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
+      $set: {
+        email_verify_token,
+        updated_at: localTime,
+      },
+    });
+    // mail
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_APP,
+          pass: process.env.EMAIL_PASSWORD_APP,
+        },
+      });
+      const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`;
+
+      // Sử dụng template 'resend-verify-email.html'
+      const htmlContent = readEmailTemplate("resend-verify-email.html", {
+        fullname: user.fullname, // Truyền tên người dùng vào template
+        verifyURL,
+      });
+
+      const mailOptions = {
+        from: `"MeBike" <${process.env.EMAIL_APP}>`,
+        to: user.email, // Gửi đến email của người dùng
+        subject: "Yêu cầu gửi lại email xác thực tài khoản MeBike",
+        html: htmlContent,
+      };
+
+      transporter.sendMail(mailOptions);
+      console.log("Resend verification email sent successfully to:", user.email);
+    }
+    catch (error) {
+      console.error("Error sending resend-verification email:", error);
+    }
+    return { message: USERS_MESSAGES.RESEND_EMAIL_VERIFY_SUCCESS };
+  }
+
+  async changePassword(user_id: string, password: string) {
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
+      $set: {
+        password: hashPassword(password),
+        forgot_password_token: "",
+        updated_at: localTime,
+      },
+    });
+    return {
+      message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS,
+    };
+  }
+
+  async getMe(user_id: string) {
+    const user = await databaseService.users.findOne(
+      { _id: new ObjectId(user_id) },
+      {
+        projection: {
+          password: 0,
+          email_verify_token: 0,
+          forgot_password_token: 0,
+        },
+      },
+    );
+    return user;
+  }
+
+  async updateMe(user_id: string, payload: UpdateMeReqBody) {
+    const _payload = payload;
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+    try {
+      const user = await databaseService.users.findOneAndUpdate(
+        { _id: new ObjectId(user_id) },
+        {
+          $set: {
+            ..._payload,
+            updated_at: localTime,
+          },
+        },
+        {
+          returnDocument: "after",
+          projection: {
+            password: 0,
+            email_verify_token: 0,
+            forgot_password_token: 0,
+          },
+        },
+      );
+      return user;
+    }
+    catch (error) {
+      console.error("Error updating user info:", error);
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.UPDATE_ME_ERROR,
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  async refreshToken({
+    user_id,
+    verify,
+    refresh_token,
+    exp,
+  }: {
+    user_id: string;
+    verify: UserVerifyStatus;
+    refresh_token: string;
+    exp: number;
+  }) {
+    const [access_token, new_refresh_token] = await Promise.all([
+      this.signAccessToken({ user_id, verify }),
+      this.signRefreshToken({ user_id, verify, exp }),
+    ]);
+    const { iat } = await this.decodeRefreshToken(refresh_token);
+    await databaseService.refreshTokens.deleteOne({ token: refresh_token });
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({ user_id: new ObjectId(user_id), token: new_refresh_token, exp, iat }),
+    );
+    return { access_token, refresh_token: new_refresh_token };
   }
 }
 
