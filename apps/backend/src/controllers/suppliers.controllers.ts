@@ -1,10 +1,15 @@
 import type { Request, Response } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
 
+import { ObjectId } from "mongodb";
+
 import type { SupplierStatus } from "~/constants/enums";
 import type { CreateSupplierReqBody, UpdateSupplierReqBody } from "~/models/requests/suppliers.request";
 
+import HTTP_STATUS from "~/constants/http-status";
 import { SUPPLIER_MESSAGE } from "~/constants/messages";
+import { ErrorWithStatus } from "~/models/errors";
+import databaseService from "~/services/database.services";
 import supplierService from "~/services/supplier.services";
 
 export async function createSupplierController(req: Request<any, any, CreateSupplierReqBody>, res: Response) {
@@ -36,10 +41,30 @@ export async function changeSupplierStatusController(req: Request<ParamsDictiona
   const supplierID = req.params.id;
   const { newStatus } = req.body;
 
-  const result = await supplierService.updateStatus({ id: supplierID.toString(), newStatus: newStatus as SupplierStatus });
+  const result = await supplierService.updateStatus({
+    id: supplierID.toString(),
+    newStatus: newStatus as SupplierStatus,
+  });
 
   res.json({
     message: SUPPLIER_MESSAGE.UPDATE_SUCCESS,
+    result,
+  });
+}
+
+export async function getByIdController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const supplierID = req.params.id;
+
+  const result = await databaseService.suppliers.findOne({ _id: new ObjectId(supplierID) });
+  if (!result) {
+    throw new ErrorWithStatus({
+      message: SUPPLIER_MESSAGE.SUPPLIER_NOT_FOUND.replace("%s", supplierID),
+      status: HTTP_STATUS.NOT_FOUND,
+    });
+  }
+
+  res.json({
+    message: SUPPLIER_MESSAGE.GET_BY_ID_SUCCESS.replace("%s", supplierID),
     result,
   });
 }

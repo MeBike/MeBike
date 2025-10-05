@@ -3,7 +3,7 @@ import multer from "multer";
 
 import type { CreateReportReqBody } from "~/models/requests/reports.requests";
 
-import { createReportController, updateReportStatusController } from "~/controllers/reports.controllers";
+import { createReportController, getByIdController, updateReportStatusController } from "~/controllers/reports.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
 import { createReportValidator, updateReportValidator } from "~/middlewares/reports.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
@@ -15,6 +15,7 @@ const upload = multer({ storage });
 
 const reportsRouter = Router();
 
+reportsRouter.get("/:reportID", accessTokenValidator, wrapAsync(getByIdController));
 reportsRouter.post(
   "/",
   accessTokenValidator,

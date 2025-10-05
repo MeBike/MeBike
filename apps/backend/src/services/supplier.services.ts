@@ -59,6 +59,8 @@ class SupplierService {
   }
 
   async updateStatus({ id, newStatus }: { id: string; newStatus: SupplierStatus }) {
+    // eslint-disable-next-line no-console
+    console.log(newStatus);
     const result = await databaseService.suppliers.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: { status: newStatus } },

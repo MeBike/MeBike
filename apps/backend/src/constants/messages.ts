@@ -83,6 +83,7 @@ export const REPORTS_MESSAGES = {
   INVALID_RENTAL_ID: "ID của phiên thuê không hợp lệ!",
   STATION_NOT_FOUND: "Không tìm thấy trạm với ID %s",
   LOCATION_IS_REQUIRED: "Vị trí là bắt buộc!",
+  GET_BY_ID_SUCCESS: "Lấy report với ID %s thành công",
 };
 
 export const SUPPLIER_MESSAGE = {
@@ -108,4 +109,5 @@ export const SUPPLIER_MESSAGE = {
   STATUS_INVALID: "Trạng thái mới không hợp lệ!",
   STATUS_IS_REQUIRED: "Trạng thái mới bắt buộc",
   STATUS_MUST_BE_STRING: "Trạng thái mới phải là chuỗi ký tự",
+  GET_BY_ID_SUCCESS: "Lấy thông tin nhà cung cấp với ID %s thành công",
 };
