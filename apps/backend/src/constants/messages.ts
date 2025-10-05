@@ -42,4 +42,9 @@ export const USERS_MESSAGES = {
   // resend verify email messages
   USER_BANNED: "Người dùng đã bị cấm",
   RESEND_EMAIL_VERIFY_SUCCESS: "Gửi lại email xác thực thành công",
+  // change password messages
+  USER_IS_NOT_VERIFIED: "Người dùng chưa được xác thực",
+  OLD_PASSWORD_NOT_MATCH: "Mật khẩu cũ không khớp",
+  NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD: "Mật khẩu mới phải khác với mật khẩu cũ",
+  CHANGE_PASSWORD_SUCCESS: "Đổi mật khẩu thành công",
 } as const;

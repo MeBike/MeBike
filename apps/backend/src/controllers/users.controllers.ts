@@ -1,9 +1,9 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
 
 import { ObjectId } from "mongodb";
 
-import type { LoginReqBody, LogoutReqBody, RegisterReqBody, resetPasswordReqBody, TokenPayLoad, VerifyEmailReqBody } from "~/models/requests/users.requests";
+import type { ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RegisterReqBody, resetPasswordReqBody, TokenPayLoad, VerifyEmailReqBody } from "~/models/requests/users.requests";
 import type User from "~/models/schemas/user.schema";
 
 import { UserVerifyStatus } from "~/constants/enums";
@@ -114,5 +114,12 @@ export async function resendEmailVerifyController(req: Request, res: Response) {
     });
   }
   const result = await usersService.resendEmailVerify(user_id);
+  res.json(result);
+}
+
+export async function changePasswordController(req: Request<ParamsDictionary, any, ChangePasswordReqBody>, res: Response, _next: NextFunction) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad;
+  const { password } = req.body;
+  const result = await usersService.changePassword(user_id, password);
   res.json(result);
 }

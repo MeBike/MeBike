@@ -36,3 +36,9 @@ export type resetPasswordReqBody = {
 export type VerifyEmailReqBody = {
   email_verify_token: string;
 };
+
+export type ChangePasswordReqBody = {
+  old_password: string;
+  password: string;
+  confirm_password: string;
+};

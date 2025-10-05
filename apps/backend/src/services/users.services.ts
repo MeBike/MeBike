@@ -323,6 +323,22 @@ class UsersService {
     }
     return { message: USERS_MESSAGES.RESEND_EMAIL_VERIFY_SUCCESS };
   }
+
+  async changePassword(user_id: string, password: string) {
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
+      $set: {
+        password: hashPassword(password),
+        forgot_password_token: "",
+        updated_at: localTime,
+      },
+    });
+    return {
+      message: USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS,
+    };
+  }
 }
 
 const usersService = new UsersService();

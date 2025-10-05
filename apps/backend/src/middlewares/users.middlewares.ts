@@ -1,4 +1,4 @@
-import type { Request } from "express";
+import type { NextFunction, Request, Response } from "express";
 import type { Meta, ParamSchema } from "express-validator";
 
 import bcrypt from "bcryptjs";
@@ -8,6 +8,9 @@ import { capitalize } from "lodash";
 import { ObjectId } from "mongodb";
 import process from "node:process";
 
+import type { TokenPayLoad } from "~/models/requests/users.requests";
+
+import { UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { USERS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
@@ -396,6 +399,61 @@ export const emailVerifyTokenValidator = validate(
           },
         },
       },
+    },
+    ["body"],
+  ),
+);
+
+export function verifiedUserValidator(req: Request, res: Response, next: NextFunction) {
+  const { verify } = req.decoded_authorization as TokenPayLoad;
+  if (verify !== UserVerifyStatus.Verified) {
+    return next(
+      new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_IS_NOT_VERIFIED,
+        status: HTTP_STATUS.FORBIDDEN,
+      }),
+    );
+  }
+  next();
+}
+
+export const changePasswordValidator = validate(
+  checkSchema(
+    {
+      old_password: {
+        ...passwordSchema,
+        custom: {
+          options: async (value, { req }) => {
+            const { user_id } = req.decoded_authorization as TokenPayLoad;
+            const user = await databaseService.users.findOne({
+              _id: new ObjectId(user_id),
+            });
+            if (user === null) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.USER_NOT_FOUND,
+                status: HTTP_STATUS.UNAUTHORIZED,
+              });
+            }
+            const isMatch = bcrypt.compareSync(value, user.password);
+            if (!isMatch) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.OLD_PASSWORD_NOT_MATCH,
+                status: HTTP_STATUS.UNAUTHORIZED,
+              });
+            }
+            return true;
+          },
+        },
+      },
+      password: { ...passwordSchema, custom: {
+        options: (value: string, { req }: Meta) => {
+          if (value === req.body.old_password) {
+            throw new Error(USERS_MESSAGES.NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD);
+          }
+          return true;
+        },
+      } },
+      confirm_password: confirmPasswordSchema,
     },
     ["body"],
   ),
