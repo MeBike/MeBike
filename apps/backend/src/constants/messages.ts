@@ -74,5 +74,10 @@ export const RENTALS_MESSAGE = {
 
 export const COMMON_MESSAGE = {
   CREATE_SESSION_FAIL: "Tạo phiên thất bại: ",
+};
+
+export const AUTH_MESSAGE = {
   ACCESS_DENIED: "Bạn không có quyền truy cập tài nguyên này",
+  ACCESS_DENIED_ADMIN_ONLY: "Bạn không có quyền truy cập tài nguyên này (chỉ dành cho Admin)",
+  ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: "Bạn không có quyền truy cập tài nguyên này (chỉ dành cho Staff và Admin)",
 };

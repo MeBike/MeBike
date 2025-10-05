@@ -4,7 +4,7 @@ import { Decimal128, Int32 } from "mongodb";
 
 import { BikeStatus, RentalStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
-import { COMMON_MESSAGE, RENTALS_MESSAGE } from "~/constants/messages";
+import { AUTH_MESSAGE, COMMON_MESSAGE, RENTALS_MESSAGE } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
 import Rental from "~/models/schemas/rental.schema";
 import { toObjectId } from "~/utils/string";
@@ -139,7 +139,7 @@ class RentalsService {
     }
     if (!rental.user_id.toString().localeCompare(user_id.toString())) {
       throw new ErrorWithStatus({
-        message: COMMON_MESSAGE.ACCESS_DENIED,
+        message: AUTH_MESSAGE.ACCESS_DENIED,
         status: HTTP_STATUS.FORBIDDEN,
       });
     }

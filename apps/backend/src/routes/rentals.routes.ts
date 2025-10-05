@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import { createRentalSessionController, endRentalSessionController, getDetailRentalController, getMyDetailRentalController, getMyRentalsController } from "~/controllers/rentals.controllers";
+import { isAdminOrStaffValidator } from "~/middlewares/auth.middlewares";
 import { createRentalSessionValidator, endRentalSessionValidator } from "~/middlewares/rentals.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
@@ -17,8 +18,9 @@ rentalsRouter.route("/:id/end")
 
 // staff/admin
 rentalsRouter.route("/:id")
-  .get(wrapAsync(getDetailRentalController));
+  .get(isAdminOrStaffValidator, wrapAsync(getDetailRentalController));
 
 rentalsRouter.route("/")
+  .get(isAdminOrStaffValidator, wrapAsync(getAllRentalsController))
   .post(createRentalSessionValidator, wrapAsync(createRentalSessionController));
 export default rentalsRouter;
