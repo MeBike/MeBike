@@ -224,14 +224,16 @@ export const updateReportValidator = validate(
             });
           }
 
-          const allowedStauts: Record<ReportStatus, ReportStatus[]> = {
+          const allowedStatuses: Record<ReportStatus, ReportStatus[]> = {
             [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
             [ReportStatus.InProgress]: [ReportStatus.Resolved],
             [ReportStatus.Resolved]: [],
             [ReportStatus.Cancel]: [],
           };
 
-          if (!allowedStauts[report.status].includes(value)) {
+          const currentStatus = report.status as ReportStatus;
+
+          if (!allowedStatuses[currentStatus]?.includes(value)) {
             throw new ErrorWithStatus({
               status: HTTP_STATUS.BAD_REQUEST,
               message: REPORTS_MESSAGES.INVALID_NEW_STATUS,

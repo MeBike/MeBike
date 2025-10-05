@@ -107,8 +107,8 @@ class ReportService {
     return { _id: reportID };
   }
 
-  async updateReportStatus({ reportID, newStatus }: { reportID: string; newStatus: ReportStatus }) {
-    const validTransitions: Record<ReportStatus, ReportStatus[]> = {
+  async updateReportStatus({ reportID, newStatus }: { reportID: string; newStatus: string }) {
+    const allowedStatuses: Record<ReportStatus, ReportStatus[]> = {
       [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
       [ReportStatus.InProgress]: [ReportStatus.Resolved],
       [ReportStatus.Resolved]: [],
@@ -123,19 +123,29 @@ class ReportService {
       });
     }
 
-    const currentStatus = findReport.status;
-    if (!validTransitions[currentStatus].includes(newStatus)) {
+    if (!Object.values(ReportStatus).includes(newStatus as ReportStatus)) {
       throw new ErrorWithStatus({
-        message: REPORTS_MESSAGES.INVALID_NEW_STATUS,
         status: HTTP_STATUS.BAD_REQUEST,
+        message: REPORTS_MESSAGES.INVALID_NEW_STATUS,
+      });
+    }
+
+    const currentStatus = findReport.status as ReportStatus;
+    const newStatusTyped = newStatus as ReportStatus;
+
+    if (!allowedStatuses[currentStatus]?.includes(newStatusTyped)) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.BAD_REQUEST,
+        message: REPORTS_MESSAGES.INVALID_NEW_STATUS,
       });
     }
 
     const result = await databaseService.reports.findOneAndUpdate(
       { _id: new ObjectId(reportID) },
-      { $set: { status: newStatus } },
+      { $set: { status: newStatusTyped } },
       { returnDocument: "after" },
     );
+
     return result;
   }
 }
