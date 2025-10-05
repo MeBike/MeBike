@@ -44,3 +44,15 @@ export enum RentalStatus {
   Cancelled = "ĐÃ HỦY",
   Expired = "HẾT HẠN",
 }
+
+export enum SupplierStatus {
+  ACTIVE = "HOẠT ĐỘNG",
+  INACTIVE = "NGƯNG HOẠT ĐỘNG",
+  TERMINATE = "CHẤM DỨT HỢP ĐỒNG",
+}
+
+export enum ContractStatus {
+  ACTIVE = "HOẠT ĐỘNG",
+  EXPIRED = "HẾT HẠN",
+  TERMINATED = "CHẤM DỨT HỢP ĐỒNG",
+}
