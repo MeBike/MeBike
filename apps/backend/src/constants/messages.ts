@@ -34,4 +34,9 @@ export const USERS_MESSAGES = {
   // reset password messages
   NEW_PASSWORD_CANNOT_BE_THE_SAME_AS_OLD_PASSWORD: "Mật khẩu mới không được trùng với mật khẩu cũ",
   RESET_PASSWORD_SUCCESS: "Đặt lại mật khẩu thành công",
+  // verify email messages
+  EMAIL_VERIFY_TOKEN_IS_REQUIRED: "Email verify token là bắt buộc",
+  EMAIL_ALREADY_VERIFIED_BEFORE: "Email đã được xác thực trước đó",
+  EMAIL_VERIFY_TOKEN_IS_INCORRECT: "Email verify token không chính xác",
+  VERIFY_EMAIL_SUCCESS: "Xác thực email thành công",
 } as const;

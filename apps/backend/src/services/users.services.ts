@@ -238,6 +238,34 @@ class UsersService {
     );
     return { message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS };
   }
+
+  async verifyEmail(user_id: string) {
+    const currentDate = new Date();
+    const vietnamTimezoneOffset = 7 * 60;
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+
+    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
+      $set: {
+        verify: UserVerifyStatus.Verified,
+        email_verify_token: "",
+        updated_at: localTime,
+      },
+    });
+    const [access_token, refresh_token] = await this.signAccessAndRefreshTokens({
+      user_id,
+      verify: UserVerifyStatus.Verified,
+    });
+    const { exp, iat } = await this.decodeRefreshToken(refresh_token);
+    await databaseService.refreshTokens.insertOne(
+      new RefreshToken({
+        token: refresh_token,
+        user_id: new ObjectId(user_id),
+        exp,
+        iat,
+      }),
+    );
+    return { access_token, refresh_token };
+  }
 }
 
 const usersService = new UsersService();

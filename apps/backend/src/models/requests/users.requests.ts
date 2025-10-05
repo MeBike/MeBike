@@ -32,3 +32,7 @@ export type resetPasswordReqBody = {
   password: string;
   confirm_password: string;
 };
+
+export type VerifyEmailReqBody = {
+  email_verify_token: string;
+};

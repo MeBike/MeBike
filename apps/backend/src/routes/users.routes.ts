@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-import { forgotPasswordController, loginController, logoutController, registerController, resetPasswordController, verifyForgotPasswordTokenController } from "~/controllers/users.controllers";
-import { accessTokenValidator, checkNewPasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, verifyForgotPasswordTokenValidator } from "~/middlewares/users.middlewares";
+import { emailVerifyTokenController, forgotPasswordController, loginController, logoutController, registerController, resetPasswordController, verifyForgotPasswordTokenController } from "~/controllers/users.controllers";
+import { accessTokenValidator, checkNewPasswordValidator, emailVerifyTokenValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, verifyForgotPasswordTokenValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
 const usersRouter = Router();
@@ -22,4 +22,6 @@ usersRouter.post(
   checkNewPasswordValidator,
   wrapAsync(resetPasswordController),
 );
+usersRouter.post("/verify-email", emailVerifyTokenValidator, wrapAsync(emailVerifyTokenController));
+
 export default usersRouter;
