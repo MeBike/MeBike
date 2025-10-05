@@ -1,9 +1,6 @@
 import { checkSchema } from "express-validator";
-import { start } from "node:repl";
 
-import HTTP_STATUS from "~/constants/http-status";
 import { SUPPLIER_MESSAGE } from "~/constants/messages";
-import { ErrorWithStatus } from "~/models/errors";
 import { validate } from "~/utils/validation";
 
 export const createSupplierValidator = validate(
@@ -49,56 +46,6 @@ export const createSupplierValidator = validate(
         isDecimal: {
           options: { decimal_digits: "1,2" },
           errorMessage: SUPPLIER_MESSAGE.FEE_IN_VALID,
-        },
-      },
-      start_date: {
-        in: ["body"],
-        isISO8601: {
-          errorMessage: SUPPLIER_MESSAGE.START_DATE_IN_VALID,
-        },
-        toDate: true,
-      },
-      end_date: {
-        in: ["body"],
-        isISO8601: {
-          errorMessage: SUPPLIER_MESSAGE.START_DATE_IN_VALID,
-        },
-        toDate: true,
-        custom: {
-          options: (value, { req }) => {
-            const startDate = new Date(req.body.start_date);
-            const endDate = new Date(value);
-
-            if (startDate <= new Date()) {
-              throw new ErrorWithStatus({
-                message: SUPPLIER_MESSAGE.START_DATE_IN_PAST,
-                status: HTTP_STATUS.BAD_REQUEST,
-              });
-            }
-
-            if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-              throw new ErrorWithStatus({
-                message: SUPPLIER_MESSAGE.START_DATE_IN_VALID,
-                status: HTTP_STATUS.BAD_REQUEST,
-              });
-            }
-
-            if (startDate > endDate) {
-              throw new ErrorWithStatus({
-                message: SUPPLIER_MESSAGE.START_DATE_AFTER,
-                status: HTTP_STATUS.BAD_REQUEST,
-              });
-            }
-
-            const oneMonthLater = new Date(startDate);
-            oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-
-            if (endDate < oneMonthLater) {
-              throw new ErrorWithStatus({ message: SUPPLIER_MESSAGE.END_DATE_1_MONTH, status: HTTP_STATUS.BAD_REQUEST });
-            }
-
-            return true;
-          },
         },
       },
     },

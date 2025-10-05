@@ -1,13 +1,19 @@
+import type { Decimal128 } from "mongodb";
+
 import { ObjectId } from "mongodb";
 
 import { SupplierStatus } from "~/constants/enums";
 
+export type ContactInfo = {
+  address: string;
+  phone_number: string;
+};
+
 export type SupplierType = {
   _id?: ObjectId;
   name: string;
-  address: string;
-  phone_number: string;
-  contracts_id: ObjectId;
+  contact_info: ContactInfo;
+  contract_fee: Decimal128;
   status: SupplierStatus;
   created_at?: Date;
 };
@@ -15,9 +21,8 @@ export type SupplierType = {
 export default class Supplier {
   _id?: ObjectId;
   name: string;
-  address: string;
-  phone_number: string;
-  contracts_id?: ObjectId;
+  contact_info: ContactInfo;
+  contract_fee: Decimal128;
   status: SupplierStatus;
   created_at?: Date;
 
@@ -28,9 +33,8 @@ export default class Supplier {
 
     this._id = supplier._id || new ObjectId();
     this.name = supplier.name;
-    this.address = supplier.address;
-    this.phone_number = supplier.phone_number;
-    this.contracts_id = supplier.contracts_id;
+    this.contact_info = supplier.contact_info;
+    this.contract_fee = supplier.contract_fee;
     this.status = supplier.status || SupplierStatus.ACTIVE;
     this.created_at = supplier.created_at || localTime;
   }
