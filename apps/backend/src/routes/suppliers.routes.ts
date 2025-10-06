@@ -1,5 +1,7 @@
 import { Router } from "express";
 
+import type { CreateSupplierReqBody, UpdateSupplierReqBody } from "~/models/requests/suppliers.request";
+
 import {
   changeSupplierStatusController,
   createSupplierController,
@@ -10,6 +12,7 @@ import {
   updateSupplierController,
 } from "~/controllers/suppliers.controllers";
 import { isAdminValidator } from "~/middlewares/admin.middlewares";
+import { filterMiddleware } from "~/middlewares/common.middlewares";
 import {
   createSupplierValidator,
   updateSupplierStatusValidator,
@@ -24,8 +27,22 @@ suppliersRouter.get("/", accessTokenValidator, isAdminValidator, wrapAsync(getAl
 suppliersRouter.get("/stats", accessTokenValidator, isAdminValidator, wrapAsync(getAllSupplierStatController));
 suppliersRouter.get("/:id", accessTokenValidator, isAdminValidator, wrapAsync(getByIdController));
 suppliersRouter.get("/:id/stats", accessTokenValidator, isAdminValidator, wrapAsync(getSupplierStatController));
-suppliersRouter.post("/", accessTokenValidator, isAdminValidator, createSupplierValidator, wrapAsync(createSupplierController));
-suppliersRouter.put("/:id", accessTokenValidator, isAdminValidator, updateSupplierValidator, wrapAsync(updateSupplierController));
+suppliersRouter.post(
+  "/",
+  accessTokenValidator,
+  isAdminValidator,
+  filterMiddleware<CreateSupplierReqBody>(["address", "contract_fee", "name", "phone_number"]),
+  createSupplierValidator,
+  wrapAsync(createSupplierController),
+);
+suppliersRouter.put(
+  "/:id",
+  accessTokenValidator,
+  isAdminValidator,
+  filterMiddleware<UpdateSupplierReqBody>(["address", "contract_fee", "name", "phone_number"]),
+  updateSupplierValidator,
+  wrapAsync(updateSupplierController),
+);
 suppliersRouter.patch(
   "/:id",
   accessTokenValidator,
