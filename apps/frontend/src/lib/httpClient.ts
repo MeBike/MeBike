@@ -42,6 +42,7 @@ export class FetchHttpClient {
       async (error) => {
         const originalRequest = error.config;
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
+         window.dispatchEvent(new Event("auth:session_expired"));
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
@@ -61,6 +62,7 @@ export class FetchHttpClient {
           try {
             const newToken = await this.refreshAccessToken();
             this.processQueue(null, newToken);
+            window.dispatchEvent(new Event("auth:token_refreshed"));
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
@@ -72,7 +74,6 @@ export class FetchHttpClient {
             this.isRefreshing = false;
           }
         }
-
         switch (error.response?.status) {
           case HTTP_STATUS.FORBIDDEN:
             console.log("API: 403 Forbidden");
@@ -114,10 +115,7 @@ export class FetchHttpClient {
       throw new Error("Refresh token expired");
     }
     const data = response.data;
-    setTokens({
-      access_token: data.access_token,
-      refresh_token: data.refresh_token,
-    });
+    setTokens(data.access_token, data.refresh_token);
     return data.access_token;
   }
 

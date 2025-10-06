@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type {UpdateProfileSchemaFormData , ChangePasswordSchemaFormData , ForgotPasswordSchemaFormData , LoginSchemaFormData, RegisterSchemaFormData , ResetPasswordSchemaFormData}  from "@schemas/authSchema";
-
+import type { AxiosResponse } from "axios";
 interface AuthResponse {
     message : string;
     result : {
@@ -44,52 +44,52 @@ interface UpdateProfileReqBody {
     avatar: string;
 }
 export const authService = {
-    login:async (data : LoginSchemaFormData) : Promise<AuthResponse>=>{
+    login:async (data : LoginSchemaFormData) : Promise<AxiosResponse<AuthResponse>>=>{
         const response = await fetchHttpClient.post<AuthResponse>("/users/login",data);
-        return response.data;
+        return response;
     },
-    register: async (data : RegisterSchemaFormData) : Promise<AuthResponse>=>{
+    register: async (data : RegisterSchemaFormData) : Promise<AxiosResponse<AuthResponse>>=>{
         const response = await fetchHttpClient.post<AuthResponse>("/users/register",data);
-        return response.data;
+        return response;
     },
-    logout : async (refresh_token : string) : Promise<MessageResponse> => {
+    logout : async (refresh_token : string) : Promise<AxiosResponse<MessageResponse>> => {
         const response = await fetchHttpClient.post<MessageResponse>("/users/logout", { refresh_token });
-        return response.data;
+        return response;
     },
-    resendVerifyEmail : async () : Promise<MessageResponse> => {
+    resendVerifyEmail : async () : Promise<AxiosResponse<MessageResponse>> => {
         const response = await fetchHttpClient.post<MessageResponse>("/users/resend-verify-email");
-        return response.data;
+        return response;
     },
-    verifyEmail : async (email_refresh_token : string) : Promise<MessageResponse> => {
+    verifyEmail : async (email_refresh_token : string) : Promise<AxiosResponse<MessageResponse>> => {
         const response = await fetchHttpClient.post<MessageResponse>("/users/verify-email", { email_refresh_token });
-        return response.data;
+        return response;
     },
-    getMe : async() : Promise<ProfileUserResponse> => {
+    getMe : async() : Promise<AxiosResponse<ProfileUserResponse>> => {
         const response = await fetchHttpClient.get<ProfileUserResponse>("/users/me");
-        return response.data;
+        return response;
     },
-    refreshToken : async (refresh_token : string) : Promise<AuthResponse> => {
+    refreshToken : async (refresh_token : string) : Promise<AxiosResponse<AuthResponse>> => {
         const response = await fetchHttpClient.post<AuthResponse>("/users/refresh-token", { refresh_token });
-        return response.data;
+        return response;
     },
-    updateProfile : async(data : UpdateProfileSchemaFormData) : Promise<ProfileUserResponse> => {
+    updateProfile : async(data : UpdateProfileSchemaFormData) : Promise<AxiosResponse<ProfileUserResponse>> => {
         const response = await fetchHttpClient.patch<ProfileUserResponse>("/users/me", data);
-        return response.data;
+        return response;
     },
-    changePassword:async(data:ChangePasswordSchemaFormData) : Promise<MessageResponse> => {
+    changePassword:async(data:ChangePasswordSchemaFormData) : Promise<AxiosResponse<MessageResponse>> => {
         const response = await fetchHttpClient.put<MessageResponse>("/users/change-password", data);
-        return response.data;
+        return response;
     },
-    forgotPassword : async(data:ForgotPasswordSchemaFormData) : Promise<MessageResponse> => {
+    forgotPassword : async(data:ForgotPasswordSchemaFormData) : Promise<AxiosResponse<MessageResponse>> => {
         const response = await fetchHttpClient.post<MessageResponse>("/users/forgot-password", data);
-        return response.data;   
+        return response;
     },
-    verifyForgotPassword: async (email_forgot_password_token : string) : Promise<MessageResponse> => {
+    verifyForgotPassword: async (email_forgot_password_token : string) : Promise<AxiosResponse<MessageResponse>> => {
         const response = await fetchHttpClient.post<MessageResponse>("/users/verify-forgot-password", { email_forgot_password_token });
-        return response.data;
+        return response;
     },
-    resetPassword : async ( data : ResetPasswordSchemaFormData) => {
+    resetPassword : async ( data : ResetPasswordSchemaFormData) : Promise<AxiosResponse<MessageResponse>> => {
         const response = await fetchHttpClient.post<MessageResponse>("/users/reset-password", data);
-        return response.data;
+        return response;
     }
 }

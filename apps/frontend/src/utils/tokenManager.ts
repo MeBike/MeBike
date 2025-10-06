@@ -12,9 +12,9 @@ interface Tokens {
     access_token: string ;
     refresh_token: string ;
 }
-export const setTokens = (data : Tokens) : void => {
-    localStorage.setItem(ACCESS_TOKEN, data.access_token);
-    localStorage.setItem(REFRESH_TOKEN, data.refresh_token);
+export const setTokens = (access_token: string, refresh_token: string) : void => {
+    localStorage.setItem(ACCESS_TOKEN, access_token);
+    localStorage.setItem(REFRESH_TOKEN, refresh_token);
 }
 export const clearTokens = () : void => {
     localStorage.removeItem(ACCESS_TOKEN);
