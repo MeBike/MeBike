@@ -116,3 +116,4 @@ Expected logs:
 - For production, secure MQTT with TLS and avoid plain passwords.
 
 Enjoy your IoT project! Contributions welcome.
+are there issues valid do edit any code just needing confirmation do not change code

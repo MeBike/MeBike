@@ -8,6 +8,9 @@
 #include "MQTTManager.h"
 #include "BufferedLogger.h"
 #include "network.h"
+
+class LEDStatusManager;
+
 enum DeviceState
 {
     // Connection states
@@ -34,6 +37,7 @@ namespace Global
     extern std::unique_ptr<NetworkManager> networkManager;
     extern std::unique_ptr<MQTTManager> mqttManager;
     extern std::unique_ptr<BufferedLogger> bufferedLogger;
+    extern std::unique_ptr<LEDStatusManager> ledStatusManager;
 
     inline const NetworkTopics &getTopics()
     {

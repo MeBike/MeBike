@@ -25,6 +25,7 @@
 #include <ArduinoLog.h>
 #include <cstring>
 #include "globals.h"
+#include "LEDStatusManager.h"
 #include "StateMachine.h"
 
 static bool matchesTopic(const char *incoming, const char *baseTopic, const std::string &deviceTopic)
@@ -235,7 +236,10 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
 
     if (strcmp(command, "start") == 0)
     {
-        if (currentState == STATE_AVAILABLE || currentState == STATE_UNAVAILABLE || currentState == STATE_BROKEN)
+        if (currentState == STATE_AVAILABLE ||
+            currentState == STATE_UNAVAILABLE ||
+            currentState == STATE_BROKEN ||
+            currentState == STATE_BOOKED)
         {
             changeState(STATE_MAINTAINED);
             Log.info("Maintenance mode started\n");
@@ -337,5 +341,11 @@ void CommandHandler::changeState(DeviceState newState)
 {
     Log.info("Changing state from %s to %s\n", getStateName(currentState), getStateName(newState));
     currentState = newState;
+
+    if (Global::ledStatusManager)
+    {
+        Global::ledStatusManager->setStatus(newState);
+    }
+
     resetStateEntryFlags();
 }
