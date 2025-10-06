@@ -110,4 +110,6 @@ export const SUPPLIER_MESSAGE = {
   STATUS_IS_REQUIRED: "Trạng thái mới bắt buộc",
   STATUS_MUST_BE_STRING: "Trạng thái mới phải là chuỗi ký tự",
   GET_BY_ID_SUCCESS: "Lấy thông tin nhà cung cấp với ID %s thành công",
+  GET_STATS_SUCCESS: "Lấy thống kế của nhà cung cấp thành công",
+  GET_STATS_SUCCESS_BY_ID: "Lấy thống kế của nhà cung cấp với ID %s thành công",
 };

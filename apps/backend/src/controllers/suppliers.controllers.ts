@@ -68,3 +68,22 @@ export async function getByIdController(req: Request<ParamsDictionary, any, any>
     result,
   });
 }
+
+export async function getAllSupplierStatController(req: Request<any, any, any>, res: Response) {
+  const resutl = await supplierService.getAllSupplierBikeStats();
+
+  res.json({
+    message: SUPPLIER_MESSAGE.GET_STATS_SUCCESS,
+    resutl,
+  });
+}
+
+export async function getSupplierStatController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const supplierID = req.params.id;
+  const result = await supplierService.getSupplierBikeStats(supplierID);
+
+  res.json({
+    message: SUPPLIER_MESSAGE.GET_STATS_SUCCESS_BY_ID.replace("%s", supplierID),
+    result,
+  });
+}

@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 
 import type { CreateSupplierReqBody, UpdateSupplierReqBody } from "~/models/requests/suppliers.request";
 import type { SupplierType } from "~/models/schemas/supplier.schema";
+import type { SupplierBikeStats } from "~/models/schemas/user.schema";
 
 import { SupplierStatus } from "~/constants/enums";
 import Supplier from "~/models/schemas/supplier.schema";
@@ -59,13 +60,174 @@ class SupplierService {
   }
 
   async updateStatus({ id, newStatus }: { id: string; newStatus: SupplierStatus }) {
-    // eslint-disable-next-line no-console
-    console.log(newStatus);
     const result = await databaseService.suppliers.findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: { status: newStatus } },
       { returnDocument: "after" },
     );
+
+    return result;
+  }
+
+  async getAllSupplierBikeStats() {
+    const result = await databaseService.suppliers
+      .aggregate<SupplierBikeStats>([
+        {
+          $lookup: {
+            from: "bikes",
+            localField: "_id",
+            foreignField: "supplier_id",
+            as: "bikes",
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            supplier_id: "$_id",
+            supplier_name: "$name",
+            total_bikes: { $size: "$bikes" },
+            active_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "AVAILABLE"] },
+                },
+              },
+            },
+            booked_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "BOOKED"] },
+                },
+              },
+            },
+            broken_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "BROKEN"] },
+                },
+              },
+            },
+            reserve_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "RESERVED"] },
+                },
+              },
+            },
+            maintain_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "MAINTAINED"] },
+                },
+              },
+            },
+            unavailable_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "UNAVAILABLE"] },
+                },
+              },
+            },
+          },
+        },
+      ])
+      .toArray();
+
+    return result;
+  }
+
+  async getSupplierBikeStats(supplierID: string) {
+    const result = await databaseService.suppliers
+      .aggregate<SupplierBikeStats>([
+        {
+          $match: {
+            _id: new ObjectId(supplierID),
+          },
+        },
+        {
+          $lookup: {
+            from: "bikes",
+            localField: "_id",
+            foreignField: "supplier_id",
+            as: "bikes",
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            supplier_id: "$_id",
+            supplier_name: "$name",
+            total_bikes: { $size: "$bikes" },
+            active_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "AVAILABLE"] },
+                },
+              },
+            },
+            booked_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "BOOKED"] },
+                },
+              },
+            },
+            broken_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "BROKEN"] },
+                },
+              },
+            },
+            reserve_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "RESERVED"] },
+                },
+              },
+            },
+            maintain_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "MAINTAINED"] },
+                },
+              },
+            },
+            unavailable_bikes: {
+              $size: {
+                $filter: {
+                  input: "$bikes",
+                  as: "b",
+                  cond: { $eq: ["$$b.status", "UNAVAILABLE"] },
+                },
+              },
+            },
+          },
+        },
+      ])
+      .toArray();
 
     return result;
   }

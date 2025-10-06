@@ -3,7 +3,9 @@ import { Router } from "express";
 import {
   changeSupplierStatusController,
   createSupplierController,
+  getAllSupplierStatController,
   getByIdController,
+  getSupplierStatController,
   updateSupplierController,
 } from "~/controllers/suppliers.controllers";
 import {
@@ -16,7 +18,9 @@ import { wrapAsync } from "~/utils/handler";
 
 const suppliersRouter = Router();
 
+suppliersRouter.get("/stats", accessTokenValidator, wrapAsync(getAllSupplierStatController));
 suppliersRouter.get("/:id", accessTokenValidator, wrapAsync(getByIdController));
+suppliersRouter.get("/:id/stats", accessTokenValidator, wrapAsync(getSupplierStatController));
 suppliersRouter.post("/", accessTokenValidator, createSupplierValidator, wrapAsync(createSupplierController));
 suppliersRouter.put("/:id", accessTokenValidator, updateSupplierValidator, wrapAsync(updateSupplierController));
 suppliersRouter.patch(
