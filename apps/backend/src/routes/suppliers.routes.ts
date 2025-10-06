@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   changeSupplierStatusController,
   createSupplierController,
+  getAllSupplierController,
   getAllSupplierStatController,
   getByIdController,
   getSupplierStatController,
@@ -19,6 +20,7 @@ import { wrapAsync } from "~/utils/handler";
 
 const suppliersRouter = Router();
 
+suppliersRouter.get("/", accessTokenValidator, isAdminValidator, wrapAsync(getAllSupplierController));
 suppliersRouter.get("/stats", accessTokenValidator, isAdminValidator, wrapAsync(getAllSupplierStatController));
 suppliersRouter.get("/:id", accessTokenValidator, isAdminValidator, wrapAsync(getByIdController));
 suppliersRouter.get("/:id/stats", accessTokenValidator, isAdminValidator, wrapAsync(getSupplierStatController));

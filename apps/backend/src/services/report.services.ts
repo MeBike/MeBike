@@ -1,3 +1,4 @@
+import type { Filter } from "mongodb";
 import type { Buffer } from "node:buffer";
 
 import { v2 as cloudinary } from "cloudinary";
@@ -145,21 +146,6 @@ class ReportService {
       { $set: { status: newStatusTyped } },
       { returnDocument: "after" },
     );
-
-    return result;
-  }
-
-  async getAllUserReport(userID: string) {
-    const result = await databaseService.reports.find({
-      user_id: new ObjectId(userID),
-      status: { $in: [ReportStatus.Pending, ReportStatus.InProgress, ReportStatus.Resolved] },
-    });
-
-    return result;
-  }
-
-  async getAllReport() {
-    const result = await databaseService.reports.find();
 
     return result;
   }

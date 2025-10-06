@@ -1,16 +1,20 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
+import type { Filter } from "mongodb";
 
 import { ObjectId } from "mongodb";
 import { report } from "node:process";
 
 import type { CreateReportReqBody } from "~/models/requests/reports.requests";
+import type Report from "~/models/schemas/report.schema";
 
+import { ReportStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { REPORTS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import reportService from "~/services/report.services";
+import { sendPaginatedResponse } from "~/utils/pagination.helper";
 
 export async function createReportController(req: Request<ParamsDictionary, any, CreateReportReqBody>, res: Response) {
   const user = req.decoded_authorization;
@@ -60,23 +64,32 @@ export async function getByIdController(req: Request<ParamsDictionary, any, any>
   });
 }
 
-export async function getAllUserReportController(req: Request<any, any, any>, res: Response) {
-  const user = req.decoded_authorization;
-  const user_id = user?.user_id as string;
+export async function getAllUserReportController(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = req.decoded_authorization;
+    const user_id = user?.user_id as string;
 
-  const result = await reportService.getAllUserReport(user_id?.toString());
+    const filter = {
+      user_id: new ObjectId(user_id),
+      status: { $in: [ReportStatus.Pending, ReportStatus.InProgress, ReportStatus.Resolved] },
+    };
 
-  res.json({
-    message: REPORTS_MESSAGES.GET_USER_REPORT_SUCCESS.replace("%s", user_id),
-    result,
-  });
+    await sendPaginatedResponse(
+      res,
+      next,
+      databaseService.reports,
+      req.query,
+      filter,
+      {},
+    );
+  }
+  catch (error) {
+    next(error);
+  }
 }
 
-export async function getAllReportController(req: Request<any, any, any>, res: Response) {
-  const result = await reportService.getAllReport();
+export async function getAllReportController(req: Request<any, any, any>, res: Response, next: NextFunction) {
+  const filter: Filter<Report> = {};
 
-  res.json({
-    message: REPORTS_MESSAGES.GET_ALL_SUCCESS,
-    result,
-  });
+  await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter);
 }

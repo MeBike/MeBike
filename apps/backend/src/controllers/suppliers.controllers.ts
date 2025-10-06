@@ -1,16 +1,19 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
+import type { Filter } from "mongodb";
 
 import { ObjectId } from "mongodb";
 
 import type { SupplierStatus } from "~/constants/enums";
 import type { CreateSupplierReqBody, UpdateSupplierReqBody } from "~/models/requests/suppliers.request";
+import type Supplier from "~/models/schemas/supplier.schema";
 
 import HTTP_STATUS from "~/constants/http-status";
 import { SUPPLIER_MESSAGE } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import supplierService from "~/services/supplier.services";
+import { sendPaginatedResponse } from "~/utils/pagination.helper";
 
 export async function createSupplierController(req: Request<any, any, CreateSupplierReqBody>, res: Response) {
   const result = await supplierService.createSupplier({
@@ -86,4 +89,14 @@ export async function getSupplierStatController(req: Request<ParamsDictionary, a
     message: SUPPLIER_MESSAGE.GET_STATS_SUCCESS_BY_ID.replace("%s", supplierID),
     result,
   });
+}
+
+export async function getAllSupplierController(
+  req: Request<ParamsDictionary, any, any>,
+  res: Response,
+  next: NextFunction,
+) {
+  const filter: Filter<Supplier> = {};
+
+  await sendPaginatedResponse(res, next, databaseService.suppliers, req.query, filter);
 }
