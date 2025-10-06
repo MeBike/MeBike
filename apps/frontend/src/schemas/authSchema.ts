@@ -5,11 +5,12 @@ export const loginSchema = z.object({
     password:z.string().min(8,{message:"Mật khẩu phải có ít nhất 8 ký tự"}),
     rememberMe:z.boolean().optional(),
 })
-export type LoginFormData = z.infer<typeof loginSchema>;
-export type RegisterFormData = z.infer<typeof registerSchema>;
-export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
-export type ResetPasswordSchemaFormData = z.infer<typeof resetPasswordSchema>;
+export type LoginSchemaFormData = z.infer<typeof loginSchema>;
+export type RegisterSchemaFormData = z.infer<typeof registerSchema>;
+export type ForgotPasswordSchemaFormData = z.infer<typeof forgotPasswordSchema>;
+export type ChangePasswordSchemaFormData = z.infer<typeof changePasswordSchema>;
 export type UpdateProfileSchemaFormData = z.infer<typeof profileUpdateSchema>;
+export type ResetPasswordSchemaFormData = z.infer<typeof resetPasswordSchema>;
 export const registerSchema = z.object({
     first_name:z.string().min(1,{message:"Họ không được để trống"})
     .max(30,{message:"Họ không được vượt quá 30 ký tự"}),
@@ -26,8 +27,10 @@ export const registerSchema = z.object({
 export const forgotPasswordSchema = z.object({
     email:z.email({message:"Email không hợp lệ"}),
 })
-export const resetPasswordSchema = z.object({
-    password:z.string().min(8,{message:"Mật khẩu phải có ít nhất 8 ký tự"})
+export const changePasswordSchema = z.object({
+    old_password:z.string().min(8,{message:"Mật khẩu cũ phải có ít nhất 8 ký tự"})
+    .max(30,{message:"Mật khẩu cũ không được vượt quá 32 ký tự"}),
+    password:z.string().min(8,{message:"Mật khẩu mới phải có ít nhất 8 ký tự"})
     .max(30,{message:"Mật khẩu không được vượt quá 32 ký tự"}),
     confirm_password:z.string().min(8,{message:"Mật khẩu phải có ít nhất 8 ký tự"}).
     max(30,{message:"Mật khẩu không được vượt quá 30 ký tự"}),
@@ -46,4 +49,10 @@ export const profileUpdateSchema = z.object({
     .optional()
     .or(z.literal("")),
   avatar: z.url({ message: "Please enter a valid URL for the avatar." }).optional().or(z.literal("")),
+})
+export const resetPasswordSchema = z.object({
+    password:z.string().min(8,{message:"Mật khẩu mới phải có ít nhất 8 ký tự"})
+    .max(30,{message:"Mật khẩu không được vượt quá 32 ký tự"}),
+    confirm_password:z.string().min(8,{message:"Mật khẩu phải có ít nhất 8 ký tự"}).
+    max(30,{message:"Mật khẩu không được vượt quá 30 ký tự"}),
 })

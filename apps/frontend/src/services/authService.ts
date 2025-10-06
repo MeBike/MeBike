@@ -1,5 +1,5 @@
 import fetchHttpClient from "@/lib/httpClient";
-import type {ForgotPasswordFormData,LoginFormData,RegisterFormData,ResetPasswordSchemaFormData , UpdateProfileSchemaFormData} from "@schemas/authSchema";
+import type {UpdateProfileSchemaFormData , ChangePasswordSchemaFormData , ForgotPasswordSchemaFormData , LoginSchemaFormData, RegisterSchemaFormData , ResetPasswordSchemaFormData}  from "@schemas/authSchema";
 
 interface AuthResponse {
     message : string;
@@ -44,16 +44,16 @@ interface UpdateProfileReqBody {
     avatar: string;
 }
 export const authService = {
-    login:async (data : LoginFormData) : Promise<AuthResponse>=>{
-        const response = await fetchHttpClient.post<AuthResponse>("/auth/login",data);
+    login:async (data : LoginSchemaFormData) : Promise<AuthResponse>=>{
+        const response = await fetchHttpClient.post<AuthResponse>("/users/login",data);
         return response.data;
     },
-    register: async (data : RegisterFormData) : Promise<AuthResponse>=>{
-        const response = await fetchHttpClient.post<AuthResponse>("/auth/register",data);
+    register: async (data : RegisterSchemaFormData) : Promise<AuthResponse>=>{
+        const response = await fetchHttpClient.post<AuthResponse>("/users/register",data);
         return response.data;
     },
     logout : async (refresh_token : string) : Promise<MessageResponse> => {
-        const response = await fetchHttpClient.post<MessageResponse>("/auth/logout", { refresh_token });
+        const response = await fetchHttpClient.post<MessageResponse>("/users/logout", { refresh_token });
         return response.data;
     },
     resendVerifyEmail : async () : Promise<MessageResponse> => {
@@ -68,10 +68,6 @@ export const authService = {
         const response = await fetchHttpClient.get<ProfileUserResponse>("/users/me");
         return response.data;
     },
-    changePassword : async(data: ResetPasswordSchemaFormData) : Promise<MessageResponse> => {
-        const response = await fetchHttpClient.put<MessageResponse>("/users/change-password", data);
-        return response.data;
-    },
     refreshToken : async (refresh_token : string) : Promise<AuthResponse> => {
         const response = await fetchHttpClient.post<AuthResponse>("/users/refresh-token", { refresh_token });
         return response.data;
@@ -80,8 +76,20 @@ export const authService = {
         const response = await fetchHttpClient.patch<ProfileUserResponse>("/users/me", data);
         return response.data;
     },
-    forgotPassword : async(data:ForgotPasswordFormData) : Promise<MessageResponse> => {
+    changePassword:async(data:ChangePasswordSchemaFormData) : Promise<MessageResponse> => {
+        const response = await fetchHttpClient.put<MessageResponse>("/users/change-password", data);
+        return response.data;
+    },
+    forgotPassword : async(data:ForgotPasswordSchemaFormData) : Promise<MessageResponse> => {
         const response = await fetchHttpClient.post<MessageResponse>("/users/forgot-password", data);
         return response.data;   
+    },
+    verifyForgotPassword: async (email_forgot_password_token : string) : Promise<MessageResponse> => {
+        const response = await fetchHttpClient.post<MessageResponse>("/users/verify-forgot-password", { email_forgot_password_token });
+        return response.data;
+    },
+    resetPassword : async ( data : ResetPasswordSchemaFormData) => {
+        const response = await fetchHttpClient.post<MessageResponse>("/users/reset-password", data);
+        return response.data;
     }
 }
