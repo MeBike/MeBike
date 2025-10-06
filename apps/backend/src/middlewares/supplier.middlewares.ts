@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb";
 
 import { SupplierStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
-import { SUPPLIER_MESSAGE } from "~/constants/messages";
+import { REPORTS_MESSAGES, SUPPLIER_MESSAGE } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import { validate } from "~/utils/validation";
@@ -184,4 +184,33 @@ export const updateSupplierStatusValidator = validate(
     },
     ["body"],
   ),
+);
+
+export const getIdValidator = validate(
+  checkSchema({
+    reportID: {
+      in: ["params"],
+      trim: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.REPORT_ID_IS_REQUIRED,
+      },
+      isMongoId: {
+        errorMessage: REPORTS_MESSAGES.INVALID_REPORT_ID,
+      },
+      custom: {
+        options: async (value) => {
+          const result = await databaseService.reports.findOne({ _id: new ObjectId(value) });
+
+          if (!result) {
+            throw new ErrorWithStatus({
+              message: REPORTS_MESSAGES.REPORT_NOT_FOUND.replace("%s", value),
+              status: HTTP_STATUS.NOT_FOUND,
+            });
+          }
+
+          return true;
+        },
+      },
+    },
+  }),
 );

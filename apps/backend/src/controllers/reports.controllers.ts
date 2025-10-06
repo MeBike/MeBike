@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
 
 import { ObjectId } from "mongodb";
+import { report } from "node:process";
 
 import type { CreateReportReqBody } from "~/models/requests/reports.requests";
 
@@ -55,6 +56,27 @@ export async function getByIdController(req: Request<ParamsDictionary, any, any>
 
   res.json({
     message: REPORTS_MESSAGES.GET_BY_ID_SUCCESS.replace("%s", reportID),
+    result,
+  });
+}
+
+export async function getAllUserReportController(req: Request<any, any, any>, res: Response) {
+  const user = req.decoded_authorization;
+  const user_id = user?.user_id as string;
+
+  const result = await reportService.getAllUserReport(user_id?.toString());
+
+  res.json({
+    message: REPORTS_MESSAGES.GET_USER_REPORT_SUCCESS.replace("%s", user_id),
+    result,
+  });
+}
+
+export async function getAllReportController(req: Request<any, any, any>, res: Response) {
+  const result = await reportService.getAllReport();
+
+  res.json({
+    message: REPORTS_MESSAGES.GET_ALL_SUCCESS,
     result,
   });
 }

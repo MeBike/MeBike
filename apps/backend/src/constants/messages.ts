@@ -88,6 +88,8 @@ export const REPORTS_MESSAGES = {
   STATION_NOT_FOUND: "Không tìm thấy trạm với ID %s",
   LOCATION_IS_REQUIRED: "Vị trí là bắt buộc!",
   GET_BY_ID_SUCCESS: "Lấy report với ID %s thành công",
+  GET_USER_REPORT_SUCCESS: "Lấy report của user ID %s thành công",
+  GET_ALL_SUCCESS: "Lấy repport thành công",
 };
 
 export const SUPPLIER_MESSAGE = {
