@@ -31,7 +31,7 @@ export function registerDeviceRoutes(
       status,
     ]) => ({ deviceId, status }));
 
-    return c.json({ items });
+    return c.json({ items }, 200);
   });
 
   app.openapi(iotServiceRoutes.getDevice, (c) => {
