@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-
+import {clearTokens,getAccessToken,getRefreshToken,setTokens} from "@utils/tokenManager"
 export const HTTP_STATUS = {
   OK: 200,
   UNAUTHORIZED: 401,
@@ -28,7 +28,7 @@ export class FetchHttpClient {
        timeout: 5000,
     });
     this.axiosInstance.interceptors.request.use((config) => {
-      const access_token = localStorage.getItem("access_token");
+      const access_token = getAccessToken();
       if (access_token && !config.headers?.Authorization) {
         config.headers.Authorization = `Bearer ${access_token}`;
       }
@@ -61,7 +61,6 @@ export class FetchHttpClient {
           try {
             const newToken = await this.refreshAccessToken();
             this.processQueue(null, newToken);
-
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
@@ -100,29 +99,25 @@ export class FetchHttpClient {
   }
 
   private async refreshAccessToken(): Promise<string> {
-    const refreshToken = localStorage.getItem("refresh_token");
+    const refreshToken = getRefreshToken();
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
-
     const response = await axios.post(
       `${this.baseURL}/auth/refresh`,
       { refresh_token: refreshToken },
       { headers: { "Content-Type": "application/json" } }
     );
-
     if (response.status !== HTTP_STATUS.OK) {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
+      clearTokens();
       window.location.href = "/login";
       throw new Error("Refresh token expired");
     }
-
     const data = response.data;
-    localStorage.setItem("access_token", data.access_token);
-    if (data.refresh_token) {
-      localStorage.setItem("refresh_token", data.refresh_token);
-    }
+    setTokens({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+    });
     return data.access_token;
   }
 
