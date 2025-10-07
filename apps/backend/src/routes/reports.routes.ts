@@ -40,7 +40,7 @@ reportsRouter.put(
   "/:reportID",
   accessTokenValidator,
   getIdValidator,
-  filterMiddleware(["newStatus"]),
+  filterMiddleware(["newStatus", "staff_id", "priority"]),
   updateReportValidator,
   wrapAsync(updateReportStatusController),
 );

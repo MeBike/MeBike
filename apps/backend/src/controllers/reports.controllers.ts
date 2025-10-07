@@ -35,10 +35,14 @@ export async function createReportController(req: Request<ParamsDictionary, any,
 export async function updateReportStatusController(req: Request<ParamsDictionary, any, any>, res: Response) {
   const { reportID } = req.params;
   const newStatus = req.body.newStatus;
+  const assignee_id = req.body.staff_id || "";
+  const priority = req.body.priority || "";
 
   const result = await reportService.updateReportStatus({
     reportID: reportID.toString(),
     newStatus,
+    assignee_id,
+    priority,
   });
 
   res.json({

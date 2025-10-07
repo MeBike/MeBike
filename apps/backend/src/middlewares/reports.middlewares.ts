@@ -1,7 +1,7 @@
 import { checkSchema } from "express-validator";
 import { ObjectId } from "mongodb";
 
-import { ReportStatus, ReportTypeEnum } from "~/constants/enums";
+import { ReportPriority, ReportStatus, ReportTypeEnum } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { REPORTS_MESSAGES, USERS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
@@ -242,6 +242,18 @@ export const updateReportValidator = validate(
 
           return true;
         },
+      },
+    },
+    priority: {
+      in: "body",
+      trim: true,
+      optional: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.PRIORITY_IS_REQUIRED,
+      },
+      isIn: {
+        options: [Object.values(ReportPriority)],
+        errorMessage: REPORTS_MESSAGES.INVALID_PRIORITY,
       },
     },
   }),

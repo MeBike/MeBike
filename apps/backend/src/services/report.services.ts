@@ -7,6 +7,7 @@ import process from "node:process";
 import { Readable } from "node:stream";
 import pLimit from "p-limit";
 
+import type { ReportPriority } from "~/constants/enums";
 import type { CreateReportReqBody } from "~/models/requests/reports.requests";
 import type { ReportType } from "~/models/schemas/report.schema";
 
@@ -54,6 +55,7 @@ class ReportService {
       status: ReportStatus.Pending,
       created_at: localTime,
       location: payload.location,
+      priority: "" as ReportPriority,
       media_urls: [],
     };
 
@@ -108,7 +110,17 @@ class ReportService {
     return { _id: reportID };
   }
 
-  async updateReportStatus({ reportID, newStatus }: { reportID: string; newStatus: string }) {
+  async updateReportStatus({
+    reportID,
+    newStatus,
+    assignee_id,
+    priority,
+  }: {
+    reportID: string;
+    newStatus: string;
+    assignee_id?: string;
+    priority?: string;
+  }) {
     const allowedStatuses: Record<ReportStatus, ReportStatus[]> = {
       [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
       [ReportStatus.InProgress]: [ReportStatus.Resolved],
@@ -141,9 +153,35 @@ class ReportService {
       });
     }
 
+    const updateData: any = {
+      status: newStatusTyped,
+    };
+
+    if (newStatusTyped === ReportStatus.InProgress) {
+      if (!assignee_id || assignee_id.trim() === "") {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.STAFF_ID_IS_REQUIRED,
+          status: HTTP_STATUS.BAD_REQUEST,
+        });
+      }
+      if (!priority || priority.trim() === "") {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.PRIORITY_IS_REQUIRED,
+          status: HTTP_STATUS.BAD_REQUEST,
+        });
+      }
+
+      updateData.assignee_id = new ObjectId(assignee_id);
+      updateData.priority = priority;
+    }
+
+    if (newStatusTyped === ReportStatus.Resolved) {
+      updateData.resolved_at = new Date();
+    }
+
     const result = await databaseService.reports.findOneAndUpdate(
       { _id: new ObjectId(reportID) },
-      { $set: { status: newStatusTyped } },
+      { $set: updateData },
       { returnDocument: "after" },
     );
 

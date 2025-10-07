@@ -94,6 +94,9 @@ export const REPORTS_MESSAGES = {
   USER_ID_IS_REQUIRED: "User ID là bắt buộc",
   USER_ID_INVALID: "User ID không hợp lệ",
   DATE_IN_VALID: "Ngày không hợp lệ",
+  STAFF_ID_IS_REQUIRED: "ID của nhân viên điều phối là bắt buộc",
+  PRIORITY_IS_REQUIRED: "Độ ưu tiên của report là bắt buộc",
+  INVALID_PRIORITY: "Độ ưu tiên không hợp lệ!",
 };
 
 export const SUPPLIER_MESSAGE = {

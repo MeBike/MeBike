@@ -50,3 +50,10 @@ export enum SupplierStatus {
   INACTIVE = "NGƯNG HOẠT ĐỘNG",
   TERMINATE = "CHẤM DỨT HỢP ĐỒNG",
 }
+
+export enum ReportPriority {
+  LOW = "THẤP",
+  NORMAL = "BÌNH THƯỜNG",
+  HIGH = "CAO",
+  URGENT = "KHẨN CẤP",
+}
