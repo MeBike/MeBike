@@ -30,19 +30,6 @@ export interface ProfileUserResponse{
     message:string;
     result:DetailUser;
 }
-interface ChangePasswordReqBody { 
-    old_password: string;
-    password: string;
-    confirm_password: string;
-}
-interface UpdateProfileReqBody {
-    fullName: string;
-    email: string;
-    location: string;
-    username: string;
-    phone_number: string;
-    avatar: string;
-}
 export const authService = {
     login:async (data : LoginSchemaFormData) : Promise<AxiosResponse<AuthResponse>>=>{
         const response = await fetchHttpClient.post<AuthResponse>("/users/login",data);

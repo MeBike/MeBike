@@ -15,7 +15,7 @@ export class FetchHttpClient {
   private isRefreshing = false;
   private failedQueue: Array<{
     resolve: (value: string | null) => void;
-    reject: (reason?: any) => void;
+    reject: (reason?: unknown) => void;
   }> = [];
 
   constructor(baseURL: string) {
@@ -119,7 +119,7 @@ export class FetchHttpClient {
     return data.access_token;
   }
 
-  private processQueue(error: any, token: string | null) {
+  private processQueue(error: unknown, token: string | null) {
     this.failedQueue.forEach(({ resolve, reject }) => {
       if (error) {
         reject(error);

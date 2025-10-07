@@ -6,23 +6,13 @@ import {clearTokens , setTokens} from "@utils/tokenManager"
 import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePasswordMutation";
 import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
-import { useRefreshTokenMutation } from "./mutations/Auth/useRefreshTokenMutation";
-import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
-import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
-import { useVerifyForgotPasswordMutation } from "./mutations/Auth/Password/useVerifyForgotPassword";
-import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
 export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<boolean>>) => {
     const router = useRouter();
     const queryClient = useQueryClient();
-    const useVerifyEmail = useVerifyEmailMutation();
     const useLogin = useLoginMutation();
     const useRegister = useRegisterMutation();
-    const useRefreshToken = useRefreshTokenMutation();
-    const useUpdateProfile = useUpdateProfileMutation();
-    const useVerifyForgotPassword = useVerifyForgotPasswordMutation();
-    const useForgotPassword = useForgotPasswordMutation();
     const useLogout = useLogoutMutation();  
     const useChangePassword = useChangePasswordMutation();
     const changePassword = useCallback(

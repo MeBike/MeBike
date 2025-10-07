@@ -8,10 +8,7 @@ export const getAccessToken = () : string | null => {
 export const getRefreshToken = () : string | null => {
     return localStorage.getItem(REFRESH_TOKEN);
 }
-interface Tokens {
-    access_token: string ;
-    refresh_token: string ;
-}
+
 export const setTokens = (access_token: string, refresh_token: string) : void => {
     localStorage.setItem(ACCESS_TOKEN, access_token);
     localStorage.setItem(REFRESH_TOKEN, refresh_token);

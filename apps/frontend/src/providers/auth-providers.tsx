@@ -1,9 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useMemo, use, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuthActions } from "@hooks/useAuthAction";
 import { getAccessToken , clearTokens} from "@/utils/tokenManager";
-import { User } from "@/types/User";
 import { DetailUser } from "@/services/authService";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserProfileQuery } from "@hooks/query/useUserProfileQuery";
