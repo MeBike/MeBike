@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { authService } from "@/services/authService";
 import type { DetailUser } from "@/services/authService";
 import { AxiosError } from "axios";
-import { error } from "console";
 
 export const USER_PROFILE_QUERY_KEY = ["user","me"];
 
@@ -12,7 +11,7 @@ export const fetchUserProfile = async (): Promise<DetailUser> => {
   if(response.status === 200){
     return response.data.result;
   }
-  throw error("Failed to fetch user profile");
+  throw new Error("Failed to fetch user profile");
 }
 export function useUserProfileQuery(isAuthenticated: boolean) {
     return useQuery<DetailUser, AxiosError>({
