@@ -45,7 +45,7 @@ export default class Rental {
     this.end_time = rental.end_time ?? undefined;
     this.duration = rental.duration instanceof Int32 ? rental.duration : new Int32(rental.duration ?? 0);
     this.total_price = rental.total_price instanceof Decimal128 ? rental.total_price : Decimal128.fromString(String(rental.total_price ?? 0));
-    this.status = rental.status ?? RentalStatus.Ongoing;
+    this.status = rental.status ?? RentalStatus.Rented;
     this.created_at = rental.created_at || localTime;
     this.updated_at = rental.updated_at || localTime;
   }

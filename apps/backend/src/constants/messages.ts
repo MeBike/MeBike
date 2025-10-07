@@ -51,6 +51,10 @@ export const RENTALS_MESSAGE = {
   // Success action
   CREATE_SESSION_SUCCESS: "Tạo phiên thuê xe thành công",
   GET_DETAIL_SUCCESS: "Xem chi tiết 1 phiên thuê xe thành công",
+  GET_REVENUE_SUCCESS: "Xem thống kê doanh thu thành công",
+  GET_BIKE_USAGES_SUCCESS: "Xem thống kê số lượt sử dụng xe thành công",
+  GET_RESERVATIONS_SUCCESS: "Xem thống kê số lượt đặt/huỷ thành công",
+  GET_STATION_TRAFFIC_SUCCESS: "Xem thống kê số lượt thuê/trả theo trạm thành công",
   // Required data
   REQUIRED_USER_ID: "Vui lòng nhập Id người dùng",
   REQUIRED_BIKE_ID: "Vui lòng nhập Id xe đạp",

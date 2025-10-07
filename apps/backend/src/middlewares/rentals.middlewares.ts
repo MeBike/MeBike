@@ -85,7 +85,7 @@ export const endRentalSessionValidator = validate(
         options: async (value, { req }) => {
           const currentRental = await databaseService.rentals.findOne({
             _id: new ObjectId(value),
-            status: RentalStatus.Ongoing,
+            status: RentalStatus.Rented,
           });
 
           if (!currentRental) {

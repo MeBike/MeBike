@@ -1,11 +1,34 @@
 import { Router } from "express";
 
-import { createRentalSessionController, endRentalSessionController, getDetailRentalController, getMyDetailRentalController, getMyRentalsController } from "~/controllers/rentals.controllers";
-import { isAdminOrStaffValidator } from "~/middlewares/auth.middlewares";
+import {
+  createRentalSessionController,
+  endRentalSessionController,
+  getAllRentalsController,
+  getBikeUsagesController,
+  getDetailRentalController,
+  getMyDetailRentalController,
+  getMyRentalsController,
+  getRentalRevenueController,
+  getReservationsStatisticController,
+  getStationTrafficController,
+} from "~/controllers/rentals.controllers";
+import { isAdminOrStaffValidator, isAdminValidator } from "~/middlewares/auth.middlewares";
 import { createRentalSessionValidator, endRentalSessionValidator } from "~/middlewares/rentals.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
 const rentalsRouter = Router();
+
+rentalsRouter.route("/stats/revenue")
+  .get(isAdminValidator, wrapAsync(getRentalRevenueController));
+
+rentalsRouter.route("/stats/bike-usage")
+  .get(isAdminValidator, wrapAsync(getBikeUsagesController));
+
+rentalsRouter.route("/stats/station-traffic")
+  .get(isAdminValidator, wrapAsync(getStationTrafficController));
+
+rentalsRouter.route("/stats/reservations")
+  .get(isAdminValidator, wrapAsync(getReservationsStatisticController));
 
 rentalsRouter.route("/me")
   .get(wrapAsync(getMyRentalsController));
@@ -22,5 +45,6 @@ rentalsRouter.route("/:id")
 
 rentalsRouter.route("/")
   .get(isAdminOrStaffValidator, wrapAsync(getAllRentalsController))
+// user
   .post(createRentalSessionValidator, wrapAsync(createRentalSessionController));
 export default rentalsRouter;
