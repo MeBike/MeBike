@@ -68,6 +68,10 @@ class DatabaseService {
   get rentals(): Collection<Rental> {
     return this.db.collection(process.env.DB_RENTALS_COLLECTION as string);
   }
+
+  get reservations(): Collection<Rental> {
+    return this.db.collection(process.env.DB_RESERVATIONS_COLLECTION as string);
+  }
 }
 
 const databaseService = new DatabaseService();
