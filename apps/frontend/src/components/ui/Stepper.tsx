@@ -78,10 +78,10 @@ const Stepper = () => {
           <div className="lg:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 p-8 flex items-center justify-center">
             <div className="text-center">
               <Image
-                src={stepsData[activeStep - 1].image}
-                alt={stepsData[activeStep - 1].title}
-                width={400}
-                height={400}
+                width={1920}
+                height={1080}
+                src={stepsData[stepsData[activeStep - 1] ? activeStep - 1 : 0].image}
+                alt={stepsData[stepsData[activeStep - 1] ? activeStep - 1 : 0].title}
                 className="w-full h-full object-cover rounded-full"
                 priority={activeStep === 1}
               />

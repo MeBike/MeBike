@@ -10,6 +10,42 @@
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./sdk/iot-service": {
+      "types": "./dist/sdk/iot-service/index.d.ts",
+      "import": "./dist/sdk/iot-service/index.js",
+      "require": "./dist/sdk/iot-service/index.js",
+      "default": "./dist/sdk/iot-service/index.js"
+    },
+    "./sdk/iot-service/client": {
+      "types": "./dist/sdk/iot-service/client.d.ts",
+      "import": "./dist/sdk/iot-service/client.js",
+      "require": "./dist/sdk/iot-service/client.js",
+      "default": "./dist/sdk/iot-service/client.js"
+    },
+    "./sdk/iot-service/schemas": {
+      "types": "./dist/sdk/iot-service/schemas/index.d.ts",
+      "import": "./dist/sdk/iot-service/schemas/index.js",
+      "require": "./dist/sdk/iot-service/schemas/index.js",
+      "default": "./dist/sdk/iot-service/schemas/index.js"
+    },
+    "./clients/iot-service": {
+      "types": "./dist/sdk/iot-service/index.d.ts",
+      "import": "./dist/sdk/iot-service/index.js",
+      "require": "./dist/sdk/iot-service/index.js",
+      "default": "./dist/sdk/iot-service/index.js"
+    },
+    "./clients/iot-service/client": {
+      "types": "./dist/sdk/iot-service/client.d.ts",
+      "import": "./dist/sdk/iot-service/client.js",
+      "require": "./dist/sdk/iot-service/client.js",
+      "default": "./dist/sdk/iot-service/client.js"
+    },
+    "./clients/iot-service/schemas": {
+      "types": "./dist/sdk/iot-service/schemas/index.d.ts",
+      "import": "./dist/sdk/iot-service/schemas/index.js",
+      "require": "./dist/sdk/iot-service/schemas/index.js",
+      "default": "./dist/sdk/iot-service/schemas/index.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
@@ -27,6 +63,7 @@
   },
   "devDependencies": {
     "@mebike/tsconfig": "workspace:*",
+    "@types/node": "^24.7.0",
     "typescript": "^5.6.3"
   }
 }

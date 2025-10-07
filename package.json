@@ -10,6 +10,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "turbo run dev --parallel",
+    "openapi:generate": "pnpm --filter iot-service openapi:generate",
+    "orval": "orval --config orval.config.ts --tsconfig packages/shared/tsconfig.json",
+    "client:generate": "pnpm openapi:generate && pnpm orval",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint -- --fix",
     "build": "turbo run build",
@@ -18,6 +21,7 @@
   },
   "devDependencies": {
     "@mebike/tsconfig": "workspace:*",
+    "orval": "^7.13.0",
     "turbo": "^2.5.6"
   }
 }

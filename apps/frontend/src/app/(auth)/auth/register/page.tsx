@@ -44,17 +44,17 @@ const RegisterPage = () => {
   };
 
   const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert("Mật khẩu xác nhận không khớp!");
-      return;
-    }
-    if (!formData.agreeTerms) {
-      alert("Vui lòng đồng ý với điều khoản sử dụng!");
-      return;
-    }
-    // TODO: Integrate with Supabase auth
-    console.log("Register with:", formData);
+    // e.preventDefault();
+    // if (formData.password !== formData.confirmPassword) {
+    //   alert("Mật khẩu xác nhận không khớp!");
+    //   return;
+    // }
+    // if (!formData.agreeTerms) {
+    //   alert("Vui lòng đồng ý với điều khoản sử dụng!");
+    //   return;
+    // }
+    // // TODO: Integrate with Supabase auth
+    // console.log("Register with:", formData);
   };
 
   return (

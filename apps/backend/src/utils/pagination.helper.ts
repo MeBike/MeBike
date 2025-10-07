@@ -40,3 +40,28 @@ export async function sendPaginatedResponse<T extends Document>(res: Response, n
     next(error);
   }
 }
+
+export function sendPaginatedResponseFromRedis<T>(res: Response, next: NextFunction, data: T[], query: Record<string, any>) {
+  try {
+    const page = Number.parseInt(query.page as string) || 1;
+    const limit = Number.parseInt(query.limit as string) || 10;
+    const start = (page - 1) * limit;
+
+    const paginatedData = data.slice(start, start + limit);
+
+    const responseBody: IResponseSearch<any> = {
+      data: paginatedData,
+      pagination: {
+        limit,
+        currentPage: page,
+        totalPages: Math.ceil(data.length / limit),
+        totalRecords: data.length,
+      },
+    };
+
+    return res.status(200).json(responseBody);
+  }
+  catch (error) {
+    next(error);
+  }
+}
