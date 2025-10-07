@@ -3,122 +3,81 @@ import type {
   CommandAcceptedResponse,
   ErrorResponse,
 } from "@mebike/shared";
+import type { Context } from "hono";
 
-import {
-  IOT_COMMAND_TOPICS,
-  iotServiceRoutes,
-  normalizeMac,
-  topicWithMac,
-} from "@mebike/shared";
+import { iotServiceRoutes } from "@mebike/shared";
 
 import type { CommandPublisher } from "../../publishers";
+import type { DeviceManager } from "../../services";
+
+import { BusinessLogicError } from "../../middleware";
+import { CommandController } from "../controllers/command-controller";
 
 export type RegisterCommandRoutesOptions = {
   commandPublisher: CommandPublisher;
+  deviceManager: DeviceManager;
 };
 
 export function registerCommandRoutes(
   app: OpenAPIHono,
-  { commandPublisher }: RegisterCommandRoutesOptions,
+  { commandPublisher, deviceManager }: RegisterCommandRoutesOptions,
 ): void {
+  const controller = new CommandController({ commandPublisher, deviceManager });
+
+  const handleCommandResponse = async (
+    c: Context,
+    handler: () => Promise<CommandAcceptedResponse>,
+  ) => {
+    try {
+      const result = await handler();
+      return c.json<CommandAcceptedResponse, 202>(result, 202);
+    }
+    catch (err) {
+      if (err instanceof BusinessLogicError) {
+        const details = err.details;
+        const status: 400 | 409 = err.status === 409 ? 409 : 400;
+        return c.json<ErrorResponse, typeof status>(
+          {
+            error: err.message,
+            ...(details ? { details } : {}),
+          },
+          status,
+        );
+      }
+      throw err;
+    }
+  };
+
   app.openapi(iotServiceRoutes.sendStateCommand, async (c) => {
     const { deviceId } = c.req.valid("param");
-    const normalized = normalizeMac(deviceId);
-    if (!normalized) {
-      return c.json<ErrorResponse, 400>({
-        error: "Invalid device identifier",
-        details: { deviceId },
-      }, 400);
-    }
-
     const { state } = c.req.valid("json");
-    await commandPublisher.sendStateCommand(state, normalized);
-
-    return c.json<CommandAcceptedResponse, 202>({
-      deviceId: normalized,
-      topic: topicWithMac(IOT_COMMAND_TOPICS.state, normalized),
-      payload: state,
-    }, 202);
+    return handleCommandResponse(c, () => controller.sendStateCommand({ deviceId, state }));
   });
 
   app.openapi(iotServiceRoutes.sendBookingCommand, async (c) => {
     const { deviceId } = c.req.valid("param");
-    const normalized = normalizeMac(deviceId);
-    if (!normalized) {
-      return c.json<ErrorResponse, 400>({
-        error: "Invalid device identifier",
-        details: { deviceId },
-      }, 400);
-    }
-
     const { command } = c.req.valid("json");
-    await commandPublisher.sendBookingCommand(command, normalized);
-
-    return c.json<CommandAcceptedResponse, 202>({
-      deviceId: normalized,
-      topic: topicWithMac(IOT_COMMAND_TOPICS.booking, normalized),
-      payload: command,
-    }, 202);
+    return handleCommandResponse(c, () => controller.sendBookingCommand({ deviceId, command }));
   });
 
   app.openapi(iotServiceRoutes.sendReservationCommand, async (c) => {
     const { deviceId } = c.req.valid("param");
-    const normalized = normalizeMac(deviceId);
-    if (!normalized) {
-      return c.json<ErrorResponse, 400>({
-        error: "Invalid device identifier",
-        details: { deviceId },
-      }, 400);
-    }
-
     const { command } = c.req.valid("json");
-    await commandPublisher.sendReservationCommand(command, normalized);
-
-    return c.json<CommandAcceptedResponse, 202>({
-      deviceId: normalized,
-      topic: topicWithMac(IOT_COMMAND_TOPICS.reservation, normalized),
-      payload: command,
-    }, 202);
+    return handleCommandResponse(c, () => controller.sendReservationCommand({ deviceId, command }));
   });
 
   app.openapi(iotServiceRoutes.sendMaintenanceCommand, async (c) => {
     const { deviceId } = c.req.valid("param");
-    const normalized = normalizeMac(deviceId);
-    if (!normalized) {
-      return c.json<ErrorResponse, 400>({
-        error: "Invalid device identifier",
-        details: { deviceId },
-      }, 400);
-    }
-
     const { command } = c.req.valid("json");
-    await commandPublisher.sendMaintenanceCommand(command, normalized);
-
-    return c.json<CommandAcceptedResponse, 202>({
-      deviceId: normalized,
-      topic: topicWithMac(IOT_COMMAND_TOPICS.maintenance, normalized),
-      payload: command,
-    }, 202);
+    return handleCommandResponse(c, () => controller.sendMaintenanceCommand({ deviceId, command }));
   });
 
   app.openapi(iotServiceRoutes.requestStatusCommand, async (c) => {
     const { deviceId } = c.req.valid("param");
-    const normalized = normalizeMac(deviceId);
-    if (!normalized) {
-      return c.json<ErrorResponse, 400>({
-        error: "Invalid device identifier",
-        details: { deviceId },
-      }, 400);
-    }
-
     const body = c.req.valid("json");
-    const command = body?.command ?? "request";
-    await commandPublisher.requestStatus(normalized);
-
-    return c.json<CommandAcceptedResponse, 202>({
-      deviceId: normalized,
-      topic: topicWithMac(IOT_COMMAND_TOPICS.status, normalized),
-      payload: command,
-    }, 202);
+    return handleCommandResponse(c, () => controller.requestStatusCommand({
+      deviceId,
+      command: body?.command,
+    }));
   });
 }

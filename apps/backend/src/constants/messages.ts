@@ -58,6 +58,10 @@ export const USERS_MESSAGES = {
   UPDATE_ME_SUCCESS: "Cập nhật thông tin người dùng thành công",
   // refresh token messages
   REFRESH_TOKEN_SUCCESS: "Làm mới token thành công",
+  // check admin role messages
+  ACCESS_DENIED_ADMIN_ONLY: "Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên",
+  // check staff role messages
+  ACCESS_DENIED_STAFF_ONLY: "Quyền truy cập bị từ chối. Chỉ dành cho nhân viên",
 } as const;
 
 export const REPORTS_MESSAGES = {
