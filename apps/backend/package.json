@@ -17,6 +17,7 @@
     "prettier:fix": "prettier --write ."
   },
   "dependencies": {
+    "@mebike/shared": "workspace:*",
     "@types/cors": "^2.8.19",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",

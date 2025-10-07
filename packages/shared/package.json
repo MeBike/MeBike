@@ -10,23 +10,41 @@
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./sdk/iot-service": {
+      "types": "./dist/sdk/iot-service/index.d.ts",
+      "import": "./dist/sdk/iot-service/index.js",
+      "require": "./dist/sdk/iot-service/index.js",
+      "default": "./dist/sdk/iot-service/index.js"
+    },
+    "./sdk/iot-service/client": {
+      "types": "./dist/sdk/iot-service/client.d.ts",
+      "import": "./dist/sdk/iot-service/client.js",
+      "require": "./dist/sdk/iot-service/client.js",
+      "default": "./dist/sdk/iot-service/client.js"
+    },
+    "./sdk/iot-service/schemas": {
+      "types": "./dist/sdk/iot-service/schemas/index.d.ts",
+      "import": "./dist/sdk/iot-service/schemas/index.js",
+      "require": "./dist/sdk/iot-service/schemas/index.js",
+      "default": "./dist/sdk/iot-service/schemas/index.js"
+    },
     "./clients/iot-service": {
-      "types": "./dist/clients/iot-service/index.d.ts",
-      "import": "./dist/clients/iot-service/index.js",
-      "require": "./dist/clients/iot-service/index.js",
-      "default": "./dist/clients/iot-service/index.js"
+      "types": "./dist/sdk/iot-service/index.d.ts",
+      "import": "./dist/sdk/iot-service/index.js",
+      "require": "./dist/sdk/iot-service/index.js",
+      "default": "./dist/sdk/iot-service/index.js"
     },
     "./clients/iot-service/client": {
-      "types": "./dist/clients/iot-service/client.d.ts",
-      "import": "./dist/clients/iot-service/client.js",
-      "require": "./dist/clients/iot-service/client.js",
-      "default": "./dist/clients/iot-service/client.js"
+      "types": "./dist/sdk/iot-service/client.d.ts",
+      "import": "./dist/sdk/iot-service/client.js",
+      "require": "./dist/sdk/iot-service/client.js",
+      "default": "./dist/sdk/iot-service/client.js"
     },
     "./clients/iot-service/schemas": {
-      "types": "./dist/clients/iot-service/schemas/index.d.ts",
-      "import": "./dist/clients/iot-service/schemas/index.js",
-      "require": "./dist/clients/iot-service/schemas/index.js",
-      "default": "./dist/clients/iot-service/schemas/index.js"
+      "types": "./dist/sdk/iot-service/schemas/index.d.ts",
+      "import": "./dist/sdk/iot-service/schemas/index.js",
+      "require": "./dist/sdk/iot-service/schemas/index.js",
+      "default": "./dist/sdk/iot-service/schemas/index.js"
     },
     "./package.json": "./package.json"
   },

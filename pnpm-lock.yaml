@@ -20,6 +20,9 @@ importers:
 
   apps/backend:
     dependencies:
+      '@mebike/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@types/cors':
         specifier: ^2.8.19
         version: 2.8.19
