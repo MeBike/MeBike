@@ -12,6 +12,7 @@ export default function createConfig(options, ...userConfigs) {
         "**/docs/**",
         "**/*.md",
         "**/node_modules/**",
+        "**/apps/backend/**",
       ],
       stylistic: {
         indent: 2,
