@@ -1,3 +1,5 @@
+import e from "cors";
+
 export enum UserVerifyStatus {
   Unverified = "UNVERIFIED",
   Verified = "VERIFIED",
@@ -43,4 +45,36 @@ export enum RentalStatus {
   Completed = "HOÀN THÀNH",
   Cancelled = "ĐÃ HỦY",
   Expired = "HẾT HẠN",
+}
+
+export enum PaymentStatus {
+  Pending = "PENDING",
+  Success = "SUCCESS",
+  Failed = "FAILED",
+}
+
+export enum PaymentMethod {
+  Momo = "MOMO",
+  Bank = "BANK",
+  Vnpt = "VNPTMONEY",
+  Wallet = "WALLET",
+}
+
+export enum WalletStatus {
+  Active = "ACTIVE",
+  Frozen = "FROZEN",
+}
+
+export enum TransactionStaus {
+  Pending = "PENDING",
+  Success = "SUCCESS",
+  Failed = "FAILED",
+  Cancelled = "CANCELLED",
+}
+
+export enum TransactionTypeEnum {
+  Deposit = "DEPOSIT",
+  PAYMENT = "PAYMENT",
+  WithDrawal = "WITHDRAWAL",
+  Refund = "REFUND",
 }

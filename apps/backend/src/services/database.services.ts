@@ -5,11 +5,14 @@ import { MongoClient } from "mongodb";
 import process from "node:process";
 
 import type Bike from "~/models/schemas/bike.schema";
+import type Payment from "~/models/schemas/payment.schemas";
 import type RefreshToken from "~/models/schemas/refresh-token.schemas";
 import type Rental from "~/models/schemas/rental.schema";
 import type Report from "~/models/schemas/report.schema";
 import type Station from "~/models/schemas/station.schema";
+import type Transaction from "~/models/schemas/transaction.schema";
 import type User from "~/models/schemas/user.schema";
+import type Wallet from "~/models/schemas/wallet.schemas";
 
 config();
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
@@ -63,6 +66,18 @@ class DatabaseService {
 
   get rentals(): Collection<Rental> {
     return this.db.collection(process.env.DB_RENTALS_COLLECTION as string);
+  }
+
+  get payments(): Collection<Payment> {
+    return this.db.collection(process.env.DB_PAYMENTS_COLLECTION as string);
+  }
+
+  get wallets(): Collection<Wallet> {
+    return this.db.collection(process.env.DB_WALLETS_COLLECTION as string);
+  }
+
+  get transactions(): Collection<Transaction> {
+    return this.db.collection(process.env.DB_TRANSACTIONS_COLLECTION as string);
   }
 }
 
