@@ -67,6 +67,7 @@ export const USERS_MESSAGES = {
 export const REPORTS_MESSAGES = {
   REPORT_NOT_FOUND: "Không tìm thấy report với ID %s",
   INVALID_NEW_STATUS: "Trạng thái mới không hợp lệ!",
+  INVALID_STATUS: "Trạng thái không hợp lệ!",
   CREATE_SUCCESS: "Tạo report thành công",
   UPDATE_SUCCESS: "Update trạng thái report thành công!",
   INVALID_REPORT_ID: "Report ID không hợp lệ!",
@@ -90,6 +91,9 @@ export const REPORTS_MESSAGES = {
   GET_BY_ID_SUCCESS: "Lấy report với ID %s thành công",
   GET_USER_REPORT_SUCCESS: "Lấy report của user ID %s thành công",
   GET_ALL_SUCCESS: "Lấy repport thành công",
+  USER_ID_IS_REQUIRED: "User ID là bắt buộc",
+  USER_ID_INVALID: "User ID không hợp lệ",
+  DATE_IN_VALID: "Ngày không hợp lệ",
 };
 
 export const SUPPLIER_MESSAGE = {

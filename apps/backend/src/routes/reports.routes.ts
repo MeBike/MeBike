@@ -12,7 +12,7 @@ import {
 } from "~/controllers/reports.controllers";
 import { isAdminValidator } from "~/middlewares/admin.middlewares";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
-import { createReportValidator, updateReportValidator } from "~/middlewares/reports.middlewares";
+import { createReportValidator, getAllReportValidator, getAllUserReportValidator, updateReportValidator } from "~/middlewares/reports.middlewares";
 import { getIdValidator } from "~/middlewares/supplier.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
@@ -23,8 +23,10 @@ const upload = multer({ storage });
 
 const reportsRouter = Router();
 
-reportsRouter.get("/", accessTokenValidator, wrapAsync(getAllUserReportController));
-reportsRouter.get("/manage-reports", accessTokenValidator, isAdminValidator, wrapAsync(getAllReportController));
+// get all cho users
+reportsRouter.get("/", accessTokenValidator, getAllUserReportValidator, wrapAsync(getAllUserReportController));
+// get all cho admin
+reportsRouter.get("/manage-reports", accessTokenValidator, isAdminValidator, getAllReportValidator, wrapAsync(getAllReportController));
 reportsRouter.get("/:reportID", accessTokenValidator, getIdValidator, wrapAsync(getByIdController));
 reportsRouter.post(
   "/",

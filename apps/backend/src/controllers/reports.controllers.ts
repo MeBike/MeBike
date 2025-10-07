@@ -5,10 +5,10 @@ import type { Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 import { report } from "node:process";
 
+import type { ReportStatus, ReportTypeEnum } from "~/constants/enums";
 import type { CreateReportReqBody } from "~/models/requests/reports.requests";
 import type Report from "~/models/schemas/report.schema";
 
-import { ReportStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { REPORTS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
@@ -71,17 +71,10 @@ export async function getAllUserReportController(req: Request, res: Response, ne
 
     const filter = {
       user_id: new ObjectId(user_id),
-      status: { $in: [ReportStatus.Pending, ReportStatus.InProgress, ReportStatus.Resolved] },
+      status: req.query.status as ReportStatus,
     };
 
-    await sendPaginatedResponse(
-      res,
-      next,
-      databaseService.reports,
-      req.query,
-      filter,
-      {},
-    );
+    await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter, {});
   }
   catch (error) {
     next(error);
@@ -90,6 +83,21 @@ export async function getAllUserReportController(req: Request, res: Response, ne
 
 export async function getAllReportController(req: Request<any, any, any>, res: Response, next: NextFunction) {
   const filter: Filter<Report> = {};
+  if (req.query.type) {
+    filter.type = req.query.type as ReportTypeEnum;
+  }
+
+  if (req.query.userID) {
+    filter.user_id = new ObjectId(req.query.userID as string);
+  }
+
+  if (req.query.date) {
+    const start = new Date(req.query.date as string);
+    const end = new Date(start);
+    end.setUTCHours(23, 59, 59, 999);
+
+    filter.created_at = { $gte: start, $lte: end };
+  }
 
   await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter);
 }
