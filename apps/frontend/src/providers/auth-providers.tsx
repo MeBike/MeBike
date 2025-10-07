@@ -1,5 +1,4 @@
 "use client";
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuthActions } from "@hooks/useAuthAction";
 import { getAccessToken , clearTokens} from "@/utils/tokenManager";
@@ -16,11 +15,12 @@ type AuthContextType = ReturnType<typeof useAuthActions> & {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }) => {
-  const [hasToken, setHasToken] = useState<boolean>(!!getAccessToken());
+  const [hasToken, setHasToken] = useState<boolean>(false);
   const queryClient = useQueryClient();
   const { data: userProfile, isLoading: isUserProfileLoading , isError , isSuccess  } = useUserProfileQuery(hasToken);
   const actions = useAuthActions(setHasToken);
   useEffect(() => {
+    setHasToken(!!getAccessToken());
     const handleStorageChange = () => {
       setHasToken(!!getAccessToken());
     };

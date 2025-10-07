@@ -17,7 +17,7 @@ import React from "react";
 import { useAuth } from "@providers/auth-providers";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const { logIn } = useAuth();
+   const { logIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();

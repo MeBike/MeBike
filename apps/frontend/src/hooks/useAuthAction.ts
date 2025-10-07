@@ -47,7 +47,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     toast.error("Error logging in");
                 }
             });
-        },[useLogin, queryClient, setHasToken]
+        },[useLogin, queryClient , setHasToken]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
@@ -68,7 +68,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 toast.error("Error registering");
             }
         });
-    },[useRegister, router, queryClient])
+    },[useRegister, router, queryClient , setHasToken]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
