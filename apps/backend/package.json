@@ -11,12 +11,11 @@
     "dev": "nodemon",
     "build": "rimraf dist && tsc",
     "start": "node dist/server.js",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write ."
   },
   "dependencies": {
+    "@mebike/shared": "workspace:*",
     "@types/cors": "^2.8.19",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
