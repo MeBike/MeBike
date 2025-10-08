@@ -41,6 +41,8 @@ export const increaseBalanceValidator = validate(
                 status: HTTP_STATUS.NOT_FOUND,
               });
             }
+
+            return true;
           },
         },
       },
@@ -147,6 +149,8 @@ export const decreaseBalanceValidator = validate(
                 status: HTTP_STATUS.BAD_REQUEST,
               });
             }
+
+            return true;
           },
         },
       },
