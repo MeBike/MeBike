@@ -1,6 +1,4 @@
-import type { Decimal128 } from "mongodb";
-
-import { ObjectId } from "mongodb";
+import { Decimal128, ObjectId } from "mongodb";
 
 import { PaymentMethod, PaymentStatus } from "~/constants/enums";
 
@@ -31,7 +29,7 @@ export default class Payment {
     this._id = payment._id || new ObjectId();
     this.rental_id = payment.rental_id;
     this.user_id = payment.user_id;
-    this.amount = payment.amount;
+    this.amount = Decimal128.fromString(payment.amount.toString());
     this.method = payment.method || PaymentMethod.Wallet;
     this.status = payment.status || PaymentStatus.Pending;
     this.created_at = payment.created_at || localTime;

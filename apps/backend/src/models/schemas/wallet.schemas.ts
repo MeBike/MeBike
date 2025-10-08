@@ -1,10 +1,8 @@
-import type { Decimal128 } from "mongodb";
-
-import { ObjectId } from "mongodb";
+import { Decimal128, ObjectId } from "mongodb";
 
 import { WalletStatus } from "~/constants/enums";
 
-type WalletType = {
+export type WalletType = {
   _id?: ObjectId;
   user_id: ObjectId;
   balance: Decimal128;
@@ -28,7 +26,7 @@ export default class Wallet {
 
     this._id = wallet._id || new ObjectId();
     this.user_id = wallet.user_id;
-    this.balance = wallet.balance;
+    this.balance = Decimal128.fromString(wallet.balance.toString());
     this.status = wallet.status || WalletStatus.Active;
     this.created_at = wallet.created_at || localTime;
     this.updated_at = wallet.updated_at || localTime;

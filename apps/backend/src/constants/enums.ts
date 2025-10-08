@@ -1,5 +1,3 @@
-import e from "cors";
-
 export enum UserVerifyStatus {
   Unverified = "UNVERIFIED",
   Verified = "VERIFIED",
