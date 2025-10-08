@@ -5,12 +5,12 @@ import {
   createRentalSessionController,
   endRentalSessionController,
   getAllRentalsController,
-  getBikeUsagesController,
   getDetailRentalController,
   getMyDetailRentalController,
   getMyRentalsController,
   getRentalRevenueController,
   getReservationsStatisticController,
+  getStationActivityController,
 } from "~/controllers/rentals.controllers";
 import { isAdminValidator } from "~/middlewares/admin.middlewares";
 import { createRentalSessionValidator, endRentalSessionValidator } from "~/middlewares/rentals.middlewares";
@@ -21,8 +21,8 @@ const rentalsRouter = Router();
 rentalsRouter.route("/stats/revenue")
   .get(accessTokenValidator, isAdminValidator, wrapAsync(getRentalRevenueController));
 
-rentalsRouter.route("/stats/bike-usage")
-  .get(accessTokenValidator, isAdminValidator, wrapAsync(getBikeUsagesController));
+rentalsRouter.route("/stats/station-activity")
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getStationActivityController));
 
 rentalsRouter.route("/stats/reservations")
   .get(accessTokenValidator, isAdminValidator, wrapAsync(getReservationsStatisticController));

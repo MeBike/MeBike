@@ -106,15 +106,15 @@ export async function getRentalRevenueController(req: Request, res: Response) {
   });
 }
 
-export async function getBikeUsagesController(req: Request, res: Response) {
+export async function getStationActivityController(req: Request, res: Response) {
   const { from, to, stationId } = req.query;
-  const result = await rentalsService.getBikeUsages({
+  const result = await rentalsService.getStationActivity({
     from: from as string,
     to: to as string,
     stationId: stationId as string,
   });
   res.json({
-    message: RENTALS_MESSAGE.GET_BIKE_USAGES_SUCCESS,
+    message: RENTALS_MESSAGE.GET_STATION_ACTIVITY_SUCCESS,
     result,
   });
 }

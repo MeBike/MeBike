@@ -2,7 +2,7 @@ import type { ObjectId } from "mongodb";
 
 import { Decimal128, Int32 } from "mongodb";
 
-import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus } from "~/constants/enums";
+import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { AUTH_MESSAGE, COMMON_MESSAGE, RENTALS_MESSAGE } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
@@ -10,6 +10,7 @@ import Rental from "~/models/schemas/rental.schema";
 import { toObjectId } from "~/utils/string";
 
 import databaseService from "./database.services";
+import { getLocalTime } from "~/utils/date";
 
 class RentalsService {
   async createRentalSession({
@@ -42,11 +43,23 @@ class RentalsService {
           { $set: { status: BikeStatus.Booked } },
           { session },
         );
+
       });
-      return rental;
+      if(!rental){
+        throw new ErrorWithStatus({
+          message: RENTALS_MESSAGE.CREATE_SESSION_FAIL,
+          status: HTTP_STATUS.BAD_REQUEST
+        })
+      }
+
+      return {
+        ...(rental as any),
+        total_price: 0
+      }
     }
     catch (error) {
       console.error(COMMON_MESSAGE.CREATE_SESSION_FAIL, error);
+      throw error
     }
     finally {
       await session.endSession();
@@ -67,6 +80,20 @@ class RentalsService {
     try {
       let endedRental: Rental = rental;
       await session.withTransaction(async () => {
+        const user = await databaseService.users.findOne({_id: user_id})
+        if(!user){
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.USER_NOT_FOUND.replace("%s", user_id.toString()),
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
+
+        if(user.role === Role.User && rental.user_id.toString().localeCompare(user_id.toString()) !== 0){
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.CANNOT_END_OTHER_RENTAL,
+            status: HTTP_STATUS.FORBIDDEN
+          })
+        }
         const endTime = new Date();
         const duration = this.generateDuration(rental.start_time, endTime);
         const totalPrice = this.generateTotalPrice(duration);
@@ -76,11 +103,16 @@ class RentalsService {
           end_time: endTime,
           duration: new Int32(duration),
           total_price: Decimal128.fromString(totalPrice.toString()),
+          status: RentalStatus.Completed
         };
 
+        const now = getLocalTime()
         const result = await databaseService.rentals.findOneAndUpdate(
           { _id: rental._id },
-          { $set: updatedData },
+          { $set: {
+            ...updatedData,
+            updated_at: now
+          } },
           { returnDocument: "after", session },
         );
 
@@ -91,15 +123,20 @@ class RentalsService {
             { $set: {
               station_id: objectedEndStationId,
               status: BikeStatus.Available,
+              updated_at: now
             } },
             { session },
           );
         }
       });
-      return endedRental;
+      return {
+        ...endedRental,
+        total_price: Number(endedRental.total_price.toString())
+      };
     }
     catch (error) {
       console.error(COMMON_MESSAGE.CREATE_SESSION_FAIL, error);
+      throw error
     }
     finally {
       await session.endSession();
@@ -117,7 +154,7 @@ class RentalsService {
         status: HTTP_STATUS.NOT_FOUND,
       });
     }
-    await this.buildDetailResponse(rental);
+    return await this.buildDetailResponse(rental);
   }
 
   // for user
@@ -137,13 +174,14 @@ class RentalsService {
         status: HTTP_STATUS.NOT_FOUND,
       });
     }
-    if (!rental.user_id.toString().localeCompare(user_id.toString())) {
+
+    if (rental.user_id.toString().localeCompare(user_id.toString()) !== 0) {
       throw new ErrorWithStatus({
         message: AUTH_MESSAGE.ACCESS_DENIED,
         status: HTTP_STATUS.FORBIDDEN,
       });
     }
-    await this.buildDetailResponse(rental);
+    return await this.buildDetailResponse(rental);
   }
 
   async buildDetailResponse(rental: Rental) {
@@ -202,8 +240,8 @@ class RentalsService {
     to,
     groupBy,
   }: {
-    from: Date;
-    to: Date;
+    from: string;
+    to: string;
     groupBy: GroupByOptions;
   }) {
     let dateFormat;
@@ -218,8 +256,8 @@ class RentalsService {
         dateFormat = "%d-%m-%Y";
     }
 
-    const startDate = from ? new Date(from) : new Date("01-01-2025");
-    const endDate = to ? new Date(to) : new Date();
+    const startDate = from ? new Date(from) : new Date("2025-01-01");
+    const endDate = to ? new Date(to) : getLocalTime();
 
     const pipeline = [
       {
@@ -231,7 +269,7 @@ class RentalsService {
       {
         $group: {
           _id: {
-            period: { $dateToString: { format: dateFormat, date: "$end_time" } },
+             $dateToString: { format: dateFormat, date: "$end_time" },
           },
           totalRevenue: { $sum: { $toDouble: "$total_price" } },
           totalRentals: { $sum: 1 },
@@ -241,7 +279,7 @@ class RentalsService {
       {
         $project: {
           _id: 0,
-          date: "$_id.period",
+          date: "$_id",
           totalRevenue: 1,
           totalRentals: 1,
         },
@@ -256,17 +294,17 @@ class RentalsService {
     };
   }
 
-  async getBikeUsages({
+  async getStationActivity({
     from,
     to,
     stationId,
   }: {
-    from: Date;
-    to: Date;
+    from: string;
+    to: string;
     stationId: string;
   }) {
-    const startDate = from ? new Date(from) : new Date("01-01-2025");
-    const endDate = to ? new Date(to) : new Date();
+    const startDate = from ? new Date(from) : new Date("2025-01-01");
+    const endDate = to ? new Date(to) : getLocalTime();
 
     const matchStage: any = {
       start_time: { $gte: startDate },
@@ -284,7 +322,7 @@ class RentalsService {
       },
       {
         $addFields: {
-          duration_hours: {
+          durationHours: {
             $divide: [
               { $subtract: ["$end_time", "$start_time"] },
               1000 * 60 * 60,
@@ -293,11 +331,39 @@ class RentalsService {
         },
       },
       {
+        $facet: {
+          rentals: [
+            {
+              $group: {
+                _id: "$start_station",
+                totalUsageHours: { $sum: "$durationHours" },
+                totalRentals: { $sum: 1 },
+              },
+            }
+          ],
+          returns: [
+            {
+              $group: {
+                _id: "$end_station",
+                totalReturns: {$sum: 1}
+              }
+            }
+          ]
+        }
+      },
+      {
+        $project: {
+          all: { $concatArrays: ["$rentals", "$returns"]}
+        }
+      },
+      {$unwind: "$all"},
+      {
         $group: {
-          _id: "$start_station",
-          totalUsageHours: { $sum: "$duration_hours" },
-          totalRentals: { $sum: 1 },
-        },
+          _id: "$all._id",
+          totalRentals: {$sum: "$all.totalRentals"},
+          totalReturns: {$sum: "$all.totalReturns"},
+          totalUsageHours: {$sum: "$all.totalUsageHours"}
+        }
       },
       {
         $lookup: {
@@ -313,15 +379,21 @@ class RentalsService {
           from: "bikes",
           let: { stationId: "$_id" },
           pipeline: [
-            { $match: { $expr: { $eq: ["$current_station_id", "$$stationId"] } } },
-            { $count: "total_bikes" },
+            { $match: 
+              { $expr: 
+                { 
+                  $eq: ["$station_id" ,"$$stationId" ] 
+                } 
+              } 
+            },
+            { $count: "totalBikes" },
           ],
           as: "bike_stats",
         },
       },
       {
         $addFields: {
-          totalBikes: { $ifNull: [{ $arrayElemAt: ["$bike_stats.total_bikes", 0] }, 0] },
+          totalBikes: { $ifNull: [{ $arrayElemAt: ["$bike_stats.totalBikes", 0] }, 0] },
         },
       },
       {
@@ -337,15 +409,17 @@ class RentalsService {
               },
             ],
           },
+          
+        },
+      },
+      {
+        $addFields: {
           usageRate: {
             $cond: [
               { $eq: ["$totalAvailableHours", 0] },
               0,
-              {
-                $multiply: [
-                  { $divide: ["$totalUsageHours", "$totalAvailableHours"] },
-                  100,
-                ],
+              { 
+                $divide: ["$totalUsageHours", "$totalAvailableHours"] 
               },
             ],
           },
@@ -354,8 +428,10 @@ class RentalsService {
       {
         $project: {
           _id: 0,
-          date: "$_id.period",
+          station: "$station.name",
+          totalBikes: 1,
           totalRentals: 1,
+          totalReturns: 1,
           totalUsageHours: 1,
           totalAvailableHours: 1,
           usageRate: { $round: ["$usageRate", 2] },
@@ -376,12 +452,12 @@ class RentalsService {
     to,
     groupBy,
   }: {
-    from: Date;
-    to: Date;
+    from: string;
+    to: string;
     groupBy: GroupByOptions;
   }) {
-    const startDate = from ? new Date(from) : new Date("01-01-2025");
-    const endDate = to ? new Date(to) : new Date();
+    const startDate = from ? new Date(from) : new Date("2025-01-01");
+    const endDate = to ? new Date(to) : getLocalTime();
 
     let dateFormat;
     switch (groupBy) {
@@ -450,10 +526,6 @@ class RentalsService {
       groupBy: groupBy ?? GroupByOptions.Day,
       data: result,
     };
-  }
-
-  async getStationTraffic() {
-
   }
 
   generateDuration(start: Date, end: Date) {

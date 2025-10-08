@@ -92,11 +92,14 @@ export const REPORTS_MESSAGES = {
 export const RENTALS_MESSAGE = {
   // Success action
   CREATE_SESSION_SUCCESS: "Tạo phiên thuê xe thành công",
+  END_SESSION_SUCCESS: "Kết thúc phiên thuê xe thành công",
   GET_DETAIL_SUCCESS: "Xem chi tiết 1 phiên thuê xe thành công",
   GET_REVENUE_SUCCESS: "Xem thống kê doanh thu thành công",
-  GET_BIKE_USAGES_SUCCESS: "Xem thống kê số lượt sử dụng xe thành công",
+  GET_STATION_ACTIVITY_SUCCESS: "Xem thống kê hoạt động trạm xe thành công",
   GET_RESERVATIONS_SUCCESS: "Xem thống kê số lượt đặt/huỷ thành công",
   GET_STATION_TRAFFIC_SUCCESS: "Xem thống kê số lượt thuê/trả theo trạm thành công",
+  // Fail action
+  CREATE_SESSION_FAIL: "Tạo phiên thuê xe không thành công",
   // Required data
   REQUIRED_USER_ID: "Vui lòng nhập Id người dùng",
   REQUIRED_BIKE_ID: "Vui lòng nhập Id xe đạp",
@@ -112,10 +115,12 @@ export const RENTALS_MESSAGE = {
   BIKE_NOT_FOUND: "Không tìm thấy xe đạp với Id %s",
   STATION_NOT_FOUND: "Không tìm thấy trạm với Id %s",
   BIKE_NOT_FOUND_IN_STATION: "Xe với Id %s không tồn tại trong trạm %s",
-  NOT_FOUND_ONGOING_RENTAL: "Không tìm thấy phiên thuê nào với Id %s đang diễn ra ở thời điểm hiện tại",
+  NOT_FOUND_RENTED_RENTAL: "Không tìm thấy phiên thuê nào với Id %s đang diễn ra ở thời điểm hiện tại",
   NOT_FOUND: "Không tìm thấy phiên thuê nào với Id %s",
   // Not available
   NOT_AVAILABLE_BIKE: "Xe chưa sẵn sàng để sử dụng",
+  // Access denied
+  CANNOT_END_OTHER_RENTAL: "Bạn không có quyền kết thúc phiên thuê của người khác"
 } as const;
 
 export const COMMON_MESSAGE = {
