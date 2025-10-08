@@ -1,3 +1,4 @@
+import { accessTokenValidator } from '~/middlewares/users.middlewares';
 import { Router } from "express";
 
 import {
@@ -10,41 +11,37 @@ import {
   getMyRentalsController,
   getRentalRevenueController,
   getReservationsStatisticController,
-  getStationTrafficController,
 } from "~/controllers/rentals.controllers";
-import { isAdminOrStaffValidator, isAdminValidator } from "~/middlewares/auth.middlewares";
+import { isAdminValidator } from "~/middlewares/admin.middlewares";
 import { createRentalSessionValidator, endRentalSessionValidator } from "~/middlewares/rentals.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
 const rentalsRouter = Router();
 
 rentalsRouter.route("/stats/revenue")
-  .get(isAdminValidator, wrapAsync(getRentalRevenueController));
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getRentalRevenueController));
 
 rentalsRouter.route("/stats/bike-usage")
-  .get(isAdminValidator, wrapAsync(getBikeUsagesController));
-
-rentalsRouter.route("/stats/station-traffic")
-  .get(isAdminValidator, wrapAsync(getStationTrafficController));
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getBikeUsagesController));
 
 rentalsRouter.route("/stats/reservations")
-  .get(isAdminValidator, wrapAsync(getReservationsStatisticController));
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getReservationsStatisticController));
 
 rentalsRouter.route("/me")
-  .get(wrapAsync(getMyRentalsController));
+  .get(accessTokenValidator, wrapAsync(getMyRentalsController));
 
 rentalsRouter.route("/me/:id")
-  .get(wrapAsync(getMyDetailRentalController));
+  .get(accessTokenValidator, wrapAsync(getMyDetailRentalController));
 
 rentalsRouter.route("/:id/end")
-  .put(endRentalSessionValidator, wrapAsync(endRentalSessionController));
+  .put(accessTokenValidator, endRentalSessionValidator, wrapAsync(endRentalSessionController));
 
 // staff/admin
 rentalsRouter.route("/:id")
-  .get(isAdminOrStaffValidator, wrapAsync(getDetailRentalController));
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getDetailRentalController));
 
 rentalsRouter.route("/")
-  .get(isAdminOrStaffValidator, wrapAsync(getAllRentalsController))
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getAllRentalsController))
 // user
-  .post(createRentalSessionValidator, wrapAsync(createRentalSessionController));
+  .post(accessTokenValidator, createRentalSessionValidator, wrapAsync(createRentalSessionController));
 export default rentalsRouter;

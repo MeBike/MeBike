@@ -90,7 +90,7 @@ export const endRentalSessionValidator = validate(
 
           if (!currentRental) {
             throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.NOT_FOUND_ONGOING_RENTAL.replace("%s", value),
+              message: RENTALS_MESSAGE.NOT_FOUND_RENTED_RENTAL.replace("%s", value),
               status: HTTP_STATUS.NOT_FOUND,
             });
           }
