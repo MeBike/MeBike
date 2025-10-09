@@ -121,7 +121,6 @@ class RentalsService {
           await databaseService.bikes.updateOne(
             { _id: result.bike_id },
             { $set: {
-              station_id: objectedEndStationId,
               status: BikeStatus.Available,
               updated_at: now
             } },
