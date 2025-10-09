@@ -1,10 +1,11 @@
 import { ObjectId } from "mongodb";
+import { BikeStatus } from "~/constants/enums";
 
 type BikeType = {
   _id?: ObjectId;
   station_id: ObjectId;
   qr_code: string;
-  status: string;
+  status: BikeStatus;
   created_at?: Date;
   updated_at?: Date;
 };
@@ -13,7 +14,7 @@ export default class Bike {
   _id?: ObjectId;
   station_id: ObjectId;
   qr_code: string;
-  status: string;
+  status: BikeStatus;
   created_at?: Date;
   updated_at?: Date;
 
@@ -25,7 +26,7 @@ export default class Bike {
     this._id = bike._id || new ObjectId();
     this.station_id = bike.station_id;
     this.qr_code = bike.qr_code;
-    this.status = bike.status;
+    this.status = bike.status ?? BikeStatus.Available;
     this.created_at = bike.created_at || localTime;
     this.updated_at = bike.updated_at || localTime;
   }

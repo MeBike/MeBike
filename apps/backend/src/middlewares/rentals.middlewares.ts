@@ -7,6 +7,8 @@ import { RENTALS_MESSAGE } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import { validate } from "~/utils/validation";
+import { isAvailability } from "./bikes.middlewares";
+import { toObjectId } from "~/utils/string";
 
 export const createRentalSessionValidator = validate(
   checkSchema({
@@ -31,7 +33,10 @@ export const createRentalSessionValidator = validate(
       },
       custom: {
         options: async (value, { req }) => {
-          const station = await databaseService.stations.findOne({ _id: new ObjectId(req.body.start_station) });
+          const stationId = toObjectId(req.body.start_station);
+          const bikeId = toObjectId(value);
+
+          const station = await databaseService.stations.findOne({ _id: stationId });
           if (!station) {
             throw new ErrorWithStatus({
               message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace("%s", req.body.start_station),
@@ -40,7 +45,7 @@ export const createRentalSessionValidator = validate(
           }
 
           const bikeInStation = await databaseService.bikes.findOne({
-            _id: new ObjectId(value),
+            _id: bikeId,
             station_id: station._id,
           });
 
@@ -53,12 +58,7 @@ export const createRentalSessionValidator = validate(
             });
           }
 
-          if (bikeInStation.status !== BikeStatus.Available) {
-            throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.NOT_AVAILABLE_BIKE,
-              status: HTTP_STATUS.BAD_REQUEST,
-            });
-          }
+          isAvailability(bikeInStation.status as BikeStatus)
 
           req.station = station;
           req.bike = bikeInStation;

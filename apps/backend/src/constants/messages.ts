@@ -132,3 +132,12 @@ export const AUTH_MESSAGE = {
   ACCESS_DENIED_ADMIN_ONLY: "Bạn không có quyền truy cập tài nguyên này (chỉ dành cho Admin)",
   ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: "Bạn không có quyền truy cập tài nguyên này (chỉ dành cho Staff và Admin)",
 };
+
+export const BIKE_MESSAGE = {
+    BIKE_IN_USE: "Xe đang được sử dụng",
+    BIKE_IS_BROKEN: "Xe đang bị hư hỏng, chưa sẵn sàng để sử dụng",
+    BIKE_IS_MAINTAINED: "Xe đang được bảo trì, chưa sẵn sàng để sử dụng",
+    BIKE_IS_RESERVED: "Xe đã được đặt trước",
+    UNAVAILABLE_BIKE: "Xe chưa sẵn sàng để sử dụng",
+    INVALID_STATUS: "Trạng thái xe không hợp lệ"
+}
