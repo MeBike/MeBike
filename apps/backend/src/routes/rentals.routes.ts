@@ -6,6 +6,7 @@ import {
   endRentalSessionController,
   getAllRentalsController,
   getDetailRentalController,
+  getMyCurrentRentalsController,
   getMyDetailRentalController,
   getMyRentalsController,
   getRentalRevenueController,
@@ -29,6 +30,9 @@ rentalsRouter.route("/stats/reservations")
 
 rentalsRouter.route("/me")
   .get(accessTokenValidator, wrapAsync(getMyRentalsController));
+
+rentalsRouter.route("/me/current")
+  .get(accessTokenValidator, wrapAsync(getMyCurrentRentalsController));
 
 rentalsRouter.route("/me/:id")
   .get(accessTokenValidator, wrapAsync(getMyDetailRentalController));

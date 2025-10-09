@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import type { NextFunction, ParamsDictionary } from "express-serve-static-core";
 import type { Filter, ObjectId } from "mongodb";
 
-import type { GroupByOptions, RentalStatus } from "~/constants/enums";
+import { GroupByOptions, RentalStatus } from "~/constants/enums";
 import type { CreateRentalReqBody, EndRentalReqBody, RentalParams } from "~/models/requests/rentals.requests";
 import type Bike from "~/models/schemas/bike.schema";
 import type Rental from "~/models/schemas/rental.schema";
@@ -44,7 +44,7 @@ export async function endRentalSessionController(req: Request<RentalParams, any,
 }
 
 export async function getMyRentalsController(req: Request, res: Response, next: NextFunction) {
-    const {user_id} = req.decoded_authorization as TokenPayLoad
+  const {user_id} = req.decoded_authorization as TokenPayLoad
 
   const filters: Filter<Rental> = {};
   filters.user_id = toObjectId(user_id);
@@ -61,7 +61,7 @@ export async function getMyRentalsController(req: Request, res: Response, next: 
 }
 
 export async function getMyDetailRentalController(req: Request<RentalParams>, res: Response) {
-      const {user_id} = req.decoded_authorization as TokenPayLoad
+  const {user_id} = req.decoded_authorization as TokenPayLoad
 
   const result = await rentalsService.getMyDetailRental({ user_id: toObjectId(user_id), rental_id: req.params.id });
   res.json({
@@ -69,6 +69,17 @@ export async function getMyDetailRentalController(req: Request<RentalParams>, re
     result,
   });
 }
+
+export async function getMyCurrentRentalsController(req: Request<RentalParams>, res: Response, next: NextFunction) {
+  const {user_id} = req.decoded_authorization as TokenPayLoad
+  const filter: Filter<Rental> = {
+    user_id: toObjectId(user_id),
+    status: RentalStatus.Rented
+  }
+
+  await sendPaginatedResponse(res, next, databaseService.rentals, filter)
+}
+
 
 // staff/admin only
 export async function getAllRentalsController(req: Request, res: Response, next: NextFunction) {
