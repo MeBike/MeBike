@@ -27,6 +27,8 @@ function resolveBaseUrl() {
 type FetchResponse = {
   ok: boolean;
   status: number;
+  statusText: string;
+  headers: Headers;
   text: () => Promise<string>;
 };
 
@@ -54,7 +56,7 @@ function parseJsonSafely(value: string) {
   try {
     return JSON.parse(value);
   }
-  catch (_error) {
+  catch {
     return value;
   }
 }
@@ -108,18 +110,13 @@ export async function httpClient<TData>(url: string, init: HttpClientInit = {}):
   });
 
   const rawBody = await response.text();
-  const parsedBody = parseJsonSafely(rawBody) as TData;
+  const parsedBody = parseJsonSafely(rawBody);
 
-  if (!response.ok) {
-    const error = new Error(
-      `Request to ${finalUrl} failed with status ${response.status}`,
-    ) as Error & { status?: number; body?: unknown };
+  const result = {
+    data: parsedBody,
+    status: response.status,
+    headers: response.headers,
+  };
 
-    error.status = response.status;
-    error.body = parsedBody;
-
-    throw error;
-  }
-
-  return parsedBody;
+  return result as TData;
 }
