@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-import { createBikeController, getBikeByIdController, getBikesController, updateBikeController } from "~/controllers/bikes.controllers";
-import { isAdminValidator } from "~/middlewares/admin.middlewares";
+import { adminUpdateBikeController, createBikeController, getBikeByIdController, getBikesController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
+import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { bikeIdValidator, createBikeValidator, updateBikeValidator } from "~/middlewares/bikes.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
@@ -26,14 +26,21 @@ bikesRouter.get(
   wrapAsync(getBikeByIdController)
 );
 
-// api này dành cho admin và user
-// đợi rental của truong le xong
-// thì quay lại đây làm api này
+// User reports a broken bike they are renting
 bikesRouter.patch(
-  "/:_id",
+  "/report-broken/:_id",
   accessTokenValidator,
   bikeIdValidator,
+  wrapAsync(reportBrokenBikeController)
+);
+
+// Admin/Staff updates a bike's info (status, station_id)
+bikesRouter.patch(
+  "/admin-update/:_id",
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  bikeIdValidator,
   updateBikeValidator,
-  wrapAsync(updateBikeController)
+  wrapAsync(adminUpdateBikeController)
 );
 export default bikesRouter;

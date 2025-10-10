@@ -6,7 +6,7 @@ import type { TokenPayLoad } from "~/models/requests/users.requests";
 
 import { BikeStatus, RentalStatus, Role } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
-import { BIKES_MESSAGES } from "~/constants/messages";
+import { BIKES_MESSAGES, USERS_MESSAGES } from "~/constants/messages";
 import bikesService from "~/services/bikes.services";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
@@ -25,7 +25,16 @@ export async function getBikesController(
   res: Response,
   next: NextFunction,
 ) {
-  const { role } = req.decoded_authorization as TokenPayLoad;
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) });
+  if(!user){
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.USER_NOT_FOUND,
+      status: HTTP_STATUS.NOT_FOUND
+    })
+  }
+
+  const { role } = user
   const query = req.query;
 
   // Nếu là user, chỉ cho phép xem xe có sẵn (AVAILABLE)
@@ -44,40 +53,39 @@ export async function getBikeByIdController(req: Request, res: Response) {
   });
 }
 
-export async function updateBikeController(req: Request<ParamsDictionary, any, UpdateBikeReqBody>, res: Response) {
+export async function reportBrokenBikeController(req: Request, res: Response) {
   const { _id: bikeId } = req.params
-  const { role, user_id } = req.decoded_authorization as TokenPayLoad
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+
+  // Kiểm tra xem user có đang thuê xe này không
+  const rental = await databaseService.rentals.findOne({
+    user_id: new ObjectId(user_id),
+    bike_id: new ObjectId(bikeId),
+    status: RentalStatus.Ongoing
+  })
+
+  if (!rental) {
+    throw new ErrorWithStatus({
+      message: BIKES_MESSAGES.CANNOT_REPORT_BIKE_NOT_RENTING,
+      status: HTTP_STATUS.FORBIDDEN
+    })
+  }
+
+  const result = await bikesService.updateBike(bikeId, { status: BikeStatus.Broken })
+
+  return res.json({
+    message: BIKES_MESSAGES.REPORT_BROKEN_BIKE_SUCCESS,
+    result
+  })
+}
+
+// admin/staff cập nhật bike
+export async function adminUpdateBikeController(req: Request<ParamsDictionary, any, UpdateBikeReqBody>, res: Response) {
+  const { _id: bikeId } = req.params
   const payload = req.body
 
-  if (role === Role.User) {
-    // 1. User chỉ được phép báo hỏng xe
-    const isReportingBroken = payload.status === BikeStatus.Broken
-    const hasOtherFields = Object.keys(payload).length > 1 || !payload.status
-
-    if (!isReportingBroken || hasOtherFields) {
-      throw new ErrorWithStatus({
-        message: BIKES_MESSAGES.USER_CAN_ONLY_REPORT_BROKEN,
-        status: HTTP_STATUS.FORBIDDEN
-      })
-    }
-
-    // 2. KIỂM TRA XEM USER CÓ ĐANG THUÊ XE NÀY KHÔNG
-    const rental = await databaseService.rentals.findOne({
-      user_id: new ObjectId(user_id),
-      bike_id: new ObjectId(bikeId),
-      status: RentalStatus.Ongoing // Giả định trạng thái thuê đang diễn ra là 'Ongoing'
-    })
-
-    if (!rental) {
-      throw new ErrorWithStatus({
-        message: BIKES_MESSAGES.CANNOT_REPORT_BIKE_NOT_RENTING,
-        status: HTTP_STATUS.FORBIDDEN
-      })
-    }
-  }
-  // Admin và Staff có toàn quyền (đã được validator kiểm tra các giá trị hợp lệ)
-
   const result = await bikesService.updateBike(bikeId, payload)
+
   return res.json({
     message: BIKES_MESSAGES.UPDATE_BIKE_SUCCESS,
     result

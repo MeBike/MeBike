@@ -43,28 +43,28 @@ class BikesService {
   }
 
   async updateBike(bikeId: string, payload: UpdateBikeReqBody) {
-    const updatePayload: any = {};
+    const updatePayload: any = {}
     if (payload.status) {
-      updatePayload.status = payload.status;
+      updatePayload.status = payload.status
     }
     if (payload.station_id) {
-      updatePayload.station_id = new ObjectId(payload.station_id);
+      updatePayload.station_id = new ObjectId(payload.station_id)
     }
 
-    const currentDate = new Date();
-    const vietnamTimezoneOffset = 7 * 60;
-    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+    const currentDate = new Date()
+    const vietnamTimezoneOffset = 7 * 60
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
     const result = await databaseService.bikes.findOneAndUpdate(
       { _id: new ObjectId(bikeId) },
       {
         $set: {
           ...updatePayload,
           updated_at: localTime
-        },
+        }
       },
       { returnDocument: 'after' }
-    );
-    return result;
+    )
+    return result
   }
 }
 

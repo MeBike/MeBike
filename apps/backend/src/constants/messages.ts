@@ -151,4 +151,5 @@ export const BIKES_MESSAGES = {
   USER_CAN_ONLY_REPORT_BROKEN: "Người dùng chỉ được phép báo hỏng xe",
   AT_LEAST_ONE_FIELD_IS_REQUIRED: "Cần ít nhất một trường để cập nhật",
   CANNOT_REPORT_BIKE_NOT_RENTING: "Bạn chỉ có thể báo hỏng chiếc xe bạn đang thuê",
+  REPORT_BROKEN_BIKE_SUCCESS: "Báo hỏng xe thành công",
 } as const;
