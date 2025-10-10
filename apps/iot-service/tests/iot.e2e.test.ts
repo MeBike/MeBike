@@ -95,6 +95,23 @@ async function waitForStatus(expectedStatus: string, timeoutMs: number): Promise
   throw new Error(`Timed out waiting for status "${expectedStatus}"`);
 }
 
+const hardwarePauseMs = (() => {
+  const parsed = Number.parseInt(env.STATE_STEP_DELAY_MS, 10);
+  if (Number.isNaN(parsed)) {
+    return 2000;
+  }
+  return Math.max(parsed, 1000);
+})();
+
+async function pauseBetweenTransitions(label: string): Promise<void> {
+  if (!isRealHttp) {
+    return;
+  }
+
+  console.info(`[iot-service:test] waiting ${hardwarePauseMs}ms after ${label}`);
+  await new Promise(resolve => setTimeout(resolve, hardwarePauseMs));
+}
+
 describe("IoT service HTTP contract", () => {
   let originalFetch: typeof global.fetch | undefined;
   let previousBaseUrl: string | undefined;
@@ -192,6 +209,7 @@ describe("IoT service HTTP contract", () => {
     else {
       await postV1DevicesDeviceIdCommandsStatus(rawDeviceId, { command: "request" });
       await waitForStatus("available", 15_000);
+      await pauseBetweenTransitions("status -> available");
     }
 
     const deviceResponse = await getV1DevicesDeviceId(rawDeviceId);
@@ -212,6 +230,7 @@ describe("IoT service HTTP contract", () => {
     }
     else {
       await waitForStatus("reserved", 15_000);
+      await pauseBetweenTransitions("reserve");
     }
 
     const claimResponse = await postV1DevicesDeviceIdCommandsBooking(rawDeviceId, { command: "claim" });
@@ -226,6 +245,7 @@ describe("IoT service HTTP contract", () => {
     }
     else {
       await waitForStatus("booked", 15_000);
+      await pauseBetweenTransitions("claim");
     }
 
     const releaseResponse = await postV1DevicesDeviceIdCommandsBooking(rawDeviceId, { command: "release" });
@@ -240,6 +260,7 @@ describe("IoT service HTTP contract", () => {
     }
     else {
       await waitForStatus("available", 15_000);
+      await pauseBetweenTransitions("release");
     }
 
     const maintenanceStartResponse = await postV1DevicesDeviceIdCommandsMaintenance(rawDeviceId, { command: "start" });
@@ -254,6 +275,7 @@ describe("IoT service HTTP contract", () => {
     }
     else {
       await waitForStatus("maintained", 15_000);
+      await pauseBetweenTransitions("maintenance start");
     }
 
     const maintenanceCompleteResponse = await postV1DevicesDeviceIdCommandsMaintenance(rawDeviceId, { command: "complete" });
@@ -268,6 +290,7 @@ describe("IoT service HTTP contract", () => {
     }
     else {
       await waitForStatus("available", 15_000);
+      await pauseBetweenTransitions("maintenance complete");
     }
 
     const directStateResponse = await postV1DevicesDeviceIdCommandsState(rawDeviceId, { state: "broken" });
@@ -282,6 +305,7 @@ describe("IoT service HTTP contract", () => {
     }
     else {
       await waitForStatus("broken", 15_000);
+      await pauseBetweenTransitions("state -> broken");
     }
 
     const invalidReservation = await postV1DevicesDeviceIdCommandsReservation(rawDeviceId, { command: "cancel" });
