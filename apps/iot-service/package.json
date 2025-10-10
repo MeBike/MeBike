@@ -9,7 +9,7 @@
   "keywords": [],
   "main": "index.js",
   "scripts": {
-    "dev": "tsx --watch src/index.ts",
+    "dev": "tsx --watch src/index.ts --env-file .env",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json --resolve-full-paths --resolve-full-extension .js",
     "start": "node dist/index.js",
