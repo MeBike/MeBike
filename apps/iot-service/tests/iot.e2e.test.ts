@@ -10,15 +10,27 @@ import {
   postV1DevicesDeviceIdCommandsState,
   postV1DevicesDeviceIdCommandsStatus,
 } from "@mebike/shared/sdk/iot-service/client";
+import { z } from "zod";
 
 import type { MqttConnection } from "../src/connection/types";
 
+import { env } from "../src/config";
 import { eventBus, EVENTS } from "../src/events";
 import { createHttpApp } from "../src/http";
 import { CommandPublisher } from "../src/publishers";
 import { createDeviceManager } from "../src/services";
 
-const isRealHttp = process.env.REAL_HTTP === "1";
+const runtimeModeSchema = z.object({
+  REAL_HTTP: z.enum(["0", "1"]).default("0"),
+  TEST_DEVICE_ID: z.string().optional(),
+});
+
+const runtimeEnv = runtimeModeSchema.parse({
+  REAL_HTTP: process.env.REAL_HTTP,
+  TEST_DEVICE_ID: process.env.TEST_DEVICE_ID,
+});
+
+const isRealHttp = runtimeEnv.REAL_HTTP === "1";
 
 const inMemoryDeviceManager = !isRealHttp ? createDeviceManager() : undefined;
 const commandLog: Array<{ topic: string; payload: string }> = [];
@@ -58,9 +70,8 @@ function emitStatus(deviceId: string, status: string) {
   });
 }
 
-
 const defaultRawDeviceId = "aa:bb:cc:dd:ee:ff";
-const envProvidedDeviceId = process.env.TEST_DEVICE_ID ?? process.env.DEVICE_MAC ?? undefined;
+const envProvidedDeviceId = runtimeEnv.TEST_DEVICE_ID ?? env.DEVICE_MAC ?? undefined;
 const rawDeviceId = isRealHttp
   ? envProvidedDeviceId ?? defaultRawDeviceId
   : defaultRawDeviceId;
@@ -70,7 +81,7 @@ if (!normalizedDeviceId) {
   throw new Error(`Unable to normalize device identifier "${rawDeviceId}"`);
 }
 
-const waitForStatus = async (expectedStatus: string, timeoutMs: number): Promise<void> => {
+async function waitForStatus(expectedStatus: string, timeoutMs: number): Promise<void> {
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
@@ -82,7 +93,7 @@ const waitForStatus = async (expectedStatus: string, timeoutMs: number): Promise
   }
 
   throw new Error(`Timed out waiting for status "${expectedStatus}"`);
-};
+}
 
 describe("IoT service HTTP contract", () => {
   let originalFetch: typeof global.fetch | undefined;
@@ -116,6 +127,10 @@ describe("IoT service HTTP contract", () => {
         process.env.IOT_SERVICE_BASE_URL = "http://localhost:3000";
       }
     }
+
+    console.info(
+      `[iot-service:test] Mode=${useInMemoryServer ? "in-memory" : "real-http"} baseUrl=${process.env.IOT_SERVICE_BASE_URL} device=${normalizedDeviceId}`,
+    );
   });
 
   afterAll(() => {
