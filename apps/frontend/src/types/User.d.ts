@@ -1,17 +1,19 @@
 export interface User {
   _id: string;
-  first_name: string;
-  last_name: string;
+  fullname:string;
   email: string;
   password: string;
   created_at: string;
   updated_at: string;
   email_verify_token: string;
   forgot_verify_token: string;
-  verify: number;
+  verify: string;
   location: string;
   username: string;
   phone_number: string;
   avatar: string;
   roleid: number;
+  role:"USER" | "STAFF" | "ADMIN";
+  created_at: string;
+  updated_at: string;
 }
