@@ -25,37 +25,37 @@ const menuItems = [
   {
     title: "Tổng quan",
     icon: LayoutDashboard,
-    href: "/",
+    href: "/staff",
     roles: ["STAFF", "ADMIN"],
   },
   {
     title: "Quản lý xe đạp",
     icon: Bike,
-    href: "/bikes",
+    href: "/staff/bikes",
     roles: ["STAFF", "ADMIN"],
   },
   {
     title: "Đơn thuê xe",
     icon: FileText,
-    href: "/rentals",
+    href: "/staff/rentals",
     roles: ["STAFF", "ADMIN"],
   },
   {
     title: "Khách hàng",
     icon: Users,
-    href: "/customers",
+    href: "/staff/customers",
     roles: ["STAFF", "ADMIN"],
   },
   {
     title: "Báo cáo & Thống kê",
     icon: BarChart3,
-    href: "/reports",
+    href: "/admin/reports",
     roles: ["ADMIN"],
   },
   {
     title: "Cài đặt",
     icon: Settings,
-    href: "/settings",
+    href: "/adminz/settings",
     roles: ["ADMIN"],
   },
 ];

@@ -13,6 +13,4 @@ export interface User {
   phone_number: string;
   avatar: string;
   role:"USER" | "STAFF" | "ADMIN";
-  created_at: string;
-  updated_at: string;
 }
