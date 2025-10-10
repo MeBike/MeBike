@@ -1,13 +1,14 @@
 import { Router } from "express";
 
-import { createBikeController, getBikesController } from "~/controllers/bikes.controllers";
+import { createBikeController, getBikeByIdController, getBikesController } from "~/controllers/bikes.controllers";
 import { isAdminValidator } from "~/middlewares/admin.middlewares";
-import { createBikeValidator } from "~/middlewares/bikes.middlewares";
+import { bikeIdValidator, createBikeValidator } from "~/middlewares/bikes.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
 const bikesRouter = Router();
 
+// admin only
 bikesRouter.post(
   "/",
   accessTokenValidator,
@@ -18,4 +19,10 @@ bikesRouter.post(
 
 bikesRouter.get("/", accessTokenValidator, wrapAsync(getBikesController));
 
+bikesRouter.get(
+  "/:_id",
+  accessTokenValidator,
+  bikeIdValidator,
+  wrapAsync(getBikeByIdController)
+);
 export default bikesRouter;

@@ -31,3 +31,12 @@ export async function getBikesController(
   }
   await bikesService.getAllBikes(res, next, query);
 }
+
+export async function getBikeByIdController(req: Request, res: Response) {
+  const { _id } = req.params;
+  const result = await bikesService.getBikeById(_id);
+  return res.json({
+    message: BIKES_MESSAGES.GET_BIKE_SUCCESS,
+    result,
+  });
+}

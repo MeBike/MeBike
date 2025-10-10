@@ -62,6 +62,8 @@ export const USERS_MESSAGES = {
   ACCESS_DENIED_ADMIN_ONLY: "Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên",
   // check staff role messages
   ACCESS_DENIED_STAFF_ONLY: "Quyền truy cập bị từ chối. Chỉ dành cho nhân viên",
+  // check admin and staff role messages
+  ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: "Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên và nhân viên",
 } as const;
 
 export const REPORTS_MESSAGES = {
@@ -139,4 +141,8 @@ export const BIKES_MESSAGES = {
   FORBIDDEN: "Không có quyền truy cập",
   INVALID_SUPPLIER_ID: "ID của nhà cung cấp không hợp lệ",
   SUPPLIER_NOT_FOUND: "Không tìm thấy nhà cung cấp với ID được cung cấp",
+  // get bikes by id
+  GET_BIKE_SUCCESS: "Lấy thông tin xe đạp thành công",
+  BIKE_ID_IS_REQUIRED: "ID của xe đạp là bắt buộc",
+  INVALID_BIKE_ID: "ID của xe đạp không hợp lệ",
 } as const;

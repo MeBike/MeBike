@@ -36,6 +36,11 @@ class BikesService {
 
     await sendPaginatedResponse(res, next, databaseService.bikes, query, filter);
   }
+
+  async getBikeById(bikeId: string) {
+    const bike = await databaseService.bikes.findOne({ _id: new ObjectId(bikeId) });
+    return bike;
+  }
 }
 
 const bikesService = new BikesService();
