@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, jest, test } from "@jest/globals";
 import { IOT_COMMAND_TOPICS, normalizeMac } from "@mebike/shared";
 import {
-  getV1Health,
   getV1Devices,
   getV1DevicesDeviceId,
+  getV1Health,
   postV1DevicesDeviceIdCommandsBooking,
   postV1DevicesDeviceIdCommandsMaintenance,
   postV1DevicesDeviceIdCommandsReservation,
@@ -62,17 +62,25 @@ describe("IoT service HTTP contract", () => {
   beforeAll(() => {
     warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
     previousBaseUrl = process.env.IOT_SERVICE_BASE_URL;
-    process.env.IOT_SERVICE_BASE_URL = "http://iot-service.test";
-    originalFetch = global.fetch;
-    global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const request = input instanceof Request
-        ? input
-        : new Request(
-          input instanceof URL ? input : String(input),
-          init,
-        );
-      return app.fetch(request);
-    };
+
+    const useInMemoryServer = process.env.REAL_HTTP !== "1";
+
+    if (useInMemoryServer) {
+      process.env.IOT_SERVICE_BASE_URL = "http://iot-service.test";
+      originalFetch = global.fetch;
+      global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        const request = input instanceof Request
+          ? input
+          : new Request(
+            input instanceof URL ? input : String(input),
+            init,
+          );
+        return app.fetch(request);
+      };
+    }
+    else if (!process.env.IOT_SERVICE_BASE_URL) {
+      process.env.IOT_SERVICE_BASE_URL = "http://localhost:3000";
+    }
   });
 
   afterAll(() => {
