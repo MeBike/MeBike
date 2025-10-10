@@ -18,7 +18,9 @@ import { createHttpApp } from "../src/http";
 import { CommandPublisher } from "../src/publishers";
 import { createDeviceManager } from "../src/services";
 
-const deviceManager = createDeviceManager();
+const isRealHttp = process.env.REAL_HTTP === "1";
+
+const inMemoryDeviceManager = !isRealHttp ? createDeviceManager() : undefined;
 const commandLog: Array<{ topic: string; payload: string }> = [];
 
 const mqttConnectionStub: MqttConnection = {
@@ -37,14 +39,18 @@ const mqttConnectionStub: MqttConnection = {
   onConnect() {},
 };
 
-const commandPublisher = new CommandPublisher(mqttConnectionStub);
-
-const app = createHttpApp({
-  commandPublisher,
-  deviceManager,
-});
+const inMemoryApp = !isRealHttp
+  ? createHttpApp({
+      commandPublisher: new CommandPublisher(mqttConnectionStub),
+      deviceManager: inMemoryDeviceManager!,
+    })
+  : null;
 
 function emitStatus(deviceId: string, status: string) {
+  if (isRealHttp) {
+    return;
+  }
+
   eventBus.emit(EVENTS.DEVICE_STATUS_CHANGED, {
     deviceId,
     status,
@@ -52,12 +58,36 @@ function emitStatus(deviceId: string, status: string) {
   });
 }
 
+
+const defaultRawDeviceId = "aa:bb:cc:dd:ee:ff";
+const envProvidedDeviceId = process.env.TEST_DEVICE_ID ?? process.env.DEVICE_MAC ?? undefined;
+const rawDeviceId = isRealHttp
+  ? envProvidedDeviceId ?? defaultRawDeviceId
+  : defaultRawDeviceId;
+const normalizedDeviceId = normalizeMac(rawDeviceId);
+
+if (!normalizedDeviceId) {
+  throw new Error(`Unable to normalize device identifier "${rawDeviceId}"`);
+}
+
+const waitForStatus = async (expectedStatus: string, timeoutMs: number): Promise<void> => {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const response = await getV1DevicesDeviceId(rawDeviceId);
+    if (response.status === 200 && response.data.status === expectedStatus) {
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+
+  throw new Error(`Timed out waiting for status "${expectedStatus}"`);
+};
+
 describe("IoT service HTTP contract", () => {
   let originalFetch: typeof global.fetch | undefined;
   let previousBaseUrl: string | undefined;
   let warnSpy: jest.SpyInstance;
-  const rawDeviceId = "aa:bb:cc:dd:ee:ff";
-  const normalizedDeviceId = normalizeMac(rawDeviceId) ?? "AABBCCDDEEFF";
 
   beforeAll(() => {
     warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -75,11 +105,16 @@ describe("IoT service HTTP contract", () => {
             input instanceof URL ? input : String(input),
             init,
           );
-        return app.fetch(request);
+        return inMemoryApp!.fetch(request);
       };
     }
-    else if (!process.env.IOT_SERVICE_BASE_URL) {
-      process.env.IOT_SERVICE_BASE_URL = "http://localhost:3000";
+    else {
+      if (!envProvidedDeviceId) {
+        throw new Error("REAL_HTTP=1 requires TEST_DEVICE_ID or DEVICE_MAC to be set.");
+      }
+      if (!process.env.IOT_SERVICE_BASE_URL) {
+        process.env.IOT_SERVICE_BASE_URL = "http://localhost:3000";
+      }
     }
   });
 
@@ -104,34 +139,51 @@ describe("IoT service HTTP contract", () => {
   });
 
   test("device listing and lookup reflect manager state", async () => {
-    const initialList = await getV1Devices();
-    if (initialList.status !== 200) {
-      throw new Error(`Expected initial device list 200, received ${initialList.status}`);
+    if (isRealHttp) {
+      const deviceResponse = await getV1DevicesDeviceId(rawDeviceId);
+      if (deviceResponse.status !== 200) {
+        throw new Error(`Expected device ${rawDeviceId} to exist, received status ${deviceResponse.status}`);
+      }
+
+      expect(deviceResponse.data.deviceId).toBe(normalizedDeviceId);
     }
-    expect(initialList.data.items).toEqual([]);
+    else {
+      const initialList = await getV1Devices();
+      if (initialList.status !== 200) {
+        throw new Error(`Expected initial device list 200, received ${initialList.status}`);
+      }
+      expect(initialList.data.items).toEqual([]);
 
-    const missingDevice = await getV1DevicesDeviceId("11:22:33:44:55:66");
-    expect(missingDevice.status).toBe(404);
-    expect(missingDevice.data.error).toBe("Device not found");
+      const missingDevice = await getV1DevicesDeviceId("11:22:33:44:55:66");
+      expect(missingDevice.status).toBe(404);
+      expect(missingDevice.data.error).toBe("Device not found");
 
-    emitStatus(normalizedDeviceId, "available");
+      emitStatus(normalizedDeviceId, "available");
 
-    const updatedList = await getV1Devices();
-    expect(updatedList.status).toBe(200);
-    expect(updatedList.data.items).toEqual([
-      { deviceId: normalizedDeviceId, status: "available" },
-    ]);
+      const updatedList = await getV1Devices();
+      expect(updatedList.status).toBe(200);
+      expect(updatedList.data.items).toEqual([
+        { deviceId: normalizedDeviceId, status: "available" },
+      ]);
+    }
   });
 
   test("sequential workflow commands enforce state transitions", async () => {
     commandLog.length = 0;
+
+    if (!isRealHttp) {
+      emitStatus(normalizedDeviceId, "available");
+    }
+    else {
+      await postV1DevicesDeviceIdCommandsStatus(rawDeviceId, { command: "request" });
+      await waitForStatus("available", 15_000);
+    }
 
     const deviceResponse = await getV1DevicesDeviceId(rawDeviceId);
     if (deviceResponse.status !== 200) {
       throw new Error(`Expected device details, received status ${deviceResponse.status}`);
     }
     expect(deviceResponse.data.deviceId).toBe(normalizedDeviceId);
-    expect(deviceResponse.data.status).toBe("available");
 
     const reserveResponse = await postV1DevicesDeviceIdCommandsReservation(rawDeviceId, { command: "reserve" });
     expect(reserveResponse.status).toBe(202);
@@ -140,7 +192,12 @@ describe("IoT service HTTP contract", () => {
       topic: `${IOT_COMMAND_TOPICS.reservation}/${normalizedDeviceId}`,
       payload: "reserve",
     });
-    emitStatus(normalizedDeviceId, "reserved");
+    if (!isRealHttp) {
+      emitStatus(normalizedDeviceId, "reserved");
+    }
+    else {
+      await waitForStatus("reserved", 15_000);
+    }
 
     const claimResponse = await postV1DevicesDeviceIdCommandsBooking(rawDeviceId, { command: "claim" });
     expect(claimResponse.status).toBe(202);
@@ -149,7 +206,12 @@ describe("IoT service HTTP contract", () => {
       topic: `${IOT_COMMAND_TOPICS.booking}/${normalizedDeviceId}`,
       payload: "claim",
     });
-    emitStatus(normalizedDeviceId, "booked");
+    if (!isRealHttp) {
+      emitStatus(normalizedDeviceId, "booked");
+    }
+    else {
+      await waitForStatus("booked", 15_000);
+    }
 
     const releaseResponse = await postV1DevicesDeviceIdCommandsBooking(rawDeviceId, { command: "release" });
     expect(releaseResponse.status).toBe(202);
@@ -158,7 +220,12 @@ describe("IoT service HTTP contract", () => {
       topic: `${IOT_COMMAND_TOPICS.booking}/${normalizedDeviceId}`,
       payload: "release",
     });
-    emitStatus(normalizedDeviceId, "available");
+    if (!isRealHttp) {
+      emitStatus(normalizedDeviceId, "available");
+    }
+    else {
+      await waitForStatus("available", 15_000);
+    }
 
     const maintenanceStartResponse = await postV1DevicesDeviceIdCommandsMaintenance(rawDeviceId, { command: "start" });
     expect(maintenanceStartResponse.status).toBe(202);
@@ -167,7 +234,12 @@ describe("IoT service HTTP contract", () => {
       topic: `${IOT_COMMAND_TOPICS.maintenance}/${normalizedDeviceId}`,
       payload: "start",
     });
-    emitStatus(normalizedDeviceId, "maintained");
+    if (!isRealHttp) {
+      emitStatus(normalizedDeviceId, "maintained");
+    }
+    else {
+      await waitForStatus("maintained", 15_000);
+    }
 
     const maintenanceCompleteResponse = await postV1DevicesDeviceIdCommandsMaintenance(rawDeviceId, { command: "complete" });
     expect(maintenanceCompleteResponse.status).toBe(202);
@@ -176,7 +248,12 @@ describe("IoT service HTTP contract", () => {
       topic: `${IOT_COMMAND_TOPICS.maintenance}/${normalizedDeviceId}`,
       payload: "complete",
     });
-    emitStatus(normalizedDeviceId, "available");
+    if (!isRealHttp) {
+      emitStatus(normalizedDeviceId, "available");
+    }
+    else {
+      await waitForStatus("available", 15_000);
+    }
 
     const directStateResponse = await postV1DevicesDeviceIdCommandsState(rawDeviceId, { state: "broken" });
     expect(directStateResponse.status).toBe(202);
@@ -185,7 +262,12 @@ describe("IoT service HTTP contract", () => {
       topic: `${IOT_COMMAND_TOPICS.state}/${normalizedDeviceId}`,
       payload: "broken",
     });
-    emitStatus(normalizedDeviceId, "broken");
+    if (!isRealHttp) {
+      emitStatus(normalizedDeviceId, "broken");
+    }
+    else {
+      await waitForStatus("broken", 15_000);
+    }
 
     const invalidReservation = await postV1DevicesDeviceIdCommandsReservation(rawDeviceId, { command: "cancel" });
     expect(invalidReservation.status).toBe(409);
@@ -199,35 +281,37 @@ describe("IoT service HTTP contract", () => {
       payload: "request",
     });
 
-    expect(commandLog).toEqual([
-      {
-        topic: `${IOT_COMMAND_TOPICS.reservation}/${normalizedDeviceId}`,
-        payload: "reserve",
-      },
-      {
-        topic: `${IOT_COMMAND_TOPICS.booking}/${normalizedDeviceId}`,
-        payload: "claim",
-      },
-      {
-        topic: `${IOT_COMMAND_TOPICS.booking}/${normalizedDeviceId}`,
-        payload: "release",
-      },
-      {
-        topic: `${IOT_COMMAND_TOPICS.maintenance}/${normalizedDeviceId}`,
-        payload: "start",
-      },
-      {
-        topic: `${IOT_COMMAND_TOPICS.maintenance}/${normalizedDeviceId}`,
-        payload: "complete",
-      },
-      {
-        topic: `${IOT_COMMAND_TOPICS.state}/${normalizedDeviceId}`,
-        payload: "broken",
-      },
-      {
-        topic: `${IOT_COMMAND_TOPICS.status}/${normalizedDeviceId}`,
-        payload: "request",
-      },
-    ]);
+    if (!isRealHttp) {
+      expect(commandLog).toEqual([
+        {
+          topic: `${IOT_COMMAND_TOPICS.reservation}/${normalizedDeviceId}`,
+          payload: "reserve",
+        },
+        {
+          topic: `${IOT_COMMAND_TOPICS.booking}/${normalizedDeviceId}`,
+          payload: "claim",
+        },
+        {
+          topic: `${IOT_COMMAND_TOPICS.booking}/${normalizedDeviceId}`,
+          payload: "release",
+        },
+        {
+          topic: `${IOT_COMMAND_TOPICS.maintenance}/${normalizedDeviceId}`,
+          payload: "start",
+        },
+        {
+          topic: `${IOT_COMMAND_TOPICS.maintenance}/${normalizedDeviceId}`,
+          payload: "complete",
+        },
+        {
+          topic: `${IOT_COMMAND_TOPICS.state}/${normalizedDeviceId}`,
+          payload: "broken",
+        },
+        {
+          topic: `${IOT_COMMAND_TOPICS.status}/${normalizedDeviceId}`,
+          payload: "request",
+        },
+      ]);
+    }
   });
 });
