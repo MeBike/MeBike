@@ -88,3 +88,17 @@ export const REPORTS_MESSAGES = {
   STATION_NOT_FOUND: "Không tìm thấy trạm với ID %s",
   LOCATION_IS_REQUIRED: "Vị trí là bắt buộc!",
 };
+
+export const BIKES_MESSAGES = {
+  CREATE_BIKE_SUCCESS: "Tạo xe đạp mới thành công",
+  GET_BIKES_SUCCESS: "Lấy danh sách xe đạp thành công",
+  BIKE_NOT_FOUND: "Không tìm thấy xe đạp",
+  STATUS_IS_REQUIRED: "Trạng thái là bắt buộc",
+  INVALID_STATUS: "Trạng thái không hợp lệ",
+  STATION_ID_IS_REQUIRED: "ID của trạm là bắt buộc",
+  INVALID_STATION_ID: "ID của trạm không hợp lệ",
+  STATION_NOT_FOUND: "Không tìm thấy trạm với ID được cung cấp",
+  FORBIDDEN: "Không có quyền truy cập",
+  INVALID_SUPPLIER_ID: "ID của nhà cung cấp không hợp lệ",
+  SUPPLIER_NOT_FOUND: "Không tìm thấy nhà cung cấp với ID được cung cấp",
+} as const;

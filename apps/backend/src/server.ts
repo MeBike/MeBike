@@ -18,6 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 databaseService.connect().then(async () => {
   databaseService.indexUsers();
+  databaseService.indexBikes();
 });
 
 app.get("/", (req, res) => {

@@ -44,3 +44,12 @@ export enum RentalStatus {
   Cancelled = "ĐÃ HỦY",
   Expired = "HẾT HẠN",
 }
+
+export enum BikeStatus {
+  Available = "AVAILABLE", // Có sẵn
+  Booked = "BOOKED", // Đã được thuê / Đang sử dụng
+  Broken = "BROKEN", // Bị hỏng
+  Reserved = "RESERVED", // Đã được đặt trước
+  Maintained = "MAINTAINED", // Đang bảo trì
+  Unavailable = "UNAVAILABLE", // Không có sẵn (trong kho)
+}

@@ -61,6 +61,11 @@ class DatabaseService {
     return this.db.collection(process.env.DB_BIKES_COLLECTION as string);
   }
 
+  async indexBikes() {
+    await this.bikes.createIndex({ station_id: 1 });
+    await this.bikes.createIndex({ status: 1 });
+  }
+
   get rentals(): Collection<Rental> {
     return this.db.collection(process.env.DB_RENTALS_COLLECTION as string);
   }
