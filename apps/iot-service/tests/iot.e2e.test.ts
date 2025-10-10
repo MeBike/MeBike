@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, jest, test } from "@jest/globals";
 import { IOT_COMMAND_TOPICS, normalizeMac } from "@mebike/shared";
 import {
+  getV1Health,
   getV1Devices,
   getV1DevicesDeviceId,
   postV1DevicesDeviceIdCommandsBooking,
@@ -83,18 +84,39 @@ describe("IoT service HTTP contract", () => {
     eventBus.removeAllListeners();
   });
 
-  test("sequential workflow commands enforce state transitions", async () => {
-    commandLog.length = 0;
+  test("health endpoint returns current uptime", async () => {
+    const response = await getV1Health();
+    if (response.status !== 200) {
+      throw new Error(`Expected health status 200, received ${response.status}`);
+    }
+
+    expect(response.data.status).toBe("ok");
+    expect(response.data.uptimeMs).toBeGreaterThanOrEqual(0);
+    expect(typeof response.data.timestamp).toBe("string");
+  });
+
+  test("device listing and lookup reflect manager state", async () => {
+    const initialList = await getV1Devices();
+    if (initialList.status !== 200) {
+      throw new Error(`Expected initial device list 200, received ${initialList.status}`);
+    }
+    expect(initialList.data.items).toEqual([]);
+
+    const missingDevice = await getV1DevicesDeviceId("11:22:33:44:55:66");
+    expect(missingDevice.status).toBe(404);
+    expect(missingDevice.data.error).toBe("Device not found");
 
     emitStatus(normalizedDeviceId, "available");
 
-    const listResponse = await getV1Devices();
-    if (listResponse.status !== 200) {
-      throw new Error(`Expected device list, received status ${listResponse.status}`);
-    }
-    expect(listResponse.data.items).toHaveLength(1);
-    expect(listResponse.data.items[0]?.deviceId).toBe(normalizedDeviceId);
-    expect(listResponse.data.items[0]?.status).toBe("available");
+    const updatedList = await getV1Devices();
+    expect(updatedList.status).toBe(200);
+    expect(updatedList.data.items).toEqual([
+      { deviceId: normalizedDeviceId, status: "available" },
+    ]);
+  });
+
+  test("sequential workflow commands enforce state transitions", async () => {
+    commandLog.length = 0;
 
     const deviceResponse = await getV1DevicesDeviceId(rawDeviceId);
     if (deviceResponse.status !== 200) {
@@ -105,33 +127,69 @@ describe("IoT service HTTP contract", () => {
 
     const reserveResponse = await postV1DevicesDeviceIdCommandsReservation(rawDeviceId, { command: "reserve" });
     expect(reserveResponse.status).toBe(202);
+    expect(reserveResponse.data).toEqual({
+      deviceId: normalizedDeviceId,
+      topic: `${IOT_COMMAND_TOPICS.reservation}/${normalizedDeviceId}`,
+      payload: "reserve",
+    });
     emitStatus(normalizedDeviceId, "reserved");
 
     const claimResponse = await postV1DevicesDeviceIdCommandsBooking(rawDeviceId, { command: "claim" });
     expect(claimResponse.status).toBe(202);
+    expect(claimResponse.data).toEqual({
+      deviceId: normalizedDeviceId,
+      topic: `${IOT_COMMAND_TOPICS.booking}/${normalizedDeviceId}`,
+      payload: "claim",
+    });
     emitStatus(normalizedDeviceId, "booked");
 
     const releaseResponse = await postV1DevicesDeviceIdCommandsBooking(rawDeviceId, { command: "release" });
     expect(releaseResponse.status).toBe(202);
+    expect(releaseResponse.data).toEqual({
+      deviceId: normalizedDeviceId,
+      topic: `${IOT_COMMAND_TOPICS.booking}/${normalizedDeviceId}`,
+      payload: "release",
+    });
     emitStatus(normalizedDeviceId, "available");
 
     const maintenanceStartResponse = await postV1DevicesDeviceIdCommandsMaintenance(rawDeviceId, { command: "start" });
     expect(maintenanceStartResponse.status).toBe(202);
+    expect(maintenanceStartResponse.data).toEqual({
+      deviceId: normalizedDeviceId,
+      topic: `${IOT_COMMAND_TOPICS.maintenance}/${normalizedDeviceId}`,
+      payload: "start",
+    });
     emitStatus(normalizedDeviceId, "maintained");
 
     const maintenanceCompleteResponse = await postV1DevicesDeviceIdCommandsMaintenance(rawDeviceId, { command: "complete" });
     expect(maintenanceCompleteResponse.status).toBe(202);
+    expect(maintenanceCompleteResponse.data).toEqual({
+      deviceId: normalizedDeviceId,
+      topic: `${IOT_COMMAND_TOPICS.maintenance}/${normalizedDeviceId}`,
+      payload: "complete",
+    });
     emitStatus(normalizedDeviceId, "available");
 
     const directStateResponse = await postV1DevicesDeviceIdCommandsState(rawDeviceId, { state: "broken" });
     expect(directStateResponse.status).toBe(202);
+    expect(directStateResponse.data).toEqual({
+      deviceId: normalizedDeviceId,
+      topic: `${IOT_COMMAND_TOPICS.state}/${normalizedDeviceId}`,
+      payload: "broken",
+    });
     emitStatus(normalizedDeviceId, "broken");
 
     const invalidReservation = await postV1DevicesDeviceIdCommandsReservation(rawDeviceId, { command: "cancel" });
     expect(invalidReservation.status).toBe(409);
+    expect(invalidReservation.data.error).toBe("Cannot transition from broken to available");
 
     const statusRequestResponse = await postV1DevicesDeviceIdCommandsStatus(rawDeviceId, { command: "request" });
     expect(statusRequestResponse.status).toBe(202);
+    expect(statusRequestResponse.data).toEqual({
+      deviceId: normalizedDeviceId,
+      topic: `${IOT_COMMAND_TOPICS.status}/${normalizedDeviceId}`,
+      payload: "request",
+    });
 
     expect(commandLog).toEqual([
       {
