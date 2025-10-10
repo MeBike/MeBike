@@ -8,7 +8,7 @@ import { commandErrorResponses, commandResponses } from "./shared";
 
 export const sendStateCommandRoute = createRoute({
   method: "post",
-  path: "/v1/devices/:deviceId/commands/state",
+  path: "/v1/devices/{deviceId}/commands/state",
   summary: "Send a state command",
   description:
     "**Low-level state manipulation** for administrative purposes. "

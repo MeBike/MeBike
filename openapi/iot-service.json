@@ -379,7 +379,7 @@
         }
       }
     },
-    "/v1/devices/:deviceId": {
+    "/v1/devices/{deviceId}": {
       "get": {
         "summary": "Get a device status",
         "description": "Return the latest known status for a specific device.",
@@ -478,7 +478,7 @@
         }
       }
     },
-    "/v1/devices/:deviceId/commands/state": {
+    "/v1/devices/{deviceId}/commands/state": {
       "post": {
         "summary": "Send a state command",
         "description": "**Low-level state manipulation** for administrative purposes. Directly changes device state if transition is allowed by the state machine. Use workflow commands (booking, reservation, maintenance) for user-facing operations. Available states: available, reserved, booked, broken, maintained, unavailable.",
@@ -629,7 +629,7 @@
         }
       }
     },
-    "/v1/devices/:deviceId/commands/booking": {
+    "/v1/devices/{deviceId}/commands/booking": {
       "post": {
         "summary": "Send a booking command",
         "description": "**User-facing booking workflow.** Commands: `book` (start using bike), `claim` (activate reservation), `release` (finish ride). Includes business logic and additional status publishing beyond simple state changes.",
@@ -780,7 +780,7 @@
         }
       }
     },
-    "/v1/devices/:deviceId/commands/reservation": {
+    "/v1/devices/{deviceId}/commands/reservation": {
       "post": {
         "summary": "Send a reservation command",
         "description": "**Reservation workflow.** Commands: `reserve` (hold bike for 5-15 min), `cancel` (cancel before claiming). Typically used before booking when user wants to ensure bike availability.",
@@ -931,7 +931,7 @@
         }
       }
     },
-    "/v1/devices/:deviceId/commands/maintenance": {
+    "/v1/devices/{deviceId}/commands/maintenance": {
       "post": {
         "summary": "Send a maintenance command",
         "description": "**Maintenance workflow.** Commands: `start` (begin maintenance), `complete` (return to service). Typically used by admins or automated systems to mark devices for servicing.",
@@ -1082,7 +1082,7 @@
         }
       }
     },
-    "/v1/devices/:deviceId/commands/status": {
+    "/v1/devices/{deviceId}/commands/status": {
       "post": {
         "summary": "Request a status update",
         "description": "Ask a device to publish its current status to MQTT.",
