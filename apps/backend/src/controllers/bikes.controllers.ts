@@ -1,0 +1,33 @@
+import type { NextFunction, Request, Response } from "express";
+import type { ParamsDictionary } from "express-serve-static-core";
+
+import type { CreateBikeReqBody, GetBikesReqQuery } from "~/models/requests/bikes.request";
+import type { TokenPayLoad } from "~/models/requests/users.requests";
+
+import { BikeStatus, Role } from "~/constants/enums";
+import HTTP_STATUS from "~/constants/http-status";
+import { BIKES_MESSAGES } from "~/constants/messages";
+import bikesService from "~/services/bikes.services";
+
+export async function createBikeController(req: Request<ParamsDictionary, any, CreateBikeReqBody>, res: Response) {
+  const result = await bikesService.createBike(req.body);
+  return res.status(HTTP_STATUS.CREATED).json({
+    message: BIKES_MESSAGES.CREATE_BIKE_SUCCESS,
+    result,
+  });
+}
+
+export async function getBikesController(
+  req: Request<ParamsDictionary, any, any, GetBikesReqQuery>,
+  res: Response,
+  next: NextFunction,
+) {
+  const { role } = req.decoded_authorization as TokenPayLoad;
+  const query = req.query;
+
+  // Nếu là user, chỉ cho phép xem xe có sẵn (AVAILABLE)
+  if (role === Role.User) {
+    query.status = BikeStatus.Available;
+  }
+  await bikesService.getAllBikes(res, next, query);
+}
