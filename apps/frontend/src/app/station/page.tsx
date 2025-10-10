@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { Station } from "@custom-types";
+import type { Station } from "../../types/station";
 import Image from "next/image";
 const Page = () => {
   const stations: Station[] = [

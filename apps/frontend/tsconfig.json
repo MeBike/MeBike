@@ -31,7 +31,7 @@
       "@utils/*": ["./src/utils/*"],
       "@contexts/*": ["./src/contexts/*"],
       "@providers/*": ["./src/providers/*"],
-      "@custom-types": ["./src/types/index"],
+      "@types/*": ["./src/types/*"]
 
     }
   },

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { BikeStation,  Station } from "@custom-types";
+import type { BikeStation,  Station } from "../types/station";
 import { Bike, MapPin, Clock, Users } from "lucide-react";
 import { toast } from "sonner";
 
