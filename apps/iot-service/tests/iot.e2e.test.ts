@@ -103,6 +103,8 @@ const hardwarePauseMs = (() => {
   return Math.max(parsed, 1000);
 })();
 
+const sequentialTestTimeoutMs = isRealHttp ? 120_000 : 10_000;
+
 async function pauseBetweenTransitions(label: string): Promise<void> {
   if (!isRealHttp) {
     return;
@@ -352,5 +354,4 @@ describe("IoT service HTTP contract", () => {
         },
       ]);
     }
-  });
-});
+  }, sequentialTestTimeoutMs);
