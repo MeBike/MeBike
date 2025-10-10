@@ -9,6 +9,7 @@ import type RefreshToken from "~/models/schemas/refresh-token.schemas";
 import type Rental from "~/models/schemas/rental.schema";
 import type Report from "~/models/schemas/report.schema";
 import type Station from "~/models/schemas/station.schema";
+import type Supplier from "~/models/schemas/supplier.schema";
 import type User from "~/models/schemas/user.schema";
 
 config();
@@ -68,6 +69,10 @@ class DatabaseService {
 
   get rentals(): Collection<Rental> {
     return this.db.collection(process.env.DB_RENTALS_COLLECTION as string);
+  }
+
+  get suppliers(): Collection<Supplier> {
+    return this.db.collection(process.env.DB_SUPPLIERS_COLLECTION as string);
   }
 }
 

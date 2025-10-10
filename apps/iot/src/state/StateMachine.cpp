@@ -138,34 +138,45 @@ void handleConnectingWifiState()
 
 void handleErrorState()
 {
-    if (millis() - lastRecoveryAttempt > recoveryInterval)
+    unsigned long now = millis();
+    if (now - lastRecoveryAttempt < recoveryInterval)
     {
-        lastRecoveryAttempt = millis();
+        return;
+    }
+
+    lastRecoveryAttempt = now;
+
+    if (WiFi.status() != WL_CONNECTED)
+    {
         recoveryRetries++;
         Log.info("Attempting recovery... (attempt %d/%d)\n", recoveryRetries, maxRecoveryRetries);
-
         WiFi.reconnect();
 
-        if (WiFi.status() == WL_CONNECTED)
+        if (WiFi.status() != WL_CONNECTED)
         {
-            Log.info("WiFi recovered\n");
-
-            if (Global::mqttManager && !Global::mqttManager->isConnected())
+            if (recoveryRetries >= maxRecoveryRetries)
             {
-                Log.info("Attempting MQTT reconnection after WiFi recovery...\n");
-                ensureMqttConnected();
+                Log.error("Max recovery attempts reached. Staying in ERROR state.\n");
             }
-
-            currentState = STATE_CONNECTED;
-            Log.info("Recovered to CONNECTED state\n");
-            recoveryRetries = 0;
-            mqttReconnectRetries = 0;
+            return;
         }
-        else if (recoveryRetries >= maxRecoveryRetries)
+
+        Log.info("WiFi recovered\n");
+        recoveryRetries = 0;
+    }
+
+    if (Global::mqttManager && !Global::mqttManager->isConnected())
+    {
+        Log.info("Attempting MQTT reconnection after WiFi recovery...\n");
+        if (!ensureMqttConnected())
         {
-            Log.error("Max recovery attempts reached. Staying in ERROR state.\n");
+            return;
         }
     }
+
+    currentState = STATE_CONNECTED;
+    Log.info("Recovered to CONNECTED state\n");
+    mqttReconnectRetries = 0;
 }
 
 void handleUnknownState()

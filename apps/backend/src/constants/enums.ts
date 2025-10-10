@@ -53,3 +53,16 @@ export enum BikeStatus {
   Maintained = "MAINTAINED", // Đang bảo trì
   Unavailable = "UNAVAILABLE", // Không có sẵn (trong kho)
 }
+
+export enum SupplierStatus {
+  ACTIVE = "HOẠT ĐỘNG",
+  INACTIVE = "NGƯNG HOẠT ĐỘNG",
+  TERMINATE = "CHẤM DỨT HỢP ĐỒNG",
+}
+
+export enum ReportPriority {
+  LOW = "THẤP",
+  NORMAL = "BÌNH THƯỜNG",
+  HIGH = "CAO",
+  URGENT = "KHẨN CẤP",
+}
