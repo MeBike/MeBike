@@ -145,4 +145,10 @@ export const BIKES_MESSAGES = {
   GET_BIKE_SUCCESS: "Lấy thông tin xe đạp thành công",
   BIKE_ID_IS_REQUIRED: "ID của xe đạp là bắt buộc",
   INVALID_BIKE_ID: "ID của xe đạp không hợp lệ",
+  // update info bike
+  UPDATE_BIKE_SUCCESS: "Cập nhật thông tin xe đạp thành công",
+  UPDATE_NOT_ALLOWED: "Bạn không được phép cập nhật trường này",
+  USER_CAN_ONLY_REPORT_BROKEN: "Người dùng chỉ được phép báo hỏng xe",
+  AT_LEAST_ONE_FIELD_IS_REQUIRED: "Cần ít nhất một trường để cập nhật",
+  CANNOT_REPORT_BIKE_NOT_RENTING: "Bạn chỉ có thể báo hỏng chiếc xe bạn đang thuê",
 } as const;

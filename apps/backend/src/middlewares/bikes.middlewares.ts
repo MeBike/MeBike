@@ -97,3 +97,36 @@ export const bikeIdValidator = validate(
     ["params"],
   )
 );
+
+export const updateBikeValidator = validate(
+  checkSchema(
+    {
+      status: {
+        optional: true,
+        isIn: {
+          options: [Object.values(BikeStatus)],
+          errorMessage: BIKES_MESSAGES.INVALID_STATUS,
+        },
+      },
+      station_id: {
+        optional: true,
+        isMongoId: {
+          errorMessage: BIKES_MESSAGES.INVALID_STATION_ID,
+        },
+        custom: {
+          options: async (value) => {
+            const station = await databaseService.stations.findOne({ _id: new ObjectId(value) });
+            if (!station) {
+              throw new ErrorWithStatus({
+                message: BIKES_MESSAGES.STATION_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
+            return true;
+          },
+        },
+      },
+    },
+    ["body"],
+  )
+);
