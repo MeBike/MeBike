@@ -2,6 +2,18 @@ import { ObjectId } from "mongodb";
 
 import { Role, UserVerifyStatus } from "~/constants/enums";
 
+export type SupplierBikeStats = {
+  supplier_id: string;
+  supplier_name?: string;
+  total_bikes: number;
+  active_bikes: number;
+  booked_bikes: number;
+  broken_bikes: number;
+  reserve_bikes: number;
+  maintain_bikes: number;
+  unavailable_bikes: number;
+};
+
 type UserType = {
   _id?: ObjectId;
   fullname: string;
