@@ -8,7 +8,7 @@ import { commandErrorResponses, commandResponses } from "./shared";
 
 export const sendMaintenanceCommandRoute = createRoute({
   method: "post",
-  path: "/v1/devices/:deviceId/commands/maintenance",
+  path: "/v1/devices/{deviceId}/commands/maintenance",
   summary: "Send a maintenance command",
   description:
     "**Maintenance workflow.** "

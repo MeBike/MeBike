@@ -8,7 +8,7 @@ import { commandErrorResponses, commandResponses } from "./shared";
 
 export const requestStatusCommandRoute = createRoute({
   method: "post",
-  path: "/v1/devices/:deviceId/commands/status",
+  path: "/v1/devices/{deviceId}/commands/status",
   summary: "Request a status update",
   description: "Ask a device to publish its current status to MQTT.",
   tags: ["Commands"],

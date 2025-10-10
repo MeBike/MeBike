@@ -8,23 +8,53 @@ import { InfrastructureError } from "../middleware";
 
 export class MqttConnectionManager implements MqttConnection {
   public client: mqtt.MqttClient;
+  private hasPendingConnect = false;
 
   constructor(private config: ConnectionConfig) {
     this.client = mqtt.connect(config.brokerUrl, {
       username: config.username,
       password: config.password,
     });
+    this.client.on("error", (error) => {
+      if (this.hasPendingConnect) {
+        return;
+      }
+      console.error("MQTT client error:", error);
+    });
   }
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.client.on("connect", () => resolve());
-      this.client.on("error", (error) => {
+      if (this.client.connected) {
+        resolve();
+        return;
+      }
+
+      let onConnect: () => void;
+      let onError: (error: Error) => void;
+
+      const cleanup = () => {
+        this.hasPendingConnect = false;
+        this.client.off("connect", onConnect);
+        this.client.off("error", onError);
+      };
+
+      onConnect = () => {
+        cleanup();
+        resolve();
+      };
+
+      onError = (error: Error) => {
+        cleanup();
         reject(new InfrastructureError("Failed to connect to MQTT broker", {
           brokerUrl: this.config.brokerUrl,
           originalError: error.message,
         }));
-      });
+      };
+
+      this.hasPendingConnect = true;
+      this.client.once("connect", onConnect);
+      this.client.once("error", onError);
     });
   }
 
