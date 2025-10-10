@@ -2,10 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import { BikeCard } from "@/components/bikes/bike-card";
+import { DashboardLayout } from "@components/dashboard/dashboard-layout";
+import { BikeCard } from "@components/bikes/bike-card";
 import { BikeFilters } from "@components/bikes/bike-filter"
-import { Button } from "@/components/ui/button";
+import { Button } from "@components/ui/button";
 import type { Bike, BikeStatus, BikeType } from "@custom-types";
 import type { User as DetailUser } from "@custom-types";
 import { Plus, Download } from "lucide-react";

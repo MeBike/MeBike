@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import { RentalTable } from "@/components/rentals/rental-table";
-import { RentalFilters } from "@/components/rentals/rental-filters";
-import { RentalStats } from "@/components/rentals/rental-stats";
-import { Button } from "@/components/ui/button";
+import { DashboardLayout } from "@components/dashboard/dashboard-layout";
+import { RentalTable } from "@components/rentals/rental-table";
+import { RentalFilters } from "@components/rentals/rental-filters";
+import { RentalStats } from "@components/rentals/rental-stats";
+import { Button } from "@components/ui/button";
 import type { Rental, RentalStatus, PaymentStatus } from "@custom-types";
 import type { User as DetailUser } from "@custom-types";
 import { Plus, Download } from "lucide-react";
@@ -189,7 +189,7 @@ const mockUser: DetailUser = {
   updated_at: "2025-01-06T10:20:00Z",
   password: "",
   email_verify_token: "",
-  forgot_verify_token: ""
+  forgot_verify_token: "",
 };
 
 export default function RentalsPage() {
