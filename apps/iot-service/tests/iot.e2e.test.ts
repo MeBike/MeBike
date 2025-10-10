@@ -110,12 +110,12 @@ async function pauseBetweenTransitions(label: string): Promise<void> {
     return;
   }
 
-  console.info(`[iot-service:test] waiting ${hardwarePauseMs}ms after ${label}`);
+  console.warn(`[iot-service:test] waiting ${hardwarePauseMs}ms after ${label}`);
   await new Promise(resolve => setTimeout(resolve, hardwarePauseMs));
 }
 
 describe("IoT service HTTP contract", () => {
-  let originalFetch: typeof global.fetch | undefined;
+  let originalFetch: typeof globalThis.fetch | undefined;
   let previousBaseUrl: string | undefined;
   let warnSpy: jest.SpyInstance;
 
@@ -127,8 +127,8 @@ describe("IoT service HTTP contract", () => {
 
     if (useInMemoryServer) {
       process.env.IOT_SERVICE_BASE_URL = "http://iot-service.test";
-      originalFetch = global.fetch;
-      global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      originalFetch = globalThis.fetch;
+      globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
         const request = input instanceof Request
           ? input
           : new Request(
@@ -147,7 +147,7 @@ describe("IoT service HTTP contract", () => {
       }
     }
 
-    console.info(
+    console.warn(
       `[iot-service:test] Mode=${useInMemoryServer ? "in-memory" : "real-http"} baseUrl=${process.env.IOT_SERVICE_BASE_URL} device=${normalizedDeviceId}`,
     );
   });
@@ -156,17 +156,14 @@ describe("IoT service HTTP contract", () => {
     warnSpy.mockRestore();
     process.env.IOT_SERVICE_BASE_URL = previousBaseUrl;
     if (originalFetch) {
-      global.fetch = originalFetch;
+      globalThis.fetch = originalFetch;
     }
     eventBus.removeAllListeners();
   });
 
   test("health endpoint returns current uptime", async () => {
     const response = await getV1Health();
-    if (response.status !== 200) {
-      throw new Error(`Expected health status 200, received ${response.status}`);
-    }
-
+    expect(response.status).toBe(200);
     expect(response.data.status).toBe("ok");
     expect(response.data.uptimeMs).toBeGreaterThanOrEqual(0);
     expect(typeof response.data.timestamp).toBe("string");
@@ -175,17 +172,12 @@ describe("IoT service HTTP contract", () => {
   test("device listing and lookup reflect manager state", async () => {
     if (isRealHttp) {
       const deviceResponse = await getV1DevicesDeviceId(rawDeviceId);
-      if (deviceResponse.status !== 200) {
-        throw new Error(`Expected device ${rawDeviceId} to exist, received status ${deviceResponse.status}`);
-      }
-
+      expect(deviceResponse.status).toBe(200);
       expect(deviceResponse.data.deviceId).toBe(normalizedDeviceId);
     }
     else {
       const initialList = await getV1Devices();
-      if (initialList.status !== 200) {
-        throw new Error(`Expected initial device list 200, received ${initialList.status}`);
-      }
+      expect(initialList.status).toBe(200);
       expect(initialList.data.items).toEqual([]);
 
       const missingDevice = await getV1DevicesDeviceId("11:22:33:44:55:66");
@@ -215,9 +207,7 @@ describe("IoT service HTTP contract", () => {
     }
 
     const deviceResponse = await getV1DevicesDeviceId(rawDeviceId);
-    if (deviceResponse.status !== 200) {
-      throw new Error(`Expected device details, received status ${deviceResponse.status}`);
-    }
+    expect(deviceResponse.status).toBe(200);
     expect(deviceResponse.data.deviceId).toBe(normalizedDeviceId);
 
     const reserveResponse = await postV1DevicesDeviceIdCommandsReservation(rawDeviceId, { command: "reserve" });
@@ -355,3 +345,4 @@ describe("IoT service HTTP contract", () => {
       ]);
     }
   }, sequentialTestTimeoutMs);
+});
