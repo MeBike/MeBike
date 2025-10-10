@@ -1,9 +1,12 @@
+import type { NextFunction, Response } from "express";
+
 import { ObjectId } from "mongodb";
 
-import type { CreateBikeReqBody, GetBikesReqQuery } from "~/models/requests/bikes.requests";
+import type { CreateBikeReqBody, GetBikesReqQuery } from "~/models/requests/bikes.request";
 
 import { BikeStatus } from "~/constants/enums";
 import Bike from "~/models/schemas/bike.schema";
+import { sendPaginatedResponse } from "~/utils/pagination.helper";
 
 import databaseService from "./database.services";
 
@@ -20,8 +23,8 @@ class BikesService {
     return bike;
   }
 
-  async getAllBikes(query: GetBikesReqQuery) {
-    const { station_id, status, limit = "10", page = "1" } = query;
+  async getAllBikes(res: Response, next: NextFunction, query: GetBikesReqQuery) {
+    const { station_id, status } = query;
     const filter: any = {};
 
     if (station_id) {
@@ -31,20 +34,7 @@ class BikesService {
       filter.status = status;
     }
 
-    const limitNumber = Number.parseInt(limit);
-    const pageNumber = Number.parseInt(page);
-    const skip = (pageNumber - 1) * limitNumber;
-
-    const [bikes, total_bikes] = await Promise.all([
-      databaseService.bikes.find(filter).skip(skip).limit(limitNumber).toArray(),
-      databaseService.bikes.countDocuments(filter),
-    ]);
-
-    return {
-      bikes,
-      total_bikes,
-      total_pages: Math.ceil(total_bikes / limitNumber),
-    };
+    await sendPaginatedResponse(res, next, databaseService.bikes, query, filter);
   }
 }
 

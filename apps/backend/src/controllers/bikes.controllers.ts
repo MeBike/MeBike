@@ -1,10 +1,10 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
 
-import type { CreateBikeReqBody, GetBikesReqQuery } from "~/models/requests/bikes.requests";
+import type { CreateBikeReqBody, GetBikesReqQuery } from "~/models/requests/bikes.request";
 import type { TokenPayLoad } from "~/models/requests/users.requests";
 
-import { Role } from "~/constants/enums";
+import { BikeStatus, Role } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { BIKES_MESSAGES } from "~/constants/messages";
 import bikesService from "~/services/bikes.services";
@@ -17,18 +17,17 @@ export async function createBikeController(req: Request<ParamsDictionary, any, C
   });
 }
 
-export async function getBikesController(req: Request<ParamsDictionary, any, any, GetBikesReqQuery>, res: Response) {
+export async function getBikesController(
+  req: Request<ParamsDictionary, any, any, GetBikesReqQuery>,
+  res: Response,
+  next: NextFunction,
+) {
   const { role } = req.decoded_authorization as TokenPayLoad;
-  let query = req.query;
+  const query = req.query;
 
   // Nếu là user, chỉ cho phép xem xe có sẵn (AVAILABLE)
   if (role === Role.User) {
-    query.status = "AVAILABLE";
+    query.status = BikeStatus.Available;
   }
-
-  const result = await bikesService.getAllBikes(query);
-  return res.json({
-    message: BIKES_MESSAGES.GET_BIKES_SUCCESS,
-    result,
-  });
+  await bikesService.getAllBikes(res, next, query);
 }

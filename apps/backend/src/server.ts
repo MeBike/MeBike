@@ -1,6 +1,3 @@
-import type { getV1DevicesResponse } from "@mebike/shared/sdk/iot-service";
-
-import { getAllDevices } from "@mebike/shared/sdk/iot-service";
 import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
@@ -11,6 +8,7 @@ import reportsRouter from "./routes/reports.routes";
 import suppliersRouter from "./routes/suppliers.routes";
 import usersRouter from "./routes/users.routes";
 import databaseService from "./services/database.services";
+import bikesRouter from "./routes/bikes.routes";
 
 config();
 
@@ -32,19 +30,11 @@ app.get("/", (req, res) => {
 app.use("/users", usersRouter);
 app.use("/reports", reportsRouter);
 app.use("/suppliers", suppliersRouter);
+app.use("/bikes", bikesRouter);
 
 app.use(defaultErrorHandler);
 
 app.listen(port, () => {
   // eslint-disable-next-line no-console
   console.log(`MeBike Backend đang chạy tại http://localhost:${port}`);
-
-  void getAllDevices()
-    .then((response: getV1DevicesResponse) => {
-      // eslint-disable-next-line no-console
-      console.log("IoT service devices", response);
-    })
-    .catch((error: unknown) => {
-      console.error("Fetching IoT service devices failed", error);
-    });
 });

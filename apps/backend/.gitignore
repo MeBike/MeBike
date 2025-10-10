@@ -152,4 +152,5 @@ copy_all.sh
 copy_code.sh
 copy_docs.sh
 tonghop.sh
+all_code.txt
 # End of https://www.toptal.com/developers/gitignore/api/node
