@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 
-import type { ReportTypeEnum } from "../../constants/enums";
+import type { ReportPriority, ReportTypeEnum } from "../../constants/enums";
 
 import { ReportStatus } from "../../constants/enums";
 
@@ -12,12 +12,15 @@ export type ReportType = {
   bike_id?: ObjectId;
   station_id?: ObjectId;
   rental_id?: ObjectId;
+  assignee_id?: ObjectId;
   media_urls?: string[];
   location?: GeoLocation;
+  priority: ReportPriority;
   type: ReportTypeEnum;
   message: string;
   status?: ReportStatus;
   created_at?: Date;
+  resolved_at?: Date;
 };
 
 export default class Report {
@@ -26,12 +29,15 @@ export default class Report {
   bike_id?: ObjectId;
   station_id?: ObjectId;
   rental_id?: ObjectId;
+  assignee_id?: ObjectId;
   media_urls?: string[];
   location?: GeoLocation;
+  priority: ReportPriority;
   type: ReportTypeEnum;
   message: string;
   status: ReportStatus;
   created_at?: Date;
+  resolved_at?: Date;
 
   constructor(report: ReportType) {
     const currentDate = new Date();
@@ -43,11 +49,14 @@ export default class Report {
     this.bike_id = report.bike_id;
     this.station_id = report.station_id;
     this.rental_id = report.rental_id;
+    this.assignee_id = report.assignee_id;
     this.media_urls = report.media_urls || [];
     this.location = report.location ?? undefined;
+    this.priority = report.priority || "";
     this.type = report.type;
     this.message = report.message || "";
     this.status = report.status || ReportStatus.Pending;
     this.created_at = report.created_at || localTime;
+    this.resolved_at = report.resolved_at;
   }
 }
