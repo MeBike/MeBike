@@ -95,6 +95,16 @@ async function waitForStatus(expectedStatus: string, timeoutMs: number): Promise
   throw new Error(`Timed out waiting for status "${expectedStatus}"`);
 }
 
+function expectStatus<TStatus extends number, TResponse extends { status: number }>(
+  response: TResponse,
+  expected: TStatus,
+): asserts response is Extract<TResponse, { status: TStatus }> {
+  expect(response.status).toBe(expected);
+  if (response.status !== expected) {
+    throw new Error(`Expected status ${expected}, received ${response.status}`);
+  }
+}
+
 const hardwarePauseMs = (() => {
   const parsed = Number.parseInt(env.STATE_STEP_DELAY_MS, 10);
   if (Number.isNaN(parsed)) {
@@ -117,7 +127,7 @@ async function pauseBetweenTransitions(label: string): Promise<void> {
 describe("IoT service HTTP contract", () => {
   let originalFetch: typeof globalThis.fetch | undefined;
   let previousBaseUrl: string | undefined;
-  let warnSpy: jest.SpyInstance;
+  let warnSpy: jest.SpiedFunction<typeof console.warn>;
 
   beforeAll(() => {
     warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -128,15 +138,20 @@ describe("IoT service HTTP contract", () => {
     if (useInMemoryServer) {
       process.env.IOT_SERVICE_BASE_URL = "http://iot-service.test";
       originalFetch = globalThis.fetch;
-      globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-        const request = input instanceof Request
-          ? input
-          : new Request(
-            input instanceof URL ? input : String(input),
-            init,
-          );
-        return inMemoryApp!.fetch(request);
+      const fetchShim: typeof globalThis.fetch = async (input, init) => {
+        if (input instanceof globalThis.Request) {
+          return inMemoryApp!.fetch(input as unknown as Request);
+        }
+
+        const url = input instanceof URL ? input.toString() : input;
+        const requestInit = init
+          ? { ...init } as unknown as globalThis.RequestInit
+          : undefined;
+        const request = new globalThis.Request(url, requestInit);
+
+        return inMemoryApp!.fetch(request as unknown as Request);
       };
+      globalThis.fetch = fetchShim;
     }
     else {
       if (!envProvidedDeviceId) {
@@ -163,7 +178,8 @@ describe("IoT service HTTP contract", () => {
 
   test("health endpoint returns current uptime", async () => {
     const response = await getV1Health();
-    expect(response.status).toBe(200);
+    expectStatus(response, 200);
+
     expect(response.data.status).toBe("ok");
     expect(response.data.uptimeMs).toBeGreaterThanOrEqual(0);
     expect(typeof response.data.timestamp).toBe("string");
@@ -172,22 +188,22 @@ describe("IoT service HTTP contract", () => {
   test("device listing and lookup reflect manager state", async () => {
     if (isRealHttp) {
       const deviceResponse = await getV1DevicesDeviceId(rawDeviceId);
-      expect(deviceResponse.status).toBe(200);
+      expectStatus(deviceResponse, 200);
       expect(deviceResponse.data.deviceId).toBe(normalizedDeviceId);
     }
     else {
       const initialList = await getV1Devices();
-      expect(initialList.status).toBe(200);
+      expectStatus(initialList, 200);
       expect(initialList.data.items).toEqual([]);
 
       const missingDevice = await getV1DevicesDeviceId("11:22:33:44:55:66");
-      expect(missingDevice.status).toBe(404);
+      expectStatus(missingDevice, 404);
       expect(missingDevice.data.error).toBe("Device not found");
 
       emitStatus(normalizedDeviceId, "available");
 
       const updatedList = await getV1Devices();
-      expect(updatedList.status).toBe(200);
+      expectStatus(updatedList, 200);
       expect(updatedList.data.items).toEqual([
         { deviceId: normalizedDeviceId, status: "available" },
       ]);
@@ -207,7 +223,7 @@ describe("IoT service HTTP contract", () => {
     }
 
     const deviceResponse = await getV1DevicesDeviceId(rawDeviceId);
-    expect(deviceResponse.status).toBe(200);
+    expectStatus(deviceResponse, 200);
     expect(deviceResponse.data.deviceId).toBe(normalizedDeviceId);
 
     const reserveResponse = await postV1DevicesDeviceIdCommandsReservation(rawDeviceId, { command: "reserve" });
@@ -301,7 +317,7 @@ describe("IoT service HTTP contract", () => {
     }
 
     const invalidReservation = await postV1DevicesDeviceIdCommandsReservation(rawDeviceId, { command: "cancel" });
-    expect(invalidReservation.status).toBe(409);
+    expectStatus(invalidReservation, 409);
     expect(invalidReservation.data.error).toBe("Cannot transition from broken to available");
 
     const statusRequestResponse = await postV1DevicesDeviceIdCommandsStatus(rawDeviceId, { command: "request" });
