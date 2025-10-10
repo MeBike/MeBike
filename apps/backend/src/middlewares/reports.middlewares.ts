@@ -1,9 +1,9 @@
 import { checkSchema } from "express-validator";
 import { ObjectId } from "mongodb";
 
-import { ReportStatus, ReportTypeEnum } from "~/constants/enums";
+import { ReportPriority, ReportStatus, ReportTypeEnum } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
-import { REPORTS_MESSAGES } from "~/constants/messages";
+import { REPORTS_MESSAGES, USERS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import { validate } from "~/utils/validation";
@@ -39,6 +39,7 @@ export const createReportValidator = validate(
     {
       type: {
         in: ["body"],
+        trim: true,
         notEmpty: {
           errorMessage: REPORTS_MESSAGES.TYPE_IS_REQUIRED,
         },
@@ -50,6 +51,7 @@ export const createReportValidator = validate(
 
       message: {
         in: ["body"],
+        trim: true,
         isString: {
           errorMessage: REPORTS_MESSAGES.MESSAGE_MUST_BE_STRING,
         },
@@ -57,11 +59,11 @@ export const createReportValidator = validate(
           options: { max: 250 },
           errorMessage: REPORTS_MESSAGES.MESSAGE_TOO_LONG,
         },
-        trim: true,
       },
 
       bike_id: {
         in: ["body"],
+        trim: true,
         custom: {
           options: async (value, { req }) => {
             if ([ReportTypeEnum.BikeDamage, ReportTypeEnum.BikeDirty].includes(req.body.type) && !value) {
@@ -89,6 +91,7 @@ export const createReportValidator = validate(
 
       rental_id: {
         in: ["body"],
+        trim: true,
         custom: {
           options: async (value, { req }) => {
             if (value) {
@@ -118,6 +121,7 @@ export const createReportValidator = validate(
 
       station_id: {
         in: ["body"],
+        trim: true,
         custom: {
           options: async (value, { req }) => {
             if (
@@ -149,6 +153,7 @@ export const createReportValidator = validate(
       },
       location: {
         in: ["body"],
+        trim: true,
         custom: {
           options: (value, { req }) => {
             if (
@@ -174,13 +179,13 @@ export const updateReportValidator = validate(
   checkSchema({
     reportID: {
       in: "params",
+      trim: true,
       notEmpty: {
         errorMessage: REPORTS_MESSAGES.REPORT_ID_IS_REQUIRED,
       },
       isMongoId: {
         errorMessage: REPORTS_MESSAGES.INVALID_REPORT_ID,
       },
-      trim: true,
       custom: {
         options: async (value) => {
           const report = await databaseService.reports.findOne({
@@ -198,6 +203,7 @@ export const updateReportValidator = validate(
     },
     newStatus: {
       in: "body",
+      trim: true,
       notEmpty: {
         errorMessage: REPORTS_MESSAGES.STATUS_IS_REQUIRED,
       },
@@ -218,14 +224,16 @@ export const updateReportValidator = validate(
             });
           }
 
-          const allowedStauts: Record<ReportStatus, ReportStatus[]> = {
+          const allowedStatuses: Record<ReportStatus, ReportStatus[]> = {
             [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
             [ReportStatus.InProgress]: [ReportStatus.Resolved],
             [ReportStatus.Resolved]: [],
             [ReportStatus.Cancel]: [],
           };
 
-          if (!allowedStauts[report.status].includes(value)) {
+          const currentStatus = report.status as ReportStatus;
+
+          if (!allowedStatuses[currentStatus]?.includes(value)) {
             throw new ErrorWithStatus({
               status: HTTP_STATUS.BAD_REQUEST,
               message: REPORTS_MESSAGES.INVALID_NEW_STATUS,
@@ -234,6 +242,98 @@ export const updateReportValidator = validate(
 
           return true;
         },
+      },
+    },
+    priority: {
+      in: "body",
+      trim: true,
+      optional: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.PRIORITY_IS_REQUIRED,
+      },
+      isIn: {
+        options: [Object.values(ReportPriority)],
+        errorMessage: REPORTS_MESSAGES.INVALID_PRIORITY,
+      },
+    },
+  }),
+);
+
+export const getAllReportValidator = validate(
+  checkSchema({
+    type: {
+      in: ["query"],
+      optional: true,
+      trim: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.TYPE_IS_REQUIRED,
+      },
+      isIn: {
+        options: [Object.values(ReportTypeEnum)],
+        errorMessage: REPORTS_MESSAGES.INVALID_TYPE,
+      },
+    },
+    userID: {
+      in: ["query"],
+      optional: true,
+      trim: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.USER_ID_IS_REQUIRED,
+      },
+      isMongoId: {
+        errorMessage: REPORTS_MESSAGES.USER_ID_INVALID,
+      },
+      custom: {
+        options: async (value) => {
+          const findUser = await databaseService.users.findOne({ _id: new ObjectId(value) });
+
+          if (!findUser) {
+            throw new ErrorWithStatus({
+              message: USERS_MESSAGES.USER_NOT_FOUND,
+              status: HTTP_STATUS.NOT_FOUND,
+            });
+          }
+
+          return true;
+        },
+      },
+    },
+    date: {
+      in: ["query"],
+      optional: true,
+      trim: true,
+      isISO8601: {
+        errorMessage: REPORTS_MESSAGES.DATE_IN_VALID,
+      },
+      custom: {
+        options: (value) => {
+          const regrex = /^\d{4}-\d{2}-\d{2}$/;
+          if (!regrex.test(value)) {
+            throw new ErrorWithStatus({
+              message: REPORTS_MESSAGES.DATE_IN_VALID,
+              status: HTTP_STATUS.BAD_REQUEST,
+            });
+          }
+
+          return true;
+        },
+      },
+    },
+  }),
+);
+
+export const getAllUserReportValidator = validate(
+  checkSchema({
+    status: {
+      in: ["query"],
+      optional: true,
+      trim: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.STATUS_IS_REQUIRED,
+      },
+      isIn: {
+        options: [Object.values(ReportStatus)],
+        errorMessage: REPORTS_MESSAGES.INVALID_STATUS,
       },
     },
   }),
