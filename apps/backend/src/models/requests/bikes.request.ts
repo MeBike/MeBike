@@ -12,3 +12,8 @@ export type GetBikesReqQuery = {
   limit?: string;
   page?: string;
 };
+
+export type UpdateBikeReqBody = {
+  status?: BikeStatus;
+  station_id?: string;
+};
