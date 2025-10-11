@@ -9,6 +9,7 @@ import suppliersRouter from "./routes/suppliers.routes";
 import usersRouter from "./routes/users.routes";
 import databaseService from "./services/database.services";
 import bikesRouter from "./routes/bikes.routes";
+import walletsRouter from "./routes/wallets.routes";
 
 config();
 
@@ -31,6 +32,7 @@ app.use("/users", usersRouter);
 app.use("/reports", reportsRouter);
 app.use("/suppliers", suppliersRouter);
 app.use("/bikes", bikesRouter);
+app.use("/wallet", walletsRouter);
 
 app.use(defaultErrorHandler);
 

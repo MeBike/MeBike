@@ -165,4 +165,5 @@ export const WALLETS_MESSAGE = {
   STATUS_IS_REQUIED: "Trạng thái là bắt buộc",
   STATUS_INVALID: "Trạng thái không hợp lệ",
   CHANGE_STATUS_SUCCESS: "Đổi trạng thái ví của người dùng %s thành công",
+  GET_USER_WALLET_SUCCESS: "Lấy thông tin ví của người dùng %s thành công"
 };
