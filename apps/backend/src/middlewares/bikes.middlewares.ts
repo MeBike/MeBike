@@ -8,6 +8,14 @@ import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import { validate } from "~/utils/validation";
 
+const statusErrors: any = {
+  [BikeStatus.Booked]: BIKES_MESSAGES.BIKE_IN_USE,
+  [BikeStatus.Broken]: BIKES_MESSAGES.BIKE_IS_BROKEN,
+  [BikeStatus.Maintained]: BIKES_MESSAGES.BIKE_IS_MAINTAINED,
+  [BikeStatus.Reserved]: BIKES_MESSAGES.BIKE_IS_RESERVED,
+  [BikeStatus.Unavailable]: BIKES_MESSAGES.UNAVAILABLE_BIKE
+};
+
 export const createBikeValidator = validate(
   checkSchema(
     {
@@ -68,3 +76,20 @@ export const createBikeValidator = validate(
     ["body"],
   ),
 );
+
+export const isAvailability = (status: BikeStatus) => {
+  if (status === BikeStatus.Available) return true;
+
+  const message = statusErrors[status];
+  if (message) {
+    throw new ErrorWithStatus({
+      message,
+      status: HTTP_STATUS.BAD_REQUEST
+    });
+  }
+
+  throw new ErrorWithStatus({
+    message: BIKES_MESSAGES.INVALID_STATUS,
+    status: HTTP_STATUS.BAD_REQUEST
+  });
+};

@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { Collection, Document, Filter, Document as Projection } from "mongodb";
+import { normalizeDecimal } from "./string";
 
 export type IResponseSearch<T> = {
   data: T[];
@@ -23,9 +24,10 @@ export async function sendPaginatedResponse<T extends Document>(res: Response, n
     ]);
 
     const totalPages = Math.ceil(totalRecords / limit);
+    const normalized = data.map(normalizeDecimal)
 
     const responseBody: IResponseSearch<any> = {
-      data,
+      data: normalized,
       pagination: {
         limit,
         currentPage: page,

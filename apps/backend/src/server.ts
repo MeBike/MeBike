@@ -4,6 +4,7 @@ import express from "express";
 import process from "node:process";
 
 import { defaultErrorHandler } from "./middlewares/error.middlewares";
+import rentalsRouter from "./routes/rentals.routes";
 import reportsRouter from "./routes/reports.routes";
 import suppliersRouter from "./routes/suppliers.routes";
 import usersRouter from "./routes/users.routes";
@@ -31,6 +32,7 @@ app.use("/users", usersRouter);
 app.use("/reports", reportsRouter);
 app.use("/suppliers", suppliersRouter);
 app.use("/bikes", bikesRouter);
+app.use("/rentals", rentalsRouter);
 
 app.use(defaultErrorHandler);
 
