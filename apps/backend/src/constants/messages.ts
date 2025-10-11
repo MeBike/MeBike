@@ -98,6 +98,8 @@ export const RENTALS_MESSAGE = {
   GET_STATION_ACTIVITY_SUCCESS: "Xem thống kê hoạt động trạm xe thành công",
   GET_RESERVATIONS_SUCCESS: "Xem thống kê số lượt đặt/huỷ thành công",
   GET_STATION_TRAFFIC_SUCCESS: "Xem thống kê số lượt thuê/trả theo trạm thành công",
+  UPDATE_DETAIL_SUCCESS: "Cập nhật phiên thuê thành công",
+  CANCEL_RENTAL_SUCCESS: "Huỷ phiên thuê thành công",
   // Fail action
   CREATE_SESSION_FAIL: "Tạo phiên thuê xe không thành công",
   // Required data
@@ -106,10 +108,17 @@ export const RENTALS_MESSAGE = {
   REQUIRED_START_STATION: "Vui lòng nhập trạm bắt đầu",
   REQUIRED_END_STATION: "Vui lòng nhập trạm kết thúc",
   REQUIRED_ID: "Vui lòng nhập Id của phiên thuê",
+  REQUIRED_CANCELLED_REASON: "Vui lòng nhập lí do huỷ phiên thuê",
+  REQUIRED_UPDATED_REASON: "Vui lòng nhập lí do thay đổi phiên thuê",
   // Invalid data
   INVALID_OBJECT_ID: "%s phải là 1 ObjectId hợp lệ",
-  INVALID_DURATION: "Khoảng thời gian không hợp lệ (phải là số nguyên)",
-  INVALID_TOTAL_PRICE: "Tổng tiền không hợp lệ (phải là số thực)",
+  INVALID_DURATION: "Khoảng thời gian không hợp lệ (phải là số nguyên dương)",
+  INVALID_TOTAL_PRICE: "Tổng tiền không hợp lệ (phải là 1 số không âm)",
+  INVALID_REASON: "Lí do không hợp lệ (phải là 1 chuỗi)",
+  REASON_TOO_LONG: "Lí do quá dài (chuỗi tối đa 255 kí tự)",
+  INVALID_RENTAL_STATUS: "Trạng thái phiên thuê không hợp lệ",
+  INVALID_END_TIME_FORMAT: "Thời gian kết thúc không hợp lệ (phải theo mẫu ISO8601)",
+  END_TIME_GREATER_THAN_START_TIME: "Thời gian kết thúc phải lớn hơn hoặc bằng thời gian bắt đầu",
   // Not found object
   USER_NOT_FOUND: "Không tìm thấy người dùng với Id %s",
   BIKE_NOT_FOUND: "Không tìm thấy xe đạp với Id %s",
@@ -119,8 +128,15 @@ export const RENTALS_MESSAGE = {
   NOT_FOUND: "Không tìm thấy phiên thuê nào với Id %s",
   // Not available
   NOT_AVAILABLE_BIKE: "Xe chưa sẵn sàng để sử dụng",
-  // Access denied
-  CANNOT_END_OTHER_RENTAL: "Bạn không có quyền kết thúc phiên thuê của người khác"
+  // Not allowed action
+  CANNOT_END_OTHER_RENTAL: "Bạn không có quyền kết thúc phiên thuê của người khác",
+  CANNOT_EDIT_THIS_RENTAL_WITH_STATUS: "Không thể chỉnh sửa phiên thuê đang ở trạng thái %s",
+  CANNOT_CANCEL_THIS_RENTAL_WITH_STATUS: "Không thể huỷ phiên thuê đang ở trạng thái %s (Rented, Reserved only)",
+  CANNOT_END_WITHOUT_END_STATION: "Không thể kết thúc phiên, vui lòng nhập trạm kết thúc",
+  UPDATED_STATUS_NOT_ALLOWED: "Bạn không thể cập nhật phiên thuê sang trạng thái %s (Completed, Cancelled only)",
+  CANNOT_CANCEL_WITH_BIKE_STATUS: "Bạn không thể huỷ phiên thuê với xe đang ở trạng thái %s (Booked, Reserved only)",
+  CANNOT_EDIT_BIKE_STATUS_TO: "Bạn không thể cập nhật trạng thái xe thành %s khi huỷ phiên thuê (Available, Broken only)",
+  NO_REASON: "Không có nguyên nhân"
 } as const;
 
 export const COMMON_MESSAGE = {

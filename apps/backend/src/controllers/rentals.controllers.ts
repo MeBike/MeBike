@@ -3,7 +3,7 @@ import type { NextFunction, ParamsDictionary } from "express-serve-static-core";
 import type { Filter, ObjectId } from "mongodb";
 
 import { GroupByOptions, RentalStatus } from "~/constants/enums";
-import type { CreateRentalReqBody, EndRentalReqBody, RentalParams } from "~/models/requests/rentals.requests";
+import type { CancelRentalReqBody, CreateRentalReqBody, EndRentalReqBody, RentalParams, UpdateRentalReqBody } from "~/models/requests/rentals.requests";
 import type Bike from "~/models/schemas/bike.schema";
 import type Rental from "~/models/schemas/rental.schema";
 import type Station from "~/models/schemas/station.schema";
@@ -31,12 +31,12 @@ export async function createRentalSessionController(req: Request<ParamsDictionar
   });
 }
 
-export async function endRentalSessionController(req: Request<RentalParams, any, EndRentalReqBody>, res: Response) {
+export async function endRentalSessionController(req: Request<RentalParams>, res: Response) {
   const {user_id} = req.decoded_authorization as TokenPayLoad
 
   const rental = req.rental! as Rental;
   
-  const result = await rentalsService.endRentalSession({ user_id: toObjectId(user_id), rental, end_station: req.body.end_station });
+  const result = await rentalsService.endRentalSession({ user_id: toObjectId(user_id), rental});
   res.json({
     message: RENTALS_MESSAGE.END_SESSION_SUCCESS,
     result,
@@ -103,6 +103,25 @@ export async function getDetailRentalController(req: Request<RentalParams>, res:
     result,
   });
 }
+
+export async function updateDetailRentalController(req: Request<RentalParams,any,UpdateRentalReqBody>, res: Response) {
+  const {user_id} = req.decoded_authorization as TokenPayLoad
+  const result = await rentalsService.updateDetailRental({rental_id: req.params.id, admin_id: user_id, payload: req.body});
+  res.json({
+    message: RENTALS_MESSAGE.UPDATE_DETAIL_SUCCESS,
+    result,
+  });
+}
+
+export async function cancelRentalController(req: Request<RentalParams,any,CancelRentalReqBody>, res: Response) {
+  const {user_id} = req.decoded_authorization as TokenPayLoad
+  const result = await rentalsService.cancelRental({rental_id: req.params.id, admin_id: user_id, payload: req.body});
+  res.json({
+    message: RENTALS_MESSAGE.CANCEL_RENTAL_SUCCESS,
+    result,
+  });
+}
+
 
 export async function getRentalRevenueController(req: Request, res: Response) {
   const { from, to, groupBy } = req.query;
