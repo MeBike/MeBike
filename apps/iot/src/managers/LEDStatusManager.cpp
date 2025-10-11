@@ -200,5 +200,5 @@ void LEDStatusManager::updatePattern()
 
 void LEDStatusManager::update()
 {
-    pdatePattern();
+    updatePattern();
 }

@@ -8,7 +8,7 @@ import { commandErrorResponses, commandResponses } from "./shared";
 
 export const sendBookingCommandRoute = createRoute({
   method: "post",
-  path: "/v1/devices/:deviceId/commands/booking",
+  path: "/v1/devices/{deviceId}/commands/booking",
   summary: "Send a booking command",
   description:
     "**User-facing booking workflow.** "

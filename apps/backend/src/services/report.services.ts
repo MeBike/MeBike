@@ -1,3 +1,4 @@
+import type { Filter } from "mongodb";
 import type { Buffer } from "node:buffer";
 
 import { v2 as cloudinary } from "cloudinary";
@@ -6,6 +7,7 @@ import process from "node:process";
 import { Readable } from "node:stream";
 import pLimit from "p-limit";
 
+import type { ReportPriority } from "~/constants/enums";
 import type { CreateReportReqBody } from "~/models/requests/reports.requests";
 import type { ReportType } from "~/models/schemas/report.schema";
 
@@ -53,6 +55,7 @@ class ReportService {
       status: ReportStatus.Pending,
       created_at: localTime,
       location: payload.location,
+      priority: "" as ReportPriority,
       media_urls: [],
     };
 
@@ -99,7 +102,7 @@ class ReportService {
           await databaseService.reports.updateOne({ _id: reportID }, { $set: { media_urls } });
         }
         catch (error) {
-          console.error("Upload background error:", error);
+          console.error("Upload report image error:", error);
         }
       })();
     }
@@ -107,8 +110,18 @@ class ReportService {
     return { _id: reportID };
   }
 
-  async updateReportStatus({ reportID, newStatus }: { reportID: string; newStatus: ReportStatus }) {
-    const validTransitions: Record<ReportStatus, ReportStatus[]> = {
+  async updateReportStatus({
+    reportID,
+    newStatus,
+    assignee_id,
+    priority,
+  }: {
+    reportID: string;
+    newStatus: string;
+    assignee_id?: string;
+    priority?: string;
+  }) {
+    const allowedStatuses: Record<ReportStatus, ReportStatus[]> = {
       [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
       [ReportStatus.InProgress]: [ReportStatus.Resolved],
       [ReportStatus.Resolved]: [],
@@ -123,19 +136,55 @@ class ReportService {
       });
     }
 
-    const currentStatus = findReport.status;
-    if (!validTransitions[currentStatus].includes(newStatus)) {
+    if (!Object.values(ReportStatus).includes(newStatus as ReportStatus)) {
       throw new ErrorWithStatus({
-        message: REPORTS_MESSAGES.INVALID_NEW_STATUS,
         status: HTTP_STATUS.BAD_REQUEST,
+        message: REPORTS_MESSAGES.INVALID_NEW_STATUS,
       });
+    }
+
+    const currentStatus = findReport.status as ReportStatus;
+    const newStatusTyped = newStatus as ReportStatus;
+
+    if (!allowedStatuses[currentStatus]?.includes(newStatusTyped)) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.BAD_REQUEST,
+        message: REPORTS_MESSAGES.INVALID_NEW_STATUS,
+      });
+    }
+
+    const updateData: any = {
+      status: newStatusTyped,
+    };
+
+    if (newStatusTyped === ReportStatus.InProgress) {
+      if (!assignee_id || assignee_id.trim() === "") {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.STAFF_ID_IS_REQUIRED,
+          status: HTTP_STATUS.BAD_REQUEST,
+        });
+      }
+      if (!priority || priority.trim() === "") {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.PRIORITY_IS_REQUIRED,
+          status: HTTP_STATUS.BAD_REQUEST,
+        });
+      }
+
+      updateData.assignee_id = new ObjectId(assignee_id);
+      updateData.priority = priority;
+    }
+
+    if (newStatusTyped === ReportStatus.Resolved) {
+      updateData.resolved_at = new Date();
     }
 
     const result = await databaseService.reports.findOneAndUpdate(
       { _id: new ObjectId(reportID) },
-      { $set: { status: newStatus } },
+      { $set: updateData },
       { returnDocument: "after" },
     );
+
     return result;
   }
 }

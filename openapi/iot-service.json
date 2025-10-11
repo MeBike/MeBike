@@ -1,0 +1,1235 @@
+{
+  "info": {
+    "title": "IoT Service API",
+    "version": "1.0.0",
+    "description": "HTTP contract for publishing IoT commands and querying device state."
+  },
+  "openapi": "3.1.0",
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "HealthStatus": {
+        "type": "string",
+        "enum": [
+          "ok"
+        ],
+        "example": "ok"
+      },
+      "ServiceUptimeMs": {
+        "type": "number",
+        "minimum": 0,
+        "example": 1234
+      },
+      "HealthTimestamp": {
+        "type": "string",
+        "format": "date-time",
+        "example": "2024-01-01T00:00:00.000Z"
+      },
+      "IotStatusMessage": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "ESP32 online"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "available",
+              "booked",
+              "reserved",
+              "broken",
+              "maintained",
+              "unavailable"
+            ]
+          },
+          {
+            "type": "string",
+            "pattern": "^State changed to \\d+$"
+          },
+          {
+            "type": "string",
+            "pattern": "^Current state: \\d+$"
+          }
+        ],
+        "description": "Latest status message received from the device.",
+        "example": "available"
+      },
+      "ErrorMessage": {
+        "type": "string",
+        "example": "Invalid command payload"
+      },
+      "ErrorDetails": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Application specific error code",
+            "example": "VALIDATION_ERROR"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Location of the invalid value",
+                  "example": "command"
+                },
+                "message": {
+                  "type": "string",
+                  "description": "Why the value is invalid",
+                  "example": "Invalid option: expected one of \"book\"|\"claim\"|\"release\""
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Zod issue code",
+                  "example": "invalid_enum_value"
+                },
+                "expected": {
+                  "nullable": true
+                },
+                "received": {
+                  "nullable": true
+                }
+              },
+              "required": [
+                "path",
+                "message"
+              ]
+            },
+            "description": "Detailed validation issues"
+          }
+        },
+        "additionalProperties": {
+          "nullable": true
+        },
+        "example": {
+          "code": "VALIDATION_ERROR",
+          "issues": [
+            {
+              "path": "command",
+              "message": "Invalid option: expected one of \"book\"|\"claim\"|\"release\"",
+              "code": "invalid_enum_value",
+              "received": "bookw"
+            }
+          ]
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorMessage"
+          },
+          "details": {
+            "$ref": "#/components/schemas/ErrorDetails"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "description": "Standard error payload returned by the IoT service.",
+        "example": {
+          "error": "Invalid command payload",
+          "details": {
+            "code": "VALIDATION_ERROR",
+            "issues": [
+              {
+                "path": "command",
+                "message": "Invalid option: expected one of \"book\"|\"claim\"|\"release\"",
+                "code": "invalid_enum_value",
+                "received": "bookw"
+              }
+            ]
+          }
+        }
+      },
+      "DeviceId": {
+        "type": "string",
+        "minLength": 1,
+        "example": "AABBCCDDEEFF"
+      },
+      "CommandDeviceId": {
+        "type": "string",
+        "minLength": 1,
+        "example": "AABBCCDDEEFF"
+      },
+      "CommandTopic": {
+        "type": "string",
+        "minLength": 1,
+        "example": "esp/commands/status/AABBCCDDEEFF"
+      },
+      "CommandPayload": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "available",
+              "booked",
+              "reserved",
+              "broken",
+              "maintained",
+              "unavailable"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "book",
+              "claim",
+              "release"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "start",
+              "complete"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "reserve",
+              "cancel"
+            ]
+          },
+          {
+            "type": "string",
+            "enum": [
+              "request"
+            ]
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "example": "request"
+      },
+      "IotStateCommand": {
+        "type": "string",
+        "enum": [
+          "available",
+          "booked",
+          "reserved",
+          "broken",
+          "maintained",
+          "unavailable"
+        ],
+        "example": "available"
+      },
+      "IotBookingCommand": {
+        "type": "string",
+        "enum": [
+          "book",
+          "claim",
+          "release"
+        ],
+        "example": "book"
+      },
+      "IotReservationCommand": {
+        "type": "string",
+        "enum": [
+          "reserve",
+          "cancel"
+        ],
+        "example": "reserve"
+      },
+      "IotMaintenanceCommand": {
+        "type": "string",
+        "enum": [
+          "start",
+          "complete"
+        ],
+        "example": "start"
+      },
+      "IotStatusCommand": {
+        "type": "string",
+        "enum": [
+          "request"
+        ],
+        "default": "request",
+        "example": "request"
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/v1/health": {
+      "get": {
+        "summary": "Service heartbeat",
+        "description": "Check the health of the IoT service and retrieve uptime information.",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "Service is operational.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "$ref": "#/components/schemas/HealthStatus"
+                    },
+                    "uptimeMs": {
+                      "$ref": "#/components/schemas/ServiceUptimeMs"
+                    },
+                    "timestamp": {
+                      "$ref": "#/components/schemas/HealthTimestamp"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "uptimeMs",
+                    "timestamp"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices": {
+      "get": {
+        "summary": "List devices",
+        "description": "Return the current status of all devices tracked by the service.",
+        "tags": [
+          "Devices"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of devices and their latest known status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "deviceId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "example": "AABBCCDDEEFF"
+                          },
+                          "status": {
+                            "$ref": "#/components/schemas/IotStatusMessage"
+                          }
+                        },
+                        "required": [
+                          "deviceId",
+                          "status"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Infrastructure or system error occurred.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "infrastructureError": {
+                    "summary": "System error (production)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR"
+                      }
+                    }
+                  },
+                  "infrastructureErrorDev": {
+                    "summary": "System error (development)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR",
+                        "message": "Failed to connect to MQTT broker",
+                        "brokerUrl": "mqtt://localhost:1883",
+                        "originalError": "Connection refused"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/{deviceId}": {
+      "get": {
+        "summary": "Get a device status",
+        "description": "Return the latest known status for a specific device.",
+        "tags": [
+          "Devices"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/DeviceId"
+            },
+            "required": true,
+            "name": "deviceId",
+            "in": "path",
+            "description": "Unique device identifier (MAC address or logical id)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device status returned successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deviceId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "example": "AABBCCDDEEFF"
+                    },
+                    "status": {
+                      "$ref": "#/components/schemas/IotStatusMessage"
+                    }
+                  },
+                  "required": [
+                    "deviceId",
+                    "status"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid device identifier provided.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Device not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Infrastructure or system error occurred.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "infrastructureError": {
+                    "summary": "System error (production)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR"
+                      }
+                    }
+                  },
+                  "infrastructureErrorDev": {
+                    "summary": "System error (development)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR",
+                        "message": "Failed to connect to MQTT broker",
+                        "brokerUrl": "mqtt://localhost:1883",
+                        "originalError": "Connection refused"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/{deviceId}/commands/state": {
+      "post": {
+        "summary": "Send a state command",
+        "description": "**Low-level state manipulation** for administrative purposes. Directly changes device state if transition is allowed by the state machine. Use workflow commands (booking, reservation, maintenance) for user-facing operations. Available states: available, reserved, booked, broken, maintained, unavailable.",
+        "tags": [
+          "Commands"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/DeviceId"
+            },
+            "required": true,
+            "name": "deviceId",
+            "in": "path",
+            "description": "Unique device identifier (MAC address or logical id)."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "$ref": "#/components/schemas/IotStateCommand"
+                  }
+                },
+                "required": [
+                  "state"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Command accepted for delivery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deviceId": {
+                      "$ref": "#/components/schemas/CommandDeviceId"
+                    },
+                    "topic": {
+                      "$ref": "#/components/schemas/CommandTopic"
+                    },
+                    "payload": {
+                      "$ref": "#/components/schemas/CommandPayload"
+                    }
+                  },
+                  "required": [
+                    "deviceId",
+                    "topic",
+                    "payload"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Payload failed validation",
+                    "value": {
+                      "error": "Invalid command payload",
+                      "details": {
+                        "code": "VALIDATION_ERROR",
+                        "issues": [
+                          {
+                            "path": "command",
+                            "message": "Invalid option: expected one of \"book\"|\"claim\"|\"release\"",
+                            "code": "invalid_enum_value",
+                            "received": "bookw"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Command conflicts with current device state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "conflict": {
+                    "summary": "Device already in requested state",
+                    "value": {
+                      "error": "Device AA11BB22CC33 is already in state booked",
+                      "details": {
+                        "code": "DEVICE_ALREADY_IN_STATE",
+                        "deviceId": "AA11BB22CC33",
+                        "currentState": "booked",
+                        "requestedState": "booked"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Infrastructure or system error occurred.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "infrastructureError": {
+                    "summary": "MQTT connection failure (production)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR"
+                      }
+                    }
+                  },
+                  "infrastructureErrorDev": {
+                    "summary": "MQTT connection failure (development)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR",
+                        "message": "Failed to connect to MQTT broker",
+                        "brokerUrl": "mqtt://localhost:1883",
+                        "originalError": "Connection refused"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/{deviceId}/commands/booking": {
+      "post": {
+        "summary": "Send a booking command",
+        "description": "**User-facing booking workflow.** Commands: `book` (start using bike), `claim` (activate reservation), `release` (finish ride). Includes business logic and additional status publishing beyond simple state changes.",
+        "tags": [
+          "Commands"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/DeviceId"
+            },
+            "required": true,
+            "name": "deviceId",
+            "in": "path",
+            "description": "Unique device identifier (MAC address or logical id)."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "$ref": "#/components/schemas/IotBookingCommand"
+                  }
+                },
+                "required": [
+                  "command"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Command accepted for delivery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deviceId": {
+                      "$ref": "#/components/schemas/CommandDeviceId"
+                    },
+                    "topic": {
+                      "$ref": "#/components/schemas/CommandTopic"
+                    },
+                    "payload": {
+                      "$ref": "#/components/schemas/CommandPayload"
+                    }
+                  },
+                  "required": [
+                    "deviceId",
+                    "topic",
+                    "payload"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Payload failed validation",
+                    "value": {
+                      "error": "Invalid command payload",
+                      "details": {
+                        "code": "VALIDATION_ERROR",
+                        "issues": [
+                          {
+                            "path": "command",
+                            "message": "Invalid option: expected one of \"book\"|\"claim\"|\"release\"",
+                            "code": "invalid_enum_value",
+                            "received": "bookw"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Command conflicts with current device state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "conflict": {
+                    "summary": "Device already in requested state",
+                    "value": {
+                      "error": "Device AA11BB22CC33 is already in state booked",
+                      "details": {
+                        "code": "DEVICE_ALREADY_IN_STATE",
+                        "deviceId": "AA11BB22CC33",
+                        "currentState": "booked",
+                        "requestedState": "booked"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Infrastructure or system error occurred.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "infrastructureError": {
+                    "summary": "MQTT connection failure (production)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR"
+                      }
+                    }
+                  },
+                  "infrastructureErrorDev": {
+                    "summary": "MQTT connection failure (development)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR",
+                        "message": "Failed to connect to MQTT broker",
+                        "brokerUrl": "mqtt://localhost:1883",
+                        "originalError": "Connection refused"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/{deviceId}/commands/reservation": {
+      "post": {
+        "summary": "Send a reservation command",
+        "description": "**Reservation workflow.** Commands: `reserve` (hold bike for 5-15 min), `cancel` (cancel before claiming). Typically used before booking when user wants to ensure bike availability.",
+        "tags": [
+          "Commands"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/DeviceId"
+            },
+            "required": true,
+            "name": "deviceId",
+            "in": "path",
+            "description": "Unique device identifier (MAC address or logical id)."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "$ref": "#/components/schemas/IotReservationCommand"
+                  }
+                },
+                "required": [
+                  "command"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Command accepted for delivery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deviceId": {
+                      "$ref": "#/components/schemas/CommandDeviceId"
+                    },
+                    "topic": {
+                      "$ref": "#/components/schemas/CommandTopic"
+                    },
+                    "payload": {
+                      "$ref": "#/components/schemas/CommandPayload"
+                    }
+                  },
+                  "required": [
+                    "deviceId",
+                    "topic",
+                    "payload"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Payload failed validation",
+                    "value": {
+                      "error": "Invalid command payload",
+                      "details": {
+                        "code": "VALIDATION_ERROR",
+                        "issues": [
+                          {
+                            "path": "command",
+                            "message": "Invalid option: expected one of \"book\"|\"claim\"|\"release\"",
+                            "code": "invalid_enum_value",
+                            "received": "bookw"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Command conflicts with current device state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "conflict": {
+                    "summary": "Device already in requested state",
+                    "value": {
+                      "error": "Device AA11BB22CC33 is already in state booked",
+                      "details": {
+                        "code": "DEVICE_ALREADY_IN_STATE",
+                        "deviceId": "AA11BB22CC33",
+                        "currentState": "booked",
+                        "requestedState": "booked"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Infrastructure or system error occurred.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "infrastructureError": {
+                    "summary": "MQTT connection failure (production)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR"
+                      }
+                    }
+                  },
+                  "infrastructureErrorDev": {
+                    "summary": "MQTT connection failure (development)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR",
+                        "message": "Failed to connect to MQTT broker",
+                        "brokerUrl": "mqtt://localhost:1883",
+                        "originalError": "Connection refused"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/{deviceId}/commands/maintenance": {
+      "post": {
+        "summary": "Send a maintenance command",
+        "description": "**Maintenance workflow.** Commands: `start` (begin maintenance), `complete` (return to service). Typically used by admins or automated systems to mark devices for servicing.",
+        "tags": [
+          "Commands"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/DeviceId"
+            },
+            "required": true,
+            "name": "deviceId",
+            "in": "path",
+            "description": "Unique device identifier (MAC address or logical id)."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "$ref": "#/components/schemas/IotMaintenanceCommand"
+                  }
+                },
+                "required": [
+                  "command"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Command accepted for delivery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deviceId": {
+                      "$ref": "#/components/schemas/CommandDeviceId"
+                    },
+                    "topic": {
+                      "$ref": "#/components/schemas/CommandTopic"
+                    },
+                    "payload": {
+                      "$ref": "#/components/schemas/CommandPayload"
+                    }
+                  },
+                  "required": [
+                    "deviceId",
+                    "topic",
+                    "payload"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Payload failed validation",
+                    "value": {
+                      "error": "Invalid command payload",
+                      "details": {
+                        "code": "VALIDATION_ERROR",
+                        "issues": [
+                          {
+                            "path": "command",
+                            "message": "Invalid option: expected one of \"book\"|\"claim\"|\"release\"",
+                            "code": "invalid_enum_value",
+                            "received": "bookw"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Command conflicts with current device state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "conflict": {
+                    "summary": "Device already in requested state",
+                    "value": {
+                      "error": "Device AA11BB22CC33 is already in state booked",
+                      "details": {
+                        "code": "DEVICE_ALREADY_IN_STATE",
+                        "deviceId": "AA11BB22CC33",
+                        "currentState": "booked",
+                        "requestedState": "booked"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Infrastructure or system error occurred.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "infrastructureError": {
+                    "summary": "MQTT connection failure (production)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR"
+                      }
+                    }
+                  },
+                  "infrastructureErrorDev": {
+                    "summary": "MQTT connection failure (development)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR",
+                        "message": "Failed to connect to MQTT broker",
+                        "brokerUrl": "mqtt://localhost:1883",
+                        "originalError": "Connection refused"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/{deviceId}/commands/status": {
+      "post": {
+        "summary": "Request a status update",
+        "description": "Ask a device to publish its current status to MQTT.",
+        "tags": [
+          "Commands"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/DeviceId"
+            },
+            "required": true,
+            "name": "deviceId",
+            "in": "path",
+            "description": "Unique device identifier (MAC address or logical id)."
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "$ref": "#/components/schemas/IotStatusCommand"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Command accepted for delivery.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deviceId": {
+                      "$ref": "#/components/schemas/CommandDeviceId"
+                    },
+                    "topic": {
+                      "$ref": "#/components/schemas/CommandTopic"
+                    },
+                    "payload": {
+                      "$ref": "#/components/schemas/CommandPayload"
+                    }
+                  },
+                  "required": [
+                    "deviceId",
+                    "topic",
+                    "payload"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid command payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Payload failed validation",
+                    "value": {
+                      "error": "Invalid command payload",
+                      "details": {
+                        "code": "VALIDATION_ERROR",
+                        "issues": [
+                          {
+                            "path": "command",
+                            "message": "Invalid option: expected one of \"book\"|\"claim\"|\"release\"",
+                            "code": "invalid_enum_value",
+                            "received": "bookw"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Command conflicts with current device state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "conflict": {
+                    "summary": "Device already in requested state",
+                    "value": {
+                      "error": "Device AA11BB22CC33 is already in state booked",
+                      "details": {
+                        "code": "DEVICE_ALREADY_IN_STATE",
+                        "deviceId": "AA11BB22CC33",
+                        "currentState": "booked",
+                        "requestedState": "booked"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Infrastructure or system error occurred.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "infrastructureError": {
+                    "summary": "MQTT connection failure (production)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR"
+                      }
+                    }
+                  },
+                  "infrastructureErrorDev": {
+                    "summary": "MQTT connection failure (development)",
+                    "value": {
+                      "error": "A system error occurred. Please try again later.",
+                      "details": {
+                        "code": "INFRASTRUCTURE_ERROR",
+                        "message": "Failed to connect to MQTT broker",
+                        "brokerUrl": "mqtt://localhost:1883",
+                        "originalError": "Connection refused"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,14 +13,17 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Bike, Mail, Lock, Eye, EyeOff} from "lucide-react";
+import React from "react";  
+import { useAuth } from "@providers/auth-providers";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+   const { logIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-   
+    logIn({ email, password });
     console.log("Login with:", { email, password });
   };
 
@@ -30,7 +33,6 @@ const Login = () => {
     bg-[linear-gradient(135deg,hsl(214_100%_40%)_0%,hsl(215_16%_47%)_100%)] "
     >
       <div className="w-full max-w-md">
-        {/* Logo and Title */}
         <div className="text-center animate-fade-in mb-6">
           <div className="flex items-center justify-center">
             <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 shadow-floating">
@@ -119,7 +121,7 @@ const Login = () => {
                 <Bike className="mr-2 h-5 w-5" />
                 Đăng nhập
               </Button>
-              <Separator className="my-1" />
+              {/* <Separator className="my-1" />
               <Button
                 className="w-full h-12 bg-white hover:bg-gray-50 shadow-md hover:shadow-lg 
              transition-all duration-300 border border-gray-200 
@@ -149,7 +151,7 @@ const Login = () => {
                   />
                 </svg>
                 <span>Sign in with Google</span>
-              </Button>
+              </Button> */}
             </form>
 
             <Separator className="my-6" />

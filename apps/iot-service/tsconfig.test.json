@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "baseUrl": ".",
+    "rootDir": ".",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "paths": {
+      "@/*": ["src/*"],
+      "@mebike/shared": ["../../packages/shared/src/index"],
+      "@mebike/shared/*": ["../../packages/shared/src/*"]
+    },
+    "resolveJsonModule": true,
+    "types": ["node", "jest"],
+    "allowJs": false,
+    "strict": true,
+    "outDir": "./dist-test",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src",
+    "tests"
+  ]
+}
