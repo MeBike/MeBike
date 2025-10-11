@@ -9,6 +9,7 @@ import type RefreshToken from "~/models/schemas/refresh-token.schemas";
 import type Rental from "~/models/schemas/rental.schema";
 import type Report from "~/models/schemas/report.schema";
 import type Station from "~/models/schemas/station.schema";
+import type Supplier from "~/models/schemas/supplier.schema";
 import type User from "~/models/schemas/user.schema";
 import RentalLog from "~/models/schemas/rental-audit-logs.schema";
 import { getLocalTime } from "~/utils/date";
@@ -67,8 +68,17 @@ class DatabaseService {
     return this.db.collection(process.env.DB_BIKES_COLLECTION as string);
   }
 
+  async indexBikes() {
+    await this.bikes.createIndex({ station_id: 1 });
+    await this.bikes.createIndex({ status: 1 });
+  }
+
   get rentals(): Collection<Rental> {
     return this.db.collection(process.env.DB_RENTALS_COLLECTION as string);
+  }
+
+  get suppliers(): Collection<Supplier> {
+    return this.db.collection(process.env.DB_SUPPLIERS_COLLECTION as string);
   }
 
   get rentalLogs(): Collection<RentalLog> {

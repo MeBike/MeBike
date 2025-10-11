@@ -4,6 +4,15 @@ type HeadersInput = Headers | Array<[string, string]> | HeadersRecord | undefine
 
 const DEFAULT_BASE_URL = "http://localhost:3000";
 
+function getEnv(name: string): string | undefined {
+  if (typeof process === "undefined" || typeof process.env === "undefined") {
+    return undefined;
+  }
+
+  const value = process.env[name];
+  return value && value.length > 0 ? value : undefined;
+}
+
 function normalizeUrl(baseUrl: string, url: string) {
   if (/^https?:\/\//i.test(url)) {
     return url;
@@ -17,24 +26,27 @@ function normalizeUrl(baseUrl: string, url: string) {
 
 function resolveBaseUrl() {
   const fromEnv
-    = process.env.IOT_SERVICE_BASE_URL
-      || process.env.IOT_SERVICE_URL
-      || process.env.IOT_BASE_URL;
+    = getEnv("IOT_SERVICE_BASE_URL")
+      || getEnv("IOT_SERVICE_URL")
+      || getEnv("IOT_BASE_URL");
 
-  return fromEnv && fromEnv.length > 0 ? fromEnv : DEFAULT_BASE_URL;
+  return fromEnv ?? DEFAULT_BASE_URL;
 }
 
 type FetchResponse = {
   ok: boolean;
   status: number;
+  statusText: string;
+  headers: Headers;
   text: () => Promise<string>;
 };
 
-type FetchFn = (input: string, init?: Record<string, unknown>) => Promise<FetchResponse>;
+type FetchFn = (input: string, init?: RequestInit) => Promise<FetchResponse>;
 
-export type HttpClientInit = {
+export type HttpClientInit = Omit<RequestInit, "headers"> & {
   headers?: HeadersInput;
-} & Record<string, unknown>;
+  baseUrl?: string;
+};
 
 function getFetchFn(): FetchFn {
   const globalFetch = (globalThis as Record<string, unknown>).fetch as FetchFn | undefined;
@@ -54,12 +66,12 @@ function parseJsonSafely(value: string) {
   try {
     return JSON.parse(value);
   }
-  catch (_error) {
+  catch {
     return value;
   }
 }
 
-function normalizeHeaders(headers: HeadersInput) {
+export function normalizeHeaders(headers: HeadersInput) {
   if (!headers) {
     return {} as Record<string, string>;
   }
@@ -93,10 +105,23 @@ function normalizeHeaders(headers: HeadersInput) {
   }, {});
 }
 
+export function mergeHeaders(...inputs: HeadersInput[]): Record<string, string> {
+  return inputs.reduce<Record<string, string>>((accumulator, current) => {
+    if (!current) {
+      return accumulator;
+    }
+    const normalized = normalizeHeaders(current);
+    for (const [key, value] of Object.entries(normalized)) {
+      accumulator[key] = value;
+    }
+    return accumulator;
+  }, {});
+}
+
 export async function httpClient<TData>(url: string, init: HttpClientInit = {}): Promise<TData> {
   const fetchFn = getFetchFn();
-  const finalUrl = normalizeUrl(resolveBaseUrl(), url);
-  const { headers: initHeaders, ...rest } = init;
+  const { headers: initHeaders, baseUrl, ...rest } = init;
+  const finalUrl = normalizeUrl(baseUrl ?? resolveBaseUrl(), url);
   const headers = {
     accept: "application/json",
     ...normalizeHeaders(initHeaders),
@@ -108,18 +133,13 @@ export async function httpClient<TData>(url: string, init: HttpClientInit = {}):
   });
 
   const rawBody = await response.text();
-  const parsedBody = parseJsonSafely(rawBody) as TData;
+  const parsedBody = parseJsonSafely(rawBody);
 
-  if (!response.ok) {
-    const error = new Error(
-      `Request to ${finalUrl} failed with status ${response.status}`,
-    ) as Error & { status?: number; body?: unknown };
+  const result = {
+    data: parsedBody,
+    status: response.status,
+    headers: response.headers,
+  };
 
-    error.status = response.status;
-    error.body = parsedBody;
-
-    throw error;
-  }
-
-  return parsedBody;
+  return result as TData;
 }

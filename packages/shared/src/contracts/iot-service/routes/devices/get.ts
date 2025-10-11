@@ -9,7 +9,7 @@ import { deviceErrorResponses } from "./shared";
 
 export const getDeviceRoute = createRoute({
   method: "get",
-  path: "/v1/devices/:deviceId",
+  path: "/v1/devices/{deviceId}",
   summary: "Get a device status",
   description: "Return the latest known status for a specific device.",
   tags: ["Devices"],

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
+  DeviceId,
   ErrorResponse,
   GetV1Devices200,
   GetV1DevicesDeviceId200,
@@ -22,7 +23,7 @@ import type {
   PostV1DevicesDeviceIdCommandsStatusBody,
 } from "./schemas";
 
-import { httpClient } from "../http-client";
+import { httpClient, mergeHeaders } from "../http-client";
 
 /**
  * Check the health of the IoT service and retrieve uptime information.
@@ -120,12 +121,12 @@ export type getV1DevicesDeviceIdResponseError = (getV1DevicesDeviceIdResponse400
 
 export type getV1DevicesDeviceIdResponse = (getV1DevicesDeviceIdResponseSuccess | getV1DevicesDeviceIdResponseError);
 
-export function getGetV1DevicesDeviceIdUrl() {
-  return "/v1/devices/:deviceId";
+export function getGetV1DevicesDeviceIdUrl(deviceId: DeviceId) {
+  return `/v1/devices/${deviceId}`;
 }
 
-export async function getV1DevicesDeviceId(options?: RequestInit): Promise<getV1DevicesDeviceIdResponse> {
-  return httpClient<getV1DevicesDeviceIdResponse>(getGetV1DevicesDeviceIdUrl(), {
+export async function getV1DevicesDeviceId(deviceId: DeviceId, options?: RequestInit): Promise<getV1DevicesDeviceIdResponse> {
+  return httpClient<getV1DevicesDeviceIdResponse>(getGetV1DevicesDeviceIdUrl(deviceId), {
     ...options,
     method: "GET",
 
@@ -165,15 +166,15 @@ export type postV1DevicesDeviceIdCommandsStateResponseError = (postV1DevicesDevi
 
 export type postV1DevicesDeviceIdCommandsStateResponse = (postV1DevicesDeviceIdCommandsStateResponseSuccess | postV1DevicesDeviceIdCommandsStateResponseError);
 
-export function getPostV1DevicesDeviceIdCommandsStateUrl() {
-  return "/v1/devices/:deviceId/commands/state";
+export function getPostV1DevicesDeviceIdCommandsStateUrl(deviceId: DeviceId) {
+  return `/v1/devices/${deviceId}/commands/state`;
 }
 
-export async function postV1DevicesDeviceIdCommandsState(postV1DevicesDeviceIdCommandsStateBody: PostV1DevicesDeviceIdCommandsStateBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsStateResponse> {
-  return httpClient<postV1DevicesDeviceIdCommandsStateResponse>(getPostV1DevicesDeviceIdCommandsStateUrl(), {
+export async function postV1DevicesDeviceIdCommandsState(deviceId: DeviceId, postV1DevicesDeviceIdCommandsStateBody: PostV1DevicesDeviceIdCommandsStateBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsStateResponse> {
+  return httpClient<postV1DevicesDeviceIdCommandsStateResponse>(getPostV1DevicesDeviceIdCommandsStateUrl(deviceId), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
+    headers: mergeHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(
       postV1DevicesDeviceIdCommandsStateBody,
     ),
@@ -213,15 +214,15 @@ export type postV1DevicesDeviceIdCommandsBookingResponseError = (postV1DevicesDe
 
 export type postV1DevicesDeviceIdCommandsBookingResponse = (postV1DevicesDeviceIdCommandsBookingResponseSuccess | postV1DevicesDeviceIdCommandsBookingResponseError);
 
-export function getPostV1DevicesDeviceIdCommandsBookingUrl() {
-  return "/v1/devices/:deviceId/commands/booking";
+export function getPostV1DevicesDeviceIdCommandsBookingUrl(deviceId: DeviceId) {
+  return `/v1/devices/${deviceId}/commands/booking`;
 }
 
-export async function postV1DevicesDeviceIdCommandsBooking(postV1DevicesDeviceIdCommandsBookingBody: PostV1DevicesDeviceIdCommandsBookingBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsBookingResponse> {
-  return httpClient<postV1DevicesDeviceIdCommandsBookingResponse>(getPostV1DevicesDeviceIdCommandsBookingUrl(), {
+export async function postV1DevicesDeviceIdCommandsBooking(deviceId: DeviceId, postV1DevicesDeviceIdCommandsBookingBody: PostV1DevicesDeviceIdCommandsBookingBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsBookingResponse> {
+  return httpClient<postV1DevicesDeviceIdCommandsBookingResponse>(getPostV1DevicesDeviceIdCommandsBookingUrl(deviceId), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
+    headers: mergeHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(
       postV1DevicesDeviceIdCommandsBookingBody,
     ),
@@ -261,15 +262,15 @@ export type postV1DevicesDeviceIdCommandsReservationResponseError = (postV1Devic
 
 export type postV1DevicesDeviceIdCommandsReservationResponse = (postV1DevicesDeviceIdCommandsReservationResponseSuccess | postV1DevicesDeviceIdCommandsReservationResponseError);
 
-export function getPostV1DevicesDeviceIdCommandsReservationUrl() {
-  return "/v1/devices/:deviceId/commands/reservation";
+export function getPostV1DevicesDeviceIdCommandsReservationUrl(deviceId: DeviceId) {
+  return `/v1/devices/${deviceId}/commands/reservation`;
 }
 
-export async function postV1DevicesDeviceIdCommandsReservation(postV1DevicesDeviceIdCommandsReservationBody: PostV1DevicesDeviceIdCommandsReservationBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsReservationResponse> {
-  return httpClient<postV1DevicesDeviceIdCommandsReservationResponse>(getPostV1DevicesDeviceIdCommandsReservationUrl(), {
+export async function postV1DevicesDeviceIdCommandsReservation(deviceId: DeviceId, postV1DevicesDeviceIdCommandsReservationBody: PostV1DevicesDeviceIdCommandsReservationBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsReservationResponse> {
+  return httpClient<postV1DevicesDeviceIdCommandsReservationResponse>(getPostV1DevicesDeviceIdCommandsReservationUrl(deviceId), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
+    headers: mergeHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(
       postV1DevicesDeviceIdCommandsReservationBody,
     ),
@@ -309,15 +310,15 @@ export type postV1DevicesDeviceIdCommandsMaintenanceResponseError = (postV1Devic
 
 export type postV1DevicesDeviceIdCommandsMaintenanceResponse = (postV1DevicesDeviceIdCommandsMaintenanceResponseSuccess | postV1DevicesDeviceIdCommandsMaintenanceResponseError);
 
-export function getPostV1DevicesDeviceIdCommandsMaintenanceUrl() {
-  return "/v1/devices/:deviceId/commands/maintenance";
+export function getPostV1DevicesDeviceIdCommandsMaintenanceUrl(deviceId: DeviceId) {
+  return `/v1/devices/${deviceId}/commands/maintenance`;
 }
 
-export async function postV1DevicesDeviceIdCommandsMaintenance(postV1DevicesDeviceIdCommandsMaintenanceBody: PostV1DevicesDeviceIdCommandsMaintenanceBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsMaintenanceResponse> {
-  return httpClient<postV1DevicesDeviceIdCommandsMaintenanceResponse>(getPostV1DevicesDeviceIdCommandsMaintenanceUrl(), {
+export async function postV1DevicesDeviceIdCommandsMaintenance(deviceId: DeviceId, postV1DevicesDeviceIdCommandsMaintenanceBody: PostV1DevicesDeviceIdCommandsMaintenanceBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsMaintenanceResponse> {
+  return httpClient<postV1DevicesDeviceIdCommandsMaintenanceResponse>(getPostV1DevicesDeviceIdCommandsMaintenanceUrl(deviceId), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
+    headers: mergeHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(
       postV1DevicesDeviceIdCommandsMaintenanceBody,
     ),
@@ -357,15 +358,15 @@ export type postV1DevicesDeviceIdCommandsStatusResponseError = (postV1DevicesDev
 
 export type postV1DevicesDeviceIdCommandsStatusResponse = (postV1DevicesDeviceIdCommandsStatusResponseSuccess | postV1DevicesDeviceIdCommandsStatusResponseError);
 
-export function getPostV1DevicesDeviceIdCommandsStatusUrl() {
-  return "/v1/devices/:deviceId/commands/status";
+export function getPostV1DevicesDeviceIdCommandsStatusUrl(deviceId: DeviceId) {
+  return `/v1/devices/${deviceId}/commands/status`;
 }
 
-export async function postV1DevicesDeviceIdCommandsStatus(postV1DevicesDeviceIdCommandsStatusBody?: PostV1DevicesDeviceIdCommandsStatusBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsStatusResponse> {
-  return httpClient<postV1DevicesDeviceIdCommandsStatusResponse>(getPostV1DevicesDeviceIdCommandsStatusUrl(), {
+export async function postV1DevicesDeviceIdCommandsStatus(deviceId: DeviceId, postV1DevicesDeviceIdCommandsStatusBody?: PostV1DevicesDeviceIdCommandsStatusBody, options?: RequestInit): Promise<postV1DevicesDeviceIdCommandsStatusResponse> {
+  return httpClient<postV1DevicesDeviceIdCommandsStatusResponse>(getPostV1DevicesDeviceIdCommandsStatusUrl(deviceId), {
     ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
+    headers: mergeHeaders({ "Content-Type": "application/json" }, options?.headers),
     body: JSON.stringify(
       postV1DevicesDeviceIdCommandsStatusBody,
     ),

@@ -66,3 +66,25 @@ export enum ReservationStatus {
   Cancelled = "ĐÃ HUỶ",
   Expired = "ĐÃ HẾT HẠN",
 }
+
+export enum BikeStatus {
+  Available = "AVAILABLE", // Có sẵn
+  Booked = "BOOKED", // Đã được thuê / Đang sử dụng
+  Broken = "BROKEN", // Bị hỏng
+  Reserved = "RESERVED", // Đã được đặt trước
+  Maintained = "MAINTAINED", // Đang bảo trì
+  Unavailable = "UNAVAILABLE", // Không có sẵn (trong kho)
+}
+
+export enum SupplierStatus {
+  ACTIVE = "HOẠT ĐỘNG",
+  INACTIVE = "NGƯNG HOẠT ĐỘNG",
+  TERMINATE = "CHẤM DỨT HỢP ĐỒNG",
+}
+
+export enum ReportPriority {
+  LOW = "THẤP",
+  NORMAL = "BÌNH THƯỜNG",
+  HIGH = "CAO",
+  URGENT = "KHẨN CẤP",
+}
