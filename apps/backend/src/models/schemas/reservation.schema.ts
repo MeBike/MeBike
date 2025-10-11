@@ -1,6 +1,7 @@
 import { Decimal128, ObjectId } from "mongodb";
 
 import { ReservationStatus } from "~/constants/enums";
+import { getLocalTime } from "~/utils/date";
 
 type ReservationType = {
   _id?: ObjectId;
@@ -28,9 +29,7 @@ export default class Reservation {
   updated_at?: Date;
 
   constructor(reservation: ReservationType) {
-    const currentDate = new Date();
-    const vietnamTimezoneOffset = 7 * 60;
-    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+    const localTime = getLocalTime()
 
     this._id = reservation._id || new ObjectId();
     this.user_id = reservation.user_id;

@@ -1,6 +1,7 @@
 import { Decimal128, Int32, ObjectId } from "mongodb";
 
 import { RentalStatus } from "~/constants/enums";
+import { getLocalTime } from "~/utils/date";
 
 type RentalType = {
   _id?: ObjectId;
@@ -34,9 +35,7 @@ export default class Rental {
   updated_at?: Date;
 
   constructor(rental: RentalType) {
-    const currentDate = new Date();
-    const vietnamTimezoneOffset = 7 * 60;
-    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+    const localTime = getLocalTime()
 
     this._id = rental._id || new ObjectId();
     this.user_id = rental.user_id;

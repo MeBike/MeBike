@@ -268,7 +268,7 @@ class RentalsService {
         }
 
         if (end_time) {
-          if (!end_station || !rental.end_station) {
+          if (!end_station && !rental.end_station) {
             throw new ErrorWithStatus({
               message: RENTALS_MESSAGE.CANNOT_END_WITHOUT_END_STATION,
               status: HTTP_STATUS.BAD_REQUEST
@@ -577,7 +577,7 @@ class RentalsService {
           usageRate: { $round: ['$usageRate', 2] }
         }
       },
-      { $sort: { date: 1 } }
+      { $sort: { station: 1 } }
     ]
 
     const result = await databaseService.rentals.aggregate(pipeline).toArray()

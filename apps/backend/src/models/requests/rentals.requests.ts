@@ -6,10 +6,6 @@ export type CreateRentalReqBody = {
   start_station: ObjectId;
 };
 
-export type EndRentalReqBody = {
-  end_station: string | ObjectId;
-};
-
 export type RentalParams = {
   id: string;
 };
