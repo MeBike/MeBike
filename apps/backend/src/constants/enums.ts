@@ -38,15 +38,6 @@ export enum ReportTypeEnum {
   Other = "KHÁC",
 }
 
-export enum BikeStatus {
-  Available = "SẴN SÀNG",
-  Booked = "ĐÃ ĐẶT",
-  Broken = "HƯ HỎNG",
-  Reserved = "ĐÃ ĐƯỢC ĐẶT TRƯỚC",
-  Maintained = "ĐANG ĐƯỢC BẢO TRÌ",
-  Unavailable = "KHÔNG SẴN SÀNG",
-}
-
 export enum RentalStatus {
   Rented = "ĐANG THUÊ",
   Completed = "HOÀN THÀNH",

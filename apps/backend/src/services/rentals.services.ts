@@ -185,12 +185,14 @@ class RentalsService {
         status: HTTP_STATUS.NOT_FOUND
       })
     }
-    const bikeStation = await databaseService.stations.findOne({ _id: bike.station_id })
-    if (!bikeStation) {
-      throw new ErrorWithStatus({
-        message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', rental.start_station.toString()),
-        status: HTTP_STATUS.NOT_FOUND
-      })
+    if (bike.station_id) {
+      const bikeStation = await databaseService.stations.findOne({ _id: bike.station_id })
+      if (!bikeStation) {
+        throw new ErrorWithStatus({
+          message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', rental.start_station.toString()),
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
     }
 
     const startStation = await databaseService.stations.findOne({ _id: rental.start_station })
