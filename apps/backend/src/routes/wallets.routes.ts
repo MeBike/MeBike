@@ -3,6 +3,9 @@ import { Router } from 'express'
 import {
   changeStatusController,
   decreaseBalanceController,
+  getTransactionDetailController,
+  getUserTransactionController,
+  getUserWalletController,
   increateBalanceController
 } from '~/controllers/wallet.controllers'
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
@@ -12,7 +15,11 @@ import { wrapAsync } from '~/utils/handler'
 
 const walletsRouter = Router()
 
-walletsRouter.get('/')
+// lấy thông tin ví cho user
+walletsRouter.get('/', accessTokenValidator, wrapAsync(getUserWalletController))
+// lấy các thông tin transaction của user
+walletsRouter.get('/transaction', accessTokenValidator, wrapAsync(getUserTransactionController))
+walletsRouter.get('/transaction/:id', accessTokenValidator, wrapAsync(getTransactionDetailController))
 walletsRouter.put(
   '/increase',
   accessTokenValidator,

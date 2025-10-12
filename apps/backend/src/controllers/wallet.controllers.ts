@@ -54,7 +54,7 @@ export async function changeStatusController(req: Request<any, any, any>, res: R
   })
 }
 
-export async function getUserWalletContrller(req: Request<any, any, any>, res: Response) {
+export async function getUserWalletController(req: Request<any, any, any>, res: Response) {
   const user = req.decoded_authorization
   const user_id = user?._id as string
 
@@ -66,7 +66,7 @@ export async function getUserWalletContrller(req: Request<any, any, any>, res: R
   })
 }
 
-export async function getUserTransactionControlle(
+export async function getUserTransactionController(
   req: Request<ParamsDictionary, any, any, GetTransactionReqQuery>,
   res: Response,
   next: NextFunction
@@ -77,4 +77,18 @@ export async function getUserTransactionControlle(
   const query = req.query
 
   await walletService.getPaymentHistory(res, next, query, user_id)
+}
+
+export async function getTransactionDetailController(req: Request<any, any, any>, res: Response) {
+  const user = req.decoded_authorization
+  const user_id = user?._id as string
+
+  const transaction_id = req.params.id as string
+
+  const result = await walletService.getTransactionDetail(user_id, transaction_id)
+
+  res.json({
+    message: WALLETS_MESSAGE.TRANSACTION_DETAIL_SUCCESS,
+    result
+  })
 }

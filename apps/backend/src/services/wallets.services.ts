@@ -8,9 +8,9 @@ import type {
 import type { TransactionType } from '~/models/schemas/transaction.schema'
 import type { WalletType } from '~/models/schemas/wallet.schemas'
 
-import { TransactionStaus, TransactionTypeEnum, WalletStatus } from '~/constants/enums'
+import { Role, TransactionStaus, TransactionTypeEnum, WalletStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
-import { WALLETS_MESSAGE } from '~/constants/messages'
+import { USERS_MESSAGES, WALLETS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import Wallet from '~/models/schemas/wallet.schemas'
 
@@ -189,6 +189,57 @@ class WalletService {
     } catch (error) {
       next(error)
     }
+  }
+
+  async getTransactionDetail(user_id: string, transaction_id: string) {
+    const findUser = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+    if (!findUser) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+
+    if (!findWallet && findUser.role !== Role.Admin) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id),
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    let transaction = null
+
+    switch (findUser.role) {
+      case Role.Admin:
+        transaction = await databaseService.transactions.findOne({
+          _id: new ObjectId(transaction_id)
+        })
+        break
+
+      case Role.User:
+        transaction = await databaseService.transactions.findOne({
+          _id: new ObjectId(transaction_id),
+          wallet_id: findWallet?._id
+        })
+        break
+
+      default:
+        throw new ErrorWithStatus({
+          message: WALLETS_MESSAGE.FORBIDDEN,
+          status: HTTP_STATUS.FORBIDDEN
+        })
+    }
+
+    if (!transaction) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.TRANSACTION_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return transaction
   }
 }
 
