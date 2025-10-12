@@ -48,7 +48,7 @@ class DatabaseService {
   async indexUsers() {
     await this.users.createIndex({ email: 1 }, { unique: true });
     await this.users.createIndex({ username: 1 }, { unique: true });
-    await this.users.createIndex({ phone_number: 1 }, { unique: true });
+    // await this.users.createIndex({ phone_number: 1 }, { unique: true });
     await this.users.createIndex({ email: 1, password: 1 });
   }
 

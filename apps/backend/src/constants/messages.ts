@@ -61,7 +61,9 @@ export const USERS_MESSAGES = {
   // check admin role messages
   ACCESS_DENIED_ADMIN_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên',
   // check staff role messages
-  ACCESS_DENIED_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho nhân viên'
+  ACCESS_DENIED_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho nhân viên',
+  // check admin and staff role messages
+  ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên và nhân viên'
 } as const
 
 export const REPORTS_MESSAGES = {
@@ -139,11 +141,17 @@ export const BIKES_MESSAGES = {
   FORBIDDEN: 'Không có quyền truy cập',
   INVALID_SUPPLIER_ID: 'ID của nhà cung cấp không hợp lệ',
   SUPPLIER_NOT_FOUND: 'Không tìm thấy nhà cung cấp với ID được cung cấp',
-  BIKE_IN_USE: 'Xe đang được sử dụng',
-  BIKE_IS_BROKEN: 'Xe đang bị hư hỏng, chưa sẵn sàng để sử dụng',
-  BIKE_IS_MAINTAINED: 'Xe đang được bảo trì, chưa sẵn sàng để sử dụng',
-  BIKE_IS_RESERVED: 'Xe đã được đặt trước',
-  UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng'
+  // get bikes by id
+  GET_BIKE_SUCCESS: 'Lấy thông tin xe đạp thành công',
+  BIKE_ID_IS_REQUIRED: 'ID của xe đạp là bắt buộc',
+  INVALID_BIKE_ID: 'ID của xe đạp không hợp lệ',
+  // update info bike
+  UPDATE_BIKE_SUCCESS: 'Cập nhật thông tin xe đạp thành công',
+  UPDATE_NOT_ALLOWED: 'Bạn không được phép cập nhật trường này',
+  USER_CAN_ONLY_REPORT_BROKEN: 'Người dùng chỉ được phép báo hỏng xe',
+  AT_LEAST_ONE_FIELD_IS_REQUIRED: 'Cần ít nhất một trường để cập nhật',
+  CANNOT_REPORT_BIKE_NOT_RENTING: 'Bạn chỉ có thể báo hỏng chiếc xe bạn đang thuê',
+  REPORT_BROKEN_BIKE_SUCCESS: 'Báo hỏng xe thành công'
 } as const
 
 export const RENTALS_MESSAGE = {
@@ -194,7 +202,14 @@ export const RENTALS_MESSAGE = {
   CANNOT_CANCEL_WITH_BIKE_STATUS: 'Bạn không thể huỷ phiên thuê với xe đang ở trạng thái %s (Booked, Reserved only)',
   CANNOT_EDIT_BIKE_STATUS_TO:
     'Bạn không thể cập nhật trạng thái xe thành %s khi huỷ phiên thuê (Available, Broken only)',
-  NO_REASON: 'Không có nguyên nhân'
+  NO_REASON: 'Không có nguyên nhân',
+  // bike
+  BIKE_IN_USE: 'Xe đang được sử dụng',
+  BIKE_IS_BROKEN: 'Xe đang bị hư hỏng, chưa sẵn sàng để sử dụng',
+  BIKE_IS_MAINTAINED: 'Xe đang được bảo trì, chưa sẵn sàng để sử dụng',
+  BIKE_IS_RESERVED: 'Xe đã được đặt trước',
+  UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
+  INVALID_STATUS: 'Trạng thái xe không hợp lệ'
 } as const
 
 export const COMMON_MESSAGE = {
