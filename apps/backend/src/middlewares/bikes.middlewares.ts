@@ -68,3 +68,65 @@ export const createBikeValidator = validate(
     ["body"],
   ),
 );
+
+export const bikeIdValidator = validate(
+  checkSchema(
+    {
+      _id: {
+        in: ["params"],
+        notEmpty: {
+          errorMessage: BIKES_MESSAGES.BIKE_ID_IS_REQUIRED,
+        },
+        isMongoId: {
+          errorMessage: BIKES_MESSAGES.INVALID_BIKE_ID,
+        },
+        custom: {
+          options: async (value) => {
+            const bike = await databaseService.bikes.findOne({ _id: new ObjectId(value) });
+            if (!bike) {
+              throw new ErrorWithStatus({
+                message: BIKES_MESSAGES.BIKE_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
+            return true;
+          },
+        },
+      },
+    },
+    ["params"],
+  )
+);
+
+export const updateBikeValidator = validate(
+  checkSchema(
+    {
+      status: {
+        optional: true,
+        isIn: {
+          options: [Object.values(BikeStatus)],
+          errorMessage: BIKES_MESSAGES.INVALID_STATUS,
+        },
+      },
+      station_id: {
+        optional: true,
+        isMongoId: {
+          errorMessage: BIKES_MESSAGES.INVALID_STATION_ID,
+        },
+        custom: {
+          options: async (value) => {
+            const station = await databaseService.stations.findOne({ _id: new ObjectId(value) });
+            if (!station) {
+              throw new ErrorWithStatus({
+                message: BIKES_MESSAGES.STATION_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
+            return true;
+          },
+        },
+      },
+    },
+    ["body"],
+  )
+);
