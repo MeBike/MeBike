@@ -9,6 +9,7 @@ import { wrapAsync } from "~/utils/handler";
 const bikesRouter = Router();
 
 // admin only
+// tạo xe mới
 bikesRouter.post(
   "/",
   accessTokenValidator,
@@ -17,8 +18,12 @@ bikesRouter.post(
   wrapAsync(createBikeController),
 );
 
+// user chỉ xem được xe có trạng thái AVAILABLE
+// staff, manager, admin có thể xem tất cả các trạng thái
+// lấy danh sách xe, có phân trang, lọc theo station_id, status, supplier_id
 bikesRouter.get("/", accessTokenValidator, wrapAsync(getBikesController));
 
+// lấy thông tin chi tiết xe theo id
 bikesRouter.get(
   "/:_id",
   accessTokenValidator,
@@ -27,6 +32,8 @@ bikesRouter.get(
 );
 
 // User reports a broken bike they are renting
+// Chỉ user mới có quyền báo xe bị hỏng
+// người dùng chỉ được báo hỏng xe mà họ đang thuê
 bikesRouter.patch(
   "/report-broken/:_id",
   accessTokenValidator,
@@ -34,7 +41,7 @@ bikesRouter.patch(
   wrapAsync(reportBrokenBikeController)
 );
 
-// Admin/Staff updates a bike's info (status, station_id)
+// Admin/Staff updates a bike's info (status, station_id, supplier_id)
 bikesRouter.patch(
   "/admin-update/:_id",
   accessTokenValidator,

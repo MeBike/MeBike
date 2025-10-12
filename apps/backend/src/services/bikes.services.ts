@@ -24,7 +24,7 @@ class BikesService {
   }
 
   async getAllBikes(res: Response, next: NextFunction, query: GetBikesReqQuery) {
-    const { station_id, status } = query;
+    const { station_id, status, supplier_id } = query;
     const filter: any = {};
 
     if (station_id) {
@@ -32,6 +32,9 @@ class BikesService {
     }
     if (status) {
       filter.status = status;
+    }
+    if (supplier_id) {
+      filter.supplier_id = new ObjectId(supplier_id);
     }
 
     await sendPaginatedResponse(res, next, databaseService.bikes, query, filter);
@@ -49,6 +52,9 @@ class BikesService {
     }
     if (payload.station_id) {
       updatePayload.station_id = new ObjectId(payload.station_id)
+    }
+    if (payload.supplier_id) {
+      updatePayload.supplier_id = new ObjectId(payload.supplier_id);
     }
 
     const currentDate = new Date()

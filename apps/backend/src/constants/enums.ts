@@ -46,12 +46,12 @@ export enum RentalStatus {
 }
 
 export enum BikeStatus {
-  Available = "AVAILABLE", // Có sẵn
-  Booked = "BOOKED", // Đã được thuê / Đang sử dụng
-  Broken = "BROKEN", // Bị hỏng
-  Reserved = "RESERVED", // Đã được đặt trước
-  Maintained = "MAINTAINED", // Đang bảo trì
-  Unavailable = "UNAVAILABLE", // Không có sẵn (trong kho)
+  Available = "CÓ SẴN",
+  Booked = "ĐANG ĐƯỢC THUÊ",
+  Broken = "BỊ HỎNG",
+  Reserved = "ĐÃ ĐẶT TRƯỚC",
+  Maintained = "ĐANG BẢO TRÌ",
+  Unavailable = "KHÔNG CÓ SẴN",
 }
 
 export enum SupplierStatus {
