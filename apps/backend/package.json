@@ -30,7 +30,10 @@
     "mongoose": "^8.19.0",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.6",
-    "p-limit": "^7.1.1"
+    "p-limit": "^7.1.1",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -42,6 +45,9 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.6.2",
     "@types/nodemailer": "^7.0.2",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/yamljs": "^0.2.34",
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

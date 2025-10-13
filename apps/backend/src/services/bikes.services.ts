@@ -24,7 +24,7 @@ class BikesService {
   }
 
   async getAllBikes(res: Response, next: NextFunction, query: GetBikesReqQuery) {
-    const { station_id, status } = query;
+    const { station_id, status, supplier_id } = query;
     const filter: any = {};
 
     if (station_id) {
@@ -32,6 +32,9 @@ class BikesService {
     }
     if (status) {
       filter.status = status;
+    }
+    if (supplier_id) {
+      filter.supplier_id = new ObjectId(supplier_id);
     }
 
     await sendPaginatedResponse(res, next, databaseService.bikes, query, filter);
@@ -50,6 +53,9 @@ class BikesService {
     if (payload.station_id) {
       updatePayload.station_id = new ObjectId(payload.station_id)
     }
+    if (payload.supplier_id) {
+      updatePayload.supplier_id = new ObjectId(payload.supplier_id);
+    }
 
     const currentDate = new Date()
     const vietnamTimezoneOffset = 7 * 60
@@ -65,6 +71,89 @@ class BikesService {
       { returnDocument: 'after' }
     )
     return result
+  }
+
+  async deleteBike(bikeId: string) {
+    // Luôn thực hiện xóa mềm: cập nhật status thành UNAVAILABLE
+    const result = await this.updateBike(bikeId, { status: BikeStatus.Unavailable });
+    return { softDelete: true, result };
+  }
+
+  async getRentalsByBikeId(res: Response, next: NextFunction, bikeId: string, query: GetBikesReqQuery) {
+    const filter = {
+      bike_id: new ObjectId(bikeId)
+    };
+
+    await sendPaginatedResponse(res, next, databaseService.rentals, query, filter);
+  }
+
+  async getBikesStats() {
+    const stats = await databaseService.bikes.aggregate([
+      // Group by status and count
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 }
+        }
+      },
+      // Reshape the output
+      {
+        $group: {
+          _id: null,
+          total_by_status: {
+            $push: {
+              k: "$_id",
+              v: "$count"
+            }
+          }
+        }
+      },
+      {
+        $replaceRoot: {
+          newRoot: { $arrayToObject: "$total_by_status" }
+        }
+      }
+    ]).toArray();
+
+    return stats[0] || {};
+  }
+
+  async getBikeStatsById(bikeId: string) {
+    const bikeStats = await databaseService.rentals.aggregate([
+      // Filter for the specific bike
+      {
+        $match: {
+          bike_id: new ObjectId(bikeId)
+        }
+      },
+      // Group and calculate stats
+      {
+        $group: {
+          _id: "$bike_id",
+          total_rentals: { $sum: 1 },
+          total_revenue: { $sum: { $toDouble: "$total_price" } }, // Convert Decimal128 to double for summation
+          total_duration_minutes: { $sum: "$duration" } // duration is in minutes
+        }
+      }
+    ]).toArray();
+
+    const reportCount = await databaseService.reports.countDocuments({
+      bike_id: new ObjectId(bikeId)
+    });
+
+    if (bikeStats.length === 0) {
+      return {
+        total_rentals: 0,
+        total_revenue: 0,
+        total_duration_minutes: 0,
+        total_reports: reportCount
+      };
+    }
+
+    return {
+      ...bikeStats[0],
+      total_reports: reportCount
+    };
   }
 }
 
