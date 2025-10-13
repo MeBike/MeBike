@@ -2,6 +2,8 @@ import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
 import process from "node:process";
+import swaggerUi from "swagger-ui-express";
+import YAML from "yamljs";
 
 import { defaultErrorHandler } from "./middlewares/error.middlewares";
 import rentalsRouter from "./routes/rentals.routes";
@@ -13,7 +15,22 @@ import bikesRouter from "./routes/bikes.routes";
 
 config();
 
+import swaggerJSDoc from "swagger-jsdoc";
+
 const port = process.env.PORT || 4000;
+
+const options: swaggerJSDoc.Options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "MeBike API",
+      version: "1.0.0",
+    },
+  },
+  apis: ["./src/routes/*.ts", "./src/docs/openapi.yaml"],
+};
+
+const swaggerSpec = swaggerJSDoc(options);
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -33,6 +50,8 @@ app.use("/reports", reportsRouter);
 app.use("/suppliers", suppliersRouter);
 app.use("/bikes", bikesRouter);
 app.use("/rentals", rentalsRouter);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(defaultErrorHandler);
 
