@@ -151,6 +151,24 @@ export const updateBikeValidator = validate(
           },
         },
       },
+      supplier_id: {
+        optional: true,
+        isMongoId: {
+          errorMessage: BIKES_MESSAGES.INVALID_SUPPLIER_ID,
+        },
+        custom: {
+          options: async (value) => {
+            const supplier = await databaseService.suppliers.findOne({ _id: new ObjectId(value) });
+            if (!supplier) {
+              throw new ErrorWithStatus({
+                message: BIKES_MESSAGES.SUPPLIER_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
+            return true;
+          },
+        },
+      },
     },
     ["body"],
   )

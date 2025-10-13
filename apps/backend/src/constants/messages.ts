@@ -145,6 +145,12 @@ export const BIKES_MESSAGES = {
   GET_BIKE_SUCCESS: 'Lấy thông tin xe đạp thành công',
   BIKE_ID_IS_REQUIRED: 'ID của xe đạp là bắt buộc',
   INVALID_BIKE_ID: 'ID của xe đạp không hợp lệ',
+  // delete bike
+  DELETE_BIKE_SUCCESS: "Xóa xe đạp thành công",
+  // history rental of bike
+  GET_BIKE_RENTALS_SUCCESS: "Lấy lịch sử thuê xe thành công",
+  // stats of bikes
+  GET_BIKE_STATS_SUCCESS: "Lấy thống kê xe thành công",
   // update info bike
   UPDATE_BIKE_SUCCESS: 'Cập nhật thông tin xe đạp thành công',
   UPDATE_NOT_ALLOWED: 'Bạn không được phép cập nhật trường này',
