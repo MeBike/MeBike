@@ -71,17 +71,17 @@ export const createRentalSessionValidator = validate(
           errorMessage: RENTALS_MESSAGE.INVALID_MEDIA_URLS
         },
         custom: {
-          options: (urls: string[]) => {
-            urls.forEach((url)=>{
-              try {
-                
-              } catch (error) {
+          options: (value: string[]) => {
+            for (const url of value) {
+              const urlPattern = /^(https?:\/\/)([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/i
+              if(!urlPattern.test(url)){
                 throw new ErrorWithStatus({
                   message: RENTALS_MESSAGE.INVALID_URL_FORMAT.replace("%s",url),
                   status: HTTP_STATUS.BAD_REQUEST
                 })
               }
-            })
+            }
+            return true
           }
         }
       }
