@@ -27,11 +27,13 @@ export async function createRentalSessionController(
   const { user_id } = req.decoded_authorization as TokenPayLoad
   const station = req.station as Station
   const bike = req.bike as Bike
+  const media_urls = req.body.media_urls || [] as string[]
 
   const result = await rentalsService.createRentalSession({
     user_id,
     start_station: station._id as ObjectId,
-    bike_id: bike._id as ObjectId
+    bike_id: bike._id as ObjectId,
+    media_urls
   })
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,

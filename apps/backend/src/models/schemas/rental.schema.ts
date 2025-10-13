@@ -27,7 +27,7 @@ export default class Rental {
   start_station: ObjectId;
   end_station?: ObjectId;
   start_time: Date;
-  end_time?: Date;
+  end_time?: Date;  
   duration: Int32;
   total_price: Decimal128;
   status: RentalStatus;

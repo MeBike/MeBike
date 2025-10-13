@@ -18,13 +18,14 @@ class RentalsService {
   async createRentalSession({
     user_id,
     start_station,
-    bike_id
+    bike_id,
+    media_urls
   }: {
     user_id: ObjectId | string
-    start_station: ObjectId | string
-    bike_id: ObjectId | string
+    start_station: ObjectId
+    bike_id: ObjectId
+    media_urls: string[]
   }) {
-    const objectedBikeId = toObjectId(bike_id)
     const session = databaseService.getClient().startSession()
 
     try {
@@ -34,21 +35,24 @@ class RentalsService {
       await session.withTransaction(async () => {
         rental = new Rental({
           user_id: toObjectId(user_id),
-          start_station: toObjectId(start_station),
-          bike_id: objectedBikeId,
+          start_station,
+          bike_id,
           start_time: now,
+          media_urls,
           status: RentalStatus.Rented
         })
 
         await databaseService.rentals.insertOne(rental, { session })
 
         await databaseService.bikes.updateOne(
-          { _id: objectedBikeId },
-          { $set: { 
-            station_id: null,
-            status: BikeStatus.Booked,
-            updated_at: now 
-          } },
+          { _id: bike_id },
+          {
+            $set: {
+              station_id: null,
+              status: BikeStatus.Booked,
+              updated_at: now
+            }
+          },
           { session }
         )
       })
@@ -64,7 +68,6 @@ class RentalsService {
         total_price: 0
       }
     } catch (error) {
-      console.error(COMMON_MESSAGE.CREATE_SESSION_FAIL, error)
       throw error
     } finally {
       await session.endSession()
@@ -237,7 +240,7 @@ class RentalsService {
     admin_id: string
     payload: UpdateRentalReqBody
   }) {
-    const { end_station, end_time, total_price, reason } = payload
+    const { end_station, end_time, status, total_price, reason } = payload
     const objRentalId = toObjectId(rental_id)
     const now = getLocalTime()
 
@@ -256,23 +259,6 @@ class RentalsService {
 
         const updateData: any = { updated_at: now }
 
-        if (end_station) {
-          const objEndStation = toObjectId(end_station)
-          const stationExists = await databaseService.stations.findOne({ _id: objEndStation }, { session })
-          if (!stationExists) {
-            throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', end_station),
-              status: HTTP_STATUS.NOT_FOUND
-            })
-          }
-          updateData.end_station = objEndStation
-
-          if (!rental.end_time && !end_time) {
-            updateData.end_time = now
-            updateData.duration = this.generateDuration(rental.start_time, now)
-          }
-        }
-
         if (end_time) {
           if (!end_station && !rental.end_station) {
             throw new ErrorWithStatus({
@@ -281,9 +267,15 @@ class RentalsService {
             })
           }
           const end = new Date(end_time)
+          if(end > now){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.END_DATE_CANNOT_BE_IN_FUTURE,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
           if (end < rental.start_time) {
             throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.END_TIME_GREATER_THAN_START_TIME,
+              message: RENTALS_MESSAGE.END_TIME_MUST_GREATER_THAN_START_TIME,
               status: HTTP_STATUS.BAD_REQUEST
             })
           }
@@ -291,15 +283,27 @@ class RentalsService {
           updateData.end_time = end
           updateData.duration = this.generateDuration(rental.start_time, end)
 
-          if (rental.status === RentalStatus.Rented) {
+          if (status !== undefined) {
+            updateData.status = status
+          } else if (rental.status === RentalStatus.Rented) {
             updateData.status = RentalStatus.Completed
           }
         }
 
-        if (end_time && !total_price) {
-          updateData.total_price = this.generateTotalPrice(updateData.duration)
-        } else if (total_price !== undefined) {
+        if (end_station) {
+          if (!rental.end_time && !end_time) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.CANNOT_END_WITHOUT_END_TIME,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+          updateData.end_station = toObjectId(end_station)
+        }
+
+        if (total_price !== undefined) {
           updateData.total_price = total_price
+        } else if (end_time) {
+          updateData.total_price = this.generateTotalPrice(updateData.duration)
         }
 
         result = await databaseService.rentals.findOneAndUpdate(
