@@ -100,3 +100,12 @@ export async function deleteBikeController(req: Request, res: Response) {
     result,
   });
 }
+
+export async function getRentalsByBikeIdController(
+  req: Request<ParamsDictionary, any, any, GetBikesReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const { _id: bikeId } = req.params;
+  await bikesService.getRentalsByBikeId(res, next, bikeId, req.query);
+}

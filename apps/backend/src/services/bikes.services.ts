@@ -78,6 +78,14 @@ class BikesService {
     const result = await this.updateBike(bikeId, { status: BikeStatus.Unavailable });
     return { softDelete: true, result };
   }
+
+  async getRentalsByBikeId(res: Response, next: NextFunction, bikeId: string, query: GetBikesReqQuery) {
+    const filter = {
+      bike_id: new ObjectId(bikeId)
+    };
+
+    await sendPaginatedResponse(res, next, databaseService.rentals, query, filter);
+  }
 }
 
 const bikesService = new BikesService();

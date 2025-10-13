@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeByIdController, getBikesController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
+import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeByIdController, getBikesController, getRentalsByBikeIdController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { bikeIdValidator, createBikeValidator, updateBikeValidator } from "~/middlewares/bikes.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
@@ -22,6 +22,15 @@ bikesRouter.post(
 // staff, manager, admin có thể xem tất cả các trạng thái
 // lấy danh sách xe, có phân trang, lọc theo station_id, status, supplier_id
 bikesRouter.get("/", accessTokenValidator, wrapAsync(getBikesController));
+
+// admin/staff lấy lịch sử thuê xe theo bike id
+bikesRouter.get(
+  "/:_id/rentals",
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  bikeIdValidator,
+  wrapAsync(getRentalsByBikeIdController)
+);
 
 // lấy thông tin chi tiết xe theo id
 bikesRouter.get(
