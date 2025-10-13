@@ -39,10 +39,23 @@ export enum ReportTypeEnum {
 }
 
 export enum RentalStatus {
-  Ongoing = "ĐANG THUÊ",
+  Rented = "ĐANG THUÊ",
   Completed = "HOÀN THÀNH",
   Cancelled = "ĐÃ HỦY",
-  Expired = "HẾT HẠN",
+  Reserved = "ĐÃ ĐẶT TRƯỚC",
+}
+
+export enum GroupByOptions {
+  Day = "DAY",
+  Month = "MONTH",
+  Year = "YEAR",
+}
+
+export enum ReservationStatus {
+  Pending = "ĐANG CHỜ XỬ LÍ",
+  Active = "ĐANG HOẠT ĐỘNG",
+  Cancelled = "ĐÃ HUỶ",
+  Expired = "ĐÃ HẾT HẠN",
 }
 
 export enum BikeStatus {

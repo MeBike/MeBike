@@ -61,7 +61,7 @@ export async function reportBrokenBikeController(req: Request, res: Response) {
   const rental = await databaseService.rentals.findOne({
     user_id: new ObjectId(user_id),
     bike_id: new ObjectId(bikeId),
-    status: RentalStatus.Ongoing
+    status: RentalStatus.Rented
   })
 
   if (!rental) {
