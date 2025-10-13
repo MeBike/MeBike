@@ -6,7 +6,9 @@ import {
   getTransactionDetailController,
   getUserTransactionController,
   getUserWalletController,
-  increateBalanceController
+  increateBalanceController,
+  refundController,
+  updateRefundController
 } from '~/controllers/wallet.controllers'
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
@@ -20,6 +22,7 @@ walletsRouter.get('/', accessTokenValidator, wrapAsync(getUserWalletController))
 // lấy các thông tin transaction của user
 walletsRouter.get('/transaction', accessTokenValidator, wrapAsync(getUserTransactionController))
 walletsRouter.get('/transaction/:id', accessTokenValidator, wrapAsync(getTransactionDetailController))
+walletsRouter.post('/', accessTokenValidator, wrapAsync(refundController))
 walletsRouter.put(
   '/increase',
   accessTokenValidator,
@@ -33,6 +36,12 @@ walletsRouter.put(
   isAdminValidator,
   decreaseBalanceValidator,
   wrapAsync(decreaseBalanceController)
+)
+walletsRouter.put(
+  '/:id',
+  accessTokenValidator,
+  isAdminValidator,
+  wrapAsync(updateRefundController)
 )
 walletsRouter.patch('/', accessTokenValidator, isAdminValidator, wrapAsync(changeStatusController))
 

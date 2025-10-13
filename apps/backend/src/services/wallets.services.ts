@@ -8,7 +8,7 @@ import type {
 import type { TransactionType } from '~/models/schemas/transaction.schema'
 import type { WalletType } from '~/models/schemas/wallet.schemas'
 
-import { Role, TransactionStaus, TransactionTypeEnum, WalletStatus } from '~/constants/enums'
+import { RefundStatus, Role, TransactionStaus, TransactionTypeEnum, WalletStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { USERS_MESSAGES, WALLETS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -18,6 +18,8 @@ import databaseService from './database.services'
 import Transaction from '~/models/schemas/transaction.schema'
 import { sendPaginatedResponse } from '~/utils/pagination.helper'
 import { NextFunction, Response } from 'express'
+import { CreateRefundReqBody } from '~/models/requests/refunds.request'
+import Refund, { RefundType } from '~/models/schemas/refund.schema'
 
 class WalletService {
   async createWallet(user_id: string) {
@@ -240,6 +242,87 @@ class WalletService {
     }
 
     return transaction
+  }
+
+  async refundTransaction(user_id: string, payload: CreateRefundReqBody) {
+    const findUser = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+    if (!findUser) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const findTransaction = await databaseService.transactions.findOne({ _id: new ObjectId(payload.transaction_id) })
+    if (!findTransaction) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.TRANSACTION_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const refundID = new ObjectId()
+    const refundData: RefundType = {
+      _id: refundID,
+      user_id: new ObjectId(user_id),
+      transaction_id: new ObjectId(findTransaction._id),
+      amount: Decimal128.fromString(payload.amount.toString()),
+      status: RefundStatus.Pending
+    }
+
+    const result = await databaseService.refunds.insertOne(new Refund(refundData))
+
+    return result
+  }
+
+  async updateStatusRefund(refund_id: string, newStatus: string) {
+    const allowedStatuses: Record<RefundStatus, RefundStatus[]> = {
+      [RefundStatus.Pending]: [RefundStatus.Approved, RefundStatus.Rejected],
+      [RefundStatus.Approved]: [RefundStatus.Completed],
+      [RefundStatus.Completed]: [],
+      [RefundStatus.Rejected]: []
+    }
+
+    const findRefund = await databaseService.refunds.findOne({ _id: new ObjectId(refund_id) })
+    if (!findRefund) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.REFUND_NOT_FOUND.replace('%s', refund_id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (!Object.values(RefundStatus).includes(newStatus as RefundStatus)) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.BAD_REQUEST,
+        message: WALLETS_MESSAGE.INVALID_NEW_STATUS
+      })
+    }
+
+    const currentStatus = findRefund.status as RefundStatus
+    const newStatusTyped = newStatus as RefundStatus
+
+    if (!allowedStatuses[currentStatus]?.includes(newStatusTyped)) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.BAD_REQUEST,
+        message: WALLETS_MESSAGE.INVALID_NEW_STATUS
+      })
+    }
+
+    const updateData: any = {
+      status: newStatusTyped
+    }
+
+    if (newStatusTyped === RefundStatus.Completed) {
+      updateData.resolved_at = new Date()
+    }
+
+    const result = await databaseService.refunds.findOneAndUpdate(
+      { _id: new ObjectId(refund_id) },
+      { $set: updateData },
+      { returnDocument: 'after' }
+    )
+
+    return result
   }
 }
 

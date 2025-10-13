@@ -168,5 +168,9 @@ export const WALLETS_MESSAGE = {
   GET_USER_WALLET_SUCCESS: "Lấy thông tin ví của người dùng %s thành công",
   FORBIDDEN: "Không có quyền truy cập vào giao dịch của người khác",
   TRANSACTION_NOT_FOUND: "Không tìm thấy giao dịch",
-  TRANSACTION_DETAIL_SUCCESS: "Lấy chi tiết giao dịch thành công"
+  TRANSACTION_DETAIL_SUCCESS: "Lấy chi tiết giao dịch thành công",
+  CREATE_REFUND_SUCCESS: "Tạo yêu cầu hoàn tiền thành công",
+  REFUND_NOT_FOUND: "Không tìm thấy yêu cầu giao dịch %s",
+  INVALID_NEW_STATUS: "Trạng thái mới không hợp lệ",
+  UPDATE_REFUND_SUCCESS: "Cập nhật trạng thái yêu cầu hoàn tiền thành công"
 };

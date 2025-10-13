@@ -14,6 +14,7 @@ import type Supplier from "~/models/schemas/supplier.schema";
 import type Transaction from "~/models/schemas/transaction.schema";
 import type User from "~/models/schemas/user.schema";
 import type Wallet from "~/models/schemas/wallet.schemas";
+import Refund from "~/models/schemas/refund.schema";
 
 config();
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
@@ -88,6 +89,10 @@ class DatabaseService {
 
   get transactions(): Collection<Transaction> {
     return this.db.collection(process.env.DB_TRANSACTIONS_COLLECTION as string);
+  }
+
+  get refunds(): Collection<Refund>{
+    return this.db.collection(process.env.DB_REFUNDS_COLLECTION as string)
   }
 }
 

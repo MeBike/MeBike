@@ -5,6 +5,7 @@ import type { GetTransactionReqQuery, IncreareBalanceWalletReqBody } from '~/mod
 import { WALLETS_MESSAGE } from '~/constants/messages'
 import walletService from '~/services/wallets.services'
 import { ParamsDictionary } from 'express-serve-static-core'
+import { CreateRefundReqBody } from '~/models/requests/refunds.request'
 
 export async function createWalletController(req: Request<any, any, any>, res: Response) {
   const user = req.decoded_authorization
@@ -89,6 +90,30 @@ export async function getTransactionDetailController(req: Request<any, any, any>
 
   res.json({
     message: WALLETS_MESSAGE.TRANSACTION_DETAIL_SUCCESS,
+    result
+  })
+}
+
+export async function refundController(req: Request<any, any, CreateRefundReqBody>, res: Response) {
+  const user = req.decoded_authorization
+  const user_id = user?._id as string
+
+  const result = await walletService.refundTransaction(user_id, req.body)
+
+  res.json({
+    message: WALLETS_MESSAGE.CREATE_REFUND_SUCCESS,
+    result
+  })
+}
+
+export async function updateRefundController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const { id } = req.params
+  const newStatus = req.body.newStatus
+
+  const result = await walletService.updateStatusRefund(id.toString(), newStatus)
+
+  res.json({
+    message: WALLETS_MESSAGE.UPDATE_REFUND_SUCCESS,
     result
   })
 }

@@ -98,3 +98,10 @@ export enum TransactionTypeEnum {
   WithDrawal = "WITHDRAWAL",
   Refund = "REFUND",
 }
+
+export enum RefundStatus {
+  Pending = 'PENDING',
+  Approved = 'APPROVED',
+  Rejected = 'REJECTED',
+  Completed = 'COMPLETED',
+}
