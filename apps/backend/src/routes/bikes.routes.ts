@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { adminUpdateBikeController, createBikeController, getBikeByIdController, getBikesController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
+import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeByIdController, getBikesController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { bikeIdValidator, createBikeValidator, updateBikeValidator } from "~/middlewares/bikes.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
@@ -49,5 +49,14 @@ bikesRouter.patch(
   bikeIdValidator,
   updateBikeValidator,
   wrapAsync(adminUpdateBikeController)
+);
+
+// Admin deletes a bike (soft delete)
+bikesRouter.delete(
+  "/:_id",
+  accessTokenValidator,
+  isAdminValidator,
+  bikeIdValidator,
+  wrapAsync(deleteBikeController)
 );
 export default bikesRouter;

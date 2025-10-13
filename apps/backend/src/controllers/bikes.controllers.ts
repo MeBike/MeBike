@@ -91,3 +91,12 @@ export async function adminUpdateBikeController(req: Request<ParamsDictionary, a
     result
   })
 }
+
+export async function deleteBikeController(req: Request, res: Response) {
+  const { _id: bikeId } = req.params;
+  const result = await bikesService.deleteBike(bikeId);
+  return res.json({
+    message: BIKES_MESSAGES.DELETE_BIKE_SUCCESS,
+    result,
+  });
+}

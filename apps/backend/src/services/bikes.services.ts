@@ -72,6 +72,12 @@ class BikesService {
     )
     return result
   }
+
+  async deleteBike(bikeId: string) {
+    // Luôn thực hiện xóa mềm: cập nhật status thành UNAVAILABLE
+    const result = await this.updateBike(bikeId, { status: BikeStatus.Unavailable });
+    return { softDelete: true, result };
+  }
 }
 
 const bikesService = new BikesService();
