@@ -64,6 +64,26 @@ export const createRentalSessionValidator = validate(
             return true
           }
         }
+      },
+      media_urls: {
+        optional: true,
+        isArray: {
+          errorMessage: RENTALS_MESSAGE.INVALID_MEDIA_URLS
+        },
+        custom: {
+          options: (urls: string[]) => {
+            urls.forEach((url)=>{
+              try {
+                
+              } catch (error) {
+                throw new ErrorWithStatus({
+                  message: RENTALS_MESSAGE.INVALID_URL_FORMAT.replace("%s",url),
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
+            })
+          }
+        }
       }
     },
     ['body']

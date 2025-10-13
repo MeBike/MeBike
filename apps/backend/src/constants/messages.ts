@@ -184,6 +184,9 @@ export const RENTALS_MESSAGE = {
   INVALID_RENTAL_STATUS: 'Trạng thái phiên thuê không hợp lệ',
   INVALID_END_TIME_FORMAT: 'Thời gian kết thúc không hợp lệ (phải theo mẫu ISO8601)',
   END_TIME_GREATER_THAN_START_TIME: 'Thời gian kết thúc phải lớn hơn hoặc bằng thời gian bắt đầu',
+  INVALID_MEDIA_URLS: 'Danh sách media_urls không hợp lệ, phải là một mảng URL hợp lệ.',
+  INVALID_URL_FORMAT: 'Định dạng URL không hợp lệ: %s.',
+
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
