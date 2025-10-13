@@ -29,12 +29,14 @@ class RentalsService {
 
     try {
       let rental: Rental | null = null
+      const now = getLocalTime()
+
       await session.withTransaction(async () => {
         rental = new Rental({
           user_id: toObjectId(user_id),
           start_station: toObjectId(start_station),
           bike_id: objectedBikeId,
-          start_time: new Date(),
+          start_time: now,
           status: RentalStatus.Rented
         })
 
@@ -42,7 +44,11 @@ class RentalsService {
 
         await databaseService.bikes.updateOne(
           { _id: objectedBikeId },
-          { $set: { status: BikeStatus.Booked } },
+          { $set: { 
+            station_id: null,
+            status: BikeStatus.Booked,
+            updated_at: now 
+          } },
           { session }
         )
       })
@@ -368,6 +374,7 @@ class RentalsService {
           { _id: rental.bike_id },
           {
             $set: {
+              station_id: rental.start_station,
               status: updatedBikeStatus,
               updated_at: now
             }
