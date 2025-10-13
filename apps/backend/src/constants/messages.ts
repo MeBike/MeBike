@@ -156,4 +156,6 @@ export const BIKES_MESSAGES = {
   DELETE_BIKE_SUCCESS: "Xóa xe đạp thành công",
   // history rental of bike
   GET_BIKE_RENTALS_SUCCESS: "Lấy lịch sử thuê xe thành công",
+  // stats of bikes
+  GET_BIKE_STATS_SUCCESS: "Lấy thống kê xe thành công",
 } as const;

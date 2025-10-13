@@ -109,3 +109,20 @@ export async function getRentalsByBikeIdController(
   const { _id: bikeId } = req.params;
   await bikesService.getRentalsByBikeId(res, next, bikeId, req.query);
 }
+
+export async function getBikesStatsController(req: Request, res: Response) {
+  const result = await bikesService.getBikesStats();
+  return res.json({
+    message: BIKES_MESSAGES.GET_BIKE_STATS_SUCCESS,
+    result,
+  });
+}
+
+export async function getBikeStatsByIdController(req: Request, res: Response) {
+  const { _id: bikeId } = req.params;
+  const result = await bikesService.getBikeStatsById(bikeId);
+  return res.json({
+    message: BIKES_MESSAGES.GET_BIKE_STATS_SUCCESS,
+    result,
+  });
+}
