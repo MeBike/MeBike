@@ -77,7 +77,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     setHasToken(false);
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Logged out successfully");
-                    router.push("/login");
+                    router.push("/auth/login");
                 }else{
                     toast.error("Error logging out");
                 }

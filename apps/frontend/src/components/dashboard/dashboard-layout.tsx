@@ -1,4 +1,4 @@
-"use client";
+
 
 import type React from "react";
 
@@ -7,12 +7,12 @@ import { Sidebar } from "./sidebar";
 import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { User } from "@custom-types";
+import type { DetailUser } from "@/services/authService";
 import Image from "next/image";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  user: User;
+  user: DetailUser;
 }
 
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
@@ -20,7 +20,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar userRole={user.role} />
+      <Sidebar userRole={user?.role} />
       <div
         className={`transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}
       >

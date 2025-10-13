@@ -24,7 +24,7 @@ const Login = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     logIn({ email, password });
-    console.log("Login with:", { email, password });
+    router.push('/staff')
   };
 
   return (
@@ -55,7 +55,6 @@ const Login = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleLogin} className="space-y-4">
-              {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
                   Email

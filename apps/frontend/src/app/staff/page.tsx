@@ -1,3 +1,4 @@
+"use client";
 import { ProfileHeader } from "@/components/dashboard/profile-header";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { RentalChart } from "@/components/dashboard/rental-chart";
@@ -5,32 +6,25 @@ import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import type { User as DetailUser } from "@custom-types";
 import { Bike, TrendingUp, Users, DollarSign } from "lucide-react";
-
-// Mock data - thay thế bằng dữ liệu thực từ API
-const mockUser: DetailUser = {
-  _id: "507f1f77bcf86cd799439011",
-  fullname: "Nguyễn Văn Minh",
-  email: "minh.nguyen@bikerental.vn",
-  verify: "verified",
-  location: "Hà Nội, Việt Nam",
-  username: "minh_staff",
-  phone_number: "+84 912 345 678",
-  avatar: "/professional-avatar.png",
-  role: "STAFF",
-  created_at: "2024-01-15T08:30:00Z",
-  updated_at: "2025-01-06T10:20:00Z",
-  password: "",
-  email_verify_token: "",
-  forgot_verify_token: "",
-};
+import { useAuth } from "@/providers/auth-providers";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Progress } from "@/components/ui/progress";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
+  if (!user) {
+    return <div><Progress /></div>;
+  }
+  
   return (
-    <DashboardLayout user={mockUser}>
+    <DashboardLayout user={user}>
       <div className="space-y-8">
         {/* Profile Section */}
         <section>
-          <ProfileHeader user={mockUser} />
+          <ProfileHeader user={user} />
         </section>
 
         {/* Stats Section */}
