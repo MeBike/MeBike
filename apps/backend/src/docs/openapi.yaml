@@ -57,6 +57,13 @@ components:
       $ref: './components/schemas/CreateBikeReqBody.yaml'
     UpdateBikeReqBody:
       $ref: './components/schemas/UpdateBikeReqBody.yaml'
+    # supplier
+    CreateSupplierReqBody:
+      $ref: './components/schemas/CreateSupplierReqBody.yaml'
+    UpdateSupplierReqBody:
+      $ref: './components/schemas/UpdateSupplierReqBody.yaml'
+    ChangeSupplierStatusReqBody:
+      $ref: './components/schemas/ChangeSupplierStatusReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:
@@ -87,6 +94,8 @@ components:
       $ref: './components/schemas/Bike.yaml'
     BikeStatus:
       $ref: './components/schemas/BikeStatus.yaml'
+    Supplier:
+      $ref: "./components/schemas/Supplier.yaml"
 
   securitySchemes:
     BearerAuth:

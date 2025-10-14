@@ -533,3 +533,206 @@
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '403':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+# ===================================================================
+# Suppliers API (ADMIN ONLY)
+# ===================================================================
+/suppliers:
+  get:
+    tags: [Suppliers]
+    summary: Get all suppliers (Admin only)
+    description: Retrieves a paginated list of all suppliers. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: A paginated list of suppliers.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Supplier.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+  post:
+    tags: [Suppliers]
+    summary: Create a new supplier (Admin only)
+    description: Adds a new supplier to the system. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CreateSupplierReqBody.yaml'
+    responses:
+      '201':
+        description: Supplier created successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/suppliers/stats:
+  get:
+    tags: [Suppliers]
+    summary: Get bike statistics for all suppliers (Admin only)
+    description: Retrieves statistics about the number of bikes associated with each supplier. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Statistics retrieved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/suppliers/{id}:
+  get:
+    tags: [Suppliers]
+    summary: Get supplier by ID (Admin only)
+    description: Retrieves detailed information for a specific supplier by their ID. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the supplier to retrieve.
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Supplier details retrieved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Supplier.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  
+  put:
+    tags: [Suppliers]
+    summary: Update a supplier (Admin only)
+    description: Updates the information of an existing supplier. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the supplier to update.
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateSupplierReqBody.yaml'
+    responses:
+      '200':
+        description: Supplier updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+        
+  patch:
+    tags: [Suppliers]
+    summary: Change supplier status (Admin only)
+    description: Changes the status of a supplier (e.g., ACTIVE, INACTIVE). Requires admin privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the supplier whose status is to be changed.
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ChangeSupplierStatusReqBody.yaml'
+    responses:
+      '200':
+        description: Supplier status changed successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/suppliers/{id}/stats:
+  get:
+    tags: [Suppliers]
+    summary: Get bike statistics for a specific supplier (Admin only)
+    description: Retrieves statistics about the number of bikes for a specific supplier by their ID. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the supplier to get statistics for.
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Statistics retrieved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'

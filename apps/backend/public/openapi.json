@@ -925,6 +925,340 @@
           }
         }
       }
+    },
+    "/suppliers": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Get all suppliers (Admin only)",
+        "description": "Retrieves a paginated list of all suppliers. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of suppliers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Supplier"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Create a new supplier (Admin only)",
+        "description": "Adds a new supplier to the system. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplierReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Supplier created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/suppliers/stats": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Get bike statistics for all suppliers (Admin only)",
+        "description": "Retrieves statistics about the number of bikes associated with each supplier. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/suppliers/{id}": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Get supplier by ID (Admin only)",
+        "description": "Retrieves detailed information for a specific supplier by their ID. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the supplier to retrieve.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supplier details retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Supplier"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Update a supplier (Admin only)",
+        "description": "Updates the information of an existing supplier. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the supplier to update.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplierReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supplier updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Change supplier status (Admin only)",
+        "description": "Changes the status of a supplier (e.g., ACTIVE, INACTIVE). Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the supplier whose status is to be changed.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeSupplierStatusReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supplier status changed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/suppliers/{id}/stats": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Get bike statistics for a specific supplier (Admin only)",
+        "description": "Retrieves statistics about the number of bikes for a specific supplier by their ID. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the supplier to get statistics for.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1173,6 +1507,89 @@
             "type": "string",
             "format": "mongoId",
             "description": "The new supplier ID for the bike."
+          }
+        }
+      },
+      "CreateSupplierReqBody": {
+        "type": "object",
+        "required": [
+          "name",
+          "address",
+          "phone_number",
+          "contract_fee"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the supplier.",
+            "maxLength": 255,
+            "example": "Công ty TNHH Xe Đạp Toàn Cầu"
+          },
+          "address": {
+            "type": "string",
+            "description": "Address of the supplier.",
+            "maxLength": 250,
+            "example": "456 Đường XYZ, Quận 2, TP.HCM"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Phone number of the supplier (must be 10 digits).",
+            "pattern": "^\\d{10}$",
+            "example": "0912345678"
+          },
+          "contract_fee": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Contract fee with up to 2 decimal places.",
+            "example": 25000.75
+          }
+        }
+      },
+      "UpdateSupplierReqBody": {
+        "type": "object",
+        "description": "Fields to update for a supplier. All fields are optional.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "New name for the supplier.",
+            "maxLength": 255,
+            "example": "Công ty Cổ phần Xe Đạp Việt Nam"
+          },
+          "address": {
+            "type": "string",
+            "description": "New address for the supplier.",
+            "maxLength": 250,
+            "example": "789 Đường LMN, Quận 3, TP.HCM"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "New phone number for the supplier (must be 10 digits).",
+            "pattern": "^\\d{10}$",
+            "example": "0988888888"
+          },
+          "contract_fee": {
+            "type": "number",
+            "format": "decimal",
+            "description": "New contract fee.",
+            "example": 30000
+          }
+        }
+      },
+      "ChangeSupplierStatusReqBody": {
+        "type": "object",
+        "required": [
+          "newStatus"
+        ],
+        "properties": {
+          "newStatus": {
+            "type": "string",
+            "description": "The new status for the supplier.",
+            "enum": [
+              "HOẠT ĐỘNG",
+              "NGƯNG HOẠT ĐỘNG",
+              "CHẤM DỨT HỢP ĐỒNG"
+            ],
+            "example": "NGƯNG HOẠT ĐỘNG"
           }
         }
       },
@@ -1454,6 +1871,52 @@
           "KHÔNG CÓ SẴN"
         ],
         "example": "CÓ SẴN"
+      },
+      "Supplier": {
+        "type": "object",
+        "description": "Represents a supplier object.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "name": {
+            "type": "string",
+            "example": "Nhà cung cấp Xe Đạp Xanh"
+          },
+          "contact_info": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string",
+                "example": "123 Đường ABC, Quận 1, TP.HCM"
+              },
+              "phone_number": {
+                "type": "string",
+                "example": "0987654321"
+              }
+            }
+          },
+          "contract_fee": {
+            "type": "number",
+            "format": "decimal",
+            "example": 15000.5
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the supplier contract.",
+            "enum": [
+              "HOẠT ĐỘNG",
+              "NGƯNG HOẠT ĐỘNG",
+              "CHẤM DỨT HỢP ĐỒNG"
+            ],
+            "example": "HOẠT ĐỘNG"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       }
     },
     "securitySchemes": {
