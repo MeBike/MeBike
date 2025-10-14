@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express'
 
-import type { GetTransactionReqQuery, IncreareBalanceWalletReqBody } from '~/models/requests/wallets.requests'
+import type { DecreaseBalanceWalletReqBody, GetTransactionReqQuery, IncreareBalanceWalletReqBody } from '~/models/requests/wallets.requests'
 
 import { WALLETS_MESSAGE } from '~/constants/messages'
 import walletService from '~/services/wallets.services'
@@ -31,7 +31,7 @@ export async function increateBalanceController(req: Request<any, any, IncreareB
   })
 }
 
-export async function decreaseBalanceController(req: Request<any, any, IncreareBalanceWalletReqBody>, res: Response) {
+export async function decreaseBalanceController(req: Request<any, any, DecreaseBalanceWalletReqBody>, res: Response) {
   const user = req.decoded_authorization
   const user_id = user?._id as string
 
