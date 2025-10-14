@@ -39,19 +39,32 @@ export enum ReportTypeEnum {
 }
 
 export enum RentalStatus {
-  Ongoing = "ĐANG THUÊ",
+  Rented = "ĐANG THUÊ",
   Completed = "HOÀN THÀNH",
   Cancelled = "ĐÃ HỦY",
-  Expired = "HẾT HẠN",
+  Reserved = "ĐÃ ĐẶT TRƯỚC",
+}
+
+export enum GroupByOptions {
+  Day = "DAY",
+  Month = "MONTH",
+  Year = "YEAR",
+}
+
+export enum ReservationStatus {
+  Pending = "ĐANG CHỜ XỬ LÍ",
+  Active = "ĐANG HOẠT ĐỘNG",
+  Cancelled = "ĐÃ HUỶ",
+  Expired = "ĐÃ HẾT HẠN",
 }
 
 export enum BikeStatus {
-  Available = "AVAILABLE", // Có sẵn
-  Booked = "BOOKED", // Đã được thuê / Đang sử dụng
-  Broken = "BROKEN", // Bị hỏng
-  Reserved = "RESERVED", // Đã được đặt trước
-  Maintained = "MAINTAINED", // Đang bảo trì
-  Unavailable = "UNAVAILABLE", // Không có sẵn (trong kho)
+  Available = "CÓ SẴN",
+  Booked = "ĐANG ĐƯỢC THUÊ",
+  Broken = "BỊ HỎNG",
+  Reserved = "ĐÃ ĐẶT TRƯỚC",
+  Maintained = "ĐANG BẢO TRÌ",
+  Unavailable = "KHÔNG CÓ SẴN",
 }
 
 export enum SupplierStatus {
