@@ -1,7 +1,6 @@
 
-
+"use client";
 import type React from "react";
-
 import { useState } from "react";
 import { Sidebar } from "./sidebar";
 import { Bell, Search } from "lucide-react";

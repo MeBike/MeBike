@@ -3,14 +3,14 @@
 import type React from "react";
 import Header from "@components/ui/layout/Header";
 import { Footer as LandingFooter} from "@components/landing/landing-footer";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card } from "@components/ui/card";
+import { Button } from "@components/ui/button";
+import { Input } from "@components/ui/input";
 import { Textarea } from "@components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Label } from "@components/ui/label";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
-
+import { toast } from "sonner";
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -22,7 +22,7 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("[v0] Contact form submitted:", formData);
-    alert("Cảm ơn bạn đã liên hệ! Chúng tôi sẽ phản hồi trong vòng 24 giờ.");
+    toast.success("Tin nhắn của bạn đã được gửi thành công!");
   };
   return (
     <div className="min-h-screen bg-background">
