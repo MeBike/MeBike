@@ -1,0 +1,13 @@
+type: object
+properties:
+  message:
+    type: string
+    example: 'Validation error'
+  errors:
+    type: object
+    additionalProperties:
+      type: object
+      properties:
+        msg:
+          type: string
+          example: 'Email is required'

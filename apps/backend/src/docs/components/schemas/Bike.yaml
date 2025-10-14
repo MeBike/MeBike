@@ -1,0 +1,26 @@
+type: object
+description: Represents a bike object.
+properties:
+  _id:
+    type: string
+    format: mongoId
+  station_id:
+    type: string
+    format: mongoId
+    nullable: true
+    description: ID of the station where the bike is located. Null if rented.
+  status:
+    type: string
+    enum: ["AVAILABLE", "BOOKED", "BROKEN", "RESERVED", "MAINTAINED", "UNAVAILABLE"]
+    example: "AVAILABLE"
+  supplier_id:
+    type: string
+    format: mongoId
+    nullable: true
+    description: ID of the supplier for maintenance.
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time
