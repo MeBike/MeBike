@@ -18,7 +18,7 @@ import { useAuth } from "@providers/auth-providers";
 import { useAuthActions } from "@hooks/useAuthAction";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [_, setHasToken] = useState(false);
+  const [, setHasToken] = useState(false);
   const { logIn } = useAuthActions(setHasToken);
   const { user} = useAuth();
   const [email, setEmail] = useState("");

@@ -10,32 +10,32 @@ import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
 import { authService } from "@/services/authService";
 
+interface ErrorResponse {
+    response?: {
+        data?: {
+            errors?: Record<string, { msg?: string }>;
+            message?: string;
+        };
+    };
+}
+
+interface ErrorWithMessage {
+    message: string;
+}
+
 const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-    if (
-        typeof error === "object" &&
-        error !== null &&
-        "response" in error &&
-        typeof (error as any).response === "object" &&
-        (error as any).response !== null &&
-        "data" in (error as any).response
-    ) {
-        const errorData = (error as any).response.data;
-        if (errorData.errors) {
-            const firstErrorKey = Object.keys(errorData.errors)[0];
-            if (firstErrorKey && errorData.errors[firstErrorKey]?.msg) {
-                return errorData.errors[firstErrorKey].msg;
-            }
+    const axiosError = error as ErrorResponse;
+    if (axiosError?.response?.data) {
+        const { errors, message } = axiosError.response.data;
+        if (errors) {
+            const firstError = Object.values(errors)[0];
+            if (firstError?.msg) return firstError.msg;
         }
-        else if (errorData.message) {
-            return errorData.message;
-        }
+        if (message) return message;
     }
-    else if (
-        typeof error === "object" &&
-        error !== null &&
-        "message" in error
-    ) {
-        return (error as any).message;
+    const simpleError = error as ErrorWithMessage;
+    if (simpleError?.message) {
+        return simpleError.message;
     }
     
     return defaultMessage;

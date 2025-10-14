@@ -1,12 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Smartphone } from "lucide-react";
 import Link from "next/link";
-
+import Image from "next/image";
 export function Hero() {
   return (
     <section className="relative h-[80vh] flex items-center justify-center overflow-hidden pt-10">
       <div className="absolute inset-0 z-0">
-        <img
+        <Image
+          src="/ho-chi-minh-city-metro-station-with-bicycles--mode.jpg"
+          alt="Metro station with bikes"
+          layout="fill"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+      </div>
+
+      <div className="container mx-auto px-4 lg:px-8 relative z-10">
+        <div className="max-w-3xl mx-auto text-center space-y-6">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground text-balance leading-tight">
           src="/ho-chi-minh-city-metro-station-with-bicycles--mode.jpg"
           alt="Metro station with bikes"
           className="w-full h-full object-cover"
