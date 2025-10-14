@@ -8,6 +8,39 @@ import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
+import { authService } from "@/services/authService";
+
+interface ErrorResponse {
+    response?: {
+        data?: {
+            errors?: Record<string, { msg?: string }>;
+            message?: string;
+        };
+    };
+}
+
+interface ErrorWithMessage {
+    message: string;
+}
+
+const getErrorMessage = (error: unknown, defaultMessage: string): string => {
+    const axiosError = error as ErrorResponse;
+    if (axiosError?.response?.data) {
+        const { errors, message } = axiosError.response.data;
+        if (errors) {
+            const firstError = Object.values(errors)[0];
+            if (firstError?.msg) return firstError.msg;
+        }
+        if (message) return message;
+    }
+    const simpleError = error as ErrorWithMessage;
+    if (simpleError?.message) {
+        return simpleError.message;
+    }
+    
+    return defaultMessage;
+};
+
 export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<boolean>>) => {
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -26,8 +59,9 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                             toast.error("Error changing password");
                         }
                     },
-                    onError: () => {
-                        toast.error("Error changing password");
+                    onError: (error: unknown) => {
+                        const errorMessage = getErrorMessage(error, "Error changing password");
+                        toast.error(errorMessage);
                     }
                 }
             )
@@ -40,14 +74,38 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     const { access_token, refresh_token } = result.data.result;
                     setTokens(access_token, refresh_token);
                     setHasToken(true);
-                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Logged in successfully");
+                    const fetchUserAndRedirect = async () => {
+                        try {
+                            const userResponse = await authService.getMe();
+                            if (userResponse.status === 200) {
+                                const userProfile = userResponse.data.result;
+                                queryClient.setQueryData(["user", "me"], userProfile);
+                                if (userProfile?.role === "ADMIN") {
+                                    router.push("/admin");
+                                } else if (userProfile?.role === "STAFF") {
+                                    router.push("/staff");
+                                } else {
+                                    router.push("/");
+                                }
+                            } else {
+                                console.error('Failed to fetch user profile:', userResponse.status);
+                                router.push("/");
+                            }
+                        } catch (error) {
+                            console.error('Error fetching user profile:', error);
+                            router.push("/");
+                        }
+                    };
+                    
+                    fetchUserAndRedirect();
                 },
-                onError: () => {
-                    toast.error("Error logging in");
+                onError: (error: unknown) => {
+                    const errorMessage = getErrorMessage(error, "Error logging in");
+                    toast.error(errorMessage);
                 }
             });
-        },[useLogin, queryClient , setHasToken]
+        },[useLogin, queryClient , setHasToken, router]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
@@ -59,13 +117,15 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     setHasToken(true);
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Registration Successful", { description: "Your account has been created." });
-                    router.push("/");
+                    router.push("/auth/login");
                 }else{
-                    toast.error("Error registering");
+                    const errorMessage = result.data?.message || "Error registering";
+                    toast.error(errorMessage);
                 }
             },
-            onError: () => {
-                toast.error("Error registering");
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error registering");
+                toast.error(errorMessage);
             }
         });
     },[useRegister, router, queryClient , setHasToken]);
@@ -77,16 +137,18 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     setHasToken(false);
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Logged out successfully");
-                    router.push("/login");
+                    router.push("/auth/login");
                 }else{
-                    toast.error("Error logging out");
+                    const errorMessage = result.data?.message || "Error logging out";
+                    toast.error(errorMessage);
                 }
             },
-            onError: () => {
-                toast.error("Error registering");
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error logging out");
+                toast.error(errorMessage);
             }
         });
-    },[useLogout, queryClient, setHasToken]);
+    },[useLogout, queryClient, setHasToken, router]);
     return {
         changePassword,
         logIn,

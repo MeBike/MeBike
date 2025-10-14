@@ -16,7 +16,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { useAuth } from "@/providers/auth-providers";
+import { getRefreshToken } from "@/utils/tokenManager";
 interface SidebarProps {
   userRole: "STAFF" | "ADMIN" | "USER";
 }
@@ -62,8 +63,15 @@ const menuItems = [
 
 export function Sidebar({ userRole }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const { logOut } = useAuth();
   const pathname = usePathname();
-
+  const handleLogout = () => {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      logOut(refreshToken);
+    }
+    // Optionally handle the case where refreshToken is null
+  }
   const filteredMenuItems = menuItems.filter((item) =>
     item.roles.includes(userRole)
   );
@@ -152,7 +160,8 @@ export function Sidebar({ userRole }: SidebarProps) {
           <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
             <LogOut className="w-5 h-5 flex-shrink-0" />
             {!collapsed && (
-              <span className="text-sm font-medium">Đăng xuất</span>
+              <span className="text-sm font-medium"
+              onClick={() => handleLogout()}>Đăng xuất</span>
             )}
           </button>
         </div>
