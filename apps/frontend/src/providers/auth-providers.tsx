@@ -5,6 +5,13 @@ import { getAccessToken , clearTokens} from "@/utils/tokenManager";
 import { DetailUser } from "@/services/authService";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserProfileQuery } from "@hooks/query/useUserProfileQuery";
+
+interface AuthError {
+  response?: {
+    status: number;
+  };
+}
+
 type AuthContextType = ReturnType<typeof useAuthActions> & {
   user : DetailUser | null;
   isAuthenticated: boolean;
@@ -44,8 +51,9 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
   
   useEffect(() => {
     if (isError && hasToken && isInitialized) {
-      const hasResponse = typeof isError === "object" && isError !== null && "response" in isError && typeof (isError as any).response === "object";
-      const status = hasResponse ? (isError as any).response.status : undefined;
+      const authError = isError as unknown as AuthError;
+      const hasResponse = authError?.response && typeof authError.response === "object";
+      const status = hasResponse && authError.response ? authError.response.status : undefined;
       const isAuthError = hasResponse && (status === 401 || status === 403);
       
       if (isAuthError) {

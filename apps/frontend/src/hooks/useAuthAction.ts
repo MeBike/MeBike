@@ -80,16 +80,12 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                             const userResponse = await authService.getMe();
                             if (userResponse.status === 200) {
                                 const userProfile = userResponse.data.result;
-                                console.log('Fetched user profile:', userProfile);
                                 queryClient.setQueryData(["user", "me"], userProfile);
                                 if (userProfile?.role === "ADMIN") {
-                                    console.log('Redirecting to admin');
                                     router.push("/admin");
                                 } else if (userProfile?.role === "STAFF") {
-                                    console.log('Redirecting to staff');
                                     router.push("/staff");
                                 } else {
-                                    console.log('Redirecting to home, role:', userProfile?.role);
                                     router.push("/");
                                 }
                             } else {
@@ -152,7 +148,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 toast.error(errorMessage);
             }
         });
-    },[useLogout, queryClient, setHasToken]);
+    },[useLogout, queryClient, setHasToken, router]);
     return {
         changePassword,
         logIn,
