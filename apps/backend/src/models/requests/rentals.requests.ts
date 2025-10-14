@@ -3,7 +3,6 @@ import { BikeStatus, RentalStatus } from '~/constants/enums'
 
 export type CreateRentalReqBody = {
   bike_id: ObjectId
-  media_urls?: string[]
 }
 
 export type RentalParams = {
@@ -20,5 +19,11 @@ export type UpdateRentalReqBody = {
 
 export type CancelRentalReqBody = {
   bikeStatus?: BikeStatus
+  reason: string
+}
+
+export type EndRentalByAdminOrStaffReqBody = {
+  end_station: string,
+  end_time?: string
   reason: string
 }

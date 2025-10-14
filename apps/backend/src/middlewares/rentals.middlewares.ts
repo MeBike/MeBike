@@ -1,5 +1,4 @@
 import { checkSchema } from 'express-validator'
-import { ObjectId } from 'mongodb'
 
 import { BikeStatus, RentalStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
@@ -10,9 +9,10 @@ import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { toObjectId } from '~/utils/string'
 
-const ALLOWED_CREATED_FIELDS = ['bike_id', 'media_urls', 'status', 'total_price', 'reason']
+const ALLOWED_CREATED_FIELDS = ['bike_id', 'status', 'total_price', 'reason']
 const ALLOWED_UPDATED_FIELDS = ['end_station', 'end_time', 'status', 'total_price', 'reason']
 const ALLOWED_CANCELLED_FIELDS = ['bikeStatus', 'reason']
+const ALLOWED_ENDED_RENTAL_FIELDS = ['end_station', 'end_time', 'reason']
 
 export const createRentalSessionValidator = validate(
   checkSchema(
@@ -55,26 +55,6 @@ export const createRentalSessionValidator = validate(
 
             req.station = station
             req.bike = bike
-            return true
-          }
-        }
-      },
-      media_urls: {
-        optional: true,
-        isArray: {
-          errorMessage: RENTALS_MESSAGE.INVALID_MEDIA_URLS
-        },
-        custom: {
-          options: (value: string[]) => {
-            for (const url of value) {
-              const urlPattern = /^(https?:\/\/)([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/i
-              if (!urlPattern.test(url)) {
-                throw new ErrorWithStatus({
-                  message: RENTALS_MESSAGE.INVALID_URL_FORMAT.replace('%s', url),
-                  status: HTTP_STATUS.BAD_REQUEST
-                })
-              }
-            }
             return true
           }
         }
@@ -130,6 +110,99 @@ export const endRentalSessionValidator = validate(
         bail: true
       }
     }
+  })
+)
+
+export const endRentalByAdminOrStaffValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: {
+        errorMessage: RENTALS_MESSAGE.REQUIRED_ID,
+        bail: true
+      },
+      isMongoId: {
+        errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Rental Id'),
+        bail: true
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const currentRental = await databaseService.rentals.findOne({
+            _id: toObjectId(value),
+            status: RentalStatus.Rented
+          })
+
+          if (!currentRental) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.NOT_FOUND_RENTED_RENTAL.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          req.rental = currentRental
+          return true
+        },
+        bail: true
+      }
+    },
+    end_station: {
+      in: ['body'],
+      notEmpty:{
+        errorMessage: RENTALS_MESSAGE.REQUIRED_END_STATION
+      },
+      isMongoId: {
+        errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'end_station'),
+        bail: true
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const station = await databaseService.stations.findOne({ _id: toObjectId(value) })
+          if (!station) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+          req.station = station
+          return true
+        }
+      }
+    },
+
+    end_time: {
+      in: ['body'],
+      optional: true,
+      isISO8601: {
+        errorMessage: RENTALS_MESSAGE.INVALID_END_TIME_FORMAT
+      }
+    },
+    reason: {
+        in: ['body'],
+        notEmpty: {
+          errorMessage: RENTALS_MESSAGE.REQUIRED_UPDATED_REASON
+        },
+        isString: {
+          errorMessage: RENTALS_MESSAGE.INVALID_REASON
+        },
+        isLength: {
+          options: { max: 255 },
+          errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
+        }
+      },
+      '*': {
+        in: ['body'],
+        custom: {
+          options: (value, { path }) => {
+            if (!ALLOWED_ENDED_RENTAL_FIELDS.includes(path)) {
+              throw new ErrorWithStatus({
+                message: RENTALS_MESSAGE.NOT_ALLOWED_UPDATED_FIELD.replace('%s', path),
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
+        }
+      }
   })
 )
 

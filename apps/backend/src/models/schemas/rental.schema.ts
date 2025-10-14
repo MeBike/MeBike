@@ -7,7 +7,6 @@ type RentalType = {
   _id?: ObjectId;
   user_id: ObjectId;
   bike_id: ObjectId;
-  media_urls?: string[],
   start_station: ObjectId;
   end_station?: ObjectId;
   start_time: Date;
@@ -23,7 +22,6 @@ export default class Rental {
   _id?: ObjectId;
   user_id: ObjectId;
   bike_id: ObjectId;
-  media_urls?: string[];
   start_station: ObjectId;
   end_station?: ObjectId;
   start_time: Date;
@@ -40,7 +38,6 @@ export default class Rental {
     this._id = rental._id || new ObjectId();
     this.user_id = rental.user_id;
     this.bike_id = rental.bike_id;
-    this.media_urls = rental.media_urls ?? [];
     this.start_station = rental.start_station;
     this.end_station = rental.end_station ?? undefined;
     this.start_time = rental.start_time ?? localTime;

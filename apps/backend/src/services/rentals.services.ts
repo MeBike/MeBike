@@ -11,7 +11,7 @@ import { toObjectId } from '~/utils/string'
 
 import databaseService from './database.services'
 import { getLocalTime } from '~/utils/date'
-import { CancelRentalReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
+import { CancelRentalReqBody, EndRentalByAdminOrStaffReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 
 class RentalsService {
@@ -19,12 +19,10 @@ class RentalsService {
     user_id,
     start_station,
     bike_id,
-    media_urls
   }: {
     user_id: ObjectId | string
     start_station: ObjectId
     bike_id: ObjectId
-    media_urls: string[]
   }) {
     const session = databaseService.getClient().startSession()
 
@@ -38,7 +36,6 @@ class RentalsService {
           start_station,
           bike_id,
           start_time: now,
-          media_urls,
           status: RentalStatus.Rented
         })
 
@@ -123,12 +120,100 @@ class RentalsService {
             { _id: result.bike_id },
             {
               $set: {
+                station_id: end_station,
                 status: BikeStatus.Available,
                 updated_at: now
               }
             },
             { session }
           )
+        }
+      })
+      return {
+        ...endedRental,
+        total_price: Number(endedRental.total_price.toString())
+      }
+    } catch (error) {
+      console.error(COMMON_MESSAGE.CREATE_SESSION_FAIL, error)
+      throw error
+    } finally {
+      await session.endSession()
+    }
+  }
+
+  async endRentalByAdminOrStaff({ user_id, rental, payload }: { user_id: ObjectId; rental: Rental, payload: EndRentalByAdminOrStaffReqBody}) {
+    const { end_station, end_time, reason} = payload
+    const objStationId = toObjectId(end_station)
+    const session = databaseService.getClient().startSession()
+    try {
+      let endedRental: Rental = rental
+      await session.withTransaction(async () => {
+        const user = await databaseService.users.findOne({ _id: user_id })
+        if (!user) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
+
+        const now = getLocalTime()
+        const duration = this.generateDuration(rental.start_time, now)
+        const totalPrice = this.generateTotalPrice(duration)
+
+        const endTime = end_time ? new Date(end_time) : now
+        if(endTime > now){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.END_DATE_CANNOT_BE_IN_FUTURE,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+          if (endTime < rental.start_time) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.END_TIME_MUST_GREATER_THAN_START_TIME,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+        const updatedData: Partial<Rental> = {
+          end_station: objStationId,
+          end_time: endTime,
+          duration: new Int32(duration),
+          total_price: Decimal128.fromString(totalPrice.toString()),
+          status: RentalStatus.Completed
+        }
+
+        const result = await databaseService.rentals.findOneAndUpdate(
+          { _id: rental._id },
+          {
+            $set: {
+              ...updatedData,
+              updated_at: now
+            }
+          },
+          { returnDocument: 'after', session }
+        )
+
+        if (result) {
+          endedRental = result
+          await databaseService.bikes.updateOne(
+            { _id: result.bike_id },
+            {
+              $set: {
+                station_id: objStationId,
+                status: BikeStatus.Available,
+                updated_at: now
+              }
+            },
+            { session }
+          )
+          
+          const log = new RentalLog({
+            rental_id: rental._id!,
+            admin_id: user_id,
+            changes: Object.keys(updatedData),
+            reason
+          })
+          await databaseService.rentalLogs.insertOne(log)
         }
       })
       return {
