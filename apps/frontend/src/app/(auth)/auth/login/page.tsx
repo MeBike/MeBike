@@ -1,21 +1,21 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@components/ui/button";
+import { Input } from "@components/ui/input";
+import { Label } from "@components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+} from "@components/ui/card";
+import { Separator } from "@components/ui/separator";
 import { Bike, Mail, Lock, Eye, EyeOff} from "lucide-react";
 import React from "react";  
 import { useAuth } from "@providers/auth-providers";
-import { useAuthActions } from "@/hooks/useAuthAction";
+import { useAuthActions } from "@hooks/useAuthAction";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [hasToken, setHasToken] = useState(false);
@@ -84,7 +84,6 @@ const Login = () => {
                   />
                 </div>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
                   Mật khẩu
@@ -114,7 +113,6 @@ const Login = () => {
                   </button>
                 </div>
               </div>
-
               <div className="text-right">
                 <Button
                   className="text-sm text-white hover:text-metro-secondary transition-colors bg-[hsl(214,100%,40%)]"
@@ -132,10 +130,7 @@ const Login = () => {
                 Đăng nhập
               </Button>
             </form>
-
             <Separator className="my-6" />
-
-            {/* Register Link */}
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Chưa có tài khoản?{" "}
@@ -148,7 +143,6 @@ const Login = () => {
               </p>
             </div>
 
-            {/* Back to Home */}
             <div className="text-center pt-4">
               <Button
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors text-white bg-[hsl(214,100%,40%)]"

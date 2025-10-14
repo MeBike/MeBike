@@ -16,7 +16,7 @@ const Header = () => {
           <div>
             <Button
               variant="ghost"
-              className="text_header cursor-pointer"
+              className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/guide")}
             >
               Hướng dẫn sử dụng
@@ -25,7 +25,7 @@ const Header = () => {
           <div>
             <Button
               variant="ghost"
-              className="text_header cursor-pointer"
+              className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/station")}
             >
               Danh sách trạm
@@ -34,21 +34,24 @@ const Header = () => {
           <div>
             <Button
               variant="ghost"
-              className="text_header cursor-pointer"
+              className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/pricing")}
             >
               Bảng giá
             </Button>
           </div>
           <div>
-            <Button variant="ghost" className="text_header cursor-pointer">
+            <Button
+              variant="ghost"
+              className="text_header cursor-pointer hover:bg-primary"
+            >
               Dịch vụ
             </Button>
           </div>
           <div>
             <Button
               variant="ghost"
-              className="text_header cursor-pointer"
+              className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/auth/login")}
             >
               Đăng nhập
@@ -56,7 +59,7 @@ const Header = () => {
             |
             <Button
               variant="ghost"
-              className="text_header cursor-pointer"
+              className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/auth/register")}
             >
               Đăng ký

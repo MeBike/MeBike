@@ -110,7 +110,7 @@ export default function About() {
             <Button
               size="lg"
               variant="outline"
-              className="border-white text-white hover:bg-white hover:text-foreground cursor-pointer"
+              className="border-white text-black hover:bg-white hover:text-foreground cursor-pointer"
             >
               Xem thêm thông tin
             </Button>

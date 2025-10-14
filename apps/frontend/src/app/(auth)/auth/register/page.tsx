@@ -19,14 +19,15 @@ import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { toast } from "sonner";
 import { email } from "zod";
+import { useAuth } from "@/providers/auth-providers";
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [hasToken, setHasToken] = useState(false);
   const router = useRouter();
-  
-  const { register: registerUser , logIn} = useAuthActions(setHasToken);
+  const { user } = useAuth();
+  const { register: registerUser , logIn , } = useAuthActions(setHasToken);
 
   const {
     register,
@@ -49,19 +50,13 @@ const RegisterPage = () => {
       toast.error("Vui lòng đồng ý với điều khoản sử dụng!");
       return;
     }
-    
-    // Loại bỏ phone_number nếu empty để tránh validation lỗi
     const registerData = { ...data };
     if (!registerData.phone_number || registerData.phone_number.trim() === '') {
       delete registerData.phone_number;
     }
-    
     registerUser(registerData);
-    const value = {
-      email: registerData.email,
-      password: registerData.password
-    }
-    logIn(value);
+    console.log(user);
+
   };
 
   return (
