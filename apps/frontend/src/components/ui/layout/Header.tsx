@@ -48,23 +48,26 @@ const Header = () => {
               Dịch vụ
             </Button>
           </div>
-          
         </div>
-        <div>
-          <Button
-            variant="ghost"
-            className="text_header cursor-pointer hover:bg-primary"
-            onClick={() => router.push("/auth/login")}
-          >
-            Đăng nhập
-          </Button>
-          <Button
-            onClick={() => router.push("/auth/register")}
-            className="bg-[linear-gradient(135deg,_#2563eb,_#60a5fa)] text-white hover:scale-105 hover:shadow-[var(--shadow-metro)]
+        <div className="flex gap-3">
+          <div>
+            <Button
+              variant="ghost"
+              className="text_header cursor-pointer hover:bg-primary"
+              onClick={() => router.push("/auth/login")}
+            >
+              Đăng nhập
+            </Button>
+          </div>
+          <div>
+            <Button
+              onClick={() => router.push("/auth/register")}
+              className="bg-[linear-gradient(135deg,_#2563eb,_#60a5fa)] text-white hover:scale-105 hover:shadow-[var(--shadow-metro)]
             cursor-pointer"
-          >
-            Đăng ký
-          </Button>
+            >
+              Đăng ký
+            </Button>
+          </div>
         </div>
       </div>
     </header>
