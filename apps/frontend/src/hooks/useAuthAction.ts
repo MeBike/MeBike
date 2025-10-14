@@ -8,6 +8,7 @@ import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
+import { authService } from "@/services/authService";
 
 // Helper function để xử lý error message từ API response
 const getErrorMessage = (error: any, defaultMessage: string): string => {
@@ -67,15 +68,42 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     const { access_token, refresh_token } = result.data.result;
                     setTokens(access_token, refresh_token);
                     setHasToken(true);
-                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Logged in successfully");
+                    const fetchUserAndRedirect = async () => {
+                        try {
+                            const userResponse = await authService.getMe();
+                            if (userResponse.status === 200) {
+                                const userProfile = userResponse.data.result;
+                                console.log('Fetched user profile:', userProfile);
+                                queryClient.setQueryData(["user", "me"], userProfile);
+                                if (userProfile?.role === "ADMIN") {
+                                    console.log('Redirecting to admin');
+                                    router.push("/admin");
+                                } else if (userProfile?.role === "STAFF") {
+                                    console.log('Redirecting to staff');
+                                    router.push("/staff");
+                                } else {
+                                    console.log('Redirecting to home, role:', userProfile?.role);
+                                    router.push("/");
+                                }
+                            } else {
+                                console.error('Failed to fetch user profile:', userResponse.status);
+                                router.push("/");
+                            }
+                        } catch (error) {
+                            console.error('Error fetching user profile:', error);
+                            router.push("/");
+                        }
+                    };
+                    
+                    fetchUserAndRedirect();
                 },
                 onError: (error: any) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin, queryClient , setHasToken]
+        },[useLogin, queryClient , setHasToken, router]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {

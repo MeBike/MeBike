@@ -26,18 +26,11 @@ const Login = () => {
   const router = useRouter();
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const response = logIn({ email, password });
-    console.log(response);
-    console.log(user);
-    if(user?.role === "ADMIN"){
-      router.push("/admin");
-    }
-    else if(user?.role === "STAFF")
-      router.push("/staff");
-    else
-      router.push("/" );
+    logIn({ email, password });
   };
-
+  React.useEffect(() => {
+    console.log(user);
+  }, [user]);
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 

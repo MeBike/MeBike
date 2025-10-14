@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/card";
 import type { Station } from "@custom-types";
 import Image from "next/image";
+import { Footer } from "@/components/landing/landing-footer";
+import { CTA } from "@/components/landing/cta";
+import Header from "@/components/ui/layout/Header";
 const Page = () => {
   const stations: Station[] = [
     {
@@ -304,7 +307,7 @@ const Page = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-      {/* Header Section */}
+      <Header />
       <div className="relative">
         <div className="w-full h-64 bg-gradient-to-r from-blue-600 to-green-600 relative overflow-hidden">
           <Image
@@ -455,12 +458,7 @@ const Page = () => {
                     📱 Chia sẻ
                   </Button>
                 </div>
-                {/* <Separator />
-                <BikeStationInfo
-                  station={selectedStation}
-                  bikeStation={bikeStation}
-                  onBack={() => setSelectedStation(null)}
-                /> */}
+                
               </CardContent>
             </Card>
           </div>
@@ -478,6 +476,8 @@ const Page = () => {
           </div>
         )}
       </div>
+      <CTA/>
+      <Footer />
     </div>
   );
 };

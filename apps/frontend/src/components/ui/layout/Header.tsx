@@ -37,15 +37,16 @@ const Header = () => {
               className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/pricing")}
             >
-              Cách hoạt động
+              Bảng giá
             </Button>
           </div>
           <div>
             <Button
               variant="ghost"
+              onClick={() => router.push("/contact")}
               className="text_header cursor-pointer hover:bg-primary"
             >
-              Dịch vụ
+              Liên hệ
             </Button>
           </div>
         </div>

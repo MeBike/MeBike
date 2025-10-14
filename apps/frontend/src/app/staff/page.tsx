@@ -27,7 +27,6 @@ export default function DashboardPage() {
           <ProfileHeader user={user} />
         </section>
 
-        {/* Stats Section */}
         <section>
           <h2 className="text-2xl font-bold text-foreground mb-4">
             Thống kê tổng quan
@@ -64,7 +63,6 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Charts and Activity Section */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <RentalChart />

@@ -41,7 +41,7 @@ export class FetchHttpClient {
         return response;
       },
       async (error) => {
-        console.error('API Error:', error.response?.status, error.config?.url, error.response?.data);
+        console.log('API Error:', error.response?.status, error.config?.url, error.response?.data);
         const originalRequest = error.config;
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
          window.dispatchEvent(new Event("auth:session_expired"));
