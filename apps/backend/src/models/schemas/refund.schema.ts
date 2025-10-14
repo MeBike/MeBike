@@ -8,6 +8,7 @@ export type RefundType = {
   amount: Decimal128
   status?: RefundStatus
   created_at?: Date
+  updated_at?: Date
 }
 
 export default class Refund {
@@ -17,6 +18,7 @@ export default class Refund {
   amount: Decimal128
   status: RefundStatus
   created_at?: Date
+  updated_at?: Date
 
   constructor(refund: RefundType) {
     const currentDate = new Date()
@@ -29,5 +31,6 @@ export default class Refund {
     this.amount = refund.amount || Decimal128.fromString('0')
     this.status = refund.status || RefundStatus.Pending
     this.created_at = refund.created_at || localTime
+    this.updated_at = refund.updated_at || localTime
   }
 }

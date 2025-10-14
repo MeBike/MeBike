@@ -308,12 +308,13 @@ class WalletService {
       })
     }
 
-    const updateData: any = {
-      status: newStatusTyped
-    }
+    const currentDate = new Date()
+    const vietnamTimezoneOffset = 7 * 60
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
 
-    if (newStatusTyped === RefundStatus.Completed) {
-      updateData.resolved_at = new Date()
+    const updateData: any = {
+      status: newStatusTyped,
+      updated_at: localTime
     }
 
     const result = await databaseService.refunds.findOneAndUpdate(
