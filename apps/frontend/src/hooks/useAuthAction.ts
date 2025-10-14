@@ -8,6 +8,32 @@ import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
+
+// Helper function để xử lý error message từ API response
+const getErrorMessage = (error: any, defaultMessage: string): string => {
+    if (error?.response?.data) {
+        const errorData = error.response.data;
+        
+        // Nếu có errors field với thông tin chi tiết
+        if (errorData.errors) {
+            const firstErrorKey = Object.keys(errorData.errors)[0];
+            if (firstErrorKey && errorData.errors[firstErrorKey]?.msg) {
+                return errorData.errors[firstErrorKey].msg;
+            }
+        }
+        // Nếu chỉ có message
+        else if (errorData.message) {
+            return errorData.message;
+        }
+    }
+    // Fallback cho error.message
+    else if (error?.message) {
+        return error.message;
+    }
+    
+    return defaultMessage;
+};
+
 export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<boolean>>) => {
     const router = useRouter();
     const queryClient = useQueryClient();
@@ -26,8 +52,9 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                             toast.error("Error changing password");
                         }
                     },
-                    onError: () => {
-                        toast.error("Error changing password");
+                    onError: (error: any) => {
+                        const errorMessage = getErrorMessage(error, "Error changing password");
+                        toast.error(errorMessage);
                     }
                 }
             )
@@ -43,8 +70,9 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Logged in successfully");
                 },
-                onError: () => {
-                    toast.error("Error logging in");
+                onError: (error: any) => {
+                    const errorMessage = getErrorMessage(error, "Error logging in");
+                    toast.error(errorMessage);
                 }
             });
         },[useLogin, queryClient , setHasToken]
@@ -59,13 +87,15 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     setHasToken(true);
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Registration Successful", { description: "Your account has been created." });
-                    router.push("/");
+                    router.push("/auth/login");
                 }else{
-                    toast.error("Error registering");
+                    const errorMessage = result.data?.message || "Error registering";
+                    toast.error(errorMessage);
                 }
             },
-            onError: () => {
-                toast.error("Error registering");
+            onError: (error: any) => {
+                const errorMessage = getErrorMessage(error, "Error registering");
+                toast.error(errorMessage);
             }
         });
     },[useRegister, router, queryClient , setHasToken]);
@@ -79,11 +109,13 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     toast.success("Logged out successfully");
                     router.push("/auth/login");
                 }else{
-                    toast.error("Error logging out");
+                    const errorMessage = result.data?.message || "Error logging out";
+                    toast.error(errorMessage);
                 }
             },
-            onError: () => {
-                toast.error("Error registering");
+            onError: (error: any) => {
+                const errorMessage = getErrorMessage(error, "Error logging out");
+                toast.error(errorMessage);
             }
         });
     },[useLogout, queryClient, setHasToken]);

@@ -25,7 +25,7 @@ export class FetchHttpClient {
       headers: {
         "Content-Type": "application/json;charset=UTF-8",
       },
-       timeout: 5000,
+       timeout: 30000, // Tăng lên 30 giây để đủ thời gian cho email service
     });
     this.axiosInstance.interceptors.request.use((config) => {
       const access_token = getAccessToken();
@@ -37,9 +37,11 @@ export class FetchHttpClient {
 
     this.axiosInstance.interceptors.response.use(
       (response) => {
-         return response;
+        console.log('API Response:', response.status, response.config.url);
+        return response;
       },
       async (error) => {
+        console.error('API Error:', error.response?.status, error.config?.url, error.response?.data);
         const originalRequest = error.config;
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
          window.dispatchEvent(new Event("auth:session_expired"));
@@ -74,25 +76,25 @@ export class FetchHttpClient {
             this.isRefreshing = false;
           }
         }
-        switch (error.response?.status) {
-          case HTTP_STATUS.FORBIDDEN:
-            console.log("API: 403 Forbidden");
-            window.location.href = `/error/${HTTP_STATUS.FORBIDDEN}`;
-            break;
-          case HTTP_STATUS.NOT_FOUND:
-            console.log("API: 404 Not Found");
-            break;
-          case HTTP_STATUS.INTERNAL_SERVER_ERROR:
-            console.log("API: 500 Internal Server Error");
-            window.location.href = `/error/${HTTP_STATUS.INTERNAL_SERVER_ERROR}`;
-            break;
-          case HTTP_STATUS.SERVICE_UNAVAILABLE:
-            console.log("API: 503 Service Unavailable");
-            window.location.href = `/error/${HTTP_STATUS.SERVICE_UNAVAILABLE}`;
-            break;
-          default:
-            console.error(`API Error: ${error.response?.status}`);
-        }
+        // switch (error.response?.status) {
+        //   case HTTP_STATUS.FORBIDDEN:
+        //     console.log("API: 403 Forbidden");
+        //     window.location.href = `/error/${HTTP_STATUS.FORBIDDEN}`;
+        //     break;
+        //   case HTTP_STATUS.NOT_FOUND:
+        //     console.log("API: 404 Not Found");
+        //     break;
+        //   // case HTTP_STATUS.INTERNAL_SERVER_ERROR:
+        //   //   console.log("API: 500 Internal Server Error");
+        //   //   window.location.href = `/error/${HTTP_STATUS.INTERNAL_SERVER_ERROR}`;
+        //   //   break;
+        //   case HTTP_STATUS.SERVICE_UNAVAILABLE:
+        //     console.log("API: 503 Service Unavailable");
+        //     window.location.href = `/error/${HTTP_STATUS.SERVICE_UNAVAILABLE}`;
+        //     break;
+        //   default:
+        //     console.error(`API Error: ${error.response?.status}`);
+        // }
 
         return Promise.reject(error);
       }
@@ -101,22 +103,24 @@ export class FetchHttpClient {
 
   private async refreshAccessToken(): Promise<string> {
     const refreshToken = getRefreshToken();
+    console.log('Refreshing token with:', refreshToken);
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
     const response = await axios.post(
-      `${this.baseURL}/auth/refresh`,
+      `${this.baseURL}/users/refresh-token`,
       { refresh_token: refreshToken },
       { headers: { "Content-Type": "application/json" } }
     );
+    console.log('Refresh token response:', response.status, response.data);
     if (response.status !== HTTP_STATUS.OK) {
       clearTokens();
       window.location.href = "/login";
       throw new Error("Refresh token expired");
     }
     const data = response.data;
-    setTokens(data.access_token, data.refresh_token);
-    return data.access_token;
+    setTokens(data.result.access_token, data.result.refresh_token);
+    return data.result.access_token;
   }
 
   private processQueue(error: unknown, token: string | null) {

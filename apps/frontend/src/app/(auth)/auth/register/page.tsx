@@ -1,10 +1,13 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RegisterSchemaFormData, registerSchema } from "@/schemas/authSchema";
 import {
   Card,
   CardContent,
@@ -13,48 +16,52 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
-
+import { useAuthActions } from "@/hooks/useAuthAction";
+import { toast } from "sonner";
+import { email } from "zod";
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
   const router = useRouter();
+  
+  const { register: registerUser , logIn} = useAuthActions(setHasToken);
 
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    password: "",
-    confirmPassword: "",
-    agreeTerms: false,
+  const {
+    register,
+    handleSubmit, 
+    formState: { errors, isSubmitting },
+    watch,
+  } = useForm<RegisterSchemaFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      full_name: "",
+      email: "",
+      password: "",
+      phone_number: "",
+      confirm_password: "",
+    },
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleCheckedChange = (checked: boolean) => {
-    setFormData((prev) => ({
-      ...prev,
-      agreeTerms: checked,
-    }));
-  };
-
-  const handleRegister = (e: React.FormEvent) => {
-    // e.preventDefault();
-    // if (formData.password !== formData.confirmPassword) {
-    //   alert("Mật khẩu xác nhận không khớp!");
-    //   return;
-    // }
-    // if (!formData.agreeTerms) {
-    //   alert("Vui lòng đồng ý với điều khoản sử dụng!");
-    //   return;
-    // }
-    // // TODO: Integrate with Supabase auth
-    // console.log("Register with:", formData);
+  const handleRegister = async (data: RegisterSchemaFormData) => {
+    if (!agreeTerms) {
+      toast.error("Vui lòng đồng ý với điều khoản sử dụng!");
+      return;
+    }
+    
+    // Loại bỏ phone_number nếu empty để tránh validation lỗi
+    const registerData = { ...data };
+    if (!registerData.phone_number || registerData.phone_number.trim() === '') {
+      delete registerData.phone_number;
+    }
+    
+    registerUser(registerData);
+    const value = {
+      email: registerData.email,
+      password: registerData.password
+    }
+    logIn(value);
   };
 
   return (
@@ -88,28 +95,27 @@ const RegisterPage = () => {
         
           <CardContent className="space-y-4 overflow-y-auto">
             
-            <form onSubmit={handleRegister} className="space-y-4">
+            <form onSubmit={handleSubmit(handleRegister)} className="space-y-4">
             
+              {/* Họ và tên */}
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm font-medium">
+                <Label htmlFor="full_name" className="text-sm font-medium">
                   Họ và tên
                 </Label>
                 <div className="relative">
-                 
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="fullName"
-                    name="fullName" 
+                    id="full_name"
+                    {...register("full_name")}
                     type="text"
                     placeholder="Nguyễn Văn A"
-                    value={formData.fullName} 
-                    onChange={handleInputChange} 
                     className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                    required
                   />
+                  {errors.full_name && (
+                    <p className="text-sm text-red-500 mt-1">{errors.full_name.message}</p>
+                  )}
                 </div>
               </div>
-
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
@@ -119,14 +125,34 @@ const RegisterPage = () => {
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
-                    name="email"
+                    {...register("email")}
                     type="email"
                     placeholder="example@email.com"
-                    value={formData.email}
-                    onChange={handleInputChange}
                     className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                    required
                   />
+                  {errors.email && (
+                    <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Số điện thoại */}
+              <div className="space-y-2">
+                <Label htmlFor="phone_number" className="text-sm font-medium">
+                  Số điện thoại (tùy chọn)
+                </Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone_number"
+                    {...register("phone_number")}
+                    type="tel"
+                    placeholder="0912345678"
+                    className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  />
+                  {errors.phone_number && (
+                    <p className="text-sm text-red-500 mt-1">{errors.phone_number.message}</p>
+                  )}
                 </div>
               </div>
 
@@ -139,13 +165,10 @@ const RegisterPage = () => {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
-                    name="password"
+                    {...register("password")}
                     type={showPassword ? "text" : "password"}
                     placeholder="Tối thiếu 8 ký tự"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                    required
+                    className="pl-10 pr-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   />
                   <button
                     type="button"
@@ -158,13 +181,16 @@ const RegisterPage = () => {
                       <Eye className="h-5 w-4" />
                     )}
                   </button>
+                  {errors.password && (
+                    <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+                  )}
                 </div>
               </div>
 
              
               <div className="space-y-2">
                 <Label
-                  htmlFor="confirmPassword"
+                  htmlFor="confirm_password"
                   className="text-sm font-medium"
                 >
                   Xác nhận mật khẩu
@@ -172,14 +198,11 @@ const RegisterPage = () => {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
+                    id="confirm_password"
+                    {...register("confirm_password")}
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Nhập lại mật khẩu"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                    required
+                    className="pl-10 pr-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   />
                   <button
                     type="button"
@@ -192,6 +215,9 @@ const RegisterPage = () => {
                       <Eye className="h-5 w-4" />
                     )}
                   </button>
+                  {errors.confirm_password && (
+                    <p className="text-sm text-red-500 mt-1">{errors.confirm_password.message}</p>
+                  )}
                 </div>
               </div>
 
@@ -199,10 +225,8 @@ const RegisterPage = () => {
               <div className="flex items-start space-x-3 pt-2">
                 <Checkbox
                   id="terms"
-                  checked={formData.agreeTerms}
-                  onCheckedChange={(checked) =>
-                    handleCheckedChange(checked as boolean)
-                  }
+                  checked={agreeTerms}
+                  onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
                   className="mt-1"
                 />
                 <label
@@ -234,10 +258,10 @@ const RegisterPage = () => {
                   type="submit"
                   className="w-full h-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
                   bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white"
-                  disabled={!formData.agreeTerms}
+                  disabled={!agreeTerms || isSubmitting}
                 >
                   <Bike className="mr-2 h-5 w-5" />
-                  Đăng ký
+                  {isSubmitting ? "Đang đăng ký..." : "Đăng ký"}
                 </Button>
               </div>
             </form>

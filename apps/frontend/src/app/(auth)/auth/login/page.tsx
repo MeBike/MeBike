@@ -15,16 +15,27 @@ import { Separator } from "@/components/ui/separator";
 import { Bike, Mail, Lock, Eye, EyeOff} from "lucide-react";
 import React from "react";  
 import { useAuth } from "@providers/auth-providers";
+import { useAuthActions } from "@/hooks/useAuthAction";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-   const { logIn } = useAuth();
+  const [hasToken, setHasToken] = useState(false);
+  const { logIn , register} = useAuthActions(setHasToken);
+  const { user} = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    logIn({ email, password });
-    router.push('/staff')
+    const response = logIn({ email, password });
+    console.log(response);
+    console.log(user);
+    if(user?.role === "ADMIN"){
+      router.push("/admin");
+    }
+    else if(user?.role === "STAFF")
+      router.push("/staff");
+    else
+      router.push("/" );
   };
 
   return (
@@ -106,7 +117,7 @@ const Login = () => {
 
               <div className="text-right">
                 <Button
-                  className="text-sm text-metro-primary hover:text-metro-secondary transition-colors"
+                  className="text-sm text-white hover:text-metro-secondary transition-colors bg-[hsl(214,100%,40%)]"
                   onClick={() => router.push("/auth/forgot-password")}
                 >
                   Quên mật khẩu?
@@ -114,43 +125,12 @@ const Login = () => {
               </div>
               <Button
                 type="submit"
-                className="w-full h-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
+                className="w-full h-12  hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
                 bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white"
               >
                 <Bike className="mr-2 h-5 w-5" />
                 Đăng nhập
               </Button>
-              {/* <Separator className="my-1" />
-              <Button
-                className="w-full h-12 bg-white hover:bg-gray-50 shadow-md hover:shadow-lg 
-             transition-all duration-300 border border-gray-200 
-             text-black font-medium p-3 flex items-center justify-center gap-2"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 48 48"
-                >
-                  <path
-                    fill="#4285F4"
-                    d="M24 9.5c3.54 0 6.73 1.22 9.24 3.6l6.85-6.85C35.59 2.38 30.12 0 24 0 14.62 0 6.39 5.34 2.54 13.11l7.98 6.2C12.38 13.05 17.74 9.5 24 9.5z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M46.5 24.5c0-1.56-.14-3.06-.39-4.5H24v9h12.7c-.54 2.9-2.18 5.36-4.65 7.04l7.27 5.64C43.72 37.08 46.5 31.22 46.5 24.5z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M10.52 28.31A14.49 14.49 0 0 1 9.5 24c0-1.49.27-2.93.75-4.31l-7.98-6.2A23.9 23.9 0 0 0 0 24c0 3.82.92 7.42 2.54 10.61l7.98-6.3z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M24 48c6.12 0 11.28-2.02 15.04-5.49l-7.27-5.64c-2.02 1.36-4.62 2.13-7.77 2.13-6.26 0-11.62-3.55-14.48-8.81l-7.98 6.3C6.39 42.66 14.62 48 24 48z"
-                  />
-                </svg>
-                <span>Sign in with Google</span>
-              </Button> */}
             </form>
 
             <Separator className="my-6" />
@@ -160,7 +140,7 @@ const Login = () => {
               <p className="text-sm text-muted-foreground">
                 Chưa có tài khoản?{" "}
                 <Button
-                  className="text-sm text-metro-primary hover:text-metro-secondary transition-colors"
+                  className="text-sm text-metro-primary hover:text-metro-secondary transition-colors text-white bg-[hsl(214,100%,40%)]"
                   onClick={() => router.push("/auth/register")}
                 >
                   Đăng ký ngay
@@ -171,7 +151,7 @@ const Login = () => {
             {/* Back to Home */}
             <div className="text-center pt-4">
               <Button
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors text-white bg-[hsl(214,100%,40%)]"
                 onClick={() => router.push("/")}
               >
                 ← Về trang chủ
