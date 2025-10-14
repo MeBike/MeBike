@@ -1,0 +1,43 @@
+type: object
+description: "Represents a user object."
+properties:
+  _id:
+    type: string
+    format: mongoId
+    example: "60c72b2f9b1d8e001f8e8e8e"
+  fullname:
+    type: string
+    example: "Nguyen Van A"
+  email:
+    type: string
+    format: email
+    example: "user@example.com"
+  username:
+    type: string
+    example: "user12345"
+  location:
+    type: string
+    example: "Hanoi, Vietnam"
+  phone_number:
+    type: string
+    example: "0987654321"
+  avatar:
+    type: string
+    format: uri
+    example: "https://example.com/avatar.png"
+  verify:
+    type: string
+    description: "Verification status of the user."
+    enum: ["UNVERIFIED", "VERIFIED", "BANNED"]
+    example: "VERIFIED"
+  role:
+    type: string
+    description: "Role of the user."
+    enum: ["USER", "STAFF", "ADMIN"]
+    example: "USER"
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

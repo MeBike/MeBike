@@ -1,0 +1,10 @@
+type: string
+description: "Trạng thái của xe đạp"
+enum: 
+  - "CÓ SẴN"
+  - "ĐANG ĐƯỢC THUÊ"
+  - "BỊ HỎNG"
+  - "ĐÃ ĐẶT TRƯỚC"
+  - "ĐANG BẢO TRÌ"
+  - "KHÔNG CÓ SẴN"
+example: "CÓ SẴN"

@@ -1,0 +1,535 @@
+# ===================================================================
+# Users API
+# ===================================================================
+/users/register:
+  post:
+    tags: [Users]
+    summary: Register a new user
+    description: Creates a new user account, sends a verification email, and returns access/refresh tokens.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RegisterReqBody.yaml'
+    responses:
+      '201':
+        description: Registration successful.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RegisterSuccessResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/login:
+  post:
+    tags: [Users]
+    summary: Log in a user
+    description: Authenticates a user with email and password, returning access and refresh tokens.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/LoginReqBody.yaml'
+    responses:
+      '200':
+        description: Login successful.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/LoginSuccessResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/logout:
+  post:
+    tags: [Users]
+    summary: Logout a user
+    description: Invalidates the provided refresh token, effectively logging the user out. Requires a valid access token for authentication.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/LogoutReqBody.yaml'
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/forgot-password:
+  post:
+    tags: [Users]
+    summary: Request a password reset
+    description: Sends a forgot password token to the user's email if the email exists.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ForgotPasswordReqBody.yaml'
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/verify-forgot-password:
+  post:
+    tags: [Users]
+    summary: Verify forgot password token
+    description: Checks if the provided forgot password token is valid.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/VerifyForgotPasswordTokenReqBody.yaml'
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/reset-password:
+  post:
+    tags: [Users]
+    summary: Reset user password
+    description: Sets a new password for the user using a valid forgot password token.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ResetPasswordReqBody.yaml'
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/verify-email:
+  post:
+    tags: [Users]
+    summary: Verify user email
+    description: Verifies a user's email with the provided token. Returns new tokens upon successful first-time verification.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/VerifyEmailReqBody.yaml'
+    responses:
+      '200':
+        description: Email verification status. Can be a success message or a new set of tokens.
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '../components/schemas/LoginSuccessResponse.yaml'
+                - $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/resend-verify-email:
+  post:
+    tags: [Users]
+    summary: Resend email verification token
+    description: Resends a new email verification token to the authenticated user's email.
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (user is banned or already verified).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/change-password:
+  put:
+    tags: [Users]
+    summary: Change user password
+    description: Allows an authenticated and verified user to change their password by providing the old and new password.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/ChangePasswordReqBody.yaml'
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        description: Unauthorized (invalid access token or old password does not match).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (user is not verified).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/me:
+  get:
+    tags: [Users]
+    summary: Get current user's profile
+    description: Retrieves the profile information of the currently authenticated user.
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Successfully retrieved user profile.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetMeSuccessResponse.yaml'
+      '401': 
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+  patch:
+    tags: [Users]
+    summary: Update current user's profile
+    description: Partially updates the profile information of the authenticated user. Only include the fields to be changed.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateMeReqBody.yaml'
+    responses:
+      '200':
+        description: Profile updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetMeSuccessResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/refresh-token:
+  post:
+    tags: [Users]
+    summary: Refresh access token
+    description: Issues a new access token and refresh token in exchange for a valid refresh token.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/RefreshTokenReqBody.yaml'
+    responses:
+      '200':
+        description: Tokens refreshed successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/RefreshTokenSuccessResponse.yaml'
+      '401':
+        description: Unauthorized (refresh token is invalid, used, or non-existent).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+# ===================================================================
+# Bikes API
+# ===================================================================
+/bikes:
+  get:
+    tags: [Bikes]
+    summary: Get a list of bikes
+    description: |
+      Retrieves a paginated list of bikes. 
+      - **Users** can only view bikes with 'Available' status.
+      - **Admins/Staff** can filter by any status.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: station_id
+        in: query
+        description: Filter bikes by station ID.
+        schema:
+          type: string
+          format: mongoId
+      - name: supplier_id
+        in: query
+        description: Filter bikes by supplier ID.
+        schema:
+          type: string
+          format: mongoId
+      - name: status
+        in: query
+        description: "Filter bikes by status. (Admin/Staff only for non-available statuses)"
+        schema:
+          $ref: '../components/schemas/BikeStatus.yaml'
+    responses:
+      '200':
+        description: A paginated list of bikes.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Bike.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  post:
+    tags: [Bikes]
+    summary: Create a new bike (Admin only)
+    description: Adds a new bike to the system. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CreateBikeReqBody.yaml'
+    responses:
+      '201':
+        description: Bike created successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Create bike successfully"
+                result:
+                  $ref: '../components/schemas/Bike.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/bikes/stats:
+  get:
+    tags: [Bikes]
+    summary: Get overall bike statistics (Admin only)
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Statistics retrieved successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/bikes/{_id}:
+  get:
+    tags: [Bikes]
+    summary: Get bike by ID
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Bike details retrieved successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message: 
+                  type: string
+                result:
+                  $ref: '../components/schemas/Bike.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  delete:
+    tags: [Bikes]
+    summary: Delete a bike (Admin only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+        
+/bikes/report-broken/{_id}:
+  patch:
+    tags: [Bikes]
+    summary: Report a broken bike
+    description: Allows a user to report a bike they are currently renting as broken.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Bike reported successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden, user is not renting this bike.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/bikes/admin-update/{_id}:
+  patch:
+    tags: [Bikes]
+    summary: Update bike details (Admin/Staff only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateBikeReqBody.yaml'
+    responses:
+      '200':
+        description: Bike updated successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/bikes/{_id}/rentals:
+  get:
+    tags: [Bikes]
+    summary: Get rental history for a bike (Admin/Staff only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: A paginated list of rentals for the bike.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/bikes/{_id}/stats:
+  get:
+    tags: [Bikes]
+    summary: Get statistics for a specific bike (Admin only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Statistics for the bike.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'

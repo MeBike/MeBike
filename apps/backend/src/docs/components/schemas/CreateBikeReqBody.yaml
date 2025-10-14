@@ -1,0 +1,14 @@
+type: object
+required:
+  - station_id
+properties:
+  station_id:
+    type: string
+    format: mongoId
+    description: The ID of the station to which the bike belongs.
+  status:
+    $ref: './Bike.yaml#/properties/status'
+  supplier_id:
+    type: string
+    format: mongoId
+    description: The ID of the supplier. Optional.
