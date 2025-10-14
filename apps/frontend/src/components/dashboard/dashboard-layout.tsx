@@ -9,15 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { DetailUser } from "@/services/authService";
 import Image from "next/image";
-
 interface DashboardLayoutProps {
   children: React.ReactNode;
   user: DetailUser;
 }
-
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed, _] = useState(false);
   return (
     <div className="min-h-screen bg-background">
       <Sidebar userRole={user?.role} />

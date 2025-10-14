@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-
+import Image from "next/image";
 const steps = [
   {
     number: "01",
@@ -45,10 +45,12 @@ export function HowItWorks() {
             >
               <div className="flex-1">
                 <Card className="overflow-hidden">
-                  <img
+                  <Image
                     src={step.image || "/placeholder.svg"}
                     alt={step.title}
                     className="w-full h-[400px] object-cover"
+                    width={640}
+                    height={400}
                   />
                 </Card>
               </div>

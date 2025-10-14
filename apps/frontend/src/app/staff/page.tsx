@@ -4,25 +4,17 @@ import { StatsCard } from "@/components/dashboard/stats-card";
 import { RentalChart } from "@/components/dashboard/rental-chart";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import type { User as DetailUser } from "@custom-types";
 import { Bike, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useAuth } from "@/providers/auth-providers";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Progress } from "@/components/ui/progress";
-
 export default function DashboardPage() {
   const { user } = useAuth();
-  const router = useRouter();
-
   if (!user) {
     return <div><Progress /></div>;
   }
-  
   return (
     <DashboardLayout user={user}>
       <div className="space-y-8">
-        {/* Profile Section */}
         <section>
           <ProfileHeader user={user} />
         </section>

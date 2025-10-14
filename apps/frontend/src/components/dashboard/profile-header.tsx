@@ -8,7 +8,7 @@ interface ProfileHeaderProps {
   user: DetailUser;
 }
 
-export function ProfileHeader({ user }: DetailUser) {
+export function ProfileHeader({ user }: ProfileHeaderProps) {
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case "admin":

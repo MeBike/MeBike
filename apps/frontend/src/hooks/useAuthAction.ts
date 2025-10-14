@@ -10,26 +10,32 @@ import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
 import { authService } from "@/services/authService";
 
-// Helper function để xử lý error message từ API response
-const getErrorMessage = (error: any, defaultMessage: string): string => {
-    if (error?.response?.data) {
-        const errorData = error.response.data;
-        
-        // Nếu có errors field với thông tin chi tiết
+const getErrorMessage = (error: unknown, defaultMessage: string): string => {
+    if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        typeof (error as any).response === "object" &&
+        (error as any).response !== null &&
+        "data" in (error as any).response
+    ) {
+        const errorData = (error as any).response.data;
         if (errorData.errors) {
             const firstErrorKey = Object.keys(errorData.errors)[0];
             if (firstErrorKey && errorData.errors[firstErrorKey]?.msg) {
                 return errorData.errors[firstErrorKey].msg;
             }
         }
-        // Nếu chỉ có message
         else if (errorData.message) {
             return errorData.message;
         }
     }
-    // Fallback cho error.message
-    else if (error?.message) {
-        return error.message;
+    else if (
+        typeof error === "object" &&
+        error !== null &&
+        "message" in error
+    ) {
+        return (error as any).message;
     }
     
     return defaultMessage;
@@ -53,7 +59,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                             toast.error("Error changing password");
                         }
                     },
-                    onError: (error: any) => {
+                    onError: (error: unknown) => {
                         const errorMessage = getErrorMessage(error, "Error changing password");
                         toast.error(errorMessage);
                     }
@@ -98,7 +104,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     
                     fetchUserAndRedirect();
                 },
-                onError: (error: any) => {
+                onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
                     toast.error(errorMessage);
                 }
@@ -121,7 +127,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     toast.error(errorMessage);
                 }
             },
-            onError: (error: any) => {
+            onError: (error: unknown) => {
                 const errorMessage = getErrorMessage(error, "Error registering");
                 toast.error(errorMessage);
             }
@@ -141,7 +147,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     toast.error(errorMessage);
                 }
             },
-            onError: (error: any) => {
+            onError: (error: unknown) => {
                 const errorMessage = getErrorMessage(error, "Error logging out");
                 toast.error(errorMessage);
             }

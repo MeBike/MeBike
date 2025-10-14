@@ -18,22 +18,19 @@ import {
 import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { toast } from "sonner";
-import { email } from "zod";
 import { useAuth } from "@/providers/auth-providers";
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [hasToken, setHasToken] = useState(false);
+  const [_, setHasToken] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
   const { register: registerUser , logIn , } = useAuthActions(setHasToken);
-
   const {
     register,
     handleSubmit, 
     formState: { errors, isSubmitting },
-    watch,
   } = useForm<RegisterSchemaFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
