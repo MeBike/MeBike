@@ -2,17 +2,18 @@
 
 import type React from "react";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import type { DetailUser } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Save, X } from "lucide-react";
+import { Camera, Save, X, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@radix-ui/react-progress";
 import { useAuthActions } from "@/hooks/useAuthAction";
+import Image from "next/image";
 export default function ProfilePage() {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -61,7 +62,14 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
   const handleResendVerifyEmail = () => {
+    if (formData?.verify === "VERIFIED") {
+      return; // Đã xác thực rồi thì không cần gửi lại
+    }
+    
     resendVerifyEmail();
+    // Show notification that email has been sent
+    // The user will need to check their email and click the verification link
+    // which will redirect to /auth/verify-email?email_verify_token={token}
   };
   return (
     <DashboardLayout user={data}>
@@ -110,10 +118,12 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
-                  <img
+                  <Image
                     src={avatarPreview || "/placeholder.svg"}
                     alt="Avatar"
                     className="w-full h-full object-cover"
+                    width={128}
+                    height={128}
                   />
                 </div>
                 {isEditing && (
@@ -341,8 +351,11 @@ export default function ProfilePage() {
               <Button
                 variant="outline"
                 onClick={() => handleResendVerifyEmail()}
+                className="gap-2"
+                disabled={formData?.verify === "VERIFIED"}
               >
-                Kích hoạt
+                <Mail className="w-4 h-4" />
+                {formData?.verify === "VERIFIED" ? "Đã xác thực" : "Gửi email xác thực"}
               </Button>
             </div>
           </div>
