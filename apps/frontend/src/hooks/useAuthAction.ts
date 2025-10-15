@@ -233,5 +233,8 @@ export const useAuthActions = () => {
       resendVerifyEmail,
       forgotPassword,
       resetPassword,
+      isReseting: useResetPassword.isPending,
+      isLoadingForgottingPassword: useForgotPassword.isPending,
+     
     };
 }
