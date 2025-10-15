@@ -73,7 +73,7 @@ export const useAuthActions = () => {
                     }
                 }
             )
-        },[useChangePassword , queryClient, router]
+        },[useChangePassword]
     );
     const logIn = useCallback(
         (data : LoginSchemaFormData) => {
@@ -109,7 +109,7 @@ export const useAuthActions = () => {
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin, queryClient , router]
+        },[useLogin]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
@@ -131,7 +131,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useRegister, router, queryClient ]);
+    },[useRegister]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
@@ -152,7 +152,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useLogout, queryClient, router]);
+    },[useLogout]);
     const verifyEmail = useCallback((email_verify_token: string): Promise<void> => {
         return new Promise((resolve, reject) => {
             useVerifyEmail.mutate(email_verify_token, {
@@ -174,7 +174,7 @@ export const useAuthActions = () => {
                 }
             });
         });
-    }, [useVerifyEmail, queryClient , router]);
+    }, [useVerifyEmail]);
     const resendVerifyEmail = useCallback(() => {
         useResendVerifyEmail.mutate(undefined,{
             onSuccess: (result) => {
@@ -190,7 +190,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    }, [useResendVerifyEmail, queryClient, router]);
+    }, [useResendVerifyEmail]);
     const forgotPassword = useCallback(
       (data: ForgotPasswordSchemaFormData) => {
         useForgotPassword.mutate(data, {
@@ -212,7 +212,7 @@ export const useAuthActions = () => {
           },
         });
       },
-      [useForgotPassword, queryClient]
+      [useForgotPassword]
     );
     
     const resetPassword = useCallback((data: ResetPasswordSchemaFormData) => {
@@ -231,7 +231,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useResetPassword, router , queryClient]);
+    }, [useResetPassword, router]);
     const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
         useUpdateProfile.mutate(data, {
             onSuccess: (result) => {
@@ -248,7 +248,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    }, [useUpdateProfile, queryClient]);
+    }, [useUpdateProfile]);
     return {
       changePassword,
       logIn,

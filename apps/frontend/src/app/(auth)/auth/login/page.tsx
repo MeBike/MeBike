@@ -26,7 +26,6 @@ const Login = () => {
   const router = useRouter();
   useEffect(() => {
     if (isLoggingIn || isLoading) {
-      let interval: NodeJS.Timeout | undefined;
       let currentProgress = 0;
       const messages = [
         "Đang kết nối đến máy chủ...",
@@ -36,7 +35,7 @@ const Login = () => {
         "Hoàn tất!"
       ];
       const messageTimings = [0, 25, 50, 75, 95];
-      interval = setInterval(() => {
+      const interval = setInterval(() => {
         currentProgress += 30; 
         const messageIndex = messageTimings.findIndex(timing => currentProgress >= timing);
         if (messageIndex !== -1 && messageIndex < messages.length) {
