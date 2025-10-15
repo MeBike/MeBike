@@ -138,7 +138,6 @@ class RentalsService {
         total_price: Number(endedRental.total_price.toString())
       }
     } catch (error) {
-      console.error(COMMON_MESSAGE.CREATE_SESSION_FAIL, error)
       throw error
     } finally {
       await session.endSession()
@@ -233,7 +232,6 @@ class RentalsService {
         total_price: Number(endedRental.total_price.toString())
       }
     } catch (error) {
-      console.error(COMMON_MESSAGE.CREATE_SESSION_FAIL, error)
       throw error
     } finally {
       await session.endSession()

@@ -9,7 +9,7 @@ import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { toObjectId } from '~/utils/string'
 
-const ALLOWED_CREATED_FIELDS = ['bike_id', 'status', 'total_price', 'reason']
+const ALLOWED_CREATED_FIELDS = ['bike_id']
 const ALLOWED_UPDATED_FIELDS = ['end_station', 'end_time', 'status', 'total_price', 'reason']
 const ALLOWED_CANCELLED_FIELDS = ['bikeStatus', 'reason']
 const ALLOWED_ENDED_RENTAL_FIELDS = ['end_station', 'end_time', 'reason']

@@ -216,9 +216,9 @@ export const RENTALS_MESSAGE = {
     'Bạn không thể cập nhật trạng thái xe thành %s khi huỷ phiên thuê (Available, Broken only)',
   // Not allowed body fields
   NOT_ALLOWED_CREATED_FIELD: '%s không nằm trong các trường được cho phép để tạo',
-  NOT_ALLOWED_UPDATED_FIELD: '%s không nằm trong các trường được cho phép cập để nhật',
+  NOT_ALLOWED_UPDATED_FIELD: '%s không nằm trong các trường được cho phép để cập nhật',
   NOT_ALLOWED_CANCELLED_FIELD: '%s không nằm trong các trường được cho phép để huỷ',
-  // 
+  // default message
   NO_REASON: 'Không có nguyên nhân',
   // bike
   BIKE_IN_USE: 'Xe đang được sử dụng',
