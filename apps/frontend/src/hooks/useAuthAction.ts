@@ -13,6 +13,7 @@ import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEm
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
+import { getQueryClient } from "@/providers/get-query-client";
 interface ErrorResponse {
     response?: {
         data?: {
@@ -131,7 +132,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useRegister]);
+    },[useRegister,getQueryClient,router]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
@@ -152,7 +153,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useLogout]);
+    },[useLogout, queryClient, router]);
     const verifyEmail = useCallback((email_verify_token: string): Promise<void> => {
         return new Promise((resolve, reject) => {
             useVerifyEmail.mutate(email_verify_token, {
@@ -174,7 +175,7 @@ export const useAuthActions = () => {
                 }
             });
         });
-    }, [useVerifyEmail]);
+    }, [useVerifyEmail,queryClient]);
     const resendVerifyEmail = useCallback(() => {
         useResendVerifyEmail.mutate(undefined,{
             onSuccess: (result) => {
@@ -248,7 +249,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    }, [useUpdateProfile]);
+    }, [useUpdateProfile, queryClient]);
     return {
       changePassword,
       logIn,
