@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import type { DetailUser } from "@/services/authService";
 import { Button } from "@/components/ui/button";
@@ -13,10 +13,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@radix-ui/react-progress";
 import { useAuthActions } from "@/hooks/useAuthAction";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
 export default function ProfilePage() {
   const { user } = useAuth();
-  const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [data,setData] = useState<DetailUser | null>(null);
   const [formData, setFormData] = useState<DetailUser>(() => user || {} as DetailUser);
@@ -119,10 +118,12 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
-                  <img
+                  <Image
                     src={avatarPreview || "/placeholder.svg"}
                     alt="Avatar"
                     className="w-full h-full object-cover"
+                    width={128}
+                    height={128}
                   />
                 </div>
                 {isEditing && (
