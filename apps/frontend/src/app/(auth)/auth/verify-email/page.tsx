@@ -42,10 +42,10 @@ export default function VerifyEmailPage() {
         console.error("Email verification failed:", error);
         setStatus("error");
         setMessage("Xác thực email thất bại. Vui lòng thử lại.");
-        setHasVerified(false); // Reset để có thể thử lại nếu cần
+        setHasVerified(false); 
       });
 
-  }, [searchParams, router, hasVerified]); // Bỏ verifyEmail khỏi dependency array
+  }, [searchParams, router, hasVerified]); 
 
   const handleGoBack = () => {
     router.push("/staff/profile");
