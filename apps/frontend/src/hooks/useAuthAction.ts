@@ -7,9 +7,11 @@ import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePa
 import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
-import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
+import { ForgotPasswordSchemaFormData, LoginSchemaFormData, RegisterSchemaFormData, ResetPasswordSchemaFormData } from "@/schemas/authSchema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
+import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
+import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
 interface ErrorResponse {
     response?: {
         data?: {
@@ -49,6 +51,8 @@ export const useAuthActions = () => {
     const useLogout = useLogoutMutation();  
     const useChangePassword = useChangePasswordMutation();
     const useVerifyEmail = useVerifyEmailMutation();
+    const useForgotPassword = useForgotPasswordMutation();
+    const useResetPassword = useResetPasswordMutation();
     const useResendVerifyEmail = useResendVerifyEmailMutation();
     const changePassword = useCallback(
         (old_password: string, password: string , confirm_password : string) => {
@@ -153,7 +157,6 @@ export const useAuthActions = () => {
                 onSuccess: (result) => {
                     if(result.status === 200){
                         toast.success("Email verified successfully");
-                        // Invalidate user query to update verification status
                         queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                         resolve();
                     } else {
@@ -186,6 +189,41 @@ export const useAuthActions = () => {
             }
         });
     }, [useResendVerifyEmail]);
+    const forgotPassword = useCallback((data: ForgotPasswordSchemaFormData) => {
+        useForgotPassword.mutate(data,{
+            onSuccess: (result) => {
+                if(result.status === 200){ 
+                    toast.success("Password reset email sent successfully");
+                } else{
+                    const errorMessage = result.data?.message || "Error sending password reset email";
+                    toast.error(errorMessage);
+                }
+            },
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error sending password reset email");
+                toast.error(errorMessage);
+            }
+        });
+    },[useForgotPassword]);
+    
+    const resetPassword = useCallback((data: ResetPasswordSchemaFormData) => {
+        useResetPassword.mutate(data,{
+            onSuccess: (result) => {
+                if(result.status === 200){ 
+                    toast.success("Password reset successfully");
+                    router.push("/auth/login");
+                } else{
+                    const errorMessage = result.data?.message || "Error resetting password";
+                    toast.error(errorMessage);
+                }
+            },
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error resetting password");
+                toast.error(errorMessage);
+            }
+        });
+    },[useResetPassword, router]);
+    
     return {
       changePassword,
       logIn,
@@ -193,5 +231,7 @@ export const useAuthActions = () => {
       logOut,
       verifyEmail,
       resendVerifyEmail,
+      forgotPassword,
+      resetPassword,
     };
 }
