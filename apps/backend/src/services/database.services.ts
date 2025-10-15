@@ -15,6 +15,7 @@ import type Transaction from "~/models/schemas/transaction.schema";
 import type User from "~/models/schemas/user.schema";
 import type Wallet from "~/models/schemas/wallet.schemas";
 import Refund from "~/models/schemas/refund.schema";
+import Withdraw from "~/models/schemas/withdraw-request";
 
 config();
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
@@ -93,6 +94,10 @@ class DatabaseService {
 
   get refunds(): Collection<Refund>{
     return this.db.collection(process.env.DB_REFUNDS_COLLECTION as string)
+  }
+
+  get withdraws(): Collection<Withdraw>{
+    return this.db.collection(process.env.DB_WITHDRAWS_COLLECTION as string)
   }
 }
 

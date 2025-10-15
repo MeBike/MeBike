@@ -3,7 +3,6 @@ import type { ParamsDictionary } from "express-serve-static-core";
 import type { Filter } from "mongodb";
 
 import { ObjectId } from "mongodb";
-import { report } from "node:process";
 
 import type { ReportStatus, ReportTypeEnum } from "~/constants/enums";
 import type { CreateReportReqBody } from "~/models/requests/reports.requests";

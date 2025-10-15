@@ -1,16 +1,26 @@
 import { Decimal128, Filter, ObjectId } from 'mongodb'
 
 import type {
+  CreateWithdrawlReqBody,
   DecreaseBalanceWalletReqBody,
   GetTransactionReqQuery,
-  IncreareBalanceWalletReqBody
+  GetWithdrawReqQuery,
+  IncreareBalanceWalletReqBody,
+  UpdateWithdrawStatusReqBody
 } from '~/models/requests/wallets.requests'
 import type { TransactionType } from '~/models/schemas/transaction.schema'
 import type { WalletType } from '~/models/schemas/wallet.schemas'
 
-import { RefundStatus, Role, TransactionStaus, TransactionTypeEnum, WalletStatus } from '~/constants/enums'
+import {
+  RefundStatus,
+  Role,
+  TransactionStaus,
+  TransactionTypeEnum,
+  WalletStatus,
+  WithDrawalStatus
+} from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
-import { USERS_MESSAGES, WALLETS_MESSAGE } from '~/constants/messages'
+import { USERS_MESSAGES, WALLETS_MESSAGE, WITHDRAWLS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import Wallet from '~/models/schemas/wallet.schemas'
 
@@ -20,6 +30,7 @@ import { sendPaginatedResponse } from '~/utils/pagination.helper'
 import { NextFunction, Response } from 'express'
 import { CreateRefundReqBody } from '~/models/requests/refunds.request'
 import Refund, { RefundType } from '~/models/schemas/refund.schema'
+import Withdraw, { WithdrawType } from '~/models/schemas/withdraw-request'
 
 class WalletService {
   async createWallet(user_id: string) {
@@ -324,6 +335,137 @@ class WalletService {
     )
 
     return result
+  }
+
+  async createWithdrawal(user_id: string, payload: CreateWithdrawlReqBody) {
+    const findUser = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+    if (!findUser) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(findUser._id) })
+    if (!findWallet) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (Decimal128.fromString(findWallet.balance.toString()) < Decimal128.fromString(payload.amount.toString())) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.INSUFFICIENT_BALANCE.replace('%s', user_id),
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    const currentDate = new Date()
+    const vietnamTimezoneOffset = 7 * 60
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
+
+    const withdrawID = new ObjectId()
+    const withdrawData: WithdrawType = {
+      _id: withdrawID,
+      user_id: new ObjectId(user_id),
+      amount: Decimal128.fromString(payload.amount.toString()),
+      account: payload.account,
+      reason: '',
+      note: payload.note || '',
+      status: WithDrawalStatus.Pending,
+      created_at: localTime,
+      updated_at: localTime
+    }
+
+    const result = Promise.all([
+      await databaseService.withdraws.insertOne(new Withdraw(withdrawData)),
+      await databaseService.wallets.findOneAndUpdate(
+        { _id: new ObjectId(findWallet._id) },
+        { $inc: { balance: Decimal128.fromString((payload.amount * -1).toString()) } },
+        { returnDocument: 'after' }
+      )
+    ])
+
+    return result
+  }
+
+  async updateWithDrawStatus(withdrawID: string, payload: UpdateWithdrawStatusReqBody) {
+    const allowedStatuses: Record<WithDrawalStatus, WithDrawalStatus[]> = {
+      [WithDrawalStatus.Pending]: [WithDrawalStatus.Approved, WithDrawalStatus.Rejected],
+      [RefundStatus.Approved]: [WithDrawalStatus.Completed],
+      [RefundStatus.Completed]: [],
+      [RefundStatus.Rejected]: []
+    }
+
+    const findWithDraw = await databaseService.withdraws.findOne({ _id: new ObjectId(withdrawID) })
+    if (!findWithDraw) {
+      throw new ErrorWithStatus({
+        message: WITHDRAWLS_MESSAGE.WITHDRAWL_NOT_FOUND.replace('%s', withdrawID),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (!Object.values(WithDrawalStatus).includes(payload.newStatus as WithDrawalStatus)) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.BAD_REQUEST,
+        message: WALLETS_MESSAGE.INVALID_NEW_STATUS
+      })
+    }
+
+    const currentStatus = findWithDraw.status as WithDrawalStatus
+    const newStatusTyped = payload.newStatus as WithDrawalStatus
+
+    if (!allowedStatuses[currentStatus]?.includes(newStatusTyped)) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.BAD_REQUEST,
+        message: WALLETS_MESSAGE.INVALID_NEW_STATUS
+      })
+    }
+
+    if (newStatusTyped === WithDrawalStatus.Rejected) {
+      if (!payload.newStatus || payload.newStatus.trim() === '') {
+        throw new ErrorWithStatus({
+          message: WITHDRAWLS_MESSAGE.REASON_IS_REQUIRED,
+          status: HTTP_STATUS.BAD_REQUEST
+        })
+      }
+    }
+
+    const currentDate = new Date()
+    const vietnamTimezoneOffset = 7 * 60
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
+
+    const updateData: any = {
+      status: newStatusTyped,
+      reason: payload.reason || '',
+      updated_at: localTime
+    }
+
+    const result = await databaseService.refunds.findOneAndUpdate(
+      { _id: new ObjectId(withdrawID) },
+      { $set: updateData },
+      { returnDocument: 'after' }
+    )
+
+    return result
+  }
+
+  async getWithdrawRequestDetail(withdrawID: string) {
+    const result = await databaseService.withdraws.findOne({ _id: new ObjectId(withdrawID) })
+    return result
+  }
+
+  async getAllWithDrawRequest(res: Response, next: NextFunction, query: GetWithdrawReqQuery) {
+    const { status } = query
+
+    const filter: any = {}
+
+    if (status) {
+      filter.status = status
+    }
+
+    await sendPaginatedResponse(res, next, databaseService.withdraws, query, filter)
   }
 }
 

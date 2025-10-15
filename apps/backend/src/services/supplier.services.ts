@@ -1,6 +1,10 @@
 import { ObjectId } from 'mongodb'
 
-import type { CreateSupplierReqBody, UpdateSupplierReqBody } from '~/models/requests/suppliers.request'
+import type {
+  CreateSupplierReqBody,
+  GetSupplierReqQuery,
+  UpdateSupplierReqBody
+} from '~/models/requests/suppliers.request'
 import type { SupplierType } from '~/models/schemas/supplier.schema'
 import type { SupplierBikeStats } from '~/models/schemas/user.schema'
 
@@ -8,6 +12,8 @@ import { SupplierStatus } from '~/constants/enums'
 import Supplier from '~/models/schemas/supplier.schema'
 
 import databaseService from './database.services'
+import { NextFunction, Response } from 'express'
+import { sendPaginatedResponse } from '~/utils/pagination.helper'
 
 class SupplierService {
   async createSupplier({ payload }: { payload: CreateSupplierReqBody }) {
@@ -245,6 +251,17 @@ class SupplierService {
       .toArray()
 
     return result
+  }
+
+  async getAllSupplier(res: Response, next: NextFunction, query: GetSupplierReqQuery) {
+    const { status } = query
+    const filter: any = {}
+
+    if (status) {
+      filter.status = status
+    }
+
+    await sendPaginatedResponse(res, next, databaseService.suppliers, query, filter)
   }
 }
 

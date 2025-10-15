@@ -1,8 +1,15 @@
 import type { NextFunction, Request, Response } from 'express'
 
-import type { DecreaseBalanceWalletReqBody, GetTransactionReqQuery, IncreareBalanceWalletReqBody } from '~/models/requests/wallets.requests'
+import type {
+  CreateWithdrawlReqBody,
+  DecreaseBalanceWalletReqBody,
+  GetTransactionReqQuery,
+  GetWithdrawReqQuery,
+  IncreareBalanceWalletReqBody,
+  UpdateWithdrawStatusReqBody
+} from '~/models/requests/wallets.requests'
 
-import { WALLETS_MESSAGE } from '~/constants/messages'
+import { WALLETS_MESSAGE, WITHDRAWLS_MESSAGE } from '~/constants/messages'
 import walletService from '~/services/wallets.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { CreateRefundReqBody } from '~/models/requests/refunds.request'
@@ -116,4 +123,54 @@ export async function updateRefundController(req: Request<ParamsDictionary, any,
     message: WALLETS_MESSAGE.UPDATE_REFUND_SUCCESS,
     result
   })
+}
+
+export async function createWithdrawalRequestController(
+  req: Request<ParamsDictionary, any, CreateWithdrawlReqBody>,
+  res: Response
+) {
+  const user = req.decoded_authorization
+  const user_id = user?._id as string
+
+  const result = await walletService.createWithdrawal(user_id, req.body)
+
+  res.json({
+    message: WALLETS_MESSAGE.CREATE_WITHDRAWL_SUCCESS,
+    result
+  })
+}
+
+export async function updateWithDrawStatusController(
+  req: Request<ParamsDictionary, any, UpdateWithdrawStatusReqBody>,
+  res: Response
+) {
+  const { id } = req.params
+
+  const result = await walletService.updateWithDrawStatus(id, req.body)
+
+  res.json({
+    message: WITHDRAWLS_MESSAGE.UPDATE_SUCCESS.replace('%s', id),
+    result
+  })
+}
+
+export async function getWithDrawDetailController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const { id } = req.params
+
+  const result = await walletService.getWithdrawRequestDetail(id)
+
+  res.json({
+    message: WITHDRAWLS_MESSAGE.GET_DETAIL_SUCCESS,
+    result
+  })
+}
+
+export async function getAllWithDrawController(
+  req: Request<ParamsDictionary, any, any, GetWithdrawReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const query = req.query
+
+  await walletService.getAllWithDrawRequest(res, next, query)
 }

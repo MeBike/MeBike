@@ -2,6 +2,7 @@ import { Router } from 'express'
 
 import {
   changeStatusController,
+  createWithdrawalRequestController,
   decreaseBalanceController,
   getTransactionDetailController,
   getUserTransactionController,
@@ -15,7 +16,11 @@ import { filterMiddleware } from '~/middlewares/common.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { decreaseBalanceValidator, increaseBalanceValidator } from '~/middlewares/wallet.middlewares'
 import { CreateRefundReqBody } from '~/models/requests/refunds.request'
-import { DecreaseBalanceWalletReqBody, IncreareBalanceWalletReqBody } from '~/models/requests/wallets.requests'
+import {
+  CreateWithdrawlReqBody,
+  DecreaseBalanceWalletReqBody,
+  IncreareBalanceWalletReqBody
+} from '~/models/requests/wallets.requests'
 import { wrapAsync } from '~/utils/handler'
 
 const walletsRouter = Router()
@@ -30,6 +35,12 @@ walletsRouter.post(
   accessTokenValidator,
   filterMiddleware<CreateRefundReqBody>(['amount', 'transaction_id']),
   wrapAsync(refundController)
+)
+walletsRouter.post(
+  '/withdraw',
+  accessTokenValidator,
+  filterMiddleware<CreateWithdrawlReqBody>(['account', 'amount', 'note']),
+  wrapAsync(createWithdrawalRequestController)
 )
 walletsRouter.put(
   '/increase',
