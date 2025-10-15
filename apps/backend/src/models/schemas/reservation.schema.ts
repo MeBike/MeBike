@@ -9,7 +9,7 @@ type ReservationType = {
   bike_id: ObjectId;
   station_id: ObjectId;
   start_time: Date;
-  end_time: Date;
+  end_time?: Date;
   prepaid: Decimal128;
   status: ReservationStatus;
   created_at?: Date;
@@ -22,7 +22,7 @@ export default class Reservation {
   bike_id: ObjectId;
   station_id: ObjectId;
   start_time: Date;
-  end_time: Date;
+  end_time?: Date;
   prepaid: Decimal128;
   status: ReservationStatus;
   created_at?: Date;
@@ -30,14 +30,14 @@ export default class Reservation {
 
   constructor(reservation: ReservationType) {
     const localTime = getLocalTime()
+    const holdTimeMs = Number(process.env.HOLD_HOURS_RESERVATION || '1') * 60 * 60 * 1000
 
     this._id = reservation._id || new ObjectId();
     this.user_id = reservation.user_id;
     this.bike_id = reservation.bike_id;
     this.station_id = reservation.station_id;
-    this.start_time = reservation.start_time ?? localTime;
-    this.end_time = reservation.end_time
-      ?? new Date((reservation.start_time ?? localTime).getTime() + 60 * 60 * 1000);
+    this.start_time = reservation.start_time;
+    this.end_time = reservation.end_time ?? new Date(reservation.start_time.getTime() + holdTimeMs)
     this.prepaid = reservation.prepaid instanceof Decimal128 ? reservation.prepaid : Decimal128.fromString(String(reservation.prepaid ?? 0));
     this.status = reservation.status ?? ReservationStatus.Pending;
     this.created_at = reservation.created_at || localTime;

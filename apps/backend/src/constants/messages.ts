@@ -231,10 +231,30 @@ export const RENTALS_MESSAGE = {
 
 export const COMMON_MESSAGE = {
   CREATE_SESSION_FAIL: 'Tạo phiên thất bại: '
-}
+} as const
 
 export const AUTH_MESSAGE = {
   ACCESS_DENIED: 'Bạn không có quyền truy cập tài nguyên này',
   ACCESS_DENIED_ADMIN_ONLY: 'Bạn không có quyền truy cập tài nguyên này (chỉ dành cho Admin)',
   ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: 'Bạn không có quyền truy cập tài nguyên này (chỉ dành cho Staff và Admin)'
-}
+} as const
+
+export const RESERVATIONS_MESSAGE = {
+  // success action
+  RESERVE_SUCCESS: 'Đặt trước xe thành công',
+  // Required data
+  REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
+  REQUIRED_BIKE_ID: 'Vui lòng nhập Id xe đạp',
+  REQUIRED_START_STATION: 'Vui lòng nhập trạm bắt đầu',
+  REQUIRED_END_STATION: 'Vui lòng nhập trạm kết thúc',
+  REQUIRED_START_TIME: 'Vui lòng nhập thời gian bắt đầu hiệu lực',
+  // Invalid data
+  INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
+  INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
+  // Not found object
+  USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
+  BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
+  STATION_NOT_FOUND: 'Không tìm thấy trạm với Id %s',
+  // Unavailable object
+  UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
+} as const

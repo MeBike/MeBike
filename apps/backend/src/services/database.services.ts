@@ -12,7 +12,7 @@ import type Station from "~/models/schemas/station.schema";
 import type Supplier from "~/models/schemas/supplier.schema";
 import type User from "~/models/schemas/user.schema";
 import RentalLog from "~/models/schemas/rental-audit-logs.schema";
-import { getLocalTime } from "~/utils/date";
+import Reservation from "~/models/schemas/reservation.schema";
 
 config();
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
@@ -85,7 +85,7 @@ class DatabaseService {
     return this.db.collection(process.env.DB_RENTAL_LOGS_COLLECTION as string);
   }
 
-  get reservations(): Collection<Rental> {
+  get reservations(): Collection<Reservation> {
     return this.db.collection(process.env.DB_RESERVATIONS_COLLECTION as string);
   }
 }
