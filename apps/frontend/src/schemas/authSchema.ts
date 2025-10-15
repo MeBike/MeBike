@@ -13,14 +13,10 @@ export type UpdateProfileSchemaFormData = z.infer<typeof profileUpdateSchema>;
 export type ResetPasswordSchemaFormData = z.infer<typeof resetPasswordSchema>;
 export const registerSchema = z
   .object({
-    first_name: z
+    full_name: z
       .string()
       .min(1, { message: "Họ không được để trống" })
       .max(30, { message: "Họ không được vượt quá 30 ký tự" }),
-    last_name: z
-      .string()
-      .min(1, { message: "Tên không được để trống" })
-      .max(30, { message: "Tên không được vượt quá 30 ký tự" }),
     email: z.email({ message: "Email không hợp lệ" }),
     password: z
       .string()

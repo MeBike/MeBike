@@ -1,0 +1,14 @@
+type: object
+properties:
+  message:
+    type: string
+    example: 'Login successful'
+  result:
+    type: object
+    properties:
+      access_token:
+        type: string
+        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjA5...'
+      refresh_token:
+        type: string
+        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjA5...'

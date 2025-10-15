@@ -3,7 +3,6 @@ import { config } from "dotenv";
 import express from "express";
 import process from "node:process";
 import swaggerUi from "swagger-ui-express";
-import YAML from "yamljs";
 
 import { defaultErrorHandler } from "./middlewares/error.middlewares";
 import rentalsRouter from "./routes/rentals.routes";
@@ -12,6 +11,7 @@ import suppliersRouter from "./routes/suppliers.routes";
 import usersRouter from "./routes/users.routes";
 import databaseService from "./services/database.services";
 import bikesRouter from "./routes/bikes.routes";
+import swaggerDocument from '../public/openapi.json'
 
 config();
 
@@ -20,18 +20,6 @@ import stationRouter from "./routes/station.routes";
 
 const port = process.env.PORT || 4000;
 
-const options: swaggerJSDoc.Options = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "MeBike API",
-      version: "1.0.0",
-    },
-  },
-  apis: ["./src/routes/*.ts", "./src/docs/openapi.yaml"],
-};
-
-const swaggerSpec = swaggerJSDoc(options);
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -53,7 +41,8 @@ app.use("/bikes", bikesRouter);
 app.use("/rentals", rentalsRouter);
 app.use("/stations", stationRouter);
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+
 
 app.use(defaultErrorHandler);
 

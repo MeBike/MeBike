@@ -55,7 +55,6 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <LinearGradient
           colors={[BikeColors.primary, BikeColors.secondary]}
           style={styles.header}
@@ -70,8 +69,6 @@ export default function LoginScreen() {
             <Text style={styles.headerSubtitle}>Chào mừng bạn trở lại!</Text>
           </View>
         </LinearGradient>
-
-        {/* Login Form */}
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Email</Text>
@@ -114,22 +111,6 @@ export default function LoginScreen() {
               {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </Text>
           </Pressable>
-
-          {/* <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>hoặc</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <Pressable 
-            style={styles.googleButton} 
-            onPress={handleGoogleLogin}
-            disabled={isLoading}
-          >
-            <IconSymbol name="globe" size={20} color={BikeColors.textPrimary} />
-            <Text style={styles.googleButtonText}>Đăng nhập với Google</Text>
-          </Pressable> */}
-
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Chưa có tài khoản? </Text>
             <Pressable onPress={goToRegister}>

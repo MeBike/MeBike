@@ -1,0 +1,20 @@
+type: object
+description: "Fields to update for the user's profile. All fields are optional."
+properties:
+  fullname:
+    type: string
+    description: "The user's full name."
+    example: 'Nguyen Van B'
+  location:
+    type: string
+    description: "The user's location."
+    example: 'Ho Chi Minh, Vietnam'
+  username:
+    type: string
+    description: 'A new unique username for the user. Must not be already taken by another user.'
+    example: 'nguyenvana_2025'
+  avatar:
+    type: string
+    description: "A URL pointing to the user's new avatar image."
+    format: uri
+    example: 'https://example.com/avatars/new_avatar.png'

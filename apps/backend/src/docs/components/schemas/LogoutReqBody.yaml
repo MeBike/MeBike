@@ -1,0 +1,8 @@
+type: object
+properties:
+  refresh_token:
+    type: string
+    description: The refresh token issued to the user during login, which will be invalidated upon logout.
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjZhMTIzNDU2Nzg5MGFiY2RlZjEyMzQ1IiwidG9rZW5fdHlwZSI6InJlZnJlc2hfdG9rZW4iLCJpYXQiOjE3MTg1MjAxMDAsImV4cCI6MTcxOTEyNDkwMH0.abcdefg123456'
+required:
+  - refresh_token

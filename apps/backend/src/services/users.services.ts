@@ -101,7 +101,7 @@ class UsersService {
       new User({
         ...payload,
         _id: user_id,
-        fullname: payload.full_name,
+        fullname: payload.fullname,
         username: `user${user_id.toString()}`,
         email_verify_token,
         password: hashPassword(payload.password),
@@ -135,7 +135,7 @@ class UsersService {
       const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`; // Đường dẫn xác nhận email
 
       const htmlContent = readEmailTemplate("verify-email.html", {
-        full_name: payload.full_name,
+        fullname: payload.fullname,
         verifyURL,
       });
 

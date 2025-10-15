@@ -1,0 +1,7 @@
+type: object
+properties:
+  message:
+    type: string
+    example: 'Refresh token successful'
+  result:
+    $ref: './AuthSuccessResponse.yaml'
