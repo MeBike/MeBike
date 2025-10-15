@@ -8,7 +8,8 @@ import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
-
+import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
+import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
 interface ErrorResponse {
     response?: {
         data?: {
@@ -47,6 +48,8 @@ export const useAuthActions = () => {
     const useRegister = useRegisterMutation();
     const useLogout = useLogoutMutation();  
     const useChangePassword = useChangePasswordMutation();
+    const useVerifyEmail = useVerifyEmailMutation();
+    const useResendVerifyEmail = useResendVerifyEmailMutation();
     const changePassword = useCallback(
         (old_password: string, password: string , confirm_password : string) => {
             useChangePassword.mutate(
@@ -93,7 +96,6 @@ export const useAuthActions = () => {
                     });
                     setTimeout(() => {
                         unsubscribe();
-                        router.push("/"); 
                     }, 3000);
                 },
                 onError: (error: unknown) => {
@@ -145,11 +147,44 @@ export const useAuthActions = () => {
             }
         });
     },[useLogout, queryClient, router]);
+    const verifyEmail = useCallback((email_refresh_token: string) => {
+        useVerifyEmail.mutate(email_refresh_token,{
+            onSuccess: (result) => {
+                if(result.status === 200){
+                    toast.success("Email verified successfully");
+                }else{
+                    const errorMessage = result.data?.message || "Error verifying email";
+                    toast.error(errorMessage);
+                }
+            },
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error verifying email");
+                toast.error(errorMessage);
+            }
+        });
+    },[useVerifyEmail]);
+    const resendVerifyEmail = useCallback(() => {
+        useResendVerifyEmail.mutate(undefined,{
+            onSuccess: (result) => {
+                if(result.status === 200){
+                    toast.success("Verification email resent successfully");
+                }else{
+                    const errorMessage = result.data?.message || "Error resending verification email";
+                    toast.error(errorMessage);
+                }
+            },
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error resending verification email");
+                toast.error(errorMessage);
+            }
+        });
+    }, [useResendVerifyEmail]);
     return {
-        changePassword,
-        logIn,
-        register,
-        logOut
-    
+      changePassword,
+      logIn,
+      register,
+      logOut,
+      verifyEmail,
+      resendVerifyEmail,
     };
 }
