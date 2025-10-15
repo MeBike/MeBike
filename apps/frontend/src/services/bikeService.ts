@@ -59,7 +59,7 @@ export const bikeService = {
     const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BASE);
     return response;
   },
-  patchReportBrokenBike: async (id: string): Promise<AxiosResponse> => {
+  reportBrokenBike: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.patch(
       BIKE_ENDPOINTS.REPORT_BROKEN(id)
     );
