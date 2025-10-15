@@ -1,0 +1,33 @@
+type: object
+required:
+  - fullname
+  - email
+  - password
+  - confirm_password
+properties:
+  fullname:
+    type: string
+    minLength: 1
+    maxLength: 50
+    example: "Nguyen Van A"
+  email:
+    type: string
+    format: email
+    example: "user@example.com"
+  password:
+    type: string
+    format: password
+    minLength: 8
+    maxLength: 30
+    example: "password123"
+  confirm_password:
+    type: string
+    format: password
+    minLength: 8
+    maxLength: 30
+    example: "password123"
+  avatar:
+    type: string
+    format: uri
+    description: "Optional avatar URL."
+    example: "https://example.com/avatar.jpg"

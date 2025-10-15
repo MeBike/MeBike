@@ -16,6 +16,8 @@ import type User from "~/models/schemas/user.schema";
 import type Wallet from "~/models/schemas/wallet.schemas";
 import Refund from "~/models/schemas/refund.schema";
 import Withdraw from "~/models/schemas/withdraw-request";
+import RentalLog from "~/models/schemas/rental-audit-logs.schema";
+import { getLocalTime } from "~/utils/date";
 
 config();
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
@@ -40,6 +42,10 @@ class DatabaseService {
     }
   }
 
+  getClient(): MongoClient {
+    return this.client;
+  }
+
   get users(): Collection<User> {
     return this.db.collection(process.env.DB_USERS_COLLECTION as string);
   }
@@ -47,7 +53,7 @@ class DatabaseService {
   async indexUsers() {
     await this.users.createIndex({ email: 1 }, { unique: true });
     await this.users.createIndex({ username: 1 }, { unique: true });
-    await this.users.createIndex({ phone_number: 1 }, { unique: true });
+    // await this.users.createIndex({ phone_number: 1 }, { unique: true });
     await this.users.createIndex({ email: 1, password: 1 });
   }
 
@@ -78,6 +84,14 @@ class DatabaseService {
 
   get suppliers(): Collection<Supplier> {
     return this.db.collection(process.env.DB_SUPPLIERS_COLLECTION as string);
+  }
+
+  get rentalLogs(): Collection<RentalLog> {
+    return this.db.collection(process.env.DB_RENTAL_LOGS_COLLECTION as string);
+  }
+
+  get reservations(): Collection<Rental> {
+    return this.db.collection(process.env.DB_RESERVATIONS_COLLECTION as string);
   }
 
   get payments(): Collection<Payment> {

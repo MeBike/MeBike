@@ -2,8 +2,10 @@ import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
 import process from "node:process";
+import swaggerUi from "swagger-ui-express";
 
 import { defaultErrorHandler } from "./middlewares/error.middlewares";
+import rentalsRouter from "./routes/rentals.routes";
 import reportsRouter from "./routes/reports.routes";
 import suppliersRouter from "./routes/suppliers.routes";
 import usersRouter from "./routes/users.routes";
@@ -12,10 +14,12 @@ import bikesRouter from "./routes/bikes.routes";
 import walletsRouter from "./routes/wallets.routes";
 import withdrawsRouter from "./routes/withdraw.routes";
 import refundsRouter from "./routes/refunds.routes";
+import swaggerDocument from '../public/openapi.json'
 
 config();
 
 const port = process.env.PORT || 4000;
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -37,6 +41,10 @@ app.use("/bikes", bikesRouter);
 app.use("/wallets", walletsRouter);
 app.use("/withdraws", withdrawsRouter);
 app.use("/refunds", refundsRouter);
+app.use("/rentals", rentalsRouter);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+
 
 app.use(defaultErrorHandler);
 
