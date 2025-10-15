@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {clearTokens , setTokens} from "@utils/tokenManager"
@@ -7,11 +7,12 @@ import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePa
 import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
-import { ForgotPasswordSchemaFormData, LoginSchemaFormData, RegisterSchemaFormData, ResetPasswordSchemaFormData } from "@/schemas/authSchema";
+import { ForgotPasswordSchemaFormData, LoginSchemaFormData, RegisterSchemaFormData, ResetPasswordSchemaFormData, UpdateProfileSchemaFormData } from "@/schemas/authSchema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
+import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 interface ErrorResponse {
     response?: {
         data?: {
@@ -51,6 +52,7 @@ export const useAuthActions = () => {
     const useLogout = useLogoutMutation();  
     const useChangePassword = useChangePasswordMutation();
     const useVerifyEmail = useVerifyEmailMutation();
+    const useUpdateProfile = useUpdateProfileMutation();
     const useForgotPassword = useForgotPasswordMutation();
     const useResetPassword = useResetPasswordMutation();
     const useResendVerifyEmail = useResendVerifyEmailMutation();
@@ -93,7 +95,7 @@ export const useAuthActions = () => {
                             } else if (userProfile?.role === "STAFF") {
                                 router.push("/staff");
                             } else {
-                                router.push("/");
+                                router.push("/user");
                             }
                             unsubscribe(); 
                         }
@@ -223,7 +225,23 @@ export const useAuthActions = () => {
             }
         });
     },[useResetPassword, router]);
-    
+    const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
+        useUpdateProfile.mutate(data, {
+            onSuccess: (result) => {
+                if(result.status === 200){
+                    toast.success("Profile updated successfully");
+                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+                } else {
+                    const errorMessage = result.data?.message || "Error updating profile";
+                    toast.error(errorMessage);
+                }
+            },
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error updating profile");
+                toast.error(errorMessage);
+            }
+        });
+    }, [useUpdateProfile]);
     return {
       changePassword,
       logIn,
@@ -233,6 +251,10 @@ export const useAuthActions = () => {
       resendVerifyEmail,
       forgotPassword,
       resetPassword,
+      updateProfile,
+      isUpdatingProfile: useUpdateProfile.isPending,
+      isChangingPassword: useChangePassword.isPending,
+      isRegistering: useRegister.isPending,
       isReseting: useResetPassword.isPending,
       isLoadingForgottingPassword: useForgotPassword.isPending,
       isLoggingIn: useLogin.isPending,

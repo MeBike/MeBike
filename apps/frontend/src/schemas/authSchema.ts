@@ -58,7 +58,7 @@ export const changePasswordSchema = z
     path: ["confirm_password"],
   });
 export const profileUpdateSchema = z.object({
-  fullName: z
+  fullname: z
     .string()
     .min(3, { message: "Họ và tên phải có ít nhất 3 ký tự" })
     .max(50, { message: "Họ và tên không được vượt quá 50 ký tự" }),
@@ -76,6 +76,13 @@ export const profileUpdateSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
+  phone_number: z
+    .string()
+    .regex(vietnamesePhoneNumberRegex, {  
+      message: "Số điện thoại không hợp lệ",
+    })
+    .optional()
+    .or(z.literal("")),  
   avatar: z
     .url({ message: "Please enter a valid URL for the avatar." })
     .optional()

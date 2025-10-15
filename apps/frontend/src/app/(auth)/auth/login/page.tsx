@@ -156,6 +156,7 @@ const Login = () => {
               </div>
               <div className="text-right">
                 <Button
+                  type="button"
                   disabled={isLoggingIn || isLoading}
                   className="text-sm text-white hover:text-metro-secondary transition-colors bg-[hsl(214,100%,40%)] disabled:opacity-50"
                   onClick={() => router.push("/auth/forgot-password")}
