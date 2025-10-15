@@ -1,9 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { use, useCallback } from "react";
 import { toast } from "sonner";
 import { useGetAllBike } from "./query/Bike/useGetAllBikeCus";
 import { bikeService } from "@/services/bikeService";
 import { useCreateBikeMutation } from "./mutations/Bike/useCreateBike";
+import type  { BikeSchemaFormData, UpdateBikeSchemaFormData } from "@/schemas/bikeSchema";
+import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
+import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
+import { useReportBike } from "./mutations/Bike/useReportBike";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -37,13 +41,109 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 export const useBikeActions = (setHasToken: React.Dispatch<React.SetStateAction<boolean>>) => {
     const useGetBikes = useGetAllBike();
     const useCreateBike = useCreateBikeMutation();
+    const updateBikeMutation = useUpdateBike();
+    const deleteBikeMutation = useSoftDeleteBikeMutation();
+    const reportBikeMutation = useReportBike();
     const queryClient = useQueryClient();
     const getBikes = useCallback(() => {
         useGetBikes.refetch();
     }, [useGetBikes]);
+    const createBike = useCallback(
+      (data: BikeSchemaFormData) => {
+        useCreateBike.mutate(data, {
+          onSuccess: (result) => {
+            if (result.status === 201) {
+              toast.success("Bike created successfully");
+            } else {
+              const errorMessage =
+                result.data?.message || "Error creating bikes";
+              toast.error(errorMessage);
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(error, "Error creating bikes");
+            toast.error(errorMessage);
+          },
+        });
+      },
+      [useCreateBike]
+    );
+    const updateBike = useCallback(
+      (data: UpdateBikeSchemaFormData, id: string) => {
+        updateBikeMutation.mutate(
+          { id, data },
+          {
+            onSuccess: (result) => {
+              if (result.status === 200) {
+                toast.success("Bike updated successfully");
+              } else {
+                const errorMessage =
+                  result.data?.message || "Error updating bikes";
+                toast.error(errorMessage);
+              }
+            },
+            onError: (error) => {
+              const errorMessage = getErrorMessage(
+                error,
+                "Error updating bikes"
+              );
+              toast.error(errorMessage);
+            },
+          }
+        );
+      },
+      [updateBikeMutation]
+    );
+    const deleteBike = useCallback(
+      (id: string) => {
+        deleteBikeMutation.mutate(id, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Bike deleted successfully");
+              queryClient.invalidateQueries({ queryKey: ["bikes"] });
+            } else {
+              const errorMessage =
+                result.data?.message || "Error deleting bikes";
+              toast.error(errorMessage);
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(error, "Error deleting bikes");
+            toast.error(errorMessage);
+          },
+        });
+      },
+      [deleteBikeMutation]
+    );
+  const reportBike = useCallback(
+    (id: string) => {
+      reportBikeMutation.mutate(id, {
+        onSuccess: (result) => {
+          if (result.status === 200) {
+            toast.success("Bike reported successfully");
+          } else {
+            const errorMessage = result.data?.message || "Error reporting bike";
+            toast.error(errorMessage);
+          }
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(error, "Error reporting bike");
+          toast.error(errorMessage);
+        },
+      });
+    },
+    [reportBikeMutation]
+  );
     return {
-        useGetBikes,
-        queryClient,
-      
+      getBikes,
+      createBike,
+      updateBike,
+      deleteBike,
+      reportBike,
+      isReportingBike: reportBikeMutation.isPending,
+      isDeletingBike: deleteBikeMutation.isPending,
+      isGettingBikes: useGetBikes.isFetching,
+      isUpdatingBike: updateBikeMutation.isPending,
+      isCreatingBike: useCreateBike.isPending,
     };
 }
