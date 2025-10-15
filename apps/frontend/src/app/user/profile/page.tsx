@@ -15,7 +15,6 @@ import { Progress } from "@radix-ui/react-progress";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import Image from "next/image";
 import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
-import { clearTokens } from "@/utils/tokenManager";
 import Link from "next/link";
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
