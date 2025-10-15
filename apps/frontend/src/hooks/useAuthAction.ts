@@ -212,7 +212,7 @@ export const useAuthActions = () => {
           },
         });
       },
-      [useForgotPassword, queryClient, router]
+      [useForgotPassword, queryClient]
     );
     
     const resetPassword = useCallback((data: ResetPasswordSchemaFormData) => {
@@ -248,7 +248,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    }, [useUpdateProfile, queryClient, router]);
+    }, [useUpdateProfile, queryClient]);
     return {
       changePassword,
       logIn,

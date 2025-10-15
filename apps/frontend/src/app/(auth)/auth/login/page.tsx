@@ -26,7 +26,7 @@ const Login = () => {
   const router = useRouter();
   useEffect(() => {
     if (isLoggingIn || isLoading) {
-      let interval: NodeJS.Timeout;
+      let interval: NodeJS.Timeout | undefined;
       let currentProgress = 0;
       const messages = [
         "Đang kết nối đến máy chủ...",
