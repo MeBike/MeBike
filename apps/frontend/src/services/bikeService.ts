@@ -19,10 +19,7 @@ const BIKE_ENDPOINTS = {
 
 export const bikeService = {
   //for admin
-  getBikesForAdmin: async (): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BASE);
-    return response;
-  },
+
   createBikeAdmin: async (data: BikeSchemaFormData): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.post(BIKE_ENDPOINTS.BASE, data);
     return response;
@@ -51,14 +48,14 @@ export const bikeService = {
     id: string,
     data: Partial<UpdateBikeSchemaFormData>
   ): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.patch(BIKE_ENDPOINTS.UPDATE(id), data);
+    const response = await fetchHttpClient.patch(
+      BIKE_ENDPOINTS.UPDATE(id),
+      data
+    );
     return response;
   },
   //for user
-  getAllBikes: async (): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BASE);
-    return response;
-  },
+
   reportBrokenBike: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.patch(
       BIKE_ENDPOINTS.REPORT_BROKEN(id)
@@ -69,6 +66,12 @@ export const bikeService = {
   getBikeByIdForAll: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
       BIKE_ENDPOINTS.BY_ID_FOR_ALL(id)
+    );
+    return response;
+  },
+  getAllBikes: async (page ?: number , limit ?: number ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BASE , 
+    { params : { page , limit } }
     );
     return response;
   },
