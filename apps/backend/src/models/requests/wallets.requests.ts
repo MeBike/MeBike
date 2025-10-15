@@ -3,8 +3,8 @@ import type { Decimal128 } from 'mongodb'
 import type { RefundStatus, TransactionTypeEnum, WithDrawalStatus } from '~/constants/enums'
 
 export type IncreareBalanceWalletReqBody = {
+  user_id: string
   amount: Decimal128 | number
-  type: TransactionTypeEnum
   fee: Decimal128 | number
   description: string
   transaction_hash?: string
@@ -12,8 +12,8 @@ export type IncreareBalanceWalletReqBody = {
 }
 
 export type DecreaseBalanceWalletReqBody = {
+  user_id: string
   amount: Decimal128 | number
-  type: TransactionTypeEnum
   fee: Decimal128 | number
   description: string
   transaction_hash?: string
@@ -22,7 +22,7 @@ export type DecreaseBalanceWalletReqBody = {
 
 export type GetTransactionReqQuery = {
   limit?: string
-  page?: string,
+  page?: string
   type?: TransactionTypeEnum
 }
 
@@ -49,6 +49,4 @@ export type GetAllRefundReqQuery = {
   status?: RefundStatus
 }
 
-export type UpdateRefundReqBody = {
-
-}
+export type UpdateRefundReqBody = {}

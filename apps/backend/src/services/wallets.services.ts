@@ -63,19 +63,12 @@ class WalletService {
     return result
   }
 
-  async increaseBalance({ user_id, payload }: { user_id: string; payload: IncreareBalanceWalletReqBody }) {
-    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+  async increaseBalance({ payload }: { payload: IncreareBalanceWalletReqBody }) {
+    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(payload.user_id) })
     if (!findWallet) {
       throw new ErrorWithStatus({
-        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id),
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', payload.user_id),
         status: HTTP_STATUS.NOT_FOUND
-      })
-    }
-
-    if (!Object.values(TransactionTypeEnum).includes(payload.type)) {
-      throw new ErrorWithStatus({
-        message: WALLETS_MESSAGE.TRANSACTION_TYPE_INVALID.replace('%s', payload.type),
-        status: HTTP_STATUS.BAD_REQUEST
       })
     }
 
@@ -110,19 +103,12 @@ class WalletService {
     return wallet
   }
 
-  async decreaseBalance({ user_id, payload }: { user_id: string; payload: DecreaseBalanceWalletReqBody }) {
-    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+  async decreaseBalance({ payload }: { payload: DecreaseBalanceWalletReqBody }) {
+    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(payload.user_id) })
     if (!findWallet) {
       throw new ErrorWithStatus({
-        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id),
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', payload.user_id),
         status: HTTP_STATUS.NOT_FOUND
-      })
-    }
-
-    if (!Object.values(TransactionTypeEnum).includes(payload.type)) {
-      throw new ErrorWithStatus({
-        message: WALLETS_MESSAGE.TRANSACTION_TYPE_INVALID.replace('%s', payload.type),
-        status: HTTP_STATUS.BAD_REQUEST
       })
     }
 
@@ -137,7 +123,7 @@ class WalletService {
     const currentBalance = Number.parseFloat(findWallet.balance.toString())
     if (currentBalance < amount) {
       throw new ErrorWithStatus({
-        message: WALLETS_MESSAGE.INSUFFICIENT_BALANCE.replace('%s', user_id),
+        message: WALLETS_MESSAGE.INSUFFICIENT_BALANCE.replace('%s', payload.user_id),
         status: HTTP_STATUS.BAD_REQUEST
       })
     }
@@ -154,9 +140,9 @@ class WalletService {
       wallet_id: new ObjectId(findWallet._id),
       amount: Decimal128.fromString(payload.amount.toString()),
       fee: Decimal128.fromString(payload.fee.toString()),
-      description: payload.description,
+      description: payload.description || 'Admin decrease balance',
       transaction_hash: payload.transaction_hash || '',
-      type: TransactionTypeEnum.Deposit,
+      type: TransactionTypeEnum.PAYMENT,
       status: TransactionStaus.Success
     }
 
@@ -164,13 +150,12 @@ class WalletService {
     return wallet
   }
 
-  async changeWalletStatus(user_id: string, newStatus: WalletStatus) {
+  async changeWalletStatus(id: string, newStatus: WalletStatus) {
     const result = await databaseService.wallets.findOneAndUpdate(
-      { user_id: new ObjectId(user_id) },
+      { _id: new ObjectId(id) },
       { $set: { status: newStatus } },
       { returnDocument: 'after' }
     )
-
     return result
   }
 
@@ -404,14 +389,7 @@ class WalletService {
       updated_at: localTime
     }
 
-    const result = Promise.all([
-      await databaseService.withdraws.insertOne(new Withdraw(withdrawData)),
-      await databaseService.wallets.findOneAndUpdate(
-        { _id: new ObjectId(findWallet._id) },
-        { $inc: { balance: Decimal128.fromString((Number(payload.amount) * -1).toString()) } },
-        { returnDocument: 'after' }
-      )
-    ])
+    const result = Promise.all([await databaseService.withdraws.insertOne(new Withdraw(withdrawData))])
 
     return result
   }
@@ -429,6 +407,22 @@ class WalletService {
       throw new ErrorWithStatus({
         message: WITHDRAWLS_MESSAGE.WITHDRAWL_NOT_FOUND.replace('%s', withdrawID),
         status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const user_id = findWithDraw.user_id
+    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+    if (!findWallet) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id.toString()),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (findWallet.status === WalletStatus.Frozen) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.WALLET_HAS_BEEN_FROZEN,
+        status: HTTP_STATUS.BAD_REQUEST
       })
     }
 
@@ -459,12 +453,15 @@ class WalletService {
     }
 
     if (newStatusTyped === WithDrawalStatus.Completed) {
-      const user_id = findWithDraw.user_id
-      const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
-
       const currentDate = new Date()
       const vietnamTimezoneOffset = 7 * 60
       const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
+
+      await databaseService.wallets.findOneAndUpdate(
+        { _id: new ObjectId(findWallet?._id) },
+        { $inc: { balance: Decimal128.fromString((-findWithDraw.amount).toString()) } },
+        { returnDocument: 'after' }
+      )
 
       const transactionID = new ObjectId()
       const transactionData: TransactionType = {
@@ -492,7 +489,7 @@ class WalletService {
       updated_at: localTime
     }
 
-    const result = await databaseService.refunds.findOneAndUpdate(
+    const result = await databaseService.withdraws.findOneAndUpdate(
       { _id: new ObjectId(withdrawID) },
       { $set: updateData },
       { returnDocument: 'after' }

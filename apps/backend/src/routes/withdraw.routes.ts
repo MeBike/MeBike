@@ -4,7 +4,7 @@ import {
   getAllUserWithDrawController,
   getAllWithDrawController,
   getWithDrawDetailController,
-  updateRefundController
+  updateWithDrawStatusController
 } from '~/controllers/wallet.controllers'
 
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
@@ -24,7 +24,7 @@ withdrawsRouter.post(
   wrapAsync(createWithdrawalRequestController)
 )
 // admin get all withdraw
-withdrawsRouter.get('/', accessTokenValidator, isAdminValidator, wrapAsync(getAllWithDrawController))
+withdrawsRouter.get('/manage-withdrawal', accessTokenValidator, isAdminValidator, wrapAsync(getAllWithDrawController))
 // user get all withdraw
 withdrawsRouter.get('/', accessTokenValidator, wrapAsync(getAllUserWithDrawController))
 withdrawsRouter.get('/:id', accessTokenValidator, wrapAsync(getWithDrawDetailController))
@@ -34,7 +34,7 @@ withdrawsRouter.put(
   isAdminValidator,
   updateWithdrawStatusValidator,
   filterMiddleware(['newStatus']),
-  wrapAsync(updateRefundController)
+  wrapAsync(updateWithDrawStatusController)
 )
 
 export default withdrawsRouter

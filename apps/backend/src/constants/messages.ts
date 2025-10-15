@@ -251,7 +251,7 @@ export const WALLETS_MESSAGE = {
   MESSAGE_INVALID: 'Lời nhắn là chuỗi ký tự',
   STATUS_IS_REQUIED: 'Trạng thái là bắt buộc',
   STATUS_INVALID: 'Trạng thái không hợp lệ',
-  CHANGE_STATUS_SUCCESS: 'Đổi trạng thái ví của người dùng %s thành công',
+  CHANGE_STATUS_SUCCESS: 'Đổi trạng thái ví của người dùng thành công',
   GET_USER_WALLET_SUCCESS: 'Lấy thông tin ví của người dùng %s thành công',
   FORBIDDEN: 'Không có quyền truy cập vào giao dịch của người khác',
   TRANSACTION_NOT_FOUND: 'Không tìm thấy giao dịch',
@@ -267,6 +267,13 @@ export const WALLETS_MESSAGE = {
   WALLET_HAS_BEEN_FROZEN: 'Ví của người dùng này đã bị đóng băng',
   NOTE_IN_VALID: 'Ghi chú phải là chuỗi ký tự',
   NOTE_TOO_LONG: 'Ghi chú không được vượt quá 500 ký tự',
+  USER_ID_IS_REQUIRED: 'User ID là bắt buộc',
+  USER_ID_INVALID: 'User ID không hợp lệ',
+  WALLET_ID_IS_REQUIED: 'Wallet ID là bắt buộc',
+  WALLET_ID_INVALID: 'Wallet ID không hợp lệ',
+  WALLET_NOT_FOUND: 'Không tìm thấy ví với ID %s',
+  REASON_INVALID: 'Lý do không hợp lệ',
+  REASON_TOO_LONG: 'Lý do không được vượt quá 500 ký tự',
 }
 
 export const WITHDRAWLS_MESSAGE = {

@@ -24,7 +24,7 @@ refundsRouter.post(
   wrapAsync(refundController)
 )
 
-refundsRouter.get('/', accessTokenValidator, isAdminValidator, wrapAsync(getAllRefundController))
+refundsRouter.get('/manage-refunds', accessTokenValidator, isAdminValidator, wrapAsync(getAllRefundController))
 refundsRouter.get('/', accessTokenValidator, wrapAsync(getAllUserRefundController))
 refundsRouter.get('/:id', accessTokenValidator, wrapAsync(getRefundDetailController))
 refundsRouter.put(

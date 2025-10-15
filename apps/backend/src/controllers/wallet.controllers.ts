@@ -17,8 +17,7 @@ import { CreateRefundReqBody } from '~/models/requests/refunds.request'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 
 export async function createWalletController(req: Request<any, any, any>, res: Response) {
-  const user = req.decoded_authorization
-  const user_id = user?._id as string
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
   const result = await walletService.createWallet(user_id)
 
@@ -29,10 +28,9 @@ export async function createWalletController(req: Request<any, any, any>, res: R
 }
 
 export async function increateBalanceController(req: Request<any, any, IncreareBalanceWalletReqBody>, res: Response) {
-  const user = req.decoded_authorization
-  const user_id = user?._id as string
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
-  const result = await walletService.increaseBalance({ user_id, payload: req.body })
+  const result = await walletService.increaseBalance({ payload: req.body })
 
   res.json({
     message: WALLETS_MESSAGE.INCREASE_BALANCE_SUCCESS.replace('%s', `${req.body.amount}`).replace('%s', user_id),
@@ -41,32 +39,30 @@ export async function increateBalanceController(req: Request<any, any, IncreareB
 }
 
 export async function decreaseBalanceController(req: Request<any, any, DecreaseBalanceWalletReqBody>, res: Response) {
-  const user = req.decoded_authorization
-  const user_id = user?._id as string
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
-  const result = await walletService.decreaseBalance({ user_id, payload: req.body })
+  const result = await walletService.decreaseBalance({ payload: req.body })
 
   res.json({
-    message: WALLETS_MESSAGE.INCREASE_BALANCE_SUCCESS.replace('%s', `${req.body.amount}`).replace('%s', user_id),
+    message: WALLETS_MESSAGE.DECRESE_BALANCE_SUCCESS.replace('%s', `${req.body.amount}`).replace('%s', user_id),
     result
   })
 }
 
-export async function changeStatusController(req: Request<any, any, any>, res: Response) {
-  const user = req.decoded_authorization
-  const user_id = user?._id as string
+export async function changeStatusController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const { id } = req.params
+  console.log(id)
 
-  const result = await walletService.changeWalletStatus(user_id, req.body.newStatus)
+  const result = await walletService.changeWalletStatus(id, req.body.newStatus)
 
   res.json({
-    message: WALLETS_MESSAGE.CHANGE_STATUS_SUCCESS.replace('%s', user_id),
+    message: WALLETS_MESSAGE.CHANGE_STATUS_SUCCESS.replace('%s', id),
     result
   })
 }
 
 export async function getUserWalletController(req: Request<any, any, any>, res: Response) {
-  const user = req.decoded_authorization
-  const user_id = user?._id as string
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
   const result = await walletService.getUserWallet(user_id)
 
@@ -81,8 +77,7 @@ export async function getUserTransactionWalletController(
   res: Response,
   next: NextFunction
 ) {
-  const user = req.decoded_authorization
-  const user_id = user?._id as string
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
   const query = req.query
 
@@ -90,8 +85,7 @@ export async function getUserTransactionWalletController(
 }
 
 export async function getTransactionDetailController(req: Request<any, any, any>, res: Response) {
-  const user = req.decoded_authorization
-  const user_id = user?._id as string
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
   const transaction_id = req.params.id as string
 
@@ -104,8 +98,7 @@ export async function getTransactionDetailController(req: Request<any, any, any>
 }
 
 export async function refundController(req: Request<any, any, CreateRefundReqBody>, res: Response) {
-  const user = req.decoded_authorization
-  const user_id = user?._id as string
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
   const result = await walletService.refundTransaction(user_id, req.body)
 
@@ -131,8 +124,7 @@ export async function createWithdrawalRequestController(
   req: Request<ParamsDictionary, any, CreateWithdrawlReqBody>,
   res: Response
 ) {
-  const user = req.decoded_authorization
-  const user_id = user?._id as string
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
   const result = await walletService.createWithdrawal(user_id, req.body)
 

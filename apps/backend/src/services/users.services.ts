@@ -15,6 +15,7 @@ import { readEmailTemplate } from "~/utils/email-templates";
 import { signToken, verifyToken } from "~/utils/jwt";
 
 import databaseService from "./database.services";
+import walletService from "./wallets.services";
 
 class UsersService {
   private decodeRefreshToken(refresh_token: string) {
@@ -108,6 +109,8 @@ class UsersService {
         role: Role.User,
       }),
     );
+    // create wallet for user
+    await walletService.createWallet(user_id.toString());
     const [access_token, refresh_token] = await this.signAccessAndRefreshTokens({
       user_id: user_id.toString(),
       verify: UserVerifyStatus.Unverified,

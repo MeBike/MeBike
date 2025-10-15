@@ -68,6 +68,29 @@ export const updateWithdrawStatusValidator = validate(
         options: [[WithDrawalStatus.Approved, WithDrawalStatus.Completed, WithDrawalStatus.Rejected]],
         errorMessage: WALLETS_MESSAGE.INVALID_NEW_STATUS
       }
+    },
+    reason: {
+      in: ['body'],
+      trim: true,
+      isString: {
+        errorMessage: WALLETS_MESSAGE.REASON_INVALID
+      },
+      isLength: {
+        options: { max: 500 },
+        errorMessage: WALLETS_MESSAGE.REASON_TOO_LONG
+      },
+      custom: {
+        options: (value, { req }) => {
+          if (req.body.newStatus === WithDrawalStatus.Rejected && (!value || value.trim() === '')) {
+            throw new ErrorWithStatus({
+              message: WALLETS_MESSAGE.REASON_INVALID,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+          return true
+        }
+      }
     }
   })
 )

@@ -37,7 +37,7 @@ walletsRouter.put(
     'fee',
     'message',
     'transaction_hash',
-    'type'
+    'user_id'
   ]),
   wrapAsync(increateBalanceController)
 )
@@ -52,12 +52,12 @@ walletsRouter.put(
     'fee',
     'message',
     'transaction_hash',
-    'type'
+    'user_id'
   ]),
   wrapAsync(decreaseBalanceController)
 )
 walletsRouter.patch(
-  '/',
+  '/:id',
   accessTokenValidator,
   isAdminValidator,
   updateWalletStatusValidator,

@@ -29,9 +29,8 @@ export const increaseBalanceValidator = validate(
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }
-            
-            const user = req.decoded_authorization
-            const user_id = user?._id
+
+            const { user_id } = req.body
 
             const findUser = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
             if (!findUser) {
@@ -54,18 +53,6 @@ export const increaseBalanceValidator = validate(
         }
       },
 
-      type: {
-        in: ['body'],
-        trim: true,
-        notEmpty: {
-          errorMessage: WALLETS_MESSAGE.TYPE_IS_REQUIRED
-        },
-        isIn: {
-          options: [Object.values(TransactionTypeEnum)],
-          errorMessage: WALLETS_MESSAGE.TYPE_INVALID
-        }
-      },
-
       fee: {
         in: ['body'],
         trim: true,
@@ -78,7 +65,7 @@ export const increaseBalanceValidator = validate(
         },
         custom: {
           options: (value) => {
-            if (parseFloat(value) <= 0) {
+            if (parseFloat(value) < 0) {
               throw new ErrorWithStatus({
                 message: WALLETS_MESSAGE.FEE_NEGATIVE,
                 status: HTTP_STATUS.BAD_REQUEST
@@ -120,8 +107,7 @@ export const increaseBalanceValidator = validate(
         },
         custom: {
           options: async (value, { req }) => {
-            const user = req.decoded_authorization
-            const user_id = user?._id
+            const { user_id } = req.body
 
             const findUser = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
             if (!findUser) {
@@ -146,6 +132,28 @@ export const increaseBalanceValidator = validate(
               })
             }
 
+            return true
+          }
+        }
+      },
+      user_id: {
+        in: ['body'],
+        trim: true,
+        notEmpty: {
+          errorMessage: WALLETS_MESSAGE.USER_ID_IS_REQUIRED
+        },
+        isMongoId: {
+          errorMessage: WALLETS_MESSAGE.USER_ID_INVALID
+        },
+        custom: {
+          options: async (value) => {
+            const findUser = await databaseService.users.findOne({ _id: new ObjectId(value) })
+            if (!findUser) {
+              throw new ErrorWithStatus({
+                message: USERS_MESSAGES.USER_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
             return true
           }
         }
@@ -177,8 +185,7 @@ export const decreaseBalanceValidator = validate(
               })
             }
 
-            const user = req.decoded_authorization
-            const user_id = user?._id
+            const { user_id } = req.body
 
             const findUser = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
             if (!findUser) {
@@ -217,19 +224,6 @@ export const decreaseBalanceValidator = validate(
           }
         }
       },
-
-      type: {
-        in: ['body'],
-        trim: true,
-        notEmpty: {
-          errorMessage: WALLETS_MESSAGE.TYPE_IS_REQUIRED
-        },
-        isIn: {
-          options: [Object.values(TransactionTypeEnum)],
-          errorMessage: WALLETS_MESSAGE.TYPE_INVALID
-        }
-      },
-
       fee: {
         in: ['body'],
         trim: true,
@@ -242,7 +236,7 @@ export const decreaseBalanceValidator = validate(
         },
         custom: {
           options: (value) => {
-            if (parseFloat(value) <= 0) {
+            if (parseFloat(value) < 0) {
               throw new ErrorWithStatus({
                 message: WALLETS_MESSAGE.FEE_NEGATIVE,
                 status: HTTP_STATUS.BAD_REQUEST
@@ -255,6 +249,7 @@ export const decreaseBalanceValidator = validate(
       description: {
         in: ['body'],
         trim: true,
+        optional: true,
         notEmpty: {
           errorMessage: WALLETS_MESSAGE.DESCRIPTION_IS_REQUIED
         },
@@ -288,16 +283,39 @@ export const decreaseBalanceValidator = validate(
   )
 )
 
-export const updateWalletStatusValidator = checkSchema({
-  newStatus: {
-    in: ['body'],
-    trim: true,
-    notEmpty: {
-      errorMessage: WALLETS_MESSAGE.STATUS_IS_REQUIED
+export const updateWalletStatusValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      trim: true,
+      notEmpty: {
+        errorMessage: WALLETS_MESSAGE.WALLET_ID_IS_REQUIED
+      },
+      isMongoId: {
+        errorMessage: WALLETS_MESSAGE.WALLET_ID_INVALID
+      },
+      custom: {
+        options: async (value) => {
+          const findWallet = await databaseService.wallets.findOne({ _id: new ObjectId(value) })
+          if (!findWallet) {
+            throw new ErrorWithStatus({
+              message: WALLETS_MESSAGE.WALLET_NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+        }
+      }
     },
-    isIn: {
-      options: [[WalletStatus.Active, WalletStatus.Frozen]],
-      errorMessage: WALLETS_MESSAGE.STATUS_INVALID
+    newStatus: {
+      in: ['body'],
+      trim: true,
+      notEmpty: {
+        errorMessage: WALLETS_MESSAGE.STATUS_IS_REQUIED
+      },
+      isIn: {
+        options: [[WalletStatus.Active, WalletStatus.Frozen]],
+        errorMessage: WALLETS_MESSAGE.STATUS_INVALID
+      }
     }
-  }
-})
+  })
+)
