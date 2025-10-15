@@ -6,7 +6,7 @@ import type {
   GetAllRefundReqQuery,
   GetTransactionReqQuery,
   GetWithdrawReqQuery,
-  IncreareBalanceWalletReqBody,
+  IncreaseBalanceWalletReqBody,
   UpdateWithdrawStatusReqBody
 } from '~/models/requests/wallets.requests'
 
@@ -27,7 +27,7 @@ export async function createWalletController(req: Request<any, any, any>, res: R
   })
 }
 
-export async function increateBalanceController(req: Request<any, any, IncreareBalanceWalletReqBody>, res: Response) {
+export async function increateBalanceController(req: Request<any, any, IncreaseBalanceWalletReqBody>, res: Response) {
   const { user_id } = req.decoded_authorization as TokenPayLoad
 
   const result = await walletService.increaseBalance({ payload: req.body })
@@ -134,7 +134,7 @@ export async function createWithdrawalRequestController(
   })
 }
 
-export async function updateWithDrawStatusController(
+export async function updateWithdrawStatusController(
   req: Request<ParamsDictionary, any, UpdateWithdrawStatusReqBody>,
   res: Response
 ) {
@@ -148,7 +148,7 @@ export async function updateWithDrawStatusController(
   })
 }
 
-export async function getWithDrawDetailController(req: Request<ParamsDictionary, any, any>, res: Response) {
+export async function getWithdrawDetailController(req: Request<ParamsDictionary, any, any>, res: Response) {
   const { id } = req.params
   const { role, user_id } = req.decoded_authorization as TokenPayLoad
 
@@ -170,7 +170,7 @@ export async function getAllWithDrawController(
   await walletService.getAllWithDrawRequest(res, next, query)
 }
 
-export async function getAllUserWithDrawController(
+export async function getAllUserWithdrawController(
   req: Request<ParamsDictionary, any, any, GetWithdrawReqQuery>,
   res: Response,
   next: NextFunction

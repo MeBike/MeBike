@@ -3,7 +3,7 @@ import type { ParamsDictionary } from 'express-serve-static-core'
 
 import { ObjectId } from 'mongodb'
 
-import { Role, SupplierStatus } from '~/constants/enums'
+import { SupplierStatus } from '~/constants/enums'
 import type {
   CreateSupplierReqBody,
   GetSupplierReqQuery,
@@ -36,7 +36,7 @@ export async function updateSupplierController(
   const result = await supplierService.updateSupplier({ id: supplierID.toString(), payload: req.body })
 
   res.json({
-    messgae: SUPPLIER_MESSAGE.UPDATE_SUCCESS,
+    message: SUPPLIER_MESSAGE.UPDATE_SUCCESS,
     result
   })
 }
@@ -74,11 +74,11 @@ export async function getByIdController(req: Request<ParamsDictionary, any, any>
 }
 
 export async function getAllSupplierStatController(req: Request<any, any, any>, res: Response) {
-  const resutl = await supplierService.getAllSupplierBikeStats()
+  const result = await supplierService.getAllSupplierBikeStats()
 
   res.json({
     message: SUPPLIER_MESSAGE.GET_STATS_SUCCESS,
-    resutl
+    result
   })
 }
 

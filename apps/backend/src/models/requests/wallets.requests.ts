@@ -2,7 +2,7 @@ import type { Decimal128 } from 'mongodb'
 
 import type { RefundStatus, TransactionTypeEnum, WithDrawalStatus } from '~/constants/enums'
 
-export type IncreareBalanceWalletReqBody = {
+export type IncreaseBalanceWalletReqBody = {
   user_id: string
   amount: Decimal128 | number
   fee: Decimal128 | number

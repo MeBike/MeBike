@@ -6,7 +6,7 @@ import type {
   GetAllRefundReqQuery,
   GetTransactionReqQuery,
   GetWithdrawReqQuery,
-  IncreareBalanceWalletReqBody,
+  IncreaseBalanceWalletReqBody,
   UpdateWithdrawStatusReqBody
 } from '~/models/requests/wallets.requests'
 import type { TransactionType } from '~/models/schemas/transaction.schema'
@@ -63,7 +63,7 @@ class WalletService {
     return result
   }
 
-  async increaseBalance({ payload }: { payload: IncreareBalanceWalletReqBody }) {
+  async increaseBalance({ payload }: { payload: IncreaseBalanceWalletReqBody }) {
     const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(payload.user_id) })
     if (!findWallet) {
       throw new ErrorWithStatus({
@@ -397,9 +397,9 @@ class WalletService {
   async updateWithDrawStatus(withdrawID: string, payload: UpdateWithdrawStatusReqBody) {
     const allowedStatuses: Record<WithDrawalStatus, WithDrawalStatus[]> = {
       [WithDrawalStatus.Pending]: [WithDrawalStatus.Approved, WithDrawalStatus.Rejected],
-      [RefundStatus.Approved]: [WithDrawalStatus.Completed],
-      [RefundStatus.Completed]: [],
-      [RefundStatus.Rejected]: []
+      [WithDrawalStatus.Approved]: [WithDrawalStatus.Completed],
+      [WithDrawalStatus.Completed]: [],
+      [WithDrawalStatus.Rejected]: []
     }
 
     const findWithDraw = await databaseService.withdraws.findOne({ _id: new ObjectId(withdrawID) })
@@ -444,7 +444,7 @@ class WalletService {
     }
 
     if (newStatusTyped === WithDrawalStatus.Rejected) {
-      if (!payload.newStatus || payload.newStatus.trim() === '') {
+      if (!payload.reason || payload.reason.trim() === '') {
         throw new ErrorWithStatus({
           message: WITHDRAWLS_MESSAGE.REASON_IS_REQUIRED,
           status: HTTP_STATUS.BAD_REQUEST
@@ -458,7 +458,7 @@ class WalletService {
       const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
 
       await databaseService.wallets.findOneAndUpdate(
-        { _id: new ObjectId(findWallet?._id) },
+        { _id: findWallet?._id },
         { $inc: { balance: Decimal128.fromString((-findWithDraw.amount).toString()) } },
         { returnDocument: 'after' }
       )
@@ -466,7 +466,7 @@ class WalletService {
       const transactionID = new ObjectId()
       const transactionData: TransactionType = {
         _id: transactionID,
-        wallet_id: new ObjectId(findWallet?._id),
+        wallet_id: findWallet?._id,
         amount: findWithDraw.amount,
         description: 'Withdrawal',
         fee: Decimal128.fromString('0'),
@@ -572,7 +572,7 @@ class WalletService {
     }
 
     if (role !== Role.Admin) {
-      if (user_id !== findRefund._id.toString()) {
+      if (user_id !== findRefund.user_id!.toString()) {
         throw new ErrorWithStatus({
           message: WALLETS_MESSAGE.FORBIDDEN_ACCESS,
           status: HTTP_STATUS.FORBIDDEN
