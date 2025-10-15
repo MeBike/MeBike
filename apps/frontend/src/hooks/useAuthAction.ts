@@ -110,7 +110,7 @@ export const useAuthActions = () => {
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin]
+        },[useLogin , queryClient]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
@@ -132,7 +132,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useRegister,getQueryClient,router]);
+    },[useRegister,queryClient,router]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
