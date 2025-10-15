@@ -12,11 +12,11 @@ import {
   CardTitle,
 } from "@components/ui/card";
 import { Separator } from "@components/ui/separator";
-import { Bike, Lock, Eye, EyeOff, Shield } from "lucide-react";
+import { Bike, Lock, Eye, EyeOff, Shield, Loader2 } from "lucide-react";
 import React from "react";
 import { useAuthActions } from "@hooks/useAuthAction";
-
-const ResetPassword = () => {
+import { Suspense } from "react";
+function ResetPasswordContent() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -29,17 +29,21 @@ const ResetPassword = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       return;
     }
-    
+
     if (!token) {
       return;
     }
 
     setIsLoading(true);
-    resetPassword({ password, confirm_password: confirmPassword , forgot_password_token : token });
+    resetPassword({
+      password,
+      confirm_password: confirmPassword,
+      forgot_password_token: token,
+    });
     setIsLoading(false);
   };
 
@@ -56,8 +60,10 @@ const ResetPassword = () => {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
-        bg-[linear-gradient(135deg,hsl(214_100%_40%)_0%,hsl(215_16%_47%)_100%)]">
+      <div
+        className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
+        bg-[linear-gradient(135deg,hsl(214_100%_40%)_0%,hsl(215_16%_47%)_100%)]"
+      >
         <div className="text-center text-white">
           <p>Redirecting...</p>
         </div>
@@ -66,8 +72,10 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
-      bg-[linear-gradient(135deg,hsl(214_100%_40%)_0%,hsl(215_16%_47%)_100%)]">
+    <div
+      className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
+      bg-[linear-gradient(135deg,hsl(214_100%_40%)_0%,hsl(215_16%_47%)_100%)]"
+    >
       <div className="w-full max-w-md">
         <div className="text-center animate-fade-in mb-6">
           <div className="flex items-center justify-center">
@@ -126,7 +134,10 @@ const ResetPassword = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium"
+                >
                   Xác nhận mật khẩu
                 </Label>
                 <div className="relative">
@@ -154,9 +165,13 @@ const ResetPassword = () => {
                     )}
                   </button>
                 </div>
-                {password && confirmPassword && password !== confirmPassword && (
-                  <p className="text-sm text-red-500">Mật khẩu xác nhận không khớp</p>
-                )}
+                {password &&
+                  confirmPassword &&
+                  password !== confirmPassword && (
+                    <p className="text-sm text-red-500">
+                      Mật khẩu xác nhận không khớp
+                    </p>
+                  )}
               </div>
 
               <div className="space-y-2">
@@ -164,10 +179,14 @@ const ResetPassword = () => {
                   <p>Mật khẩu phải có ít nhất 8 ký tự</p>
                 </div>
               </div>
-                
+
               <Button
                 type="submit"
-                disabled={isLoading || password !== confirmPassword || password.length < 8}
+                disabled={
+                  isLoading ||
+                  password !== confirmPassword ||
+                  password.length < 8
+                }
                 className="w-full h-12 hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
                   bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -184,9 +203,9 @@ const ResetPassword = () => {
                 )}
               </Button>
             </form>
-            
+
             <Separator className="my-6" />
-            
+
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Nhớ mật khẩu rồi?{" "}
@@ -212,6 +231,28 @@ const ResetPassword = () => {
       </div>
     </div>
   );
-};
+}
 
-export default ResetPassword;
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Reset Password</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex flex-col items-center space-y-4">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                <p className="text-center text-muted-foreground">Đang tải...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
+  );
+}
