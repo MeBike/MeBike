@@ -16,7 +16,7 @@ import {
   increaseBalanceValidator,
   updateWalletStatusValidator
 } from '~/middlewares/wallet.middlewares'
-import { DecreaseBalanceWalletReqBody, IncreareBalanceWalletReqBody } from '~/models/requests/wallets.requests'
+import { DecreaseBalanceWalletReqBody, IncreaseBalanceWalletReqBody } from '~/models/requests/wallets.requests'
 import { wrapAsync } from '~/utils/handler'
 
 const walletsRouter = Router()
@@ -31,7 +31,7 @@ walletsRouter.put(
   accessTokenValidator,
   isAdminValidator,
   increaseBalanceValidator,
-  filterMiddleware<IncreareBalanceWalletReqBody>([
+  filterMiddleware<IncreaseBalanceWalletReqBody>([
     'amount',
     'description',
     'fee',
