@@ -67,3 +67,43 @@ export function sendPaginatedResponseFromRedis<T>(res: Response, next: NextFunct
     next(error);
   }
 }
+
+export async function sendPaginatedAggregationResponse<T extends Document>(
+  res: Response,
+  next: NextFunction,
+  collection: Collection<T>,
+  query: Request['query'],
+  pipeline: Document[]
+) {
+  try {
+    const page = Number.parseInt(query.page as string) || 1
+    const limit = Number.parseInt(query.limit as string) || 10
+    const skip = (page - 1) * limit
+
+    const [totalRecordsResult, data] = await Promise.all([
+      // Pipeline to count the total matching documents
+      collection.aggregate([...pipeline, { $count: 'total' }]).toArray(),
+      // Pipeline to get the actual data for the current page
+      collection.aggregate([...pipeline, { $skip: skip }, { $limit: limit }]).toArray()
+    ])
+
+    const totalRecords = totalRecordsResult.length > 0 ? totalRecordsResult[0].total : 0
+    const totalPages = Math.ceil(totalRecords / limit)
+
+    const normalized = data.map(normalizeDecimal)
+
+    const responseBody: IResponseSearch<any> = {
+      data: normalized,
+      pagination: {
+        limit,
+        currentPage: page,
+        totalPages,
+        totalRecords
+      }
+    }
+
+    return res.status(200).json(responseBody)
+  } catch (error) {
+    next(error)
+  }
+}
