@@ -7,12 +7,11 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Lock, Save, ArrowLeft, Shield, User, Key } from "lucide-react";
+import { Eye, EyeOff, Lock, ArrowLeft, Shield, User, Key } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { changePasswordSchema, ChangePasswordSchemaFormData } from "@/schemas/authSchema";
-import { clearTokens } from "@/utils/tokenManager";
 import Link from "next/link";
 import { Progress } from "@radix-ui/react-progress";
 
@@ -50,8 +49,6 @@ export default function ChangePasswordPage() {
     }
   };
 
-  // Check role permission
-
 
   if (!user) {
     return <div className="flex items-center justify-center h-screen"><Progress /></div>;
@@ -60,7 +57,6 @@ export default function ChangePasswordPage() {
   return (
     <DashboardLayout user={user}>
       <div className="space-y-6 max-w-4xl mx-auto">
-        {/* Header Section */}
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <Link
@@ -70,13 +66,6 @@ export default function ChangePasswordPage() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div className="flex-1">
-              {/* <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                <User className="w-4 h-4" />
-                <span>Hồ sơ cá nhân</span>
-                <span>/</span>
-                <Key className="w-4 h-4" />
-                <span>Thay đổi mật khẩu</span>
-              </div> */}
               <h1 className="text-3xl font-bold text-foreground">
                 Thay đổi mật khẩu
               </h1>
@@ -86,7 +75,6 @@ export default function ChangePasswordPage() {
             </div>
           </div>
           
-          {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
               <div className="flex items-center gap-3">
@@ -130,9 +118,7 @@ export default function ChangePasswordPage() {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Form Section */}
           <div className="lg:col-span-2">
             <div className="bg-card border border-border rounded-xl p-8">
               <div className="mb-6">
@@ -281,9 +267,7 @@ export default function ChangePasswordPage() {
           </div>
           </div>
 
-          {/* Security Section */}
           <div className="space-y-6">
-            {/* Current User Info */}
             <div className="bg-card border border-border rounded-xl p-6">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
@@ -319,7 +303,6 @@ export default function ChangePasswordPage() {
               </div>
             </div>
 
-            {/* Security Tips */}
             <div className="bg-card border border-border rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">

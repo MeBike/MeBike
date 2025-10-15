@@ -16,10 +16,8 @@ import { Progress } from "@components/ui/progress";
 import { Bike, Mail, Lock, Eye, EyeOff} from "lucide-react";
 import React from "react";  
 import { useAuth } from "@providers/auth-providers";
-import { useAuthActions } from "@hooks/useAuthAction";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  // const { logIn ,  } = useAuthActions();
   const { user , logIn , isLoggingIn , isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

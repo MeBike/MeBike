@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { use, useCallback } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {clearTokens , setTokens} from "@utils/tokenManager"
@@ -73,7 +73,7 @@ export const useAuthActions = () => {
                     }
                 }
             )
-        },[useChangePassword]
+        },[useChangePassword , queryClient, router]
     );
     const logIn = useCallback(
         (data : LoginSchemaFormData) => {
@@ -174,7 +174,7 @@ export const useAuthActions = () => {
                 }
             });
         });
-    }, [useVerifyEmail, queryClient]);
+    }, [useVerifyEmail, queryClient , router]);
     const resendVerifyEmail = useCallback(() => {
         useResendVerifyEmail.mutate(undefined,{
             onSuccess: (result) => {
@@ -190,23 +190,30 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    }, [useResendVerifyEmail]);
-    const forgotPassword = useCallback((data: ForgotPasswordSchemaFormData) => {
-        useForgotPassword.mutate(data,{
-            onSuccess: (result) => {
-                if(result.status === 200){ 
-                    toast.success("Password reset email sent successfully");
-                } else{
-                    const errorMessage = result.data?.message || "Error sending password reset email";
-                    toast.error(errorMessage);
-                }
-            },
-            onError: (error: unknown) => {
-                const errorMessage = getErrorMessage(error, "Error sending password reset email");
-                toast.error(errorMessage);
+    }, [useResendVerifyEmail, queryClient, router]);
+    const forgotPassword = useCallback(
+      (data: ForgotPasswordSchemaFormData) => {
+        useForgotPassword.mutate(data, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Password reset email sent successfully");
+            } else {
+              const errorMessage =
+                result.data?.message || "Error sending password reset email";
+              toast.error(errorMessage);
             }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Error sending password reset email"
+            );
+            toast.error(errorMessage);
+          },
         });
-    },[useForgotPassword]);
+      },
+      [useForgotPassword, queryClient, router]
+    );
     
     const resetPassword = useCallback((data: ResetPasswordSchemaFormData) => {
         useResetPassword.mutate(data,{
@@ -224,7 +231,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useResetPassword, router]);
+    },[useResetPassword, router , queryClient]);
     const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
         useUpdateProfile.mutate(data, {
             onSuccess: (result) => {
@@ -241,7 +248,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    }, [useUpdateProfile]);
+    }, [useUpdateProfile, queryClient, router]);
     return {
       changePassword,
       logIn,

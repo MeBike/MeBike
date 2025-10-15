@@ -18,7 +18,7 @@ import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
 import { clearTokens } from "@/utils/tokenManager";
 import Link from "next/link";
 export default function ProfilePage() {
-  const { user, updateProfile , isUpdatingProfile } = useAuth();
+  const { user, updateProfile  } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [data,setData] = useState<DetailUser | null>(null);
   const [formData, setFormData] = useState<DetailUser>(() => user || {} as DetailUser);
