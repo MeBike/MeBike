@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import {
   createWithdrawalRequestController,
+  getAllUserWithDrawController,
   getAllWithDrawController,
   getWithDrawDetailController,
   updateRefundController
@@ -22,8 +23,10 @@ withdrawsRouter.post(
   filterMiddleware<CreateWithdrawlReqBody>(['account', 'amount', 'note']),
   wrapAsync(createWithdrawalRequestController)
 )
-
+// admin get all withdraw
 withdrawsRouter.get('/', accessTokenValidator, isAdminValidator, wrapAsync(getAllWithDrawController))
+// user get all withdraw
+withdrawsRouter.get('/', accessTokenValidator, wrapAsync(getAllUserWithDrawController))
 withdrawsRouter.get('/:id', accessTokenValidator, wrapAsync(getWithDrawDetailController))
 withdrawsRouter.put(
   '/:id',

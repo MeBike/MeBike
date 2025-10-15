@@ -178,6 +178,17 @@ export async function getAllWithDrawController(
   await walletService.getAllWithDrawRequest(res, next, query)
 }
 
+export async function getAllUserWithDrawController(
+  req: Request<ParamsDictionary, any, any, GetWithdrawReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const query = req.query
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+
+  await walletService.getAllUserWithDrawRequest(res, next, query, user_id)
+}
+
 export async function getAllRefundController(
   req: Request<ParamsDictionary, any, any, GetAllRefundReqQuery>,
   res: Response,

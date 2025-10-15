@@ -523,6 +523,19 @@ class WalletService {
     await sendPaginatedResponse(res, next, databaseService.withdraws, query, filter)
   }
 
+  async getAllUserWithDrawRequest(res: Response, next: NextFunction, query: GetWithdrawReqQuery, user_id: string) {
+    const { status } = query
+
+    const filter: any = {}
+
+    if (status) {
+      filter.status = status
+    }
+    filter.user_id = new ObjectId(user_id)
+
+    await sendPaginatedResponse(res, next, databaseService.withdraws, query, filter)
+  }
+
   async getAllRefund(res: Response, next: NextFunction, query: GetAllRefundReqQuery) {
     const { status } = query
 
