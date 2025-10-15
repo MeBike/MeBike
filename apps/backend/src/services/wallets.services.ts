@@ -3,6 +3,7 @@ import { Decimal128, Filter, ObjectId } from 'mongodb'
 import type {
   CreateWithdrawlReqBody,
   DecreaseBalanceWalletReqBody,
+  GetAllRefundReqQuery,
   GetTransactionReqQuery,
   GetWithdrawReqQuery,
   IncreareBalanceWalletReqBody,
@@ -185,7 +186,8 @@ class WalletService {
     return result
   }
 
-  async getPaymentHistory(res: Response, next: NextFunction, query: GetTransactionReqQuery, user_id: string) {
+  // lịch sử cộng trừ tiền của ví
+  async getWalletHistory(res: Response, next: NextFunction, query: GetTransactionReqQuery, user_id: string) {
     try {
       const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
       if (!findWallet) {
@@ -323,6 +325,26 @@ class WalletService {
     const vietnamTimezoneOffset = 7 * 60
     const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
 
+    if (newStatusTyped === RefundStatus.Completed) {
+      const user_id = findRefund.user_id
+      const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+
+      const transactionID = new ObjectId()
+      const transactionData: TransactionType = {
+        _id: transactionID,
+        wallet_id: new ObjectId(findWallet?._id),
+        amount: findRefund.amount,
+        description: 'Refund',
+        fee: Decimal128.fromString('0'),
+        status: TransactionStaus.Success,
+        transaction_hash: '',
+        type: TransactionTypeEnum.Refund,
+        created_at: localTime
+      }
+
+      await databaseService.transactions.insertOne(new Transaction(transactionData))
+    }
+
     const updateData: any = {
       status: newStatusTyped,
       updated_at: localTime
@@ -382,7 +404,7 @@ class WalletService {
       await databaseService.withdraws.insertOne(new Withdraw(withdrawData)),
       await databaseService.wallets.findOneAndUpdate(
         { _id: new ObjectId(findWallet._id) },
-        { $inc: { balance: Decimal128.fromString((payload.amount * -1).toString()) } },
+        { $inc: { balance: Decimal128.fromString((Number(payload.amount) * -1).toString()) } },
         { returnDocument: 'after' }
       )
     ])
@@ -432,6 +454,30 @@ class WalletService {
       }
     }
 
+    if (newStatusTyped === WithDrawalStatus.Completed) {
+      const user_id = findWithDraw.user_id
+      const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+
+      const currentDate = new Date()
+      const vietnamTimezoneOffset = 7 * 60
+      const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
+
+      const transactionID = new ObjectId()
+      const transactionData: TransactionType = {
+        _id: transactionID,
+        wallet_id: new ObjectId(findWallet?._id),
+        amount: findWithDraw.amount,
+        description: 'Withdrawal',
+        fee: Decimal128.fromString('0'),
+        status: TransactionStaus.Success,
+        transaction_hash: '',
+        type: TransactionTypeEnum.WithDrawal,
+        created_at: localTime
+      }
+
+      await databaseService.transactions.insertOne(new Transaction(transactionData))
+    }
+
     const currentDate = new Date()
     const vietnamTimezoneOffset = 7 * 60
     const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
@@ -451,8 +497,17 @@ class WalletService {
     return result
   }
 
-  async getWithdrawRequestDetail(withdrawID: string) {
+  async getWithdrawRequestDetail(withdrawID: string, role: Role, user_id: string) {
     const result = await databaseService.withdraws.findOne({ _id: new ObjectId(withdrawID) })
+    if (role !== Role.Admin) {
+      if (result?.user_id.toString() !== user_id) {
+        throw new ErrorWithStatus({
+          message: WALLETS_MESSAGE.FORBIDDEN_WITHDRAW_ACCESS,
+          status: HTTP_STATUS.FORBIDDEN
+        })
+      }
+    }
+
     return result
   }
 
@@ -466,6 +521,39 @@ class WalletService {
     }
 
     await sendPaginatedResponse(res, next, databaseService.withdraws, query, filter)
+  }
+
+  async getAllRefund(res: Response, next: NextFunction, query: GetAllRefundReqQuery) {
+    const { status } = query
+
+    const filter: any = {}
+
+    if (status) {
+      filter.status = status
+    }
+
+    await sendPaginatedResponse(res, next, databaseService.refunds, query, filter)
+  }
+
+  async getRefundDetail(refund_id: string, role: Role, user_id: string) {
+    const findRefund = await databaseService.refunds.findOne({ _id: new ObjectId(refund_id) })
+    if (!findRefund) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.REFUND_NOT_FOUND.replace('%s', refund_id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (role !== Role.Admin) {
+      if (user_id !== findRefund._id.toString()) {
+        throw new ErrorWithStatus({
+          message: WALLETS_MESSAGE.FORBIDDEN_ACCESS,
+          status: HTTP_STATUS.FORBIDDEN
+        })
+      }
+    }
+
+    return findRefund
   }
 }
 

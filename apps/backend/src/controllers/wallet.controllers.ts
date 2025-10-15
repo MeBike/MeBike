@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from 'express'
 import type {
   CreateWithdrawlReqBody,
   DecreaseBalanceWalletReqBody,
+  GetAllRefundReqQuery,
   GetTransactionReqQuery,
   GetWithdrawReqQuery,
   IncreareBalanceWalletReqBody,
@@ -13,6 +14,7 @@ import { WALLETS_MESSAGE, WITHDRAWLS_MESSAGE } from '~/constants/messages'
 import walletService from '~/services/wallets.services'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { CreateRefundReqBody } from '~/models/requests/refunds.request'
+import { TokenPayLoad } from '~/models/requests/users.requests'
 
 export async function createWalletController(req: Request<any, any, any>, res: Response) {
   const user = req.decoded_authorization
@@ -74,7 +76,7 @@ export async function getUserWalletController(req: Request<any, any, any>, res: 
   })
 }
 
-export async function getUserTransactionController(
+export async function getUserTransactionWalletController(
   req: Request<ParamsDictionary, any, any, GetTransactionReqQuery>,
   res: Response,
   next: NextFunction
@@ -84,7 +86,7 @@ export async function getUserTransactionController(
 
   const query = req.query
 
-  await walletService.getPaymentHistory(res, next, query, user_id)
+  await walletService.getWalletHistory(res, next, query, user_id)
 }
 
 export async function getTransactionDetailController(req: Request<any, any, any>, res: Response) {
@@ -156,8 +158,9 @@ export async function updateWithDrawStatusController(
 
 export async function getWithDrawDetailController(req: Request<ParamsDictionary, any, any>, res: Response) {
   const { id } = req.params
+  const { role, user_id } = req.decoded_authorization as TokenPayLoad
 
-  const result = await walletService.getWithdrawRequestDetail(id)
+  const result = await walletService.getWithdrawRequestDetail(id, role, user_id)
 
   res.json({
     message: WITHDRAWLS_MESSAGE.GET_DETAIL_SUCCESS,
@@ -173,4 +176,29 @@ export async function getAllWithDrawController(
   const query = req.query
 
   await walletService.getAllWithDrawRequest(res, next, query)
+}
+
+export async function getAllRefundController(
+  req: Request<ParamsDictionary, any, any, GetAllRefundReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const query = req.query
+
+  await walletService.getAllRefund(res, next, query)
+}
+
+export async function getRefundDetailController(
+  req: Request<ParamsDictionary, any, any, GetAllRefundReqQuery>,
+  res: Response
+) {
+  const { role, user_id } = req.decoded_authorization as TokenPayLoad
+  const { id } = req.params
+
+  const result = await walletService.getRefundDetail(id, role, user_id)
+
+  res.json({
+    message: WALLETS_MESSAGE.REFUND_DETAIL_SUCCESS,
+    result
+  })
 }

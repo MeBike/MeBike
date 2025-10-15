@@ -173,7 +173,13 @@ export const WALLETS_MESSAGE = {
   REFUND_NOT_FOUND: 'Không tìm thấy yêu cầu giao dịch %s',
   INVALID_NEW_STATUS: 'Trạng thái mới không hợp lệ',
   UPDATE_REFUND_SUCCESS: 'Cập nhật trạng thái yêu cầu hoàn tiền thành công',
-  CREATE_WITHDRAWL_SUCCESS: 'Tạo yêu cầu rút về tài khoản thành công'
+  CREATE_WITHDRAWL_SUCCESS: 'Tạo yêu cầu rút về tài khoản thành công',
+  REFUND_DETAIL_SUCCESS: 'Lấy chi tiết yêu cầu hoàn tiền thành công',
+  FORBIDDEN_ACCESS: 'Bạn không có quyền truy cập vào yêu cầu hoàn tiền này',
+  FORBIDDEN_WITHDRAW_ACCESS: 'Bạn không có quyền truy cập vào yêu cầu rút tiền này',
+  WALLET_HAS_BEEN_FROZEN: 'Ví của người dùng này đã bị đóng băng',
+  NOTE_IN_VALID: 'Ghi chú phải là chuỗi ký tự',
+  NOTE_TOO_LONG: 'Ghi chú không được vượt quá 500 ký tự',
 }
 
 export const WITHDRAWLS_MESSAGE = {

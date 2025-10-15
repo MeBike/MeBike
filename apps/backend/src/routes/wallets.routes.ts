@@ -2,46 +2,30 @@ import { Router } from 'express'
 
 import {
   changeStatusController,
-  createWithdrawalRequestController,
   decreaseBalanceController,
   getTransactionDetailController,
-  getUserTransactionController,
+  getUserTransactionWalletController,
   getUserWalletController,
-  increateBalanceController,
-  refundController,
-  updateRefundController
+  increateBalanceController
 } from '~/controllers/wallet.controllers'
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
-import { decreaseBalanceValidator, increaseBalanceValidator } from '~/middlewares/wallet.middlewares'
-import { CreateRefundReqBody } from '~/models/requests/refunds.request'
 import {
-  CreateWithdrawlReqBody,
-  DecreaseBalanceWalletReqBody,
-  IncreareBalanceWalletReqBody
-} from '~/models/requests/wallets.requests'
+  decreaseBalanceValidator,
+  increaseBalanceValidator,
+  updateWalletStatusValidator
+} from '~/middlewares/wallet.middlewares'
+import { DecreaseBalanceWalletReqBody, IncreareBalanceWalletReqBody } from '~/models/requests/wallets.requests'
 import { wrapAsync } from '~/utils/handler'
 
 const walletsRouter = Router()
 
 // lấy thông tin ví cho user
 walletsRouter.get('/', accessTokenValidator, wrapAsync(getUserWalletController))
-// lấy các thông tin transaction của user
-walletsRouter.get('/transaction', accessTokenValidator, wrapAsync(getUserTransactionController))
+// lấy các thông tin transaction trong ví chưa có lịch sử rental của user (cộng tiền, rút tiền)
+walletsRouter.get('/transaction', accessTokenValidator, wrapAsync(getUserTransactionWalletController))
 walletsRouter.get('/transaction/:id', accessTokenValidator, wrapAsync(getTransactionDetailController))
-walletsRouter.post(
-  '/',
-  accessTokenValidator,
-  filterMiddleware<CreateRefundReqBody>(['amount', 'transaction_id']),
-  wrapAsync(refundController)
-)
-walletsRouter.post(
-  '/withdraw',
-  accessTokenValidator,
-  filterMiddleware<CreateWithdrawlReqBody>(['account', 'amount', 'note']),
-  wrapAsync(createWithdrawalRequestController)
-)
 walletsRouter.put(
   '/increase',
   accessTokenValidator,
@@ -72,17 +56,11 @@ walletsRouter.put(
   ]),
   wrapAsync(decreaseBalanceController)
 )
-walletsRouter.put(
-  '/:id',
-  accessTokenValidator,
-  isAdminValidator,
-  filterMiddleware(['newStatus']),
-  wrapAsync(updateRefundController)
-)
 walletsRouter.patch(
   '/',
   accessTokenValidator,
   isAdminValidator,
+  updateWalletStatusValidator,
   filterMiddleware(['newStatus']),
   wrapAsync(changeStatusController)
 )
