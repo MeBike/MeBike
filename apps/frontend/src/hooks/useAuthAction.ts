@@ -8,7 +8,6 @@ import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
-import { authService } from "@/services/authService";
 
 interface ErrorResponse {
     response?: {
@@ -81,7 +80,7 @@ export const useAuthActions = () => {
                             event?.query?.queryKey?.[1] === "me" && 
                             event.type === "updated" &&
                             event.query.state.data) {
-                            const userProfile = event.query.state.data as any;
+                            const userProfile = event.query.state.data as unknown as { role: string };
                             if (userProfile?.role === "ADMIN") {
                                 router.push("/admin");
                             } else if (userProfile?.role === "STAFF") {
