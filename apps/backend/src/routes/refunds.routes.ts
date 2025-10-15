@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import {
   getAllRefundController,
+  getAllUserRefundController,
   getRefundDetailController,
   refundController,
   updateRefundController
@@ -24,6 +25,7 @@ refundsRouter.post(
 )
 
 refundsRouter.get('/', accessTokenValidator, isAdminValidator, wrapAsync(getAllRefundController))
+refundsRouter.get('/', accessTokenValidator, wrapAsync(getAllUserRefundController))
 refundsRouter.get('/:id', accessTokenValidator, wrapAsync(getRefundDetailController))
 refundsRouter.put(
   '/:id',

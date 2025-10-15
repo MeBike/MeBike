@@ -10,6 +10,8 @@ import usersRouter from "./routes/users.routes";
 import databaseService from "./services/database.services";
 import bikesRouter from "./routes/bikes.routes";
 import walletsRouter from "./routes/wallets.routes";
+import withdrawsRouter from "./routes/withdraw.routes";
+import refundsRouter from "./routes/refunds.routes";
 
 config();
 
@@ -32,7 +34,9 @@ app.use("/users", usersRouter);
 app.use("/reports", reportsRouter);
 app.use("/suppliers", suppliersRouter);
 app.use("/bikes", bikesRouter);
-app.use("/wallet", walletsRouter);
+app.use("/wallets", walletsRouter);
+app.use("/withdraws", withdrawsRouter);
+app.use("/refunds", refundsRouter);
 
 app.use(defaultErrorHandler);
 

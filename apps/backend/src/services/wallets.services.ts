@@ -548,6 +548,19 @@ class WalletService {
     await sendPaginatedResponse(res, next, databaseService.refunds, query, filter)
   }
 
+  async getAllUserRefund(res: Response, next: NextFunction, query: GetAllRefundReqQuery, user_id: string) {
+    const { status } = query
+
+    const filter: any = {}
+
+    if (status) {
+      filter.status = status
+    }
+    filter.user_id = new ObjectId(user_id)
+
+    await sendPaginatedResponse(res, next, databaseService.refunds, query, filter)
+  }
+
   async getRefundDetail(refund_id: string, role: Role, user_id: string) {
     const findRefund = await databaseService.refunds.findOne({ _id: new ObjectId(refund_id) })
     if (!findRefund) {

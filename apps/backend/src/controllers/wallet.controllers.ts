@@ -199,6 +199,17 @@ export async function getAllRefundController(
   await walletService.getAllRefund(res, next, query)
 }
 
+export async function getAllUserRefundController(
+  req: Request<ParamsDictionary, any, any, GetAllRefundReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  const query = req.query
+
+  await walletService.getAllUserRefund(res, next, query, user_id)
+}
+
 export async function getRefundDetailController(
   req: Request<ParamsDictionary, any, any, GetAllRefundReqQuery>,
   res: Response
