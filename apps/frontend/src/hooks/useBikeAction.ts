@@ -10,6 +10,8 @@ import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 import { useReportBike } from "./mutations/Bike/useReportBike";
 import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
 import { useGetStatusBikeQuery } from "./query/Bike/useGetStatusBike";
+import { useRouter } from "next/router";
+import { useGetStatusBikeIDQuery } from "./query/Bike/useGetStatusBikeByID";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -41,22 +43,32 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   return defaultMessage;
 };
 export const useBikeActions = (
-  setHasToken: React.Dispatch<React.SetStateAction<boolean>>, 
+  hasToken : boolean, 
   bikeId?: string
 ) => {
+    const router = useRouter();
     const useGetBikes = useGetAllBikeQuery();
     const useCreateBike = useCreateBikeMutation();
     const useGetStatusBike = useGetStatusBikeQuery();
+    const useGetStatusBikeByID = useGetStatusBikeIDQuery(bikeId || '');
     const updateBikeMutation = useUpdateBike();
     const deleteBikeMutation = useSoftDeleteBikeMutation();
     const reportBikeMutation = useReportBike();
     const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || '');
     const queryClient = useQueryClient();
     const getBikes = useCallback(() => {
+        if(!hasToken){
+            router.push('/login');
+            return;
+        };
         useGetBikes.refetch();
-    }, [useGetBikes]);
+    }, [useGetBikes, hasToken, router]);
     const createBike = useCallback(
       (data: BikeSchemaFormData) => {
+        if (!hasToken) {
+          router.push("/login");
+          return;
+        }
         useCreateBike.mutate(data, {
           onSuccess: (result) => {
             if (result.status === 201) {
@@ -73,10 +85,14 @@ export const useBikeActions = (
           },
         });
       },
-      [useCreateBike]
+      [useCreateBike, hasToken, router]
     );
     const updateBike = useCallback(
       (data: UpdateBikeSchemaFormData, id: string) => {
+        if (!hasToken) {
+          router.push("/login");
+          return;
+        }
         updateBikeMutation.mutate(
           { id, data },
           {
@@ -99,10 +115,14 @@ export const useBikeActions = (
           }
         );
       },
-      [updateBikeMutation]
+      [updateBikeMutation, hasToken, router]
     );
     const deleteBike = useCallback(
       (id: string) => {
+        if (!hasToken) {
+          router.push("/login");
+          return;
+        }
         deleteBikeMutation.mutate(id, {
           onSuccess: (result) => {
             if (result.status === 200) {
@@ -120,10 +140,14 @@ export const useBikeActions = (
           },
         });
       },
-      [deleteBikeMutation]
+      [deleteBikeMutation, hasToken, router, queryClient]
     );
     const reportBike = useCallback(
     (id: string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
       reportBikeMutation.mutate(id, {
         onSuccess: (result) => {
           if (result.status === 200) {
@@ -139,7 +163,7 @@ export const useBikeActions = (
         },
       });
     },
-    [reportBikeMutation]
+    [reportBikeMutation, hasToken, router]
     );
     const getBikeByID = useCallback(() => {
       useGetDetailBike.refetch();
@@ -147,6 +171,9 @@ export const useBikeActions = (
     const getStatusBike = useCallback(() => {
       useGetStatusBike.refetch();
     }, [useGetStatusBike]);
+    const getStatusBikeByID = useCallback(() => {
+      useGetStatusBikeByID.refetch();
+    } , [useGetStatusBikeByID]);
     return {
       getBikes,
       createBike,
@@ -155,7 +182,9 @@ export const useBikeActions = (
       reportBike,
       getBikeByID,
       getStatusBike,
-      isFetchStatusBike: useGetStatusBike.isFetching,
+      getStatusBikeByID,
+      isFetchingStatusBikeByID: useGetStatusBikeByID.isFetching,
+      isFetchingStatusBike: useGetStatusBike.isFetching,
       isFetchingBikeDetail: useGetBikes.isFetching,
       isFetchingBike: useGetDetailBike.isFetching,
       isReportingBike: reportBikeMutation.isPending,

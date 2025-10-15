@@ -73,33 +73,29 @@ export const useAuthActions = () => {
                 onSuccess: (result) => {
                     const { access_token, refresh_token } = result.data.result;
                     setTokens(access_token, refresh_token);
-                    // Trigger storage event to update hasToken state
                     window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     toast.success("Logged in successfully");
-                    const fetchUserAndRedirect = async () => {
-                        try {
-                            const userResponse = await authService.getMe();
-                            if (userResponse.status === 200) {
-                                const userProfile = userResponse.data.result;
-                                queryClient.setQueryData(["user", "me"], userProfile);
-                                if (userProfile?.role === "ADMIN") {
-                                    router.push("/admin");
-                                } else if (userProfile?.role === "STAFF") {
-                                    router.push("/staff");
-                                } else {
-                                    router.push("/");
-                                }
+                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+                    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+                        if (event?.query?.queryKey?.[0] === "user" && 
+                            event?.query?.queryKey?.[1] === "me" && 
+                            event.type === "updated" &&
+                            event.query.state.data) {
+                            const userProfile = event.query.state.data as any;
+                            if (userProfile?.role === "ADMIN") {
+                                router.push("/admin");
+                            } else if (userProfile?.role === "STAFF") {
+                                router.push("/staff");
                             } else {
-                                console.error('Failed to fetch user profile:', userResponse.status);
                                 router.push("/");
                             }
-                        } catch (error) {
-                            console.error('Error fetching user profile:', error);
-                            router.push("/");
+                            unsubscribe(); 
                         }
-                    };
-                    
-                    fetchUserAndRedirect();
+                    });
+                    setTimeout(() => {
+                        unsubscribe();
+                        router.push("/"); 
+                    }, 3000);
                 },
                 onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
