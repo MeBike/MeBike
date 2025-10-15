@@ -147,22 +147,29 @@ export const useAuthActions = () => {
             }
         });
     },[useLogout, queryClient, router]);
-    const verifyEmail = useCallback((email_refresh_token: string) => {
-        useVerifyEmail.mutate(email_refresh_token,{
-            onSuccess: (result) => {
-                if(result.status === 200){
-                    toast.success("Email verified successfully");
-                }else{
-                    const errorMessage = result.data?.message || "Error verifying email";
+    const verifyEmail = useCallback((email_verify_token: string): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            useVerifyEmail.mutate(email_verify_token, {
+                onSuccess: (result) => {
+                    if(result.status === 200){
+                        toast.success("Email verified successfully");
+                        // Invalidate user query to update verification status
+                        queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+                        resolve();
+                    } else {
+                        const errorMessage = result.data?.message || "Error verifying email";
+                        toast.error(errorMessage);
+                        reject(new Error(errorMessage));
+                    }
+                },
+                onError: (error: unknown) => {
+                    const errorMessage = getErrorMessage(error, "Error verifying email");
                     toast.error(errorMessage);
+                    reject(error);
                 }
-            },
-            onError: (error: unknown) => {
-                const errorMessage = getErrorMessage(error, "Error verifying email");
-                toast.error(errorMessage);
-            }
+            });
         });
-    },[useVerifyEmail]);
+    }, [useVerifyEmail, queryClient]);
     const resendVerifyEmail = useCallback(() => {
         useResendVerifyEmail.mutate(undefined,{
             onSuccess: (result) => {

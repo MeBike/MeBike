@@ -8,13 +8,15 @@ import type { DetailUser } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Save, X } from "lucide-react";
+import { Camera, Save, X, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@radix-ui/react-progress";
 import { useAuthActions } from "@/hooks/useAuthAction";
+import { useRouter } from "next/navigation";
 export default function ProfilePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [data,setData] = useState<DetailUser | null>(null);
   const [formData, setFormData] = useState<DetailUser>(() => user || {} as DetailUser);
@@ -61,7 +63,14 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
   const handleResendVerifyEmail = () => {
+    if (formData?.verify === "VERIFIED") {
+      return; // Đã xác thực rồi thì không cần gửi lại
+    }
+    
     resendVerifyEmail();
+    // Show notification that email has been sent
+    // The user will need to check their email and click the verification link
+    // which will redirect to /auth/verify-email?email_verify_token={token}
   };
   return (
     <DashboardLayout user={data}>
@@ -341,8 +350,11 @@ export default function ProfilePage() {
               <Button
                 variant="outline"
                 onClick={() => handleResendVerifyEmail()}
+                className="gap-2"
+                disabled={formData?.verify === "VERIFIED"}
               >
-                Kích hoạt
+                <Mail className="w-4 h-4" />
+                {formData?.verify === "VERIFIED" ? "Đã xác thực" : "Gửi email xác thực"}
               </Button>
             </div>
           </div>
