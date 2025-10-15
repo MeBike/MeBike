@@ -45,7 +45,7 @@ export default function VerifyEmailPage() {
         setHasVerified(false); 
       });
 
-  }, [searchParams, router, hasVerified]); 
+  }, [searchParams, router]); 
 
   const handleGoBack = () => {
     router.push("/staff/profile");
