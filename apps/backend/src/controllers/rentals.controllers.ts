@@ -17,7 +17,7 @@ import type Station from '~/models/schemas/station.schema'
 import { RENTALS_MESSAGE } from '~/constants/messages'
 import databaseService from '~/services/database.services'
 import rentalsService from '~/services/rentals.services'
-import { sendPaginatedResponse } from '~/utils/pagination.helper'
+import { sendPaginatedAggregationResponse, sendPaginatedResponse } from '~/utils/pagination.helper'
 import { toObjectId } from '~/utils/string'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 
@@ -32,7 +32,7 @@ export async function createRentalSessionController(
   const result = await rentalsService.createRentalSession({
     user_id,
     start_station: station._id as ObjectId,
-    bike_id: bike._id as ObjectId,
+    bike_id: bike._id as ObjectId
   })
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,
@@ -52,12 +52,19 @@ export async function endRentalSessionController(req: Request<RentalParams>, res
   })
 }
 
-export async function endRentalByAdminOrStaffController(req: Request<RentalParams, any, EndRentalByAdminOrStaffReqBody>, res: Response) {
+export async function endRentalByAdminOrStaffController(
+  req: Request<RentalParams, any, EndRentalByAdminOrStaffReqBody>,
+  res: Response
+) {
   const { user_id } = req.decoded_authorization as TokenPayLoad
 
   const rental = req.rental! as Rental
 
-  const result = await rentalsService.endRentalByAdminOrStaff({ user_id: toObjectId(user_id), rental, payload: req.body })
+  const result = await rentalsService.endRentalByAdminOrStaff({
+    user_id: toObjectId(user_id),
+    rental,
+    payload: req.body
+  })
   res.json({
     message: RENTALS_MESSAGE.END_SESSION_SUCCESS,
     result
@@ -183,7 +190,18 @@ export async function getReservationsStatisticController(req: Request, res: Resp
     groupBy: groupBy as GroupByOptions
   })
   res.json({
-    message: RENTALS_MESSAGE.GET_RESERVATIONS_SUCCESS,
+    message: RENTALS_MESSAGE.GET_RESERVATIONS_STATISTIC_SUCCESS,
     result
   })
+}
+
+export async function getRentalsByStationIdController(req: Request, res: Response, next: NextFunction) {
+  const { id: stationId } = req.params
+  const { status, expired_within } = req.query
+  const pipeline = await rentalsService.getRentalsByStationIdPipeline({
+    stationId,
+    status: status as RentalStatus,
+    expired_within: (expired_within as string) ?? '60'
+  })
+  return sendPaginatedAggregationResponse(res, next, databaseService.rentals, req.query, pipeline)
 }

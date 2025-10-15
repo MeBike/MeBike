@@ -47,7 +47,7 @@ rentalsRouter.route("/:id/end")
   .put(accessTokenValidator, isAdminAndStaffValidator, endRentalByAdminOrStaffValidator, wrapAsync(endRentalByAdminOrStaffController));
 
 rentalsRouter.route("/:id/cancel")
-  .post(accessTokenValidator, isAdminValidator, cancelRentalValidator, wrapAsync(cancelRentalController));
+  .post(accessTokenValidator, isAdminAndStaffValidator, cancelRentalValidator, wrapAsync(cancelRentalController));
 
 // staff/admin
 rentalsRouter.route("/:id")

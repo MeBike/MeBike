@@ -167,10 +167,11 @@ export const RENTALS_MESSAGE = {
   GET_DETAIL_SUCCESS: 'Xem chi tiết 1 phiên thuê xe thành công',
   GET_REVENUE_SUCCESS: 'Xem thống kê doanh thu thành công',
   GET_STATION_ACTIVITY_SUCCESS: 'Xem thống kê hoạt động trạm xe thành công',
-  GET_RESERVATIONS_SUCCESS: 'Xem thống kê số lượt đặt/huỷ thành công',
+  GET_RESERVATIONS_STATISTIC_SUCCESS: 'Xem thống kê số lượt đặt/huỷ thành công',
   GET_STATION_TRAFFIC_SUCCESS: 'Xem thống kê số lượt thuê/trả theo trạm thành công',
   UPDATE_DETAIL_SUCCESS: 'Cập nhật phiên thuê thành công',
   CANCEL_RENTAL_SUCCESS: 'Huỷ phiên thuê thành công',
+  TRACKING_RENTAL_IN_STATION_SUCCESS: 'Xem danh sách các phiên thuê tại trạm thành công',
   // Fail action
   CREATE_SESSION_FAIL: 'Tạo phiên thuê xe không thành công',
   // Required data

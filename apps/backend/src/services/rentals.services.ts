@@ -1,4 +1,4 @@
-import type { ObjectId } from 'mongodb'
+import type { Document, ObjectId } from 'mongodb'
 
 import { Decimal128, Int32 } from 'mongodb'
 
@@ -11,14 +11,18 @@ import { toObjectId } from '~/utils/string'
 
 import databaseService from './database.services'
 import { getLocalTime } from '~/utils/date'
-import { CancelRentalReqBody, EndRentalByAdminOrStaffReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
+import {
+  CancelRentalReqBody,
+  EndRentalByAdminOrStaffReqBody,
+  UpdateRentalReqBody
+} from '~/models/requests/rentals.requests'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 
 class RentalsService {
   async createRentalSession({
     user_id,
     start_station,
-    bike_id,
+    bike_id
   }: {
     user_id: ObjectId | string
     start_station: ObjectId
@@ -141,8 +145,16 @@ class RentalsService {
     }
   }
 
-  async endRentalByAdminOrStaff({ user_id, rental, payload }: { user_id: ObjectId; rental: Rental, payload: EndRentalByAdminOrStaffReqBody}) {
-    const { end_station, end_time, reason} = payload
+  async endRentalByAdminOrStaff({
+    user_id,
+    rental,
+    payload
+  }: {
+    user_id: ObjectId
+    rental: Rental
+    payload: EndRentalByAdminOrStaffReqBody
+  }) {
+    const { end_station, end_time, reason } = payload
     const objStationId = toObjectId(end_station)
     const session = databaseService.getClient().startSession()
     try {
@@ -161,18 +173,18 @@ class RentalsService {
         const totalPrice = this.generateTotalPrice(duration)
 
         const endTime = end_time ? new Date(end_time) : now
-        if(endTime > now){
-            throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.END_DATE_CANNOT_BE_IN_FUTURE,
-              status: HTTP_STATUS.BAD_REQUEST
-            })
-          }
-          if (endTime < rental.start_time) {
-            throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.END_TIME_MUST_GREATER_THAN_START_TIME,
-              status: HTTP_STATUS.BAD_REQUEST
-            })
-          }
+        if (endTime > now) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.END_DATE_CANNOT_BE_IN_FUTURE,
+            status: HTTP_STATUS.BAD_REQUEST
+          })
+        }
+        if (endTime < rental.start_time) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.END_TIME_MUST_GREATER_THAN_START_TIME,
+            status: HTTP_STATUS.BAD_REQUEST
+          })
+        }
 
         const updatedData: Partial<Rental> = {
           end_station: objStationId,
@@ -206,7 +218,7 @@ class RentalsService {
             },
             { session }
           )
-          
+
           const log = new RentalLog({
             rental_id: rental._id!,
             admin_id: user_id,
@@ -352,7 +364,7 @@ class RentalsService {
             })
           }
           const end = new Date(end_time)
-          if(end > now){
+          if (end > now) {
             throw new ErrorWithStatus({
               message: RENTALS_MESSAGE.END_DATE_CANNOT_BE_IN_FUTURE,
               status: HTTP_STATUS.BAD_REQUEST
@@ -750,6 +762,87 @@ class RentalsService {
       groupBy: groupBy ?? GroupByOptions.Day,
       data: result
     }
+  }
+
+  async getRentalsByStationIdPipeline({
+    stationId,
+    status,
+    expired_within
+  }: {
+    stationId: string
+    status: RentalStatus
+    expired_within: string
+  }) {
+    const objStationId = toObjectId(stationId)
+    const matchQuery: any = {
+      start_station: objStationId
+    }
+    if (status) {
+      matchQuery.status = status
+    }
+
+    const now = getLocalTime()
+    if (status === RentalStatus.Reserved && expired_within) {
+      const minutes = parseInt(expired_within, 10)
+      if (!isNaN(minutes)) {
+        const expiryLimit = new Date(now.getTime() + minutes * 60 * 1000)
+
+        matchQuery.start_time = {
+          $gt: now,
+          $lte: expiryLimit
+        }
+      }
+    }
+
+    const pipeline: Document[] = [
+      { $match: matchQuery },
+      {
+        $lookup: {
+          from: 'bikes',
+          localField: 'bike_id',
+          foreignField: '_id',
+          as: 'bikeInfo'
+        }
+      },
+      { $unwind: '$bikeInfo' },
+      {
+        $addFields: {
+          timeRemainingMinutes: {
+            $cond: {
+              if: { $eq: ['$status', RentalStatus.Reserved] },
+              then: {
+                $max: [0, { $round: [{ $divide: [{ $subtract: ['$start_time', now] }, 60000] }] }]
+              },
+              else: '$$REMOVE'
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          user_id: 1,
+          bike: '$bikeInfo',
+          status: 1,
+          timeRemainingMinutes: 1,
+          start_station: 1,
+          end_station: 1,
+          start_time: 1,
+          end_time: 1,
+          duration: 1,
+          total_price: { $toDouble: { $ifNull: ['$total_price', '0']}},
+          created_at: 1,
+          updated_at: 1
+        }
+      },
+      {
+        $sort: {
+          timeRemainingMinutes: -1
+        }
+      }
+    ]
+
+    return pipeline;
   }
 
   generateDuration(start: Date, end: Date) {

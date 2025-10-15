@@ -16,6 +16,7 @@ import bikesRouter from "./routes/bikes.routes";
 config();
 
 import swaggerJSDoc from "swagger-jsdoc";
+import stationRouter from "./routes/station.routes";
 
 const port = process.env.PORT || 4000;
 
@@ -50,6 +51,7 @@ app.use("/reports", reportsRouter);
 app.use("/suppliers", suppliersRouter);
 app.use("/bikes", bikesRouter);
 app.use("/rentals", rentalsRouter);
+app.use("/stations", stationRouter);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
