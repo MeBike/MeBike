@@ -8,6 +8,7 @@ import type  { BikeSchemaFormData, UpdateBikeSchemaFormData } from "@/schemas/bi
 import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
 import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 import { useReportBike } from "./mutations/Bike/useReportBike";
+import { useGetBikeByIDAll } from "./query/Bike/useGetBIkeByIDAll";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -38,12 +39,16 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 
   return defaultMessage;
 };
-export const useBikeActions = (setHasToken: React.Dispatch<React.SetStateAction<boolean>>) => {
+export const useBikeActions = (
+  setHasToken: React.Dispatch<React.SetStateAction<boolean>>, 
+  bikeId?: string
+) => {
     const useGetBikes = useGetAllBike();
     const useCreateBike = useCreateBikeMutation();
     const updateBikeMutation = useUpdateBike();
     const deleteBikeMutation = useSoftDeleteBikeMutation();
     const reportBikeMutation = useReportBike();
+    const bikeByIdQuery = useGetBikeByIDAll(bikeId || '');
     const queryClient = useQueryClient();
     const getBikes = useCallback(() => {
         useGetBikes.refetch();
@@ -115,7 +120,7 @@ export const useBikeActions = (setHasToken: React.Dispatch<React.SetStateAction<
       },
       [deleteBikeMutation]
     );
-  const reportBike = useCallback(
+    const reportBike = useCallback(
     (id: string) => {
       reportBikeMutation.mutate(id, {
         onSuccess: (result) => {
@@ -133,13 +138,23 @@ export const useBikeActions = (setHasToken: React.Dispatch<React.SetStateAction<
       });
     },
     [reportBikeMutation]
-  );
+    );
+    const getBikeByID = useCallback(() => {
+      bikeByIdQuery.refetch();
+    }, [bikeByIdQuery]);
     return {
       getBikes,
       createBike,
       updateBike,
       deleteBike,
       reportBike,
+      getBikeByID,
+      isFetchingBikeDetail: bikeByIdQuery.isFetching,
+      useGetBikeByIDAll,
+      bike: bikeByIdQuery.data,
+      isGettingBikeByID: bikeByIdQuery.isFetching,
+      bikeError: bikeByIdQuery.error,
+      refetchBike: bikeByIdQuery.refetch,
       isReportingBike: reportBikeMutation.isPending,
       isDeletingBike: deleteBikeMutation.isPending,
       isGettingBikes: useGetBikes.isFetching,
