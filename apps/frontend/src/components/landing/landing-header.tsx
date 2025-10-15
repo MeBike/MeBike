@@ -10,6 +10,8 @@ export function Hero() {
           src="/ho-chi-minh-city-metro-station-with-bicycles--mode.jpg"
           alt="Metro station with bikes"
           className="w-full h-full object-cover"
+          width={640}
+          height={360}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
       </div>
