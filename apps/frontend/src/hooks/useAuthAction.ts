@@ -13,7 +13,6 @@ import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEm
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
-import { getQueryClient } from "@/providers/get-query-client";
 interface ErrorResponse {
     response?: {
         data?: {
@@ -110,7 +109,7 @@ export const useAuthActions = () => {
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin , queryClient]
+        },[useLogin , queryClient,router]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
