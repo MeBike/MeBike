@@ -235,6 +235,6 @@ export const useAuthActions = () => {
       resetPassword,
       isReseting: useResetPassword.isPending,
       isLoadingForgottingPassword: useForgotPassword.isPending,
-     
+      isLoggingIn: useLogin.isPending,
     };
 }
