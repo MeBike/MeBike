@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bikeService";
-export const useGetStatusBike = () => {
+export const useGetStatusBikeQuery = () => {
     return useQuery({
         queryKey: ["bikes", "status"],
         queryFn: () => bikeService.getStatusBikeAdmin(),

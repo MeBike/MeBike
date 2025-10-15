@@ -9,6 +9,7 @@ import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
 import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 import { useReportBike } from "./mutations/Bike/useReportBike";
 import { useGetBikeByIDAll } from "./query/Bike/useGetBIkeByIDAll";
+import { useGetStatusBike } from "./query/Bike/useGetStatusBike";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -45,10 +46,11 @@ export const useBikeActions = (
 ) => {
     const useGetBikes = useGetAllBike();
     const useCreateBike = useCreateBikeMutation();
+    const useGetStatusBike = useGetStatusBike();
     const updateBikeMutation = useUpdateBike();
     const deleteBikeMutation = useSoftDeleteBikeMutation();
     const reportBikeMutation = useReportBike();
-    const bikeByIdQuery = useGetBikeByIDAll(bikeId || '');
+    const useGetDetailBike = useGetBikeByIDAll(bikeId || '');
     const queryClient = useQueryClient();
     const getBikes = useCallback(() => {
         useGetBikes.refetch();
@@ -140,8 +142,8 @@ export const useBikeActions = (
     [reportBikeMutation]
     );
     const getBikeByID = useCallback(() => {
-      bikeByIdQuery.refetch();
-    }, [bikeByIdQuery]);
+      useGetDetailBike.refetch();
+    }, [useGetDetailBike]);
     return {
       getBikes,
       createBike,
@@ -149,12 +151,8 @@ export const useBikeActions = (
       deleteBike,
       reportBike,
       getBikeByID,
-      isFetchingBikeDetail: bikeByIdQuery.isFetching,
-      useGetBikeByIDAll,
-      bike: bikeByIdQuery.data,
-      isGettingBikeByID: bikeByIdQuery.isFetching,
-      bikeError: bikeByIdQuery.error,
-      refetchBike: bikeByIdQuery.refetch,
+      isFetchingBikeDetail: useGetBikes.isFetching,
+      isFetchingBike: useGetDetailBike.isFetching,
       isReportingBike: reportBikeMutation.isPending,
       isDeletingBike: deleteBikeMutation.isPending,
       isGettingBikes: useGetBikes.isFetching,

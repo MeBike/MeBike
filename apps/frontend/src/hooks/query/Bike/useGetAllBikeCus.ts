@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bikeService";
 
-export const useGetAllBike = (page: number = 1, limit: number = 10) => {
+export const useGetAllBikeQuery = (page: number = 1, limit: number = 10) => {
     return useQuery({
         queryKey: ["bikes", "all", page, limit],
         queryFn: ({ queryKey }) => {
