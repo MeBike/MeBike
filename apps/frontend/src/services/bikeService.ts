@@ -19,6 +19,10 @@ const BIKE_ENDPOINTS = {
 
 export const bikeService = {
   //for admin
+  getBikesForAdmin: async (): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BASE);
+    return response;
+  },
   createBikeAdmin: async (data: BikeSchemaFormData): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.post(BIKE_ENDPOINTS.BASE, data);
     return response;
