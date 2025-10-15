@@ -14,7 +14,7 @@ export default function VerifyEmailPage() {
   
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
-  const [hasVerified, setHasVerified] = useState(false); 
+  const [hasVerified, setHasVerified] = useState<boolean>(false); 
 
   useEffect(() => {
     const token = searchParams.get("email_verify_token");
@@ -32,7 +32,7 @@ export default function VerifyEmailPage() {
       .then(() => {
         console.log("Email verification successful");
         setStatus("success");
-        setMessage("Xác thực email thành công!");=
+        setMessage("Xác thực email thành công!");
         setTimeout(() => {
           console.log("Navigating to /staff/profile");
           router.push("/staff/profile");
@@ -50,7 +50,10 @@ export default function VerifyEmailPage() {
   const handleGoBack = () => {
     router.push("/staff/profile");
   };
-
+  const handleResendVerifyEmail = () => {
+    setHasVerified(false);
+    router.refresh();
+  }
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -67,7 +70,7 @@ export default function VerifyEmailPage() {
                 </p>
               </>
             )}
-            
+
             {status === "success" && (
               <>
                 <CheckCircle className="h-12 w-12 text-green-500" />
@@ -79,33 +82,30 @@ export default function VerifyEmailPage() {
                 </div>
               </>
             )}
-            
+
             {status === "error" && (
               <>
                 <XCircle className="h-12 w-12 text-red-500" />
                 <div className="text-center">
                   <p className="text-red-600 font-medium">{message}</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Vui lòng kiểm tra lại link xác thực hoặc yêu cầu gửi lại email.
+                    Vui lòng kiểm tra lại link xác thực hoặc yêu cầu gửi lại
+                    email.
                   </p>
                 </div>
               </>
             )}
           </div>
-          
+
           <div className="flex flex-col space-y-2">
-            <Button 
-              onClick={handleGoBack}
-              variant="outline"
-              className="w-full"
-            >
+            <Button onClick={handleGoBack} variant="outline" className="w-full">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Quay lại hồ sơ
             </Button>
-            
+
             {status === "error" && (
-              <Button 
-                onClick={() => router.push("/staff/profile")}
+              <Button
+                onClick={() => handleResendVerifyEmail()}
                 className="w-full"
               >
                 Gửi lại email xác thực
