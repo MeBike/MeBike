@@ -130,7 +130,7 @@ export const loginValidator = validate(
 export const registerValidator = validate(
   checkSchema(
     {
-      full_name: fullNameSchema,
+      fullname: fullNameSchema,
       email: {
         notEmpty: {
           errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED,

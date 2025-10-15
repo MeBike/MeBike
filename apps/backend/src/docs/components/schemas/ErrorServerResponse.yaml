@@ -1,0 +1,9 @@
+type: object
+properties:
+  message:
+    type: string
+    example: 'Internal Server Error'
+  errorInfor:
+    type: object
+    nullable: true
+    description: 'Additional error information (excluding stack trace).'

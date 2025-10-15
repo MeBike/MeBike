@@ -16,7 +16,7 @@ export type LoginReqBody = {
 };
 
 export type RegisterReqBody = {
-  full_name: string;
+  fullname: string;
   email: string;
   password: string;
   confirm_password: string;

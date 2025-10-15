@@ -1,0 +1,8 @@
+type: object
+properties:
+  refresh_token:
+    type: string
+    description: The valid refresh token that was provided upon login.
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjY2NTZkYmRjYj...'
+required:
+  - refresh_token

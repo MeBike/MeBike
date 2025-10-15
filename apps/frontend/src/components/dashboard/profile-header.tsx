@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import type { User as DetailUser} from "@custom-types";
+import { DetailUser } from "@/services/authService";
 import { Mail, MapPin, Phone, User, Calendar } from "lucide-react";
 
 interface ProfileHeaderProps {
@@ -58,7 +58,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
             <Badge variant={getRoleBadgeVariant(user.role)} className="w-fit">
               {user.role.toUpperCase()}
             </Badge>
-            {user.verify === "verified" && (
+            {user.verify === "VERIFIED" && (
               <Badge
                 variant="outline"
                 className="w-fit border-accent text-accent"

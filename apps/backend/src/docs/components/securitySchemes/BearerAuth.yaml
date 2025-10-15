@@ -1,0 +1,4 @@
+type: http
+scheme: bearer
+bearerFormat: JWT
+description: "Enter JWT access token in the format: Bearer <token>"

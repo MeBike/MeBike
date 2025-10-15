@@ -1,18 +1,95 @@
-
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: MeBike API
-  version: 1.0.0
-  description: API documentation for the MeBike project.
+  version: '1.0.0'
+  description: API for the MeBike application.
+  contact:
+    name: MeBike Team
+    email: nguyennvse173423@fpt.edu.vn
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
 servers:
-  - url: http://localhost:8080/api/v1
-    description: Development server
+  - url: http://localhost:4000
+    description: Development Server
+  - url: https://mebike.site
+    description: Production Server
+
+tags:
+  - name: Users
+    description: Operations related to user authentication, profile, and management.
+  - name: Bikes
+    description: Operations related to managing bikes.
+  - name: Rentals
+    description: Operations related to bike rentals.
+  - name: Reports
+    description: Operations for user reports and management.
+  - name: Suppliers
+    description: Operations for managing bike suppliers.
+paths:
+  $ref: './paths/all-paths.yaml'
+
 components:
+  schemas:
+    # --- Request Body Schemas ---
+    RegisterReqBody:
+      $ref: './components/schemas/RegisterReqBody.yaml'
+    LoginReqBody:
+      $ref: './components/schemas/LoginReqBody.yaml'
+    LogoutReqBody:
+      $ref: './components/schemas/LogoutReqBody.yaml'
+    ForgotPasswordReqBody:
+      $ref: './components/schemas/ForgotPasswordReqBody.yaml'
+    VerifyForgotPasswordTokenReqBody:
+      $ref: './components/schemas/VerifyForgotPasswordTokenReqBody.yaml'
+    ResetPasswordReqBody:
+      $ref: './components/schemas/ResetPasswordReqBody.yaml'
+    VerifyEmailReqBody:
+      $ref: './components/schemas/VerifyEmailReqBody.yaml'
+    ChangePasswordReqBody:
+      $ref: './components/schemas/ChangePasswordReqBody.yaml'
+    UpdateMeReqBody:
+      $ref: './components/schemas/UpdateMeReqBody.yaml'
+    RefreshTokenReqBody:
+      $ref: './components/schemas/RefreshTokenReqBody.yaml'
+    CreateBikeReqBody:
+      $ref: './components/schemas/CreateBikeReqBody.yaml'
+    UpdateBikeReqBody:
+      $ref: './components/schemas/UpdateBikeReqBody.yaml'
+    
+    # --- Response Schemas ---
+    AuthSuccessResponse:
+      $ref: './components/schemas/AuthSuccessResponse.yaml'
+    RegisterSuccessResponse:
+      $ref: './components/schemas/RegisterSuccessResponse.yaml'
+    LoginSuccessResponse:
+      $ref: './components/schemas/LoginSuccessResponse.yaml'
+    RefreshTokenSuccessResponse:
+      $ref: './components/schemas/RefreshTokenSuccessResponse.yaml'
+    GetMeSuccessResponse:
+      $ref: './components/schemas/GetMeSuccessResponse.yaml'
+    MessageResponse:
+      $ref: './components/schemas/MessageResponse.yaml'
+    PaginatedResponse:
+       $ref: './components/schemas/PaginatedResponse.yaml'
+    ErrorValidationResponse:
+      $ref: './components/schemas/ErrorValidationResponse.yaml'
+    ErrorStatusResponse:
+      $ref: './components/schemas/ErrorStatusResponse.yaml'
+    ErrorServerResponse:
+      $ref: './components/schemas/ErrorServerResponse.yaml'
+
+    # --- Model Schemas ---
+    User:
+      $ref: './components/schemas/User.yaml'
+    Bike:
+      $ref: './components/schemas/Bike.yaml'
+    BikeStatus:
+      $ref: './components/schemas/BikeStatus.yaml'
+
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-security:
-  - bearerAuth: []
-paths: {}
+    BearerAuth:
+      $ref: './components/securitySchemes/BearerAuth.yaml'
+  parameters:
+    $ref: './parameters/all-parameters.yaml'
