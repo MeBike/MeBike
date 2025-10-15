@@ -47,7 +47,7 @@ export const bikeService = {
     id: string,
     data: Partial<UpdateBikeSchemaFormData>
   ): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.put(BIKE_ENDPOINTS.UPDATE(id), data);
+    const response = await fetchHttpClient.patch(BIKE_ENDPOINTS.UPDATE(id), data);
     return response;
   },
   //for user
