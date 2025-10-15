@@ -1,15 +1,15 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { use, useCallback } from "react";
 import { toast } from "sonner";
-import { useGetAllBike } from "./query/Bike/useGetAllBikeCus";
+import { useGetAllBikeQuery } from "./query/Bike/useGetAllBikeCus";
 import { bikeService } from "@/services/bikeService";
 import { useCreateBikeMutation } from "./mutations/Bike/useCreateBike";
 import type  { BikeSchemaFormData, UpdateBikeSchemaFormData } from "@/schemas/bikeSchema";
 import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
 import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 import { useReportBike } from "./mutations/Bike/useReportBike";
-import { useGetBikeByIDAll } from "./query/Bike/useGetBIkeByIDAll";
-import { useGetStatusBike } from "./query/Bike/useGetStatusBike";
+import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
+import { useGetStatusBikeQuery } from "./query/Bike/useGetStatusBike";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -44,13 +44,13 @@ export const useBikeActions = (
   setHasToken: React.Dispatch<React.SetStateAction<boolean>>, 
   bikeId?: string
 ) => {
-    const useGetBikes = useGetAllBike();
+    const useGetBikes = useGetAllBikeQuery();
     const useCreateBike = useCreateBikeMutation();
-    const useGetStatusBike = useGetStatusBike();
+    const useGetStatusBike = useGetStatusBikeQuery();
     const updateBikeMutation = useUpdateBike();
     const deleteBikeMutation = useSoftDeleteBikeMutation();
     const reportBikeMutation = useReportBike();
-    const useGetDetailBike = useGetBikeByIDAll(bikeId || '');
+    const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || '');
     const queryClient = useQueryClient();
     const getBikes = useCallback(() => {
         useGetBikes.refetch();
@@ -144,6 +144,9 @@ export const useBikeActions = (
     const getBikeByID = useCallback(() => {
       useGetDetailBike.refetch();
     }, [useGetDetailBike]);
+    const getStatusBike = useCallback(() => {
+      useGetStatusBike.refetch();
+    }, [useGetStatusBike]);
     return {
       getBikes,
       createBike,
@@ -151,6 +154,8 @@ export const useBikeActions = (
       deleteBike,
       reportBike,
       getBikeByID,
+      getStatusBike,
+      isFetchStatusBike: useGetStatusBike.isFetching,
       isFetchingBikeDetail: useGetBikes.isFetching,
       isFetchingBike: useGetDetailBike.isFetching,
       isReportingBike: reportBikeMutation.isPending,
