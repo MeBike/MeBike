@@ -16,6 +16,7 @@ import { useAuthActions } from "@/hooks/useAuthAction";
 import Image from "next/image";
 import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
 import { clearTokens } from "@/utils/tokenManager";
+import Link from "next/link";
 export default function ProfilePage() {
   const { user, updateProfile , isUpdatingProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -363,7 +364,9 @@ export default function ProfilePage() {
                     Cập nhật mật khẩu của bạn
                   </p>
                 </div>
-                <Button variant="outline">Thay đổi</Button>
+                <Link href="/staff/profile/change-password">
+                  <Button variant="outline">Thay đổi</Button>
+                </Link>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-border">
                 <div>
