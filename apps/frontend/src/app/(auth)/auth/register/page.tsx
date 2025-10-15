@@ -26,7 +26,7 @@ const RegisterPage = () => {
   const [, setHasToken] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
-  const { register: registerUser , logIn , } = useAuthActions(setHasToken);
+  const { register: registerUser , logIn , } = useAuthActions();
   const {
     register,
     handleSubmit, 

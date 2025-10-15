@@ -19,7 +19,7 @@ import { useAuthActions } from "@hooks/useAuthAction";
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [, setHasToken] = useState(false);
-  const { logIn } = useAuthActions(setHasToken);
+  const { logIn } = useAuthActions();
   const { user} = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

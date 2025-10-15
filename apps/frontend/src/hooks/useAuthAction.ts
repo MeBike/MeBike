@@ -41,7 +41,7 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
     return defaultMessage;
 };
 
-export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<boolean>>) => {
+export const useAuthActions = () => {
     const router = useRouter();
     const queryClient = useQueryClient();
     const useLogin = useLoginMutation();
@@ -73,7 +73,8 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 onSuccess: (result) => {
                     const { access_token, refresh_token } = result.data.result;
                     setTokens(access_token, refresh_token);
-                    setHasToken(true);
+                    // Trigger storage event to update hasToken state
+                    window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     toast.success("Logged in successfully");
                     const fetchUserAndRedirect = async () => {
                         try {
@@ -105,7 +106,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin, queryClient , setHasToken, router]
+        },[useLogin, queryClient , router]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
@@ -114,7 +115,6 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 if(result.status === 201){
                     const { access_token, refresh_token } = result.data.result;
                     setTokens(access_token, refresh_token);
-                    setHasToken(true);
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Registration Successful", { description: "Your account has been created." });
                     router.push("/auth/login");
@@ -128,13 +128,14 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 toast.error(errorMessage);
             }
         });
-    },[useRegister, router, queryClient , setHasToken]);
+    },[useRegister, router, queryClient ]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
                 if(result.status === 200){
                     clearTokens();
-                    setHasToken(false);
+                    // Trigger storage event to update hasToken state
+                    window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Logged out successfully");
                     router.push("/auth/login");
@@ -148,7 +149,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 toast.error(errorMessage);
             }
         });
-    },[useLogout, queryClient, setHasToken, router]);
+    },[useLogout, queryClient, router]);
     return {
         changePassword,
         logIn,
