@@ -6,7 +6,7 @@ export function Hero() {
   return (
     <section className="relative h-[80vh] flex items-center justify-center overflow-hidden pt-10">
       <div className="absolute inset-0 z-0">
-        <img
+        <Image
           src="/ho-chi-minh-city-metro-station-with-bicycles--mode.jpg"
           alt="Metro station with bikes"
           className="w-full h-full object-cover"

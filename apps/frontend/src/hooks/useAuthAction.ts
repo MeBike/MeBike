@@ -8,7 +8,6 @@ import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
-import { authService } from "@/services/authService";
 
 interface ErrorResponse {
     response?: {
@@ -41,7 +40,7 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
     return defaultMessage;
 };
 
-export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<boolean>>) => {
+export const useAuthActions = () => {
     const router = useRouter();
     const queryClient = useQueryClient();
     const useLogin = useLoginMutation();
@@ -73,39 +72,36 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 onSuccess: (result) => {
                     const { access_token, refresh_token } = result.data.result;
                     setTokens(access_token, refresh_token);
-                    setHasToken(true);
+                    window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     toast.success("Logged in successfully");
-                    const fetchUserAndRedirect = async () => {
-                        try {
-                            const userResponse = await authService.getMe();
-                            if (userResponse.status === 200) {
-                                const userProfile = userResponse.data.result;
-                                queryClient.setQueryData(["user", "me"], userProfile);
-                                if (userProfile?.role === "ADMIN") {
-                                    router.push("/admin");
-                                } else if (userProfile?.role === "STAFF") {
-                                    router.push("/staff");
-                                } else {
-                                    router.push("/");
-                                }
+                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+                    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+                        if (event?.query?.queryKey?.[0] === "user" && 
+                            event?.query?.queryKey?.[1] === "me" && 
+                            event.type === "updated" &&
+                            event.query.state.data) {
+                            const userProfile = event.query.state.data as unknown as { role: string };
+                            if (userProfile?.role === "ADMIN") {
+                                router.push("/admin");
+                            } else if (userProfile?.role === "STAFF") {
+                                router.push("/staff");
                             } else {
-                                console.error('Failed to fetch user profile:', userResponse.status);
                                 router.push("/");
                             }
-                        } catch (error) {
-                            console.error('Error fetching user profile:', error);
-                            router.push("/");
+                            unsubscribe(); 
                         }
-                    };
-                    
-                    fetchUserAndRedirect();
+                    });
+                    setTimeout(() => {
+                        unsubscribe();
+                        router.push("/"); 
+                    }, 3000);
                 },
                 onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin, queryClient , setHasToken, router]
+        },[useLogin, queryClient , router]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
@@ -114,7 +110,6 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 if(result.status === 201){
                     const { access_token, refresh_token } = result.data.result;
                     setTokens(access_token, refresh_token);
-                    setHasToken(true);
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Registration Successful", { description: "Your account has been created." });
                     router.push("/auth/login");
@@ -128,13 +123,14 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 toast.error(errorMessage);
             }
         });
-    },[useRegister, router, queryClient , setHasToken]);
+    },[useRegister, router, queryClient ]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
                 if(result.status === 200){
                     clearTokens();
-                    setHasToken(false);
+                    // Trigger storage event to update hasToken state
+                    window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Logged out successfully");
                     router.push("/auth/login");
@@ -148,7 +144,7 @@ export const useAuthActions = (setHasToken: React.Dispatch<React.SetStateAction<
                 toast.error(errorMessage);
             }
         });
-    },[useLogout, queryClient, setHasToken, router]);
+    },[useLogout, queryClient, router]);
     return {
         changePassword,
         logIn,

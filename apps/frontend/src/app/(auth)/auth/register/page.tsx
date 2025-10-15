@@ -23,10 +23,9 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [, setHasToken] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
-  const { register: registerUser , logIn , } = useAuthActions(setHasToken);
+  const { register: registerUser } = useAuthActions();
   const {
     register,
     handleSubmit, 
