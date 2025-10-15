@@ -200,6 +200,10 @@ class WalletService {
       const filter: Filter<Transaction> = {
         wallet_id: new ObjectId(findWallet._id)
       }
+      if (query.type) {
+        filter.type = query.type
+      }
+
       await sendPaginatedResponse(res, next, databaseService.transactions, query, filter)
     } catch (error) {
       next(error)
