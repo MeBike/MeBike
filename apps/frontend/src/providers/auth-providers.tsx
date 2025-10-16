@@ -38,7 +38,7 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
     window.addEventListener("auth:session_expired", handleAuthFailure);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("auth:session_expired", handleAuthFailure);
+      window.removeEventListener("auth:session_expirekd", handleAuthFailure);
     };
   }, [queryClient, getAccessToken]);
   

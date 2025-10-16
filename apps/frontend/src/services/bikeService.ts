@@ -55,7 +55,6 @@ export const bikeService = {
     return response;
   },
   //for user
-
   reportBrokenBike: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.patch(
       BIKE_ENDPOINTS.REPORT_BROKEN(id)
