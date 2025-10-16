@@ -3,8 +3,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Sidebar } from "./sidebar";
-import { Bell, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { DetailUser } from "@/services/authService";
 import Image from "next/image";

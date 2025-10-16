@@ -51,7 +51,7 @@ function VerifyEmailContent() {
         setHasVerified(false); 
       });
 
-  }, [searchParams, router,hasVerified, verifyEmail]); 
+  }, [searchParams, router,hasVerified, verifyEmail , user?.role]); 
 
   const handleGoBack = () => {
     if (user?.role === "ADMIN") {

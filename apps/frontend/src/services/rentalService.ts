@@ -85,14 +85,14 @@ export const rentalService = {
     );
     return response;
   },
-  staffAdminUpdateDetailRental: async (
-    id: string,
-    data: any
-  ): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.put(
-      RENTAL_ENDPOINTS.STAFF_ADMIN_UPDATE_DETAIL_RENTAL(id),
-      data
-    );
-    return response;
-  },
+  // staffAdminUpdateDetailRental: async (
+  //   id: string,
+  //   data: any
+  // ): Promise<AxiosResponse> => {
+  //   const response = await fetchHttpClient.put(
+  //     RENTAL_ENDPOINTS.STAFF_ADMIN_UPDATE_DETAIL_RENTAL(id),
+  //     data
+  //   );
+  //   return response;
+  // },
 };

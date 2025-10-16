@@ -3,7 +3,7 @@ import * as z from "zod";
 const isValidObjectId = (id: string): boolean => {
   return /^[0-9a-fA-F]{24}$/.test(id);
 };
-const rentalSchema = z.object({
+export const rentalSchema = z.object({
     bike_id : z
       .string()
       .min(24, "Station ID must be a valid ObjectId")

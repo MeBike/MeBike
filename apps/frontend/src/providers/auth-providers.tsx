@@ -40,7 +40,7 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("auth:session_expirekd", handleAuthFailure);
     };
-  }, [queryClient, getAccessToken]);
+  }, [queryClient]);
   
   useEffect(() => {
     if (isError && hasToken && isInitialized) {
