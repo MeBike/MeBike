@@ -43,7 +43,7 @@ function VerifyEmailContent() {
         setHasVerified(false); 
       });
 
-  }, [searchParams, router]); 
+  }, [searchParams, router,hasVerified, verifyEmail]); 
 
   const handleGoBack = () => {
     router.push("/staff/profile");

@@ -19,16 +19,16 @@ import { useAuthActions } from "@hooks/useAuthAction";
 const ForgotPassword = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { forgotPassword } = useAuthActions();
+  const { forgotPassword, isLoadingForgottingPassword } = useAuthActions();
   const router = useRouter();
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    forgotPassword({ email });
-    setIsSubmitted(true);
-    setIsLoading(false);
+    try {
+        forgotPassword({ email });
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error('Forgot password error:', error);
+    }
   };
 
   const handleBackToLogin = () => {
@@ -153,11 +153,11 @@ const ForgotPassword = () => {
                 
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoadingForgottingPassword}
                 className="w-full h-12 hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
                   bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white"
               >
-                {isLoading ? (
+                {isLoadingForgottingPassword ? (
                   <>
                     <div className="mr-2 h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                     Đang gửi...

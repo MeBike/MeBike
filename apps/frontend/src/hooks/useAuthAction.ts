@@ -7,11 +7,12 @@ import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePa
 import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
-import { ForgotPasswordSchemaFormData, LoginSchemaFormData, RegisterSchemaFormData, ResetPasswordSchemaFormData } from "@/schemas/authSchema";
+import { ForgotPasswordSchemaFormData, LoginSchemaFormData, RegisterSchemaFormData, ResetPasswordSchemaFormData, UpdateProfileSchemaFormData } from "@/schemas/authSchema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
+import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 interface ErrorResponse {
     response?: {
         data?: {
@@ -51,6 +52,7 @@ export const useAuthActions = () => {
     const useLogout = useLogoutMutation();  
     const useChangePassword = useChangePasswordMutation();
     const useVerifyEmail = useVerifyEmailMutation();
+    const useUpdateProfile = useUpdateProfileMutation();
     const useForgotPassword = useForgotPasswordMutation();
     const useResetPassword = useResetPasswordMutation();
     const useResendVerifyEmail = useResendVerifyEmailMutation();
@@ -93,7 +95,7 @@ export const useAuthActions = () => {
                             } else if (userProfile?.role === "STAFF") {
                                 router.push("/staff");
                             } else {
-                                router.push("/");
+                                router.push("/user");
                             }
                             unsubscribe(); 
                         }
@@ -107,7 +109,7 @@ export const useAuthActions = () => {
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin, queryClient , router]
+        },[useLogin , queryClient,router]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
@@ -129,7 +131,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useRegister, router, queryClient ]);
+    },[useRegister,queryClient,router]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
@@ -172,7 +174,7 @@ export const useAuthActions = () => {
                 }
             });
         });
-    }, [useVerifyEmail, queryClient]);
+    }, [useVerifyEmail,queryClient]);
     const resendVerifyEmail = useCallback(() => {
         useResendVerifyEmail.mutate(undefined,{
             onSuccess: (result) => {
@@ -189,22 +191,29 @@ export const useAuthActions = () => {
             }
         });
     }, [useResendVerifyEmail]);
-    const forgotPassword = useCallback((data: ForgotPasswordSchemaFormData) => {
-        useForgotPassword.mutate(data,{
-            onSuccess: (result) => {
-                if(result.status === 200){ 
-                    toast.success("Password reset email sent successfully");
-                } else{
-                    const errorMessage = result.data?.message || "Error sending password reset email";
-                    toast.error(errorMessage);
-                }
-            },
-            onError: (error: unknown) => {
-                const errorMessage = getErrorMessage(error, "Error sending password reset email");
-                toast.error(errorMessage);
+    const forgotPassword = useCallback(
+      (data: ForgotPasswordSchemaFormData) => {
+        useForgotPassword.mutate(data, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Password reset email sent successfully");
+            } else {
+              const errorMessage =
+                result.data?.message || "Error sending password reset email";
+              toast.error(errorMessage);
             }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Error sending password reset email"
+            );
+            toast.error(errorMessage);
+          },
         });
-    },[useForgotPassword]);
+      },
+      [useForgotPassword]
+    );
     
     const resetPassword = useCallback((data: ResetPasswordSchemaFormData) => {
         useResetPassword.mutate(data,{
@@ -222,8 +231,24 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useResetPassword, router]);
-    
+    }, [useResetPassword, router]);
+    const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
+        useUpdateProfile.mutate(data, {
+            onSuccess: (result) => {
+                if(result.status === 200){
+                    toast.success("Profile updated successfully");
+                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+                } else {
+                    const errorMessage = result.data?.message || "Error updating profile";
+                    toast.error(errorMessage);
+                }
+            },
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error updating profile");
+                toast.error(errorMessage);
+            }
+        });
+    }, [useUpdateProfile, queryClient]);
     return {
       changePassword,
       logIn,
@@ -233,5 +258,12 @@ export const useAuthActions = () => {
       resendVerifyEmail,
       forgotPassword,
       resetPassword,
+      updateProfile,
+      isUpdatingProfile: useUpdateProfile.isPending,
+      isChangingPassword: useChangePassword.isPending,
+      isRegistering: useRegister.isPending,
+      isReseting: useResetPassword.isPending,
+      isLoadingForgottingPassword: useForgotPassword.isPending,
+      isLoggingIn: useLogin.isPending,
     };
 }
