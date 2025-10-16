@@ -109,7 +109,7 @@ export const useAuthActions = () => {
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin , queryClient,router]
+        },[useLogin , queryClient]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
