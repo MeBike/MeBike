@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
@@ -23,51 +23,76 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [progressValue, setProgressValue] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
+  const [showProgress, setShowProgress] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const router = useRouter();
+  // Drive the visual progress animation independent of transient auth flags
+  useEffect(() => {
+    if (!showProgress) return;
+
+    // initialize
+    setProgressValue(0);
+    setProgressMessage("");
+    let currentProgress = 0;
+    const messages = [
+      "Đang kết nối đến máy chủ...",
+      "Đang xác thực thông tin...",
+      "Đang kiểm tra quyền truy cập...",
+      "Đang chuẩn bị chuyển trang...",
+      "Hoàn tất!"
+    ];
+    const messageTimings = [0, 25, 50, 75, 95];
+
+    intervalRef.current = setInterval(() => {
+      currentProgress = Math.min(currentProgress + 25, 100);
+      const idx = messageTimings.filter((t) => currentProgress >= t).length - 1;
+      if (idx >= 0) {
+        setProgressMessage(messages[Math.min(idx, messages.length - 1)]);
+      }
+      setProgressValue(currentProgress);
+
+      if (currentProgress >= 100) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }, 60);
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    };
+  }, [showProgress]);
+
   useEffect(() => {
     if (isLoggingIn || isLoading) {
-      let currentProgress = 0;
-      const messages = [
-        "Đang kết nối đến máy chủ...",
-        "Đang xác thực thông tin...",
-        "Đang kiểm tra quyền truy cập...",
-        "Đang chuẩn bị chuyển trang...",
-        "Hoàn tất!"
-      ];
-      const messageTimings = [0, 25, 50, 75, 95];
-      const interval = setInterval(() => {
-        currentProgress += 25; 
-        const messageIndex = messageTimings.findIndex(timing => currentProgress >= timing);
-        if (messageIndex !== -1 && messageIndex < messages.length) {
-          setProgressMessage(messages[Math.min(messageIndex, messages.length - 1)]);
-        }
-        setProgressValue(Math.min(currentProgress, 100));
-        if (currentProgress >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            if (user?.role === "ADMIN") {
-              router.push("/admin");
-            } else if (user?.role === "STAFF") {
-              router.push("/staff");
-            } else if (user) {
-              router.push("/");
-            }
-          }, 200);
-        }
-      }, 60); 
-      return () => {
-        if (interval) clearInterval(interval);
-      };
-    } else {
+      setShowProgress(true);
+      return;
+    }
+    if (!user) {
+      setShowProgress(false);
       setProgressValue(0);
       setProgressMessage("");
     }
-  }, [isLoggingIn, isLoading, user, router]);
+  }, [isLoggingIn, isLoading, user]);
+  useEffect(() => {
+    if (progressValue < 100 || !user) return;
+    const timer = setTimeout(() => {
+      if (user?.role === "ADMIN") {
+        router.push("/admin");
+      } else if (user?.role === "STAFF") {
+        router.push("/staff");
+      } else {
+        router.push("/user");
+      }
+      setShowProgress(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [progressValue, user, router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Không cho submit nếu đang loading
     if (isLoggingIn || isLoading) return;
+    setShowProgress(true);
     logIn({ email, password });
   };
   React.useEffect(() => {
