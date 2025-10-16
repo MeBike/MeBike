@@ -39,32 +39,32 @@ export enum ReportTypeEnum {
 }
 
 export enum RentalStatus {
-  Rented = "ĐANG THUÊ",
-  Completed = "HOÀN THÀNH",
-  Cancelled = "ĐÃ HỦY",
-  Reserved = "ĐÃ ĐẶT TRƯỚC",
+  Rented = 'ĐANG THUÊ',
+  Completed = 'HOÀN THÀNH',
+  Cancelled = 'ĐÃ HỦY',
+  Reserved = 'ĐÃ ĐẶT TRƯỚC'
 }
 
 export enum GroupByOptions {
-  Day = "DAY",
-  Month = "MONTH",
-  Year = "YEAR",
+  Day = 'DAY',
+  Month = 'MONTH',
+  Year = 'YEAR'
 }
 
 export enum ReservationStatus {
-  Pending = "ĐANG CHỜ XỬ LÍ",
-  Active = "ĐANG HOẠT ĐỘNG",
-  Cancelled = "ĐÃ HUỶ",
-  Expired = "ĐÃ HẾT HẠN",
+  Pending = 'ĐANG CHỜ XỬ LÍ',
+  Active = 'ĐANG HOẠT ĐỘNG',
+  Cancelled = 'ĐÃ HUỶ',
+  Expired = 'ĐÃ HẾT HẠN'
 }
 
 export enum BikeStatus {
-  Available = "CÓ SẴN",
-  Booked = "ĐANG ĐƯỢC THUÊ",
-  Broken = "BỊ HỎNG",
-  Reserved = "ĐÃ ĐẶT TRƯỚC",
-  Maintained = "ĐANG BẢO TRÌ",
-  Unavailable = "KHÔNG CÓ SẴN",
+  Available = 'CÓ SẴN',
+  Booked = 'ĐANG ĐƯỢC THUÊ',
+  Broken = 'BỊ HỎNG',
+  Reserved = 'ĐÃ ĐẶT TRƯỚC',
+  Maintained = 'ĐANG BẢO TRÌ',
+  Unavailable = 'KHÔNG CÓ SẴN'
 }
 
 export enum SupplierStatus {
@@ -81,47 +81,47 @@ export enum ReportPriority {
 }
 
 export enum PaymentStatus {
-  Pending = 'PENDING',
-  Success = 'SUCCESS',
-  Failed = 'FAILED'
+  Pending = 'ĐANG CHỜ XỬ LÝ',
+  Success = 'THÀNH CÔNG',
+  Failed = 'THẤT BẠI'
 }
 
 export enum PaymentMethod {
   Momo = 'MOMO',
-  Bank = 'BANK',
+  Bank = 'NGÂN HÀNG',
   Vnpt = 'VNPTMONEY',
-  Wallet = 'WALLET'
+  Wallet = 'VÍ'
 }
 
 export enum WalletStatus {
-  Active = 'ACTIVE',
-  Frozen = 'FROZEN'
+  Active = 'ĐANG HOẠT ĐỘNG',
+  Frozen = 'ĐÃ BỊ ĐÓNG BĂNG'
 }
 
 export enum TransactionStaus {
-  Pending = 'PENDING',
-  Success = 'SUCCESS',
-  Failed = 'FAILED',
-  Cancelled = 'CANCELLED'
+  Pending = 'ĐANG CHỜ XỬ LÝ',
+  Success = 'THÀNH CÔNG',
+  Failed = 'THẤT BẠI',
+  Cancelled = 'ĐÃ HỦY'
 }
 
 export enum TransactionTypeEnum {
-  Deposit = 'DEPOSIT',
-  PAYMENT = 'PAYMENT',
-  WithDrawal = 'WITHDRAWAL',
-  Refund = 'REFUND'
+  Deposit = 'NẠP TIỀN',
+  PAYMENT = 'THANH TOÁN',
+  WithDrawal = 'RÚT TIỀN',
+  Refund = 'HOÀN TIỀN'
 }
 
 export enum RefundStatus {
-  Pending = 'PENDING',
-  Approved = 'APPROVED',
-  Rejected = 'REJECTED',
-  Completed = 'COMPLETED'
+  Pending = 'ĐANG CHỜ XỬ LÝ',
+  Approved = 'ĐÃ DUYỆT',
+  Rejected = 'TỪ CHỐI',
+  Completed = 'ĐÃ HOÀN THÀNH'
 }
 
 export enum WithDrawalStatus {
-  Pending = 'PENDING',
-  Approved = 'APPROVED',
-  Rejected = 'REJECTED',
-  Completed = 'COMPLETED'
+  Pending = 'ĐANG CHỜ XỬ LÝ',
+  Approved = 'ĐÃ DUYỆT',
+  Rejected = 'TỪ CHỐI',
+  Completed = 'ĐÃ HOÀN THÀNH'
 }
