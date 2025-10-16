@@ -47,8 +47,8 @@ export const authService = {
         const response = await fetchHttpClient.post<MessageResponse>("/users/resend-verify-email");
         return response;
     },
-    verifyEmail : async (email_refresh_token : string) : Promise<AxiosResponse<MessageResponse>> => {
-        const response = await fetchHttpClient.post<MessageResponse>("/users/verify-email", { email_refresh_token });
+    verifyEmail : async (email_verify_token : string) : Promise<AxiosResponse<MessageResponse>> => {
+        const response = await fetchHttpClient.post<MessageResponse>("/users/verify-email", { email_verify_token });
         return response;
     },
     getMe : async() : Promise<AxiosResponse<ProfileUserResponse>> => {
