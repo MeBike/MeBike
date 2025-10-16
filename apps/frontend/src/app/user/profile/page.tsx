@@ -109,7 +109,7 @@ export default function ProfilePage() {
           {!isEditing ? (
             <Button
               onClick={() => setIsEditing(true)}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 cursor-pointer gap-2"
             >
               Chỉnh sửa hồ sơ
             </Button>
@@ -118,14 +118,14 @@ export default function ProfilePage() {
               <Button
                 onClick={handleCancel}
                 variant="outline"
-                className="gap-2 bg-transparent"
+                className="gap-2 bg-transparent cursor-pointer"
               >
                 <X className="w-4 h-4" />
                 Hủy
               </Button>
               <Button
                 onClick={() => handleSave()}
-                className="bg-primary hover:bg-primary/90 gap-2"
+                className="bg-primary hover:bg-primary/90 gap-2 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 Lưu thay đổi
@@ -359,7 +359,7 @@ export default function ProfilePage() {
                 </p>
               </div>
               <Link href="/staff/profile/change-password">
-                <Button variant="outline">Thay đổi</Button>
+                <Button variant="outline" className="cursor-pointer">Thay đổi</Button>
               </Link>
             </div>
             <div className="flex items-center justify-between pt-4 border-t border-border">
@@ -372,7 +372,7 @@ export default function ProfilePage() {
               <Button
                 variant="outline"
                 onClick={() => handleResendVerifyEmail()}
-                className="gap-2"
+                className="gap-2 cursor-pointer"
                 disabled={formData?.verify === "VERIFIED"}
               >
                 <Mail className="w-4 h-4" />

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import {
   LayoutDashboard,
   Bike,
@@ -14,6 +15,7 @@ import {
   ChevronRight,
   User,
   LogOut,
+  History
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
@@ -66,6 +68,18 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       icon: Settings,
       href: "/admin/settings",
       roles: ["ADMIN"],
+    },
+    {
+      title: "Hồ sơ cá nhân",
+      icon: Users,
+      href: "/user/profile",
+      roles: ["USER"],
+    },
+    {
+      title: "Lịch sử giao dịch",
+      icon: History,
+      href: "/user/booking-history",
+      roles: ["USER"],
     },
   ];
 };
@@ -165,11 +179,14 @@ export function Sidebar({ userRole }: SidebarProps) {
             <User className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">Hồ sơ</span>}
           </Link>
-          <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
+          <button
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors
+          cursor-pointer"
+            onClick={() => handleLogout()}
+          >
             <LogOut className="w-5 h-5 flex-shrink-0" />
             {!collapsed && (
-              <span className="text-sm font-medium"
-              onClick={() => handleLogout()}>Đăng xuất</span>
+              <span className="text-sm font-medium ">Đăng xuất</span>
             )}
           </button>
         </div>

@@ -33,10 +33,6 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-              </Button>
               <div className="flex items-center gap-3 pl-4 border-l border-border">
                 <div className="text-right hidden md:block">
                   <p className="text-sm font-medium text-foreground">
@@ -59,7 +55,6 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="p-6">{children}</main>
       </div>
     </div>
