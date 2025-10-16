@@ -224,7 +224,7 @@ class RentalsService {
             changes: Object.keys(updatedData),
             reason
           })
-          await databaseService.rentalLogs.insertOne(log)
+          await databaseService.rentalLogs.insertOne({ ...log }, { session })
         }
       })
       return {
@@ -401,11 +401,21 @@ class RentalsService {
           updateData.total_price = this.generateTotalPrice(updateData.duration)
         }
 
-        result = await databaseService.rentals.findOneAndUpdate(
+        const objResult = await databaseService.rentals.findOneAndUpdate(
           { _id: objRentalId },
           { $set: updateData },
           { returnDocument: 'after', session }
         )
+
+        if (objResult) {
+          const { total_price, created_at, updated_at, ...restResult } = objResult
+          result = {
+            ...restResult,
+            total_price: Number(total_price),
+            created_at,
+            updated_at
+          }
+        }
 
         const { updated_at, ...changedFields } = updateData
 
@@ -416,7 +426,7 @@ class RentalsService {
           changes: Object.keys(changedFields)
         })
 
-        await databaseService.rentalLogs.insertOne(log, { session })
+        await databaseService.rentalLogs.insertOne({ ...log }, { session })
       })
       return result
     } catch (error) {
@@ -490,7 +500,7 @@ class RentalsService {
           changes: Object.keys(changedFields)
         })
 
-        await databaseService.rentalLogs.insertOne(log, { session })
+        await databaseService.rentalLogs.insertOne({ ...log }, { session })
       })
       return {
         ...(result as any),
@@ -828,7 +838,7 @@ class RentalsService {
           start_time: 1,
           end_time: 1,
           duration: 1,
-          total_price: { $toDouble: { $ifNull: ['$total_price', '0']}},
+          total_price: { $toDouble: { $ifNull: ['$total_price', '0'] } },
           created_at: 1,
           updated_at: 1
         }
@@ -840,7 +850,7 @@ class RentalsService {
       }
     ]
 
-    return pipeline;
+    return pipeline
   }
 
   generateDuration(start: Date, end: Date) {
