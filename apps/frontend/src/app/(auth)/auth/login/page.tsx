@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
@@ -12,92 +12,43 @@ import {
   CardTitle,
 } from "@components/ui/card";
 import { Separator } from "@components/ui/separator";
-import { Progress } from "@components/ui/progress";
-import { Bike, Mail, Lock, Eye, EyeOff} from "lucide-react";
-import React from "react";  
+import { Bike, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import React from "react";
 import { useAuth } from "@providers/auth-providers";
+import { isBuffer } from "util";
+
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const { user , logIn , isLoggingIn , isLoading } = useAuth();
+  const { user, logIn, isLoggingIn, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [progressValue, setProgressValue] = useState(0);
-  const [progressMessage, setProgressMessage] = useState("");
-  const [showProgress, setShowProgress] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
-  // Drive the visual progress animation independent of transient auth flags
-  useEffect(() => {
-    if (!showProgress) return;
-
-    // initialize
-    setProgressValue(0);
-    setProgressMessage("");
-    let currentProgress = 0;
-    const messages = [
-      "Đang kết nối đến máy chủ...",
-      "Đang xác thực thông tin...",
-      "Đang kiểm tra quyền truy cập...",
-      "Đang chuẩn bị chuyển trang...",
-      "Hoàn tất!"
-    ];
-    const messageTimings = [0, 25, 50, 75, 95];
-
-    intervalRef.current = setInterval(() => {
-      currentProgress = Math.min(currentProgress + 25, 100);
-      const idx = messageTimings.filter((t) => currentProgress >= t).length - 1;
-      if (idx >= 0) {
-        setProgressMessage(messages[Math.min(idx, messages.length - 1)]);
-      }
-      setProgressValue(currentProgress);
-
-      if (currentProgress >= 100) {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    }, 60);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    };
-  }, [showProgress]);
 
   useEffect(() => {
-    if (isLoggingIn || isLoading) {
-      setShowProgress(true);
-      return;
+    if (user && isNavigating) {
+      const timer = setTimeout(() => {
+        if (user?.role === "ADMIN"){
+          router.push("/admin");
+        } else if (user?.role === "STAFF") {
+          router.push("/staff");
+        } else {
+          router.push("/user");
+        }
+        setIsNavigating(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
     }
-    if (!user) {
-      setShowProgress(false);
-      setProgressValue(0);
-      setProgressMessage("");
-    }
-  }, [isLoggingIn, isLoading, user]);
-  useEffect(() => {
-    if (progressValue < 100 || !user) return;
-    const timer = setTimeout(() => {
-      if (user?.role === "ADMIN") {
-        router.push("/admin");
-      } else if (user?.role === "STAFF") {
-        router.push("/staff");
-      } else {
-        router.push("/user");
-      }
-      setShowProgress(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [progressValue, user, router]);
+  }, [user, isNavigating, router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoggingIn || isLoading) return;
-    setShowProgress(true);
+    if (isLoggingIn || isLoading || isNavigating) return;
+    setIsNavigating(true);
     logIn({ email, password });
-  };
-  React.useEffect(() => {
-    console.log(user);
-  }, [user]);
+  };  
+
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
@@ -126,6 +77,7 @@ const Login = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleLogin} className="space-y-4">
+              {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
                   Email
@@ -139,12 +91,13 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoggingIn || isLoading}
-                    className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                    transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="pl-10 h-12"
                     required
                   />
                 </div>
               </div>
+
+              {/* Password */}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
                   Mật khẩu
@@ -158,15 +111,14 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoggingIn || isLoading}
-                    className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                    transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="pl-10 h-12"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoggingIn || isLoading}
-                    className="absolute right-3 top-3 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="absolute right-3 top-3"
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-4" />
@@ -176,53 +128,46 @@ const Login = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Forgot password */}
               <div className="text-right">
                 <Button
                   type="button"
                   disabled={isLoggingIn || isLoading}
-                  className="text-sm text-white hover:text-metro-secondary transition-colors bg-[hsl(214,100%,40%)] disabled:opacity-50"
+                  variant="link"
                   onClick={() => router.push("/auth/forgot-password")}
                 >
                   Quên mật khẩu?
                 </Button>
               </div>
+
+              {/* Login button */}
               <Button
                 type="submit"
-                disabled={isLoggingIn || isLoading}
-                className="w-full h-12  hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
-                bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isLoggingIn || isLoading || isNavigating}
+                className="w-full h-12"
               >
-                <Bike className="mr-2 h-5 w-5" />
-                {isLoggingIn ? "Đang đăng nhập..." : "Đăng nhập"}
+                {isLoggingIn || isLoading || isNavigating ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Đang đăng nhập...
+                  </>
+                ) : (
+                  <>
+                    <Bike className="mr-2 h-5 w-5" />
+                    Đăng nhập
+                  </>
+                )}
               </Button>
             </form>
-            
-            {/* Progress indicators */}
-            {(isLoggingIn || isLoading) && (
-              <div className="space-y-3 mt-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {progressMessage}
-                  </span>
-                  <span className="text-muted-foreground font-medium">
-                    {progressValue}%
-                  </span>
-                </div>
-                <Progress value={progressValue} className="h-2" />
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">
-                    Vui lòng đợi trong giây lát...
-                  </p>
-                </div>
-              </div>
-            )}
+
             <Separator className="my-6" />
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Chưa có tài khoản?{" "}
                 <Button
                   disabled={isLoggingIn || isLoading}
-                  className="text-sm text-metro-primary hover:text-metro-secondary transition-colors text-white bg-[hsl(214,100%,40%)] disabled:opacity-50"
+                  variant="link"
                   onClick={() => router.push("/auth/register")}
                 >
                   Đăng ký ngay
@@ -233,7 +178,7 @@ const Login = () => {
             <div className="text-center pt-4">
               <Button
                 disabled={isLoggingIn || isLoading}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors text-white bg-[hsl(214,100%,40%)] disabled:opacity-50"
+                variant="link"
                 onClick={() => router.push("/")}
               >
                 ← Về trang chủ
