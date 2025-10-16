@@ -167,10 +167,11 @@ export const RENTALS_MESSAGE = {
   GET_DETAIL_SUCCESS: 'Xem chi tiết 1 phiên thuê xe thành công',
   GET_REVENUE_SUCCESS: 'Xem thống kê doanh thu thành công',
   GET_STATION_ACTIVITY_SUCCESS: 'Xem thống kê hoạt động trạm xe thành công',
-  GET_RESERVATIONS_SUCCESS: 'Xem thống kê số lượt đặt/huỷ thành công',
+  GET_RESERVATIONS_STATISTIC_SUCCESS: 'Xem thống kê số lượt đặt/huỷ thành công',
   GET_STATION_TRAFFIC_SUCCESS: 'Xem thống kê số lượt thuê/trả theo trạm thành công',
   UPDATE_DETAIL_SUCCESS: 'Cập nhật phiên thuê thành công',
   CANCEL_RENTAL_SUCCESS: 'Huỷ phiên thuê thành công',
+  TRACKING_RENTAL_IN_STATION_SUCCESS: 'Xem danh sách các phiên thuê tại trạm thành công',
   // Fail action
   CREATE_SESSION_FAIL: 'Tạo phiên thuê xe không thành công',
   // Required data
@@ -189,7 +190,11 @@ export const RENTALS_MESSAGE = {
   REASON_TOO_LONG: 'Lí do quá dài (chuỗi tối đa 255 kí tự)',
   INVALID_RENTAL_STATUS: 'Trạng thái phiên thuê không hợp lệ',
   INVALID_END_TIME_FORMAT: 'Thời gian kết thúc không hợp lệ (phải theo mẫu ISO8601)',
-  END_TIME_GREATER_THAN_START_TIME: 'Thời gian kết thúc phải lớn hơn hoặc bằng thời gian bắt đầu',
+  END_TIME_MUST_GREATER_THAN_START_TIME: 'Thời gian kết thúc phải lớn hơn hoặc bằng thời gian bắt đầu',
+  END_DATE_CANNOT_BE_IN_FUTURE: 'Thời gian kết thúc không thể là thời điểm ở tương lai',
+  INVALID_MEDIA_URLS: 'Danh sách media_urls không hợp lệ, phải là một mảng URL hợp lệ.',
+  INVALID_URL_FORMAT: 'Định dạng URL không hợp lệ: %s.',
+  INVALID_STATUS: 'Trạng thái phiên thuê không hợp lệ',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
@@ -203,11 +208,17 @@ export const RENTALS_MESSAGE = {
   CANNOT_END_OTHER_RENTAL: 'Bạn không có quyền kết thúc phiên thuê của người khác',
   CANNOT_EDIT_THIS_RENTAL_WITH_STATUS: 'Không thể chỉnh sửa phiên thuê đang ở trạng thái %s',
   CANNOT_CANCEL_THIS_RENTAL_WITH_STATUS: 'Không thể huỷ phiên thuê đang ở trạng thái %s (Rented, Reserved only)',
-  CANNOT_END_WITHOUT_END_STATION: 'Không thể kết thúc phiên, vui lòng nhập trạm kết thúc',
+  CANNOT_END_WITHOUT_END_STATION: 'Vui lòng nhập trạm kết thúc để kết thúc phiên',
+  CANNOT_END_WITHOUT_END_TIME: 'Vui lòng nhập thời điểm kết thúc để kết thúc phiên',
   UPDATED_STATUS_NOT_ALLOWED: 'Bạn không thể cập nhật phiên thuê sang trạng thái %s (Completed, Cancelled only)',
   CANNOT_CANCEL_WITH_BIKE_STATUS: 'Bạn không thể huỷ phiên thuê với xe đang ở trạng thái %s (Booked, Reserved only)',
   CANNOT_EDIT_BIKE_STATUS_TO:
     'Bạn không thể cập nhật trạng thái xe thành %s khi huỷ phiên thuê (Available, Broken only)',
+  // Not allowed body fields
+  NOT_ALLOWED_CREATED_FIELD: '%s không nằm trong các trường được cho phép để tạo',
+  NOT_ALLOWED_UPDATED_FIELD: '%s không nằm trong các trường được cho phép để cập nhật',
+  NOT_ALLOWED_CANCELLED_FIELD: '%s không nằm trong các trường được cho phép để huỷ',
+  // default message
   NO_REASON: 'Không có nguyên nhân',
   // bike
   BIKE_IN_USE: 'Xe đang được sử dụng',
@@ -215,7 +226,7 @@ export const RENTALS_MESSAGE = {
   BIKE_IS_MAINTAINED: 'Xe đang được bảo trì, chưa sẵn sàng để sử dụng',
   BIKE_IS_RESERVED: 'Xe đã được đặt trước',
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
-  INVALID_STATUS: 'Trạng thái xe không hợp lệ'
+  INVALID_BIKE_STATUS: 'Trạng thái xe không hợp lệ'
 } as const
 
 export const COMMON_MESSAGE = {
@@ -226,4 +237,59 @@ export const AUTH_MESSAGE = {
   ACCESS_DENIED: 'Bạn không có quyền truy cập tài nguyên này',
   ACCESS_DENIED_ADMIN_ONLY: 'Bạn không có quyền truy cập tài nguyên này (chỉ dành cho Admin)',
   ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: 'Bạn không có quyền truy cập tài nguyên này (chỉ dành cho Staff và Admin)'
+}
+
+export const WALLETS_MESSAGE = {
+  USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',
+  USER_NOT_HAVE_WALLET: 'Người dùng với ID %s chưa có ví',
+  TRANSACTION_TYPE_INVALID: 'Loại giao dịch %s không hợp lệ',
+  AMOUNT_NEGATIVE: 'Số tiền giao dịch phải lớn hơn 0',
+  INSUFFICIENT_BALANCE: 'Số dư trong ví của người dùng %s không đủ để thực hiện giao dịch',
+  CREATE_SUCCESS: 'Tạo ví thành công',
+  INCREASE_BALANCE_SUCCESS: 'Đã cộng %s vào ví của người dùng %s',
+  DECRESE_BALANCE_SUCCESS: 'Đã trừ %s vào ví của người dùng %s',
+  AMOUNT_IS_REQUIRED: 'Số tiền giao dịch là bắt buộc',
+  AMOUNT_NUMERIC: 'Số tiền giao dịch là số thực',
+  TYPE_IS_REQUIRED: 'Loại giao dịch là bắt buộc',
+  TYPE_INVALID: 'Loại giao dịch không hợp lệ',
+  FEE_IS_REQUIRED: 'Phí giao dịch là bắt buộc',
+  FEE_NEGATIVE: 'Phí giao dịch phải lớn hơn 0',
+  DESCRIPTION_IS_REQUIED: 'Mô tả giao dịch là bắt buộc',
+  DESCRIPTION_INVALID: 'Mô tả giao dịch là chuỗi ký tự',
+  TRANSACRION_HASH_REQUIRED: 'Mã giao dịch là bắt buộc',
+  TRANSACRION_HASH_INVALID: 'Mã giao dịch là chuỗi ký tự',
+  MESSAGE_IS_REQUIED: 'Lời nhắn là bắt buộc',
+  MESSAGE_INVALID: 'Lời nhắn là chuỗi ký tự',
+  STATUS_IS_REQUIED: 'Trạng thái là bắt buộc',
+  STATUS_INVALID: 'Trạng thái không hợp lệ',
+  CHANGE_STATUS_SUCCESS: 'Đổi trạng thái ví của người dùng thành công',
+  GET_USER_WALLET_SUCCESS: 'Lấy thông tin ví của người dùng %s thành công',
+  FORBIDDEN: 'Không có quyền truy cập vào giao dịch của người khác',
+  TRANSACTION_NOT_FOUND: 'Không tìm thấy giao dịch',
+  TRANSACTION_DETAIL_SUCCESS: 'Lấy chi tiết giao dịch thành công',
+  CREATE_REFUND_SUCCESS: 'Tạo yêu cầu hoàn tiền thành công',
+  REFUND_NOT_FOUND: 'Không tìm thấy yêu cầu giao dịch %s',
+  INVALID_NEW_STATUS: 'Trạng thái mới không hợp lệ',
+  UPDATE_REFUND_SUCCESS: 'Cập nhật trạng thái yêu cầu hoàn tiền thành công',
+  CREATE_WITHDRAWL_SUCCESS: 'Tạo yêu cầu rút về tài khoản thành công',
+  REFUND_DETAIL_SUCCESS: 'Lấy chi tiết yêu cầu hoàn tiền thành công',
+  FORBIDDEN_ACCESS: 'Bạn không có quyền truy cập vào yêu cầu hoàn tiền này',
+  FORBIDDEN_WITHDRAW_ACCESS: 'Bạn không có quyền truy cập vào yêu cầu rút tiền này',
+  WALLET_HAS_BEEN_FROZEN: 'Ví của người dùng này đã bị đóng băng',
+  NOTE_IN_VALID: 'Ghi chú phải là chuỗi ký tự',
+  NOTE_TOO_LONG: 'Ghi chú không được vượt quá 500 ký tự',
+  USER_ID_IS_REQUIRED: 'User ID là bắt buộc',
+  USER_ID_INVALID: 'User ID không hợp lệ',
+  WALLET_ID_IS_REQUIED: 'Wallet ID là bắt buộc',
+  WALLET_ID_INVALID: 'Wallet ID không hợp lệ',
+  WALLET_NOT_FOUND: 'Không tìm thấy ví với ID %s',
+  REASON_INVALID: 'Lý do không hợp lệ',
+  REASON_TOO_LONG: 'Lý do không được vượt quá 500 ký tự',
+}
+
+export const WITHDRAWLS_MESSAGE = {
+  WITHDRAWL_NOT_FOUND: 'Khong tìm thấy yêu cầu rút tiền với ID %s',
+  REASON_IS_REQUIRED: 'Vui lòng nhập nguyên nhân từ chối yêu cầu',
+  UPDATE_SUCCESS: 'Cập nhật trạng thái yêu cầu rút tiền %s thành công',
+  GET_DETAIL_SUCCESS: 'Lấy chi tiết yêu cầu rút tiền thành công'
 }

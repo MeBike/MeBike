@@ -20,7 +20,7 @@ export type ReportType = {
   message: string;
   status?: ReportStatus;
   created_at?: Date;
-  resolved_at?: Date;
+  updated_at?: Date;
 };
 
 export default class Report {
@@ -37,7 +37,7 @@ export default class Report {
   message: string;
   status: ReportStatus;
   created_at?: Date;
-  resolved_at?: Date;
+  updated_at?: Date;
 
   constructor(report: ReportType) {
     const currentDate = new Date();
@@ -57,6 +57,6 @@ export default class Report {
     this.message = report.message || "";
     this.status = report.status || ReportStatus.Pending;
     this.created_at = report.created_at || localTime;
-    this.resolved_at = report.resolved_at;
+    this.updated_at = report.updated_at || localTime;
   }
 }
