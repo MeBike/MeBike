@@ -5,4 +5,12 @@ export type ReserveBikeReqBody = {
   start_time: string
 }
 
+export type CancelReservationReqBody = {
+  reason?: string
+}
+
+export type ReservationParam = {
+  id: string
+}
+
 

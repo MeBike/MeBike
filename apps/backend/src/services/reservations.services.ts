@@ -68,9 +68,17 @@ class ReservationsService {
     }
   }
 
+  async cancelReservation({user_id, reservation_id}:{user_id: ObjectId; reservation_id: ObjectId}){
+    
+  }
+
   generateEndTime(startTime: string) {
     const holdTimeMs = Number(process.env.HOLD_HOURS_RESERVATION || '1') * 60 * 60 * 1000
     return new Date(new Date(startTime).getTime() + holdTimeMs)
+  }
+
+  getCancellablePeriod(){
+    
   }
 }
 

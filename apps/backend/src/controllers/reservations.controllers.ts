@@ -5,7 +5,7 @@ import { Role } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { RESERVATIONS_MESSAGE, USERS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
-import { ReserveBikeReqBody } from "~/models/requests/reservations.requests";
+import { CancelReservationReqBody, ReservationParam, ReserveBikeReqBody } from "~/models/requests/reservations.requests";
 import { TokenPayLoad } from "~/models/requests/users.requests";
 import Reservation from "~/models/schemas/reservation.schema";
 import databaseService from "~/services/database.services";
@@ -45,3 +45,18 @@ export async function reserveBikeController(req:Request<ParamsDictionary, any, R
     })
 }
 
+export async function cancelReservationController(
+  req: Request<ReservationParam, any, CancelReservationReqBody>,
+  res: Response
+) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+
+  const result = await reservationsService.cancelReservation({
+    user_id: toObjectId(user_id),
+    reservation_id: toObjectId(req.params.id)
+  })
+  res.json({
+    message: RESERVATIONS_MESSAGE.CANCEL_SUCCESS,
+    result
+  })
+}

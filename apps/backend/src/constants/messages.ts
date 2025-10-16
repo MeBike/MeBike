@@ -242,19 +242,27 @@ export const AUTH_MESSAGE = {
 export const RESERVATIONS_MESSAGE = {
   // success action
   RESERVE_SUCCESS: 'Đặt trước xe thành công',
+  CANCEL_SUCCESS: 'Huỷ phiên đặt trước thành công',
   // Required data
+  REQUIRED_ID: 'Vui lòng nhập Id phiên đặt trước',
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
   REQUIRED_BIKE_ID: 'Vui lòng nhập Id xe đạp',
   REQUIRED_START_STATION: 'Vui lòng nhập trạm bắt đầu',
   REQUIRED_END_STATION: 'Vui lòng nhập trạm kết thúc',
   REQUIRED_START_TIME: 'Vui lòng nhập thời gian bắt đầu hiệu lực',
+  REQUIRED_CANCELLED_REASON: 'Vui lòng nhập nguyên nhân huỷ',
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
+  INVALID_CANCELLED_REASON: 'Nguyên nhân huỷ không hợp lệ (phải là dạng chuỗi)',
+  REASON_TOO_LONG: 'Độ dài của nguyên nhân huỷ không hợp lệ (dưới 255 kí tự)',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
   STATION_NOT_FOUND: 'Không tìm thấy trạm với Id %s',
+  NOT_FOUND: 'Không tìm thấy phiên đặt trước với Id %s',
   // Unavailable object
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
+  // Not allowed action
+  CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền kết thúc phiên đặt trước của người khác',
 } as const
