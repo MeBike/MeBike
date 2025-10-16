@@ -33,14 +33,14 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
       clearTokens();
       setHasToken(false);
       queryClient.clear();
-    }
+    };
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("auth:session_expired", handleAuthFailure);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("auth:session_expired", handleAuthFailure);
     };
-  }, [queryClient]);
+  }, [queryClient, getAccessToken]);
   
   useEffect(() => {
     if (isError && hasToken && isInitialized) {

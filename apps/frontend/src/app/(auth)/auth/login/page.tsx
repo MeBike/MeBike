@@ -36,7 +36,7 @@ const Login = () => {
       ];
       const messageTimings = [0, 25, 50, 75, 95];
       const interval = setInterval(() => {
-        currentProgress += 20; 
+        currentProgress += 25; 
         const messageIndex = messageTimings.findIndex(timing => currentProgress >= timing);
         if (messageIndex !== -1 && messageIndex < messages.length) {
           setProgressMessage(messages[Math.min(messageIndex, messages.length - 1)]);

@@ -180,7 +180,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Form Section */}
             <div className="flex-1 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -203,8 +202,6 @@ export default function ProfilePage() {
                     )}
                   />
                 </div>
-
-                {/* Username */}
                 <div className="space-y-2">
                   <Label
                     htmlFor="username"
@@ -246,8 +243,6 @@ export default function ProfilePage() {
                     )}
                   />
                 </div>
-
-                {/* Phone Number */}
                 <div className="space-y-2">
                   <Label
                     htmlFor="phone"
@@ -268,8 +263,6 @@ export default function ProfilePage() {
                     )}
                   />
                 </div>
-
-                {/* Location */}
                 <div className="space-y-2 md:col-span-2">
                   <Label
                     htmlFor="location"
@@ -292,7 +285,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Account Info */}
               <div className="pt-6 border-t border-border">
                 <h3 className="text-sm font-semibold text-foreground mb-4">
                   Thông tin tài khoản
@@ -358,7 +350,7 @@ export default function ProfilePage() {
                   Cập nhật mật khẩu của bạn
                 </p>
               </div>
-              <Link href="/staff/profile/change-password">
+              <Link href="/user/profile/change-password">
                 <Button variant="outline" className="cursor-pointer">Thay đổi</Button>
               </Link>
             </div>
