@@ -226,7 +226,8 @@ export const RENTALS_MESSAGE = {
   BIKE_IS_MAINTAINED: 'Xe đang được bảo trì, chưa sẵn sàng để sử dụng',
   BIKE_IS_RESERVED: 'Xe đã được đặt trước',
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
-  INVALID_BIKE_STATUS: 'Trạng thái xe không hợp lệ'
+  INVALID_BIKE_STATUS: 'Trạng thái xe không hợp lệ',
+  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON: 'Bạn phải nhập ít nhất 1 trường ngoài nguyên nhân để cập nhật'
 } as const
 
 export const COMMON_MESSAGE = {

@@ -53,7 +53,7 @@ export const createRentalSessionValidator = validate(
             return true
           }
         }
-      },
+      }
     },
     ['body']
   )
@@ -128,7 +128,7 @@ export const endRentalByAdminOrStaffValidator = validate(
     },
     end_station: {
       in: ['body'],
-      notEmpty:{
+      notEmpty: {
         errorMessage: RENTALS_MESSAGE.REQUIRED_END_STATION
       },
       isMongoId: {
@@ -158,18 +158,18 @@ export const endRentalByAdminOrStaffValidator = validate(
       }
     },
     reason: {
-        in: ['body'],
-        notEmpty: {
-          errorMessage: RENTALS_MESSAGE.REQUIRED_UPDATED_REASON
-        },
-        isString: {
-          errorMessage: RENTALS_MESSAGE.INVALID_REASON
-        },
-        isLength: {
-          options: { max: 255 },
-          errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
-        }
+      in: ['body'],
+      notEmpty: {
+        errorMessage: RENTALS_MESSAGE.REQUIRED_UPDATED_REASON
       },
+      isString: {
+        errorMessage: RENTALS_MESSAGE.INVALID_REASON
+      },
+      isLength: {
+        options: { max: 255 },
+        errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
+      }
+    }
   })
 )
 
@@ -268,8 +268,26 @@ export const updateDetailRentalValidator = validate(
         isLength: {
           options: { max: 255 },
           errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
+        },
+        custom: {
+          options: (value, { req }) => {
+            const { end_station, end_time, status, total_price } = req.body
+            if (
+              end_station === undefined &&
+              end_time === undefined &&
+              status === undefined &&
+              total_price === undefined
+            ) {
+              throw new ErrorWithStatus({
+                message: RENTALS_MESSAGE.PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+
+            return true
+          }
         }
-      },
+      }
     },
     ['body', 'params']
   )
@@ -353,7 +371,7 @@ export const cancelRentalValidator = validate(
           options: { max: 255 },
           errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
         }
-      },
+      }
     },
     ['body', 'params']
   )
