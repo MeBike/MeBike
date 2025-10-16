@@ -37,7 +37,7 @@ function VerifyEmailContent() {
             router.push("/admin/profile");
             return;
           }
-          else if(user?.role==='STAFF'){
+          else if(user?.role === "STAFF"){
             router.push("/staff/profile");
             return;
           }
