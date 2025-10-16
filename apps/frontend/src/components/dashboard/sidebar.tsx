@@ -22,44 +22,53 @@ interface SidebarProps {
   userRole: "STAFF" | "ADMIN" | "USER";
 }
 
-const menuItems = [
-  {
-    title: "Tổng quan",
-    icon: LayoutDashboard,
-    href: "/staff",
-    roles: ["STAFF", "ADMIN"],
-  },
-  {
-    title: "Quản lý xe đạp",
-    icon: Bike,
-    href: "/staff/bikes",
-    roles: ["STAFF", "ADMIN"],
-  },
-  {
-    title: "Đơn thuê xe",
-    icon: FileText,
-    href: "/staff/rentals",
-    roles: ["STAFF", "ADMIN"],
-  },
-  {
-    title: "Khách hàng",
-    icon: Users,
-    href: "/staff/customers",
-    roles: ["STAFF", "ADMIN"],
-  },
-  {
-    title: "Báo cáo & Thống kê",
-    icon: BarChart3,
-    href: "/admin/reports",
-    roles: ["ADMIN"],
-  },
-  {
-    title: "Cài đặt",
-    icon: Settings,
-    href: "/adminz/settings",
-    roles: ["ADMIN"],
-  },
-];
+const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
+  const baseUrl =
+    userRole === "ADMIN"
+      ? "/admin"
+      : userRole === "STAFF"
+      ? "/staff"
+      : "/customer";
+  
+  return [
+    {
+      title: "Tổng quan",
+      icon: LayoutDashboard,
+      href: baseUrl,
+      roles: ["STAFF", "ADMIN"],
+    },
+    {
+      title: "Quản lý xe đạp",
+      icon: Bike,
+      href: `${baseUrl}/bikes`,
+      roles: ["STAFF", "ADMIN"],
+    },
+    {
+      title: "Đơn thuê xe",
+      icon: FileText,
+      href: `${baseUrl}/rentals`,
+      roles: ["STAFF", "ADMIN"],
+    },
+    {
+      title: "Khách hàng",
+      icon: Users,
+      href: `${baseUrl}/customers`,
+      roles: ["STAFF", "ADMIN"],
+    },
+    {
+      title: "Báo cáo & Thống kê",
+      icon: BarChart3,
+      href: "/admin/reports",
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Cài đặt",
+      icon: Settings,
+      href: "/admin/settings",
+      roles: ["ADMIN"],
+    },
+  ];
+};
 
 export function Sidebar({ userRole }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
@@ -70,8 +79,8 @@ export function Sidebar({ userRole }: SidebarProps) {
     if (refreshToken) {
       logOut(refreshToken);
     }
-    // Optionally handle the case where refreshToken is null
   }
+  const menuItems = getMenuItems(userRole);
   const filteredMenuItems = menuItems.filter((item) =>
     item.roles.includes(userRole)
   );
@@ -150,7 +159,7 @@ export function Sidebar({ userRole }: SidebarProps) {
 
         <div className="border-t border-sidebar-border p-2">
           <Link
-            href="/staff/profile"
+            href={`${userRole === "ADMIN" ? "/admin" : "/staff"}/profile`}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
           >
             <User className="w-5 h-5 flex-shrink-0" />
