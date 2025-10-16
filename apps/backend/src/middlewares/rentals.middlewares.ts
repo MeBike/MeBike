@@ -1,5 +1,4 @@
 import { checkSchema } from 'express-validator'
-import { ObjectId } from 'mongodb'
 
 import { BikeStatus, RentalStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
@@ -10,19 +9,14 @@ import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { toObjectId } from '~/utils/string'
 
+const ALLOWED_CREATED_FIELDS = ['bike_id']
+const ALLOWED_UPDATED_FIELDS = ['end_station', 'end_time', 'status', 'total_price', 'reason']
+const ALLOWED_CANCELLED_FIELDS = ['bikeStatus', 'reason']
+const ALLOWED_ENDED_RENTAL_FIELDS = ['end_station', 'end_time', 'reason']
+
 export const createRentalSessionValidator = validate(
   checkSchema(
     {
-      start_station: {
-        notEmpty: {
-          errorMessage: RENTALS_MESSAGE.REQUIRED_START_STATION,
-          bail: true
-        },
-        isMongoId: {
-          errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'start_station'),
-          bail: true
-        }
-      },
       bike_id: {
         notEmpty: {
           errorMessage: RENTALS_MESSAGE.REQUIRED_BIKE_ID,
@@ -34,33 +28,47 @@ export const createRentalSessionValidator = validate(
         },
         custom: {
           options: async (value, { req }) => {
-            const stationId = toObjectId(req.body.start_station)
             const bikeId = toObjectId(value)
+            const bike = await databaseService.bikes.findOne({ _id: bikeId })
+            if (!bike) {
+              throw new ErrorWithStatus({
+                message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', value),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            isAvailability(bike.status as BikeStatus)
 
+            const stationId = bike.station_id
+            if (!stationId) {
+              throw new ErrorWithStatus({
+                message: RENTALS_MESSAGE.UNAVAILABLE_BIKE,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
             const station = await databaseService.stations.findOne({ _id: stationId })
             if (!station) {
               throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', req.body.start_station),
+                message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', stationId.toString()),
                 status: HTTP_STATUS.NOT_FOUND
               })
             }
-
-            const bikeInStation = await databaseService.bikes.findOne({
-              _id: bikeId,
-              station_id: station._id
-            })
-
-            if (!bikeInStation) {
-              throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.BIKE_NOT_FOUND_IN_STATION.replace('%s', value).replace('%s', station.name),
-                status: HTTP_STATUS.NOT_FOUND
-              })
-            }
-
-            isAvailability(bikeInStation.status as BikeStatus)
 
             req.station = station
-            req.bike = bikeInStation
+            req.bike = bike
+            return true
+          }
+        }
+      },
+      '*': {
+        in: ['body'],
+        custom: {
+          options: (value, { path }) => {
+            if (!ALLOWED_CREATED_FIELDS.includes(path)) {
+              throw new ErrorWithStatus({
+                message: RENTALS_MESSAGE.NOT_ALLOWED_CREATED_FIELD.replace('%s', path),
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
             return true
           }
         }
@@ -101,7 +109,100 @@ export const endRentalSessionValidator = validate(
         },
         bail: true
       }
+    }
+  })
+)
+
+export const endRentalByAdminOrStaffValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: {
+        errorMessage: RENTALS_MESSAGE.REQUIRED_ID,
+        bail: true
+      },
+      isMongoId: {
+        errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Rental Id'),
+        bail: true
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const currentRental = await databaseService.rentals.findOne({
+            _id: toObjectId(value),
+            status: RentalStatus.Rented
+          })
+
+          if (!currentRental) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.NOT_FOUND_RENTED_RENTAL.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          req.rental = currentRental
+          return true
+        },
+        bail: true
+      }
     },
+    end_station: {
+      in: ['body'],
+      notEmpty:{
+        errorMessage: RENTALS_MESSAGE.REQUIRED_END_STATION
+      },
+      isMongoId: {
+        errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'end_station'),
+        bail: true
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const station = await databaseService.stations.findOne({ _id: toObjectId(value) })
+          if (!station) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+          req.station = station
+          return true
+        }
+      }
+    },
+
+    end_time: {
+      in: ['body'],
+      optional: true,
+      isISO8601: {
+        errorMessage: RENTALS_MESSAGE.INVALID_END_TIME_FORMAT
+      }
+    },
+    reason: {
+        in: ['body'],
+        notEmpty: {
+          errorMessage: RENTALS_MESSAGE.REQUIRED_UPDATED_REASON
+        },
+        isString: {
+          errorMessage: RENTALS_MESSAGE.INVALID_REASON
+        },
+        isLength: {
+          options: { max: 255 },
+          errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
+        }
+      },
+      '*': {
+        in: ['body'],
+        custom: {
+          options: (value, { path }) => {
+            if (!ALLOWED_ENDED_RENTAL_FIELDS.includes(path)) {
+              throw new ErrorWithStatus({
+                message: RENTALS_MESSAGE.NOT_ALLOWED_UPDATED_FIELD.replace('%s', path),
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
+        }
+      }
   })
 )
 
@@ -171,6 +272,15 @@ export const updateDetailRentalValidator = validate(
         }
       },
 
+      status: {
+        in: ['body'],
+        optional: true,
+        isIn: {
+          options: Object.values(RentalStatus),
+          errorMessage: RENTALS_MESSAGE.INVALID_STATUS
+        }
+      },
+
       total_price: {
         in: ['body'],
         optional: true,
@@ -191,6 +301,20 @@ export const updateDetailRentalValidator = validate(
         isLength: {
           options: { max: 255 },
           errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
+        }
+      },
+      '*': {
+        in: ['body'],
+        custom: {
+          options: (value, { path }) => {
+            if (!ALLOWED_UPDATED_FIELDS.includes(path)) {
+              throw new ErrorWithStatus({
+                message: RENTALS_MESSAGE.NOT_ALLOWED_UPDATED_FIELD.replace('%s', path),
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
         }
       }
     },
@@ -275,6 +399,20 @@ export const cancelRentalValidator = validate(
         isLength: {
           options: { max: 255 },
           errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
+        }
+      },
+      '*': {
+        in: ['body'],
+        custom: {
+          options: (value, { path }) => {
+            if (!ALLOWED_CANCELLED_FIELDS.includes(path)) {
+              throw new ErrorWithStatus({
+                message: RENTALS_MESSAGE.NOT_ALLOWED_CANCELLED_FIELD.replace('%s', path),
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
         }
       }
     },

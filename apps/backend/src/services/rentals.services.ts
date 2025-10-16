@@ -1,4 +1,4 @@
-import type { ObjectId } from 'mongodb'
+import type { Document, ObjectId } from 'mongodb'
 
 import { Decimal128, Int32 } from 'mongodb'
 
@@ -11,7 +11,11 @@ import { toObjectId } from '~/utils/string'
 
 import databaseService from './database.services'
 import { getLocalTime } from '~/utils/date'
-import { CancelRentalReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
+import {
+  CancelRentalReqBody,
+  EndRentalByAdminOrStaffReqBody,
+  UpdateRentalReqBody
+} from '~/models/requests/rentals.requests'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 
 class RentalsService {
@@ -21,28 +25,35 @@ class RentalsService {
     bike_id
   }: {
     user_id: ObjectId | string
-    start_station: ObjectId | string
-    bike_id: ObjectId | string
+    start_station: ObjectId
+    bike_id: ObjectId
   }) {
-    const objectedBikeId = toObjectId(bike_id)
     const session = databaseService.getClient().startSession()
 
     try {
       let rental: Rental | null = null
+      const now = getLocalTime()
+
       await session.withTransaction(async () => {
         rental = new Rental({
           user_id: toObjectId(user_id),
-          start_station: toObjectId(start_station),
-          bike_id: objectedBikeId,
-          start_time: new Date(),
+          start_station,
+          bike_id,
+          start_time: now,
           status: RentalStatus.Rented
         })
 
         await databaseService.rentals.insertOne(rental, { session })
 
         await databaseService.bikes.updateOne(
-          { _id: objectedBikeId },
-          { $set: { status: BikeStatus.Booked } },
+          { _id: bike_id },
+          {
+            $set: {
+              station_id: null,
+              status: BikeStatus.Booked,
+              updated_at: now
+            }
+          },
           { session }
         )
       })
@@ -58,7 +69,6 @@ class RentalsService {
         total_price: 0
       }
     } catch (error) {
-      console.error(COMMON_MESSAGE.CREATE_SESSION_FAIL, error)
       throw error
     } finally {
       await session.endSession()
@@ -114,6 +124,7 @@ class RentalsService {
             { _id: result.bike_id },
             {
               $set: {
+                station_id: end_station,
                 status: BikeStatus.Available,
                 updated_at: now
               }
@@ -127,7 +138,100 @@ class RentalsService {
         total_price: Number(endedRental.total_price.toString())
       }
     } catch (error) {
-      console.error(COMMON_MESSAGE.CREATE_SESSION_FAIL, error)
+      throw error
+    } finally {
+      await session.endSession()
+    }
+  }
+
+  async endRentalByAdminOrStaff({
+    user_id,
+    rental,
+    payload
+  }: {
+    user_id: ObjectId
+    rental: Rental
+    payload: EndRentalByAdminOrStaffReqBody
+  }) {
+    const { end_station, end_time, reason } = payload
+    const objStationId = toObjectId(end_station)
+    const session = databaseService.getClient().startSession()
+    try {
+      let endedRental: Rental = rental
+      await session.withTransaction(async () => {
+        const user = await databaseService.users.findOne({ _id: user_id })
+        if (!user) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
+
+        const now = getLocalTime()
+        const duration = this.generateDuration(rental.start_time, now)
+        const totalPrice = this.generateTotalPrice(duration)
+
+        const endTime = end_time ? new Date(end_time) : now
+        if (endTime > now) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.END_DATE_CANNOT_BE_IN_FUTURE,
+            status: HTTP_STATUS.BAD_REQUEST
+          })
+        }
+        if (endTime < rental.start_time) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.END_TIME_MUST_GREATER_THAN_START_TIME,
+            status: HTTP_STATUS.BAD_REQUEST
+          })
+        }
+
+        const updatedData: Partial<Rental> = {
+          end_station: objStationId,
+          end_time: endTime,
+          duration: new Int32(duration),
+          total_price: Decimal128.fromString(totalPrice.toString()),
+          status: RentalStatus.Completed
+        }
+
+        const result = await databaseService.rentals.findOneAndUpdate(
+          { _id: rental._id },
+          {
+            $set: {
+              ...updatedData,
+              updated_at: now
+            }
+          },
+          { returnDocument: 'after', session }
+        )
+
+        if (result) {
+          endedRental = result
+          await databaseService.bikes.updateOne(
+            { _id: result.bike_id },
+            {
+              $set: {
+                station_id: objStationId,
+                status: BikeStatus.Available,
+                updated_at: now
+              }
+            },
+            { session }
+          )
+
+          const log = new RentalLog({
+            rental_id: rental._id!,
+            admin_id: user_id,
+            changes: Object.keys(updatedData),
+            reason
+          })
+          await databaseService.rentalLogs.insertOne(log)
+        }
+      })
+      return {
+        ...endedRental,
+        total_price: Number(endedRental.total_price.toString())
+      }
+    } catch (error) {
       throw error
     } finally {
       await session.endSession()
@@ -231,7 +335,7 @@ class RentalsService {
     admin_id: string
     payload: UpdateRentalReqBody
   }) {
-    const { end_station, end_time, total_price, reason } = payload
+    const { end_station, end_time, status, total_price, reason } = payload
     const objRentalId = toObjectId(rental_id)
     const now = getLocalTime()
 
@@ -250,23 +354,6 @@ class RentalsService {
 
         const updateData: any = { updated_at: now }
 
-        if (end_station) {
-          const objEndStation = toObjectId(end_station)
-          const stationExists = await databaseService.stations.findOne({ _id: objEndStation }, { session })
-          if (!stationExists) {
-            throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', end_station),
-              status: HTTP_STATUS.NOT_FOUND
-            })
-          }
-          updateData.end_station = objEndStation
-
-          if (!rental.end_time && !end_time) {
-            updateData.end_time = now
-            updateData.duration = this.generateDuration(rental.start_time, now)
-          }
-        }
-
         if (end_time) {
           if (!end_station && !rental.end_station) {
             throw new ErrorWithStatus({
@@ -275,9 +362,15 @@ class RentalsService {
             })
           }
           const end = new Date(end_time)
+          if (end > now) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.END_DATE_CANNOT_BE_IN_FUTURE,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
           if (end < rental.start_time) {
             throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.END_TIME_GREATER_THAN_START_TIME,
+              message: RENTALS_MESSAGE.END_TIME_MUST_GREATER_THAN_START_TIME,
               status: HTTP_STATUS.BAD_REQUEST
             })
           }
@@ -285,15 +378,27 @@ class RentalsService {
           updateData.end_time = end
           updateData.duration = this.generateDuration(rental.start_time, end)
 
-          if (rental.status === RentalStatus.Rented) {
+          if (status !== undefined) {
+            updateData.status = status
+          } else if (rental.status === RentalStatus.Rented) {
             updateData.status = RentalStatus.Completed
           }
         }
 
-        if (end_time && !total_price) {
-          updateData.total_price = this.generateTotalPrice(updateData.duration)
-        } else if (total_price !== undefined) {
+        if (end_station) {
+          if (!rental.end_time && !end_time) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.CANNOT_END_WITHOUT_END_TIME,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+          updateData.end_station = toObjectId(end_station)
+        }
+
+        if (total_price !== undefined) {
           updateData.total_price = total_price
+        } else if (end_time) {
+          updateData.total_price = this.generateTotalPrice(updateData.duration)
         }
 
         result = await databaseService.rentals.findOneAndUpdate(
@@ -368,6 +473,7 @@ class RentalsService {
           { _id: rental.bike_id },
           {
             $set: {
+              station_id: rental.start_station,
               status: updatedBikeStatus,
               updated_at: now
             }
@@ -654,6 +760,87 @@ class RentalsService {
       groupBy: groupBy ?? GroupByOptions.Day,
       data: result
     }
+  }
+
+  async getRentalsByStationIdPipeline({
+    stationId,
+    status,
+    expired_within
+  }: {
+    stationId: string
+    status: RentalStatus
+    expired_within: string
+  }) {
+    const objStationId = toObjectId(stationId)
+    const matchQuery: any = {
+      start_station: objStationId
+    }
+    if (status) {
+      matchQuery.status = status
+    }
+
+    const now = getLocalTime()
+    if (status === RentalStatus.Reserved && expired_within) {
+      const minutes = parseInt(expired_within, 10)
+      if (!isNaN(minutes)) {
+        const expiryLimit = new Date(now.getTime() + minutes * 60 * 1000)
+
+        matchQuery.start_time = {
+          $gt: now,
+          $lte: expiryLimit
+        }
+      }
+    }
+
+    const pipeline: Document[] = [
+      { $match: matchQuery },
+      {
+        $lookup: {
+          from: 'bikes',
+          localField: 'bike_id',
+          foreignField: '_id',
+          as: 'bikeInfo'
+        }
+      },
+      { $unwind: '$bikeInfo' },
+      {
+        $addFields: {
+          timeRemainingMinutes: {
+            $cond: {
+              if: { $eq: ['$status', RentalStatus.Reserved] },
+              then: {
+                $max: [0, { $round: [{ $divide: [{ $subtract: ['$start_time', now] }, 60000] }] }]
+              },
+              else: '$$REMOVE'
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          user_id: 1,
+          bike: '$bikeInfo',
+          status: 1,
+          timeRemainingMinutes: 1,
+          start_station: 1,
+          end_station: 1,
+          start_time: 1,
+          end_time: 1,
+          duration: 1,
+          total_price: { $toDouble: { $ifNull: ['$total_price', '0']}},
+          created_at: 1,
+          updated_at: 1
+        }
+      },
+      {
+        $sort: {
+          timeRemainingMinutes: -1
+        }
+      }
+    ]
+
+    return pipeline;
   }
 
   generateDuration(start: Date, end: Date) {

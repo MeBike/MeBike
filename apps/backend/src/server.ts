@@ -18,6 +18,9 @@ import swaggerDocument from '../public/openapi.json'
 
 config();
 
+import swaggerJSDoc from "swagger-jsdoc";
+import stationRouter from "./routes/station.routes";
+
 const port = process.env.PORT || 4000;
 
 const app = express();
@@ -42,6 +45,7 @@ app.use("/wallets", walletsRouter);
 app.use("/withdraws", withdrawsRouter);
 app.use("/refunds", refundsRouter);
 app.use("/rentals", rentalsRouter);
+app.use("/stations", stationRouter);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
