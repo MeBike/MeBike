@@ -5,21 +5,23 @@ import { clearTokens } from "@/utils/tokenManager";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-interface AdminLayoutProps {
+interface StaffLayoutProps {
   children: React.ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function StaffLayout({ children }: StaffLayoutProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [showUnauthorized, setShowUnauthorized] = useState(false);
 
   useEffect(() => {
     if (isLoading) return;
-
-    if (!isAuthenticated || !user || user.role !== "ADMIN") {
+    
+    if (!isAuthenticated || !user || user.role !== "STAFF") {
       clearTokens();
       setShowUnauthorized(true);
+      
+      // Delay 3 giây trước khi navigate
       const timer = setTimeout(() => {
         router.push("/auth/login");
       }, 3000);
@@ -32,9 +34,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">
-            Đang kiểm tra quyền truy cập...
-          </p>
+          <p className="text-gray-600 font-medium">Đang kiểm tra quyền truy cập...</p>
         </div>
       </div>
     );
@@ -47,7 +47,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-300">
             {/* Header với gradient */}
             <div className="bg-gradient-to-r from-red-500 to-orange-500 h-2"></div>
-
+            
             <div className="p-8 text-center">
               {/* Ảnh 401 với shadow và animation */}
               <div className="mb-8 relative">
@@ -72,11 +72,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </div>
 
                 <p className="text-gray-600 text-lg leading-relaxed max-w-md mx-auto">
-                  Bạn không có quyền truy cập vào trang này. Chỉ
-                  <span className="font-semibold text-orange-600">
-                    {" "}
-                     (ADMIN){" "}
-                  </span>
+                  Bạn không có quyền truy cập vào trang này. Chỉ 
+                  <span className="font-semibold text-orange-600"> nhân viên (Staff) </span>
                   mới có thể truy cập khu vực này.
                 </p>
 
@@ -101,8 +98,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 {/* Tips */}
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
                   <p className="text-yellow-800 text-sm">
-                    💡 <strong>Gợi ý:</strong> Hãy đăng nhập bằng tài khoản
-                    Staff để truy cập trang này.
+                    💡 <strong>Gợi ý:</strong> Hãy đăng nhập bằng tài khoản Staff để truy cập trang này.
                   </p>
                 </div>
               </div>
@@ -117,7 +113,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div>
       <main>
         <div>
-          <div>{children}</div>
+          <div>
+            {children}
+          </div>
         </div>
       </main>
     </div>
