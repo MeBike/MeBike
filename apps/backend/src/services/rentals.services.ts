@@ -101,6 +101,24 @@ class RentalsService {
       })
     }
 
+    const activeRental = await databaseService.rentals.findOne({
+      user_id: user._id as ObjectId,
+      bike_id: bike._id as ObjectId,
+      status: RentalStatus.Rented
+    })
+
+    if (activeRental) {
+      const endedRental = await this.endRentalSession({
+        user_id: user._id as ObjectId,
+        rental: activeRental
+      })
+
+      return {
+        mode: 'ended' as const,
+        rental: endedRental
+      }
+    }
+
     const reservation = await databaseService.reservations.findOne({
       user_id: user._id as ObjectId,
       bike_id: bike._id as ObjectId,
@@ -128,24 +146,6 @@ class RentalsService {
       return {
         mode: 'reservation_started' as const,
         rental: rentalSession
-      }
-    }
-
-    const activeRental = await databaseService.rentals.findOne({
-      user_id: user._id as ObjectId,
-      bike_id: bike._id as ObjectId,
-      status: RentalStatus.Rented
-    })
-
-    if (activeRental) {
-      const endedRental = await this.endRentalSession({
-        user_id: user._id as ObjectId,
-        rental: activeRental
-      })
-
-      return {
-        mode: 'ended' as const,
-        rental: endedRental
       }
     }
 
@@ -222,6 +222,21 @@ class RentalsService {
         {
           $set: {
             status: BikeStatus.Available,
+            updated_at: now
+          }
+        },
+        findOptions
+      )
+
+      await databaseService.reservations.updateMany(
+        {
+          user_id: rental.user_id,
+          bike_id: rental.bike_id,
+          status: ReservationStatus.Active
+        },
+        {
+          $set: {
+            status: ReservationStatus.Expired,
             updated_at: now
           }
         },

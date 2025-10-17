@@ -29,8 +29,9 @@ export async function handleCardTapMessage(topic: string, payload: string): Prom
       if (response.mode === "started" || response.mode === "reservation_started") {
         await commandPublisher.sendBookingCommand("book", request.chip_id);
         console.info(`[card-tap] sent booking command for chip ${request.chip_id}`);
-      }
-      else if (response.mode === "ended") {
+        await commandPublisher.sendStateCommand("booked", request.chip_id);
+        console.info(`[card-tap] requested booked state for chip ${request.chip_id}`);
+      } else if (response.mode === "ended") {
         await commandPublisher.sendBookingCommand("release", request.chip_id);
         console.info(`[card-tap] sent release command for chip ${request.chip_id}`);
         await commandPublisher.sendStateCommand("available", request.chip_id);
