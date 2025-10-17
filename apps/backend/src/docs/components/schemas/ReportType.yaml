@@ -1,0 +1,13 @@
+type: string
+description: "The type or category of the report."
+enum:
+  - "XE HƯ HỎNG"
+  - "XE BẨN"
+  - "TRẠM ĐẦY"
+  - "TRẠM KHÔNG NHẬN XE"
+  - "TRẠM NGOẠI TUYẾN"
+  - "CẤP CỨU TAI NẠN"
+  - "CẤP CỨU SỨC KHỎE"
+  - "CẤP CỨU NGUY HIỂM"
+  - "KHÁC"
+example: "XE HƯ HỎNG"

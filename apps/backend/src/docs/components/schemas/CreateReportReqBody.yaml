@@ -1,0 +1,32 @@
+type: object
+required:
+  - type
+  - message
+properties:
+  type:
+    $ref: './ReportType.yaml'
+  message:
+    type: string
+    maxLength: 250
+    example: "The bike's front tire is flat."
+  bike_id:
+    type: string
+    format: mongoId
+    description: "Required if type is 'XE HƯ HỎNG' or 'XE BẨN'."
+  station_id:
+    type: string
+    format: mongoId
+    description: "Required for station-related report types."
+  rental_id:
+    type: string
+    format: mongoId
+    description: "Optional, to link the report to a specific rental session."
+  location:
+    $ref: './GeoLocation.yaml'
+    description: "Required for SOS report types."
+  files:
+    type: array
+    items:
+      type: string
+      format: binary
+    description: "Array of files (images/videos) to upload with the report."

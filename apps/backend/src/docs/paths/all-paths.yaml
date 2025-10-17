@@ -1071,3 +1071,169 @@
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '400':
         description: Bad Request (e.g., rental cannot be cancelled in its current state).
+
+# ===================================================================
+# Reports API
+# ===================================================================
+/reports:
+  get:
+    tags: [Reports]
+    summary: Get my reports
+    description: Retrieves a paginated list of reports created by the currently authenticated user.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: status
+        in: query
+        description: Filter reports by status.
+        schema:
+          $ref: '../components/schemas/ReportStatus.yaml'
+    responses:
+      '200':
+        description: A paginated list of user's reports.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Report.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  post:
+    tags: [Reports]
+    summary: Create a new report
+    description: Submits a new report. For reports involving files, use `multipart/form-data`.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            $ref: '../components/schemas/CreateReportReqBody.yaml'
+    responses:
+      '201':
+        description: Report created successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/reports/manage-reports:
+  get:
+    tags: [Reports]
+    summary: Get all reports (Admin only)
+    description: Retrieves a paginated list of all reports in the system. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: type
+        in: query
+        description: Filter reports by type.
+        schema:
+          $ref: '../components/schemas/ReportType.yaml'
+      - name: userID
+        in: query
+        description: Filter reports by user ID.
+        schema:
+          type: string
+          format: mongoId
+      - name: date
+        in: query
+        description: Filter reports by a specific date (YYYY-MM-DD).
+        schema:
+          type: string
+          format: date
+    responses:
+      '200':
+        description: A paginated list of all reports.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Report.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/reports/{reportID}:
+  get:
+    tags: [Reports]
+    summary: Get report by ID
+    description: Retrieves detailed information for a specific report by its ID.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: reportID
+        in: path
+        required: true
+        description: The ID of the report to retrieve.
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Report details retrieved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Report.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  put:
+    tags: [Reports]
+    summary: Update a report (Admin/Staff)
+    description: Updates the status, assignee, or priority of a report. Requires admin/staff privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: reportID
+        in: path
+        required: true
+        description: The ID of the report to update.
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateReportReqBody.yaml'
+    responses:
+      '200':
+        description: Report updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'

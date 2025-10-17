@@ -1827,6 +1827,289 @@
           }
         }
       }
+    },
+    "/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Get my reports",
+        "description": "Retrieves a paginated list of reports created by the currently authenticated user.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter reports by status.",
+            "schema": {
+              "$ref": "#/components/schemas/ReportStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of user's reports.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Report"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Create a new report",
+        "description": "Submits a new report. For reports involving files, use `multipart/form-data`.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Report created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/reports/manage-reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Get all reports (Admin only)",
+        "description": "Retrieves a paginated list of all reports in the system. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter reports by type.",
+            "schema": {
+              "$ref": "#/components/schemas/ReportType"
+            }
+          },
+          {
+            "name": "userID",
+            "in": "query",
+            "description": "Filter reports by user ID.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Filter reports by a specific date (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of all reports.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Report"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reports/{reportID}": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Get report by ID",
+        "description": "Retrieves detailed information for a specific report by its ID.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reportID",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the report to retrieve.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report details retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Update a report (Admin/Staff)",
+        "description": "Updates the status, assignee, or priority of a report. Requires admin/staff privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reportID",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the report to update.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReportReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2256,6 +2539,70 @@
           }
         }
       },
+      "CreateReportReqBody": {
+        "type": "object",
+        "required": [
+          "type",
+          "message"
+        ],
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ReportType"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 250,
+            "example": "The bike's front tire is flat."
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "Required if type is 'XE HƯ HỎNG' or 'XE BẨN'."
+          },
+          "station_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "Required for station-related report types."
+          },
+          "rental_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "Optional, to link the report to a specific rental session."
+          },
+          "location": {
+            "$ref": "#/components/schemas/GeoLocation",
+            "description": "Required for SOS report types."
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            },
+            "description": "Array of files (images/videos) to upload with the report."
+          }
+        }
+      },
+      "UpdateReportReqBody": {
+        "type": "object",
+        "required": [
+          "newStatus"
+        ],
+        "properties": {
+          "newStatus": {
+            "$ref": "#/components/schemas/ReportStatus"
+          },
+          "staff_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the staff member to assign the report to. Required when changing status to 'ĐANG XỬ LÝ'."
+          },
+          "priority": {
+            "$ref": "#/components/schemas/ReportPriority",
+            "description": "The priority of the report. Required when changing status to 'ĐANG XỬ LÝ'."
+          }
+        }
+      },
       "AuthSuccessResponse": {
         "type": "object",
         "properties": {
@@ -2653,6 +3000,132 @@
           "ĐÃ ĐẶT TRƯỚC"
         ],
         "example": "ĐANG THUÊ"
+      },
+      "Report": {
+        "type": "object",
+        "description": "Represents a user-submitted report.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the user who submitted the report."
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "The ID of the bike related to the report, if any."
+          },
+          "station_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "The ID of the station related to the report, if any."
+          },
+          "rental_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "The ID of the rental session related to the report, if any."
+          },
+          "assignee_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "The ID of the staff member assigned to handle the report."
+          },
+          "media_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "A list of URLs for media files (images/videos) attached to the report."
+          },
+          "location": {
+            "$ref": "#/components/schemas/GeoLocation",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/ReportPriority"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ReportType"
+          },
+          "message": {
+            "type": "string",
+            "description": "The detailed message or description of the report."
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReportStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReportStatus": {
+        "type": "string",
+        "description": "The status of a report.",
+        "enum": [
+          "ĐANG CHỜ XỬ LÝ",
+          "ĐANG XỬ LÝ",
+          "ĐÃ GIẢI QUYẾT",
+          "ĐÃ HỦY"
+        ],
+        "example": "ĐANG CHỜ XỬ LÝ"
+      },
+      "ReportType": {
+        "type": "string",
+        "description": "The type or category of the report.",
+        "enum": [
+          "XE HƯ HỎNG",
+          "XE BẨN",
+          "TRẠM ĐẦY",
+          "TRẠM KHÔNG NHẬN XE",
+          "TRẠM NGOẠI TUYẾN",
+          "CẤP CỨU TAI NẠN",
+          "CẤP CỨU SỨC KHỎE",
+          "CẤP CỨU NGUY HIỂM",
+          "KHÁC"
+        ],
+        "example": "XE HƯ HỎNG"
+      },
+      "ReportPriority": {
+        "type": "string",
+        "description": "The priority level of the report.",
+        "enum": [
+          "THẤP",
+          "BÌNH THƯỜNG",
+          "CAO",
+          "KHẨN CẤP"
+        ],
+        "example": "BÌNH THƯỜNG"
+      },
+      "GeoLocation": {
+        "type": "object",
+        "description": "Represents a geographical location with latitude and longitude.",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "example": 10.7769
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "example": 106.7009
+          }
+        }
       }
     },
     "securitySchemes": {
