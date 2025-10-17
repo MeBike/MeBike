@@ -84,32 +84,32 @@ export const useAuthActions = () => {
                     window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     toast.success("Logged in successfully");
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-                        if (event?.query?.queryKey?.[0] === "user" && 
-                            event?.query?.queryKey?.[1] === "me" && 
-                            event.type === "updated" &&
-                            event.query.state.data) {
-                            const userProfile = event.query.state.data as unknown as { role: string };
-                            if (userProfile?.role === "ADMIN") {
-                                router.push("/admin");
-                            } else if (userProfile?.role === "STAFF") {
-                                router.push("/staff");
-                            } else {
-                                router.push("/user");
-                            }
-                            unsubscribe(); 
-                        }
-                    });
-                    setTimeout(() => {
-                        unsubscribe();
-                    }, 3000);
+                    // const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+                    //     if (event?.query?.queryKey?.[0] === "user" && 
+                    //         event?.query?.queryKey?.[1] === "me" && 
+                    //         event.type === "updated" &&
+                    //         event.query.state.data) {
+                    //         const userProfile = event.query.state.data as unknown as { role: string };
+                    //         if (userProfile?.role === "ADMIN") {
+                    //             router.push("/admin");
+                    //         } else if (userProfile?.role === "STAFF") {
+                    //             router.push("/staff");
+                    //         } else {
+                    //             router.push("/user");
+                    //         }
+                    //         unsubscribe(); 
+                    //     }
+                    // });
+                    // setTimeout(() => {
+                    //     unsubscribe();
+                    // }, 3000);
                 },
                 onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin , queryClient,router]
+        },[useLogin , queryClient]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {

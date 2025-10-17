@@ -256,9 +256,8 @@ export default function ChangePasswordPage() {
                 )}
               </div>
 
-              {/* Submit Button */}
               <div className="flex gap-3 pt-6 border-t border-border">
-                <Link href="/staff/profile">
+                <Link href="/user/profile">
                   <Button
                     type="button"
                     variant="outline"

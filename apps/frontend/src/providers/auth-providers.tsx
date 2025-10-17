@@ -33,7 +33,7 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
       clearTokens();
       setHasToken(false);
       queryClient.clear();
-    }
+    };
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("auth:session_expired", handleAuthFailure);
     return () => {
