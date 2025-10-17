@@ -109,7 +109,7 @@ export default function ProfilePage() {
           {!isEditing ? (
             <Button
               onClick={() => setIsEditing(true)}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 cursor-pointer gap-2"
             >
               Chỉnh sửa hồ sơ
             </Button>
@@ -118,14 +118,14 @@ export default function ProfilePage() {
               <Button
                 onClick={handleCancel}
                 variant="outline"
-                className="gap-2 bg-transparent"
+                className="gap-2 bg-transparent cursor-pointer"
               >
                 <X className="w-4 h-4" />
                 Hủy
               </Button>
               <Button
                 onClick={() => handleSave()}
-                className="bg-primary hover:bg-primary/90 gap-2"
+                className="bg-primary hover:bg-primary/90 gap-2 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 Lưu thay đổi
@@ -180,7 +180,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Form Section */}
             <div className="flex-1 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -203,8 +202,6 @@ export default function ProfilePage() {
                     )}
                   />
                 </div>
-
-                {/* Username */}
                 <div className="space-y-2">
                   <Label
                     htmlFor="username"
@@ -246,8 +243,6 @@ export default function ProfilePage() {
                     )}
                   />
                 </div>
-
-                {/* Phone Number */}
                 <div className="space-y-2">
                   <Label
                     htmlFor="phone"
@@ -268,8 +263,6 @@ export default function ProfilePage() {
                     )}
                   />
                 </div>
-
-                {/* Location */}
                 <div className="space-y-2 md:col-span-2">
                   <Label
                     htmlFor="location"
@@ -292,7 +285,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Account Info */}
               <div className="pt-6 border-t border-border">
                 <h3 className="text-sm font-semibold text-foreground mb-4">
                   Thông tin tài khoản
@@ -358,8 +350,8 @@ export default function ProfilePage() {
                   Cập nhật mật khẩu của bạn
                 </p>
               </div>
-              <Link href="/staff/profile/change-password">
-                <Button variant="outline">Thay đổi</Button>
+              <Link href="/user/profile/change-password">
+                <Button variant="outline" className="cursor-pointer">Thay đổi</Button>
               </Link>
             </div>
             <div className="flex items-center justify-between pt-4 border-t border-border">
@@ -372,7 +364,7 @@ export default function ProfilePage() {
               <Button
                 variant="outline"
                 onClick={() => handleResendVerifyEmail()}
-                className="gap-2"
+                className="gap-2 cursor-pointer"
                 disabled={formData?.verify === "VERIFIED"}
               >
                 <Mail className="w-4 h-4" />

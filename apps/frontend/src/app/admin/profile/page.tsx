@@ -107,7 +107,7 @@ export default function ProfilePage() {
           {!isEditing ? (
             <Button
               onClick={() => setIsEditing(true)}
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 cursor-pointer gap-2"
             >
               Chỉnh sửa hồ sơ
             </Button>
@@ -116,14 +116,14 @@ export default function ProfilePage() {
               <Button
                 onClick={handleCancel}
                 variant="outline"
-                className="gap-2 bg-transparent"
+                className="gap-2 bg-transparent cursor-pointer"
               >
                 <X className="w-4 h-4" />
                 Hủy
               </Button>
               <Button
                 onClick={() => handleSave()}
-                className="bg-primary hover:bg-primary/90 gap-2"
+                className="bg-primary hover:bg-primary/90 gap-2 cursor-pointer"
               >
                 <Save className="w-4 h-4" />
                 Lưu thay đổi
