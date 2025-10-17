@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import {clearTokens,getAccessToken,getRefreshToken,setTokens} from "@utils/tokenManager"
+import {clearTokens,getAccessToken,getRefreshToken,setTokens} from "../utils/tokenManager";
 export const HTTP_STATUS = {
   OK: 200,
   UNAUTHORIZED: 401,

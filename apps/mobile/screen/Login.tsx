@@ -29,10 +29,6 @@ export default function LoginScreen() {
       Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
-    // await signInWithEmail(email, password);
-    // Alert.alert('Success', 'Login functionality will be implemented');
-    
-    // Sau khi đăng nhập, chuyển sang màn hình chọn trạm
     navigation.navigate('StationSelect');
   };
 

@@ -24,7 +24,7 @@ export const getRefreshToken = async (): Promise<string | null> => {
 export const setTokens = async (
   access_token: string,
   refresh_token: string
-): Promise<void> => {c
+): Promise<void> => {
   try {
     await AsyncStorage.multiSet([
       [ACCESS_TOKEN, access_token],
