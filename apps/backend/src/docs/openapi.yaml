@@ -27,6 +27,13 @@ tags:
     description: Operations for user reports and management.
   - name: Suppliers
     description: Operations for managing bike suppliers.
+  - name: Wallets
+    description: Operations related to user wallets and transactions.
+  - name: Refunds
+    description: Operations for managing refund requests.
+  - name: Withdrawals
+    description: Operations for managing withdrawal requests.
+  
 paths:
   $ref: './paths/all-paths.yaml'
 
@@ -83,6 +90,18 @@ components:
       $ref: './components/schemas/CreateRefundReqBody.yaml'
     UpdateRefundStatusReqBody:
       $ref: './components/schemas/UpdateRefundStatusReqBody.yaml'
+    # wallet
+    IncreaseBalanceReqBody:
+      $ref: './components/schemas/IncreaseBalanceReqBody.yaml'
+    DecreaseBalanceReqBody:
+      $ref: './components/schemas/DecreaseBalanceReqBody.yaml'
+    UpdateWalletStatusReqBody:
+      $ref: './components/schemas/UpdateWalletStatusReqBody.yaml'
+    # withdrawal
+    CreateWithdrawalReqBody:
+      $ref: './components/schemas/CreateWithdrawalReqBody.yaml'
+    UpdateWithdrawalStatusReqBody:
+      $ref: './components/schemas/UpdateWithdrawalStatusReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:
@@ -133,6 +152,20 @@ components:
       $ref: "./components/schemas/Refund.yaml"
     RefundStatus:
       $ref: "./components/schemas/RefundStatus.yaml"
+    Wallet:
+      $ref: "./components/schemas/Wallet.yaml"
+    WalletStatus:
+      $ref: "./components/schemas/WalletStatus.yaml"
+    Transaction:
+      $ref: "./components/schemas/Transaction.yaml"
+    TransactionStatus:
+      $ref: "./components/schemas/TransactionStatus.yaml"
+    TransactionType:
+      $ref: "./components/schemas/TransactionType.yaml"
+    Withdrawal:
+      $ref: "./components/schemas/Withdrawal.yaml"
+    WithdrawalStatus:
+      $ref: "./components/schemas/WithdrawalStatus.yaml"
 
   securitySchemes:
     BearerAuth:

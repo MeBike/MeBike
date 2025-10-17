@@ -1,0 +1,30 @@
+type: object
+description: "Represents a wallet transaction."
+properties:
+  _id:
+    type: string
+    format: mongoId
+  wallet_id:
+    type: string
+    format: mongoId
+  amount:
+    type: number
+    format: decimal
+    example: 50000.00
+  fee:
+    type: number
+    format: decimal
+    example: 0
+  description:
+    type: string
+    example: "Nạp tiền vào ví"
+  transaction_hash:
+    type: string
+    example: "TX123456789"
+  type:
+    $ref: './TransactionType.yaml'
+  status:
+    $ref: './TransactionStatus.yaml'
+  created_at:
+    type: string
+    format: date-time

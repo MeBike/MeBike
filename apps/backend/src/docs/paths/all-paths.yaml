@@ -1239,6 +1239,166 @@
         $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
 # ===================================================================
+# Wallets API
+# ===================================================================
+/wallets:
+  get:
+    tags: [Wallets]
+    summary: Get my wallet info
+    description: Retrieves information about the currently authenticated user's wallet.
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Wallet information retrieved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Wallet.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/wallets/transaction:
+  get:
+    tags: [Wallets]
+    summary: Get my transaction history
+    description: Retrieves a paginated list of transactions for the authenticated user's wallet.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: type
+        in: query
+        description: Filter transactions by type.
+        schema:
+          $ref: '../components/schemas/TransactionType.yaml'
+    responses:
+      '200':
+        description: A paginated list of transactions.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Transaction.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/wallets/transaction/{id}:
+  get:
+    tags: [Wallets]
+    summary: Get transaction details
+    description: Retrieves details of a specific transaction for the authenticated user.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Transaction details retrieved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Transaction.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/wallets/increase:
+  put:
+    tags: [Wallets]
+    summary: Increase wallet balance (Admin only)
+    description: Increases the balance of a user's wallet. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/IncreaseBalanceReqBody.yaml'
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/wallets/decrease:
+  put:
+    tags: [Wallets]
+    summary: Decrease wallet balance (Admin only)
+    description: Decreases the balance of a user's wallet. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/DecreaseBalanceReqBody.yaml'
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/wallets/{id}:
+  patch:
+    tags: [Wallets]
+    summary: Change wallet status (Admin only)
+    description: Changes the status of a user's wallet (e.g., Active, Frozen). Requires admin privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateWalletStatusReqBody.yaml'
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+# ===================================================================
 # Refunds API
 # ===================================================================
 /refunds:
@@ -1256,19 +1416,11 @@
             $ref: '../components/schemas/CreateRefundReqBody.yaml'
     responses:
       '201':
-        description: Refund request created successfully.
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/MessageResponse.yaml'
+        $ref: '../components/schemas/MessageResponse.yaml'
       '401':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '404':
         description: Transaction not found.
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '422':
         $ref: '../components/schemas/ErrorValidationResponse.yaml'
   get:
@@ -1282,7 +1434,6 @@
       - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
       - name: status
         in: query
-        description: Filter refund requests by status.
         schema:
           $ref: '../components/schemas/RefundStatus.yaml'
     responses:
@@ -1306,7 +1457,7 @@
   get:
     tags: [Refunds]
     summary: Get all refund requests (Admin only)
-    description: Retrieves a paginated list of all refund requests in the system. Requires admin privileges.
+    description: Retrieves a paginated list of all refund requests. Requires admin privileges.
     security:
       - BearerAuth: []
     parameters:
@@ -1314,7 +1465,6 @@
       - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
       - name: status
         in: query
-        description: Filter refund requests by status.
         schema:
           $ref: '../components/schemas/RefundStatus.yaml'
     responses:
@@ -1340,20 +1490,18 @@
   get:
     tags: [Refunds]
     summary: Get refund request details
-    description: Retrieves details of a specific refund request. Admins can view any request, while users can only view their own.
+    description: Retrieves details of a specific refund request. Admins can view any request, users can only view their own.
     security:
       - BearerAuth: []
     parameters:
       - name: id
         in: path
         required: true
-        description: The ID of the refund request.
         schema:
           type: string
           format: mongoId
     responses:
       '200':
-        description: Refund request details retrieved successfully.
         content:
           application/json:
             schema:
@@ -1361,11 +1509,7 @@
       '401':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '403':
-        description: Forbidden, user does not have permission to view this request.
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '404':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
   put:
@@ -1378,7 +1522,6 @@
       - name: id
         in: path
         required: true
-        description: The ID of the refund request to update.
         schema:
           type: string
           format: mongoId
@@ -1390,17 +1533,154 @@
             $ref: '../components/schemas/UpdateRefundStatusReqBody.yaml'
     responses:
       '200':
-        description: Refund status updated successfully.
-        content:
-          application/json:
-            schema:
-              $ref: '../components/schemas/MessageResponse.yaml'
+        $ref: '../components/schemas/MessageResponse.yaml'
       '400':
         description: Bad request (e.g., invalid status transition).
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+# ===================================================================
+# Withdrawals API
+# ===================================================================
+/withdraws:
+  post:
+    tags: [Withdrawals]
+    summary: Create a withdrawal request
+    description: Allows an authenticated user to submit a request to withdraw funds from their wallet.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CreateWithdrawalReqBody.yaml'
+    responses:
+      '201':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+  get:
+    tags: [Withdrawals]
+    summary: Get my withdrawal requests
+    description: Retrieves a paginated list of the authenticated user's withdrawal requests.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: status
+        in: query
+        schema:
+          $ref: '../components/schemas/WithdrawalStatus.yaml'
+    responses:
+      '200':
+        description: A paginated list of withdrawal requests.
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Withdrawal.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/withdraws/manage-withdrawal:
+  get:
+    tags: [Withdrawals]
+    summary: Get all withdrawal requests (Admin only)
+    description: Retrieves a paginated list of all withdrawal requests in the system.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: status
+        in: query
+        schema:
+          $ref: '../components/schemas/WithdrawalStatus.yaml'
+    responses:
+      '200':
+        description: A paginated list of all withdrawal requests.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Withdrawal.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/withdraws/{id}:
+  get:
+    tags: [Withdrawals]
+    summary: Get withdrawal request details
+    description: Retrieves details of a specific withdrawal request. Admins can view any request, users can only view their own.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Withdrawal.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  put:
+    tags: [Withdrawals]
+    summary: Update withdrawal status (Admin only)
+    description: Allows an admin to approve, reject, or complete a withdrawal request.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateWithdrawalStatusReqBody.yaml'
+    responses:
+      '200':
+        $ref: '../components/schemas/MessageResponse.yaml'
+      '400':
+        description: Bad request (e.g., invalid status transition).
       '401':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '403':

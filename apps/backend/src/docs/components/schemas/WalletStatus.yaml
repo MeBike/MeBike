@@ -1,0 +1,6 @@
+type: string
+description: "The status of a wallet."
+enum:
+  - "ĐANG HOẠT ĐỘNG"
+  - "ĐÃ BỊ ĐÓNG BĂNG"
+example: "ĐANG HOẠT ĐỘNG"

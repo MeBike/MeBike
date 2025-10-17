@@ -43,6 +43,18 @@
     {
       "name": "Suppliers",
       "description": "Operations for managing bike suppliers."
+    },
+    {
+      "name": "Wallets",
+      "description": "Operations related to user wallets and transactions."
+    },
+    {
+      "name": "Refunds",
+      "description": "Operations for managing refund requests."
+    },
+    {
+      "name": "Withdrawals",
+      "description": "Operations for managing withdrawal requests."
     }
   ],
   "paths": {
@@ -2111,6 +2123,272 @@
         }
       }
     },
+    "/wallets": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Get my wallet info",
+        "description": "Retrieves information about the currently authenticated user's wallet.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet information retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Wallet"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/wallets/transaction": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Get my transaction history",
+        "description": "Retrieves a paginated list of transactions for the authenticated user's wallet.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter transactions by type.",
+            "schema": {
+              "$ref": "#/components/schemas/TransactionType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of transactions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Transaction"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/wallets/transaction/{id}": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Get transaction details",
+        "description": "Retrieves details of a specific transaction for the authenticated user.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction details retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/wallets/increase": {
+      "put": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Increase wallet balance (Admin only)",
+        "description": "Increases the balance of a user's wallet. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncreaseBalanceReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/wallets/decrease": {
+      "put": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Decrease wallet balance (Admin only)",
+        "description": "Decreases the balance of a user's wallet. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecreaseBalanceReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/wallets/{id}": {
+      "patch": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Change wallet status (Admin only)",
+        "description": "Changes the status of a user's wallet (e.g., Active, Frozen). Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWalletStatusReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
     "/refunds": {
       "post": {
         "tags": [
@@ -2135,27 +2413,13 @@
         },
         "responses": {
           "201": {
-            "description": "Refund request created successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
-                }
-              }
-            }
+            "$ref": "#/components/schemas/MessageResponse"
           },
           "401": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
           },
           "404": {
-            "description": "Transaction not found.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorStatusResponse"
-                }
-              }
-            }
+            "description": "Transaction not found."
           },
           "422": {
             "$ref": "#/components/schemas/ErrorValidationResponse"
@@ -2183,7 +2447,6 @@
           {
             "name": "status",
             "in": "query",
-            "description": "Filter refund requests by status.",
             "schema": {
               "$ref": "#/components/schemas/RefundStatus"
             }
@@ -2227,7 +2490,7 @@
           "Refunds"
         ],
         "summary": "Get all refund requests (Admin only)",
-        "description": "Retrieves a paginated list of all refund requests in the system. Requires admin privileges.",
+        "description": "Retrieves a paginated list of all refund requests. Requires admin privileges.",
         "security": [
           {
             "BearerAuth": []
@@ -2243,7 +2506,6 @@
           {
             "name": "status",
             "in": "query",
-            "description": "Filter refund requests by status.",
             "schema": {
               "$ref": "#/components/schemas/RefundStatus"
             }
@@ -2290,7 +2552,7 @@
           "Refunds"
         ],
         "summary": "Get refund request details",
-        "description": "Retrieves details of a specific refund request. Admins can view any request, while users can only view their own.",
+        "description": "Retrieves details of a specific refund request. Admins can view any request, users can only view their own.",
         "security": [
           {
             "BearerAuth": []
@@ -2301,7 +2563,6 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "The ID of the refund request.",
             "schema": {
               "type": "string",
               "format": "mongoId"
@@ -2310,7 +2571,6 @@
         ],
         "responses": {
           "200": {
-            "description": "Refund request details retrieved successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2323,14 +2583,7 @@
             "$ref": "#/components/schemas/ErrorStatusResponse"
           },
           "403": {
-            "description": "Forbidden, user does not have permission to view this request.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorStatusResponse"
-                }
-              }
-            }
+            "$ref": "#/components/schemas/ErrorStatusResponse"
           },
           "404": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
@@ -2353,7 +2606,6 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "The ID of the refund request to update.",
             "schema": {
               "type": "string",
               "format": "mongoId"
@@ -2372,24 +2624,262 @@
         },
         "responses": {
           "200": {
-            "description": "Refund status updated successfully.",
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "400": {
+            "description": "Bad request (e.g., invalid status transition)."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/withdraws": {
+      "post": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Create a withdrawal request",
+        "description": "Allows an authenticated user to submit a request to withdraw funds from their wallet.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWithdrawalReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Get my withdrawal requests",
+        "description": "Retrieves a paginated list of the authenticated user's withdrawal requests.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WithdrawalStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of withdrawal requests.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Withdrawal"
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
           },
-          "400": {
-            "description": "Bad request (e.g., invalid status transition).",
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/withdraws/manage-withdrawal": {
+      "get": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Get all withdrawal requests (Admin only)",
+        "description": "Retrieves a paginated list of all withdrawal requests in the system.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WithdrawalStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of all withdrawal requests.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Withdrawal"
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/withdraws/{id}": {
+      "get": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Get withdrawal request details",
+        "description": "Retrieves details of a specific withdrawal request. Admins can view any request, users can only view their own.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Withdrawal"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Update withdrawal status (Admin only)",
+        "description": "Allows an admin to approve, reject, or complete a withdrawal request.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWithdrawalStatusReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "400": {
+            "description": "Bad request (e.g., invalid status transition)."
           },
           "401": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
@@ -2926,6 +3416,129 @@
           "newStatus": {
             "$ref": "#/components/schemas/RefundStatus",
             "description": "The new status for the refund request. Allowed values are 'ĐÃ DUYỆT', 'TỪ CHỐI', 'ĐÃ HOÀN THÀNH'."
+          }
+        }
+      },
+      "IncreaseBalanceReqBody": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "amount",
+          "fee",
+          "description",
+          "message"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "amount": {
+            "type": "number",
+            "example": 100000
+          },
+          "fee": {
+            "type": "number",
+            "example": 0
+          },
+          "description": {
+            "type": "string",
+            "example": "Admin top-up for user"
+          },
+          "transaction_hash": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Top-up successful"
+          }
+        }
+      },
+      "DecreaseBalanceReqBody": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "amount",
+          "fee",
+          "message"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "amount": {
+            "type": "number",
+            "example": 50000
+          },
+          "fee": {
+            "type": "number",
+            "example": 0
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Admin adjustment"
+          },
+          "transaction_hash": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Adjustment successful"
+          }
+        }
+      },
+      "UpdateWalletStatusReqBody": {
+        "type": "object",
+        "required": [
+          "newStatus"
+        ],
+        "properties": {
+          "newStatus": {
+            "$ref": "#/components/schemas/WalletStatus"
+          }
+        }
+      },
+      "CreateWithdrawalReqBody": {
+        "type": "object",
+        "required": [
+          "amount",
+          "account"
+        ],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "example": 200000
+          },
+          "account": {
+            "type": "string",
+            "description": "Bank account information for withdrawal.",
+            "example": "Techcombank - 190123456789 - NGUYEN VAN B"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "example": "Please process quickly."
+          }
+        }
+      },
+      "UpdateWithdrawalStatusReqBody": {
+        "type": "object",
+        "required": [
+          "newStatus"
+        ],
+        "properties": {
+          "newStatus": {
+            "$ref": "#/components/schemas/WithdrawalStatus"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reason is required if status is 'TỪ CHỐI'.",
+            "example": "Thông tin tài khoản không hợp lệ."
           }
         }
       },
@@ -3493,6 +4106,165 @@
       "RefundStatus": {
         "type": "string",
         "description": "The status of a refund request.",
+        "enum": [
+          "ĐANG CHỜ XỬ LÝ",
+          "ĐÃ DUYỆT",
+          "TỪ CHỐI",
+          "ĐÃ HOÀN THÀNH"
+        ],
+        "example": "ĐANG CHỜ XỬ LÝ"
+      },
+      "Wallet": {
+        "type": "object",
+        "description": "Represents a user's wallet.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "balance": {
+            "type": "number",
+            "format": "decimal",
+            "example": 150000
+          },
+          "status": {
+            "$ref": "#/components/schemas/WalletStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WalletStatus": {
+        "type": "string",
+        "description": "The status of a wallet.",
+        "enum": [
+          "ĐANG HOẠT ĐỘNG",
+          "ĐÃ BỊ ĐÓNG BĂNG"
+        ],
+        "example": "ĐANG HOẠT ĐỘNG"
+      },
+      "Transaction": {
+        "type": "object",
+        "description": "Represents a wallet transaction.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "wallet_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "example": 50000
+          },
+          "fee": {
+            "type": "number",
+            "format": "decimal",
+            "example": 0
+          },
+          "description": {
+            "type": "string",
+            "example": "Nạp tiền vào ví"
+          },
+          "transaction_hash": {
+            "type": "string",
+            "example": "TX123456789"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TransactionStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TransactionStatus": {
+        "type": "string",
+        "description": "The status of a transaction.",
+        "enum": [
+          "ĐANG CHỜ XỬ LÝ",
+          "THÀNH CÔNG",
+          "THẤT BẠI",
+          "ĐÃ HỦY"
+        ],
+        "example": "THÀNH CÔNG"
+      },
+      "TransactionType": {
+        "type": "string",
+        "description": "The type of a transaction.",
+        "enum": [
+          "NẠP TIỀN",
+          "THANH TOÁN",
+          "RÚT TIỀN",
+          "HOÀN TIỀN"
+        ],
+        "example": "NẠP TIỀN"
+      },
+      "Withdrawal": {
+        "type": "object",
+        "description": "Represents a withdrawal request.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "example": 100000
+          },
+          "account": {
+            "type": "string",
+            "description": "Bank account information for the withdrawal.",
+            "example": "Vietcombank - 0123456789 - NGUYEN VAN A"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reason for rejection, if applicable."
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "description": "User's note for the request."
+          },
+          "status": {
+            "$ref": "#/components/schemas/WithdrawalStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WithdrawalStatus": {
+        "type": "string",
+        "description": "The status of a withdrawal request.",
         "enum": [
           "ĐANG CHỜ XỬ LÝ",
           "ĐÃ DUYỆT",

@@ -1,0 +1,26 @@
+type: object
+required:
+  - user_id
+  - amount
+  - fee
+  - message
+properties:
+  user_id:
+    type: string
+    format: mongoId
+  amount:
+    type: number
+    example: 50000
+  fee:
+    type: number
+    example: 0
+  description:
+    type: string
+    nullable: true
+    example: "Admin adjustment"
+  transaction_hash:
+    type: string
+    nullable: true
+  message:
+    type: string
+    example: "Adjustment successful"
