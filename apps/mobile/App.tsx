@@ -4,7 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import type { RootStackParamList } from './types/navigation';
 import { Ionicons } from '@expo/vector-icons';
-// Import screens
+import Providers from '@providers/providers';
+import { AuthProvider } from '@providers/auth-providers';
 import HomeScreen from './screen/Home';
 import LoginScreen from './screen/Login';
 import IntroScreen from './screen/Intro';
@@ -70,36 +71,45 @@ const BottomTab = () => {
 }
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="auto" />
-      <Stack.Navigator initialRouteName="Main">
-        <Stack.Screen 
-          name="Main" 
-          component={BottomTab} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="Intro" 
-          component={IntroScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="Register" 
-          component={RegisterScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="StationDetail" 
-          component={StationDetailScreen} 
-          options={{ headerShown: false }}
-        />
-        {/* Add more screens here as you create them */}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Providers>
+      <NavigationContainer>
+        <AuthProvider>
+          <StatusBar style="auto" />
+          <Stack.Navigator initialRouteName="Main">
+            <Stack.Screen
+              name="Main"
+              component={BottomTab}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Intro"
+              component={IntroScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="StationDetail"
+              component={StationDetailScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="StationSelect"
+              component={StationSelectScreen}
+              options={{ headerShown: false }}
+            />
+            {/* Add more screens here as you create them */}
+          </Stack.Navigator>
+        </AuthProvider>
+      </NavigationContainer>
+    </Providers>
   );
 }

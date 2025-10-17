@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,27 +9,86 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { LoginScreenNavigationProp } from '../types/navigation';
 import { BikeColors } from '../constants/BikeColors';
 import { IconSymbol } from '../components/IconSymbol';
 import { LinearGradient } from 'expo-linear-gradient';
-// import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@providers/auth-providers';
+import { testBackendConnection } from '../utils/testConnection';
 
 export default function LoginScreen() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  // const { signInWithEmail, signInWithGoogle, isLoading } = useAuth();
-  const isLoading = false; // Temporary until AuthContext is added
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const rotateAnim = new Animated.Value(0);
+  const { logIn, isLoggingIn, isLoading } = useAuth();
+
+  useEffect(() => {
+    // Test backend connection on component mount
+    const checkBackend = async () => {
+      const isOnline = await testBackendConnection();
+      setBackendStatus(isOnline ? 'online' : 'offline');
+    };
+    checkBackend();
+  }, []);
 
   const handleEmailLogin = async () => {
     if (!email || !password) {
       Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
-    navigation.navigate('StationSelect');
+
+    if (backendStatus === 'offline') {
+      Alert.alert('Lỗi kết nối', 'Không thể kết nối đến server. Vui lòng kiểm tra:\n\n1. Server backend có đang chạy?\n2. URL API có đúng không?\n3. Kết nối mạng', [
+        {
+          text: 'Thử lại',
+          onPress: async () => {
+            setBackendStatus('checking');
+            const isOnline = await testBackendConnection();
+            setBackendStatus(isOnline ? 'online' : 'offline');
+          }
+        },
+        {
+          text: 'Demo Mode',
+          onPress: () => navigation.navigate('StationSelect')
+        }
+      ]);
+      return;
+    }
+    
+    try {
+      // Bắt đầu hiệu ứng xoay button
+      Animated.loop(
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        })
+      ).start();
+
+      // Gọi API đăng nhập và đợi kết quả
+      await logIn({ email, password });
+      
+      // Chờ 3 giây để hiệu ứng xoay hoàn thành
+      setTimeout(() => {
+        // Dừng animation
+        rotateAnim.stopAnimation();
+        rotateAnim.setValue(0);
+        // Chuyển trang sau khi đăng nhập thành công và lấy được thông tin user từ API /users/me
+        navigation.navigate('StationSelect');
+      }, 3000);
+      
+    } catch (error) {
+      // Dừng animation khi có lỗi
+      rotateAnim.stopAnimation();
+      rotateAnim.setValue(0);
+      console.log('Login failed:', error);
+      // Lỗi sẽ được hiển thị trong useAuth hook
+    }
   };
 
   const goToRegister = () => {
@@ -58,6 +117,20 @@ export default function LoginScreen() {
             <IconSymbol name="bicycle" size={48} color="white" />
             <Text style={styles.headerTitle}>Đăng nhập</Text>
             <Text style={styles.headerSubtitle}>Chào mừng bạn trở lại!</Text>
+            
+            {/* Backend Status Indicator */}
+            <View style={styles.statusContainer}>
+              <View style={[styles.statusDot, { backgroundColor: 
+                backendStatus === 'online' ? '#4CAF50' : 
+                backendStatus === 'offline' ? '#F44336' : '#FF9800' 
+              }]} />
+              <Text style={styles.statusText}>
+                Server: {
+                  backendStatus === 'online' ? 'Hoạt động' :
+                  backendStatus === 'offline' ? 'Offline' : 'Đang kiểm tra...'
+                }
+              </Text>
+            </View>
           </View>
         </LinearGradient>
         <View style={styles.formContainer}>
@@ -94,13 +167,24 @@ export default function LoginScreen() {
           </Pressable>
 
           <Pressable 
-            style={[styles.loginButton, isLoading && styles.disabledButton]} 
+            style={[styles.loginButton, isLoggingIn && styles.disabledButton]} 
             onPress={handleEmailLogin}
-            disabled={isLoading}
+            disabled={isLoggingIn}
           >
-            <Text style={styles.loginButtonText}>
-              {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-            </Text>
+            <Animated.View
+              style={{
+                transform: [{
+                  rotate: rotateAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0deg', '360deg']
+                  })
+                }]
+              }}
+            >
+              <Text style={styles.loginButtonText}>
+                {isLoggingIn ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              </Text>
+            </Animated.View>
           </Pressable>
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Chưa có tài khoản? </Text>
@@ -145,6 +229,21 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.9)',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 8,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   formContainer: {
     flex: 1,

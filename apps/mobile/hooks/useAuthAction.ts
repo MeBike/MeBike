@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { Alert } from "react-native";
 import {clearTokens , setTokens} from "@utils/tokenManager";
 import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePasswordMutation";
 import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
@@ -44,8 +43,7 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
     return defaultMessage;
 };
 
-export const useAuthActions = () => {
-    const router = useRouter();
+export const useAuthActions = (navigation?: { navigate: (route: string) => void }, onTokenUpdate?: () => void) => {
     const queryClient = useQueryClient();
     const useLogin = useLoginMutation();
     const useRegister = useRegisterMutation();
@@ -62,14 +60,14 @@ export const useAuthActions = () => {
                 {old_password, password , confirm_password},{
                     onSuccess: (result) => {
                         if(result.status === 200){
-                            toast.success("Password changed successfully");
+                            Alert.alert("Success", "Password changed successfully");
                         } else{
-                            toast.error("Error changing password");
+                            Alert.alert("Error", "Error changing password");
                         }
                     },
                     onError: (error: unknown) => {
                         const errorMessage = getErrorMessage(error, "Error changing password");
-                        toast.error(errorMessage);
+                        Alert.alert("Error", errorMessage);
                     }
                 }
             )
@@ -78,79 +76,80 @@ export const useAuthActions = () => {
     const logIn = useCallback(
         (data : LoginSchemaFormData) => {
             useLogin.mutate(data, {
-                onSuccess: (result) => {
+                onSuccess: async (result) => {
                     const { access_token, refresh_token } = result.data.result;
-                    setTokens(access_token, refresh_token);
-                    window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
-                    toast.success("Logged in successfully");
+                    await setTokens(access_token, refresh_token);
+                    Alert.alert("Success", "Logged in successfully");
+                    // Notify AuthProvider that token has been updated
+                    onTokenUpdate?.();
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                 },
                 onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
-                    toast.error(errorMessage);
+                    Alert.alert("Error", errorMessage);
                 }
             });
-        },[useLogin , queryClient]
+        },[useLogin , queryClient, onTokenUpdate]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
         useRegister.mutate(data,{
-            onSuccess: (result) => {
+            onSuccess: async (result) => {
                 if(result.status === 201){
                     const { access_token, refresh_token } = result.data.result;
-                    setTokens(access_token, refresh_token);
+                    await setTokens(access_token, refresh_token);
+                    // Notify AuthProvider that token has been updated
+                    onTokenUpdate?.();
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                    toast.success("Registration Successful", { description: "Your account has been created." });
-                    router.push("/auth/login");
+                    Alert.alert("Success", "Registration Successful. Your account has been created.");
+                    navigation?.navigate("Login");
                 }else{
                     const errorMessage = result.data?.message || "Error registering";
-                    toast.error(errorMessage);
+                    Alert.alert("Error", errorMessage);
                 }
             },
             onError: (error: unknown) => {
                 const errorMessage = getErrorMessage(error, "Error registering");
-                toast.error(errorMessage);
+                Alert.alert("Error", errorMessage);
             }
         });
-    },[useRegister,queryClient,router]);
+    },[useRegister,queryClient,navigation,onTokenUpdate]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
-            onSuccess: (result) => {
+            onSuccess: async (result) => {
                 if(result.status === 200){
-                    clearTokens();
-                    // Trigger storage event to update hasToken state
-                    window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
+                    await clearTokens();
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                    toast.success("Logged out successfully");
-                    router.push("/auth/login");
+                    Alert.alert("Success", "Logged out successfully");
+                    navigation?.navigate("Login");
                 }else{
                     const errorMessage = result.data?.message || "Error logging out";
-                    toast.error(errorMessage);
+                    Alert.alert("Error", errorMessage);
                 }
             },
             onError: (error: unknown) => {
                 const errorMessage = getErrorMessage(error, "Error logging out");
-                toast.error(errorMessage);
+                Alert.alert("Error", errorMessage);
             }
         });
-    },[useLogout, queryClient, router]);
+    },[useLogout, queryClient, navigation]);
     const verifyEmail = useCallback((email_verify_token: string): Promise<void> => {
         return new Promise((resolve, reject) => {
             useVerifyEmail.mutate(email_verify_token, {
                 onSuccess: (result) => {
                     if(result.status === 200){
-                        toast.success("Email verified successfully");
+                        Alert.alert("Success", "Email verified successfully");
                         queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                         resolve();
                     } else {
                         const errorMessage = result.data?.message || "Error verifying email";
-                        toast.error(errorMessage);
+                        Alert.alert("Error", errorMessage);
                         reject(new Error(errorMessage));
                     }
                 },
                 onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error verifying email");
-                    toast.error(errorMessage);
+                    Alert.alert("Error", errorMessage);
                     reject(error);
                 }
             });
@@ -160,15 +159,15 @@ export const useAuthActions = () => {
         useResendVerifyEmail.mutate(undefined,{
             onSuccess: (result) => {
                 if(result.status === 200){
-                    toast.success("Verification email resent successfully");
+                    Alert.alert("Success", "Verification email resent successfully");
                 }else{
                     const errorMessage = result.data?.message || "Error resending verification email";
-                    toast.error(errorMessage);
+                    Alert.alert("Error", errorMessage);
                 }
             },
             onError: (error: unknown) => {
                 const errorMessage = getErrorMessage(error, "Error resending verification email");
-                toast.error(errorMessage);
+                Alert.alert("Error", errorMessage);
             }
         });
     }, [useResendVerifyEmail]);
@@ -177,11 +176,11 @@ export const useAuthActions = () => {
         useForgotPassword.mutate(data, {
           onSuccess: (result) => {
             if (result.status === 200) {
-              toast.success("Password reset email sent successfully");
+              Alert.alert("Success", "Password reset email sent successfully");
             } else {
               const errorMessage =
                 result.data?.message || "Error sending password reset email";
-              toast.error(errorMessage);
+              Alert.alert("Error", errorMessage);
             }
           },
           onError: (error: unknown) => {
@@ -189,7 +188,7 @@ export const useAuthActions = () => {
               error,
               "Error sending password reset email"
             );
-            toast.error(errorMessage);
+            Alert.alert("Error", errorMessage);
           },
         });
       },
@@ -200,33 +199,33 @@ export const useAuthActions = () => {
         useResetPassword.mutate(data,{
             onSuccess: (result) => {
                 if(result.status === 200){ 
-                    toast.success("Password reset successfully");
-                    router.push("/auth/login");
+                    Alert.alert("Success", "Password reset successfully");
+                    navigation?.navigate("Login");
                 } else{
                     const errorMessage = result.data?.message || "Error resetting password";
-                    toast.error(errorMessage);
+                    Alert.alert("Error", errorMessage);
                 }
             },
             onError: (error: unknown) => {
                 const errorMessage = getErrorMessage(error, "Error resetting password");
-                toast.error(errorMessage);
+                Alert.alert("Error", errorMessage);
             }
         });
-    }, [useResetPassword, router]);
+    }, [useResetPassword, navigation]);
     const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
         useUpdateProfile.mutate(data, {
             onSuccess: (result) => {
                 if(result.status === 200){
-                    toast.success("Profile updated successfully");
+                    Alert.alert("Success", "Profile updated successfully");
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                 } else {
                     const errorMessage = result.data?.message || "Error updating profile";
-                    toast.error(errorMessage);
+                    Alert.alert("Error", errorMessage);
                 }
             },
             onError: (error: unknown) => {
                 const errorMessage = getErrorMessage(error, "Error updating profile");
-                toast.error(errorMessage);
+                Alert.alert("Error", errorMessage);
             }
         });
     }, [useUpdateProfile, queryClient]);

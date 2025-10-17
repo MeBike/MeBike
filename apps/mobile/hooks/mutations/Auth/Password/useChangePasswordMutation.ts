@@ -1,6 +1,6 @@
-import { authService } from "@/services/authService";
+import { authService } from "@services/authService";
 import { useMutation } from "@tanstack/react-query";
-import type {  ChangePasswordSchemaFormData } from "@/schemas/authSchema";
+import type {  ChangePasswordSchemaFormData } from "@schemas/authSchema";
 export const useChangePasswordMutation = () => {
     return useMutation({
         mutationFn: (data: ChangePasswordSchemaFormData) => authService.changePassword(data),

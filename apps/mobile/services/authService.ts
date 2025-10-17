@@ -1,4 +1,4 @@
-import fetchHttpClient from "@/lib/httpClient";
+import fetchHttpClient from "@lib/httpClient";
 import type {UpdateProfileSchemaFormData , ChangePasswordSchemaFormData , ForgotPasswordSchemaFormData , LoginSchemaFormData, RegisterSchemaFormData , ResetPasswordSchemaFormData}  from "@schemas/authSchema";
 import type { AxiosResponse } from "axios";
 interface AuthResponse {

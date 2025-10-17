@@ -20,6 +20,7 @@ export class FetchHttpClient {
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
+    console.log('HTTP Client Base URL:', this.baseURL);
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
       headers: {
@@ -27,8 +28,10 @@ export class FetchHttpClient {
       },
        timeout: 30000, // Tăng lên 30 giây để đủ thời gian cho email service
     });
-    this.axiosInstance.interceptors.request.use((config) => {
-      const access_token = getAccessToken();
+    this.axiosInstance.interceptors.request.use(async (config) => {
+      const fullUrl = `${config.baseURL || this.baseURL}${config.url || ''}`;
+      console.log('Making request to:', fullUrl);
+      const access_token = await getAccessToken();
       if (access_token && !config.headers?.Authorization) {
         config.headers.Authorization = `Bearer ${access_token}`;
       }
@@ -44,7 +47,8 @@ export class FetchHttpClient {
         console.log('API Error:', error.response?.status, error.config?.url, error.response?.data);
         const originalRequest = error.config;
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
-         window.dispatchEvent(new Event("auth:session_expired"));
+          // TODO: Implement auth session expired handling for React Native
+          // For now, just clear tokens and reject
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
@@ -64,13 +68,14 @@ export class FetchHttpClient {
           try {
             const newToken = await this.refreshAccessToken();
             this.processQueue(null, newToken);
-            window.dispatchEvent(new Event("auth:token_refreshed"));
+            // TODO: Emit event for React Native auth token refresh
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
             return this.axiosInstance(originalRequest);
           } catch (refreshError) {
             this.processQueue(refreshError, null);
+            await clearTokens(); // Clear tokens on refresh failure
             return Promise.reject(refreshError);
           } finally {
             this.isRefreshing = false;
@@ -102,7 +107,7 @@ export class FetchHttpClient {
   }
 
   private async refreshAccessToken(): Promise<string> {
-    const refreshToken = getRefreshToken();
+    const refreshToken = await getRefreshToken();
     console.log('Refreshing token with:', refreshToken);
     if (!refreshToken) {
       throw new Error("No refresh token available");
@@ -114,12 +119,12 @@ export class FetchHttpClient {
     );
     console.log('Refresh token response:', response.status, response.data);
     if (response.status !== HTTP_STATUS.OK) {
-      clearTokens();
-      window.location.href = "/login";
+      await clearTokens();
+      // TODO: Navigate to login screen in React Native instead of window.location
       throw new Error("Refresh token expired");
     }
     const data = response.data;
-    setTokens(data.result.access_token, data.result.refresh_token);
+    await setTokens(data.result.access_token, data.result.refresh_token);
     return data.result.access_token;
   }
 
@@ -172,7 +177,17 @@ export class FetchHttpClient {
 }
 
 const fetchHttpClient = new FetchHttpClient(
-  process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:3000"
+  (() => {
+    const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+    const defaultUrl = "http://localhost:4000";
+    console.log('Environment EXPO_PUBLIC_API_BASE_URL:', envUrl);
+    console.log('Using API Base URL:', envUrl || defaultUrl);
+    
+    // Use computer's IP address for physical device testing
+    const computerIP = "http://192.168.12.103:4000";
+    console.log('Using computer IP for device testing:', computerIP);
+    return computerIP;
+  })()
 );
 
 export default fetchHttpClient;
