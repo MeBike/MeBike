@@ -1259,6 +1259,574 @@
           }
         }
       }
+    },
+    "/rentals": {
+      "post": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Create a new rental session",
+        "description": "Allows a user to start a new rental session by providing a bike ID.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRentalReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental session created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "$ref": "#/components/schemas/MessageResponse/properties/message"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/Rental"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (e.g., bike not available, station not found).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get all rental sessions (Admin/Staff only)",
+        "description": "Retrieves a paginated list of all rental sessions.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "start_station",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "name": "end_station",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RentalStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of rentals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Rental"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/stats/revenue": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get rental revenue statistics (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DAY",
+                "MONTH",
+                "YEAR"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revenue statistics retrieved successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/stats/station-activity": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get station activity statistics (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station activity statistics retrieved successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/stats/reservations": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get reservation statistics (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservation statistics retrieved successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/me": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get my rental history",
+        "description": "Retrieves the authenticated user's paginated rental history.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of the user's rentals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Rental"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/me/current": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get my current rental session",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Details of the current active rental session."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/me/{id}": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get details of my specific rental",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed information about the rental session."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (trying to access another user's rental)."
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/me/{id}/end": {
+      "put": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "End my rental session",
+        "description": "Allows a user to end their own currently active rental session.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rental session ended successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (not the user's rental)."
+          },
+          "404": {
+            "description": "Not Found (rental is not currently active)."
+          }
+        }
+      }
+    },
+    "/rentals/{id}": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get rental details by ID (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed rental information."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Update rental details (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRentalReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental updated successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/rentals/{id}/end": {
+      "put": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "End a rental session (Admin/Staff only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EndRentalByAdminOrStaffReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental session ended successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/rentals/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Cancel a rental session (Admin/Staff only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelRentalReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental session cancelled successfully."
+          },
+          "400": {
+            "description": "Bad Request (e.g., rental cannot be cancelled in its current state)."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1603,6 +2171,91 @@
           }
         }
       },
+      "CreateRentalReqBody": {
+        "type": "object",
+        "required": [
+          "bike_id"
+        ],
+        "properties": {
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the bike to be rented."
+          }
+        }
+      },
+      "UpdateRentalReqBody": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "end_station": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the station where the bike was returned. Optional."
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time the rental ended. Optional."
+          },
+          "status": {
+            "$ref": "#/components/schemas/RentalStatus"
+          },
+          "total_price": {
+            "type": "number",
+            "format": "decimal",
+            "description": "The total price of the rental. Optional."
+          },
+          "reason": {
+            "type": "string",
+            "description": "The reason for the update.",
+            "example": "Admin adjusted rental details due to system error."
+          }
+        }
+      },
+      "CancelRentalReqBody": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "bikeStatus": {
+            "$ref": "#/components/schemas/BikeStatus",
+            "description": "The new status to set for the bike after cancellation (e.g., 'AVAILABLE', 'BROKEN'). Optional."
+          },
+          "reason": {
+            "type": "string",
+            "description": "The reason for cancelling the rental.",
+            "example": "Customer requested cancellation due to personal emergency."
+          }
+        }
+      },
+      "EndRentalByAdminOrStaffReqBody": {
+        "type": "object",
+        "required": [
+          "end_station",
+          "reason"
+        ],
+        "properties": {
+          "end_station": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the station where the bike is being returned."
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time the rental is being ended. Optional, defaults to current time."
+          },
+          "reason": {
+            "type": "string",
+            "description": "The reason for ending the rental session.",
+            "example": "Staff assisted user to end rental session."
+          }
+        }
+      },
       "AuthSuccessResponse": {
         "type": "object",
         "properties": {
@@ -1932,6 +2585,74 @@
             "format": "date-time"
           }
         }
+      },
+      "Rental": {
+        "type": "object",
+        "description": "Represents a rental session object.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "start_station": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "end_station": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Duration of the rental in minutes.",
+            "example": 60
+          },
+          "total_price": {
+            "type": "number",
+            "format": "decimal",
+            "example": 10000
+          },
+          "status": {
+            "$ref": "#/components/schemas/RentalStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RentalStatus": {
+        "type": "string",
+        "description": "The status of a rental session.",
+        "enum": [
+          "ĐANG THUÊ",
+          "HOÀN THÀNH",
+          "ĐÃ HỦY",
+          "ĐÃ ĐẶT TRƯỚC"
+        ],
+        "example": "ĐANG THUÊ"
       }
     },
     "securitySchemes": {

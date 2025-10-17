@@ -64,6 +64,15 @@ components:
       $ref: './components/schemas/UpdateSupplierReqBody.yaml'
     ChangeSupplierStatusReqBody:
       $ref: './components/schemas/ChangeSupplierStatusReqBody.yaml'
+    # rental
+    CreateRentalReqBody:
+      $ref: './components/schemas/CreateRentalReqBody.yaml'
+    UpdateRentalReqBody:
+      $ref: './components/schemas/UpdateRentalReqBody.yaml'
+    CancelRentalReqBody:
+      $ref: './components/schemas/CancelRentalReqBody.yaml'
+    EndRentalByAdminOrStaffReqBody:
+      $ref: './components/schemas/EndRentalByAdminOrStaffReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:
@@ -96,6 +105,10 @@ components:
       $ref: './components/schemas/BikeStatus.yaml'
     Supplier:
       $ref: "./components/schemas/Supplier.yaml"
+    Rental:
+      $ref: "./components/schemas/Rental.yaml"
+    RentalStatus:
+      $ref: "./components/schemas/RentalStatus.yaml"
 
   securitySchemes:
     BearerAuth:

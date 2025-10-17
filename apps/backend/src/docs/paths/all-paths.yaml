@@ -736,3 +736,338 @@
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '404':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+# ===================================================================
+# Rentals API
+# ===================================================================
+/rentals:
+  post:
+    tags: [Rentals]
+    summary: Create a new rental session
+    description: Allows a user to start a new rental session by providing a bike ID.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CreateRentalReqBody.yaml'
+    responses:
+      '200':
+        description: Rental session created successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  $ref: '../components/schemas/MessageResponse.yaml#/properties/message'
+                result:
+                  $ref: '../components/schemas/Rental.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '400':
+        description: Bad Request (e.g., bike not available, station not found).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+  get:
+    tags: [Rentals]
+    summary: Get all rental sessions (Admin/Staff only)
+    description: Retrieves a paginated list of all rental sessions.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: start_station
+        in: query
+        schema:
+          type: string
+          format: mongoId
+      - name: end_station
+        in: query
+        schema:
+          type: string
+          format: mongoId
+      - name: status
+        in: query
+        schema:
+          $ref: '../components/schemas/RentalStatus.yaml'
+    responses:
+      '200':
+        description: A paginated list of rentals.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Rental.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/rentals/stats/revenue:
+  get:
+    tags: [Rentals]
+    summary: Get rental revenue statistics (Admin only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: from
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: to
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: groupBy
+        in: query
+        schema:
+          type: string
+          enum: ["DAY", "MONTH", "YEAR"]
+    responses:
+      '200':
+        description: Revenue statistics retrieved successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/rentals/stats/station-activity:
+  get:
+    tags: [Rentals]
+    summary: Get station activity statistics (Admin only)
+    security:
+      - BearerAuth: []
+    # ... (add from, to, stationId parameters similarly)
+    responses:
+      '200':
+        description: Station activity statistics retrieved successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/rentals/stats/reservations:
+  get:
+    tags: [Rentals]
+    summary: Get reservation statistics (Admin only)
+    security:
+      - BearerAuth: []
+    # ... (add from, to, groupBy parameters similarly)
+    responses:
+      '200':
+        description: Reservation statistics retrieved successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/rentals/me:
+  get:
+    tags: [Rentals]
+    summary: Get my rental history
+    description: Retrieves the authenticated user's paginated rental history.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      # ... (add other filters if available for users)
+    responses:
+      '200':
+        description: A paginated list of the user's rentals.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Rental.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/rentals/me/current:
+  get:
+    tags: [Rentals]
+    summary: Get my current rental session
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: Details of the current active rental session.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/rentals/me/{id}:
+  get:
+    tags: [Rentals]
+    summary: Get details of my specific rental
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Detailed information about the rental session.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (trying to access another user's rental).
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/rentals/me/{id}/end:
+  put:
+    tags: [Rentals]
+    summary: End my rental session
+    description: Allows a user to end their own currently active rental session.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Rental session ended successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (not the user's rental).
+      '404':
+        description: Not Found (rental is not currently active).
+
+/rentals/{id}:
+  get:
+    tags: [Rentals]
+    summary: Get rental details by ID (Admin only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Detailed rental information.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  put:
+    tags: [Rentals]
+    summary: Update rental details (Admin only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateRentalReqBody.yaml'
+    responses:
+      '200':
+        description: Rental updated successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/rentals/{id}/end:
+  put:
+    tags: [Rentals]
+    summary: End a rental session (Admin/Staff only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/EndRentalByAdminOrStaffReqBody.yaml'
+    responses:
+      '200':
+        description: Rental session ended successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/rentals/{id}/cancel:
+  post:
+    tags: [Rentals]
+    summary: Cancel a rental session (Admin/Staff only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CancelRentalReqBody.yaml'
+    responses:
+      '200':
+        description: Rental session cancelled successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '400':
+        description: Bad Request (e.g., rental cannot be cancelled in its current state).
