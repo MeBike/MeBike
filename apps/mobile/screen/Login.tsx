@@ -32,11 +32,6 @@ export default function LoginScreen() {
     navigation.navigate('StationSelect');
   };
 
-  const handleGoogleLogin = async () => {
-    // await signInWithGoogle();
-    Alert.alert('Success', 'Google login functionality will be implemented');
-  };
-
   const goToRegister = () => {
     navigation.navigate('Register');
   };
