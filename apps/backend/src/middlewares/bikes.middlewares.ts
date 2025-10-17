@@ -28,7 +28,7 @@ export const isAvailability = (status: BikeStatus) => {
   }
 
   throw new ErrorWithStatus({
-    message: BIKES_MESSAGES.INVALID_STATUS,
+    message: RENTALS_MESSAGE.INVALID_BIKE_STATUS,
     status: HTTP_STATUS.BAD_REQUEST
   });
 };

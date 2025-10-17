@@ -5,34 +5,27 @@ import { getAccessToken , clearTokens} from "@/utils/tokenManager";
 import { DetailUser } from "@/services/authService";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserProfileQuery } from "@hooks/query/useUserProfileQuery";
-
 interface AuthError {
   response?: {
     status: number;
   };
 }
-
 type AuthContextType = ReturnType<typeof useAuthActions> & {
   user : DetailUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   actions : ReturnType<typeof useAuthActions>;
 };
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }) => {
   const [hasToken, setHasToken] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const queryClient = useQueryClient();
   const { data: userProfile, isLoading: isUserProfileLoading , isError , isSuccess  } = useUserProfileQuery(hasToken);
-  const actions = useAuthActions(setHasToken);
-  
+  const actions = useAuthActions();
   useEffect(() => {
-    // Initialize token state on client side only
     setHasToken(!!getAccessToken());
     setIsInitialized(true);
-    
     const handleStorageChange = () => {
       setHasToken(!!getAccessToken());
     };
