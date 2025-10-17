@@ -78,6 +78,11 @@ components:
       $ref: './components/schemas/CreateReportReqBody.yaml'
     UpdateReportReqBody:
       $ref: './components/schemas/UpdateReportReqBody.yaml'
+    # refund
+    CreateRefundReqBody:
+      $ref: './components/schemas/CreateRefundReqBody.yaml'
+    UpdateRefundStatusReqBody:
+      $ref: './components/schemas/UpdateRefundStatusReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:
@@ -124,6 +129,10 @@ components:
       $ref: "./components/schemas/ReportPriority.yaml"
     GeoLocation:
       $ref: "./components/schemas/GeoLocation.yaml"
+    Refund:
+      $ref: "./components/schemas/Refund.yaml"
+    RefundStatus:
+      $ref: "./components/schemas/RefundStatus.yaml"
 
   securitySchemes:
     BearerAuth:

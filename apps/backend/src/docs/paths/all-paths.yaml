@@ -1237,3 +1237,175 @@
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '422':
         $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+# ===================================================================
+# Refunds API
+# ===================================================================
+/refunds:
+  post:
+    tags: [Refunds]
+    summary: Create a new refund request
+    description: Allows an authenticated user to submit a refund request for a specific transaction.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CreateRefundReqBody.yaml'
+    responses:
+      '201':
+        description: Refund request created successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: Transaction not found.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+  get:
+    tags: [Refunds]
+    summary: Get my refund requests
+    description: Retrieves a paginated list of refund requests for the currently authenticated user.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: status
+        in: query
+        description: Filter refund requests by status.
+        schema:
+          $ref: '../components/schemas/RefundStatus.yaml'
+    responses:
+      '200':
+        description: A paginated list of the user's refund requests.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Refund.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/refunds/manage-refunds:
+  get:
+    tags: [Refunds]
+    summary: Get all refund requests (Admin only)
+    description: Retrieves a paginated list of all refund requests in the system. Requires admin privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: status
+        in: query
+        description: Filter refund requests by status.
+        schema:
+          $ref: '../components/schemas/RefundStatus.yaml'
+    responses:
+      '200':
+        description: A paginated list of all refund requests.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Refund.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/refunds/{id}:
+  get:
+    tags: [Refunds]
+    summary: Get refund request details
+    description: Retrieves details of a specific refund request. Admins can view any request, while users can only view their own.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the refund request.
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Refund request details retrieved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Refund.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden, user does not have permission to view this request.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  put:
+    tags: [Refunds]
+    summary: Update refund status (Admin only)
+    description: Allows an admin to approve, reject, or complete a refund request.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the refund request to update.
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateRefundStatusReqBody.yaml'
+    responses:
+      '200':
+        description: Refund status updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '400':
+        description: Bad request (e.g., invalid status transition).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'

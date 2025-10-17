@@ -1,0 +1,8 @@
+type: string
+description: "The status of a refund request."
+enum:
+  - "ĐANG CHỜ XỬ LÝ"
+  - "ĐÃ DUYỆT"
+  - "TỪ CHỐI"
+  - "ĐÃ HOÀN THÀNH"
+example: "ĐANG CHỜ XỬ LÝ"

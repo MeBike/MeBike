@@ -1,0 +1,13 @@
+type: object
+required:
+  - transaction_id
+  - amount
+properties:
+  transaction_id:
+    type: string
+    format: mongoId
+    description: The ID of the transaction for which the refund is requested.
+  amount:
+    type: number
+    description: The amount to be refunded. Must be a positive number.
+    example: 50000.00
