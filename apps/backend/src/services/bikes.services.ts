@@ -16,6 +16,7 @@ class BikesService {
       new Bike({
         station_id: new ObjectId(payload.station_id),
         status: payload.status || BikeStatus.Available,
+        chip_id: payload.chip_id,
         supplier_id: payload.supplier_id ? new ObjectId(payload.supplier_id) : null,
       }),
     );
@@ -24,9 +25,12 @@ class BikesService {
   }
 
   async getAllBikes(res: Response, next: NextFunction, query: GetBikesReqQuery) {
-    const { station_id, status, supplier_id } = query;
+    const { station_id, status, supplier_id, chip_id } = query;
     const filter: any = {};
 
+    if (chip_id) {
+        filter.chip_id = chip_id;
+    }
     if (station_id) {
       filter.station_id = new ObjectId(station_id);
     }
@@ -47,6 +51,9 @@ class BikesService {
 
   async updateBike(bikeId: string, payload: UpdateBikeReqBody) {
     const updatePayload: any = {}
+    if (payload.chip_id) {
+      updatePayload.chip_id = payload.chip_id
+    }
     if (payload.status) {
       updatePayload.status = payload.status
     }

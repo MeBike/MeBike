@@ -9,6 +9,10 @@ properties:
     format: mongoId
     nullable: true
     description: ID of the station where the bike is located. Null if rented.
+  chip_id:
+    type: string 
+    description: "The unique identifier of the bike's chip." 
+    example: "CHIP123456789"
   status:
     type: string
     enum: ["AVAILABLE", "BOOKED", "BROKEN", "RESERVED", "MAINTAINED", "UNAVAILABLE"]
