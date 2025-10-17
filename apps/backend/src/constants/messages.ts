@@ -266,4 +266,8 @@ export const RESERVATIONS_MESSAGE = {
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   // Not allowed action
   CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền kết thúc phiên đặt trước của người khác',
+  // Over time
+  OVER_CANCELLED_TIME: 'Đã quá thời gian quy định để có thể huỷ phiên đặt trước',
+  // Reason
+  NO_CANCELLED_REASON: 'Không có nguyên nhân nào được cung cấp'
 } as const

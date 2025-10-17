@@ -50,10 +50,12 @@ export async function cancelReservationController(
   res: Response
 ) {
   const { user_id } = req.decoded_authorization as TokenPayLoad
+  const reservation = req.reservation as Reservation
 
   const result = await reservationsService.cancelReservation({
     user_id: toObjectId(user_id),
-    reservation_id: toObjectId(req.params.id)
+    reservation,
+    reason: req.body.reason
   })
   res.json({
     message: RESERVATIONS_MESSAGE.CANCEL_SUCCESS,

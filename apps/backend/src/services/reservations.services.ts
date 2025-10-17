@@ -1,11 +1,13 @@
 import { Decimal128, ObjectId } from 'mongodb'
-import { BikeStatus, RentalStatus, ReservationStatus } from '~/constants/enums'
-import { ReserveBikeReqBody } from '~/models/requests/reservations.requests'
+import { BikeStatus, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
 import { getLocalTime } from '~/utils/date'
-import { toObjectId } from '~/utils/string'
 import databaseService from './database.services'
+import { ErrorWithStatus } from '~/models/errors'
+import { RESERVATIONS_MESSAGE } from '~/constants/messages'
+import HTTP_STATUS from '~/constants/http-status'
+import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 
 class ReservationsService {
   async reserveBike({
@@ -37,15 +39,6 @@ class ReservationsService {
         })
         await databaseService.reservations.insertOne(reservation, { session })
 
-        const { prepaid: pre, station_id: start_station, end_time, ...rental } = reservation
-
-        const reservedRental = new Rental({
-          ...rental,
-          start_station,
-          status: RentalStatus.Reserved
-        })
-        await databaseService.rentals.insertOne(reservedRental, { session })
-
         await databaseService.bikes.updateOne(
           { _id: bike_id },
           {
@@ -68,8 +61,54 @@ class ReservationsService {
     }
   }
 
-  async cancelReservation({user_id, reservation_id}:{user_id: ObjectId; reservation_id: ObjectId}){
-    
+  async cancelReservation({
+    user_id,
+    reservation,
+    reason
+  }: {
+    user_id: ObjectId
+    reservation: Reservation
+    reason?: string
+  }) {
+    const session = databaseService.getClient().startSession()
+    try {
+      let result
+      await session.withTransaction(async () => {
+        const updatedData: any = {}
+        if (reservation.created_at && this.isCancellable(reservation.created_at)) {
+          // TODO: handle refund
+        }
+        updatedData.status = ReservationStatus.Cancelled
+        result = await databaseService.reservations.findOneAndUpdate(
+          { _id: reservation._id },
+          { $set: updatedData },
+          { returnDocument: 'after', session }
+        )
+
+        const user = await databaseService.users.findOne({ _id: user_id }, { session })
+        if (!user) {
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
+
+        if ([Role.Admin, Role.Staff].includes(user.role)) {
+          const log = new RentalLog({
+            rental_id: reservation._id!,
+            admin_id: user_id,
+            changes: Object.keys(updatedData),
+            reason: reason || RESERVATIONS_MESSAGE.NO_CANCELLED_REASON
+          })
+          await databaseService.rentalLogs.insertOne({ ...log }, { session })
+        }
+      })
+      return result
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
   }
 
   generateEndTime(startTime: string) {
@@ -77,8 +116,10 @@ class ReservationsService {
     return new Date(new Date(startTime).getTime() + holdTimeMs)
   }
 
-  getCancellablePeriod(){
-    
+  isCancellable(createdTime: Date) {
+    const now = getLocalTime()
+    const cancellableMs = Number(process.env.CANCELLABLE_HOURS || '1') * 60 * 60 * 1000
+    return new Date(createdTime.getTime() + cancellableMs) < now
   }
 }
 
