@@ -5,6 +5,7 @@ import type { Filter, ObjectId } from 'mongodb'
 import { GroupByOptions, RentalStatus } from '~/constants/enums'
 import type {
   CancelRentalReqBody,
+  CardRentalReqBody,
   CreateRentalReqBody,
   RentalParams,
   UpdateRentalReqBody
@@ -36,6 +37,26 @@ export async function createRentalSessionController(
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,
     result
+  })
+}
+
+export async function createRentalFromCardController(
+  req: Request<ParamsDictionary, any, CardRentalReqBody>,
+  res: Response
+) {
+  const { chip_id, card_uid } = req.body
+
+  const { mode, rental } = await rentalsService.createRentalFromCard({
+    chip_id,
+    card_uid
+  })
+
+  res.json({
+    message: mode === 'ended'
+      ? 'Rental session ended successfully via card.'
+      : 'Rental session started successfully via card.',
+    mode,
+    result: rental
   })
 }
 

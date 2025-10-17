@@ -1,6 +1,6 @@
-import type { ObjectId } from 'mongodb'
+import type { ClientSession, ObjectId } from 'mongodb'
 
-import { Decimal128, Int32 } from 'mongodb'
+import { Decimal128, Int32, MongoServerError } from 'mongodb'
 
 import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
@@ -11,8 +11,9 @@ import { toObjectId } from '~/utils/string'
 
 import databaseService from './database.services'
 import { getLocalTime } from '~/utils/date'
-import { CancelRentalReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
+import { CancelRentalReqBody, CardRentalReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
+import { isAvailability } from '~/middlewares/bikes.middlewares'
 
 class RentalsService {
   async createRentalSession({
@@ -27,25 +28,42 @@ class RentalsService {
     const objectedBikeId = toObjectId(bike_id)
     const session = databaseService.getClient().startSession()
 
+    const createRentalCore = async (activeSession?: ClientSession) => {
+      const rentalDocument = new Rental({
+        user_id: toObjectId(user_id),
+        start_station: toObjectId(start_station),
+        bike_id: objectedBikeId,
+        start_time: new Date(),
+        status: RentalStatus.Rented
+      })
+
+      const sessionOptions = activeSession ? { session: activeSession } : undefined
+
+      await databaseService.rentals.insertOne(rentalDocument, sessionOptions)
+
+      await databaseService.bikes.updateOne(
+        { _id: objectedBikeId },
+        { $set: { status: BikeStatus.Booked } },
+        sessionOptions
+      )
+
+      return rentalDocument
+    }
+
     try {
       let rental: Rental | null = null
-      await session.withTransaction(async () => {
-        rental = new Rental({
-          user_id: toObjectId(user_id),
-          start_station: toObjectId(start_station),
-          bike_id: objectedBikeId,
-          start_time: new Date(),
-          status: RentalStatus.Rented
+      try {
+        await session.withTransaction(async () => {
+          rental = await createRentalCore(session)
         })
-
-        await databaseService.rentals.insertOne(rental, { session })
-
-        await databaseService.bikes.updateOne(
-          { _id: objectedBikeId },
-          { $set: { status: BikeStatus.Booked } },
-          { session }
-        )
-      })
+      } catch (transactionError) {
+        if (transactionError instanceof MongoServerError && transactionError.code === 20) {
+          console.warn('Transactions unsupported, falling back to non-transactional flow.')
+          rental = await createRentalCore()
+        } else {
+          throw transactionError
+        }
+      }
       if (!rental) {
         throw new ErrorWithStatus({
           message: RENTALS_MESSAGE.CREATE_SESSION_FAIL,
@@ -65,67 +83,171 @@ class RentalsService {
     }
   }
 
-  async endRentalSession({ user_id, rental }: { user_id: ObjectId; rental: Rental }) {
-    const end_station = rental.start_station
-    const session = databaseService.getClient().startSession()
-    try {
-      let endedRental: Rental = rental
-      await session.withTransaction(async () => {
-        const user = await databaseService.users.findOne({ _id: user_id })
-        if (!user) {
-          throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
-            status: HTTP_STATUS.NOT_FOUND
-          })
-        }
+  async createRentalFromCard({ chip_id, card_uid }: CardRentalReqBody) {
+    const user = await databaseService.users.findOne({ nfc_card_uid: card_uid })
 
-        if (rental.user_id.toString().localeCompare(user_id.toString()) !== 0) {
-          throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.CANNOT_END_OTHER_RENTAL,
-            status: HTTP_STATUS.FORBIDDEN
-          })
-        }
-        const now = getLocalTime()
-        const duration = this.generateDuration(rental.start_time, now)
-        const totalPrice = this.generateTotalPrice(duration)
-
-        const updatedData: Partial<Rental> = {
-          end_station,
-          end_time: now,
-          duration: new Int32(duration),
-          total_price: Decimal128.fromString(totalPrice.toString()),
-          status: RentalStatus.Completed
-        }
-
-        const result = await databaseService.rentals.findOneAndUpdate(
-          { _id: rental._id },
-          {
-            $set: {
-              ...updatedData,
-              updated_at: now
-            }
-          },
-          { returnDocument: 'after', session }
-        )
-
-        if (result) {
-          endedRental = result
-          await databaseService.bikes.updateOne(
-            { _id: result.bike_id },
-            {
-              $set: {
-                status: BikeStatus.Available,
-                updated_at: now
-              }
-            },
-            { session }
-          )
-        }
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: 'User not found for the provided card.',
+        status: HTTP_STATUS.NOT_FOUND
       })
+    }
+
+    const bike = await databaseService.bikes.findOne({ chip_id })
+    if (!bike) {
+      throw new ErrorWithStatus({
+        message: `Bike with chip_id ${chip_id} not found or unavailable.`,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const reservation = await databaseService.reservations.findOne({
+      user_id: user._id as ObjectId,
+      bike_id: bike._id as ObjectId,
+      status: { $in: [ReservationStatus.Pending, ReservationStatus.Active] }
+    })
+
+    if (reservation) {
+      const now = getLocalTime()
+      await databaseService.reservations.updateOne(
+        { _id: reservation._id },
+        {
+          $set: {
+            status: ReservationStatus.Active,
+            updated_at: now
+          }
+        }
+      )
+
+      const rentalSession = await this.createRentalSession({
+        user_id: user._id as ObjectId,
+        start_station: bike.station_id ?? reservation.station_id,
+        bike_id: bike._id as ObjectId
+      })
+
       return {
-        ...endedRental,
-        total_price: Number(endedRental.total_price.toString())
+        mode: 'reservation_started' as const,
+        rental: rentalSession
       }
+    }
+
+    const activeRental = await databaseService.rentals.findOne({
+      user_id: user._id as ObjectId,
+      bike_id: bike._id as ObjectId,
+      status: RentalStatus.Rented
+    })
+
+    if (activeRental) {
+      const endedRental = await this.endRentalSession({
+        user_id: user._id as ObjectId,
+        rental: activeRental
+      })
+
+      return {
+        mode: 'ended' as const,
+        rental: endedRental
+      }
+    }
+
+    if (!bike.station_id) {
+      throw new ErrorWithStatus({
+        message: `Bike with chip_id ${chip_id} not found or unavailable.`,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    isAvailability(bike.status as BikeStatus)
+
+    const rentalSession = await this.createRentalSession({
+      user_id: user._id as ObjectId,
+      start_station: bike.station_id,
+      bike_id: bike._id as ObjectId
+    })
+
+    return {
+      mode: 'started' as const,
+      rental: rentalSession
+    }
+  }
+
+  async endRentalSession({ user_id, rental }: { user_id: ObjectId; rental: Rental }) {
+    const session = databaseService.getClient().startSession()
+
+    const executeEndRental = async (activeSession?: ClientSession) => {
+      const findOptions = activeSession ? { session: activeSession } : undefined
+      const user = await databaseService.users.findOne({ _id: user_id }, findOptions)
+      if (!user) {
+        throw new ErrorWithStatus({
+          message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+
+      if (rental.user_id.toString().localeCompare(user_id.toString()) !== 0) {
+        throw new ErrorWithStatus({
+          message: RENTALS_MESSAGE.CANNOT_END_OTHER_RENTAL,
+          status: HTTP_STATUS.FORBIDDEN
+        })
+      }
+      const now = getLocalTime()
+      const duration = this.generateDuration(rental.start_time, now)
+      const totalPrice = this.generateTotalPrice(duration)
+
+      const updatedData: Partial<Rental> = {
+        end_station: rental.start_station,
+        end_time: now,
+        duration: new Int32(duration),
+        total_price: Decimal128.fromString(totalPrice.toString()),
+        status: RentalStatus.Completed
+      }
+
+      const result = await databaseService.rentals.findOneAndUpdate(
+        { _id: rental._id },
+        {
+          $set: {
+            ...updatedData,
+            updated_at: now
+          }
+        },
+        {
+          returnDocument: 'after',
+          ...(findOptions ?? {})
+        }
+      )
+
+      const updatedRental = result ?? rental
+
+      await databaseService.bikes.updateOne(
+        { _id: updatedRental.bike_id },
+        {
+          $set: {
+            status: BikeStatus.Available,
+            updated_at: now
+          }
+        },
+        findOptions
+      )
+
+      return {
+        ...updatedRental,
+        total_price: Number(updatedRental.total_price.toString())
+      }
+    }
+
+    try {
+      try {
+        const result = await session.withTransaction(async () => executeEndRental(session))
+        if (result) {
+          return result
+        }
+      } catch (transactionError) {
+        if (transactionError instanceof MongoServerError && transactionError.code === 20) {
+          console.warn('Transactions unsupported, falling back to non-transactional flow.')
+          return await executeEndRental()
+        }
+        throw transactionError
+      }
+      return await executeEndRental()
     } catch (error) {
       console.error(COMMON_MESSAGE.CREATE_SESSION_FAIL, error)
       throw error

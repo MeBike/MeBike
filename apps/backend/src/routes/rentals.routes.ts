@@ -3,6 +3,7 @@ import { Router } from "express";
 
 import {
   cancelRentalController,
+  createRentalFromCardController,
   createRentalSessionController,
   endRentalSessionController,
   getAllRentalsController,
@@ -23,6 +24,11 @@ const rentalsRouter = Router();
 
 rentalsRouter.route("/stats/revenue")
   .get(accessTokenValidator, isAdminValidator, wrapAsync(getRentalRevenueController));
+
+rentalsRouter.post(
+  "/card-rental",
+  wrapAsync(createRentalFromCardController)
+);
 
 rentalsRouter.route("/stats/station-activity")
   .get(accessTokenValidator, isAdminValidator, wrapAsync(getStationActivityController));

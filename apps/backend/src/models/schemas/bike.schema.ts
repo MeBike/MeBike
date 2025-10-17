@@ -4,6 +4,7 @@ import { BikeStatus } from "~/constants/enums";
 
 type BikeType = {
   _id?: ObjectId;
+  chip_id: string;
   station_id?: ObjectId | null; // null when bike is rented
   status: BikeStatus;
   supplier_id?: ObjectId | null; // null when bike is not under maintenance
@@ -13,6 +14,7 @@ type BikeType = {
 
 export default class Bike {
   _id?: ObjectId;
+  chip_id: string;
   station_id?: ObjectId | null;
   status: BikeStatus;
   supplier_id?: ObjectId | null;
@@ -25,6 +27,7 @@ export default class Bike {
     const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
 
     this._id = bike._id || new ObjectId();
+    this.chip_id = bike.chip_id;
     this.station_id = bike.station_id;
     this.status = bike.status || BikeStatus.Available;
     this.supplier_id = bike.supplier_id || null;

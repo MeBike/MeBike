@@ -1,6 +1,7 @@
 import type { BikeStatus } from "~/constants/enums";
 
 export type CreateBikeReqBody = {
+  chip_id: string;
   station_id: string;
   status?: BikeStatus;
   supplier_id?: string;

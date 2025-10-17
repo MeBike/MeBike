@@ -1,6 +1,7 @@
 import { IOT_PUBLISH_TOPICS } from "@mebike/shared";
 
 import type { MqttConnection } from "../connection/types";
+import type { MessageHandler } from "../handlers";
 
 import { messageHandlers } from "../handlers";
 
@@ -21,14 +22,21 @@ export class MessageRouter {
   private handleMessage(topic: string, payload: string): void {
     const handler = this.findHandlerForTopic(topic);
     if (handler) {
-      handler(topic, payload);
+      try {
+        Promise.resolve(handler(topic, payload)).catch((error) => {
+          console.error(`Error handling message on topic ${topic}`, error);
+        });
+      }
+      catch (error) {
+        console.error(`Error handling message on topic ${topic}`, error);
+      }
     }
     else {
       console.warn(`Received on ${topic}: ${payload}`);
     }
   }
 
-  private findHandlerForTopic(topic: string): ((topic: string, payload: string) => void) | undefined {
+  private findHandlerForTopic(topic: string): MessageHandler | undefined {
     if (messageHandlers[topic as keyof typeof messageHandlers]) {
       return messageHandlers[topic as keyof typeof messageHandlers];
     }
@@ -49,11 +57,13 @@ export class MessageRouter {
     topics.add(IOT_PUBLISH_TOPICS.logs);
     topics.add(IOT_PUBLISH_TOPICS.bookingStatus);
     topics.add(IOT_PUBLISH_TOPICS.maintenanceStatus);
+    topics.add(IOT_PUBLISH_TOPICS.cardTap);
 
     topics.add(`${IOT_PUBLISH_TOPICS.logs}/#`);
     topics.add(`${IOT_PUBLISH_TOPICS.status}/#`);
     topics.add(`${IOT_PUBLISH_TOPICS.bookingStatus}/#`);
     topics.add(`${IOT_PUBLISH_TOPICS.maintenanceStatus}/#`);
+    topics.add(`${IOT_PUBLISH_TOPICS.cardTap}/#`);
 
     if (deviceMac) {
       // cu the neu can

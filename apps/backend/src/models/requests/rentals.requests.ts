@@ -6,6 +6,11 @@ export type CreateRentalReqBody = {
   start_station: ObjectId;
 };
 
+export type CardRentalReqBody = {
+  chip_id: string;
+  card_uid: string;
+};
+
 export type RentalParams = {
   id: string;
 };

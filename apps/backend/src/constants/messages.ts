@@ -141,6 +141,7 @@ export const BIKES_MESSAGES = {
   FORBIDDEN: 'Không có quyền truy cập',
   INVALID_SUPPLIER_ID: 'ID của nhà cung cấp không hợp lệ',
   SUPPLIER_NOT_FOUND: 'Không tìm thấy nhà cung cấp với ID được cung cấp',
+  BIKE_ALREADY_EXISTS: 'Xe đạp với chip_id này đã tồn tại',
   // get bikes by id
   GET_BIKE_SUCCESS: 'Lấy thông tin xe đạp thành công',
   BIKE_ID_IS_REQUIRED: 'ID của xe đạp là bắt buộc',

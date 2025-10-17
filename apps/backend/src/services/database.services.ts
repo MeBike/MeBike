@@ -13,10 +13,11 @@ import type Supplier from "~/models/schemas/supplier.schema";
 import type User from "~/models/schemas/user.schema";
 import RentalLog from "~/models/schemas/rental-audit-logs.schema";
 import { getLocalTime } from "~/utils/date";
+import type Reservation from "~/models/schemas/reservation.schema";
 
 config();
-const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
-
+// const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
+const uri = process.env.DATABASE_URL!;
 class DatabaseService {
   private client: MongoClient;
   private db: Db;
@@ -69,6 +70,7 @@ class DatabaseService {
   }
 
   async indexBikes() {
+    await this.bikes.createIndex({ chip_id: 1 }, { unique: true });
     await this.bikes.createIndex({ station_id: 1 });
     await this.bikes.createIndex({ status: 1 });
   }
@@ -85,7 +87,7 @@ class DatabaseService {
     return this.db.collection(process.env.DB_RENTAL_LOGS_COLLECTION as string);
   }
 
-  get reservations(): Collection<Rental> {
+  get reservations(): Collection<Reservation> {
     return this.db.collection(process.env.DB_RESERVATIONS_COLLECTION as string);
   }
 }

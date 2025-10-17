@@ -11,6 +11,7 @@
     "dev": "nodemon",
     "build": "rimraf dist && tsc",
     "start": "node dist/server.js",
+    "db:seed": "ts-node -r tsconfig-paths/register src/scripts/seed.ts",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write ."
   },

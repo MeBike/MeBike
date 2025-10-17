@@ -36,6 +36,22 @@ export const isAvailability = (status: BikeStatus) => {
 export const createBikeValidator = validate(
   checkSchema(
     {
+      chip_id: {
+        notEmpty: { errorMessage: BIKES_MESSAGES.BIKE_ID_IS_REQUIRED },
+        isString: { errorMessage: BIKES_MESSAGES.BIKE_ID_IS_REQUIRED },
+        custom: {
+          options: async (value) => {
+            const existingBike = await databaseService.bikes.findOne({ chip_id: value });
+            if (existingBike) {
+              throw new ErrorWithStatus({
+                message: BIKES_MESSAGES.BIKE_ALREADY_EXISTS,
+                status: HTTP_STATUS.BAD_REQUEST,
+              });
+            }
+            return true;
+          },
+        },
+      },
       station_id: {
         notEmpty: { errorMessage: BIKES_MESSAGES.STATION_ID_IS_REQUIRED },
         isString: { errorMessage: BIKES_MESSAGES.INVALID_STATION_ID },

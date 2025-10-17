@@ -8,40 +8,23 @@
 #include "NetworkManager.h"
 #include "LEDStatusManager.h"
 #include <Wire.h>
-#include "Adafruit_PN532.h"
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
+#include "NFCManager.h"
+#include "CardTapService.h"
+#include <string>
+#include <memory>
+#include "HardwareConfig.h"
+#include "DeviceUtils.h"
 
-#define I2C_SDA 21
-#define I2C_SCL 22
-#define PN532_IRQ (4)
-#define PN532_RESET (5)
-Adafruit_PN532 nfc(PN532_IRQ, PN532_RESET);
+NFCManager *nfcManager = nullptr;
+CardTapService *cardTapService = nullptr;
 
-BLEServer *pServer = NULL;
-BLECharacteristic *pCharacteristic = NULL;
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
+static std::string deviceChipId;
+
 #define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-
-class MyServerCallbacks : public BLEServerCallbacks
-{
-  void onConnect(BLEServer *pServer)
-  {
-    deviceConnected = true;
-    Serial.println("Device connected");
-  };
-
-  void onDisconnect(BLEServer *pServer)
-  {
-    deviceConnected = false;
-    Serial.println("Device disconnected");
-  }
-};
 
 void setup()
 {
@@ -54,49 +37,27 @@ void setup()
   Global::bufferedLogger.reset(new BufferedLogger());
   Global::bufferedLogger->setTopic("esp/logs"); // temporary
   Global::logInfoLocal("Buffered logger initialized");
-  Wire.begin(I2C_SDA, I2C_SCL);
-  nfc.begin();
-  Serial.println("Hello from ESP32!");
-
-  delay(5000);
-  uint32_t versiondata = nfc.getFirmwareVersion();
-  if (!versiondata)
+  Wire.begin(HardwareConfig::I2C_SDA_PIN, HardwareConfig::I2C_SCL_PIN);
+  nfcManager = new NFCManager(HardwareConfig::PN532_IRQ_PIN, HardwareConfig::PN532_RESET_PIN);
+  if (!nfcManager->begin())
   {
-    Serial.print("Didn't find PN53x board");
-    Serial.print("Check your wiring and the DIP switches!");
     while (1)
     {
       delay(10);
     }
   }
-  Serial.println("Found PN532 Board!");
-  Serial.print("Firmware ver. ");
-  Serial.print((versiondata >> 16) & 0xFF, DEC);
-  Serial.print('.');
-  Serial.println((versiondata >> 8) & 0xFF, DEC);
-  nfc.SAMConfig();
+  Serial.println("Hello from ESP32!");
+  deviceChipId = getMacAddress();
+  Serial.print("Chip ID: ");
+  Serial.println(deviceChipId.c_str());
+  cardTapService = new CardTapService(*nfcManager);
+  cardTapService->begin(deviceChipId);
+
+  Serial.println("BLE advertising started");
 
   Serial.println("\nWaiting for an NFC Card...");
   currentState = STATE_INIT;
   Global::ledStatusManager->setStatus(currentState);
-
-  BLEDevice::init("MeBike-ESP32");
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-  pCharacteristic = pService->createCharacteristic(
-      CHARACTERISTIC_UUID,
-      BLECharacteristic::PROPERTY_READ |
-          BLECharacteristic::PROPERTY_WRITE);
-  pCharacteristic->setValue("Hello from MeBike ESP32");
-  pService->start();
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(true);
-  pAdvertising->setMinPreferred(0x06); // iphne
-  pAdvertising->setMinPreferred(0x12);
-  BLEDevice::startAdvertising();
-  Serial.println("BLE advertising started");
 
   AppConfig config = loadConfig();
   Global::networkManager.reset(new NetworkManager());
@@ -119,37 +80,9 @@ void setup()
 
 void loop()
 {
-  uint8_t success;
-  uint8_t uid[] = {0, 0, 0, 0, 0, 0, 0}; // Buffer to store the card's UID 4 bytes th
-  uint8_t uidLength;                   
-
-
-  success = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
-
-  if (success)
+  if (cardTapService)
   {
-    Serial.println("Found a card!");
-    Serial.print("UID Length: ");
-    Serial.print(uidLength, DEC);
-    Serial.println(" bytes");
-    Serial.print("UID Value: ");
-    nfc.PrintHex(uid, uidLength); 
-    Serial.println("");
-
-    delay(1000);
-  };
-
-  if (deviceConnected && !oldDeviceConnected)
-  {
-    oldDeviceConnected = deviceConnected;
-    Serial.println("Device connected, starting notification");
-  }
-  if (!deviceConnected && oldDeviceConnected)
-  {
-    delay(500);                  
-    pServer->startAdvertising(); 
-    Serial.println("Start advertising");
-    oldDeviceConnected = deviceConnected;
+    cardTapService->loop();
   }
 
   if (Global::ledStatusManager)
@@ -161,6 +94,8 @@ void loop()
   {
     Global::bufferedLogger->loop();
   }
+
+  delay(5);
 
   switch (currentState)
   {

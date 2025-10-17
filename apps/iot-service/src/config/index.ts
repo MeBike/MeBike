@@ -16,6 +16,7 @@ const envSchema = z.object({
   STATE_SEQUENCE: z.string().optional(),
   HTTP_PORT: z.coerce.number().default(3000),
   HTTP_HOST: z.string().default("0.0.0.0"),
+  BACKEND_API_URL: z.string().url().default("http://localhost:4000"),
 });
 
 export type Env = z.infer<typeof envSchema>;
