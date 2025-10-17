@@ -1,0 +1,23 @@
+type: object
+description: "Fields to update for a supplier. All fields are optional."
+properties:
+  name:
+    type: string
+    description: "New name for the supplier."
+    maxLength: 255
+    example: "Công ty Cổ phần Xe Đạp Việt Nam"
+  address:
+    type: string
+    description: "New address for the supplier."
+    maxLength: 250
+    example: "789 Đường LMN, Quận 3, TP.HCM"
+  phone_number:
+    type: string
+    description: "New phone number for the supplier (must be 10 digits)."
+    pattern: '^\d{10}$'
+    example: "0988888888"
+  contract_fee:
+    type: number
+    format: decimal
+    description: "New contract fee."
+    example: 30000.00

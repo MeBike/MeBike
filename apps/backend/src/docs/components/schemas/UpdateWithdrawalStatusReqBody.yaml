@@ -1,0 +1,11 @@
+type: object
+required:
+  - newStatus
+properties:
+  newStatus:
+    $ref: './WithdrawalStatus.yaml'
+  reason:
+    type: string
+    nullable: true
+    description: "Reason is required if status is 'TỪ CHỐI'."
+    example: "Thông tin tài khoản không hợp lệ."

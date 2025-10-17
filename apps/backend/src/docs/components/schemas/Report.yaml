@@ -1,0 +1,54 @@
+type: object
+description: Represents a user-submitted report.
+properties:
+  _id:
+    type: string
+    format: mongoId
+  user_id:
+    type: string
+    format: mongoId
+    description: The ID of the user who submitted the report.
+  bike_id:
+    type: string
+    format: mongoId
+    nullable: true
+    description: The ID of the bike related to the report, if any.
+  station_id:
+    type: string
+    format: mongoId
+    nullable: true
+    description: The ID of the station related to the report, if any.
+  rental_id:
+    type: string
+    format: mongoId
+    nullable: true
+    description: The ID of the rental session related to the report, if any.
+  assignee_id:
+    type: string
+    format: mongoId
+    nullable: true
+    description: The ID of the staff member assigned to handle the report.
+  media_urls:
+    type: array
+    items:
+      type: string
+      format: uri
+    description: A list of URLs for media files (images/videos) attached to the report.
+  location:
+    $ref: './GeoLocation.yaml'
+    nullable: true
+  priority:
+    $ref: './ReportPriority.yaml'
+  type:
+    $ref: './ReportType.yaml'
+  message:
+    type: string
+    description: The detailed message or description of the report.
+  status:
+    $ref: './ReportStatus.yaml'
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

@@ -1,0 +1,27 @@
+type: object
+description: Represents a refund request object.
+properties:
+  _id:
+    type: string
+    format: mongoId
+  transaction_id:
+    type: string
+    format: mongoId
+    description: The ID of the transaction being refunded.
+  user_id:
+    type: string
+    format: mongoId
+    description: The ID of the user who requested the refund.
+  amount:
+    type: number
+    format: decimal
+    description: The amount requested for refund.
+    example: 50000.00
+  status:
+    $ref: './RefundStatus.yaml'
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

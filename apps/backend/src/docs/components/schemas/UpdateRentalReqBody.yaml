@@ -1,0 +1,22 @@
+type: object
+required:
+  - reason
+properties:
+  end_station:
+    type: string
+    format: mongoId
+    description: The ID of the station where the bike was returned. Optional.
+  end_time:
+    type: string
+    format: date-time
+    description: The time the rental ended. Optional.
+  status:
+    $ref: './RentalStatus.yaml'
+  total_price:
+    type: number
+    format: decimal
+    description: The total price of the rental. Optional.
+  reason:
+    type: string
+    description: The reason for the update.
+    example: "Admin adjusted rental details due to system error."

@@ -1,0 +1,11 @@
+type: object
+description: "Represents a geographical location with latitude and longitude."
+properties:
+  latitude:
+    type: number
+    format: double
+    example: 10.7769
+  longitude:
+    type: number
+    format: double
+    example: 106.7009

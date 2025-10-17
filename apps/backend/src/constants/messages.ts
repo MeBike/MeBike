@@ -157,7 +157,12 @@ export const BIKES_MESSAGES = {
   USER_CAN_ONLY_REPORT_BROKEN: 'Người dùng chỉ được phép báo hỏng xe',
   AT_LEAST_ONE_FIELD_IS_REQUIRED: 'Cần ít nhất một trường để cập nhật',
   CANNOT_REPORT_BIKE_NOT_RENTING: 'Bạn chỉ có thể báo hỏng chiếc xe bạn đang thuê',
-  REPORT_BROKEN_BIKE_SUCCESS: 'Báo hỏng xe thành công'
+  REPORT_BROKEN_BIKE_SUCCESS: 'Báo hỏng xe thành công',
+  // thêm chip_id messages cho create and update bike
+  CHIP_ID_IS_REQUIRED: 'Chip ID là bắt buộc',
+  CHIP_ID_MUST_BE_A_STRING: 'Chip ID phải là chuỗi',
+  CHIP_ID_ALREADY_EXISTS: 'Chip ID đã tồn tại',
+  CHIP_ID_ALREADY_EXISTS_ON_ANOTHER_BIKE: 'Chip ID đã tồn tại trên một xe đạp khác'
 } as const
 
 export const RENTALS_MESSAGE = {

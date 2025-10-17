@@ -6,6 +6,10 @@ properties:
     type: string
     format: mongoId
     description: The ID of the station to which the bike belongs.
+  chip_id:
+    type: string
+    description: "The unique identifier of the bike's chip."
+    example: "CHIP123456789"
   status:
     $ref: './Bike.yaml#/properties/status'
   supplier_id:

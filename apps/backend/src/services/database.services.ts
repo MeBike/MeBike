@@ -74,6 +74,7 @@ class DatabaseService {
   }
 
   async indexBikes() {
+    await this.bikes.createIndex({ chip_id: 1 }, { unique: true });
     await this.bikes.createIndex({ station_id: 1 });
     await this.bikes.createIndex({ status: 1 });
   }

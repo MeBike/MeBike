@@ -1,6 +1,10 @@
 type: object
 description: "Fields to update for a bike. All fields are optional."
 properties:
+  chip_id:
+    type: string
+    description: "The new unique identifier for the bike's chip."
+    example: "CHIP987654321"
   station_id:
     type: string
     format: mongoId
