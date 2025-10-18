@@ -1,4 +1,4 @@
-import { Role } from './../constants/enums'
+import { ReservationStatus, Role } from './../constants/enums'
 import { checkSchema } from 'express-validator'
 import HTTP_STATUS from '~/constants/http-status'
 import { RESERVATIONS_MESSAGE } from '~/constants/messages'
@@ -121,3 +121,35 @@ export const cancelReservationValidator = validate(
     }
   })
 )
+
+export const confirmReservationValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_ID },
+      isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Id') },
+      custom: {
+        options: async (value, { req }) => {
+          const reservation = await databaseService.reservations.findOne({ _id: toObjectId(value) })
+          if (!reservation) {
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          if (reservation.status !== ReservationStatus.Pending) {
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_THIS_RESERVATION,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+          req.reservation = reservation
+          return true
+        }
+      }
+    }
+  })
+)
+

@@ -244,6 +244,8 @@ export const RESERVATIONS_MESSAGE = {
   // success action
   RESERVE_SUCCESS: 'Đặt trước xe thành công',
   CANCEL_SUCCESS: 'Huỷ phiên đặt trước thành công',
+  GET_HISTORY_SUCCESS: 'Xem lịch sử đặt trước thành công',
+  CONFIRM_SUCCESS: 'Xác nhận phiên đặt trước thành công',
   // Required data
   REQUIRED_ID: 'Vui lòng nhập Id phiên đặt trước',
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
@@ -266,8 +268,11 @@ export const RESERVATIONS_MESSAGE = {
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   // Not allowed action
   CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền kết thúc phiên đặt trước của người khác',
+  CANNOT_CONFIRM_THIS_RESERVATION: 'Không thể xác nhận phiên đặt trước này (phải ở trạng thái Pending)',
   // Over time
   OVER_CANCELLED_TIME: 'Đã quá thời gian quy định để có thể huỷ phiên đặt trước',
   // Reason
-  NO_CANCELLED_REASON: 'Không có nguyên nhân nào được cung cấp'
+  NO_CANCELLED_REASON: 'Không có nguyên nhân nào được cung cấp',
+  // Notification
+  NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
 } as const

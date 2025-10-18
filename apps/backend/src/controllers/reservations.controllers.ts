@@ -62,3 +62,40 @@ export async function cancelReservationController(
     result
   })
 }
+
+export async function confirmReservationController(
+  req: Request<ReservationParam>,
+  res: Response
+) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  const reservation = req.reservation as Reservation
+
+  const result = await reservationsService.confirmReservation({
+    user_id: toObjectId(user_id),
+    reservation
+  })
+
+  res.json({
+    message: RESERVATIONS_MESSAGE.CONFIRM_SUCCESS,
+    result
+  })
+}
+
+export async function notifyExpiringReservationsController(req: Request, res: Response) {
+  const result = await reservationsService.notifyExpiringReservations()
+  res.json({
+    message: RESERVATIONS_MESSAGE.NOTIFY_EXPIRED_RESERVATION,
+    result
+  })
+}
+
+export async function getReservationHistoryController(req: Request, res: Response) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  const result = await reservationsService.getReservationHistory(toObjectId(user_id))
+  res.json({
+    message: RESERVATIONS_MESSAGE.GET_HISTORY_SUCCESS,
+    result
+  })
+}
+
+

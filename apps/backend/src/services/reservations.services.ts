@@ -74,6 +74,7 @@ class ReservationsService {
     try {
       let result
       await session.withTransaction(async () => {
+        const now = getLocalTime()
         const updatedData: any = {}
         if (reservation.created_at && this.isCancellable(reservation.created_at)) {
           // TODO: handle refund
@@ -81,8 +82,23 @@ class ReservationsService {
         updatedData.status = ReservationStatus.Cancelled
         result = await databaseService.reservations.findOneAndUpdate(
           { _id: reservation._id },
-          { $set: updatedData },
+          {
+            $set: {
+              ...updatedData,
+              updated_at: now
+            }
+          },
           { returnDocument: 'after', session }
+        )
+
+        await databaseService.bikes.updateOne(
+          { _id: reservation.bike_id },
+          {
+            $set: {
+              status: BikeStatus.Available,
+              updated_at: now
+            }
+          }
         )
 
         const user = await databaseService.users.findOne({ _id: user_id }, { session })
@@ -109,6 +125,87 @@ class ReservationsService {
     } finally {
       await session.endSession()
     }
+  }
+
+  async confirmReservation({ user_id, reservation }: { user_id: ObjectId; reservation: Reservation }) {
+    const session = databaseService.getClient().startSession()
+    try {
+      let result
+      await session.withTransaction(async () => {
+        const now = getLocalTime()
+
+        const rental = new Rental({
+          _id: reservation._id,
+          user_id,
+          bike_id: reservation.bike_id,
+          start_station: reservation.station_id,
+          start_time: now,
+          status: RentalStatus.Rented
+        })
+
+        await databaseService.rentals.insertOne(rental, { session })
+
+        await databaseService.reservations.updateOne(
+          { _id: reservation._id },
+          {
+            $set: {
+              status: ReservationStatus.Active,
+              updated_at: now
+            }
+          },
+          { session }
+        )
+
+        await databaseService.bikes.updateOne(
+          { _id: reservation.bike_id },
+          {
+            $set: {
+              status: BikeStatus.Booked,
+              updated_at: now
+            }
+          },
+          { session }
+        )
+
+        result = rental
+      })
+      return result
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
+  }
+
+  async notifyExpiringReservations() {
+    const now = getLocalTime()
+    const threshold = new Date(now.getTime() + 15 * 60 * 1000)
+
+    const expiring = await databaseService.reservations
+      .find({
+        status: ReservationStatus.Pending,
+        end_time: { $lte: threshold, $gte: now }
+      })
+      .toArray()
+
+    for (const r of expiring) {
+      // TODO: send notification to user (e.g. push/email)
+      console.log(`Notify user ${r.user_id}: reservation ${r._id} expires soon`)
+    }
+
+    return { count: expiring.length }
+  }
+
+  async getReservationHistory(user_id: ObjectId) {
+    const reservations = await databaseService.reservations
+      .find({
+        user_id,
+        status: { $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired] }
+      })
+      .sort({ created_at: -1 })
+      .toArray()
+
+    return reservations
   }
 
   generateEndTime(startTime: string) {
