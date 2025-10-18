@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useGetAllStation } from "./query/Station/useGetAllStationQuery";
-
+import { useGetStationById } from "./query/Station/useGetStationByIDQuery";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -39,17 +39,25 @@ export const useStationActions = (
 
     const queryClient = useQueryClient();
     const useGetAllStations = useGetAllStation();
-    const getAllStations = useCallback(() => {
+    const { refetch,  data : response , isLoading} = useGetAllStations;
+    const useGetStationByID = useGetStationById(stationId || '');
+    const getAllStations = useCallback(async () => {
         if(!hasToken){  
-           
             return;
         };
-        useGetAllStations.refetch();
-    }, [useGetAllStations, hasToken, ]);
-    
-    
+        return await refetch();
+    }, [refetch ,  hasToken ]);
+    const getStationByID = useCallback(() => {
+        if(!hasToken){
+            return;
+        };
+        useGetStationByID.refetch();
+    }, [useGetStationByID, hasToken ]);
     return {
-        getAllStations,
-        isLoadingGetAllStations: useGetAllStations.isLoading,
+      getAllStations,
+      getStationByID,
+      stations: response?.data.data ?? [],
+      isLoadingGetAllStations: isLoading,
+      isLoadingGetStationByID: useGetStationByID.isLoading,
     };
 }

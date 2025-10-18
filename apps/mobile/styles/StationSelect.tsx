@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -16,13 +16,21 @@ import { StationCard } from "../components/StationCard";
 import type { StationDetailScreenNavigationProp } from "../types/navigation";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useStationActions } from "@hooks/useStationAction";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 export default function StationSelectScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
-  const { data: response, isLoading } = useGetAllStation();
+  // const { data: response, isLoading } = useGetAllStation();
+  const {
+    getStationByID,
+    isLoadingGetStationByID,
+    getAllStations,
+    stations : data,
+  } = useStationActions(true);
   const handleSelectStation = (stationId: string) => {
     navigation.navigate("StationDetail", { stationId });
   };
-  const stations = response?.data?.data ?? [];
+  const stations = data;
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.container}>
@@ -38,7 +46,7 @@ export default function StationSelectScreen() {
           Xem tất cả các lần thuê xe của bạn
         </Text>
       </LinearGradient>
-      {isLoading ? (
+      {isLoadingGetStationByID ? (
         <Text style={{ textAlign: "center", marginTop: 20 }}>
           Đang tải dữ liệu...
         </Text>
