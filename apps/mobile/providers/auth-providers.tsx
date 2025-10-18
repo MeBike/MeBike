@@ -25,7 +25,10 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
   const queryClient = useQueryClient();
   const { data: userProfile, isLoading: isUserProfileLoading , isError , isSuccess  } = useUserProfileQuery(hasToken);
   
-  // Callback to update hasToken when token is saved
+  // Debug logging
+  console.log('AuthProvider state:', { hasToken, isInitialized });
+  
+  // Callback to update hasToken when token is saved or cleared
   const handleTokenUpdate = useCallback(async () => {
     const token = await getAccessToken();
     setHasToken(!!token);
@@ -74,6 +77,7 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
       
       if (isAuthError) {
         const clearAuth = async () => {
+          console.log('Auth error detected, clearing auth state');
           await clearTokens();
           setHasToken(false);
           queryClient.clear();
@@ -82,6 +86,14 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
       }
     }
   }, [isError, hasToken, queryClient, isInitialized]);
+
+  // Additional effect to ensure queries are properly disabled when token is cleared
+  useEffect(() => {
+    if (!hasToken && isInitialized) {
+      console.log('No token detected, clearing query cache');
+      queryClient.clear();
+    }
+  }, [hasToken, isInitialized, queryClient]);
 
  const value: AuthContextType = React.useMemo(() => {
     const user = userProfile as DetailUser || null;

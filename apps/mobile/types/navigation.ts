@@ -24,5 +24,8 @@ export type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParam
 export type IntroScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Intro'>;
 export type RegisterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 export type StationDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'StationDetail'>;
-
+export type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Profile"
+>;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, 'StationDetail'>;

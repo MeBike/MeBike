@@ -28,7 +28,6 @@ export default function LoginScreen() {
   const { logIn, isLoggingIn, isLoading } = useAuth();
 
   useEffect(() => {
-    // Test backend connection on component mount
     const checkBackend = async () => {
       const isOnline = await testBackendConnection();
       setBackendStatus(isOnline ? 'online' : 'offline');
@@ -41,7 +40,6 @@ export default function LoginScreen() {
       Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
-
     if (backendStatus === 'offline') {
       Alert.alert('Lỗi kết nối', 'Không thể kết nối đến server. Vui lòng kiểm tra:\n\n1. Server backend có đang chạy?\n2. URL API có đúng không?\n3. Kết nối mạng', [
         {
@@ -61,7 +59,6 @@ export default function LoginScreen() {
     }
     
     try {
-      // Bắt đầu hiệu ứng xoay button
       Animated.loop(
         Animated.timing(rotateAnim, {
           toValue: 1,
@@ -70,24 +67,17 @@ export default function LoginScreen() {
         })
       ).start();
 
-      // Gọi API đăng nhập và đợi kết quả
-      await logIn({ email, password });
-      
-      // Chờ 3 giây để hiệu ứng xoay hoàn thành
+      logIn({ email, password });
       setTimeout(() => {
-        // Dừng animation
         rotateAnim.stopAnimation();
         rotateAnim.setValue(0);
-        // Chuyển trang sau khi đăng nhập thành công và lấy được thông tin user từ API /users/me
-        navigation.navigate('StationSelect');
-      }, 3000);
+        navigation.navigate("Main");
+      }, 500);
       
     } catch (error) {
-      // Dừng animation khi có lỗi
       rotateAnim.stopAnimation();
       rotateAnim.setValue(0);
       console.log('Login failed:', error);
-      // Lỗi sẽ được hiển thị trong useAuth hook
     }
   };
 
@@ -169,7 +159,7 @@ export default function LoginScreen() {
           <Pressable 
             style={[styles.loginButton, isLoggingIn && styles.disabledButton]} 
             onPress={handleEmailLogin}
-            disabled={isLoggingIn}
+            disabled={isLoggingIn && isLoading}
           >
             <Animated.View
               style={{

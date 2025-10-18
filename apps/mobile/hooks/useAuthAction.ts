@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Alert } from "react-native";
-import {clearTokens , setTokens} from "@utils/tokenManager";
+import {clearTokens , getAccessToken, setTokens} from "@utils/tokenManager";
 import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePasswordMutation";
 import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
@@ -12,6 +12,7 @@ import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEm
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 interface ErrorResponse {
     response?: {
         data?: {
@@ -78,9 +79,10 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
             useLogin.mutate(data, {
                 onSuccess: async (result) => {
                     const { access_token, refresh_token } = result.data.result;
+                    console.log("Login successful:", { access_token, refresh_token });
                     await setTokens(access_token, refresh_token);
+                    console.log("access_token", String(getAccessToken()));
                     Alert.alert("Success", "Logged in successfully");
-                    // Notify AuthProvider that token has been updated
                     onTokenUpdate?.();
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                 },
@@ -98,8 +100,6 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
                 if(result.status === 201){
                     const { access_token, refresh_token } = result.data.result;
                     await setTokens(access_token, refresh_token);
-                    // Notify AuthProvider that token has been updated
-                    onTokenUpdate?.();
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     Alert.alert("Success", "Registration Successful. Your account has been created.");
                     navigation?.navigate("Login");
@@ -119,7 +119,8 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
             onSuccess: async (result) => {
                 if(result.status === 200){
                     await clearTokens();
-                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+                    onTokenUpdate?.(); 
+                    queryClient.clear(); 
                     Alert.alert("Success", "Logged out successfully");
                     navigation?.navigate("Login");
                 }else{
@@ -127,12 +128,15 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
                     Alert.alert("Error", errorMessage);
                 }
             },
-            onError: (error: unknown) => {
-                const errorMessage = getErrorMessage(error, "Error logging out");
-                Alert.alert("Error", errorMessage);
+            onError: async (error: unknown) => {
+                console.log("Logout API failed, clearing tokens locally:", error);
+                await clearTokens();
+                queryClient.clear();
+                Alert.alert("Success", "Logged out successfully");
+                navigation?.navigate("Login");
             }
         });
-    },[useLogout, queryClient, navigation]);
+    },[useLogout, queryClient, navigation, onTokenUpdate]);
     const verifyEmail = useCallback((email_verify_token: string): Promise<void> => {
         return new Promise((resolve, reject) => {
             useVerifyEmail.mutate(email_verify_token, {

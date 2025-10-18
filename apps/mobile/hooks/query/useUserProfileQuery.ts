@@ -14,10 +14,12 @@ export const fetchUserProfile = async (): Promise<DetailUser> => {
   throw new Error("Failed to fetch user profile");
 }
 export function useUserProfileQuery(isAuthenticated: boolean) {
+    console.log('useUserProfileQuery enabled:', isAuthenticated);
     return useQuery<DetailUser, AxiosError>({
         queryKey: USER_PROFILE_QUERY_KEY,
         queryFn: fetchUserProfile,
         enabled: isAuthenticated,
         staleTime: 5 * 60 * 1000, // 5 minutes
+        retry: false, // Don't retry failed requests
     });
 } 
