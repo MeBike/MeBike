@@ -360,6 +360,7 @@ export const STATIONS_MESSAGE = {
   FAILED_TO_CREATE_STATION: 'Tạo trạm thất bại',
   LATITUDE_MUST_BE_NUMERIC: 'Vĩ độ phải là chuỗi biểu diễn số',
   LONGITUDE_MUST_BE_NUMERIC: 'Kinh độ phải là chuỗi biểu diễn số',
+  STATION_NAME_ALREADY_EXISTS: 'Tên trạm đã tồn tại',
   // get station details messages
   GET_STATION_DETAILS_SUCCESSFULLY: 'Lấy chi tiết trạm thành công',
   // update station messages
