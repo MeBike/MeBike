@@ -4,6 +4,8 @@ import type { HttpServer } from "../http";
 import type { CommandPublisher } from "../publishers";
 import type { DeviceManager } from "../services";
 
+import logger from "../lib/logger";
+
 export type ApplicationDependencies = {
   connection: MqttConnection;
   eventBus: EventBus;
@@ -38,7 +40,7 @@ export class IotApplication {
   constructor(private deps: ApplicationDependencies) {}
 
   async start(config: ApplicationConfig): Promise<void> {
-    console.warn("Starting IoT Application...");
+    logger.warn("Starting IoT Application...");
 
     this.setupEventListeners();
 
@@ -56,7 +58,7 @@ export class IotApplication {
 
     await this.deps.commandPublisher.requestStatus(config.deviceMac);
 
-    console.warn("IoT Application started successfully");
+    logger.info("IoT Application started successfully");
   }
 
   async stop(): Promise<void> {
@@ -65,7 +67,7 @@ export class IotApplication {
     }
 
     this.shuttingDown = true;
-    console.warn("Stopping IoT Application...");
+    logger.warn("Stopping IoT Application...");
 
     const results = await Promise.allSettled([
       this.deps.connection.disconnect(),
@@ -74,20 +76,20 @@ export class IotApplication {
 
     for (const result of results) {
       if (result.status === "rejected") {
-        console.error("Shutdown error:", result.reason);
+        logger.error({ err: result.reason }, "Shutdown error");
       }
     }
 
-    console.warn("IoT Application stopped");
+    logger.warn("IoT Application stopped");
   }
 
   private setupEventListeners(): void {
     this.deps.eventBus.on("connection:established", (data) => {
-      console.warn(`Connected to MQTT broker at ${data.brokerUrl}`);
+      logger.info({ brokerUrl: data.brokerUrl }, "Connected to MQTT broker");
     });
 
     this.deps.eventBus.on("connection:error", (data) => {
-      console.error("Connection error:", data.error);
+      logger.error({ err: data.error }, "Connection error");
     });
   }
 

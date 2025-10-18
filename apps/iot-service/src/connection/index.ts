@@ -4,6 +4,7 @@ import mqtt from "mqtt";
 
 import type { ConnectionConfig, MqttConnection } from "./types";
 
+import logger from "../lib/logger";
 import { InfrastructureError } from "../middleware";
 
 export class MqttConnectionManager implements MqttConnection {
@@ -19,7 +20,7 @@ export class MqttConnectionManager implements MqttConnection {
       if (this.hasPendingConnect) {
         return;
       }
-      console.error("MQTT client error:", error);
+      logger.error({ err: error }, "MQTT client error");
     });
   }
 

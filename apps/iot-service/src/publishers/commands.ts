@@ -7,6 +7,7 @@ import { topicWithMac } from "@mebike/shared";
 
 import type { MqttConnection } from "../connection/types";
 
+import logger from "../lib/logger";
 import { InfrastructureError } from "../middleware";
 
 export class CommandPublisher {
@@ -21,7 +22,7 @@ export class CommandPublisher {
 
     try {
       await this.connection.publish(resolvedTopic, payload);
-      console.warn(`Command sent to ${resolvedTopic}: ${payload}`);
+      logger.info({ topic: resolvedTopic, payload }, "command sent");
     }
     catch (error) {
       if (error instanceof InfrastructureError) {
