@@ -16,7 +16,7 @@ const Header = () => {
           <div>
             <Button
               variant="ghost"
-              className="text_header cursor-pointer"
+              className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/guide")}
             >
               Hướng dẫn sử dụng
@@ -25,52 +25,50 @@ const Header = () => {
           <div>
             <Button
               variant="ghost"
-              className="text_header cursor-pointer"
+              className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/station")}
             >
-              Danh sách trạm
+              Trạm xe
             </Button>
           </div>
           <div>
             <Button
               variant="ghost"
-              className="text_header cursor-pointer"
+              className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/pricing")}
             >
               Bảng giá
             </Button>
           </div>
           <div>
-            <Button variant="ghost" className="text_header cursor-pointer">
-              Dịch vụ
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/contact")}
+              className="text_header cursor-pointer hover:bg-primary"
+            >
+              Liên hệ
             </Button>
           </div>
+        </div>
+        <div className="flex gap-3">
           <div>
             <Button
               variant="ghost"
-              className="text_header cursor-pointer"
+              className="text_header cursor-pointer hover:bg-primary"
               onClick={() => router.push("/auth/login")}
             >
               Đăng nhập
             </Button>
-            |
+          </div>
+          <div>
             <Button
-              variant="ghost"
-              className="text_header cursor-pointer"
               onClick={() => router.push("/auth/register")}
+              className="bg-[linear-gradient(135deg,_#2563eb,_#60a5fa)] text-white hover:scale-105 hover:shadow-[var(--shadow-metro)]
+            cursor-pointer"
             >
               Đăng ký
             </Button>
           </div>
-        </div>
-        <div>
-          <Button
-            onClick={() => router.push("/")}
-            className="bg-[linear-gradient(135deg,_#2563eb,_#60a5fa)] text-white hover:scale-105 hover:shadow-[var(--shadow-metro)]
-            cursor-pointer"
-          >
-            Bắt đầu sử dụng
-          </Button>
         </div>
       </div>
     </header>

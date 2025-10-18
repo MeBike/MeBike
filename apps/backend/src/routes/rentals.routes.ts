@@ -5,6 +5,7 @@ import {
   cancelRentalController,
   createRentalFromCardController,
   createRentalSessionController,
+  endRentalByAdminOrStaffController,
   endRentalSessionController,
   getAllRentalsController,
   getDetailRentalController,
@@ -16,8 +17,8 @@ import {
   getStationActivityController,
   updateDetailRentalController,
 } from "~/controllers/rentals.controllers";
-import { isAdminValidator } from "~/middlewares/admin.middlewares";
-import { cancelRentalValidator, createRentalSessionValidator, endRentalSessionValidator, updateDetailRentalValidator } from "~/middlewares/rentals.middlewares";
+import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
+import { cancelRentalValidator, createRentalSessionValidator, endRentalByAdminOrStaffValidator, endRentalSessionValidator, updateDetailRentalValidator } from "~/middlewares/rentals.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
 const rentalsRouter = Router();
@@ -48,8 +49,11 @@ rentalsRouter.route("/me/:id")
 rentalsRouter.route("/me/:id/end")
   .put(accessTokenValidator, endRentalSessionValidator, wrapAsync(endRentalSessionController));
 
+rentalsRouter.route("/:id/end")
+  .put(accessTokenValidator, isAdminAndStaffValidator, endRentalByAdminOrStaffValidator, wrapAsync(endRentalByAdminOrStaffController));
+
 rentalsRouter.route("/:id/cancel")
-  .post(accessTokenValidator, isAdminValidator, cancelRentalValidator, wrapAsync(cancelRentalController));
+  .post(accessTokenValidator, isAdminAndStaffValidator, cancelRentalValidator, wrapAsync(cancelRentalController));
 
 // staff/admin
 rentalsRouter.route("/:id")

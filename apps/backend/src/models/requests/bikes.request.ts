@@ -8,6 +8,8 @@ export type CreateBikeReqBody = {
 };
 
 export type GetBikesReqQuery = {
+  chip_id?: string;
+  supplier_id?: string;
   station_id?: string;
   status?: BikeStatus;
   limit?: string;
@@ -17,4 +19,6 @@ export type GetBikesReqQuery = {
 export type UpdateBikeReqBody = {
   status?: BikeStatus;
   station_id?: string;
+  supplier_id?: string;
+  chip_id?: string;
 };

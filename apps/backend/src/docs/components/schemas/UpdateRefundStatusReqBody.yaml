@@ -1,0 +1,7 @@
+type: object
+required:
+  - newStatus
+properties:
+  newStatus:
+    $ref: './RefundStatus.yaml'
+    description: The new status for the refund request. Allowed values are 'ĐÃ DUYỆT', 'TỪ CHỐI', 'ĐÃ HOÀN THÀNH'.

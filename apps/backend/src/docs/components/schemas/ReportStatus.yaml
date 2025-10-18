@@ -1,0 +1,8 @@
+type: string
+description: "The status of a report."
+enum:
+  - "ĐANG CHỜ XỬ LÝ"
+  - "ĐANG XỬ LÝ"
+  - "ĐÃ GIẢI QUYẾT"
+  - "ĐÃ HỦY"
+example: "ĐANG CHỜ XỬ LÝ"

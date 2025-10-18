@@ -1,0 +1,174 @@
+openapi: 3.0.3
+info:
+  title: MeBike API
+  version: '1.0.0'
+  description: API for the MeBike application.
+  contact:
+    name: MeBike Team
+    email: nguyennvse173423@fpt.edu.vn
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: http://localhost:4000
+    description: Development Server
+  - url: https://mebike.site
+    description: Production Server
+
+tags:
+  - name: Users
+    description: Operations related to user authentication, profile, and management.
+  - name: Bikes
+    description: Operations related to managing bikes.
+  - name: Rentals
+    description: Operations related to bike rentals.
+  - name: Reports
+    description: Operations for user reports and management.
+  - name: Suppliers
+    description: Operations for managing bike suppliers.
+  - name: Wallets
+    description: Operations related to user wallets and transactions.
+  - name: Refunds
+    description: Operations for managing refund requests.
+  - name: Withdrawals
+    description: Operations for managing withdrawal requests.
+  
+paths:
+  $ref: './paths/all-paths.yaml'
+
+components:
+  schemas:
+    # --- Request Body Schemas ---
+    RegisterReqBody:
+      $ref: './components/schemas/RegisterReqBody.yaml'
+    LoginReqBody:
+      $ref: './components/schemas/LoginReqBody.yaml'
+    LogoutReqBody:
+      $ref: './components/schemas/LogoutReqBody.yaml'
+    ForgotPasswordReqBody:
+      $ref: './components/schemas/ForgotPasswordReqBody.yaml'
+    VerifyForgotPasswordTokenReqBody:
+      $ref: './components/schemas/VerifyForgotPasswordTokenReqBody.yaml'
+    ResetPasswordReqBody:
+      $ref: './components/schemas/ResetPasswordReqBody.yaml'
+    VerifyEmailReqBody:
+      $ref: './components/schemas/VerifyEmailReqBody.yaml'
+    ChangePasswordReqBody:
+      $ref: './components/schemas/ChangePasswordReqBody.yaml'
+    UpdateMeReqBody:
+      $ref: './components/schemas/UpdateMeReqBody.yaml'
+    RefreshTokenReqBody:
+      $ref: './components/schemas/RefreshTokenReqBody.yaml'
+    CreateBikeReqBody:
+      $ref: './components/schemas/CreateBikeReqBody.yaml'
+    UpdateBikeReqBody:
+      $ref: './components/schemas/UpdateBikeReqBody.yaml'
+    # supplier
+    CreateSupplierReqBody:
+      $ref: './components/schemas/CreateSupplierReqBody.yaml'
+    UpdateSupplierReqBody:
+      $ref: './components/schemas/UpdateSupplierReqBody.yaml'
+    ChangeSupplierStatusReqBody:
+      $ref: './components/schemas/ChangeSupplierStatusReqBody.yaml'
+    # rental
+    CreateRentalReqBody:
+      $ref: './components/schemas/CreateRentalReqBody.yaml'
+    UpdateRentalReqBody:
+      $ref: './components/schemas/UpdateRentalReqBody.yaml'
+    CancelRentalReqBody:
+      $ref: './components/schemas/CancelRentalReqBody.yaml'
+    EndRentalByAdminOrStaffReqBody:
+      $ref: './components/schemas/EndRentalByAdminOrStaffReqBody.yaml'
+    # report
+    CreateReportReqBody:
+      $ref: './components/schemas/CreateReportReqBody.yaml'
+    UpdateReportReqBody:
+      $ref: './components/schemas/UpdateReportReqBody.yaml'
+    # refund
+    CreateRefundReqBody:
+      $ref: './components/schemas/CreateRefundReqBody.yaml'
+    UpdateRefundStatusReqBody:
+      $ref: './components/schemas/UpdateRefundStatusReqBody.yaml'
+    # wallet
+    IncreaseBalanceReqBody:
+      $ref: './components/schemas/IncreaseBalanceReqBody.yaml'
+    DecreaseBalanceReqBody:
+      $ref: './components/schemas/DecreaseBalanceReqBody.yaml'
+    UpdateWalletStatusReqBody:
+      $ref: './components/schemas/UpdateWalletStatusReqBody.yaml'
+    # withdrawal
+    CreateWithdrawalReqBody:
+      $ref: './components/schemas/CreateWithdrawalReqBody.yaml'
+    UpdateWithdrawalStatusReqBody:
+      $ref: './components/schemas/UpdateWithdrawalStatusReqBody.yaml'
+    
+    # --- Response Schemas ---
+    AuthSuccessResponse:
+      $ref: './components/schemas/AuthSuccessResponse.yaml'
+    RegisterSuccessResponse:
+      $ref: './components/schemas/RegisterSuccessResponse.yaml'
+    LoginSuccessResponse:
+      $ref: './components/schemas/LoginSuccessResponse.yaml'
+    RefreshTokenSuccessResponse:
+      $ref: './components/schemas/RefreshTokenSuccessResponse.yaml'
+    GetMeSuccessResponse:
+      $ref: './components/schemas/GetMeSuccessResponse.yaml'
+    MessageResponse:
+      $ref: './components/schemas/MessageResponse.yaml'
+    PaginatedResponse:
+       $ref: './components/schemas/PaginatedResponse.yaml'
+    ErrorValidationResponse:
+      $ref: './components/schemas/ErrorValidationResponse.yaml'
+    ErrorStatusResponse:
+      $ref: './components/schemas/ErrorStatusResponse.yaml'
+    ErrorServerResponse:
+      $ref: './components/schemas/ErrorServerResponse.yaml'
+
+    # --- Model Schemas ---
+    User:
+      $ref: './components/schemas/User.yaml'
+    Bike:
+      $ref: './components/schemas/Bike.yaml'
+    BikeStatus:
+      $ref: './components/schemas/BikeStatus.yaml'
+    Supplier:
+      $ref: "./components/schemas/Supplier.yaml"
+    Rental:
+      $ref: "./components/schemas/Rental.yaml"
+    RentalStatus:
+      $ref: "./components/schemas/RentalStatus.yaml"
+    Report:
+      $ref: "./components/schemas/Report.yaml"
+    ReportStatus:
+      $ref: "./components/schemas/ReportStatus.yaml"
+    ReportType:
+      $ref: "./components/schemas/ReportType.yaml"
+    ReportPriority:
+      $ref: "./components/schemas/ReportPriority.yaml"
+    GeoLocation:
+      $ref: "./components/schemas/GeoLocation.yaml"
+    Refund:
+      $ref: "./components/schemas/Refund.yaml"
+    RefundStatus:
+      $ref: "./components/schemas/RefundStatus.yaml"
+    Wallet:
+      $ref: "./components/schemas/Wallet.yaml"
+    WalletStatus:
+      $ref: "./components/schemas/WalletStatus.yaml"
+    Transaction:
+      $ref: "./components/schemas/Transaction.yaml"
+    TransactionStatus:
+      $ref: "./components/schemas/TransactionStatus.yaml"
+    TransactionType:
+      $ref: "./components/schemas/TransactionType.yaml"
+    Withdrawal:
+      $ref: "./components/schemas/Withdrawal.yaml"
+    WithdrawalStatus:
+      $ref: "./components/schemas/WithdrawalStatus.yaml"
+
+  securitySchemes:
+    BearerAuth:
+      $ref: './components/securitySchemes/BearerAuth.yaml'
+  parameters:
+    $ref: './parameters/all-parameters.yaml'

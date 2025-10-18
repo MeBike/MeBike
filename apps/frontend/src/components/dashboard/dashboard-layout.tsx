@@ -1,32 +1,26 @@
+
 "use client";
-
 import type React from "react";
-
 import { useState } from "react";
 import { Sidebar } from "./sidebar";
-import { Bell, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import type { User } from "@custom-types";
+import type { DetailUser } from "@/services/authService";
 import Image from "next/image";
-
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  user: User;
+  user: DetailUser;
 }
-
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
+  const [sidebarCollapsed,] = useState(false);
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar userRole={user.role} />
+      <Sidebar userRole={user?.role} />
       <div
         className={`transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}
       >
         <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
           <div className="flex h-16 items-center justify-between px-6">
-            {/* Search Bar */}
             <div className="flex-1 max-w-md">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -37,29 +31,20 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 />
               </div>
             </div>
-
-            {/* Right Section */}
             <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-              </Button>
-
-              {/* User Profile */}
               <div className="flex items-center gap-3 pl-4 border-l border-border">
                 <div className="text-right hidden md:block">
                   <p className="text-sm font-medium text-foreground">
-                    {user.fullname}
+                    {user?.fullname || "Chưa có tên"}
                   </p>
                   <p className="text-xs text-muted-foreground capitalize">
-                    {user.role}
+                    {user?.role || "user"}
                   </p>
                 </div>
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted">
                   <Image
-                    src={user.avatar || "/placeholder.svg"}
-                    alt={user.fullname}
+                    src={user?.avatar || "/placeholder.svg"}
+                    alt={user?.fullname || "User"}
                     fill
                     className="object-cover"
                   />
@@ -69,7 +54,6 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           </div>
         </header>
 
-        {/* Page Content */}
         <main className="p-6">{children}</main>
       </div>
     </div>

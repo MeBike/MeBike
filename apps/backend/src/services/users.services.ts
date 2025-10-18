@@ -15,6 +15,7 @@ import { readEmailTemplate } from "~/utils/email-templates";
 import { signToken, verifyToken } from "~/utils/jwt";
 
 import databaseService from "./database.services";
+import walletService from "./wallets.services";
 
 class UsersService {
   private decodeRefreshToken(refresh_token: string) {
@@ -101,13 +102,15 @@ class UsersService {
       new User({
         ...payload,
         _id: user_id,
-        fullname: payload.full_name,
+        fullname: payload.fullname,
         username: `user${user_id.toString()}`,
         email_verify_token,
         password: hashPassword(payload.password),
         role: Role.User,
       }),
     );
+    // create wallet for user
+    await walletService.createWallet(user_id.toString());
     const [access_token, refresh_token] = await this.signAccessAndRefreshTokens({
       user_id: user_id.toString(),
       verify: UserVerifyStatus.Unverified,
@@ -135,7 +138,7 @@ class UsersService {
       const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`; // Đường dẫn xác nhận email
 
       const htmlContent = readEmailTemplate("verify-email.html", {
-        full_name: payload.full_name,
+        fullname: payload.fullname,
         verifyURL,
       });
 

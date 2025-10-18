@@ -13,14 +13,10 @@ export type UpdateProfileSchemaFormData = z.infer<typeof profileUpdateSchema>;
 export type ResetPasswordSchemaFormData = z.infer<typeof resetPasswordSchema>;
 export const registerSchema = z
   .object({
-    first_name: z
+    full_name: z
       .string()
       .min(1, { message: "Họ không được để trống" })
       .max(30, { message: "Họ không được vượt quá 30 ký tự" }),
-    last_name: z
-      .string()
-      .min(1, { message: "Tên không được để trống" })
-      .max(30, { message: "Tên không được vượt quá 30 ký tự" }),
     email: z.email({ message: "Email không hợp lệ" }),
     password: z
       .string()
@@ -62,7 +58,7 @@ export const changePasswordSchema = z
     path: ["confirm_password"],
   });
 export const profileUpdateSchema = z.object({
-  fullName: z
+  fullname: z
     .string()
     .min(3, { message: "Họ và tên phải có ít nhất 3 ký tự" })
     .max(50, { message: "Họ và tên không được vượt quá 50 ký tự" }),
@@ -80,6 +76,13 @@ export const profileUpdateSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
+  phone_number: z
+    .string()
+    .regex(vietnamesePhoneNumberRegex, {  
+      message: "Số điện thoại không hợp lệ",
+    })
+    .optional()
+    .or(z.literal("")),  
   avatar: z
     .url({ message: "Please enter a valid URL for the avatar." })
     .optional()
@@ -94,4 +97,5 @@ export const resetPasswordSchema = z.object({
     .string()
     .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" })
     .max(30, { message: "Mật khẩu không được vượt quá 30 ký tự" }),
+  forgot_password_token: z.string().nonempty({ message: "Token không được để trống" }),
 });
