@@ -18,9 +18,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@providers/auth-providers";
 import type { DetailUser } from "@services/authService";
 import { getRefreshToken } from "@utils/tokenManager";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { user , logOut} = useAuth();
+  const insets = useSafeAreaInsets();
   const [profile] = useState<DetailUser>(() => ({
     _id: user?._id ?? "",
     fullname: user?.fullname ?? "",
@@ -94,15 +96,14 @@ const ProfileScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={["#0066FF", "#00B4D8"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.header}
+          style={[styles.header, { paddingTop: insets.top + 16 }]}
         >
           <View style={styles.profileHeader}>
             <Image 
@@ -125,7 +126,6 @@ const ProfileScreen = () => {
         </LinearGradient>
 
         <View style={styles.content}>
-          {/* Thông tin liên hệ */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
             <View style={styles.infoCard}>
@@ -187,7 +187,7 @@ const ProfileScreen = () => {
           <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

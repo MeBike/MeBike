@@ -1,5 +1,6 @@
 import fetchHttpClient from "@lib/httpClient";
 import type { AxiosResponse } from "axios";
+import type { Pagination } from "../types/Pagination";
 import type { RentingHistory } from "../types/RentalTypes";
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
@@ -17,6 +18,10 @@ const RENTAL_ENDPOINTS = {
   STAFF_ADMIN_GET_DETAIL_RENTAL : (id: string) => `${RENTAL_BASE}/${id}`,
   STAFF_ADMIN_UPDATE_DETAIL_RENTAL : (id: string) => `${RENTAL_BASE}/${id}`,
 };
+interface RentalResponse {
+  data: RentingHistory[];
+  pagination: Pagination;
+}
 import type { RentalSchemaFormData } from "@schemas/rentalSchema";
 export const rentalService = {
   userPostRent: async (data: RentalSchemaFormData): Promise<AxiosResponse> => {
@@ -26,9 +31,9 @@ export const rentalService = {
     );
     return response;
   },
-  userGetAllRentals: async (page: number, limit: number): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(
-      "/rentals/me",
+  userGetAllRentals: async (page: number, limit: number): Promise<AxiosResponse<RentalResponse>> => {
+    const response = await fetchHttpClient.get<RentalResponse>(
+      RENTAL_ENDPOINTS.USER_RENTAL_ME(),
       {
         params: {
           page,

@@ -15,16 +15,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import type { RentingHistory } from "../types/RentalTypes";
 import { useRentalsActions } from "@hooks/useRentalAction";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 const BookingHistoryScreen = () => {
+  const navigator = useNavigation();
+  const insets = useSafeAreaInsets();
   const { rentalsData, isGetAllRentalsFetching, getAllRentals } = useRentalsActions(true);
   const [bookings, setBookings] = useState<RentingHistory[]>([]);
-
-  useEffect(() => {
-    // Gọi getAllRentals để fetch data khi component mount
-    getAllRentals();
-  }, [getAllRentals]);
-
   useEffect(() => {
     if (rentalsData && !isGetAllRentalsFetching) {
       if (rentalsData.data?.data && Array.isArray(rentalsData.data.data)) {
@@ -32,11 +29,9 @@ const BookingHistoryScreen = () => {
       }
     }
   }, [rentalsData, isGetAllRentalsFetching]);
-
   useEffect(() => {
     console.log('bookings state:', bookings);
   }, [bookings]);
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "HOÀN THÀNH":
@@ -49,7 +44,6 @@ const BookingHistoryScreen = () => {
         return "#999";
     }
   };
-
   const getStatusText = (status: string) => {
     switch (status) {
       case "HOÀN THÀNH":
@@ -120,22 +114,22 @@ const BookingHistoryScreen = () => {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.detailButton}>
-        <Text style={styles.detailButtonText}>Xem chi tiết</Text>
+      <TouchableOpacity style={styles.detailButton} onPress={() => {(navigator as any).navigate("BookingHistoryDetail", { bookingId: item._id })} }>
+        <Text style={styles.detailButtonText} >Xem chi tiết</Text>
         <Ionicons name="chevron-forward" size={16} color="#0066FF" />
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
 
       <LinearGradient
         colors={["#0066FF", "#00B4D8"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
         <Text style={styles.headerTitle}>Lịch sử thuê xe</Text>
         <Text style={styles.headerSubtitle}>
@@ -165,7 +159,7 @@ const BookingHistoryScreen = () => {
           </Text>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

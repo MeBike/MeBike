@@ -15,6 +15,7 @@ import StationSelectScreen from './styles/StationSelect';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import BookingHistoryScreen from './screen/BookingHistoryScreen';
 import ProfileScreen from './screen/ProfileScreen';
+import BookingHistoryDetail from './screen/BookingHistoryDetail';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
 const BottomTab = () => {
@@ -56,21 +57,6 @@ const BottomTab = () => {
           tabBarIcon: ({ color, size }) => (
             <Ionicons
               name="map-outline"
-              size={size ?? 24}
-              color={color ?? "#222"}
-            />
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="person-outline"
               size={size ?? 24}
               color={color ?? "#222"}
             />
@@ -129,7 +115,16 @@ export default function App() {
               component={StationSelectScreen}
               options={{ headerShown: false }}
             />
-
+            <Stack.Screen
+              name="Profile"
+              component={ProfileScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="BookingHistoryDetail"
+              component={BookingHistoryDetail}
+              options={{ headerShown: false }}
+            />
           </Stack.Navigator>
         </AuthProvider>
       </NavigationContainer>

@@ -2,6 +2,7 @@
 import { useCallback } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { useGetAllRentalsQuery } from "./query/Rent/useGetAllRentalsQuery";
+import { useGetDetailRentalQuery } from "./query/Rent/useGetDetailRentalQuery";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -38,6 +39,7 @@ export const useRentalsActions = (
 ) => {
     const navigation = useNavigation();
     const useGetAllRentals = useGetAllRentalsQuery();
+    const useGetDetailRentals = useGetDetailRentalQuery(bikeId || "");
     const getAllRentals = useCallback(() => {
         if(!hasToken){
             navigation.navigate("Login" as never);
@@ -45,10 +47,21 @@ export const useRentalsActions = (
         }
         useGetAllRentals.refetch();
     }, [hasToken, navigation, useGetAllRentals]);
+    const useGetDetailRental = useCallback(() => {
+        if(!hasToken){
+            navigation.navigate("Login" as never);
+            return;
+        }
+        useGetDetailRentals.refetch();
+    }, [hasToken, navigation, useGetDetailRentals]);
     return {
-        getAllRentals,
-        rentalsData: useGetAllRentals.data,
-        isGetAllRentalsFetching: useGetAllRentals.isLoading,
-        isGetAllRentalsError: useGetAllRentals.isError,
+      getAllRentals,
+      rentalsData: useGetAllRentals.data,
+      isGetAllRentalsFetching: useGetAllRentals.isLoading,
+      isGetAllRentalsError: useGetAllRentals.isError,
+      useGetDetailRental,
+      rentalDetailData: useGetDetailRentals.data,
+      isGetDetailRentalFetching: useGetDetailRentals.isLoading,
+      isGetDetailRentalError: useGetDetailRentals.isError,
     };
 }
