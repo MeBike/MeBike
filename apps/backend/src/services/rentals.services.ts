@@ -95,7 +95,6 @@ class RentalsService {
     }
   }
 
-  // card-tap flow moved to card-tap.service.ts orchestrator
 
   async endRentalSession({ user_id, rental }: { user_id: ObjectId; rental: Rental }) {
     const session = databaseService.getClient().startSession()
@@ -155,7 +154,6 @@ class RentalsService {
         findOptions
       )
 
-      // Clean up any active reservation for this user+bike via facade
       const reservationFacade = getReservationFacade()
       await reservationFacade.expireActiveForUserAndBike({ user_id: rental.user_id, bike_id: rental.bike_id })
 
