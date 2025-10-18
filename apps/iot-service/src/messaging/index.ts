@@ -4,6 +4,7 @@ import type { MqttConnection } from "../connection/types";
 import type { MessageHandler } from "../handlers";
 
 import { messageHandlers } from "../handlers";
+import logger from "../lib/logger";
 
 export class MessageRouter {
   constructor(private connection: MqttConnection) {}
@@ -32,7 +33,7 @@ export class MessageRouter {
       }
     }
     else {
-      console.warn(`Received on ${topic}: ${payload}`);
+      logger.warn({ topic, payload }, "no handler for topic");
     }
   }
 
