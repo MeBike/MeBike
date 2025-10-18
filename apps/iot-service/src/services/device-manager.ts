@@ -1,4 +1,5 @@
 import { eventBus, EVENTS } from "../events";
+import logger from "../lib/logger";
 
 export class DeviceManager {
   private deviceStates = new Map<string, string>();
@@ -11,19 +12,19 @@ export class DeviceManager {
     eventBus.on(EVENTS.DEVICE_STATUS_CHANGED, (data) => {
       if (data.deviceId) {
         this.deviceStates.set(data.deviceId, data.status);
-        console.warn(`Device ${data.deviceId} status updated to: ${data.status}`);
+        logger.info({ deviceId: data.deviceId, status: data.status }, "device status updated");
       }
     });
 
     eventBus.on(EVENTS.BOOKING_STATUS_UPDATED, (data) => {
       if (data.deviceId) {
-        console.warn(`Device ${data.deviceId} booking status: ${data.status}`);
+        logger.info({ deviceId: data.deviceId, status: data.status }, "device booking status");
       }
     });
 
     eventBus.on(EVENTS.MAINTENANCE_STATUS_UPDATED, (data) => {
       if (data.deviceId) {
-        console.warn(`Device ${data.deviceId} maintenance status: ${data.status}`);
+        logger.info({ deviceId: data.deviceId, status: data.status }, "device maintenance status");
       }
     });
   }

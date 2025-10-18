@@ -3,17 +3,19 @@ import type { AddressInfo } from "node:net";
 
 import { serve } from "@hono/node-server";
 
+import defaultLogger from "../lib/logger";
+
 export type HttpServer = ReturnType<typeof serve>;
 
 export type StartHttpServerOptions = {
   port: number;
   hostname?: string;
-  logger?: Pick<typeof console, "info" | "error">;
+  logger?: Pick<typeof defaultLogger, "info" | "error">;
 };
 
 export function startHttpServer(
   app: OpenAPIHono,
-  { port, hostname, logger = console }: StartHttpServerOptions,
+  { port, hostname, logger = defaultLogger }: StartHttpServerOptions,
 ): HttpServer {
   const server = serve(
     {

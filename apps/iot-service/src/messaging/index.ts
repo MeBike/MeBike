@@ -3,6 +3,7 @@ import { IOT_PUBLISH_TOPICS } from "@mebike/shared";
 import type { MqttConnection } from "../connection/types";
 
 import { messageHandlers } from "../handlers";
+import logger from "../lib/logger";
 
 export class MessageRouter {
   constructor(private connection: MqttConnection) {}
@@ -24,7 +25,7 @@ export class MessageRouter {
       handler(topic, payload);
     }
     else {
-      console.warn(`Received on ${topic}: ${payload}`);
+      logger.warn({ topic, payload }, "no handler for topic");
     }
   }
 

@@ -9,11 +9,6 @@ import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { toObjectId } from '~/utils/string'
 
-const ALLOWED_CREATED_FIELDS = ['bike_id']
-const ALLOWED_UPDATED_FIELDS = ['end_station', 'end_time', 'status', 'total_price', 'reason']
-const ALLOWED_CANCELLED_FIELDS = ['bikeStatus', 'reason']
-const ALLOWED_ENDED_RENTAL_FIELDS = ['end_station', 'end_time', 'reason']
-
 export const createRentalSessionValidator = validate(
   checkSchema(
     {
@@ -55,20 +50,6 @@ export const createRentalSessionValidator = validate(
 
             req.station = station
             req.bike = bike
-            return true
-          }
-        }
-      },
-      '*': {
-        in: ['body'],
-        custom: {
-          options: (value, { path }) => {
-            if (!ALLOWED_CREATED_FIELDS.includes(path)) {
-              throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.NOT_ALLOWED_CREATED_FIELD.replace('%s', path),
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
             return true
           }
         }
@@ -147,7 +128,7 @@ export const endRentalByAdminOrStaffValidator = validate(
     },
     end_station: {
       in: ['body'],
-      notEmpty:{
+      notEmpty: {
         errorMessage: RENTALS_MESSAGE.REQUIRED_END_STATION
       },
       isMongoId: {
@@ -177,32 +158,18 @@ export const endRentalByAdminOrStaffValidator = validate(
       }
     },
     reason: {
-        in: ['body'],
-        notEmpty: {
-          errorMessage: RENTALS_MESSAGE.REQUIRED_UPDATED_REASON
-        },
-        isString: {
-          errorMessage: RENTALS_MESSAGE.INVALID_REASON
-        },
-        isLength: {
-          options: { max: 255 },
-          errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
-        }
+      in: ['body'],
+      notEmpty: {
+        errorMessage: RENTALS_MESSAGE.REQUIRED_UPDATED_REASON
       },
-      '*': {
-        in: ['body'],
-        custom: {
-          options: (value, { path }) => {
-            if (!ALLOWED_ENDED_RENTAL_FIELDS.includes(path)) {
-              throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.NOT_ALLOWED_UPDATED_FIELD.replace('%s', path),
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
-            return true
-          }
-        }
+      isString: {
+        errorMessage: RENTALS_MESSAGE.INVALID_REASON
+      },
+      isLength: {
+        options: { max: 255 },
+        errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
       }
+    }
   })
 )
 
@@ -301,18 +268,22 @@ export const updateDetailRentalValidator = validate(
         isLength: {
           options: { max: 255 },
           errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
-        }
-      },
-      '*': {
-        in: ['body'],
+        },
         custom: {
-          options: (value, { path }) => {
-            if (!ALLOWED_UPDATED_FIELDS.includes(path)) {
+          options: (value, { req }) => {
+            const { end_station, end_time, status, total_price } = req.body
+            if (
+              end_station === undefined &&
+              end_time === undefined &&
+              status === undefined &&
+              total_price === undefined
+            ) {
               throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.NOT_ALLOWED_UPDATED_FIELD.replace('%s', path),
+                message: RENTALS_MESSAGE.PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON,
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }
+
             return true
           }
         }
@@ -399,20 +370,6 @@ export const cancelRentalValidator = validate(
         isLength: {
           options: { max: 255 },
           errorMessage: RENTALS_MESSAGE.REASON_TOO_LONG
-        }
-      },
-      '*': {
-        in: ['body'],
-        custom: {
-          options: (value, { path }) => {
-            if (!ALLOWED_CANCELLED_FIELDS.includes(path)) {
-              throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.NOT_ALLOWED_CANCELLED_FIELD.replace('%s', path),
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
-            return true
-          }
         }
       }
     },

@@ -1,0 +1,224 @@
+import { Decimal128, ObjectId } from 'mongodb'
+import { BikeStatus, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
+import Rental from '~/models/schemas/rental.schema'
+import Reservation from '~/models/schemas/reservation.schema'
+import { getLocalTime } from '~/utils/date'
+import databaseService from './database.services'
+import { ErrorWithStatus } from '~/models/errors'
+import { RESERVATIONS_MESSAGE } from '~/constants/messages'
+import HTTP_STATUS from '~/constants/http-status'
+import RentalLog from '~/models/schemas/rental-audit-logs.schema'
+
+class ReservationsService {
+  async reserveBike({
+    user_id,
+    bike_id,
+    station_id,
+    start_time
+  }: {
+    user_id: ObjectId
+    bike_id: ObjectId
+    station_id: ObjectId
+    start_time: string
+  }) {
+    const now = getLocalTime()
+    const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '0')
+
+    const session = databaseService.getClient().startSession()
+    try {
+      let reservation
+      await session.withTransaction(async () => {
+        reservation = new Reservation({
+          user_id,
+          bike_id,
+          station_id,
+          start_time: new Date(start_time),
+          end_time: this.generateEndTime(start_time),
+          status: ReservationStatus.Pending,
+          prepaid
+        })
+        await databaseService.reservations.insertOne(reservation, { session })
+
+        await databaseService.bikes.updateOne(
+          { _id: bike_id },
+          {
+            $set: {
+              status: BikeStatus.Reserved,
+              updated_at: now
+            }
+          },
+          { session }
+        )
+      })
+      return {
+        ...(reservation as any),
+        prepaid: Number(prepaid)
+      }
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
+  }
+
+  async cancelReservation({
+    user_id,
+    reservation,
+    reason
+  }: {
+    user_id: ObjectId
+    reservation: Reservation
+    reason?: string
+  }) {
+    const session = databaseService.getClient().startSession()
+    try {
+      let result
+      await session.withTransaction(async () => {
+        const now = getLocalTime()
+        const updatedData: any = {}
+        if (reservation.created_at && this.isCancellable(reservation.created_at)) {
+          // TODO: handle refund
+        }
+        updatedData.status = ReservationStatus.Cancelled
+        result = await databaseService.reservations.findOneAndUpdate(
+          { _id: reservation._id },
+          {
+            $set: {
+              ...updatedData,
+              updated_at: now
+            }
+          },
+          { returnDocument: 'after', session }
+        )
+
+        await databaseService.bikes.updateOne(
+          { _id: reservation.bike_id },
+          {
+            $set: {
+              status: BikeStatus.Available,
+              updated_at: now
+            }
+          }
+        )
+
+        const user = await databaseService.users.findOne({ _id: user_id }, { session })
+        if (!user) {
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
+
+        if ([Role.Admin, Role.Staff].includes(user.role)) {
+          const log = new RentalLog({
+            rental_id: reservation._id!,
+            admin_id: user_id,
+            changes: Object.keys(updatedData),
+            reason: reason || RESERVATIONS_MESSAGE.NO_CANCELLED_REASON
+          })
+          await databaseService.rentalLogs.insertOne({ ...log }, { session })
+        }
+      })
+      return result
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
+  }
+
+  async confirmReservation({ user_id, reservation }: { user_id: ObjectId; reservation: Reservation }) {
+    const session = databaseService.getClient().startSession()
+    try {
+      let result
+      await session.withTransaction(async () => {
+        const now = getLocalTime()
+
+        const rental = new Rental({
+          _id: reservation._id,
+          user_id,
+          bike_id: reservation.bike_id,
+          start_station: reservation.station_id,
+          start_time: now,
+          status: RentalStatus.Rented
+        })
+
+        await databaseService.rentals.insertOne(rental, { session })
+
+        await databaseService.reservations.updateOne(
+          { _id: reservation._id },
+          {
+            $set: {
+              status: ReservationStatus.Active,
+              updated_at: now
+            }
+          },
+          { session }
+        )
+
+        await databaseService.bikes.updateOne(
+          { _id: reservation.bike_id },
+          {
+            $set: {
+              status: BikeStatus.Booked,
+              updated_at: now
+            }
+          },
+          { session }
+        )
+
+        result = rental
+      })
+      return result
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
+  }
+
+  async notifyExpiringReservations() {
+    const now = getLocalTime()
+    const threshold = new Date(now.getTime() + 15 * 60 * 1000)
+
+    const expiring = await databaseService.reservations
+      .find({
+        status: ReservationStatus.Pending,
+        end_time: { $lte: threshold, $gte: now }
+      })
+      .toArray()
+
+    for (const r of expiring) {
+      // TODO: send notification to user (e.g. push/email)
+      console.log(`Notify user ${r.user_id}: reservation ${r._id} expires soon`)
+    }
+
+    return { count: expiring.length }
+  }
+
+  async getReservationHistory(user_id: ObjectId) {
+    const reservations = await databaseService.reservations
+      .find({
+        user_id,
+        status: { $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired] }
+      })
+      .sort({ created_at: -1 })
+      .toArray()
+
+    return reservations
+  }
+
+  generateEndTime(startTime: string) {
+    const holdTimeMs = Number(process.env.HOLD_HOURS_RESERVATION || '1') * 60 * 60 * 1000
+    return new Date(new Date(startTime).getTime() + holdTimeMs)
+  }
+
+  isCancellable(createdTime: Date) {
+    const now = getLocalTime()
+    const cancellableMs = Number(process.env.CANCELLABLE_HOURS || '1') * 60 * 60 * 1000
+    return new Date(createdTime.getTime() + cancellableMs) < now
+  }
+}
+
+const reservationsService = new ReservationsService()
+export default reservationsService
