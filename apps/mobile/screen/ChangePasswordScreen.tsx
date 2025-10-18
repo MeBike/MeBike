@@ -4,7 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BikeColors } from '../constants/BikeColors';
 import { useAuth } from '@providers/auth-providers';
 import { IconSymbol } from "../components/IconSymbol";
+import { useNavigation } from "@react-navigation/native";
 const ChangePasswordScreen = () => {
+     const navigation = useNavigation<RegisterScreenNavigationProp>();
 	const [oldPassword, setOldPassword] = useState('');
 	const [newPassword, setNewPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,7 +24,9 @@ const ChangePasswordScreen = () => {
 			return;
 		}
 		changePassword(oldPassword, newPassword, confirmPassword);
-    
+        setTimeout(() => {
+      navigation.navigate("Main");
+    }, 1000); 
 	};
 
 	return (

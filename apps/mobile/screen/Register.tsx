@@ -62,10 +62,6 @@ export default function RegisterScreen() {
     }
   };
 
-  const handleGoogleRegister = async () => {
-    // await signInWithGoogle();
-    Alert.alert('Success', 'Google register functionality will be implemented');
-  };
 
   const goToLogin = () => {
     navigation.goBack();
