@@ -1,0 +1,32 @@
+type: object
+description: Represents a bike station.
+properties:
+  _id:
+    type: string
+    format: mongoId
+  name:
+    type: string
+    example: "Trạm Đại học FPT"
+  address:
+    type: string
+    example: "Lô E2a-7, Đường D1, Khu Công nghệ cao, Long Thạnh Mỹ, TP. Thủ Đức"
+  location:
+    $ref: './GeoLocation.yaml'
+  capacity:
+    type: integer
+    description: The maximum number of bikes the station can hold.
+    example: 20
+  status:
+    $ref: './StationStatus.yaml'
+  bikes:
+    type: array
+    items:
+      type: string
+      format: mongoId
+    description: A list of bike IDs currently at the station.
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time
