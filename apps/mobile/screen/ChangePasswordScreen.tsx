@@ -5,8 +5,9 @@ import { BikeColors } from '../constants/BikeColors';
 import { useAuth } from '@providers/auth-providers';
 import { IconSymbol } from "../components/IconSymbol";
 import { useNavigation } from "@react-navigation/native";
+import type { ChangePasswordNavigationProp } from '../types/navigation';
 const ChangePasswordScreen = () => {
-     const navigation = useNavigation<RegisterScreenNavigationProp>();
+     const navigation = useNavigation<ChangePasswordNavigationProp>();
 	const [oldPassword, setOldPassword] = useState('');
 	const [newPassword, setNewPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
