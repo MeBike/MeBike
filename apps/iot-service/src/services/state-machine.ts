@@ -2,6 +2,8 @@ import type { IotStateCommand } from "@mebike/shared";
 
 import type { CommandPublisher } from "../publishers";
 
+import logger from "../lib/logger";
+
 const FALLBACK_SEQUENCE: IotStateCommand[] = [
   "booked",
   "maintained",
@@ -33,10 +35,10 @@ export class StateMachineService {
   }
 
   async runSequence(): Promise<void> {
-    console.warn("Starting state machine sequence...");
+    logger.info("Starting state machine sequence...");
 
     for (const state of this.sequence) {
-      console.warn(`Transitioning to state: ${state}`);
+      logger.info({ state }, "transitioning to state");
 
       await this.commandPublisher.sendStateCommand(state, this.deviceMac);
 
@@ -45,7 +47,7 @@ export class StateMachineService {
       await this.delay(this.transitionTimeoutMs);
     }
 
-    console.warn("State machine sequence completed");
+    logger.info("State machine sequence completed");
   }
 
   private delay(ms: number): Promise<void> {
