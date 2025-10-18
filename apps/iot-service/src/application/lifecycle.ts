@@ -2,6 +2,8 @@ import process from "node:process";
 
 import type { IotApplication } from "./index";
 
+import logger from "../lib/logger";
+
 export function setupLifecycleManagement(app: IotApplication): void {
   let shuttingDown = false;
 
@@ -11,15 +13,15 @@ export function setupLifecycleManagement(app: IotApplication): void {
     }
 
     shuttingDown = true;
-    console.warn("Received shutdown signal");
+    logger.warn("Received shutdown signal");
 
     try {
       await app.stop();
-      console.warn("Application shutdown complete");
+      logger.info("Application shutdown complete");
       process.exit(0);
     }
     catch (error) {
-      console.error("Error during shutdown:", error);
+      logger.error({ err: error }, "Error during shutdown");
       process.exit(1);
     }
   };
@@ -28,12 +30,12 @@ export function setupLifecycleManagement(app: IotApplication): void {
   process.on("SIGTERM", shutdown);
 
   process.on("uncaughtException", (error) => {
-    console.error("Uncaught exception:", error);
+    logger.error({ err: error }, "Uncaught exception");
     shutdown();
   });
 
   process.on("unhandledRejection", (reason, promise) => {
-    console.error("Unhandled rejection at:", promise, "reason:", reason);
+    logger.error({ reason, promise }, "Unhandled rejection");
     shutdown();
   });
 }
