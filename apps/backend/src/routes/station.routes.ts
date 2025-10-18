@@ -38,7 +38,7 @@ stationRouter.post(
  */
 stationRouter.get(
   "/",
-  accessTokenValidator,
+//   accessTokenValidator,
   wrapAsync(getStationsController)
 );
 
@@ -52,7 +52,7 @@ stationRouter.get(
  */
 stationRouter.get(
   "/:_id",
-  accessTokenValidator,
+//   accessTokenValidator,
   stationIdValidator,
   wrapAsync(getStationByIdController)
 );
