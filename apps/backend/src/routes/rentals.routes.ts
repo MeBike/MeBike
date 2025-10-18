@@ -1,4 +1,4 @@
-import { accessTokenValidator } from '~/middlewares/users.middlewares'
+import { accessTokenValidator, verifiedUserValidator } from '~/middlewares/users.middlewares'
 import { Router } from 'express'
 
 import {
@@ -88,6 +88,7 @@ rentalsRouter
   // user
   .post(
     accessTokenValidator,
+    verifiedUserValidator,
     filterMiddleware<CreateRentalReqBody>(['bike_id']),
     createRentalSessionValidator,
     wrapAsync(createRentalSessionController)
