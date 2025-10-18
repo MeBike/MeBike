@@ -9,7 +9,6 @@ import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 import { useReportBike } from "./mutations/Bike/useReportBike";
 import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
 import { useGetStatusBikeQuery } from "./query/Bike/useGetStatusBike";
-import { useRouter } from "next/router";
 import { useGetStatusBikeIDQuery } from "./query/Bike/useGetStatusBikeByID";
 import { useNavigation } from "@react-navigation/native";
 interface ErrorResponse {
