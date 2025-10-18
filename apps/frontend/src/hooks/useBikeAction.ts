@@ -43,10 +43,13 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 };
 export const useBikeActions = (
   hasToken : boolean, 
-  bikeId?: string
+  bikeId?: string,
+  station_id?: string,
+  supplier_id?: string,
+  status?: string
 ) => {
     const router = useRouter();
-    const useGetBikes = useGetAllBikeQuery();
+    const useGetBikes = useGetAllBikeQuery( 1, 10, station_id , supplier_id, status);
     const useCreateBike = useCreateBikeMutation();
     const useGetStatusBike = useGetStatusBikeQuery();
     const useGetStatusBikeByID = useGetStatusBikeIDQuery(bikeId || '');
@@ -56,10 +59,10 @@ export const useBikeActions = (
     const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || '');
     const queryClient = useQueryClient();
     const getBikes = useCallback(() => {
-        if(!hasToken){
+        if (!hasToken) {
             router.push('/login');
             return;
-        };
+        }
         useGetBikes.refetch();
     }, [useGetBikes, hasToken, router]);
     const createBike = useCallback(

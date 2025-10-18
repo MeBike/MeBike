@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { IconSymbol } from './IconSymbol';
 import { BikeColors } from '../constants/BikeColors';
 import { Station } from '../types/BikeTypes';
-
+import type { StationType } from '../types/StationType';
 interface StationCardProps {
   station: Station;
   onPress: () => void;
@@ -12,9 +12,7 @@ interface StationCardProps {
 
 export function StationCard({ station, onPress }: StationCardProps) {
   const availabilityPercentage = (station.availableBikes / station.totalSlots) * 100;
-  const electricBikes = station.bikes?.filter(bike => bike.type === 'electric').length || 0;
   const manualBikes = station.bikes?.filter(bike => bike.type === 'manual').length || 0;
-  const availableElectric = station.bikes?.filter(bike => bike.type === 'electric' && bike.isAvailable).length || 0;
   const availableManual = station.bikes?.filter(bike => bike.type === 'manual' && bike.isAvailable).length || 0;
   
   const getAvailabilityColor = (percentage: number) => {
@@ -67,19 +65,13 @@ export function StationCard({ station, onPress }: StationCardProps) {
           </View>
         </View>
 
-        {/* Bike Type Breakdown */}
         <View style={styles.bikeTypesContainer}>
-          <View style={styles.bikeTypeItem}>
-            <IconSymbol name="bolt.fill" size={16} color={BikeColors.accent} />
-            <Text style={styles.bikeTypeText}>Xe điện: {availableElectric}/{electricBikes}</Text>
-          </View>
           <View style={styles.bikeTypeItem}>
             <IconSymbol name="gear" size={16} color={BikeColors.primary} />
             <Text style={styles.bikeTypeText}>Xe thường: {availableManual}/{manualBikes}</Text>
           </View>
         </View>
 
-        {/* Action Hint */}
         <View style={styles.actionHint}>
           <IconSymbol name="map.fill" size={14} color={BikeColors.accent} />
           <Text style={styles.actionHintText}>Nhấn để xem sơ đồ 2D và chi tiết xe</Text>
