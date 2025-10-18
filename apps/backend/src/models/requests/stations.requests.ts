@@ -17,4 +17,9 @@ export type UpdateStationReqBody = {
 export type GetStationsReqQuery = {
   limit?: string;
   page?: string;
+  name?: string;
+  address?: string;
+  latitude?: string;
+  longitude?: string;
+  capacity?: string;
 };

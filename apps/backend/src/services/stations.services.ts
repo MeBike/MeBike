@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import { Filter, ObjectId } from "mongodb";
 import type { NextFunction, Response } from "express";
 
 import type {
@@ -43,7 +43,23 @@ class StationsService {
     next: NextFunction,
     query: GetStationsReqQuery
   ) {
-    const filter = {};
+    const filter: Filter<Station> = {};
+    if (query.name) {
+      filter.name = { $regex: query.name, $options: 'i' };
+    }
+    if (query.address) {
+      filter.address = { $regex: query.address, $options: 'i' };
+    }
+    if (query.latitude) {
+      filter.latitude = query.latitude;
+    }
+    if (query.longitude) {
+      filter.longitude = query.longitude;
+    }
+    if (query.capacity) {
+      filter.capacity = query.capacity;
+    }
+
     await sendPaginatedResponse(res, next, databaseService.stations, query, filter);
   }
 
