@@ -4,7 +4,7 @@ import { Decimal128, Int32 } from 'mongodb'
 
 import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
-import { AUTH_MESSAGE, COMMON_MESSAGE, RENTALS_MESSAGE } from '~/constants/messages'
+import { AUTH_MESSAGE, RENTALS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import Rental from '~/models/schemas/rental.schema'
 import { toObjectId } from '~/utils/string'
@@ -17,6 +17,7 @@ import {
   UpdateRentalReqBody
 } from '~/models/requests/rentals.requests'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
+import walletService from './wallets.services'
 
 class RentalsService {
   async createRentalSession({
@@ -98,6 +99,10 @@ class RentalsService {
         const now = getLocalTime()
         const duration = this.generateDuration(rental.start_time, now)
         const totalPrice = this.generateTotalPrice(duration)
+
+        const decimalTotalPrice = Decimal128.fromString(totalPrice.toString())
+        const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', rental.bike_id.toString())
+        await walletService.paymentRental(user_id.toString(), decimalTotalPrice, description, rental._id as ObjectId)
 
         const updatedData: Partial<Rental> = {
           end_station,

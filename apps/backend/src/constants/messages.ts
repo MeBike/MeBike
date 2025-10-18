@@ -232,7 +232,9 @@ export const RENTALS_MESSAGE = {
   BIKE_IS_RESERVED: 'Xe đã được đặt trước',
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   INVALID_BIKE_STATUS: 'Trạng thái xe không hợp lệ',
-  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON: 'Bạn phải nhập ít nhất 1 trường ngoài nguyên nhân để cập nhật'
+  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON: 'Bạn phải nhập ít nhất 1 trường ngoài nguyên nhân để cập nhật',
+  // payment
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên thuê cho xe %s'
 } as const
 
 export const COMMON_MESSAGE = {
@@ -280,6 +282,8 @@ export const RESERVATIONS_MESSAGE = {
   NO_CANCELLED_REASON: 'Không có nguyên nhân nào được cung cấp',
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
+  // Payment
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s'
 } as const
 export const WALLETS_MESSAGE = {
   USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',

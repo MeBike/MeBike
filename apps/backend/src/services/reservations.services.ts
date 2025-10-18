@@ -8,6 +8,7 @@ import { ErrorWithStatus } from '~/models/errors'
 import { RESERVATIONS_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
+import walletService from './wallets.services'
 
 class ReservationsService {
   async reserveBike({
@@ -28,7 +29,18 @@ class ReservationsService {
     try {
       let reservation
       await session.withTransaction(async () => {
+        const reservationId = new ObjectId()
+        const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
+
+        await walletService.paymentRental(
+            user_id.toString(),
+            prepaid, 
+            description, 
+            reservationId,
+        )
+
         reservation = new Reservation({
+          _id: reservationId,
           user_id,
           bike_id,
           station_id,
