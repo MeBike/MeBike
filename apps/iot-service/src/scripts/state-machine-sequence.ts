@@ -85,13 +85,11 @@ export async function runStateMachineSequence(
 
   const providedClient = overrides.client;
   const client
-    = providedClient
-      ?? (overrides.createClient?.()
-        ?? createClient(options.brokerUrl, options.username, options.password));
+    = providedClient ?? (overrides.createClient?.() ?? createClient(options.brokerUrl, options.username, options.password));
   const shouldCloseClient = !providedClient;
 
   const errorHandler = (err: Error) => {
-    logger.error("MQTT error:", err);
+    logger.error({ err }, "MQTT error");
   };
   client.on("error", errorHandler);
 
@@ -152,7 +150,7 @@ export async function runStateMachineSequence(
     return currentState ?? null;
   }
   catch (error) {
-    logger.error("Sequence failed:", error as Error);
+    logger.error({ err: error }, "Sequence failed");
     throw error;
   }
   finally {

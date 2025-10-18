@@ -35,7 +35,7 @@ export function setupLifecycleManagement(app: IotApplication): void {
   });
 
   process.on("unhandledRejection", (reason, promise) => {
-    logger.error({ reason, promise }, "Unhandled rejection");
+    logger.error({ err: reason, promise }, "Unhandled rejection");
     shutdown();
   });
 }
