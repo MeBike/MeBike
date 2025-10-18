@@ -1,6 +1,6 @@
 
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,69 +9,41 @@ import {
   SafeAreaView,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-
-interface Booking {
-  id: string;
-  bikeType: string;
-  location: string;
-  startDate: string;
-  duration: string;
-  price: number;
-  status: "completed" | "ongoing" | "cancelled";
-}
-
-const MOCK_BOOKINGS: Booking[] = [
-  {
-    id: "1",
-    bikeType: "Xe đạp thường",
-    location: "Quận 1, TP.HCM",
-    startDate: "15/10/2025 - 14:30",
-    duration: "2 giờ",
-    price: 50000,
-    status: "completed",
-  },
-  {
-    id: "2",
-    bikeType: "Xe đạp điện",
-    location: "Quận 3, TP.HCM",
-    startDate: "14/10/2025 - 09:00",
-    duration: "3 giờ",
-    price: 120000,
-    status: "completed",
-  },
-  {
-    id: "3",
-    bikeType: "Xe đạp thường",
-    location: "Quận 7, TP.HCM",
-    startDate: "12/10/2025 - 16:45",
-    duration: "1.5 giờ",
-    price: 35000,
-    status: "completed",
-  },
-  {
-    id: "4",
-    bikeType: "Xe đạp leo núi",
-    location: "Quận 2, TP.HCM",
-    startDate: "10/10/2025 - 10:00",
-    duration: "4 giờ",
-    price: 180000,
-    status: "completed",
-  },
-];
+import type { RentingHistory } from "../types/RentalTypes";
+import { useRentalsActions } from "@hooks/useRentalAction";
 
 const BookingHistoryScreen = () => {
-  const [bookings] = useState<Booking[]>(MOCK_BOOKINGS);
+  const { rentalsData, isGetAllRentalsFetching, getAllRentals } = useRentalsActions(true);
+  const [bookings, setBookings] = useState<RentingHistory[]>([]);
+
+  useEffect(() => {
+    // Gọi getAllRentals để fetch data khi component mount
+    getAllRentals();
+  }, [getAllRentals]);
+
+  useEffect(() => {
+    if (rentalsData && !isGetAllRentalsFetching) {
+      if (rentalsData.data?.data && Array.isArray(rentalsData.data.data)) {
+        setBookings(rentalsData.data.data);
+      }
+    }
+  }, [rentalsData, isGetAllRentalsFetching]);
+
+  useEffect(() => {
+    console.log('bookings state:', bookings);
+  }, [bookings]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed":
+      case "HOÀN THÀNH":
         return "#4CAF50";
-      case "ongoing":
+      case "ĐANG THUÊ":
         return "#FF9800";
-      case "cancelled":
+      case "ĐÃ HỦY":
         return "#F44336";
       default:
         return "#999";
@@ -80,25 +52,43 @@ const BookingHistoryScreen = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "completed":
+      case "HOÀN THÀNH":
         return "Hoàn thành";
-      case "ongoing":
+      case "ĐANG THUÊ":
         return "Đang thuê";
-      case "cancelled":
+      case "ĐÃ HỦY":
         return "Đã hủy";
       default:
         return status;
     }
   };
 
-  const renderBookingCard = ({ item }: { item: Booking }) => (
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN") + " - " + date.toLocaleTimeString("vi-VN", {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDuration = (duration: number) => {
+    if (duration === 0) return "Chưa kết thúc";
+    const hours = Math.floor(duration / 3600);
+    const minutes = Math.floor((duration % 3600) / 60);
+    if (hours > 0) {
+      return `${hours} giờ ${minutes > 0 ? minutes + ' phút' : ''}`;
+    }
+    return `${minutes} phút`;
+  };
+
+  const renderBookingCard = ({ item }: { item: RentingHistory }) => (
     <View style={styles.bookingCard}>
       <View style={styles.cardHeader}>
         <View style={styles.bikeInfo}>
           <Ionicons name="bicycle" size={24} color="#0066FF" />
           <View style={styles.bikeDetails}>
-            <Text style={styles.bikeType}>{item.bikeType}</Text>
-            <Text style={styles.location}>{item.location}</Text>
+            <Text style={styles.bikeType}>Xe đạp</Text>
+            <Text style={styles.location}>ID: {item.start_station}</Text>
           </View>
         </View>
         <View
@@ -116,16 +106,16 @@ const BookingHistoryScreen = () => {
       <View style={styles.cardDetails}>
         <View style={styles.detailRow}>
           <Ionicons name="calendar" size={16} color="#666" />
-          <Text style={styles.detailText}>{item.startDate}</Text>
+          <Text style={styles.detailText}>{formatDate(item.start_time)}</Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="time" size={16} color="#666" />
-          <Text style={styles.detailText}>{item.duration}</Text>
+          <Text style={styles.detailText}>{formatDuration(item.duration)}</Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="pricetag" size={16} color="#0066FF" />
           <Text style={[styles.detailText, styles.priceText]}>
-            {item.price.toLocaleString("vi-VN")} đ
+            {item.total_price.toLocaleString("vi-VN")} đ
           </Text>
         </View>
       </View>
@@ -153,13 +143,28 @@ const BookingHistoryScreen = () => {
         </Text>
       </LinearGradient>
 
-      <FlatList
-        data={bookings}
-        renderItem={renderBookingCard}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        scrollEnabled={true}
-      />
+      {isGetAllRentalsFetching ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0066FF" />
+          <Text style={styles.loadingText}>Đang tải...</Text>
+        </View>
+      ) : bookings.length > 0 ? (
+        <FlatList
+          data={bookings}
+          renderItem={renderBookingCard}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.listContent}
+          scrollEnabled={true}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="document-text-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyText}>Chưa có lịch sử thuê xe</Text>
+          <Text style={styles.emptySubtext}>
+            Khi bạn thuê xe, lịch sử sẽ hiển thị ở đây
+          </Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -271,6 +276,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginRight: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#666",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
   },
 });
 
