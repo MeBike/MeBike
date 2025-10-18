@@ -43,6 +43,18 @@
     {
       "name": "Suppliers",
       "description": "Operations for managing bike suppliers."
+    },
+    {
+      "name": "Wallets",
+      "description": "Operations related to user wallets and transactions."
+    },
+    {
+      "name": "Refunds",
+      "description": "Operations for managing refund requests."
+    },
+    {
+      "name": "Withdrawals",
+      "description": "Operations for managing withdrawal requests."
     }
   ],
   "paths": {
@@ -925,6 +937,1964 @@
           }
         }
       }
+    },
+    "/suppliers": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Get all suppliers (Admin only)",
+        "description": "Retrieves a paginated list of all suppliers. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of suppliers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Supplier"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Create a new supplier (Admin only)",
+        "description": "Adds a new supplier to the system. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupplierReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Supplier created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/suppliers/stats": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Get bike statistics for all suppliers (Admin only)",
+        "description": "Retrieves statistics about the number of bikes associated with each supplier. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/suppliers/{id}": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Get supplier by ID (Admin only)",
+        "description": "Retrieves detailed information for a specific supplier by their ID. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the supplier to retrieve.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supplier details retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Supplier"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Update a supplier (Admin only)",
+        "description": "Updates the information of an existing supplier. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the supplier to update.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupplierReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supplier updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Change supplier status (Admin only)",
+        "description": "Changes the status of a supplier (e.g., ACTIVE, INACTIVE). Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the supplier whose status is to be changed.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeSupplierStatusReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supplier status changed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/suppliers/{id}/stats": {
+      "get": {
+        "tags": [
+          "Suppliers"
+        ],
+        "summary": "Get bike statistics for a specific supplier (Admin only)",
+        "description": "Retrieves statistics about the number of bikes for a specific supplier by their ID. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the supplier to get statistics for.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals": {
+      "post": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Create a new rental session",
+        "description": "Allows a user to start a new rental session by providing a bike ID.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRentalReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental session created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "$ref": "#/components/schemas/MessageResponse/properties/message"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/Rental"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (e.g., bike not available, station not found).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get all rental sessions (Admin/Staff only)",
+        "description": "Retrieves a paginated list of all rental sessions.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "start_station",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "name": "end_station",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RentalStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of rentals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Rental"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/stats/revenue": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get rental revenue statistics (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DAY",
+                "MONTH",
+                "YEAR"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revenue statistics retrieved successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/stats/station-activity": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get station activity statistics (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station activity statistics retrieved successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/stats/reservations": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get reservation statistics (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservation statistics retrieved successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/me": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get my rental history",
+        "description": "Retrieves the authenticated user's paginated rental history.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of the user's rentals.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Rental"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/me/current": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get my current rental session",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Details of the current active rental session."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/me/{id}": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get details of my specific rental",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed information about the rental session."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (trying to access another user's rental)."
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/rentals/me/{id}/end": {
+      "put": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "End my rental session",
+        "description": "Allows a user to end their own currently active rental session.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rental session ended successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (not the user's rental)."
+          },
+          "404": {
+            "description": "Not Found (rental is not currently active)."
+          }
+        }
+      }
+    },
+    "/rentals/{id}": {
+      "get": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Get rental details by ID (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed rental information."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Update rental details (Admin only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRentalReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental updated successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/rentals/{id}/end": {
+      "put": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "End a rental session (Admin/Staff only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EndRentalByAdminOrStaffReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental session ended successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/rentals/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Rentals"
+        ],
+        "summary": "Cancel a rental session (Admin/Staff only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelRentalReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rental session cancelled successfully."
+          },
+          "400": {
+            "description": "Bad Request (e.g., rental cannot be cancelled in its current state)."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Get my reports",
+        "description": "Retrieves a paginated list of reports created by the currently authenticated user.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter reports by status.",
+            "schema": {
+              "$ref": "#/components/schemas/ReportStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of user's reports.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Report"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Create a new report",
+        "description": "Submits a new report. For reports involving files, use `multipart/form-data`.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Report created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/reports/manage-reports": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Get all reports (Admin only)",
+        "description": "Retrieves a paginated list of all reports in the system. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter reports by type.",
+            "schema": {
+              "$ref": "#/components/schemas/ReportType"
+            }
+          },
+          {
+            "name": "userID",
+            "in": "query",
+            "description": "Filter reports by user ID.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Filter reports by a specific date (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of all reports.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Report"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reports/{reportID}": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Get report by ID",
+        "description": "Retrieves detailed information for a specific report by its ID.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reportID",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the report to retrieve.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report details retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Update a report (Admin/Staff)",
+        "description": "Updates the status, assignee, or priority of a report. Requires admin/staff privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "reportID",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the report to update.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReportReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Report updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/wallets": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Get my wallet info",
+        "description": "Retrieves information about the currently authenticated user's wallet.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet information retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Wallet"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/wallets/transaction": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Get my transaction history",
+        "description": "Retrieves a paginated list of transactions for the authenticated user's wallet.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter transactions by type.",
+            "schema": {
+              "$ref": "#/components/schemas/TransactionType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of transactions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Transaction"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/wallets/transaction/{id}": {
+      "get": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Get transaction details",
+        "description": "Retrieves details of a specific transaction for the authenticated user.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction details retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/wallets/increase": {
+      "put": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Increase wallet balance (Admin only)",
+        "description": "Increases the balance of a user's wallet. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncreaseBalanceReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/wallets/decrease": {
+      "put": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Decrease wallet balance (Admin only)",
+        "description": "Decreases the balance of a user's wallet. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecreaseBalanceReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/wallets/{id}": {
+      "patch": {
+        "tags": [
+          "Wallets"
+        ],
+        "summary": "Change wallet status (Admin only)",
+        "description": "Changes the status of a user's wallet (e.g., Active, Frozen). Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWalletStatusReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/refunds": {
+      "post": {
+        "tags": [
+          "Refunds"
+        ],
+        "summary": "Create a new refund request",
+        "description": "Allows an authenticated user to submit a refund request for a specific transaction.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRefundReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "description": "Transaction not found."
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Refunds"
+        ],
+        "summary": "Get my refund requests",
+        "description": "Retrieves a paginated list of refund requests for the currently authenticated user.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RefundStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of the user's refund requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Refund"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/refunds/manage-refunds": {
+      "get": {
+        "tags": [
+          "Refunds"
+        ],
+        "summary": "Get all refund requests (Admin only)",
+        "description": "Retrieves a paginated list of all refund requests. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RefundStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of all refund requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Refund"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/refunds/{id}": {
+      "get": {
+        "tags": [
+          "Refunds"
+        ],
+        "summary": "Get refund request details",
+        "description": "Retrieves details of a specific refund request. Admins can view any request, users can only view their own.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Refund"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Refunds"
+        ],
+        "summary": "Update refund status (Admin only)",
+        "description": "Allows an admin to approve, reject, or complete a refund request.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRefundStatusReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "400": {
+            "description": "Bad request (e.g., invalid status transition)."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/withdraws": {
+      "post": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Create a withdrawal request",
+        "description": "Allows an authenticated user to submit a request to withdraw funds from their wallet.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWithdrawalReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Get my withdrawal requests",
+        "description": "Retrieves a paginated list of the authenticated user's withdrawal requests.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WithdrawalStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of withdrawal requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Withdrawal"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/withdraws/manage-withdrawal": {
+      "get": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Get all withdrawal requests (Admin only)",
+        "description": "Retrieves a paginated list of all withdrawal requests in the system.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WithdrawalStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of all withdrawal requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Withdrawal"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/withdraws/{id}": {
+      "get": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Get withdrawal request details",
+        "description": "Retrieves details of a specific withdrawal request. Admins can view any request, users can only view their own.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Withdrawal"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Withdrawals"
+        ],
+        "summary": "Update withdrawal status (Admin only)",
+        "description": "Allows an admin to approve, reject, or complete a withdrawal request.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWithdrawalStatusReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/schemas/MessageResponse"
+          },
+          "400": {
+            "description": "Bad request (e.g., invalid status transition)."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1147,6 +3117,11 @@
             "format": "mongoId",
             "description": "The ID of the station to which the bike belongs."
           },
+          "chip_id": {
+            "type": "string",
+            "description": "The unique identifier of the bike's chip.",
+            "example": "CHIP123456789"
+          },
           "status": {
             "$ref": "#/components/schemas/Bike/properties/status"
           },
@@ -1161,6 +3136,11 @@
         "type": "object",
         "description": "Fields to update for a bike. All fields are optional.",
         "properties": {
+          "chip_id": {
+            "type": "string",
+            "description": "The new unique identifier for the bike's chip.",
+            "example": "CHIP987654321"
+          },
           "station_id": {
             "type": "string",
             "format": "mongoId",
@@ -1173,6 +3153,392 @@
             "type": "string",
             "format": "mongoId",
             "description": "The new supplier ID for the bike."
+          }
+        }
+      },
+      "CreateSupplierReqBody": {
+        "type": "object",
+        "required": [
+          "name",
+          "address",
+          "phone_number",
+          "contract_fee"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the supplier.",
+            "maxLength": 255,
+            "example": "Công ty TNHH Xe Đạp Toàn Cầu"
+          },
+          "address": {
+            "type": "string",
+            "description": "Address of the supplier.",
+            "maxLength": 250,
+            "example": "456 Đường XYZ, Quận 2, TP.HCM"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Phone number of the supplier (must be 10 digits).",
+            "pattern": "^\\d{10}$",
+            "example": "0912345678"
+          },
+          "contract_fee": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Contract fee with up to 2 decimal places.",
+            "example": 25000.75
+          }
+        }
+      },
+      "UpdateSupplierReqBody": {
+        "type": "object",
+        "description": "Fields to update for a supplier. All fields are optional.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "New name for the supplier.",
+            "maxLength": 255,
+            "example": "Công ty Cổ phần Xe Đạp Việt Nam"
+          },
+          "address": {
+            "type": "string",
+            "description": "New address for the supplier.",
+            "maxLength": 250,
+            "example": "789 Đường LMN, Quận 3, TP.HCM"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "New phone number for the supplier (must be 10 digits).",
+            "pattern": "^\\d{10}$",
+            "example": "0988888888"
+          },
+          "contract_fee": {
+            "type": "number",
+            "format": "decimal",
+            "description": "New contract fee.",
+            "example": 30000
+          }
+        }
+      },
+      "ChangeSupplierStatusReqBody": {
+        "type": "object",
+        "required": [
+          "newStatus"
+        ],
+        "properties": {
+          "newStatus": {
+            "type": "string",
+            "description": "The new status for the supplier.",
+            "enum": [
+              "HOẠT ĐỘNG",
+              "NGƯNG HOẠT ĐỘNG",
+              "CHẤM DỨT HỢP ĐỒNG"
+            ],
+            "example": "NGƯNG HOẠT ĐỘNG"
+          }
+        }
+      },
+      "CreateRentalReqBody": {
+        "type": "object",
+        "required": [
+          "bike_id"
+        ],
+        "properties": {
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the bike to be rented."
+          }
+        }
+      },
+      "UpdateRentalReqBody": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "end_station": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the station where the bike was returned. Optional."
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time the rental ended. Optional."
+          },
+          "status": {
+            "$ref": "#/components/schemas/RentalStatus"
+          },
+          "total_price": {
+            "type": "number",
+            "format": "decimal",
+            "description": "The total price of the rental. Optional."
+          },
+          "reason": {
+            "type": "string",
+            "description": "The reason for the update.",
+            "example": "Admin adjusted rental details due to system error."
+          }
+        }
+      },
+      "CancelRentalReqBody": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "bikeStatus": {
+            "$ref": "#/components/schemas/BikeStatus",
+            "description": "The new status to set for the bike after cancellation (e.g., 'AVAILABLE', 'BROKEN'). Optional."
+          },
+          "reason": {
+            "type": "string",
+            "description": "The reason for cancelling the rental.",
+            "example": "Customer requested cancellation due to personal emergency."
+          }
+        }
+      },
+      "EndRentalByAdminOrStaffReqBody": {
+        "type": "object",
+        "required": [
+          "end_station",
+          "reason"
+        ],
+        "properties": {
+          "end_station": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the station where the bike is being returned."
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time the rental is being ended. Optional, defaults to current time."
+          },
+          "reason": {
+            "type": "string",
+            "description": "The reason for ending the rental session.",
+            "example": "Staff assisted user to end rental session."
+          }
+        }
+      },
+      "CreateReportReqBody": {
+        "type": "object",
+        "required": [
+          "type",
+          "message"
+        ],
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ReportType"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 250,
+            "example": "The bike's front tire is flat."
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "Required if type is 'XE HƯ HỎNG' or 'XE BẨN'."
+          },
+          "station_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "Required for station-related report types."
+          },
+          "rental_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "Optional, to link the report to a specific rental session."
+          },
+          "location": {
+            "$ref": "#/components/schemas/GeoLocation",
+            "description": "Required for SOS report types."
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            },
+            "description": "Array of files (images/videos) to upload with the report."
+          }
+        }
+      },
+      "UpdateReportReqBody": {
+        "type": "object",
+        "required": [
+          "newStatus"
+        ],
+        "properties": {
+          "newStatus": {
+            "$ref": "#/components/schemas/ReportStatus"
+          },
+          "staff_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the staff member to assign the report to. Required when changing status to 'ĐANG XỬ LÝ'."
+          },
+          "priority": {
+            "$ref": "#/components/schemas/ReportPriority",
+            "description": "The priority of the report. Required when changing status to 'ĐANG XỬ LÝ'."
+          }
+        }
+      },
+      "CreateRefundReqBody": {
+        "type": "object",
+        "required": [
+          "transaction_id",
+          "amount"
+        ],
+        "properties": {
+          "transaction_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the transaction for which the refund is requested."
+          },
+          "amount": {
+            "type": "number",
+            "description": "The amount to be refunded. Must be a positive number.",
+            "example": 50000
+          }
+        }
+      },
+      "UpdateRefundStatusReqBody": {
+        "type": "object",
+        "required": [
+          "newStatus"
+        ],
+        "properties": {
+          "newStatus": {
+            "$ref": "#/components/schemas/RefundStatus",
+            "description": "The new status for the refund request. Allowed values are 'ĐÃ DUYỆT', 'TỪ CHỐI', 'ĐÃ HOÀN THÀNH'."
+          }
+        }
+      },
+      "IncreaseBalanceReqBody": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "amount",
+          "fee",
+          "description",
+          "message"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "amount": {
+            "type": "number",
+            "example": 100000
+          },
+          "fee": {
+            "type": "number",
+            "example": 0
+          },
+          "description": {
+            "type": "string",
+            "example": "Admin top-up for user"
+          },
+          "transaction_hash": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Top-up successful"
+          }
+        }
+      },
+      "DecreaseBalanceReqBody": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "amount",
+          "fee",
+          "message"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "amount": {
+            "type": "number",
+            "example": 50000
+          },
+          "fee": {
+            "type": "number",
+            "example": 0
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Admin adjustment"
+          },
+          "transaction_hash": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "example": "Adjustment successful"
+          }
+        }
+      },
+      "UpdateWalletStatusReqBody": {
+        "type": "object",
+        "required": [
+          "newStatus"
+        ],
+        "properties": {
+          "newStatus": {
+            "$ref": "#/components/schemas/WalletStatus"
+          }
+        }
+      },
+      "CreateWithdrawalReqBody": {
+        "type": "object",
+        "required": [
+          "amount",
+          "account"
+        ],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "example": 200000
+          },
+          "account": {
+            "type": "string",
+            "description": "Bank account information for withdrawal.",
+            "example": "Techcombank - 190123456789 - NGUYEN VAN B"
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "example": "Please process quickly."
+          }
+        }
+      },
+      "UpdateWithdrawalStatusReqBody": {
+        "type": "object",
+        "required": [
+          "newStatus"
+        ],
+        "properties": {
+          "newStatus": {
+            "$ref": "#/components/schemas/WithdrawalStatus"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reason is required if status is 'TỪ CHỐI'.",
+            "example": "Thông tin tài khoản không hợp lệ."
           }
         }
       },
@@ -1414,6 +3780,11 @@
             "nullable": true,
             "description": "ID of the station where the bike is located. Null if rented."
           },
+          "chip_id": {
+            "type": "string",
+            "description": "The unique identifier of the bike's chip.",
+            "example": "CHIP123456789"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -1454,6 +3825,453 @@
           "KHÔNG CÓ SẴN"
         ],
         "example": "CÓ SẴN"
+      },
+      "Supplier": {
+        "type": "object",
+        "description": "Represents a supplier object.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "name": {
+            "type": "string",
+            "example": "Nhà cung cấp Xe Đạp Xanh"
+          },
+          "contact_info": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string",
+                "example": "123 Đường ABC, Quận 1, TP.HCM"
+              },
+              "phone_number": {
+                "type": "string",
+                "example": "0987654321"
+              }
+            }
+          },
+          "contract_fee": {
+            "type": "number",
+            "format": "decimal",
+            "example": 15000.5
+          },
+          "status": {
+            "type": "string",
+            "description": "The status of the supplier contract.",
+            "enum": [
+              "HOẠT ĐỘNG",
+              "NGƯNG HOẠT ĐỘNG",
+              "CHẤM DỨT HỢP ĐỒNG"
+            ],
+            "example": "HOẠT ĐỘNG"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Rental": {
+        "type": "object",
+        "description": "Represents a rental session object.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "start_station": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "end_station": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Duration of the rental in minutes.",
+            "example": 60
+          },
+          "total_price": {
+            "type": "number",
+            "format": "decimal",
+            "example": 10000
+          },
+          "status": {
+            "$ref": "#/components/schemas/RentalStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RentalStatus": {
+        "type": "string",
+        "description": "The status of a rental session.",
+        "enum": [
+          "ĐANG THUÊ",
+          "HOÀN THÀNH",
+          "ĐÃ HỦY",
+          "ĐÃ ĐẶT TRƯỚC"
+        ],
+        "example": "ĐANG THUÊ"
+      },
+      "Report": {
+        "type": "object",
+        "description": "Represents a user-submitted report.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the user who submitted the report."
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "The ID of the bike related to the report, if any."
+          },
+          "station_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "The ID of the station related to the report, if any."
+          },
+          "rental_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "The ID of the rental session related to the report, if any."
+          },
+          "assignee_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true,
+            "description": "The ID of the staff member assigned to handle the report."
+          },
+          "media_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "A list of URLs for media files (images/videos) attached to the report."
+          },
+          "location": {
+            "$ref": "#/components/schemas/GeoLocation",
+            "nullable": true
+          },
+          "priority": {
+            "$ref": "#/components/schemas/ReportPriority"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ReportType"
+          },
+          "message": {
+            "type": "string",
+            "description": "The detailed message or description of the report."
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReportStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReportStatus": {
+        "type": "string",
+        "description": "The status of a report.",
+        "enum": [
+          "ĐANG CHỜ XỬ LÝ",
+          "ĐANG XỬ LÝ",
+          "ĐÃ GIẢI QUYẾT",
+          "ĐÃ HỦY"
+        ],
+        "example": "ĐANG CHỜ XỬ LÝ"
+      },
+      "ReportType": {
+        "type": "string",
+        "description": "The type or category of the report.",
+        "enum": [
+          "XE HƯ HỎNG",
+          "XE BẨN",
+          "TRẠM ĐẦY",
+          "TRẠM KHÔNG NHẬN XE",
+          "TRẠM NGOẠI TUYẾN",
+          "CẤP CỨU TAI NẠN",
+          "CẤP CỨU SỨC KHỎE",
+          "CẤP CỨU NGUY HIỂM",
+          "KHÁC"
+        ],
+        "example": "XE HƯ HỎNG"
+      },
+      "ReportPriority": {
+        "type": "string",
+        "description": "The priority level of the report.",
+        "enum": [
+          "THẤP",
+          "BÌNH THƯỜNG",
+          "CAO",
+          "KHẨN CẤP"
+        ],
+        "example": "BÌNH THƯỜNG"
+      },
+      "GeoLocation": {
+        "type": "object",
+        "description": "Represents a geographical location with latitude and longitude.",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "example": 10.7769
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "example": 106.7009
+          }
+        }
+      },
+      "Refund": {
+        "type": "object",
+        "description": "Represents a refund request object.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "transaction_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the transaction being refunded."
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the user who requested the refund."
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "description": "The amount requested for refund.",
+            "example": 50000
+          },
+          "status": {
+            "$ref": "#/components/schemas/RefundStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RefundStatus": {
+        "type": "string",
+        "description": "The status of a refund request.",
+        "enum": [
+          "ĐANG CHỜ XỬ LÝ",
+          "ĐÃ DUYỆT",
+          "TỪ CHỐI",
+          "ĐÃ HOÀN THÀNH"
+        ],
+        "example": "ĐANG CHỜ XỬ LÝ"
+      },
+      "Wallet": {
+        "type": "object",
+        "description": "Represents a user's wallet.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "balance": {
+            "type": "number",
+            "format": "decimal",
+            "example": 150000
+          },
+          "status": {
+            "$ref": "#/components/schemas/WalletStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WalletStatus": {
+        "type": "string",
+        "description": "The status of a wallet.",
+        "enum": [
+          "ĐANG HOẠT ĐỘNG",
+          "ĐÃ BỊ ĐÓNG BĂNG"
+        ],
+        "example": "ĐANG HOẠT ĐỘNG"
+      },
+      "Transaction": {
+        "type": "object",
+        "description": "Represents a wallet transaction.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "wallet_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "example": 50000
+          },
+          "fee": {
+            "type": "number",
+            "format": "decimal",
+            "example": 0
+          },
+          "description": {
+            "type": "string",
+            "example": "Nạp tiền vào ví"
+          },
+          "transaction_hash": {
+            "type": "string",
+            "example": "TX123456789"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/TransactionStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TransactionStatus": {
+        "type": "string",
+        "description": "The status of a transaction.",
+        "enum": [
+          "ĐANG CHỜ XỬ LÝ",
+          "THÀNH CÔNG",
+          "THẤT BẠI",
+          "ĐÃ HỦY"
+        ],
+        "example": "THÀNH CÔNG"
+      },
+      "TransactionType": {
+        "type": "string",
+        "description": "The type of a transaction.",
+        "enum": [
+          "NẠP TIỀN",
+          "THANH TOÁN",
+          "RÚT TIỀN",
+          "HOÀN TIỀN"
+        ],
+        "example": "NẠP TIỀN"
+      },
+      "Withdrawal": {
+        "type": "object",
+        "description": "Represents a withdrawal request.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal",
+            "example": 100000
+          },
+          "account": {
+            "type": "string",
+            "description": "Bank account information for the withdrawal.",
+            "example": "Vietcombank - 0123456789 - NGUYEN VAN A"
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true,
+            "description": "Reason for rejection, if applicable."
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "description": "User's note for the request."
+          },
+          "status": {
+            "$ref": "#/components/schemas/WithdrawalStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "WithdrawalStatus": {
+        "type": "string",
+        "description": "The status of a withdrawal request.",
+        "enum": [
+          "ĐANG CHỜ XỬ LÝ",
+          "ĐÃ DUYỆT",
+          "TỪ CHỐI",
+          "ĐÃ HOÀN THÀNH"
+        ],
+        "example": "ĐANG CHỜ XỬ LÝ"
       }
     },
     "securitySchemes": {

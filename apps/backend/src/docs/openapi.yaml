@@ -27,6 +27,13 @@ tags:
     description: Operations for user reports and management.
   - name: Suppliers
     description: Operations for managing bike suppliers.
+  - name: Wallets
+    description: Operations related to user wallets and transactions.
+  - name: Refunds
+    description: Operations for managing refund requests.
+  - name: Withdrawals
+    description: Operations for managing withdrawal requests.
+  
 paths:
   $ref: './paths/all-paths.yaml'
 
@@ -57,6 +64,44 @@ components:
       $ref: './components/schemas/CreateBikeReqBody.yaml'
     UpdateBikeReqBody:
       $ref: './components/schemas/UpdateBikeReqBody.yaml'
+    # supplier
+    CreateSupplierReqBody:
+      $ref: './components/schemas/CreateSupplierReqBody.yaml'
+    UpdateSupplierReqBody:
+      $ref: './components/schemas/UpdateSupplierReqBody.yaml'
+    ChangeSupplierStatusReqBody:
+      $ref: './components/schemas/ChangeSupplierStatusReqBody.yaml'
+    # rental
+    CreateRentalReqBody:
+      $ref: './components/schemas/CreateRentalReqBody.yaml'
+    UpdateRentalReqBody:
+      $ref: './components/schemas/UpdateRentalReqBody.yaml'
+    CancelRentalReqBody:
+      $ref: './components/schemas/CancelRentalReqBody.yaml'
+    EndRentalByAdminOrStaffReqBody:
+      $ref: './components/schemas/EndRentalByAdminOrStaffReqBody.yaml'
+    # report
+    CreateReportReqBody:
+      $ref: './components/schemas/CreateReportReqBody.yaml'
+    UpdateReportReqBody:
+      $ref: './components/schemas/UpdateReportReqBody.yaml'
+    # refund
+    CreateRefundReqBody:
+      $ref: './components/schemas/CreateRefundReqBody.yaml'
+    UpdateRefundStatusReqBody:
+      $ref: './components/schemas/UpdateRefundStatusReqBody.yaml'
+    # wallet
+    IncreaseBalanceReqBody:
+      $ref: './components/schemas/IncreaseBalanceReqBody.yaml'
+    DecreaseBalanceReqBody:
+      $ref: './components/schemas/DecreaseBalanceReqBody.yaml'
+    UpdateWalletStatusReqBody:
+      $ref: './components/schemas/UpdateWalletStatusReqBody.yaml'
+    # withdrawal
+    CreateWithdrawalReqBody:
+      $ref: './components/schemas/CreateWithdrawalReqBody.yaml'
+    UpdateWithdrawalStatusReqBody:
+      $ref: './components/schemas/UpdateWithdrawalStatusReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:
@@ -87,6 +132,40 @@ components:
       $ref: './components/schemas/Bike.yaml'
     BikeStatus:
       $ref: './components/schemas/BikeStatus.yaml'
+    Supplier:
+      $ref: "./components/schemas/Supplier.yaml"
+    Rental:
+      $ref: "./components/schemas/Rental.yaml"
+    RentalStatus:
+      $ref: "./components/schemas/RentalStatus.yaml"
+    Report:
+      $ref: "./components/schemas/Report.yaml"
+    ReportStatus:
+      $ref: "./components/schemas/ReportStatus.yaml"
+    ReportType:
+      $ref: "./components/schemas/ReportType.yaml"
+    ReportPriority:
+      $ref: "./components/schemas/ReportPriority.yaml"
+    GeoLocation:
+      $ref: "./components/schemas/GeoLocation.yaml"
+    Refund:
+      $ref: "./components/schemas/Refund.yaml"
+    RefundStatus:
+      $ref: "./components/schemas/RefundStatus.yaml"
+    Wallet:
+      $ref: "./components/schemas/Wallet.yaml"
+    WalletStatus:
+      $ref: "./components/schemas/WalletStatus.yaml"
+    Transaction:
+      $ref: "./components/schemas/Transaction.yaml"
+    TransactionStatus:
+      $ref: "./components/schemas/TransactionStatus.yaml"
+    TransactionType:
+      $ref: "./components/schemas/TransactionType.yaml"
+    Withdrawal:
+      $ref: "./components/schemas/Withdrawal.yaml"
+    WithdrawalStatus:
+      $ref: "./components/schemas/WithdrawalStatus.yaml"
 
   securitySchemes:
     BearerAuth:

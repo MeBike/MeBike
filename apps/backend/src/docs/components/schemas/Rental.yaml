@@ -1,0 +1,42 @@
+type: object
+description: Represents a rental session object.
+properties:
+  _id:
+    type: string
+    format: mongoId
+  user_id:
+    type: string
+    format: mongoId
+  bike_id:
+    type: string
+    format: mongoId
+  start_station:
+    type: string
+    format: mongoId
+  end_station:
+    type: string
+    format: mongoId
+    nullable: true
+  start_time:
+    type: string
+    format: date-time
+  end_time:
+    type: string
+    format: date-time
+    nullable: true
+  duration:
+    type: integer
+    description: Duration of the rental in minutes.
+    example: 60
+  total_price:
+    type: number
+    format: decimal
+    example: 10000.00
+  status:
+    $ref: './RentalStatus.yaml'
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

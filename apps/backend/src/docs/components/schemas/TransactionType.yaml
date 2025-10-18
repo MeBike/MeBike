@@ -1,0 +1,8 @@
+type: string
+description: "The type of a transaction."
+enum:
+  - "NẠP TIỀN"
+  - "THANH TOÁN"
+  - "RÚT TIỀN"
+  - "HOÀN TIỀN"
+example: "NẠP TIỀN"

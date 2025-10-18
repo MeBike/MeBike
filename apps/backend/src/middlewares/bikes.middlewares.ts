@@ -58,6 +58,22 @@ export const createBikeValidator = validate(
           },
         },
       },
+      chip_id: {
+        notEmpty: { errorMessage: BIKES_MESSAGES.CHIP_ID_IS_REQUIRED },
+        isString: { errorMessage: BIKES_MESSAGES.CHIP_ID_MUST_BE_A_STRING },
+        custom: {
+          options: async (value) => {
+            const existingBike = await databaseService.bikes.findOne({ chip_id: value });
+            if (existingBike) {
+              throw new ErrorWithStatus({
+                message: BIKES_MESSAGES.CHIP_ID_ALREADY_EXISTS,
+                status: HTTP_STATUS.BAD_REQUEST,
+              });
+            }
+            return true; 
+          },
+        },
+      },
       status: {
         optional: true,
         isIn: {
@@ -126,6 +142,27 @@ export const bikeIdValidator = validate(
 export const updateBikeValidator = validate(
   checkSchema(
     {
+      chip_id: { 
+        notEmpty: { errorMessage: BIKES_MESSAGES.CHIP_ID_IS_REQUIRED }, 
+        isString: { errorMessage: BIKES_MESSAGES.CHIP_ID_MUST_BE_A_STRING }, 
+        custom: { 
+          options: async (value, { req }) => { 
+            const bikeId = req.params?._id; 
+            // Kiểm tra xem có xe nào khác đang dùng chip_id này không
+            const existingBike = await databaseService.bikes.findOne({ 
+              chip_id: value, 
+              _id: { $ne: new ObjectId(bikeId) },
+            }); 
+            if (existingBike) { 
+              throw new ErrorWithStatus({ 
+                message: BIKES_MESSAGES.CHIP_ID_ALREADY_EXISTS_ON_ANOTHER_BIKE, 
+                status: HTTP_STATUS.BAD_REQUEST, 
+              }); 
+            } 
+            return true; 
+          }, 
+        }, 
+      }, 
       status: {
         optional: true,
         isIn: {

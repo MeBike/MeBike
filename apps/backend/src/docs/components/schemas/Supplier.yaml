@@ -1,0 +1,30 @@
+type: object
+description: Represents a supplier object.
+properties:
+  _id:
+    type: string
+    format: mongoId
+  name:
+    type: string
+    example: "Nhà cung cấp Xe Đạp Xanh"
+  contact_info:
+    type: object
+    properties:
+      address:
+        type: string
+        example: "123 Đường ABC, Quận 1, TP.HCM"
+      phone_number:
+        type: string
+        example: "0987654321"
+  contract_fee:
+    type: number
+    format: decimal
+    example: 15000.50
+  status:
+    type: string
+    description: "The status of the supplier contract."
+    enum: ["HOẠT ĐỘNG", "NGƯNG HOẠT ĐỘNG", "CHẤM DỨT HỢP ĐỒNG"]
+    example: "HOẠT ĐỘNG"
+  created_at:
+    type: string
+    format: date-time

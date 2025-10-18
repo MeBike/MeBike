@@ -1,0 +1,8 @@
+type: string
+description: "The priority level of the report."
+enum:
+  - "THẤP"
+  - "BÌNH THƯỜNG"
+  - "CAO"
+  - "KHẨN CẤP"
+example: "BÌNH THƯỜNG"

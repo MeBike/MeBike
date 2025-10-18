@@ -1,0 +1,6 @@
+type: object
+required:
+  - newStatus
+properties:
+  newStatus:
+    $ref: './WalletStatus.yaml'

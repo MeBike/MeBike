@@ -1,0 +1,26 @@
+type: object
+required:
+  - user_id
+  - amount
+  - fee
+  - description
+  - message
+properties:
+  user_id:
+    type: string
+    format: mongoId
+  amount:
+    type: number
+    example: 100000
+  fee:
+    type: number
+    example: 0
+  description:
+    type: string
+    example: "Admin top-up for user"
+  transaction_hash:
+    type: string
+    nullable: true
+  message:
+    type: string
+    example: "Top-up successful"

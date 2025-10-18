@@ -1,0 +1,16 @@
+type: object
+required:
+  - amount
+  - account
+properties:
+  amount:
+    type: number
+    example: 200000
+  account:
+    type: string
+    description: "Bank account information for withdrawal."
+    example: "Techcombank - 190123456789 - NGUYEN VAN B"
+  note:
+    type: string
+    nullable: true
+    example: "Please process quickly."
