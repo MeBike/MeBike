@@ -2,6 +2,7 @@ import process from "node:process";
 
 import { bootstrap } from "./bootstrap";
 import { env } from "./config";
+import logger from "./lib/logger";
 
 async function main() {
   try {
@@ -27,7 +28,7 @@ async function main() {
     await app.start(config);
 
     const shutdown = async () => {
-      console.warn("Received shutdown signal, stopping application...");
+      logger.warn("Received shutdown signal, stopping application...");
       await app.stop();
       process.exit(0);
     };
@@ -36,7 +37,7 @@ async function main() {
     process.on("SIGTERM", shutdown);
   }
   catch (error) {
-    console.error("Application failed to start:", error);
+    logger.error({ err: error }, "Application failed to start");
     process.exit(1);
   }
 }
