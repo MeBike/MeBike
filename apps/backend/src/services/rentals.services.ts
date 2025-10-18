@@ -82,7 +82,7 @@ class RentalsService {
     try {
       let endedRental: Rental = rental
       await session.withTransaction(async () => {
-        const user = await databaseService.users.findOne({ _id: user_id })
+        const user = await databaseService.users.findOne({ _id: user_id },{session})
         if (!user) {
           throw new ErrorWithStatus({
             message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
@@ -100,7 +100,7 @@ class RentalsService {
         const duration = this.generateDuration(rental.start_time, now)
         let totalPrice = this.generateTotalPrice(duration)
 
-        const reservation = await databaseService.reservations.findOne({_id: rental._id})
+        const reservation = await databaseService.reservations.findOne({_id: rental._id}, {session})
         if(reservation){
           totalPrice = Math.max(0, totalPrice - Number.parseFloat(reservation.prepaid.toString()))
           await databaseService.reservations.updateOne(
@@ -177,7 +177,7 @@ class RentalsService {
     try {
       let endedRental: Rental = rental
       await session.withTransaction(async () => {
-        const user = await databaseService.users.findOne({ _id: user_id })
+        const user = await databaseService.users.findOne({ _id: user_id }, {session})
         if (!user) {
           throw new ErrorWithStatus({
             message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
@@ -189,7 +189,7 @@ class RentalsService {
         const duration = this.generateDuration(rental.start_time, now)
         let totalPrice = this.generateTotalPrice(duration)
 
-        const reservation = await databaseService.reservations.findOne({_id: rental._id})
+        const reservation = await databaseService.reservations.findOne({_id: rental._id}, {session})
         if(reservation){
           totalPrice = Math.max(0, totalPrice - Number.parseFloat(reservation.prepaid.toString()))
           await databaseService.reservations.updateOne(

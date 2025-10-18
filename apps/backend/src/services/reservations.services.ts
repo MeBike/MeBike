@@ -164,7 +164,8 @@ class ReservationsService {
           _id: reservation._id,
           user_id,
           status: RentalStatus.Reserved
-        })
+        }, {session})
+        
         if (!rental) {
           throw new ErrorWithStatus({
             message: RENTALS_MESSAGE.NOT_FOUND_RESERVED_RENTAL.replace('%s', reservation._id!.toString()),
