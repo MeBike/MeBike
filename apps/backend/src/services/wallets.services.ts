@@ -583,7 +583,7 @@ class WalletService {
     return findRefund
   }
 
-  async paymentRental(user_id: string, amount: Decimal128, description: string, rental_id: string) {
+  async paymentRental(user_id: string, amount: Decimal128, description: string, rental_id: ObjectId) {
     const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
     if (!findWallet) {
       throw new ErrorWithStatus({
@@ -610,7 +610,7 @@ class WalletService {
     const transactionData: TransactionType = {
       _id: transactionID,
       wallet_id: new ObjectId(findWallet._id),
-      rental_id: new ObjectId(rental_id),
+      rental_id: rental_id,
       amount: Decimal128.fromString(amountNumber.toString()),
       fee: Decimal128.fromString('0'),
       description: description,
@@ -618,7 +618,7 @@ class WalletService {
       type: TransactionTypeEnum.PAYMENT,
       status: TransactionStaus.Success
     }
-    
+
     await databaseService.transactions.insertOne(transactionData)
     return wallet
   }
