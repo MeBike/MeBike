@@ -207,6 +207,7 @@ export const RENTALS_MESSAGE = {
   BIKE_NOT_FOUND_IN_STATION: 'Xe với Id %s không tồn tại trong trạm %s',
   NOT_FOUND_RENTED_RENTAL: 'Không tìm thấy phiên thuê nào với Id %s đang diễn ra ở thời điểm hiện tại',
   NOT_FOUND: 'Không tìm thấy phiên thuê nào với Id %s',
+  NOT_FOUND_RESERVED_RENTAL:'Không tìm thấy phiên đặt trước nào với id %s',
   // Not available
   NOT_AVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   // Not allowed action
