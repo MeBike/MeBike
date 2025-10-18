@@ -143,10 +143,13 @@ class RentalsService {
 
       const updatedRental = result ?? rental
 
+      const stationToAssign = updatedRental.end_station ?? rental.start_station
+
       await databaseService.bikes.updateOne(
         { _id: updatedRental.bike_id },
         {
           $set: {
+            station_id: stationToAssign,
             status: BikeStatus.Available,
             updated_at: now
           }
