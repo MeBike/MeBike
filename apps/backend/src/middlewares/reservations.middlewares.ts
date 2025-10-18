@@ -9,6 +9,7 @@ import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { BikeStatus } from '~/constants/enums'
 import { TokenPayLoad } from '~/models/requests/users.requests'
+import { getLocalTime } from '~/utils/date'
 
 export const reserveBikeValidator = validate(
   checkSchema(
@@ -141,6 +142,13 @@ export const confirmReservationValidator = validate(
           if (reservation.status !== ReservationStatus.Pending) {
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_THIS_RESERVATION,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+          const now = getLocalTime()
+          if(reservation.end_time && reservation.end_time > now){
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_EXPIRED_RESERVATION,
               status: HTTP_STATUS.BAD_REQUEST
             })
           }

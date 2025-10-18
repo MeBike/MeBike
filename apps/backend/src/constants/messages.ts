@@ -277,6 +277,7 @@ export const RESERVATIONS_MESSAGE = {
   // Not allowed action
   CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền kết thúc phiên đặt trước của người khác',
   CANNOT_CONFIRM_THIS_RESERVATION: 'Không thể xác nhận phiên đặt trước này (phải ở trạng thái Pending)',
+  CANNOT_CONFIRM_EXPIRED_RESERVATION: 'Đã vượt quá thời gian cho phép xác nhận phiên đặt trước này',
   // Over time
   OVER_CANCELLED_TIME: 'Đã quá thời gian quy định để có thể huỷ phiên đặt trước',
   // Reason
