@@ -1,8 +1,8 @@
 // Navigation Types for React Navigation
 export type RootStackParamList = {
-  Booking:undefined;
-  QR:undefined;
-  Profile:undefined;
+  Booking: undefined;
+  QR: undefined;
+  Profile: undefined;
   Main: undefined;
   Home: undefined;
   Login: undefined;
@@ -13,7 +13,9 @@ export type RootStackParamList = {
   Modal: undefined;
   FormSheet: undefined;
   TransparentModal: undefined;
-  // Add more routes as needed
+  Wallet: undefined;
+  BookingHistoryDetail: undefined;
+  ChangePassword: undefined;
 };
 
 // Common navigation hook types
@@ -27,5 +29,18 @@ export type StationDetailScreenNavigationProp = NativeStackNavigationProp<RootSt
 export type ProfileScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Profile"
+>;
+export type WalletNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Wallet"
+>;
+
+export type BookingHistoryDetailNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "BookingHistoryDetail"
+>;
+export type ChangePasswordNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ChangePassword"
 >;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, 'StationDetail'>;

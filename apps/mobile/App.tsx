@@ -16,6 +16,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import BookingHistoryScreen from './screen/BookingHistoryScreen';
 import ProfileScreen from './screen/ProfileScreen';
 import BookingHistoryDetail from './screen/BookingHistoryDetail';
+import ChangePasswordScreen from './screen/ChangePasswordScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
 const BottomTab = () => {
@@ -66,14 +67,17 @@ const BottomTab = () => {
       <Tab.Screen
         name="Booking"
         component={BookingHistoryScreen}
-        options={{ 
+        options={{
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size ?? 24} color={color ?? '#222'} />
-          )
+            <Ionicons
+              name="calendar-outline"
+              size={size ?? 24}
+              color={color ?? "#222"}
+            />
+          ),
         }}
       />
-      
     </Tab.Navigator>
   );
 }
@@ -123,6 +127,11 @@ export default function App() {
             <Stack.Screen
               name="BookingHistoryDetail"
               component={BookingHistoryDetail}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ChangePassword"
+              component={ChangePasswordScreen}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

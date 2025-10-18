@@ -67,6 +67,7 @@ const ProfileScreen = () => {
 
   const handleChangePassword = () => {
     Alert.alert("Đổi mật khẩu", "Chuyển đến trang đổi mật khẩu");
+    navigation.navigate("ChangePassword" as never);
   };
 
   const handleNotifications = () => {
@@ -75,6 +76,9 @@ const ProfileScreen = () => {
 
   const handleSupport = () => {
     Alert.alert("Hỗ trợ", "Liên hệ với đội hỗ trợ khách hàng");
+  };
+  const handleWallet = () => {
+    Alert.alert("Ví điện tử", "Quản lý ví điện tử của bạn");
   };
 
   const renderMenuOption = (
@@ -97,7 +101,11 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent
+      />
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={["#0066FF", "#00B4D8"]}
@@ -106,9 +114,11 @@ const ProfileScreen = () => {
           style={[styles.header, { paddingTop: insets.top + 16 }]}
         >
           <View style={styles.profileHeader}>
-            <Image 
-              source={{ uri: profile.avatar || 'https://via.placeholder.com/80' }} 
-              style={styles.avatar} 
+            <Image
+              source={{
+                uri: profile.avatar || "https://via.placeholder.com/80",
+              }}
+              style={styles.avatar}
             />
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{profile.fullname}</Text>
@@ -141,7 +151,9 @@ const ProfileScreen = () => {
                 <Ionicons name="call" size={18} color="#0066FF" />
                 <View style={styles.infoContent}>
                   <Text style={styles.infoLabel}>Điện thoại</Text>
-                  <Text style={styles.infoValue}>{profile.phone_number || "Chưa cập nhật"}</Text>
+                  <Text style={styles.infoValue}>
+                    {profile.phone_number || "Chưa cập nhật"}
+                  </Text>
                 </View>
               </View>
               <View style={styles.infoDivider} />
@@ -149,7 +161,9 @@ const ProfileScreen = () => {
                 <Ionicons name="location" size={18} color="#0066FF" />
                 <View style={styles.infoContent}>
                   <Text style={styles.infoLabel}>Địa chỉ</Text>
-                  <Text style={styles.infoValue}>{profile.location || "Chưa cập nhật"}</Text>
+                  <Text style={styles.infoValue}>
+                    {profile.location || "Chưa cập nhật"}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -176,9 +190,14 @@ const ProfileScreen = () => {
               "Liên hệ với đội hỗ trợ",
               handleSupport
             )}
+            {renderMenuOption(
+              "wallet",
+              "Ví điện tử",
+              "Quản lý ví điện tử của bạn",
+              handleWallet
+            )}
           </View>
 
-          {/* Nút đăng xuất */}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out" size={20} color="#fff" />
             <Text style={styles.logoutButtonText}>Đăng xuất</Text>
