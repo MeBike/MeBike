@@ -98,7 +98,20 @@ class RentalsService {
         }
         const now = getLocalTime()
         const duration = this.generateDuration(rental.start_time, now)
-        const totalPrice = this.generateTotalPrice(duration)
+        let totalPrice = this.generateTotalPrice(duration)
+
+        const reservation = await databaseService.reservations.findOne({_id: rental._id})
+        if(reservation){
+          totalPrice = Math.max(0, totalPrice - Number.parseFloat(reservation.prepaid.toString()))
+          await databaseService.reservations.updateOne(
+            {_id: rental._id},
+            {$set: {
+              status: ReservationStatus.Expired,
+              updated_at: now
+            }},
+            {session}
+          )
+        }
 
         const decimalTotalPrice = Decimal128.fromString(totalPrice.toString())
         const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', rental.bike_id.toString())
@@ -108,7 +121,7 @@ class RentalsService {
           end_station,
           end_time: now,
           duration: new Int32(duration),
-          total_price: Decimal128.fromString(totalPrice.toString()),
+          total_price: decimalTotalPrice,
           status: RentalStatus.Completed
         }
 
@@ -174,7 +187,20 @@ class RentalsService {
 
         const now = getLocalTime()
         const duration = this.generateDuration(rental.start_time, now)
-        const totalPrice = this.generateTotalPrice(duration)
+        let totalPrice = this.generateTotalPrice(duration)
+
+        const reservation = await databaseService.reservations.findOne({_id: rental._id})
+        if(reservation){
+          totalPrice = Math.max(0, totalPrice - Number.parseFloat(reservation.prepaid.toString()))
+          await databaseService.reservations.updateOne(
+            {_id: rental._id},
+            {$set: {
+              status: ReservationStatus.Expired,
+              updated_at: now
+            }},
+            {session}
+          )
+        }
 
         const endTime = end_time ? new Date(end_time) : now
         if (endTime > now) {
@@ -189,6 +215,7 @@ class RentalsService {
             status: HTTP_STATUS.BAD_REQUEST
           })
         }
+        // TODO: handle payment logic
 
         const updatedData: Partial<Rental> = {
           end_station: objStationId,
