@@ -1,0 +1,7 @@
+type: string
+description: "The operational status of a station."
+enum:
+  - "HOẠT ĐỘNG"
+  - "BẢO TRÌ"
+  - "TẠM NGƯNG"
+example: "HOẠT ĐỘNG"
