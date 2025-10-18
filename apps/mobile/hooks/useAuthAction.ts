@@ -97,12 +97,16 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
         data:RegisterSchemaFormData) => {
         useRegister.mutate(data,{
             onSuccess: async (result) => {
-                if(result.status === 201){
+                if(result.status === 200){
                     const { access_token, refresh_token } = result.data.result;
                     await setTokens(access_token, refresh_token);
+                    console.log("Registration successful:", { access_token, refresh_token });
+                    const accesstoken = await getAccessToken();
+                    console.log("Current access token:", accesstoken);
+                    await onTokenUpdate?.();
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     Alert.alert("Success", "Registration Successful. Your account has been created.");
-                    navigation?.navigate("Login");
+                    
                 }else{
                     const errorMessage = result.data?.message || "Error registering";
                     Alert.alert("Error", errorMessage);

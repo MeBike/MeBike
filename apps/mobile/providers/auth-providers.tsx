@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useUserProfileQuery } from "@hooks/query/useUserProfileQuery";
 import { AppState, AppStateStatus } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 interface AuthError {
   response?: {
     status: number;
@@ -32,7 +33,7 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
   const handleTokenUpdate = useCallback(async () => {
     const token = await getAccessToken();
     setHasToken(!!token);
-  }, []);
+  }, [getAccessToken]);
   
   const actions = useAuthActions(navigation, handleTokenUpdate);
   useEffect(() => {

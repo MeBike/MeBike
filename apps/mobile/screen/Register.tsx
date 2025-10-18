@@ -26,9 +26,16 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phone, setPhone] = useState('');
-  const {register,isRegistering} = useAuth();
+  const {register,isRegistering , logIn ,} = useAuth();
   const isLoading = isRegistering;
 
+  const clearForm = () => {
+    setName('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setPhone('');
+  };
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword || !phone  ) {
       Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
@@ -41,6 +48,10 @@ export default function RegisterScreen() {
       confirm_password: confirmPassword,
       phone_number: phone,
     });
+    clearForm();
+    setTimeout(() => {
+      navigation.navigate("Main");
+    }, 1000); 
     if (password !== confirmPassword) {
       Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
       return;
