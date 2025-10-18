@@ -165,7 +165,7 @@ class ReservationsService {
           user_id,
           status: RentalStatus.Reserved
         }, {session})
-        
+
         if (!rental) {
           throw new ErrorWithStatus({
             message: RENTALS_MESSAGE.NOT_FOUND_RESERVED_RENTAL.replace('%s', reservation._id!.toString()),
@@ -235,18 +235,6 @@ class ReservationsService {
     }
 
     return { count: expiring.length }
-  }
-
-  async getReservationHistory(user_id: ObjectId) {
-    const reservations = await databaseService.reservations
-      .find({
-        user_id,
-        status: { $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired] }
-      })
-      .sort({ created_at: -1 })
-      .toArray()
-
-    return reservations
   }
 
   generateEndTime(startTime: string) {
