@@ -18,6 +18,7 @@ import type Station from '~/models/schemas/station.schema'
 import { RENTALS_MESSAGE } from '~/constants/messages'
 import databaseService from '~/services/database.services'
 import rentalsService from '~/services/rentals.services'
+import { cardTapService } from '~/services/card-tap.service'
 import { sendPaginatedAggregationResponse, sendPaginatedResponse } from '~/utils/pagination.helper'
 import { toObjectId } from '~/utils/string'
 import { TokenPayLoad } from '~/models/requests/users.requests'
@@ -47,10 +48,7 @@ export async function createRentalFromCardController(
 ) {
   const { chip_id, card_uid } = req.body
 
-  const { mode, rental } = await rentalsService.createRentalFromCard({
-    chip_id,
-    card_uid
-  })
+  const { mode, rental } = await cardTapService.handleCardTap({ chip_id, card_uid })
 
   res.json({
     message: mode === 'ended'

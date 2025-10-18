@@ -18,6 +18,7 @@ import {
 } from '~/models/requests/rentals.requests'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import { isAvailability } from '~/middlewares/bikes.middlewares'
+import { getReservationFacade } from './reservations.facade'
 
 class RentalsService {
   async createRentalSession({
@@ -94,92 +95,7 @@ class RentalsService {
     }
   }
 
-  async createRentalFromCard({ chip_id, card_uid }: CardRentalReqBody) {
-    const user = await databaseService.users.findOne({ nfc_card_uid: card_uid })
-
-    if (!user) {
-      throw new ErrorWithStatus({
-        message: 'User not found for the provided card.',
-        status: HTTP_STATUS.NOT_FOUND
-      })
-    }
-
-    const bike = await databaseService.bikes.findOne({ chip_id })
-    if (!bike) {
-      throw new ErrorWithStatus({
-        message: `Bike with chip_id ${chip_id} not found or unavailable.`,
-        status: HTTP_STATUS.NOT_FOUND
-      })
-    }
-
-    const activeRental = await databaseService.rentals.findOne({
-      user_id: user._id as ObjectId,
-      bike_id: bike._id as ObjectId,
-      status: RentalStatus.Rented
-    })
-
-    if (activeRental) {
-      const endedRental = await this.endRentalSession({
-        user_id: user._id as ObjectId,
-        rental: activeRental
-      })
-
-      return {
-        mode: 'ended' as const,
-        rental: endedRental
-      }
-    }
-
-    const reservation = await databaseService.reservations.findOne({
-      user_id: user._id as ObjectId,
-      bike_id: bike._id as ObjectId,
-      status: { $in: [ReservationStatus.Pending, ReservationStatus.Active] }
-    })
-
-    if (reservation) {
-      const now = getLocalTime()
-      await databaseService.reservations.updateOne(
-        { _id: reservation._id },
-        {
-          $set: {
-            status: ReservationStatus.Active,
-            updated_at: now
-          }
-        }
-      )
-
-      const rentalSession = await this.createRentalSession({
-        user_id: user._id as ObjectId,
-        start_station: bike.station_id ?? reservation.station_id,
-        bike_id: bike._id as ObjectId
-      })
-
-      return {
-        mode: 'reservation_started' as const,
-        rental: rentalSession
-      }
-    }
-
-    if (!bike.station_id) {
-      throw new ErrorWithStatus({
-        message: `Bike with chip_id ${chip_id} not found or unavailable.`,
-        status: HTTP_STATUS.NOT_FOUND
-      })
-    }
-
-    isAvailability(bike.status as BikeStatus)
-
-    const rentalSession = await this.createRentalSession({
-      user_id: user._id as ObjectId,
-      start_station: bike.station_id,
-      bike_id: bike._id as ObjectId
-    })
-
-    return {
-      mode: 'started' as const,
-      rental: rentalSession
-    }
-  }
+  // card-tap flow moved to card-tap.service.ts orchestrator
 
   async endRentalSession({ user_id, rental }: { user_id: ObjectId; rental: Rental }) {
     const session = databaseService.getClient().startSession()
@@ -239,20 +155,9 @@ class RentalsService {
         findOptions
       )
 
-      await databaseService.reservations.updateMany(
-        {
-          user_id: rental.user_id,
-          bike_id: rental.bike_id,
-          status: ReservationStatus.Active
-        },
-        {
-          $set: {
-            status: ReservationStatus.Expired,
-            updated_at: now
-          }
-        },
-        findOptions
-      )
+      // Clean up any active reservation for this user+bike via facade
+      const reservationFacade = getReservationFacade()
+      await reservationFacade.expireActiveForUserAndBike({ user_id: rental.user_id, bike_id: rental.bike_id })
 
       return {
         ...updatedRental,
