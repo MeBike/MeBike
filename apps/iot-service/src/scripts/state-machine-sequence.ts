@@ -20,6 +20,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { env } from "../config";
+import defaultLogger from "../lib/logger";
 
 const FALLBACK_SEQUENCE: IotStateCommand[] = [
   "booked",
@@ -40,7 +41,7 @@ const plannedSequenceFromEnv: IotStateCommand[] = sequenceInput
   ? parseSequence(sequenceInput)
   : [...FALLBACK_SEQUENCE];
 
-export type RunnerLogger = Pick<typeof console, "warn" | "error">;
+export type RunnerLogger = Pick<typeof defaultLogger, "warn" | "error">;
 
 export type StateMachineRunOptions = {
   brokerUrl?: string;
@@ -80,17 +81,15 @@ export async function runStateMachineSequence(
     handleSignals: boolean;
   };
 
-  const logger: RunnerLogger = overrides.logger ?? console;
+  const logger: RunnerLogger = overrides.logger ?? defaultLogger;
 
   const providedClient = overrides.client;
   const client
-    = providedClient
-      ?? (overrides.createClient?.()
-        ?? createClient(options.brokerUrl, options.username, options.password));
+    = providedClient ?? (overrides.createClient?.() ?? createClient(options.brokerUrl, options.username, options.password));
   const shouldCloseClient = !providedClient;
 
   const errorHandler = (err: Error) => {
-    logger.error("MQTT error:", err);
+    logger.error({ err }, "MQTT error");
   };
   client.on("error", errorHandler);
 
@@ -151,7 +150,7 @@ export async function runStateMachineSequence(
     return currentState ?? null;
   }
   catch (error) {
-    logger.error("Sequence failed:", error as Error);
+    logger.error({ err: error }, "Sequence failed");
     throw error;
   }
   finally {

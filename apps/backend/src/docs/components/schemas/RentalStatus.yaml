@@ -1,0 +1,8 @@
+type: string
+description: "The status of a rental session."
+enum:
+  - "ĐANG THUÊ"
+  - "HOÀN THÀNH"
+  - "ĐÃ HỦY"
+  - "ĐÃ ĐẶT TRƯỚC"
+example: "ĐANG THUÊ"

@@ -1,0 +1,8 @@
+type: string
+description: "The status of a transaction."
+enum:
+  - "ĐANG CHỜ XỬ LÝ"
+  - "THÀNH CÔNG"
+  - "THẤT BẠI"
+  - "ĐÃ HỦY"
+example: "THÀNH CÔNG"

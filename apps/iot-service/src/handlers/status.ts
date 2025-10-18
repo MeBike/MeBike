@@ -3,12 +3,13 @@ import {
 } from "@mebike/shared";
 
 import { eventBus, EVENTS } from "../events";
+import logger from "../lib/logger";
 import { extractDeviceId } from "../utils/topic";
 
 export function handleStatusMessage(topic: string, payload: string): void {
   const parsed = IotStatusMessageSchema.safeParse(payload);
   if (parsed.success) {
-    console.warn(`[status] ${topic}: ${parsed.data}`);
+    logger.info({ topic, status: parsed.data }, "status message parsed");
 
     eventBus.emit(EVENTS.DEVICE_STATUS_CHANGED, {
       deviceId: extractDeviceId(topic),
@@ -17,6 +18,6 @@ export function handleStatusMessage(topic: string, payload: string): void {
     });
   }
   else {
-    console.warn(`[status] ${topic}: ${payload} (unparsed)`);
+    logger.warn({ topic, payload }, "status message unparsed");
   }
 }

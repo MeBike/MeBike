@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
@@ -12,24 +12,43 @@ import {
   CardTitle,
 } from "@components/ui/card";
 import { Separator } from "@components/ui/separator";
-import { Bike, Mail, Lock, Eye, EyeOff} from "lucide-react";
-import React from "react";  
+import { Bike, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import React from "react";
 import { useAuth } from "@providers/auth-providers";
-import { useAuthActions } from "@hooks/useAuthAction";
+import { isBuffer } from "util";
+
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const { logIn } = useAuthActions();
-  const { user} = useAuth();
+  const { user, logIn, isLoggingIn, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (user && isNavigating) {
+      const timer = setTimeout(() => {
+        if (user?.role === "ADMIN"){
+          router.push("/admin");
+        } else if (user?.role === "STAFF") {
+          router.push("/staff");
+        } else {
+          router.push("/user");
+        }
+        setIsNavigating(false);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [user, isNavigating, router]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoggingIn || isLoading || isNavigating) return;
+    setIsNavigating(true);
     logIn({ email, password });
-  };
-  React.useEffect(() => {
-    console.log(user);
-  }, [user]);
+  };  
+
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
@@ -58,6 +77,7 @@ const Login = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleLogin} className="space-y-4">
+              {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium">
                   Email
@@ -70,12 +90,14 @@ const Login = () => {
                     placeholder="example@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                    transition-all duration-200"
+                    disabled={isLoggingIn || isLoading}
+                    className="pl-10 h-12"
                     required
                   />
                 </div>
               </div>
+
+              {/* Password */}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
                   Mật khẩu
@@ -88,14 +110,15 @@ const Login = () => {
                     placeholder="Nhập mật khẩu"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                    transition-all duration-200"
+                    disabled={isLoggingIn || isLoading}
+                    className="pl-10 h-12"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isLoggingIn || isLoading}
+                    className="absolute right-3 top-3"
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-4" />
@@ -105,29 +128,46 @@ const Login = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Forgot password */}
               <div className="text-right">
                 <Button
-                  className="text-sm text-white hover:text-metro-secondary transition-colors bg-[hsl(214,100%,40%)]"
+                  type="button"
+                  disabled={isLoggingIn || isLoading}
+                  variant="link"
                   onClick={() => router.push("/auth/forgot-password")}
                 >
                   Quên mật khẩu?
                 </Button>
               </div>
+
+              {/* Login button */}
               <Button
                 type="submit"
-                className="w-full h-12  hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
-                bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white"
+                disabled={isLoggingIn || isLoading || isNavigating}
+                className="w-full h-12"
               >
-                <Bike className="mr-2 h-5 w-5" />
-                Đăng nhập
+                {isLoggingIn || isLoading || isNavigating ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Đang đăng nhập...
+                  </>
+                ) : (
+                  <>
+                    <Bike className="mr-2 h-5 w-5" />
+                    Đăng nhập
+                  </>
+                )}
               </Button>
             </form>
+
             <Separator className="my-6" />
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
                 Chưa có tài khoản?{" "}
                 <Button
-                  className="text-sm text-metro-primary hover:text-metro-secondary transition-colors text-white bg-[hsl(214,100%,40%)]"
+                  disabled={isLoggingIn || isLoading}
+                  variant="link"
                   onClick={() => router.push("/auth/register")}
                 >
                   Đăng ký ngay
@@ -137,7 +177,8 @@ const Login = () => {
 
             <div className="text-center pt-4">
               <Button
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors text-white bg-[hsl(214,100%,40%)]"
+                disabled={isLoggingIn || isLoading}
+                variant="link"
                 onClick={() => router.push("/")}
               >
                 ← Về trang chủ

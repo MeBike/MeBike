@@ -1,0 +1,11 @@
+type: object
+required:
+  - reason
+properties:
+  bikeStatus:
+    $ref: './BikeStatus.yaml'
+    description: The new status to set for the bike after cancellation (e.g., 'AVAILABLE', 'BROKEN'). Optional.
+  reason:
+    type: string
+    description: The reason for cancelling the rental.
+    example: "Customer requested cancellation due to personal emergency."

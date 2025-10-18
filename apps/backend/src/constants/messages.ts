@@ -157,7 +157,12 @@ export const BIKES_MESSAGES = {
   USER_CAN_ONLY_REPORT_BROKEN: 'Người dùng chỉ được phép báo hỏng xe',
   AT_LEAST_ONE_FIELD_IS_REQUIRED: 'Cần ít nhất một trường để cập nhật',
   CANNOT_REPORT_BIKE_NOT_RENTING: 'Bạn chỉ có thể báo hỏng chiếc xe bạn đang thuê',
-  REPORT_BROKEN_BIKE_SUCCESS: 'Báo hỏng xe thành công'
+  REPORT_BROKEN_BIKE_SUCCESS: 'Báo hỏng xe thành công',
+  // thêm chip_id messages cho create and update bike
+  CHIP_ID_IS_REQUIRED: 'Chip ID là bắt buộc',
+  CHIP_ID_MUST_BE_A_STRING: 'Chip ID phải là chuỗi',
+  CHIP_ID_ALREADY_EXISTS: 'Chip ID đã tồn tại',
+  CHIP_ID_ALREADY_EXISTS_ON_ANOTHER_BIKE: 'Chip ID đã tồn tại trên một xe đạp khác'
 } as const
 
 export const RENTALS_MESSAGE = {
@@ -276,3 +281,57 @@ export const RESERVATIONS_MESSAGE = {
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
 } as const
+export const WALLETS_MESSAGE = {
+  USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',
+  USER_NOT_HAVE_WALLET: 'Người dùng với ID %s chưa có ví',
+  TRANSACTION_TYPE_INVALID: 'Loại giao dịch %s không hợp lệ',
+  AMOUNT_NEGATIVE: 'Số tiền giao dịch phải lớn hơn 0',
+  INSUFFICIENT_BALANCE: 'Số dư trong ví của người dùng %s không đủ để thực hiện giao dịch',
+  CREATE_SUCCESS: 'Tạo ví thành công',
+  INCREASE_BALANCE_SUCCESS: 'Đã cộng %s vào ví của người dùng %s',
+  DECRESE_BALANCE_SUCCESS: 'Đã trừ %s vào ví của người dùng %s',
+  AMOUNT_IS_REQUIRED: 'Số tiền giao dịch là bắt buộc',
+  AMOUNT_NUMERIC: 'Số tiền giao dịch là số thực',
+  TYPE_IS_REQUIRED: 'Loại giao dịch là bắt buộc',
+  TYPE_INVALID: 'Loại giao dịch không hợp lệ',
+  FEE_IS_REQUIRED: 'Phí giao dịch là bắt buộc',
+  FEE_NEGATIVE: 'Phí giao dịch phải lớn hơn 0',
+  DESCRIPTION_IS_REQUIED: 'Mô tả giao dịch là bắt buộc',
+  DESCRIPTION_INVALID: 'Mô tả giao dịch là chuỗi ký tự',
+  TRANSACRION_HASH_REQUIRED: 'Mã giao dịch là bắt buộc',
+  TRANSACRION_HASH_INVALID: 'Mã giao dịch là chuỗi ký tự',
+  MESSAGE_IS_REQUIED: 'Lời nhắn là bắt buộc',
+  MESSAGE_INVALID: 'Lời nhắn là chuỗi ký tự',
+  STATUS_IS_REQUIED: 'Trạng thái là bắt buộc',
+  STATUS_INVALID: 'Trạng thái không hợp lệ',
+  CHANGE_STATUS_SUCCESS: 'Đổi trạng thái ví của người dùng thành công',
+  GET_USER_WALLET_SUCCESS: 'Lấy thông tin ví của người dùng %s thành công',
+  FORBIDDEN: 'Không có quyền truy cập vào giao dịch của người khác',
+  TRANSACTION_NOT_FOUND: 'Không tìm thấy giao dịch',
+  TRANSACTION_DETAIL_SUCCESS: 'Lấy chi tiết giao dịch thành công',
+  CREATE_REFUND_SUCCESS: 'Tạo yêu cầu hoàn tiền thành công',
+  REFUND_NOT_FOUND: 'Không tìm thấy yêu cầu giao dịch %s',
+  INVALID_NEW_STATUS: 'Trạng thái mới không hợp lệ',
+  UPDATE_REFUND_SUCCESS: 'Cập nhật trạng thái yêu cầu hoàn tiền thành công',
+  CREATE_WITHDRAWL_SUCCESS: 'Tạo yêu cầu rút về tài khoản thành công',
+  REFUND_DETAIL_SUCCESS: 'Lấy chi tiết yêu cầu hoàn tiền thành công',
+  FORBIDDEN_ACCESS: 'Bạn không có quyền truy cập vào yêu cầu hoàn tiền này',
+  FORBIDDEN_WITHDRAW_ACCESS: 'Bạn không có quyền truy cập vào yêu cầu rút tiền này',
+  WALLET_HAS_BEEN_FROZEN: 'Ví của người dùng này đã bị đóng băng',
+  NOTE_IN_VALID: 'Ghi chú phải là chuỗi ký tự',
+  NOTE_TOO_LONG: 'Ghi chú không được vượt quá 500 ký tự',
+  USER_ID_IS_REQUIRED: 'User ID là bắt buộc',
+  USER_ID_INVALID: 'User ID không hợp lệ',
+  WALLET_ID_IS_REQUIED: 'Wallet ID là bắt buộc',
+  WALLET_ID_INVALID: 'Wallet ID không hợp lệ',
+  WALLET_NOT_FOUND: 'Không tìm thấy ví với ID %s',
+  REASON_INVALID: 'Lý do không hợp lệ',
+  REASON_TOO_LONG: 'Lý do không được vượt quá 500 ký tự',
+}
+
+export const WITHDRAWLS_MESSAGE = {
+  WITHDRAWL_NOT_FOUND: 'Khong tìm thấy yêu cầu rút tiền với ID %s',
+  REASON_IS_REQUIRED: 'Vui lòng nhập nguyên nhân từ chối yêu cầu',
+  UPDATE_SUCCESS: 'Cập nhật trạng thái yêu cầu rút tiền %s thành công',
+  GET_DETAIL_SUCCESS: 'Lấy chi tiết yêu cầu rút tiền thành công'
+}

@@ -1,0 +1,27 @@
+type: object
+required:
+  - name
+  - address
+  - phone_number
+  - contract_fee
+properties:
+  name:
+    type: string
+    description: "Name of the supplier."
+    maxLength: 255
+    example: "Công ty TNHH Xe Đạp Toàn Cầu"
+  address:
+    type: string
+    description: "Address of the supplier."
+    maxLength: 250
+    example: "456 Đường XYZ, Quận 2, TP.HCM"
+  phone_number:
+    type: string
+    description: "Phone number of the supplier (must be 10 digits)."
+    pattern: '^\d{10}$'
+    example: "0912345678"
+  contract_fee:
+    type: number
+    format: decimal
+    description: "Contract fee with up to 2 decimal places."
+    example: 25000.75

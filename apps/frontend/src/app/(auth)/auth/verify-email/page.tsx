@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, XCircle, Loader2, ArrowLeft } from "lucide-react";
 import { useAuthActions } from "@/hooks/useAuthAction";
+import { useAuth } from "@/providers/auth-providers";
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useAuth();
   const { verifyEmail } = useAuthActions();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
@@ -28,12 +30,18 @@ function VerifyEmailContent() {
     setHasVerified(true); 
     verifyEmail(token)
       .then(() => {
-        console.log("Email verification successful");
         setStatus("success");
         setMessage("Xác thực email thành công!");
         setTimeout(() => {
-          console.log("Navigating to /staff/profile");
-          router.push("/staff/profile");
+          if (user?.role === "ADMIN") {
+            router.push("/admin/profile");
+            return;
+          }
+          else if(user?.role === "STAFF"){
+            router.push("/staff/profile");
+            return;
+          }
+          router.push("/user/profile");
         }, 3000);
       })
       .catch((error) => {
@@ -43,10 +51,17 @@ function VerifyEmailContent() {
         setHasVerified(false); 
       });
 
-  }, [searchParams, router]); 
+  }, [searchParams, router,hasVerified, verifyEmail , user?.role]); 
 
   const handleGoBack = () => {
-    router.push("/staff/profile");
+    if (user?.role === "ADMIN") {
+      router.push("/admin/profile");
+      return;
+    } else if (user?.role === "STAFF") {
+      router.push("/staff/profile");
+      return;
+    }
+    router.push("/user/profile");
   };
   const handleResendVerifyEmail = () => {
     setHasVerified(false);
@@ -96,7 +111,7 @@ function VerifyEmailContent() {
           </div>
 
           <div className="flex flex-col space-y-2">
-            <Button onClick={handleGoBack} variant="outline" className="w-full">
+            <Button onClick={() => handleGoBack()} variant="outline" className="w-full">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Quay lại hồ sơ
             </Button>

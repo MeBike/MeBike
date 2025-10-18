@@ -1,0 +1,21 @@
+type: object
+description: "Represents a user's wallet."
+properties:
+  _id:
+    type: string
+    format: mongoId
+  user_id:
+    type: string
+    format: mongoId
+  balance:
+    type: number
+    format: decimal
+    example: 150000.00
+  status:
+    $ref: './WalletStatus.yaml'
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

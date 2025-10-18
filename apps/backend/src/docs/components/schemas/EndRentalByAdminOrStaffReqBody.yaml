@@ -1,0 +1,17 @@
+type: object
+required:
+  - end_station
+  - reason
+properties:
+  end_station:
+    type: string
+    format: mongoId
+    description: The ID of the station where the bike is being returned.
+  end_time:
+    type: string
+    format: date-time
+    description: The time the rental is being ended. Optional, defaults to current time.
+  reason:
+    type: string
+    description: The reason for ending the rental session.
+    example: "Staff assisted user to end rental session."

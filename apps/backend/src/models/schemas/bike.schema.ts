@@ -9,6 +9,7 @@ type BikeType = {
   supplier_id?: ObjectId | null; // null when bike is not under maintenance
   created_at?: Date;
   updated_at?: Date;
+  chip_id: string;
 };
 
 export default class Bike {
@@ -18,6 +19,8 @@ export default class Bike {
   supplier_id?: ObjectId | null;
   created_at?: Date;
   updated_at?: Date;
+  chip_id: string;
+
 
   constructor(bike: BikeType) {
     const currentDate = new Date();
@@ -30,5 +33,6 @@ export default class Bike {
     this.supplier_id = bike.supplier_id || null;
     this.created_at = bike.created_at || localTime;
     this.updated_at = bike.updated_at || localTime;
+    this.chip_id = bike.chip_id || "";
   }
 }

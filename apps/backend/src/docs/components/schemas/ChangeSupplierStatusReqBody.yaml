@@ -1,0 +1,9 @@
+type: object
+required:
+  - newStatus
+properties:
+  newStatus:
+    type: string
+    description: "The new status for the supplier."
+    enum: ["HOẠT ĐỘNG", "NGƯNG HOẠT ĐỘNG", "CHẤM DỨT HỢP ĐỒNG"]
+    example: "NGƯNG HOẠT ĐỘNG"

@@ -5,12 +5,17 @@ import { MongoClient } from "mongodb";
 import process from "node:process";
 
 import type Bike from "~/models/schemas/bike.schema";
+import type Payment from "~/models/schemas/payment.schemas";
 import type RefreshToken from "~/models/schemas/refresh-token.schemas";
 import type Rental from "~/models/schemas/rental.schema";
 import type Report from "~/models/schemas/report.schema";
 import type Station from "~/models/schemas/station.schema";
 import type Supplier from "~/models/schemas/supplier.schema";
+import type Transaction from "~/models/schemas/transaction.schema";
 import type User from "~/models/schemas/user.schema";
+import type Wallet from "~/models/schemas/wallet.schemas";
+import Refund from "~/models/schemas/refund.schema";
+import Withdraw from "~/models/schemas/withdraw-request";
 import RentalLog from "~/models/schemas/rental-audit-logs.schema";
 import Reservation from "~/models/schemas/reservation.schema";
 
@@ -69,6 +74,7 @@ class DatabaseService {
   }
 
   async indexBikes() {
+    await this.bikes.createIndex({ chip_id: 1 }, { unique: true });
     await this.bikes.createIndex({ station_id: 1 });
     await this.bikes.createIndex({ status: 1 });
   }
@@ -87,6 +93,26 @@ class DatabaseService {
 
   get reservations(): Collection<Reservation> {
     return this.db.collection(process.env.DB_RESERVATIONS_COLLECTION as string);
+  }
+
+  get payments(): Collection<Payment> {
+    return this.db.collection(process.env.DB_PAYMENTS_COLLECTION as string);
+  }
+
+  get wallets(): Collection<Wallet> {
+    return this.db.collection(process.env.DB_WALLETS_COLLECTION as string);
+  }
+
+  get transactions(): Collection<Transaction> {
+    return this.db.collection(process.env.DB_TRANSACTIONS_COLLECTION as string);
+  }
+
+  get refunds(): Collection<Refund>{
+    return this.db.collection(process.env.DB_REFUNDS_COLLECTION as string)
+  }
+
+  get withdraws(): Collection<Withdraw>{
+    return this.db.collection(process.env.DB_WITHDRAWS_COLLECTION as string)
   }
 }
 

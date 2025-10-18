@@ -1,12 +1,13 @@
 import type { DeviceManager } from "../services";
 
 import { eventBus, EVENTS } from "../events";
+import logger from "../lib/logger";
 
 export class DeviceDiscovery {
   constructor(private deviceManager: DeviceManager) {}
 
   start(): void {
-    console.warn("Starting device discovery...");
+    logger.info("Starting device discovery...");
 
     //  status changes
     eventBus.on(EVENTS.DEVICE_STATUS_CHANGED, (data) => {
@@ -28,7 +29,7 @@ export class DeviceDiscovery {
       this.handleDeviceActivity(data.deviceId, "logging");
     });
 
-    console.warn("Device discovery started");
+    logger.info("Device discovery started");
   }
 
   private handleDeviceStatusChange(deviceId: string | undefined, status: string): void {
@@ -36,7 +37,7 @@ export class DeviceDiscovery {
       return;
     }
 
-    console.warn(`Device discovery: ${deviceId} status changed to ${status}`);
+    logger.info({ deviceId, status }, "device status changed");
   }
 
   private handleDeviceActivity(deviceId: string | undefined, activity: string): void {
@@ -44,6 +45,6 @@ export class DeviceDiscovery {
       return;
     }
 
-    console.warn(`Device discovery: ${deviceId} active (${activity})`);
+    logger.info({ deviceId, activity }, "device activity");
   }
 }

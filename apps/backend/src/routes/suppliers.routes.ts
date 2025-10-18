@@ -1,6 +1,6 @@
-import { Router } from "express";
+import { Router } from 'express'
 
-import type { CreateSupplierReqBody, UpdateSupplierReqBody } from "~/models/requests/suppliers.request";
+import type { CreateSupplierReqBody, UpdateSupplierReqBody } from '~/models/requests/suppliers.request'
 
 import {
   changeSupplierStatusController,
@@ -9,46 +9,47 @@ import {
   getAllSupplierStatController,
   getByIdController,
   getSupplierStatController,
-  updateSupplierController,
-} from "~/controllers/suppliers.controllers";
-import { isAdminValidator } from "~/middlewares/admin.middlewares";
-import { filterMiddleware } from "~/middlewares/common.middlewares";
+  updateSupplierController
+} from '~/controllers/suppliers.controllers'
+import { isAdminValidator } from '~/middlewares/admin.middlewares'
+import { filterMiddleware } from '~/middlewares/common.middlewares'
 import {
   createSupplierValidator,
   updateSupplierStatusValidator,
-  updateSupplierValidator,
-} from "~/middlewares/supplier.middlewares";
-import { accessTokenValidator } from "~/middlewares/users.middlewares";
-import { wrapAsync } from "~/utils/handler";
+  updateSupplierValidator
+} from '~/middlewares/supplier.middlewares'
+import { accessTokenValidator } from '~/middlewares/users.middlewares'
+import { wrapAsync } from '~/utils/handler'
 
-const suppliersRouter = Router();
+const suppliersRouter = Router()
 
-suppliersRouter.get("/", accessTokenValidator, isAdminValidator, wrapAsync(getAllSupplierController));
-suppliersRouter.get("/stats", accessTokenValidator, isAdminValidator, wrapAsync(getAllSupplierStatController));
-suppliersRouter.get("/:id", accessTokenValidator, isAdminValidator, wrapAsync(getByIdController));
-suppliersRouter.get("/:id/stats", accessTokenValidator, isAdminValidator, wrapAsync(getSupplierStatController));
+suppliersRouter.get('/', accessTokenValidator, isAdminValidator, wrapAsync(getAllSupplierController))
+suppliersRouter.get('/stats', accessTokenValidator, isAdminValidator, wrapAsync(getAllSupplierStatController))
+suppliersRouter.get('/:id', accessTokenValidator, isAdminValidator, wrapAsync(getByIdController))
+suppliersRouter.get('/:id/stats', accessTokenValidator, isAdminValidator, wrapAsync(getSupplierStatController))
 suppliersRouter.post(
-  "/",
+  '/',
   accessTokenValidator,
   isAdminValidator,
-  filterMiddleware<CreateSupplierReqBody>(["address", "contract_fee", "name", "phone_number"]),
+  filterMiddleware<CreateSupplierReqBody>(['address', 'contract_fee', 'name', 'phone_number']),
   createSupplierValidator,
-  wrapAsync(createSupplierController),
-);
+  wrapAsync(createSupplierController)
+)
 suppliersRouter.put(
-  "/:id",
+  '/:id',
   accessTokenValidator,
   isAdminValidator,
-  filterMiddleware<UpdateSupplierReqBody>(["address", "contract_fee", "name", "phone_number"]),
+  filterMiddleware<UpdateSupplierReqBody>(['address', 'contract_fee', 'name', 'phone_number']),
   updateSupplierValidator,
-  wrapAsync(updateSupplierController),
-);
+  wrapAsync(updateSupplierController)
+)
 suppliersRouter.patch(
-  "/:id",
+  '/:id',
   accessTokenValidator,
   isAdminValidator,
   updateSupplierStatusValidator,
-  wrapAsync(changeSupplierStatusController),
-);
+  filterMiddleware(['newStatus']),
+  wrapAsync(changeSupplierStatusController)
+)
 
-export default suppliersRouter;
+export default suppliersRouter

@@ -1,10 +1,17 @@
-import type { Decimal128 } from "mongodb";
+import type { Decimal128 } from 'mongodb'
+import { SupplierStatus } from '~/constants/enums'
 
 export type CreateSupplierReqBody = {
-  name: string;
-  address: string;
-  phone_number: string;
-  contract_fee: Decimal128;
-};
+  name: string
+  address: string
+  phone_number: string
+  contract_fee: Decimal128
+}
 
-export type UpdateSupplierReqBody = Partial<CreateSupplierReqBody>;
+export type GetSupplierReqQuery = {
+  status?: SupplierStatus
+  limit?: string
+  page?: string
+}
+
+export type UpdateSupplierReqBody = Partial<CreateSupplierReqBody>

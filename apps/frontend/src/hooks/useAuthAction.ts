@@ -7,9 +7,12 @@ import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePa
 import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
-import { LoginSchemaFormData, RegisterSchemaFormData } from "@/schemas/authSchema";
+import { ForgotPasswordSchemaFormData, LoginSchemaFormData, RegisterSchemaFormData, ResetPasswordSchemaFormData, UpdateProfileSchemaFormData } from "@/schemas/authSchema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
+import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
+import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
+import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 interface ErrorResponse {
     response?: {
         data?: {
@@ -49,6 +52,9 @@ export const useAuthActions = () => {
     const useLogout = useLogoutMutation();  
     const useChangePassword = useChangePasswordMutation();
     const useVerifyEmail = useVerifyEmailMutation();
+    const useUpdateProfile = useUpdateProfileMutation();
+    const useForgotPassword = useForgotPasswordMutation();
+    const useResetPassword = useResetPasswordMutation();
     const useResendVerifyEmail = useResendVerifyEmailMutation();
     const changePassword = useCallback(
         (old_password: string, password: string , confirm_password : string) => {
@@ -78,32 +84,32 @@ export const useAuthActions = () => {
                     window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     toast.success("Logged in successfully");
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-                        if (event?.query?.queryKey?.[0] === "user" && 
-                            event?.query?.queryKey?.[1] === "me" && 
-                            event.type === "updated" &&
-                            event.query.state.data) {
-                            const userProfile = event.query.state.data as unknown as { role: string };
-                            if (userProfile?.role === "ADMIN") {
-                                router.push("/admin");
-                            } else if (userProfile?.role === "STAFF") {
-                                router.push("/staff");
-                            } else {
-                                router.push("/");
-                            }
-                            unsubscribe(); 
-                        }
-                    });
-                    setTimeout(() => {
-                        unsubscribe();
-                    }, 3000);
+                    // const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+                    //     if (event?.query?.queryKey?.[0] === "user" && 
+                    //         event?.query?.queryKey?.[1] === "me" && 
+                    //         event.type === "updated" &&
+                    //         event.query.state.data) {
+                    //         const userProfile = event.query.state.data as unknown as { role: string };
+                    //         if (userProfile?.role === "ADMIN") {
+                    //             router.push("/admin");
+                    //         } else if (userProfile?.role === "STAFF") {
+                    //             router.push("/staff");
+                    //         } else {
+                    //             router.push("/user");
+                    //         }
+                    //         unsubscribe(); 
+                    //     }
+                    // });
+                    // setTimeout(() => {
+                    //     unsubscribe();
+                    // }, 3000);
                 },
                 onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
                     toast.error(errorMessage);
                 }
             });
-        },[useLogin, queryClient , router]
+        },[useLogin , queryClient]
     )
     const register = useCallback((
         data:RegisterSchemaFormData) => {
@@ -125,7 +131,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useRegister, router, queryClient ]);
+    },[useRegister,queryClient,router]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
@@ -153,7 +159,6 @@ export const useAuthActions = () => {
                 onSuccess: (result) => {
                     if(result.status === 200){
                         toast.success("Email verified successfully");
-                        // Invalidate user query to update verification status
                         queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                         resolve();
                     } else {
@@ -169,7 +174,7 @@ export const useAuthActions = () => {
                 }
             });
         });
-    }, [useVerifyEmail, queryClient]);
+    }, [useVerifyEmail,queryClient]);
     const resendVerifyEmail = useCallback(() => {
         useResendVerifyEmail.mutate(undefined,{
             onSuccess: (result) => {
@@ -186,6 +191,64 @@ export const useAuthActions = () => {
             }
         });
     }, [useResendVerifyEmail]);
+    const forgotPassword = useCallback(
+      (data: ForgotPasswordSchemaFormData) => {
+        useForgotPassword.mutate(data, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Password reset email sent successfully");
+            } else {
+              const errorMessage =
+                result.data?.message || "Error sending password reset email";
+              toast.error(errorMessage);
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Error sending password reset email"
+            );
+            toast.error(errorMessage);
+          },
+        });
+      },
+      [useForgotPassword]
+    );
+    
+    const resetPassword = useCallback((data: ResetPasswordSchemaFormData) => {
+        useResetPassword.mutate(data,{
+            onSuccess: (result) => {
+                if(result.status === 200){ 
+                    toast.success("Password reset successfully");
+                    router.push("/auth/login");
+                } else{
+                    const errorMessage = result.data?.message || "Error resetting password";
+                    toast.error(errorMessage);
+                }
+            },
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error resetting password");
+                toast.error(errorMessage);
+            }
+        });
+    }, [useResetPassword, router]);
+    const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
+        useUpdateProfile.mutate(data, {
+            onSuccess: (result) => {
+                if(result.status === 200){
+                    toast.success("Profile updated successfully");
+                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+                } else {
+                    const errorMessage = result.data?.message || "Error updating profile";
+                    toast.error(errorMessage);
+                }
+            },
+            onError: (error: unknown) => {
+                const errorMessage = getErrorMessage(error, "Error updating profile");
+                toast.error(errorMessage);
+            }
+        });
+    }, [useUpdateProfile, queryClient]);
     return {
       changePassword,
       logIn,
@@ -193,5 +256,14 @@ export const useAuthActions = () => {
       logOut,
       verifyEmail,
       resendVerifyEmail,
+      forgotPassword,
+      resetPassword,
+      updateProfile,
+      isUpdatingProfile: useUpdateProfile.isPending,
+      isChangingPassword: useChangePassword.isPending,
+      isRegistering: useRegister.isPending,
+      isReseting: useResetPassword.isPending,
+      isLoadingForgottingPassword: useForgotPassword.isPending,
+      isLoggingIn: useLogin.isPending,
     };
 }

@@ -1,0 +1,13 @@
+type: object
+required:
+  - newStatus
+properties:
+  newStatus:
+    $ref: './ReportStatus.yaml'
+  staff_id:
+    type: string
+    format: mongoId
+    description: "The ID of the staff member to assign the report to. Required when changing status to 'ĐANG XỬ LÝ'."
+  priority:
+    $ref: './ReportPriority.yaml'
+    description: "The priority of the report. Required when changing status to 'ĐANG XỬ LÝ'."
