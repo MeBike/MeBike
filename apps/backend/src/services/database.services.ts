@@ -64,6 +64,10 @@ class DatabaseService {
   get stations(): Collection<Station> {
     return this.db.collection(process.env.DB_STATIONS_COLLECTION as string);
   }
+  
+  async indexStations() {
+    await this.stations.createIndex({ name: 1 }, { unique: true });
+  }
 
   get reports(): Collection<Report> {
     return this.db.collection(process.env.DB_REPORTS_COLLECTION as string);

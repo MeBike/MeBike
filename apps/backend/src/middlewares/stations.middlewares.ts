@@ -50,6 +50,18 @@ export const createStationValidator = validate(
           options: { min: 3, max: 100 },
           errorMessage: STATIONS_MESSAGE.STATION_NAME_LENGTH_MUST_BE_FROM_3_TO_100,
         },
+        custom: {
+          options: async (value: string) => {
+            const existingStation = await databaseService.stations.findOne({ name: value });
+            if (existingStation) {
+              throw new ErrorWithStatus({
+                message: STATIONS_MESSAGE.STATION_NAME_ALREADY_EXISTS,
+                status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+              });
+            }
+            return true;
+          },
+        },
       },
       address: {
         in: ["body"],
@@ -116,6 +128,27 @@ export const updateStationValidator = validate(
         isLength: {
           options: { min: 3, max: 100 },
           errorMessage: STATIONS_MESSAGE.STATION_NAME_LENGTH_MUST_BE_FROM_3_TO_100,
+        },
+        custom: {
+          options: async (value: string, { req }) => {
+            if (value) {
+              const stationIdBeingUpdated = req.params?._id;
+              if (!stationIdBeingUpdated || !ObjectId.isValid(stationIdBeingUpdated)) {
+                 return true;
+              }
+              const existingStation = await databaseService.stations.findOne({
+                name: value,
+                _id: { $ne: new ObjectId(stationIdBeingUpdated) }
+              });
+              if (existingStation) {
+                throw new ErrorWithStatus({
+                  message: STATIONS_MESSAGE.STATION_NAME_ALREADY_EXISTS,
+                  status: HTTP_STATUS.UNPROCESSABLE_ENTITY,
+                });
+              }
+            }
+            return true;
+          },
         },
       },
       address: {
