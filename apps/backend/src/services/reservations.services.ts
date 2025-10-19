@@ -9,6 +9,7 @@ import { RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import walletService from './wallets.services'
+import Bike from '~/models/schemas/bike.schema'
 
 class ReservationsService {
   async reserveBike({
@@ -109,12 +110,14 @@ class ReservationsService {
         )
 
         await databaseService.rentals.updateOne(
-          {_id: reservation._id},
-          {$set: {
-            status: RentalStatus.Cancelled,
-            updated_at: now
-          }},
-          {session}
+          { _id: reservation._id },
+          {
+            $set: {
+              status: RentalStatus.Cancelled,
+              updated_at: now
+            }
+          },
+          { session }
         )
 
         await databaseService.bikes.updateOne(
@@ -160,11 +163,14 @@ class ReservationsService {
       await session.withTransaction(async () => {
         const now = getLocalTime()
 
-        const rental = await databaseService.rentals.findOne({
-          _id: reservation._id,
-          user_id,
-          status: RentalStatus.Reserved
-        }, {session})
+        const rental = await databaseService.rentals.findOne(
+          {
+            _id: reservation._id,
+            user_id,
+            status: RentalStatus.Reserved
+          },
+          { session }
+        )
 
         if (!rental) {
           throw new ErrorWithStatus({
@@ -235,6 +241,61 @@ class ReservationsService {
     }
 
     return { count: expiring.length }
+  }
+
+  async dispatchSameStation({
+    user_id,
+    source_id,
+    destination_id,
+    bike_ids,
+    bikes
+  }: {
+    user_id: ObjectId
+    source_id: ObjectId
+    destination_id: ObjectId
+    bike_ids: ObjectId[]
+    bikes: Bike[]
+  }) {
+    const now = getLocalTime()
+
+    const session = databaseService.getClient().startSession()
+    try {
+      await session.withTransaction(async () => {
+        const updateResult = await databaseService.bikes.updateMany(
+          { _id: { $in: bike_ids }, station_id: source_id },
+          {
+            $set: {
+              station_id: destination_id,
+              updated_at: now
+            }
+          },
+          { session }
+        )
+
+        if (updateResult.modifiedCount !== bike_ids.length) {
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.PARTIAL_UPDATE_FAILURE.replace(
+              '%s',
+              updateResult.modifiedCount.toString()
+            ).replace('%s', bike_ids.length.toString()),
+            status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+          })
+        }
+
+        // TODO: Log the dispatch action for each bike
+      })
+
+      return {
+        dispatched_count: bike_ids.length,
+        from_station: source_id,
+        to_station: destination_id,
+        dispatched_bikes: bikes
+      }
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
   }
 
   generateEndTime(startTime: string) {

@@ -5,7 +5,12 @@ import { ReservationStatus, Role } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RESERVATIONS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
-import { CancelReservationReqBody, ReservationParam, ReserveBikeReqBody } from '~/models/requests/reservations.requests'
+import {
+  CancelReservationReqBody,
+  DispatchBikeReqBody,
+  ReservationParam,
+  ReserveBikeReqBody
+} from '~/models/requests/reservations.requests'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import Reservation from '~/models/schemas/reservation.schema'
 import databaseService from '~/services/database.services'
@@ -29,7 +34,7 @@ export async function getReservationListController(req: Request, res: Response, 
   if (user.role === Role.User) {
     filter.user_id = objUserId
     filter.status = ReservationStatus.Pending
-  }else{
+  } else {
     filter = buildAdminReservationFilter(req.query)
   }
 
@@ -105,24 +110,41 @@ export async function getReservationHistoryController(req: Request, res: Respons
       $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired]
     }
   }
-  if(req.query.status){
+  if (req.query.status) {
     filter.status = req.query.status as ReservationStatus
   }
 
   const startStationId = req.query.stationId
   if (startStationId) {
-      try {
-        const stationObjectId = new ObjectId(startStationId as string);
-        
-        filter.station_id = stationObjectId;
-        
-      } catch (error) {
-        throw new ErrorWithStatus({
-          message: RESERVATIONS_MESSAGE.INVALID_STATION_ID, 
-          status: HTTP_STATUS.BAD_REQUEST 
-        });
-      }
+    try {
+      const stationObjectId = new ObjectId(startStationId as string)
+
+      filter.station_id = stationObjectId
+    } catch (error) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.INVALID_STATION_ID,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
     }
+  }
 
   await sendPaginatedResponse(res, next, databaseService.reservations, req.query, filter)
+}
+
+export async function dispatchSameStationController(req: Request, res: Response, next: NextFunction) {
+  const { user_id } = (req as any).decoded_authorization as TokenPayLoad
+  const { source_station_id, destination_station_id } = req.body as DispatchBikeReqBody
+
+  const result = await reservationsService.dispatchSameStation({
+    user_id: toObjectId(user_id),
+    source_id: toObjectId(source_station_id),
+    destination_id: toObjectId(destination_station_id),
+    bike_ids: (req as any).dispatch_bike_ids,
+    bikes: (req as any).dispatched_bikes
+  })
+
+  res.json({
+    message: RESERVATIONS_MESSAGE.DISPATCH_BIKE_SUCCESS,
+    result
+  })
 }

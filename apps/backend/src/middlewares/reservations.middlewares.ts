@@ -10,6 +10,7 @@ import { isAvailability } from './bikes.middlewares'
 import { BikeStatus } from '~/constants/enums'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import { getLocalTime } from '~/utils/date'
+import { DispatchBikeReqBody } from '~/models/requests/reservations.requests'
 
 export const reserveBikeValidator = validate(
   checkSchema(
@@ -207,4 +208,102 @@ export const confirmReservationValidator = validate(
       }
     }
   })
+)
+
+export const batchDispatchSameStationValidator = validate(
+  checkSchema(
+    {
+      source_station_id: {
+        notEmpty: {
+          errorMessage: RESERVATIONS_MESSAGE.REQUIRED_SOURCE_STATION_ID
+        },
+        isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_SOURCE_STATION_ID, bail: true },
+        custom: {
+          options: async (value) => {
+            const station = await databaseService.stations.findOne({ _id: toObjectId(value) })
+            if (!station) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.SOURCE_STATION_NOT_FOUND.replace('%s', value),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            return true
+          }
+        }
+      },
+      destination_station_id: {
+        notEmpty: {
+          errorMessage: RESERVATIONS_MESSAGE.REQUIRED_DESTINATION_STATION_ID
+        },
+        isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_DESTINATION_STATION_ID, bail: true },
+        custom: {
+          options: async (value, { req }) => {
+            const destId = toObjectId(value)
+            const sourceId = toObjectId((req.body as DispatchBikeReqBody).source_station_id)
+
+            if (destId.equals(sourceId)) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.DESTINATION_SAME_AS_SOURCE,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+
+            const station = await databaseService.stations.findOne({ _id: destId })
+            if (!station) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.DESTINATION_STATION_NOT_FOUND.replace('%s', value),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            return true
+          }
+        }
+      },
+      bike_ids_to_move: {
+        isArray: { errorMessage: RESERVATIONS_MESSAGE.INVALID_BIKE_LIST, bail: true },
+        notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_BIKE_LIST, bail: true },
+        custom: {
+          options: async (bikeIds: string[], { req }) => {
+            const sourceId = toObjectId((req.body as DispatchBikeReqBody).source_station_id)
+            const bikeObjectIds = bikeIds.map((id) => toObjectId(id))
+
+            const bikes = await databaseService.bikes
+              .find({
+                _id: { $in: bikeObjectIds }
+              })
+              .toArray()
+
+            if (bikes.length !== bikeIds.length) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.BIKE_NOT_FOUND_IN_LIST,
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+
+            bikes.forEach((bike) => {
+              if (bike.status !== BikeStatus.Available) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.BIKE_NOT_AVAILABLE_FOR_DISPATCH.replace(
+                    '%s',
+                    bike._id.toString()
+                  ).replace('%s', bike.status),
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
+              if (!bike.station_id || !bike.station_id.equals(sourceId)) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.BIKE_NOT_AT_SOURCE_STATION.replace('%s', bike._id.toString()),
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
+            })
+            ;(req as any).dispatch_bike_ids = bikeObjectIds
+            ;(req as any).dispatched_bikes = bikes
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
 )

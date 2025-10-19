@@ -255,6 +255,9 @@ export const RESERVATIONS_MESSAGE = {
   CANCEL_SUCCESS: 'Huỷ phiên đặt trước thành công',
   GET_HISTORY_SUCCESS: 'Xem lịch sử đặt trước thành công',
   CONFIRM_SUCCESS: 'Xác nhận phiên đặt trước thành công',
+  DISPATCH_BIKE_SUCCESS: 'Phân phối xe thành công',
+  // Fail action
+  PARTIAL_UPDATE_FAILURE: 'Lỗi hệ thống: Chỉ %s/%s xe được cập nhật. Hành động bị hủy',
   // Required data
   REQUIRED_ID: 'Vui lòng nhập Id phiên đặt trước',
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
@@ -263,6 +266,9 @@ export const RESERVATIONS_MESSAGE = {
   REQUIRED_END_STATION: 'Vui lòng nhập trạm kết thúc',
   REQUIRED_START_TIME: 'Vui lòng nhập thời gian bắt đầu hiệu lực',
   REQUIRED_CANCELLED_REASON: 'Vui lòng nhập nguyên nhân huỷ',
+  REQUIRED_SOURCE_STATION_ID: 'Vui lòng cung cấp Id trạm nguồn',
+  REQUIRED_DESTINATION_STATION_ID: 'Vui lòng cung cấp Id trạm đích',
+  REQUIRED_BIKE_LIST: 'Danh sách xe cần điều phối không được để trống',
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
@@ -271,13 +277,20 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_START_TIME: 'Thời gian đặt trước không thể là thời điểm ở quá khứ',
   INVALID_STATION_ID: 'Id trạm xe không hợp lệ',
   INVALID_USER_ID: 'Id người dùng không hợp lệ',
+  INVALID_SOURCE_STATION_ID: 'Id trạm nguồn không hợp lệ.',
+  INVALID_DESTINATION_STATION_ID: 'Id trạm đích không hợp lệ',
+  INVALID_BIKE_LIST: 'Danh sách Id xe không hợp lệ',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
   STATION_NOT_FOUND: 'Không tìm thấy trạm với Id %s',
   NOT_FOUND: 'Không tìm thấy phiên đặt trước với Id %s',
+  SOURCE_STATION_NOT_FOUND: 'Không tìm thấy trạm nguồn với Id %s',
+  DESTINATION_STATION_NOT_FOUND: 'Không tìm thấy trạm đích với Id %s',
+  BIKE_NOT_FOUND_IN_LIST: 'Danh sách chứa Id xe không tồn tại',
   // Unavailable object
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
+  BIKE_NOT_AVAILABLE_FOR_DISPATCH: 'Xe (Id: %s) không có sẵn để điều phối (trạng thái: %s)',
   // Not allowed action
   CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền huỷ phiên đặt trước của người khác',
   CANNOT_CONFIRM_THIS_RESERVATION: 'Bạn chỉ có thể xác nhận phiên đặt trước ở trạng thái đang được xử lí',
@@ -293,7 +306,10 @@ export const RESERVATIONS_MESSAGE = {
   // Payment
   PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s',  
   // Quota
-  QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước'
+  QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước',
+  DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',
+  BIKE_NOT_AT_SOURCE_STATION: 'Xe (Id: %s) không nằm ở trạm nguồn đã khai báo'
+
 } as const
 export const WALLETS_MESSAGE = {
   USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',
