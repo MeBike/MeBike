@@ -295,11 +295,11 @@
     tags: [Bikes]
     summary: Get a list of bikes
     description: |
-      Retrieves a paginated list of bikes. 
-      - **Users** can only view bikes with 'Available' status.
-      - **Admins/Staff** can filter by any status.
-    security:
-      - BearerAuth: []
+      Retrieves a paginated list of bikes.
+      - **Guests and Users** can only view bikes with 'Available' status.
+      - **Admins/Staff** can filter by any status using the 'status' query parameter.
+    # security:
+    #   - BearerAuth: []
     parameters:
       - $ref: '../parameters/all-parameters.yaml#/PageQuery'
       - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
