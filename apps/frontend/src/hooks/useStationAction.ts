@@ -3,18 +3,18 @@ import { useCallback } from "react";
 import { useRouter } from "next/router";
 import { useGetAllStation } from "./query/Station/useGetAllStationQuery";
 
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
+// interface ErrorResponse {
+//   response?: {
+//     data?: {
+//       errors?: Record<string, { msg?: string }>;
+//       message?: string;
+//     };
+//   };
+// }
 
-interface ErrorWithMessage {
-  message: string;
-}
+// interface ErrorWithMessage {
+//   message: string;
+// }
 
 // const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 //   const axiosError = error as ErrorResponse;
@@ -38,7 +38,7 @@ export const useStationActions = (
   // stationId?: string
 ) => {
     const router = useRouter();
-    const queryClient = useQueryClient();
+    // const queryClient = useQueryClient();
     const useGetAllStations = useGetAllStation();
     const getAllStations = useCallback(() => {
         if(!hasToken){  

@@ -16,8 +16,16 @@ interface WalletTransactionModalProps {
   isOpen: boolean;
   user: UserWallet | null;
   onClose: () => void;
-  onDeposit: (userId: string, amount: number, TransactionDetails: any) => void;
-  onWithdraw: (userId: string, amount: number, TransactionDetails: any) => void;
+  onDeposit: (
+    userId: string,
+    amount: number,
+    details: TransactionDetails
+  ) => void;
+  onWithdraw: (
+    userId: string,
+    amount: number,
+    details: TransactionDetailsTransactionDetails
+  ) => void;
 }
 
 interface TransactionDetails {
