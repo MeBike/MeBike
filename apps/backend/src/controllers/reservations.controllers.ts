@@ -10,6 +10,7 @@ import { TokenPayLoad } from '~/models/requests/users.requests'
 import Reservation from '~/models/schemas/reservation.schema'
 import databaseService from '~/services/database.services'
 import reservationsService from '~/services/reservations.services'
+import { buildAdminReservationFilter } from '~/utils/filters.helper'
 import { sendPaginatedResponse } from '~/utils/pagination.helper'
 import { toObjectId } from '~/utils/string'
 
@@ -24,9 +25,12 @@ export async function getReservationListController(req: Request, res: Response, 
     })
   }
 
-  const filter: Filter<Reservation> = {}
+  let filter: any = {}
   if (user.role === Role.User) {
     filter.user_id = objUserId
+    filter.status = ReservationStatus.Pending
+  }else{
+    filter = buildAdminReservationFilter(req.query)
   }
 
   await sendPaginatedResponse(res, next, databaseService.reservations, req.query, filter)
