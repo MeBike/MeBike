@@ -23,7 +23,8 @@ export type DecreaseBalanceWalletReqBody = {
 export type GetTransactionReqQuery = {
   limit?: string
   page?: string
-  type?: TransactionTypeEnum
+  type?: TransactionTypeEnum,
+  user_id?: string
 }
 
 export type CreateWithdrawlReqBody = {

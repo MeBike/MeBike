@@ -1,4 +1,4 @@
-import type { NextFunction, Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 
 import type {
   CreateWithdrawlReqBody,
@@ -70,6 +70,16 @@ export async function getUserWalletController(req: Request<any, any, any>, res: 
     message: WALLETS_MESSAGE.GET_USER_WALLET_SUCCESS.replace('%s', user_id),
     result
   })
+}
+
+export async function getUserTransactionController(
+  req: Request<ParamsDictionary, any, any, GetTransactionReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const query = req.query
+
+  await walletService.getUserTransaction(res, next, query)
 }
 
 export async function getUserTransactionWalletController(
