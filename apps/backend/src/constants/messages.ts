@@ -344,7 +344,10 @@ export const WALLETS_MESSAGE = {
   WALLET_NOT_FOUND: 'Không tìm thấy ví với ID %s',
   REASON_INVALID: 'Lý do không hợp lệ',
   REASON_TOO_LONG: 'Lý do không được vượt quá 500 ký tự',
-  USER_ID_REQUIRED: 'User ID là bắt buộc'
+  USER_ID_REQUIRED: 'User ID là bắt buộc',
+  BANK_IS_REQUIRED: 'Ngân hàng là bắt buộc',
+  ACCOUNT_IS_REQUIRED: 'Tài khoản là bắt buộc',
+  ACCOUNT_OWNER_IS_REQUIRED: 'Chủ tài khoản là bắt buộc',
 }
 
 export const WITHDRAWLS_MESSAGE = {

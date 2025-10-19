@@ -30,15 +30,27 @@ export const createWithdrawRequestValidator = validate(
           }
         }
       },
-
       account: {
         in: ['body'],
         trim: true,
         notEmpty: {
-          errorMessage: WALLETS_MESSAGE.TYPE_IS_REQUIRED
+          errorMessage: WALLETS_MESSAGE.ACCOUNT_IS_REQUIRED
         }
       },
-
+      bank: {
+        in: ['body'],
+        trim: true,
+        notEmpty: {
+          errorMessage: WALLETS_MESSAGE.BANK_IS_REQUIRED
+        }
+      },
+      account_owner: {
+        in: ['body'],
+        trim: true,
+        notEmpty: {
+          errorMessage: WALLETS_MESSAGE.ACCOUNT_OWNER_IS_REQUIRED
+        }
+      },
       note: {
         in: ['body'],
         optional: true,
