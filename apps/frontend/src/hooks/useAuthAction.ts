@@ -96,12 +96,12 @@ export const useAuthActions = () => {
         data:RegisterSchemaFormData) => {
         useRegister.mutate(data,{
             onSuccess: (result) => {
-                if(result.status === 201){
+                if(result.status === 200){
                     const { access_token, refresh_token } = result.data.result;
                     setTokens(access_token, refresh_token);
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Registration Successful", { description: "Your account has been created." });
-                    router.push("/auth/login");
+                    // router.push("/auth/login");
                 }else{
                     const errorMessage = result.data?.message || "Error registering";
                     toast.error(errorMessage);
