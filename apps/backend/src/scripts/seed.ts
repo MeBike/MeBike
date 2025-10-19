@@ -1,11 +1,12 @@
 import { Decimal128, ObjectId } from 'mongodb'
 
-import { BikeStatus, ReservationStatus, Role, UserVerifyStatus, WalletStatus } from '~/constants/enums'
+import { BikeStatus, RentalStatus, ReservationStatus, Role, UserVerifyStatus, WalletStatus } from '~/constants/enums'
 import databaseService from '~/services/database.services'
 import Bike from '~/models/schemas/bike.schema'
 import Station from '~/models/schemas/station.schema'
 import User from '~/models/schemas/user.schema'
 import Reservation from '~/models/schemas/reservation.schema'
+import Rental from '~/models/schemas/rental.schema'
 import Wallet from '~/models/schemas/wallet.schemas'
 import { hashPassword } from '~/utils/crypto'
 
@@ -33,6 +34,7 @@ async function seedDatabase() {
     await databaseService.bikes.deleteOne({ _id: BIKE_ID })
     await databaseService.bikes.deleteOne({ chip_id: BIKE_CHIP_ID })
     await databaseService.reservations.deleteMany({ bike_id: BIKE_ID })
+    await databaseService.rentals.deleteMany({ bike_id: BIKE_ID })
     await databaseService.stations.deleteOne({ _id: STATION_ID })
 
     console.log('Creating prototype station...')
@@ -112,6 +114,15 @@ async function seedDatabase() {
         status: ReservationStatus.Pending
       })
       await databaseService.reservations.insertOne(reservation)
+      const reservedRental = new Rental({
+        _id: reservation._id,
+        user_id: reservation.user_id,
+        bike_id: reservation.bike_id,
+        start_station: reservation.station_id!,
+        start_time: reservation.start_time,
+        status: RentalStatus.Reserved
+      })
+      await databaseService.rentals.insertOne(reservedRental)
       console.log('Reservation created successfully.')
     }
 
