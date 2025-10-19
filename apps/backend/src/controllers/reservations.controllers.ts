@@ -95,12 +95,32 @@ export async function getReservationHistoryController(req: Request, res: Respons
   const { user_id } = req.decoded_authorization as TokenPayLoad
   const userIdObjectId = toObjectId(user_id)
 
-  const filter = {
+  let filter: Filter<Reservation> = {}
+  
+  filter = {
     user_id: userIdObjectId,
     status: {
       $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired]
     }
   }
+  if(req.query.status){
+    filter.status = req.query.status as ReservationStatus
+  }
+
+  const startStationId = req.query.stationId
+  if (startStationId) {
+      try {
+        const stationObjectId = new ObjectId(startStationId as string);
+        
+        filter.station_id = stationObjectId;
+        
+      } catch (error) {
+        throw new ErrorWithStatus({
+          message: RESERVATIONS_MESSAGE.INVALID_STATION_ID, 
+          status: HTTP_STATUS.BAD_REQUEST 
+        });
+      }
+    }
 
   await sendPaginatedResponse(res, next, databaseService.reservations, req.query, filter)
 }

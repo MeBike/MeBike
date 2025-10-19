@@ -267,6 +267,8 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
   INVALID_CANCELLED_REASON: 'Nguyên nhân huỷ không hợp lệ (phải là dạng chuỗi)',
   REASON_TOO_LONG: 'Độ dài của nguyên nhân huỷ không hợp lệ (dưới 255 kí tự)',
+  INVALID_START_TIME: 'Thời gian đặt trước không thể là thời điểm ở quá khứ',
+  INVALID_STATION_ID: 'Id trạm xe không hợp lệ',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
@@ -275,9 +277,11 @@ export const RESERVATIONS_MESSAGE = {
   // Unavailable object
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   // Not allowed action
-  CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền kết thúc phiên đặt trước của người khác',
-  CANNOT_CONFIRM_THIS_RESERVATION: 'Không thể xác nhận phiên đặt trước này (phải ở trạng thái Pending)',
+  CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền huỷ phiên đặt trước của người khác',
+  CANNOT_CONFIRM_THIS_RESERVATION: 'Bạn chỉ có thể xác nhận phiên đặt trước ở trạng thái đang được xử lí',
   CANNOT_CONFIRM_EXPIRED_RESERVATION: 'Đã vượt quá thời gian cho phép xác nhận phiên đặt trước này',
+  NOT_AVAILABLE_FOR_CONFIRMATION: 'Chưa đến thời gian cho phép xác nhận phiên đặt trước này',
+  CANNOT_CANCEL_THIS_RESERVATION: 'Bạn chỉ có thể huỷ phiên đặt trước ở trạng thái đang được xử lí',
   // Over time
   OVER_CANCELLED_TIME: 'Đã quá thời gian quy định để có thể huỷ phiên đặt trước',
   // Reason
