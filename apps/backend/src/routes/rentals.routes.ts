@@ -33,7 +33,6 @@ const rentalsRouter = Router()
 
 rentalsRouter.route('/stats/revenue').get(accessTokenValidator, isAdminValidator, wrapAsync(getRentalRevenueController))
 
-<<<<<<< HEAD
 rentalsRouter
   .route('/stats/station-activity')
   .get(accessTokenValidator, isAdminValidator, wrapAsync(getStationActivityController))

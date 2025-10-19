@@ -40,8 +40,9 @@ async function seedDatabase() {
       _id: STATION_ID,
       name: 'Prototype Station',
       address: '123 Test Street',
-      latitude: 10.123,
-      longitude: 106.456
+      latitude: '10.123',
+      longitude: '106.456',
+      capacity: '10'
     })
     await databaseService.stations.insertOne(station)
 
