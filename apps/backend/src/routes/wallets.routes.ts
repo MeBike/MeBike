@@ -4,6 +4,7 @@ import {
   changeStatusController,
   decreaseBalanceController,
   getTransactionDetailController,
+  getUserTransactionController,
   getUserTransactionWalletController,
   getUserWalletController,
   increateBalanceController
@@ -23,6 +24,8 @@ const walletsRouter = Router()
 
 // lấy thông tin ví cho user
 walletsRouter.get('/', accessTokenValidator, wrapAsync(getUserWalletController))
+// lấy thông tin giao dịch của user cho admin
+walletsRouter.get('/manage-transactions', accessTokenValidator, isAdminValidator, wrapAsync(getUserTransactionController))
 // lấy các thông tin transaction trong ví chưa có lịch sử rental của user (cộng tiền, rút tiền)
 walletsRouter.get('/transaction', accessTokenValidator, wrapAsync(getUserTransactionWalletController))
 walletsRouter.get('/transaction/:id', accessTokenValidator, wrapAsync(getTransactionDetailController))

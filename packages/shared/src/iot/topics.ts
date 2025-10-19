@@ -35,6 +35,7 @@ const STATUS_ROOT = "esp/status" as const;
 const LOG_ROOT = "esp/logs" as const;
 const BOOKING_STATUS_TOPIC = "esp/booking/status" as const;
 const MAINTENANCE_STATUS_TOPIC = "esp/maintenance/status" as const;
+const CARD_TAP_TOPIC = "mebike/rentals/card-tap" as const;
 
 export const IOT_COMMAND_TOPICS = {
   root: COMMAND_ROOT,
@@ -50,6 +51,7 @@ export const IOT_PUBLISH_TOPICS = {
   logs: LOG_ROOT,
   bookingStatus: BOOKING_STATUS_TOPIC,
   maintenanceStatus: MAINTENANCE_STATUS_TOPIC,
+  cardTap: CARD_TAP_TOPIC,
 } as const;
 
 export type IotCommandTopic
@@ -109,6 +111,12 @@ export type IotMaintenanceStatusMessage = z.infer<
   typeof IotMaintenanceStatusMessageSchema
 >;
 
+export const IotCardTapMessageSchema = z.object({
+  chip_id: z.string().min(1),
+  card_uid: z.string().min(1),
+});
+export type IotCardTapMessage = z.infer<typeof IotCardTapMessageSchema>;
+
 export type IotCommandPayloadByTopic = {
   [IOT_COMMAND_TOPICS.root]: IotStateCommand;
   [IOT_COMMAND_TOPICS.state]: IotStateCommand;
@@ -123,6 +131,7 @@ export type IotPublishPayloadByTopic = {
   [IOT_PUBLISH_TOPICS.logs]: string;
   [IOT_PUBLISH_TOPICS.bookingStatus]: IotBookingStatusMessage;
   [IOT_PUBLISH_TOPICS.maintenanceStatus]: IotMaintenanceStatusMessage;
+  [IOT_PUBLISH_TOPICS.cardTap]: IotCardTapMessage;
 };
 
 const MAC_SANITISE_REGEX = /[^A-F0-9]/gi;

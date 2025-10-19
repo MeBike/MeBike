@@ -141,16 +141,17 @@ export const BIKES_MESSAGES = {
   FORBIDDEN: 'Không có quyền truy cập',
   INVALID_SUPPLIER_ID: 'ID của nhà cung cấp không hợp lệ',
   SUPPLIER_NOT_FOUND: 'Không tìm thấy nhà cung cấp với ID được cung cấp',
+  BIKE_ALREADY_EXISTS: 'Xe đạp với chip_id này đã tồn tại',
   // get bikes by id
   GET_BIKE_SUCCESS: 'Lấy thông tin xe đạp thành công',
   BIKE_ID_IS_REQUIRED: 'ID của xe đạp là bắt buộc',
   INVALID_BIKE_ID: 'ID của xe đạp không hợp lệ',
   // delete bike
-  DELETE_BIKE_SUCCESS: "Xóa xe đạp thành công",
+  DELETE_BIKE_SUCCESS: 'Xóa xe đạp thành công',
   // history rental of bike
-  GET_BIKE_RENTALS_SUCCESS: "Lấy lịch sử thuê xe thành công",
+  GET_BIKE_RENTALS_SUCCESS: 'Lấy lịch sử thuê xe thành công',
   // stats of bikes
-  GET_BIKE_STATS_SUCCESS: "Lấy thống kê xe thành công",
+  GET_BIKE_STATS_SUCCESS: 'Lấy thống kê xe thành công',
   // update info bike
   UPDATE_BIKE_SUCCESS: 'Cập nhật thông tin xe đạp thành công',
   UPDATE_NOT_ALLOWED: 'Bạn không được phép cập nhật trường này',
@@ -169,6 +170,8 @@ export const RENTALS_MESSAGE = {
   // Success action
   CREATE_SESSION_SUCCESS: 'Tạo phiên thuê xe thành công',
   END_SESSION_SUCCESS: 'Kết thúc phiên thuê xe thành công',
+  CARD_RENTAL_START_SUCCESS: 'Bắt đầu phiên thuê bằng thẻ thành công',
+  CARD_RENTAL_END_SUCCESS: 'Kết thúc phiên thuê bằng thẻ thành công',
   GET_DETAIL_SUCCESS: 'Xem chi tiết 1 phiên thuê xe thành công',
   GET_REVENUE_SUCCESS: 'Xem thống kê doanh thu thành công',
   GET_STATION_ACTIVITY_SUCCESS: 'Xem thống kê hoạt động trạm xe thành công',
@@ -179,6 +182,7 @@ export const RENTALS_MESSAGE = {
   TRACKING_RENTAL_IN_STATION_SUCCESS: 'Xem danh sách các phiên thuê tại trạm thành công',
   // Fail action
   CREATE_SESSION_FAIL: 'Tạo phiên thuê xe không thành công',
+  RENTAL_UPDATE_FAILED: 'Cập nhật phiên thuê không thành công',
   // Required data
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
   REQUIRED_BIKE_ID: 'Vui lòng nhập Id xe đạp',
@@ -207,6 +211,7 @@ export const RENTALS_MESSAGE = {
   BIKE_NOT_FOUND_IN_STATION: 'Xe với Id %s không tồn tại trong trạm %s',
   NOT_FOUND_RENTED_RENTAL: 'Không tìm thấy phiên thuê nào với Id %s đang diễn ra ở thời điểm hiện tại',
   NOT_FOUND: 'Không tìm thấy phiên thuê nào với Id %s',
+  NOT_FOUND_RESERVED_RENTAL: 'Không tìm thấy phiên đặt trước nào với Id %s',
   // Not available
   NOT_AVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   // Not allowed action
@@ -232,11 +237,15 @@ export const RENTALS_MESSAGE = {
   BIKE_IS_RESERVED: 'Xe đã được đặt trước',
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   INVALID_BIKE_STATUS: 'Trạng thái xe không hợp lệ',
-  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON: 'Bạn phải nhập ít nhất 1 trường ngoài nguyên nhân để cập nhật'
+  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON: 'Bạn phải nhập ít nhất 1 trường ngoài nguyên nhân để cập nhật',
+  // payment
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên thuê cho xe %s'
 } as const
 
 export const COMMON_MESSAGE = {
-  CREATE_SESSION_FAIL: 'Tạo phiên thất bại: '
+  CREATE_SESSION_FAIL: 'Tạo phiên thất bại: ',
+  SERVICE_TOKEN_NOT_CONFIGURED: 'Dịch vụ chưa cấu hình khóa truy cập',
+  INVALID_SERVICE_TOKEN: 'Khóa truy cập dịch vụ không hợp lệ'
 } as const
 
 export const AUTH_MESSAGE = {
@@ -264,6 +273,8 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
   INVALID_CANCELLED_REASON: 'Nguyên nhân huỷ không hợp lệ (phải là dạng chuỗi)',
   REASON_TOO_LONG: 'Độ dài của nguyên nhân huỷ không hợp lệ (dưới 255 kí tự)',
+  INVALID_START_TIME: 'Thời gian đặt trước không thể là thời điểm ở quá khứ',
+  INVALID_STATION_ID: 'Id trạm xe không hợp lệ',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
@@ -272,14 +283,19 @@ export const RESERVATIONS_MESSAGE = {
   // Unavailable object
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   // Not allowed action
-  CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền kết thúc phiên đặt trước của người khác',
-  CANNOT_CONFIRM_THIS_RESERVATION: 'Không thể xác nhận phiên đặt trước này (phải ở trạng thái Pending)',
+  CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền huỷ phiên đặt trước của người khác',
+  CANNOT_CONFIRM_THIS_RESERVATION: 'Bạn chỉ có thể xác nhận phiên đặt trước ở trạng thái đang được xử lí',
+  CANNOT_CONFIRM_EXPIRED_RESERVATION: 'Đã vượt quá thời gian cho phép xác nhận phiên đặt trước này',
+  NOT_AVAILABLE_FOR_CONFIRMATION: 'Chưa đến thời gian cho phép xác nhận phiên đặt trước này',
+  CANNOT_CANCEL_THIS_RESERVATION: 'Bạn chỉ có thể huỷ phiên đặt trước ở trạng thái đang được xử lí',
   // Over time
   OVER_CANCELLED_TIME: 'Đã quá thời gian quy định để có thể huỷ phiên đặt trước',
   // Reason
   NO_CANCELLED_REASON: 'Không có nguyên nhân nào được cung cấp',
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
+  // Payment
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s'
 } as const
 export const WALLETS_MESSAGE = {
   USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',
@@ -306,6 +322,7 @@ export const WALLETS_MESSAGE = {
   STATUS_INVALID: 'Trạng thái không hợp lệ',
   CHANGE_STATUS_SUCCESS: 'Đổi trạng thái ví của người dùng thành công',
   GET_USER_WALLET_SUCCESS: 'Lấy thông tin ví của người dùng %s thành công',
+  GET_WALLET_SUCCESS: 'Lấy thông tin ví của người dùng thành công',
   FORBIDDEN: 'Không có quyền truy cập vào giao dịch của người khác',
   TRANSACTION_NOT_FOUND: 'Không tìm thấy giao dịch',
   TRANSACTION_DETAIL_SUCCESS: 'Lấy chi tiết giao dịch thành công',
@@ -327,6 +344,10 @@ export const WALLETS_MESSAGE = {
   WALLET_NOT_FOUND: 'Không tìm thấy ví với ID %s',
   REASON_INVALID: 'Lý do không hợp lệ',
   REASON_TOO_LONG: 'Lý do không được vượt quá 500 ký tự',
+  USER_ID_REQUIRED: 'User ID là bắt buộc',
+  BANK_IS_REQUIRED: 'Ngân hàng là bắt buộc',
+  ACCOUNT_IS_REQUIRED: 'Tài khoản là bắt buộc',
+  ACCOUNT_OWNER_IS_REQUIRED: 'Chủ tài khoản là bắt buộc',
 }
 
 export const WITHDRAWLS_MESSAGE = {
@@ -368,5 +389,4 @@ export const STATIONS_MESSAGE = {
   // delete station messages
   STATION_DELETED_SUCCESSFULLY: 'Xóa trạm thành công',
   CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.'
-
 }

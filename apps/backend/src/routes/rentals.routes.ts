@@ -1,8 +1,9 @@
-import { accessTokenValidator } from '~/middlewares/users.middlewares'
+import { accessTokenValidator, verifiedUserValidator } from '~/middlewares/users.middlewares'
 import { Router } from 'express'
 
 import {
   cancelRentalController,
+  createRentalFromCardController,
   createRentalSessionController,
   endRentalByAdminOrStaffController,
   endRentalSessionController,
@@ -24,6 +25,7 @@ import {
   endRentalSessionValidator,
   updateDetailRentalValidator
 } from '~/middlewares/rentals.middlewares'
+import { cardTapApiKeyValidator } from '~/middlewares/card-tap.middlewares'
 import { wrapAsync } from '~/utils/handler'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
 import { CancelRentalReqBody, CreateRentalReqBody, EndRentalByAdminOrStaffReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
@@ -35,6 +37,8 @@ rentalsRouter.route('/stats/revenue').get(accessTokenValidator, isAdminValidator
 rentalsRouter
   .route('/stats/station-activity')
   .get(accessTokenValidator, isAdminValidator, wrapAsync(getStationActivityController))
+
+rentalsRouter.post('/card-rental', cardTapApiKeyValidator, wrapAsync(createRentalFromCardController))
 
 rentalsRouter
   .route('/stats/reservations')
@@ -88,6 +92,7 @@ rentalsRouter
   // user
   .post(
     accessTokenValidator,
+    verifiedUserValidator,
     filterMiddleware<CreateRentalReqBody>(['bike_id']),
     createRentalSessionValidator,
     wrapAsync(createRentalSessionController)

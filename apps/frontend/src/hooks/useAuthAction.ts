@@ -84,25 +84,6 @@ export const useAuthActions = () => {
                     window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     toast.success("Logged in successfully");
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                    // const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-                    //     if (event?.query?.queryKey?.[0] === "user" && 
-                    //         event?.query?.queryKey?.[1] === "me" && 
-                    //         event.type === "updated" &&
-                    //         event.query.state.data) {
-                    //         const userProfile = event.query.state.data as unknown as { role: string };
-                    //         if (userProfile?.role === "ADMIN") {
-                    //             router.push("/admin");
-                    //         } else if (userProfile?.role === "STAFF") {
-                    //             router.push("/staff");
-                    //         } else {
-                    //             router.push("/user");
-                    //         }
-                    //         unsubscribe(); 
-                    //     }
-                    // });
-                    // setTimeout(() => {
-                    //     unsubscribe();
-                    // }, 3000);
                 },
                 onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
@@ -115,12 +96,11 @@ export const useAuthActions = () => {
         data:RegisterSchemaFormData) => {
         useRegister.mutate(data,{
             onSuccess: (result) => {
-                if(result.status === 201){
+                if(result.status === 200){
                     const { access_token, refresh_token } = result.data.result;
                     setTokens(access_token, refresh_token);
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Registration Successful", { description: "Your account has been created." });
-                    router.push("/auth/login");
                 }else{
                     const errorMessage = result.data?.message || "Error registering";
                     toast.error(errorMessage);
@@ -131,7 +111,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useRegister,queryClient,router]);
+    },[useRegister,queryClient]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
@@ -232,23 +212,30 @@ export const useAuthActions = () => {
             }
         });
     }, [useResetPassword, router]);
-    const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
+    const updateProfile = useCallback(
+      (data: Partial<UpdateProfileSchemaFormData>) => {
         useUpdateProfile.mutate(data, {
-            onSuccess: (result) => {
-                if(result.status === 200){
-                    toast.success("Profile updated successfully");
-                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                } else {
-                    const errorMessage = result.data?.message || "Error updating profile";
-                    toast.error(errorMessage);
-                }
-            },
-            onError: (error: unknown) => {
-                const errorMessage = getErrorMessage(error, "Error updating profile");
-                toast.error(errorMessage);
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Profile updated successfully");
+              queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+            } else {
+              const errorMessage =
+                result.data?.message || "Error updating profile";
+              toast.error(errorMessage);
             }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Error updating profile"
+            );
+            toast.error(errorMessage);
+          },
         });
-    }, [useUpdateProfile, queryClient]);
+      },
+      [useUpdateProfile, queryClient]
+    );
     return {
       changePassword,
       logIn,

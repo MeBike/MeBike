@@ -9,6 +9,7 @@ import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { BikeStatus } from '~/constants/enums'
 import { TokenPayLoad } from '~/models/requests/users.requests'
+import { getLocalTime } from '~/utils/date'
 
 export const reserveBikeValidator = validate(
   checkSchema(
@@ -60,6 +61,19 @@ export const reserveBikeValidator = validate(
         },
         isISO8601: {
           errorMessage: RESERVATIONS_MESSAGE.INVALID_START_TIME_FORMAT
+        },
+        custom: {
+          options: (value) => {
+            const now = getLocalTime()
+            if(new Date(value) < now){
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.INVALID_START_TIME,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+
+            return true
+          }
         }
       }
     },
@@ -102,6 +116,13 @@ export const cancelReservationValidator = validate(
             })
           }
 
+          if (reservation.status !== ReservationStatus.Pending) {
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.CANNOT_CANCEL_THIS_RESERVATION,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
           req.reservation = reservation
           return true
         }
@@ -141,6 +162,20 @@ export const confirmReservationValidator = validate(
           if (reservation.status !== ReservationStatus.Pending) {
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_THIS_RESERVATION,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+          const now = getLocalTime()
+          if(reservation.start_time > now){
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.NOT_AVAILABLE_FOR_CONFIRMATION,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+          if(reservation.end_time && reservation.end_time < now){
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_EXPIRED_RESERVATION,
               status: HTTP_STATUS.BAD_REQUEST
             })
           }

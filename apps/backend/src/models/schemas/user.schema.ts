@@ -27,6 +27,7 @@ type UserType = {
   phone_number?: string;
   avatar?: string;
   role: Role;
+  nfc_card_uid?: string;
   created_at?: Date;
   updated_at?: Date;
 };
@@ -44,6 +45,7 @@ export default class User {
   phone_number: string;
   avatar: string;
   role: Role;
+  nfc_card_uid?: string;
   created_at: Date;
   updated_at: Date;
 
@@ -64,6 +66,7 @@ export default class User {
     this.phone_number = user.phone_number || "";
     this.avatar = user.avatar || "";
     this.role = user.role || Role.User;
+    this.nfc_card_uid = user.nfc_card_uid || "";
     this.created_at = user.created_at || localTime;
     this.updated_at = user.updated_at || localTime;
   }

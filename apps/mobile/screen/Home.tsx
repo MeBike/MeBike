@@ -14,10 +14,12 @@ import type { HomeScreenNavigationProp } from '../types/navigation';
 import { BikeColors } from '../constants/BikeColors';
 import { IconSymbol } from '../components/IconSymbol';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '@providers/auth-providers';
+import { User } from "lucide-react-native";
 const { width, height } = Dimensions.get('window');
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-
+  const { user , isAuthenticated} = useAuth();
   const navigateToLogin = () => {
     navigation.navigate('Login');
   };
@@ -49,10 +51,11 @@ export default function HomeScreen() {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor={BikeColors.primary} />
-      
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={BikeColors.primary}
+      />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Header with Navigation */}
         <LinearGradient
           colors={[BikeColors.primary, BikeColors.secondary]}
           style={styles.header}
@@ -62,33 +65,67 @@ export default function HomeScreen() {
               <IconSymbol name="bicycle" size={32} color="white" />
               <Text style={styles.logoText}>BikeShare</Text>
             </View>
-            
+
             <View style={styles.navButtons}>
               <Pressable style={styles.navButton} onPress={navigateToIntro}>
                 <Text style={styles.navButtonText}>Giới thiệu</Text>
               </Pressable>
-              <Pressable style={styles.loginButton} onPress={navigateToLogin}>
-                <Text style={styles.loginButtonText}>Đăng nhập</Text>
-              </Pressable>
+
+              {isAuthenticated ? (
+                <Pressable
+                  style={styles.navButton}
+                  onPress={() => navigation.navigate("Profile")}
+                >
+                  <User size={24} color="white" />
+                </Pressable>
+              ) : (
+                <Pressable style={styles.loginButton} onPress={navigateToLogin}>
+                  <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                </Pressable>
+              )}
             </View>
           </View>
 
           {/* Hero Section */}
           <View style={styles.heroSection}>
             <Text style={styles.heroTitle}>
-              Khám phá thành phố{'\n'}với BikeShare
+              Khám phá thành phố{"\n"}với BikeShare
             </Text>
             <Text style={styles.heroSubtitle}>
               Giải pháp di chuyển thông minh và thân thiện với môi trường
             </Text>
-            
+
             <View style={styles.heroButtons}>
-              <Pressable style={styles.primaryButton} onPress={navigateToLogin}>
-                <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
-                <IconSymbol name="arrow.right" size={20} color="white" />
-              </Pressable>
-              
-              <Pressable style={styles.secondaryButton} onPress={navigateToIntro}>
+              {isAuthenticated ? (
+                <Pressable
+                  style={styles.primaryButton}
+                  onPress={() => navigation.navigate("StationSelect")}
+                >
+                  <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
+                  <IconSymbol
+                    name="arrow.right"
+                    size={20}
+                    color={BikeColors.primary}
+                  />
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={styles.primaryButton}
+                  onPress={navigateToLogin}
+                >
+                  <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
+                  <IconSymbol
+                    name="arrow.right"
+                    size={20}
+                    color={BikeColors.primary}
+                  />
+                </Pressable>
+              )}
+
+              <Pressable
+                style={styles.secondaryButton}
+                onPress={navigateToIntro}
+              >
                 <Text style={styles.secondaryButtonText}>Tìm hiểu thêm</Text>
               </Pressable>
             </View>
@@ -98,11 +135,11 @@ export default function HomeScreen() {
         {/* Features Section */}
         <View style={styles.featuresSection}>
           <Text style={styles.sectionTitle}>Tại sao chọn BikeShare?</Text>
-          
+
           {features.map((feature, index) => (
             <View key={index} style={styles.featureCard}>
               <LinearGradient
-                colors={[feature.color + '20', feature.color + '10']}
+                colors={[feature.color + "20", feature.color + "10"]}
                 style={styles.featureIcon}
               >
                 <IconSymbol
@@ -111,10 +148,12 @@ export default function HomeScreen() {
                   color={feature.color}
                 />
               </LinearGradient>
-              
+
               <View style={styles.featureContent}>
                 <Text style={styles.featureTitle}>{feature.title}</Text>
-                <Text style={styles.featureDescription}>{feature.description}</Text>
+                <Text style={styles.featureDescription}>
+                  {feature.description}
+                </Text>
               </View>
             </View>
           ))}
@@ -123,23 +162,23 @@ export default function HomeScreen() {
         {/* Stats Section */}
         <View style={styles.statsSection}>
           <Text style={styles.sectionTitle}>Thống kê hệ thống</Text>
-          
+
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>50+</Text>
               <Text style={styles.statLabel}>Trạm metro</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>500+</Text>
               <Text style={styles.statLabel}>Xe đạp</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>10K+</Text>
               <Text style={styles.statLabel}>Người dùng</Text>
             </View>
-            
+
             <View style={styles.statCard}>
               <Text style={styles.statNumber}>24/7</Text>
               <Text style={styles.statLabel}>Hoạt động</Text>
@@ -150,7 +189,7 @@ export default function HomeScreen() {
         {/* CTA Section */}
         <View style={styles.ctaSection}>
           <LinearGradient
-            colors={[BikeColors.primary + '20', BikeColors.secondary + '20']}
+            colors={[BikeColors.primary + "20", BikeColors.secondary + "20"]}
             style={styles.ctaCard}
           >
             <IconSymbol name="bicycle" size={48} color={BikeColors.primary} />
@@ -158,7 +197,7 @@ export default function HomeScreen() {
             <Text style={styles.ctaDescription}>
               Tham gia cộng đồng BikeShare và khám phá cách di chuyển mới
             </Text>
-            
+
             <Pressable style={styles.ctaButton} onPress={navigateToLogin}>
               <Text style={styles.ctaButtonText}>Đăng ký ngay</Text>
               <IconSymbol name="arrow.right" size={18} color="white" />
