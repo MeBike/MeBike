@@ -70,8 +70,10 @@ const ProfileScreen = () => {
     navigation.navigate("ChangePassword" as never);
   };
 
-  const handleNotifications = () => {
-    Alert.alert("Thông báo", "Chuyển đến cài đặt thông báo");
+  const handleUpdateProfile = () => {
+    Alert.alert("Thông báo", "Chuyển đến cài đặt thông tin cá nhân");
+    navigation.navigate("UpdateProfile" as never);
+
   };
 
   const handleSupport = () => {
@@ -169,14 +171,13 @@ const ProfileScreen = () => {
             </View>
           </View>
 
-          {/* Cài đặt tài khoản */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Cài đặt tài khoản</Text>
             {renderMenuOption(
-              "notifications",
-              "Thông báo",
-              "Quản lý cài đặt thông báo",
-              handleNotifications
+              "person-outline",
+              "Thông tin cá nhân",
+              "Quản lý thông tin cá nhân của bạn",
+              handleUpdateProfile
             )}
             {renderMenuOption(
               "lock-closed",
@@ -197,12 +198,10 @@ const ProfileScreen = () => {
               handleWallet
             )}
           </View>
-
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out" size={20} color="#fff" />
             <Text style={styles.logoutButtonText}>Đăng xuất</Text>
           </TouchableOpacity>
-
           <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
         </View>
       </ScrollView>

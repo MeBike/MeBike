@@ -213,23 +213,30 @@ export const useAuthActions = () => {
             }
         });
     }, [useResetPassword, router]);
-    const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
+    const updateProfile = useCallback(
+      (data: Partial<UpdateProfileSchemaFormData>) => {
         useUpdateProfile.mutate(data, {
-            onSuccess: (result) => {
-                if(result.status === 200){
-                    toast.success("Profile updated successfully");
-                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                } else {
-                    const errorMessage = result.data?.message || "Error updating profile";
-                    toast.error(errorMessage);
-                }
-            },
-            onError: (error: unknown) => {
-                const errorMessage = getErrorMessage(error, "Error updating profile");
-                toast.error(errorMessage);
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Profile updated successfully");
+              queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+            } else {
+              const errorMessage =
+                result.data?.message || "Error updating profile";
+              toast.error(errorMessage);
             }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Error updating profile"
+            );
+            toast.error(errorMessage);
+          },
         });
-    }, [useUpdateProfile, queryClient]);
+      },
+      [useUpdateProfile, queryClient]
+    );
     return {
       changePassword,
       logIn,

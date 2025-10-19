@@ -220,7 +220,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
             }
         });
     }, [useResetPassword, navigation]);
-    const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
+    const updateProfile = useCallback((data: Partial<UpdateProfileSchemaFormData>) => {
         useUpdateProfile.mutate(data, {
             onSuccess: (result) => {
                 if(result.status === 200){
