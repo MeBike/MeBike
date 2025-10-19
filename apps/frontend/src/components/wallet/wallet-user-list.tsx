@@ -9,10 +9,18 @@ import { WalletTransactionModal } from "./wallet-transaction-modal";
 import { UserWallet } from "@/types/Wallet";
 interface WalletUserListProps {
   users: UserWallet[];
-onDeposit: (userId: string, amount: number) => void;
-  onWithdraw: (userId: string, amount: number) => void;
+  onDeposit: (
+    userId: string,
+    amount: number,
+    details?: TransactionDetails
+  ) => void;
+  onWithdraw: (userId: string, amount: number, details: TransactionDetails) => void;
 }
-
+interface TransactionDetails {
+  fee?: number;
+  description: string;
+  transaction_hash?: string;
+}
 export function WalletUserList({
   users,
   onDeposit,
