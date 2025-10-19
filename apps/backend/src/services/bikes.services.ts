@@ -14,9 +14,9 @@ class BikesService {
   async createBike(payload: CreateBikeReqBody) {
     const result = await databaseService.bikes.insertOne(
       new Bike({
+        chip_id: payload.chip_id,
         station_id: new ObjectId(payload.station_id),
         status: payload.status || BikeStatus.Available,
-        chip_id: payload.chip_id,
         supplier_id: payload.supplier_id ? new ObjectId(payload.supplier_id) : null,
       }),
     );

@@ -141,6 +141,7 @@ export const BIKES_MESSAGES = {
   FORBIDDEN: 'Không có quyền truy cập',
   INVALID_SUPPLIER_ID: 'ID của nhà cung cấp không hợp lệ',
   SUPPLIER_NOT_FOUND: 'Không tìm thấy nhà cung cấp với ID được cung cấp',
+  BIKE_ALREADY_EXISTS: 'Xe đạp với chip_id này đã tồn tại',
   // get bikes by id
   GET_BIKE_SUCCESS: 'Lấy thông tin xe đạp thành công',
   BIKE_ID_IS_REQUIRED: 'ID của xe đạp là bắt buộc',
@@ -169,6 +170,8 @@ export const RENTALS_MESSAGE = {
   // Success action
   CREATE_SESSION_SUCCESS: 'Tạo phiên thuê xe thành công',
   END_SESSION_SUCCESS: 'Kết thúc phiên thuê xe thành công',
+  CARD_RENTAL_START_SUCCESS: 'Bắt đầu phiên thuê bằng thẻ thành công',
+  CARD_RENTAL_END_SUCCESS: 'Kết thúc phiên thuê bằng thẻ thành công',
   GET_DETAIL_SUCCESS: 'Xem chi tiết 1 phiên thuê xe thành công',
   GET_REVENUE_SUCCESS: 'Xem thống kê doanh thu thành công',
   GET_STATION_ACTIVITY_SUCCESS: 'Xem thống kê hoạt động trạm xe thành công',
@@ -240,7 +243,9 @@ export const RENTALS_MESSAGE = {
 } as const
 
 export const COMMON_MESSAGE = {
-  CREATE_SESSION_FAIL: 'Tạo phiên thất bại: '
+  CREATE_SESSION_FAIL: 'Tạo phiên thất bại: ',
+  SERVICE_TOKEN_NOT_CONFIGURED: 'Dịch vụ chưa cấu hình khóa truy cập',
+  INVALID_SERVICE_TOKEN: 'Khóa truy cập dịch vụ không hợp lệ'
 } as const
 
 export const AUTH_MESSAGE = {

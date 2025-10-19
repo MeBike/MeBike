@@ -20,8 +20,8 @@ import RentalLog from "~/models/schemas/rental-audit-logs.schema";
 import Reservation from "~/models/schemas/reservation.schema";
 
 config();
-const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
-
+// const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
+const uri = process.env.DATABASE_URL!;
 class DatabaseService {
   private client: MongoClient;
   private db: Db;
