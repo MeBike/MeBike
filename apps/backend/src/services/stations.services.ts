@@ -1,4 +1,4 @@
-import { Filter, ObjectId } from "mongodb";
+import { Document, Filter, ObjectId } from "mongodb";
 import type { NextFunction, Response } from "express";
 
 import type {
@@ -14,6 +14,7 @@ import { ErrorWithStatus } from "~/models/errors";
 import HTTP_STATUS from "~/constants/http-status";
 import { BikeStatus } from "~/constants/enums";
 import { STATIONS_MESSAGE } from "~/constants/messages";
+import { sendPaginatedAggregationResponse } from "~/utils/pagination.helper";
 
 class StationsService {
   async createStation(payload: CreateStationReqBody): Promise<Station> {
@@ -38,17 +39,43 @@ class StationsService {
     return insertedStation;
   }
 
+//   async getAllStations(
+//     res: Response,
+//     next: NextFunction,
+//     query: GetStationsReqQuery
+//   ) {
+//     const filter: Filter<Station> = {};
+//     if (query.name) {
+//       filter.name = { $regex: query.name, $options: 'i' };
+//     }
+//     if (query.address) {
+//       filter.address = { $regex: query.address, $options: 'i' };
+//     }
+//     if (query.latitude) {
+//       filter.latitude = query.latitude;
+//     }
+//     if (query.longitude) {
+//       filter.longitude = query.longitude;
+//     }
+//     if (query.capacity) {
+//       filter.capacity = query.capacity;
+//     }
+
+//     await sendPaginatedResponse(res, next, databaseService.stations, query, filter);
+//   }
+
   async getAllStations(
     res: Response,
     next: NextFunction,
     query: GetStationsReqQuery
   ) {
+    //filter
     const filter: Filter<Station> = {};
     if (query.name) {
-      filter.name = { $regex: query.name, $options: 'i' };
+      filter.name = { $regex: query.name, $options: "i" };
     }
     if (query.address) {
-      filter.address = { $regex: query.address, $options: 'i' };
+      filter.address = { $regex: query.address, $options: "i" };
     }
     if (query.latitude) {
       filter.latitude = query.latitude;
@@ -60,11 +87,165 @@ class StationsService {
       filter.capacity = query.capacity;
     }
 
-    await sendPaginatedResponse(res, next, databaseService.stations, query, filter);
+    //Aggregation Pipeline
+    const pipeline: Document[] = [
+      { $match: filter },
+      {
+        $lookup: {
+          from: "bikes",
+          localField: "_id",
+          foreignField: "station_id",
+          as: "bikesData",
+        },
+      },
+      {
+        $addFields: {
+          //Thêm các trường đếm cho từng trạng thái
+          totalBikes: { $size: "$bikesData" },
+          availableBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Available] },
+              },
+            },
+          },
+          bookedBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Booked] },
+              },
+            },
+          },
+          brokenBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Broken] },
+              },
+            },
+          },
+          reservedBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Reserved] },
+              },
+            },
+          },
+          maintainedBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Maintained] },
+              },
+            },
+          },
+          unavailableBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Unavailable] },
+              },
+            },
+          },
+        },
+      },
+      {
+        //Tính emptySlots và xây dựng mảng bike_statuses
+        $addFields: {
+          emptySlots: {
+            $max: [
+              0,
+              {
+                $subtract: [
+                  { $toInt: "$capacity" }, //Chuyển capacity (string) thành integer
+                  "$totalBikes",
+                ],
+              },
+            ],
+          },
+          
+          //Tạo mảng bike_statuses
+        //   bike_statuses: [
+        //     { status: BikeStatus.Available, count: "$availableBikesCount" },
+        //     { status: BikeStatus.Booked, count: "$bookedBikesCount" },
+        //     { status: BikeStatus.Broken, count: "$brokenBikesCount" },
+        //     { status: BikeStatus.Reserved, count: "$reservedBikesCount" },
+        //     { status: BikeStatus.Maintained, count: "$maintainedBikesCount" },
+        //     { status: BikeStatus.Unavailable, count: "$unavailableBikesCount" },
+        //   ],
+
+          //Cập nhật lại các trường đếm chính
+          availableBikes: "$availableBikesCount",
+          bookedBikes: "$bookedBikesCount",
+          brokenBikes: "$brokenBikesCount",
+          reservedBikes: "$reservedBikesCount",
+          maintainedBikes: "$maintainedBikesCount",
+          unavailableBikes: "$unavailableBikesCount",
+        },
+      },
+      {
+        //Xóa các trường đếm tạm thời và bikesData
+        $project: {
+          bikesData: 0, 
+          availableBikesCount: 0,
+          bookedBikesCount: 0,
+          brokenBikesCount: 0,
+          reservedBikesCount: 0,
+          maintainedBikesCount: 0,
+          unavailableBikesCount: 0,
+        },
+      },
+    ];
+
+    await sendPaginatedAggregationResponse(
+      res,
+      next,
+      databaseService.stations,
+      query,
+      pipeline
+    );
   }
+
+//   async getStationDetailsById(stationId: string) {
+//     const objectId = new ObjectId(stationId);
+//     const station = await databaseService.stations.findOne({ _id: objectId });
+
+//     if (!station) {
+//       throw new ErrorWithStatus({
+//         message: STATIONS_MESSAGE.STATION_NOT_FOUND,
+//         status: HTTP_STATUS.NOT_FOUND,
+//       });
+//     }
+
+//     //tính toán available bikes and empty slots
+//     const totalBikesAtStation = await databaseService.bikes.countDocuments({
+//       station_id: objectId,
+//     });
+//     const availableBikes = await databaseService.bikes.countDocuments({
+//       station_id: objectId,
+//       status: BikeStatus.Available,
+//     });
+
+//     //Parse capacity string to number for calculation, handle potential errors
+//     const capacityNumber = parseInt(station.capacity, 10);
+//     const emptySlots = Number.isNaN(capacityNumber)
+//       ? 0 //Default to 0 if capacity is not a valid number string
+//       : Math.max(0, capacityNumber - totalBikesAtStation);
+
+//     return {
+//       ...station,
+//       availableBikes,
+//       emptySlots,
+//     };
+//   }
 
   async getStationDetailsById(stationId: string) {
     const objectId = new ObjectId(stationId);
+    
+    //lấy thông tin trạm
     const station = await databaseService.stations.findOne({ _id: objectId });
 
     if (!station) {
@@ -74,25 +255,52 @@ class StationsService {
       });
     }
 
-    //tính toán available bikes and empty slots
-    const totalBikesAtStation = await databaseService.bikes.countDocuments({
-      station_id: objectId,
-    });
-    const availableBikes = await databaseService.bikes.countDocuments({
-      station_id: objectId,
-      status: BikeStatus.Available,
-    });
+    //lấy tất cả xe tại trạm (chỉ lấy trường status)
+    const bikesAtStation = await databaseService.bikes.find(
+      { station_id: objectId },
+      { projection: { status: 1 } }
+    ).toArray();
 
-    //Parse capacity string to number for calculation, handle potential errors
+    //đếm số lượng cho từng trạng thái
+    const statusCounts = new Map<string, number>();
+    for (const bike of bikesAtStation) {
+      statusCounts.set(bike.status, (statusCounts.get(bike.status) || 0) + 1);
+    }
+
+    //lấy tất cả các giá trị từ enum BikeStatus 
+    const allStatuses = Object.values(BikeStatus);
+    
+    //tạo mảng bike_statuses hoàn chỉnh, bao gồm cả count = 0
+    // const bike_statuses = allStatuses.map(status => {
+    //   const count = statusCounts.get(status) || 0;
+    //   return { status, count };
+    // });
+
+    const totalBikesAtStation = bikesAtStation.length;
+    const availableBikes = statusCounts.get(BikeStatus.Available) || 0;
+    const bookedBikes = statusCounts.get(BikeStatus.Booked) || 0;
+    const brokenBikes = statusCounts.get(BikeStatus.Broken) || 0;
+    const reservedBikes = statusCounts.get(BikeStatus.Reserved) || 0;
+    const maintainedBikes = statusCounts.get(BikeStatus.Maintained) || 0;
+    const unavailableBikes = statusCounts.get(BikeStatus.Unavailable) || 0;
+
+    //emptySlots
     const capacityNumber = parseInt(station.capacity, 10);
     const emptySlots = Number.isNaN(capacityNumber)
-      ? 0 //Default to 0 if capacity is not a valid number string
+      ? 0
       : Math.max(0, capacityNumber - totalBikesAtStation);
 
     return {
       ...station,
+      totalBikes: totalBikesAtStation,
       availableBikes,
+      bookedBikes,
+      brokenBikes,
+      reservedBikes,
+      maintainedBikes,
+      unavailableBikes,
       emptySlots,
+    //   bike_statuses: bike_statuses,
     };
   }
 
