@@ -101,7 +101,6 @@ export const useAuthActions = () => {
                     setTokens(access_token, refresh_token);
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                     toast.success("Registration Successful", { description: "Your account has been created." });
-                    // router.push("/auth/login");
                 }else{
                     const errorMessage = result.data?.message || "Error registering";
                     toast.error(errorMessage);
@@ -112,7 +111,7 @@ export const useAuthActions = () => {
                 toast.error(errorMessage);
             }
         });
-    },[useRegister,queryClient,router]);
+    },[useRegister,queryClient]);
     const logOut = useCallback((refresh_token : string) => {
         useLogout.mutate(refresh_token,{
             onSuccess: (result) => {
