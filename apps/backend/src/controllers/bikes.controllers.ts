@@ -11,6 +11,7 @@ import bikesService from "~/services/bikes.services";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import { ObjectId } from "mongodb";
+import { verifyToken } from "~/utils/jwt";
 
 export async function createBikeController(req: Request<ParamsDictionary, any, CreateBikeReqBody>, res: Response) {
   const result = await bikesService.createBike(req.body);
@@ -20,27 +21,78 @@ export async function createBikeController(req: Request<ParamsDictionary, any, C
   });
 }
 
+// export async function getBikesController(
+//   req: Request<ParamsDictionary, any, any, GetBikesReqQuery>,
+//   res: Response,
+//   next: NextFunction,
+// ) {
+//   const { user_id } = req.decoded_authorization as TokenPayLoad
+//   const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) });
+//   if(!user){
+//     throw new ErrorWithStatus({
+//       message: USERS_MESSAGES.USER_NOT_FOUND,
+//       status: HTTP_STATUS.NOT_FOUND
+//     })
+//   }
+
+//   const { role } = user
+//   const query = req.query;
+
+//   // Nếu là user, chỉ cho phép xem xe có sẵn (AVAILABLE)
+//   if (role === Role.User) {
+//     query.status = BikeStatus.Available;
+//   }
+//   await bikesService.getAllBikes(res, next, query);
+// }
 export async function getBikesController(
   req: Request<ParamsDictionary, any, any, GetBikesReqQuery>,
   res: Response,
   next: NextFunction,
 ) {
-  const { user_id } = req.decoded_authorization as TokenPayLoad
-  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) });
-  if(!user){
-    throw new ErrorWithStatus({
-      message: USERS_MESSAGES.USER_NOT_FOUND,
-      status: HTTP_STATUS.NOT_FOUND
-    })
+  const query = req.query;
+  let userRole: Role | null = null;
+  let decoded_authorization: TokenPayLoad | null = null;
+
+  const authorizationHeader = req.headers.authorization;
+
+  if (authorizationHeader) {
+    const accessToken = authorizationHeader.split(" ")[1];
+
+    if (accessToken) {
+      try {
+        decoded_authorization = (await verifyToken({
+          token: accessToken,
+          secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
+        })) as TokenPayLoad;
+      } catch (error) {
+        console.error("Optional token verification failed:", error);
+      }
+    }
   }
 
-  const { role } = user
-  const query = req.query;
-
-  // Nếu là user, chỉ cho phép xem xe có sẵn (AVAILABLE)
-  if (role === Role.User) {
+  if (decoded_authorization) {
+    const { user_id } = decoded_authorization;
+    try {
+      const user = await databaseService.users.findOne({
+        _id: new ObjectId(user_id),
+      });
+      if (user) {
+        userRole = user.role as Role;
+      } else {
+         console.warn(`User ${user_id} not found despite valid token.`);
+      }
+    } catch (dbError) {
+        console.error("Database error fetching user role:", dbError);
+        userRole = null;
+    }
+  }
+  //nếu là guest (userRole là null)
+  //hoặc nếu là User (userRole là Role.User)
+  //thì chỉ cho xem xe 'AVAILABLE'
+  if (userRole === null || userRole === Role.User) {
     query.status = BikeStatus.Available;
   }
+  //nếu là Staff hoặc Admin, không set query.status mặc định.
   await bikesService.getAllBikes(res, next, query);
 }
 
