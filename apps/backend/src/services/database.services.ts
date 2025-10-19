@@ -17,7 +17,7 @@ import type Wallet from "~/models/schemas/wallet.schemas";
 import Refund from "~/models/schemas/refund.schema";
 import Withdraw from "~/models/schemas/withdraw-request";
 import RentalLog from "~/models/schemas/rental-audit-logs.schema";
-import { getLocalTime } from "~/utils/date";
+import Reservation from "~/models/schemas/reservation.schema";
 
 config();
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
@@ -64,6 +64,10 @@ class DatabaseService {
   get stations(): Collection<Station> {
     return this.db.collection(process.env.DB_STATIONS_COLLECTION as string);
   }
+  
+  async indexStations() {
+    await this.stations.createIndex({ name: 1 }, { unique: true });
+  }
 
   get reports(): Collection<Report> {
     return this.db.collection(process.env.DB_REPORTS_COLLECTION as string);
@@ -91,7 +95,7 @@ class DatabaseService {
     return this.db.collection(process.env.DB_RENTAL_LOGS_COLLECTION as string);
   }
 
-  get reservations(): Collection<Rental> {
+  get reservations(): Collection<Reservation> {
     return this.db.collection(process.env.DB_RESERVATIONS_COLLECTION as string);
   }
 

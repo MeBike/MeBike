@@ -4,8 +4,9 @@ type StationType = {
   _id?: ObjectId;
   name: string;
   address: string;
-  latitude: number;
-  longitude: number;
+  latitude: string;
+  longitude: string;
+  capacity: string;
   created_at?: Date;
   updated_at?: Date;
 };
@@ -14,8 +15,9 @@ export default class Station {
   _id?: ObjectId;
   name: string;
   address: string;
-  latitude: number;
-  longitude: number;
+  latitude: string;
+  longitude: string;
+  capacity: string;
   created_at?: Date;
   updated_at?: Date;
 
@@ -28,7 +30,8 @@ export default class Station {
     this.name = station.name;
     this.address = station.address;
     this.latitude = station.latitude;
-    this.longitude = station.latitude;
+    this.longitude = station.longitude;
+    this.capacity = station.capacity;
     this.created_at = station.created_at || localTime;
     this.updated_at = station.updated_at || localTime;
   }

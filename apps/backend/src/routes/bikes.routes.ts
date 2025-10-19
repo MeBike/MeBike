@@ -21,7 +21,9 @@ bikesRouter.post(
 // user chỉ xem được xe có trạng thái AVAILABLE
 // staff, manager, admin có thể xem tất cả các trạng thái
 // lấy danh sách xe, có phân trang, lọc theo station_id, status, supplier_id
-bikesRouter.get("/", accessTokenValidator, wrapAsync(getBikesController));
+bikesRouter.get("/", 
+  // accessTokenValidator,
+   wrapAsync(getBikesController));
 
 // Admin Only Get overall statistics for all bikes
 bikesRouter.get(
@@ -52,7 +54,7 @@ bikesRouter.get(
 // lấy thông tin chi tiết xe theo id
 bikesRouter.get(
   "/:_id",
-  accessTokenValidator,
+  // accessTokenValidator,
   bikeIdValidator,
   wrapAsync(getBikeByIdController)
 );

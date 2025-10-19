@@ -33,6 +33,8 @@ tags:
     description: Operations for managing refund requests.
   - name: Withdrawals
     description: Operations for managing withdrawal requests.
+  - name: Stations
+    description: Operations for managing bike stations.
   
 paths:
   $ref: './paths/all-paths.yaml'
@@ -102,6 +104,11 @@ components:
       $ref: './components/schemas/CreateWithdrawalReqBody.yaml'
     UpdateWithdrawalStatusReqBody:
       $ref: './components/schemas/UpdateWithdrawalStatusReqBody.yaml'
+    # station
+    CreateStationReqBody:
+      $ref: './components/schemas/CreateStationReqBody.yaml'
+    UpdateStationReqBody:
+      $ref: './components/schemas/UpdateStationReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:
@@ -166,6 +173,10 @@ components:
       $ref: "./components/schemas/Withdrawal.yaml"
     WithdrawalStatus:
       $ref: "./components/schemas/WithdrawalStatus.yaml"
+    Station:
+      $ref: "./components/schemas/Station.yaml"
+    StationStatus:
+      $ref: "./components/schemas/StationStatus.yaml"
 
   securitySchemes:
     BearerAuth:
