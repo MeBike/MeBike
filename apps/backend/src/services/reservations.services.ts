@@ -5,9 +5,10 @@ import Reservation from '~/models/schemas/reservation.schema'
 import { getLocalTime } from '~/utils/date'
 import databaseService from './database.services'
 import { ErrorWithStatus } from '~/models/errors'
-import { RESERVATIONS_MESSAGE } from '~/constants/messages'
+import { RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
+import walletService from './wallets.services'
 
 class ReservationsService {
   async reserveBike({
@@ -28,7 +29,13 @@ class ReservationsService {
     try {
       let reservation
       await session.withTransaction(async () => {
+        const reservationId = new ObjectId()
+        const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
+
+        await walletService.paymentRental(user_id.toString(), prepaid, description, reservationId)
+
         reservation = new Reservation({
+          _id: reservationId,
           user_id,
           bike_id,
           station_id,
@@ -38,6 +45,16 @@ class ReservationsService {
           prepaid
         })
         await databaseService.reservations.insertOne(reservation, { session })
+
+        const { end_time, status, station_id: start_station, prepaid: pre, ...restReservation } = reservation
+
+        const rental = new Rental({
+          ...restReservation,
+          start_station,
+          status: RentalStatus.Reserved
+        })
+
+        await databaseService.rentals.insertOne(rental, { session })
 
         await databaseService.bikes.updateOne(
           { _id: bike_id },
@@ -52,7 +69,7 @@ class ReservationsService {
       })
       return {
         ...(reservation as any),
-        prepaid: Number(prepaid)
+        prepaid: Number.parseFloat(prepaid.toString())
       }
     } catch (error) {
       throw error
@@ -89,6 +106,15 @@ class ReservationsService {
             }
           },
           { returnDocument: 'after', session }
+        )
+
+        await databaseService.rentals.updateOne(
+          {_id: reservation._id},
+          {$set: {
+            status: RentalStatus.Cancelled,
+            updated_at: now
+          }},
+          {session}
         )
 
         await databaseService.bikes.updateOne(
@@ -134,16 +160,30 @@ class ReservationsService {
       await session.withTransaction(async () => {
         const now = getLocalTime()
 
-        const rental = new Rental({
+        const rental = await databaseService.rentals.findOne({
           _id: reservation._id,
           user_id,
-          bike_id: reservation.bike_id,
-          start_station: reservation.station_id,
-          start_time: now,
-          status: RentalStatus.Rented
-        })
+          status: RentalStatus.Reserved
+        }, {session})
 
-        await databaseService.rentals.insertOne(rental, { session })
+        if (!rental) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.NOT_FOUND_RESERVED_RENTAL.replace('%s', reservation._id!.toString()),
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
+
+        const updatedRental = await databaseService.rentals.findOneAndUpdate(
+          { _id: reservation._id },
+          {
+            $set: {
+              start_time: now,
+              status: RentalStatus.Rented,
+              updated_at: now
+            }
+          },
+          { returnDocument: 'after', session }
+        )
 
         await databaseService.reservations.updateOne(
           { _id: reservation._id },
@@ -160,6 +200,7 @@ class ReservationsService {
           { _id: reservation.bike_id },
           {
             $set: {
+              station_id: null,
               status: BikeStatus.Booked,
               updated_at: now
             }
@@ -167,7 +208,7 @@ class ReservationsService {
           { session }
         )
 
-        result = rental
+        result = updatedRental
       })
       return result
     } catch (error) {
@@ -194,18 +235,6 @@ class ReservationsService {
     }
 
     return { count: expiring.length }
-  }
-
-  async getReservationHistory(user_id: ObjectId) {
-    const reservations = await databaseService.reservations
-      .find({
-        user_id,
-        status: { $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired] }
-      })
-      .sort({ created_at: -1 })
-      .toArray()
-
-    return reservations
   }
 
   generateEndTime(startTime: string) {

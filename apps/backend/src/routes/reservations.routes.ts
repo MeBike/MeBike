@@ -1,4 +1,4 @@
-import { accessTokenValidator } from './../middlewares/users.middlewares'
+import { accessTokenValidator, verifiedUserValidator } from './../middlewares/users.middlewares'
 import { Router } from 'express'
 import {
   cancelReservationController,
@@ -28,7 +28,7 @@ reserveRouter
 reserveRouter
   .route('/')
   .get(accessTokenValidator, wrapAsync(getReservationListController))
-  .post(accessTokenValidator, reserveBikeValidator, wrapAsync(reserveBikeController))
+  .post(accessTokenValidator, verifiedUserValidator, reserveBikeValidator, wrapAsync(reserveBikeController))
 
 reserveRouter
   .route('/:id/confirm')
