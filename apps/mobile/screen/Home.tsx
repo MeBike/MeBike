@@ -14,10 +14,12 @@ import type { HomeScreenNavigationProp } from '../types/navigation';
 import { BikeColors } from '../constants/BikeColors';
 import { IconSymbol } from '../components/IconSymbol';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '@providers/auth-providers';
+import { User } from "lucide-react-native";
 const { width, height } = Dimensions.get('window');
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-
+  const { user , isAuthenticated} = useAuth();
   const navigateToLogin = () => {
     navigation.navigate('Login');
   };
@@ -50,9 +52,7 @@ export default function HomeScreen() {
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor={BikeColors.primary} />
-      
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Header with Navigation */}
         <LinearGradient
           colors={[BikeColors.primary, BikeColors.secondary]}
           style={styles.header}
@@ -67,9 +67,16 @@ export default function HomeScreen() {
               <Pressable style={styles.navButton} onPress={navigateToIntro}>
                 <Text style={styles.navButtonText}>Giới thiệu</Text>
               </Pressable>
-              <Pressable style={styles.loginButton} onPress={navigateToLogin}>
-                <Text style={styles.loginButtonText}>Đăng nhập</Text>
-              </Pressable>
+              
+              {isAuthenticated ? (
+                <Pressable style={styles.navButton} onPress={() => navigation.navigate('Profile')}>
+                  <User size={24} color="white" />
+                </Pressable>
+              ) : (
+                <Pressable style={styles.loginButton} onPress={navigateToLogin}>
+                  <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                </Pressable>
+              )}
             </View>
           </View>
 
@@ -85,7 +92,7 @@ export default function HomeScreen() {
             <View style={styles.heroButtons}>
               <Pressable style={styles.primaryButton} onPress={navigateToLogin}>
                 <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
-                <IconSymbol name="arrow.right" size={20} color="white" />
+                <IconSymbol name="arrow.right" size={20} color={BikeColors.primary} />
               </Pressable>
               
               <Pressable style={styles.secondaryButton} onPress={navigateToIntro}>

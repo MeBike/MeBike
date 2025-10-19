@@ -1,8 +1,8 @@
 // Navigation Types for React Navigation
 export type RootStackParamList = {
-  Booking:undefined;
-  QR:undefined;
-  Profile:undefined;
+  Booking: undefined;
+  QR: undefined;
+  Profile: undefined;
   Main: undefined;
   Home: undefined;
   Login: undefined;
@@ -13,7 +13,11 @@ export type RootStackParamList = {
   Modal: undefined;
   FormSheet: undefined;
   TransparentModal: undefined;
-  // Add more routes as needed
+  Wallet: undefined;
+  BookingHistoryDetail: undefined;
+  ChangePassword: undefined;
+  ForgotPassword: undefined;
+  UpdateProfile: undefined;
 };
 
 // Common navigation hook types
@@ -24,5 +28,29 @@ export type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParam
 export type IntroScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Intro'>;
 export type RegisterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 export type StationDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'StationDetail'>;
+export type ProfileScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Profile"
+>;
+export type WalletNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Wallet"
+>;
 
+export type BookingHistoryDetailNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "BookingHistoryDetail"
+>;
+export type ChangePasswordNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ChangePassword"
+>;
+export type ForgotPasswordNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ForgotPassword"
+>;
+export type UpdateProfileNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "UpdateProfile"
+>;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, 'StationDetail'>;

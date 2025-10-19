@@ -6,6 +6,8 @@ import type { StationDetailScreenNavigationProp, StationDetailRouteProp } from '
 import { IconSymbol } from '../components/IconSymbol';
 import { BikeColors } from '../constants/BikeColors';
 import { mockStations, mockBikes } from '../data/mockData';
+import { useBikeActions } from '@hooks/useBikeAction';
+import { useStationActions } from '@hooks/useStationAction';
 // import { Bike, Station } from '../types/BikeTypes';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -18,7 +20,7 @@ export default function StationDetailScreen() {
   const route = useRoute<StationDetailRouteProp>();
   const { stationId } = route.params;
   const [selectedBike, setSelectedBike] = useState<any | null>(null);
-  
+  const { getStationByID , isLoadingGetStationByID } = useStationActions(true, stationId);
   const station = mockStations.find(s => s.id === stationId);
   const stationBikes = mockBikes.filter(bike => bike.stationId === stationId);
 
