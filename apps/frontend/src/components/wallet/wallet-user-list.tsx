@@ -12,7 +12,7 @@ interface WalletUserListProps {
   onDeposit: (
     userId: string,
     amount: number,
-    details?: TransactionDetails
+    details: TransactionDetails
   ) => void;
   onWithdraw: (userId: string, amount: number, details: TransactionDetails) => void;
 }
