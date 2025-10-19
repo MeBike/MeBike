@@ -1,4 +1,4 @@
-import { Decimal128, Int32, ObjectId } from 'mongodb'
+import { ClientSession, Decimal128, Int32, ObjectId } from 'mongodb'
 
 import HTTP_STATUS from '~/constants/http-status'
 import { BikeStatus, RentalStatus, ReservationStatus } from '~/constants/enums'
@@ -8,6 +8,7 @@ import databaseService from './database.services'
 import rentalsService from './rentals.services'
 import { getReservationFacade } from './reservations.facade'
 import Rental from '~/models/schemas/rental.schema'
+import Reservation from '~/models/schemas/reservation.schema'
 import { getLocalTime } from '~/utils/date'
 import { toObjectId } from '~/utils/string'
 import walletService from './wallets.services'
@@ -73,24 +74,28 @@ export const cardTapService = {
         user_id: user._id?.toString(),
         bike_id: bike._id?.toString()
       })
-      await reservationFacade.activateReservation({ reservation_id: reservation._id })
 
-      const startStationId = (bike.station_id ?? reservation.station_id) as ObjectId
-
-      console.log('[cardTap] Creating rental from reservation', {
-        user_id: user._id?.toString(),
-        bike_id: bike._id?.toString(),
-        start_station: startStationId.toString()
-      })
-      const rentalSession = await createRentalSessionForCard({
+      const reservationDocument = await databaseService.reservations.findOne({
+        _id: reservation._id,
         user_id: user._id as ObjectId,
-        start_station: startStationId,
         bike_id: bike._id as ObjectId
       })
 
-      await reservationFacade.expireActiveForUserAndBike({ user_id: user._id as ObjectId, bike_id: bike._id as ObjectId })
+      if (!reservationDocument) {
+        throw new ErrorWithStatus({
+          message: 'Reservation not found for card tap flow.',
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
 
-      console.log('[cardTap] Rental created from reservation', {
+      const reservationModel = new Reservation(reservationDocument as any)
+
+      const rentalSession = await startRentalFromReservationForCard({
+        reservation: reservationModel,
+        bike_id: bike._id as ObjectId
+      })
+
+      console.log('[cardTap] Rental promoted from reservation', {
         rental_id: (rentalSession as any)?._id?.toString?.(),
         mode: 'reservation_started'
       })
@@ -197,6 +202,112 @@ async function createRentalSessionWithoutTransaction({ user_id, start_station, b
   return {
     ...(rental as any),
     total_price: 0
+  }
+}
+
+type StartReservationParams = {
+  reservation: Reservation
+  bike_id: ObjectId
+}
+
+async function startRentalFromReservationForCard({ reservation, bike_id }: StartReservationParams) {
+  const session = databaseService.getClient().startSession()
+  const now = getLocalTime()
+
+  const executePromotion = async (activeSession?: ClientSession) => {
+    const options = activeSession ? { session: activeSession } : undefined
+
+    const reservedRental = await databaseService.rentals.findOne(
+      {
+        _id: reservation._id,
+        user_id: reservation.user_id,
+        status: RentalStatus.Reserved
+      },
+      options
+    )
+
+    if (!reservedRental) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.NOT_FOUND_RESERVED_RENTAL.replace('%s', reservation._id!.toString()),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const updateResult = await databaseService.rentals.findOneAndUpdate(
+      { _id: reservation._id },
+      {
+        $set: {
+          start_time: now,
+          status: RentalStatus.Rented,
+          updated_at: now
+        }
+      },
+      {
+        returnDocument: 'after',
+        ...(options ?? {})
+      }
+    )
+
+    const promotedRental =
+      (updateResult as { value?: Rental | null } | null)?.value ?? (reservedRental as Rental)
+
+    await databaseService.reservations.updateOne(
+      { _id: reservation._id },
+      {
+        $set: {
+          status: ReservationStatus.Active,
+          updated_at: now
+        }
+      },
+      options
+    )
+
+    await databaseService.bikes.updateOne(
+      { _id: bike_id },
+      {
+        $set: {
+          station_id: null,
+          status: BikeStatus.Booked,
+          updated_at: now
+        }
+      },
+      options
+    )
+
+    return promotedRental
+  }
+
+  try {
+    let promotedRental: Rental | null = null
+    try {
+      promotedRental = await session.withTransaction(async () => {
+        const result = await executePromotion(session)
+        return result
+      })
+    } catch (error) {
+      if (isTransactionNotSupportedError(error)) {
+        console.warn('[cardTap] falling back to non-transactional reservation promotion', {
+          reservation_id: reservation._id?.toString()
+        })
+        promotedRental = await executePromotion()
+      } else {
+        throw error
+      }
+    }
+
+    if (!promotedRental) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.RENTAL_UPDATE_FAILED.replace('%s', reservation._id!.toString()),
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+      })
+    }
+
+    return {
+      ...(promotedRental as any),
+      total_price: Number.parseFloat(promotedRental.total_price.toString())
+    }
+  } finally {
+    await session.endSession()
   }
 }
 
