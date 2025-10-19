@@ -1,6 +1,7 @@
 import { BackendContracts } from "@mebike/shared";
 
 import { env } from "../config";
+import logger from "../lib/logger";
 
 const { CardRentalRequestSchema, CardRentalResponseSchema } = BackendContracts;
 
@@ -24,6 +25,13 @@ export async function createRentalFromCard(request: BackendContracts.CardRentalR
   });
 
   const rawBody = await response.text();
+  logger.debug(
+    {
+      status: response.status,
+      body: rawBody || null,
+    },
+    "[backend-api] card rental response received",
+  );
 
   let body: unknown;
   try {

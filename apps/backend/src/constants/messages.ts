@@ -180,6 +180,7 @@ export const RENTALS_MESSAGE = {
   TRACKING_RENTAL_IN_STATION_SUCCESS: 'Xem danh sách các phiên thuê tại trạm thành công',
   // Fail action
   CREATE_SESSION_FAIL: 'Tạo phiên thuê xe không thành công',
+  RENTAL_UPDATE_FAILED: 'Cập nhật phiên thuê không thành công',
   // Required data
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
   REQUIRED_BIKE_ID: 'Vui lòng nhập Id xe đạp',
@@ -208,6 +209,7 @@ export const RENTALS_MESSAGE = {
   BIKE_NOT_FOUND_IN_STATION: 'Xe với Id %s không tồn tại trong trạm %s',
   NOT_FOUND_RENTED_RENTAL: 'Không tìm thấy phiên thuê nào với Id %s đang diễn ra ở thời điểm hiện tại',
   NOT_FOUND: 'Không tìm thấy phiên thuê nào với Id %s',
+  NOT_FOUND_RESERVED_RENTAL: 'Không tìm thấy phiên đặt trước nào với Id %s',
   // Not available
   NOT_AVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   // Not allowed action
@@ -232,7 +234,10 @@ export const RENTALS_MESSAGE = {
   BIKE_IS_MAINTAINED: 'Xe đang được bảo trì, chưa sẵn sàng để sử dụng',
   BIKE_IS_RESERVED: 'Xe đã được đặt trước',
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
-  INVALID_BIKE_STATUS: 'Trạng thái xe không hợp lệ'
+  INVALID_BIKE_STATUS: 'Trạng thái xe không hợp lệ',
+  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON: 'Bạn phải nhập ít nhất 1 trường ngoài nguyên nhân để cập nhật',
+  // payment
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên thuê cho xe %s'
 } as const
 
 export const COMMON_MESSAGE = {
