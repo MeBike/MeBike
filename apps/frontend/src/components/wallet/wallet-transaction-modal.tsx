@@ -24,7 +24,7 @@ interface WalletTransactionModalProps {
   onWithdraw: (
     userId: string,
     amount: number,
-    details: TransactionDetailsTransactionDetails
+    details: TransactionDetails
   ) => void;
 }
 
