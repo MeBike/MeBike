@@ -622,6 +622,78 @@ class WalletService {
     await databaseService.transactions.insertOne(transactionData)
     return wallet
   }
+
+  async paymentReservation(user_id: string, amount: Decimal128, description: string, rental_id: ObjectId) {
+    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+    if (!findWallet) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const currentBalance = Number.parseFloat(findWallet.balance.toString())
+    const amountNumber = Number.parseFloat(amount.toString())
+    if (currentBalance < amountNumber) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.INSUFFICIENT_BALANCE.replace('%s', user_id),
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    const wallet = await databaseService.wallets.findOneAndUpdate(
+      { _id: new ObjectId(findWallet._id) },
+      { $inc: { balance: Decimal128.fromString((-amountNumber).toString()) } },
+      { returnDocument: 'after' }
+    )
+    const transactionID = new ObjectId()
+    const transactionData: TransactionType = {
+      _id: transactionID,
+      wallet_id: new ObjectId(findWallet._id),
+      rental_id: rental_id,
+      amount: Decimal128.fromString(amountNumber.toString()),
+      fee: Decimal128.fromString('0'),
+      description: description,
+      transaction_hash: '',
+      type: TransactionTypeEnum.RESERVATION,
+      status: TransactionStaus.Success
+    }
+
+    await databaseService.transactions.insertOne(transactionData)
+    return wallet
+  }
+
+  async refundReservation(user_id: string, amount: Decimal128, description: string, rental_id: ObjectId) {
+    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+    if (!findWallet) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const wallet = await databaseService.wallets.findOneAndUpdate(
+      { _id: new ObjectId(findWallet._id) },
+      { $inc: { balance: amount } },
+      { returnDocument: 'after' }
+    )
+
+    const transactionID = new ObjectId()
+    const transactionData: TransactionType = {
+      _id: transactionID,
+      wallet_id: new ObjectId(findWallet._id),
+      rental_id: rental_id,
+      amount: Decimal128.fromString(amount.toString()),
+      fee: Decimal128.fromString('0'),
+      description: description,
+      transaction_hash: '',
+      type: TransactionTypeEnum.Refund,
+      status: TransactionStaus.Success
+    }
+
+    await databaseService.transactions.insertOne(transactionData)
+    return wallet
+  }
 }
 
 const walletService = new WalletService()
