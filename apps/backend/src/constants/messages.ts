@@ -147,11 +147,11 @@ export const BIKES_MESSAGES = {
   BIKE_ID_IS_REQUIRED: 'ID của xe đạp là bắt buộc',
   INVALID_BIKE_ID: 'ID của xe đạp không hợp lệ',
   // delete bike
-  DELETE_BIKE_SUCCESS: "Xóa xe đạp thành công",
+  DELETE_BIKE_SUCCESS: 'Xóa xe đạp thành công',
   // history rental of bike
-  GET_BIKE_RENTALS_SUCCESS: "Lấy lịch sử thuê xe thành công",
+  GET_BIKE_RENTALS_SUCCESS: 'Lấy lịch sử thuê xe thành công',
   // stats of bikes
-  GET_BIKE_STATS_SUCCESS: "Lấy thống kê xe thành công",
+  GET_BIKE_STATS_SUCCESS: 'Lấy thống kê xe thành công',
   // update info bike
   UPDATE_BIKE_SUCCESS: 'Cập nhật thông tin xe đạp thành công',
   UPDATE_NOT_ALLOWED: 'Bạn không được phép cập nhật trường này',
@@ -318,6 +318,7 @@ export const WALLETS_MESSAGE = {
   STATUS_INVALID: 'Trạng thái không hợp lệ',
   CHANGE_STATUS_SUCCESS: 'Đổi trạng thái ví của người dùng thành công',
   GET_USER_WALLET_SUCCESS: 'Lấy thông tin ví của người dùng %s thành công',
+  GET_WALLET_SUCCESS: 'Lấy thông tin ví của người dùng thành công',
   FORBIDDEN: 'Không có quyền truy cập vào giao dịch của người khác',
   TRANSACTION_NOT_FOUND: 'Không tìm thấy giao dịch',
   TRANSACTION_DETAIL_SUCCESS: 'Lấy chi tiết giao dịch thành công',
@@ -339,6 +340,7 @@ export const WALLETS_MESSAGE = {
   WALLET_NOT_FOUND: 'Không tìm thấy ví với ID %s',
   REASON_INVALID: 'Lý do không hợp lệ',
   REASON_TOO_LONG: 'Lý do không được vượt quá 500 ký tự',
+  USER_ID_REQUIRED: 'User ID là bắt buộc'
 }
 
 export const WITHDRAWLS_MESSAGE = {
@@ -380,5 +382,4 @@ export const STATIONS_MESSAGE = {
   // delete station messages
   STATION_DELETED_SUCCESSFULLY: 'Xóa trạm thành công',
   CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.'
-
 }
