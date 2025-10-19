@@ -34,7 +34,7 @@ export const createWithdrawRequestValidator = validate(
         in: ['body'],
         trim: true,
         notEmpty: {
-          errorMessage: WALLETS_MESSAGE.TYPE_IS_REQUIRED
+          errorMessage: WALLETS_MESSAGE.ACCOUNT_IS_REQUIRED
         }
       },
       bank: {
