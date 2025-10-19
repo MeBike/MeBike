@@ -16,10 +16,15 @@ interface WalletTransactionModalProps {
   isOpen: boolean;
   user: UserWallet | null;
   onClose: () => void;
-  onDeposit: (userId: string, amount: number, details: any) => void;
-  onWithdraw: (userId: string, amount: number, details: any) => void;
+  onDeposit: (userId: string, amount: number, TransactionDetails: any) => void;
+  onWithdraw: (userId: string, amount: number, TransactionDetails: any) => void;
 }
 
+interface TransactionDetails {
+  fee?: number;
+  description: string;
+  transaction_hash?: string;
+}
 export function WalletTransactionModal({
   isOpen,
   user,
