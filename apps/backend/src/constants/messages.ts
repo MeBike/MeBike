@@ -346,3 +346,38 @@ export const WITHDRAWLS_MESSAGE = {
   UPDATE_SUCCESS: 'Cập nhật trạng thái yêu cầu rút tiền %s thành công',
   GET_DETAIL_SUCCESS: 'Lấy chi tiết yêu cầu rút tiền thành công'
 }
+
+export const STATIONS_MESSAGE = {
+  STATION_ID_IS_REQUIRED: 'ID trạm là bắt buộc',
+  INVALID_STATION_ID: 'ID trạm không hợp lệ',
+  STATION_NOT_FOUND: 'Không tìm thấy trạm với ID được cung cấp',
+  // create station messages
+  STATION_NAME_IS_REQUIRED: 'Tên trạm là bắt buộc',
+  STATION_NAME_MUST_BE_STRING: 'Tên trạm phải là chuỗi ký tự',
+  STATION_NAME_LENGTH_MUST_BE_FROM_3_TO_100: 'Tên trạm phải có độ dài từ 3 đến 100 ký tự',
+  ADDRESS_IS_REQUIRED: 'Địa chỉ là bắt buộc',
+  ADDRESS_MUST_BE_STRING: 'Địa chỉ phải là chuỗi ký tự',
+  ADDRESS_LENGTH_MUST_BE_FROM_10_TO_255: 'Địa chỉ phải có độ dài từ 10 đến 255 ký tự',
+  LATITUDE_IS_REQUIRED: 'Vĩ độ là bắt buộc',
+  LATITUDE_MUST_BE_STRING: 'Vĩ độ phải là chuỗi ký tự',
+  LONGITUDE_IS_REQUIRED: 'Kinh độ là bắt buộc',
+  LONGITUDE_MUST_BE_STRING: 'Kinh độ phải là chuỗi ký tự',
+  CAPACITY_IS_REQUIRED: 'Sức chứa là bắt buộc',
+  CAPACITY_MUST_BE_STRING: 'Sức chứa phải là chuỗi ký tự',
+  CAPACITY_MUST_BE_NON_NEGATIVE_INTEGER: 'Sức chứa phải là chuỗi biểu diễn số nguyên không âm',
+  CAPACITY_CANNOT_BE_NEGATIVE: 'Sức chứa không được âm',
+  CAPACITY_CANNOT_EXCEED_1000: 'Sức chứa không được vượt quá 1000',
+  STATION_CREATED_SUCCESSFULLY: 'Tạo trạm thành công',
+  FAILED_TO_CREATE_STATION: 'Tạo trạm thất bại',
+  LATITUDE_MUST_BE_NUMERIC: 'Vĩ độ phải là chuỗi biểu diễn số',
+  LONGITUDE_MUST_BE_NUMERIC: 'Kinh độ phải là chuỗi biểu diễn số',
+  STATION_NAME_ALREADY_EXISTS: 'Tên trạm đã tồn tại',
+  // get station details messages
+  GET_STATION_DETAILS_SUCCESSFULLY: 'Lấy chi tiết trạm thành công',
+  // update station messages
+  STATION_UPDATED_SUCCESSFULLY: 'Cập nhật trạm thành công',
+  // delete station messages
+  STATION_DELETED_SUCCESSFULLY: 'Xóa trạm thành công',
+  CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.'
+
+}
