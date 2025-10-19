@@ -38,14 +38,13 @@ export const useStationActions = (
 ) => {
 
     const queryClient = useQueryClient();
-    const useGetAllStations = useGetAllStation();
-    const { refetch,  data : response , isLoading} = useGetAllStations;
+    const {refetch, data: response, isLoading} = useGetAllStation();
     const useGetStationByID = useGetStationById(stationId || '');
     const getAllStations = useCallback(async () => {
         if(!hasToken){  
             return;
         };
-        return await refetch();
+        refetch();
     }, [refetch ,  hasToken ]);
     const getStationByID = useCallback(() => {
         if(!hasToken){
@@ -56,7 +55,8 @@ export const useStationActions = (
     return {
       getAllStations,
       getStationByID,
-      stations: response?.data.data ?? [],
+      refetch ,
+      stations: response ?? [],
       isLoadingGetAllStations: isLoading,
       isLoadingGetStationByID: useGetStationByID.isLoading,
     };
