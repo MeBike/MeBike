@@ -36,6 +36,7 @@ export const isAvailability = (status: BikeStatus) => {
 export const createBikeValidator = validate(
   checkSchema(
     {
+      // chip_id is validated below with specific messages
       station_id: {
         notEmpty: { errorMessage: BIKES_MESSAGES.STATION_ID_IS_REQUIRED },
         isString: { errorMessage: BIKES_MESSAGES.INVALID_STATION_ID },

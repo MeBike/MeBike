@@ -7,6 +7,24 @@
 #include "StateMachine.h"
 #include "NetworkManager.h"
 #include "LEDStatusManager.h"
+#include <Wire.h>
+#include "NFCManager.h"
+#include "CardTapService.h"
+#include <string>
+#include <memory>
+#include "HardwareConfig.h"
+#include "DeviceUtils.h"
+
+NFCManager *nfcManager = nullptr;
+CardTapService *cardTapService = nullptr;
+
+bool deviceConnected = false;
+bool oldDeviceConnected = false;
+
+static std::string deviceChipId;
+
+#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
 void setup()
 {
@@ -19,8 +37,25 @@ void setup()
   Global::bufferedLogger.reset(new BufferedLogger());
   Global::bufferedLogger->setTopic("esp/logs"); // temporary
   Global::logInfoLocal("Buffered logger initialized");
-  delay(5000);
+  Wire.begin(HardwareConfig::I2C_SDA_PIN, HardwareConfig::I2C_SCL_PIN);
+  nfcManager = new NFCManager(HardwareConfig::PN532_IRQ_PIN, HardwareConfig::PN532_RESET_PIN);
+  if (!nfcManager->begin())
+  {
+    while (1)
+    {
+      delay(10);
+    }
+  }
+  Serial.println("Hello from ESP32!");
+  deviceChipId = getMacAddress();
+  Serial.print("Chip ID: ");
+  Serial.println(deviceChipId.c_str());
+  cardTapService = new CardTapService(*nfcManager);
+  cardTapService->begin(deviceChipId);
 
+  Serial.println("BLE advertising started");
+
+  Serial.println("\nWaiting for an NFC Card...");
   currentState = STATE_INIT;
   Global::ledStatusManager->setStatus(currentState);
 
@@ -45,7 +80,11 @@ void setup()
 
 void loop()
 {
- 
+  if (cardTapService)
+  {
+    cardTapService->loop();
+  }
+
   if (Global::ledStatusManager)
   {
     Global::ledStatusManager->update();
@@ -55,6 +94,8 @@ void loop()
   {
     Global::bufferedLogger->loop();
   }
+
+  delay(5);
 
   switch (currentState)
   {
@@ -99,7 +140,6 @@ void loop()
     Log.info("State changed to %s (%d)\n", getStateName(currentState), currentState);
     Global::logInfoMQTT("State changed to %s (%d)", getStateName(currentState), currentState);
 
-   
     if (Global::ledStatusManager)
     {
       Global::ledStatusManager->setStatus(currentState);

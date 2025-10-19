@@ -5,6 +5,7 @@ import type { Filter, ObjectId } from 'mongodb'
 import { GroupByOptions, RentalStatus } from '~/constants/enums'
 import type {
   CancelRentalReqBody,
+  CardRentalReqBody,
   CreateRentalReqBody,
   EndRentalByAdminOrStaffReqBody,
   RentalParams,
@@ -17,6 +18,7 @@ import type Station from '~/models/schemas/station.schema'
 import { RENTALS_MESSAGE } from '~/constants/messages'
 import databaseService from '~/services/database.services'
 import rentalsService from '~/services/rentals.services'
+import { cardTapService } from '~/services/card-tap.service'
 import { sendPaginatedAggregationResponse, sendPaginatedResponse } from '~/utils/pagination.helper'
 import { toObjectId } from '~/utils/string'
 import { TokenPayLoad } from '~/models/requests/users.requests'
@@ -37,6 +39,26 @@ export async function createRentalSessionController(
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,
     result
+  })
+}
+
+export async function createRentalFromCardController(
+  req: Request<ParamsDictionary, any, CardRentalReqBody>,
+  res: Response
+) {
+  const { chip_id, card_uid } = req.body
+
+  const { mode, rental } = await cardTapService.handleCardTap({ chip_id, card_uid })
+
+  const message =
+    mode === 'ended'
+      ? RENTALS_MESSAGE.CARD_RENTAL_END_SUCCESS
+      : RENTALS_MESSAGE.CARD_RENTAL_START_SUCCESS
+
+  res.json({
+    message,
+    mode,
+    result: rental
   })
 }
 

@@ -2,6 +2,8 @@
   "files.associations": {
     "*.css": "css",
     "memory": "cpp",
-    "cstring": "cpp"
+    "cstring": "cpp",
+    "string": "cpp",
+    "vector": "cpp"
   }
 }

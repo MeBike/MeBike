@@ -19,6 +19,7 @@ import BookingHistoryDetail from './screen/BookingHistoryDetail';
 import ChangePasswordScreen from './screen/ChangePasswordScreen';
 import ForgotPasswordScreen from './screen/ForgotPassword';
 import UpdateProfileScreen from './screen/UpdateProfileScreen';
+import MyWalletScreen from './screen/MyWalletScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
 const BottomTab = () => {
@@ -144,6 +145,11 @@ export default function App() {
             <Stack.Screen
               name="UpdateProfile"
               component={UpdateProfileScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="MyWallet"
+              component={MyWalletScreen}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

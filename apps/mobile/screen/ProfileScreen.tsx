@@ -1,4 +1,3 @@
-"use client";
 
 import { useState } from "react";
 import {
@@ -81,6 +80,7 @@ const ProfileScreen = () => {
   };
   const handleWallet = () => {
     Alert.alert("Ví điện tử", "Quản lý ví điện tử của bạn");
+    navigation.navigate("MyWallet" as never);
   };
 
   const renderMenuOption = (

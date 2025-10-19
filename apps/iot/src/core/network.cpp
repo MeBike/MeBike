@@ -34,6 +34,7 @@ bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &to
         topics.commandStatusTopic = makeTopicWithMac("esp/commands/status");
         topics.commandRootTopic = makeTopicWithMac("esp/commands");
         topics.maintenanceStatusTopic = makeTopicWithMac("esp/maintenance/status");
+        topics.cardTapTopic = "mebike/rentals/card-tap";
         Log.info("Topics set with MAC address\n");
         return true;
     }
