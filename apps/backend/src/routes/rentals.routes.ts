@@ -1,5 +1,5 @@
-import { accessTokenValidator } from '~/middlewares/users.middlewares';
-import { Router } from "express";
+import { accessTokenValidator, verifiedUserValidator } from '~/middlewares/users.middlewares'
+import { Router } from 'express'
 
 import {
   cancelRentalController,
@@ -15,53 +15,86 @@ import {
   getRentalRevenueController,
   getReservationsStatisticController,
   getStationActivityController,
-  updateDetailRentalController,
-} from "~/controllers/rentals.controllers";
-import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
-import { cancelRentalValidator, createRentalSessionValidator, endRentalByAdminOrStaffValidator, endRentalSessionValidator, updateDetailRentalValidator } from "~/middlewares/rentals.middlewares";
-import { wrapAsync } from "~/utils/handler";
+  updateDetailRentalController
+} from '~/controllers/rentals.controllers'
+import { isAdminAndStaffValidator, isAdminValidator } from '~/middlewares/admin.middlewares'
+import {
+  cancelRentalValidator,
+  createRentalSessionValidator,
+  endRentalByAdminOrStaffValidator,
+  endRentalSessionValidator,
+  updateDetailRentalValidator
+} from '~/middlewares/rentals.middlewares'
+import { wrapAsync } from '~/utils/handler'
+import { filterMiddleware } from '~/middlewares/common.middlewares'
+import { CancelRentalReqBody, CreateRentalReqBody, EndRentalByAdminOrStaffReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
 
-const rentalsRouter = Router();
+const rentalsRouter = Router()
 
-rentalsRouter.route("/stats/revenue")
-  .get(accessTokenValidator, isAdminValidator, wrapAsync(getRentalRevenueController));
+rentalsRouter.route('/stats/revenue').get(accessTokenValidator, isAdminValidator, wrapAsync(getRentalRevenueController))
 
-rentalsRouter.post(
-  "/card-rental",
-  wrapAsync(createRentalFromCardController)
-);
+<<<<<<< HEAD
+rentalsRouter
+  .route('/stats/station-activity')
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getStationActivityController))
 
-rentalsRouter.route("/stats/station-activity")
-  .get(accessTokenValidator, isAdminValidator, wrapAsync(getStationActivityController));
+rentalsRouter.post('/card-rental', wrapAsync(createRentalFromCardController))
 
-rentalsRouter.route("/stats/reservations")
-  .get(accessTokenValidator, isAdminValidator, wrapAsync(getReservationsStatisticController));
+rentalsRouter
+  .route('/stats/reservations')
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getReservationsStatisticController))
 
-rentalsRouter.route("/me")
-  .get(accessTokenValidator, wrapAsync(getMyRentalsController));
+rentalsRouter.route('/me').get(accessTokenValidator, wrapAsync(getMyRentalsController))
 
-rentalsRouter.route("/me/current")
-  .get(accessTokenValidator, wrapAsync(getMyCurrentRentalsController));
+rentalsRouter.route('/me/current').get(accessTokenValidator, wrapAsync(getMyCurrentRentalsController))
 
-rentalsRouter.route("/me/:id")
-  .get(accessTokenValidator, wrapAsync(getMyDetailRentalController));
+rentalsRouter.route('/me/:id').get(accessTokenValidator, wrapAsync(getMyDetailRentalController))
 
-rentalsRouter.route("/me/:id/end")
-  .put(accessTokenValidator, endRentalSessionValidator, wrapAsync(endRentalSessionController));
+rentalsRouter
+  .route('/me/:id/end')
+  .put(accessTokenValidator, endRentalSessionValidator, wrapAsync(endRentalSessionController))
 
-rentalsRouter.route("/:id/end")
-  .put(accessTokenValidator, isAdminAndStaffValidator, endRentalByAdminOrStaffValidator, wrapAsync(endRentalByAdminOrStaffController));
+rentalsRouter
+  .route('/:id/end')
+  .put(
+    accessTokenValidator,
+    isAdminAndStaffValidator,
+    filterMiddleware<EndRentalByAdminOrStaffReqBody>(["end_station", "end_time", "reason"]),
+    endRentalByAdminOrStaffValidator,
+    wrapAsync(endRentalByAdminOrStaffController)
+  )
 
-rentalsRouter.route("/:id/cancel")
-  .post(accessTokenValidator, isAdminAndStaffValidator, cancelRentalValidator, wrapAsync(cancelRentalController));
+rentalsRouter
+  .route('/:id/cancel')
+  .post(
+    accessTokenValidator,
+    isAdminAndStaffValidator,
+    filterMiddleware<CancelRentalReqBody>(['bikeStatus', 'reason']),
+    cancelRentalValidator,
+    wrapAsync(cancelRentalController)
+  )
 
 // staff/admin
-rentalsRouter.route("/:id")
-  .get(accessTokenValidator, isAdminValidator, wrapAsync(getDetailRentalController))
-  .put(accessTokenValidator, isAdminValidator, updateDetailRentalValidator, wrapAsync(updateDetailRentalController))
+rentalsRouter
+  .route('/:id')
+  .get(accessTokenValidator, isAdminAndStaffValidator, wrapAsync(getDetailRentalController))
+  .put(
+    accessTokenValidator,
+    isAdminValidator,
+    filterMiddleware<UpdateRentalReqBody>(['end_station', 'end_time', 'status', 'total_price', 'reason']),
+    updateDetailRentalValidator,
+    wrapAsync(updateDetailRentalController)
+  )
 
-rentalsRouter.route("/")
+rentalsRouter
+  .route('/')
   .get(accessTokenValidator, isAdminValidator, wrapAsync(getAllRentalsController))
-// user
-  .post(accessTokenValidator, createRentalSessionValidator, wrapAsync(createRentalSessionController));
-export default rentalsRouter;
+  // user
+  .post(
+    accessTokenValidator,
+    verifiedUserValidator,
+    filterMiddleware<CreateRentalReqBody>(['bike_id']),
+    createRentalSessionValidator,
+    wrapAsync(createRentalSessionController)
+  )
+export default rentalsRouter

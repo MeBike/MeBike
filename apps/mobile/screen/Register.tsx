@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { RegisterScreenNavigationProp } from '../types/navigation';
 import { BikeColors } from '../constants/BikeColors';
 import { IconSymbol } from '../components/IconSymbol';
-// import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@providers/auth-providers';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function RegisterScreen() {
@@ -25,33 +25,43 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // const { signUp, signInWithGoogle, isLoading } = useAuth();
-  const isLoading = false; // Temporary until AuthContext is added
+  const [phone, setPhone] = useState('');
+  const {register,isRegistering , logIn ,} = useAuth();
+  const isLoading = isRegistering;
 
+  const clearForm = () => {
+    setName('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setPhone('');
+  };
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password || !confirmPassword || !phone  ) {
       Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
-
+    register({
+      fullname: name,
+      email: email,
+      password: password,
+      confirm_password: confirmPassword,
+      phone_number: phone,
+    });
+    clearForm();
+    setTimeout(() => {
+      navigation.navigate("Main");
+    }, 1000); 
     if (password !== confirmPassword) {
       Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
       return;
     }
-
     if (password.length < 6) {
       Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
       return;
     }
-
-    // await signUp(email, password, name);
-    Alert.alert('Success', 'Register functionality will be implemented');
   };
 
-  const handleGoogleRegister = async () => {
-    // await signInWithGoogle();
-    Alert.alert('Success', 'Google register functionality will be implemented');
-  };
 
   const goToLogin = () => {
     navigation.goBack();
@@ -60,11 +70,11 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <LinearGradient
-          colors={[BikeColors.secondary + '10', 'white']}
+          colors={[BikeColors.secondary + "10", "white"]}
           style={styles.header}
         >
           <View style={styles.logoContainer}>
@@ -110,7 +120,20 @@ export default function RegisterScreen() {
               autoCorrect={false}
             />
           </View>
-
+          <View style={styles.inputContainer}>
+            <IconSymbol
+              name="phone"
+              size={20}
+              color={BikeColors.textSecondary}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Số điện thoại"
+              value={phone}
+              onChangeText={setPhone}
+              autoCapitalize="none"
+            />
+          </View>
           <View style={styles.inputContainer}>
             <IconSymbol
               name="lock"
@@ -169,7 +192,7 @@ export default function RegisterScreen() {
             disabled={isLoading}
           >
             <Text style={styles.registerButtonText}>
-              {isLoading ? 'Đang đăng ký...' : 'Đăng ký'}
+              {isLoading ? "Đang đăng ký..." : "Đăng ký"}
             </Text>
           </Pressable>
 
@@ -178,19 +201,6 @@ export default function RegisterScreen() {
             <Text style={styles.dividerText}>hoặc</Text>
             <View style={styles.dividerLine} />
           </View>
-
-          <Pressable
-            style={[styles.googleButton, isLoading && styles.disabledButton]}
-            onPress={handleGoogleRegister}
-            disabled={isLoading}
-          >
-            <IconSymbol
-              name="globe"
-              size={20}
-              color={BikeColors.secondary}
-            />
-            <Text style={styles.googleButtonText}>Đăng ký với Google</Text>
-          </Pressable>
 
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Đã có tài khoản? </Text>

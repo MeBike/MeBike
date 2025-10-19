@@ -20,6 +20,7 @@ config();
 
 import swaggerJSDoc from "swagger-jsdoc";
 import stationRouter from "./routes/station.routes";
+import reserveRouter from "./routes/reservations.routes";
 
 const port = process.env.PORT || 4000;
 
@@ -31,6 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 databaseService.connect().then(async () => {
   databaseService.indexUsers();
   databaseService.indexBikes();
+  databaseService.indexStations();
 });
 
 app.get("/", (req, res) => {
@@ -46,6 +48,7 @@ app.use("/withdraws", withdrawsRouter);
 app.use("/refunds", refundsRouter);
 app.use("/rentals", rentalsRouter);
 app.use("/stations", stationRouter);
+app.use("/reservations", reserveRouter);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 

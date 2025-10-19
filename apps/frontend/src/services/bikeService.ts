@@ -68,10 +68,16 @@ export const bikeService = {
     );
     return response;
   },
-  getAllBikes: async (page ?: number , limit ?: number ): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BASE , 
-    { params : { page , limit } }
-    );
+  getAllBikes: async (
+    page?: number,
+    limit?: number,
+    station_id?: string,
+    supplier_id?: string,
+    status ?: string
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BASE, {
+      params: { page, limit, station_id, supplier_id, status },
+    });
     return response;
   },
 };

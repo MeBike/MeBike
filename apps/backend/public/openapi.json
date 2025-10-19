@@ -55,6 +55,10 @@
     {
       "name": "Withdrawals",
       "description": "Operations for managing withdrawal requests."
+    },
+    {
+      "name": "Stations",
+      "description": "Operations for managing bike stations."
     }
   ],
   "paths": {
@@ -2895,6 +2899,302 @@
           }
         }
       }
+    },
+    "/stations": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get all stations",
+        "description": "Retrieves a paginated list of all bike stations. This is a public endpoint.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "description": "Filter stations by name (case-insensitive, partial match).",
+            "schema": {
+              "type": "string",
+              "example": "Vincom"
+            }
+          },
+          {
+            "name": "address",
+            "in": "query",
+            "required": false,
+            "description": "Filter stations by address (case-insensitive, partial match).",
+            "schema": {
+              "type": "string",
+              "example": "Xa lộ Hà Nội"
+            }
+          },
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": false,
+            "description": "Filter stations by latitude.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 10.8015
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": false,
+            "description": "Filter stations by longitude.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 106.7423
+            }
+          },
+          {
+            "name": "capacity",
+            "in": "query",
+            "required": false,
+            "description": "Filter stations by capacity (exact match).",
+            "schema": {
+              "type": "integer",
+              "example": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of stations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Station"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Create a new station (Admin only)",
+        "description": "Adds a new bike station to the system. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStationReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Station created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      }
+    },
+    "/stations/{id}": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get station by ID",
+        "description": "Retrieves detailed information for a specific station by its ID.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the station to retrieve.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station details retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/Station"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Update a station (Admin only)",
+        "description": "Updates the information of an existing station. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the station to update.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStationReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Station updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Delete a station (Admin only)",
+        "description": "Deletes a station from the system. Requires admin privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the station to delete.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station deleted successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3539,6 +3839,77 @@
             "nullable": true,
             "description": "Reason is required if status is 'TỪ CHỐI'.",
             "example": "Thông tin tài khoản không hợp lệ."
+          }
+        }
+      },
+      "CreateStationReqBody": {
+        "type": "object",
+        "required": [
+          "name",
+          "address",
+          "latitude",
+          "longitude",
+          "capacity"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the station.",
+            "example": "Trạm Vincom Mega Mall"
+          },
+          "address": {
+            "type": "string",
+            "description": "The address of the station.",
+            "example": "161 Xa lộ Hà Nội, Thảo Điền, TP. Thủ Đức"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "description": "The latitude coordinate of the station.",
+            "example": 10.8015
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "description": "The longitude coordinate of the station.",
+            "example": 106.7423
+          },
+          "capacity": {
+            "type": "integer",
+            "description": "The maximum number of bikes the station can hold.",
+            "example": 25
+          }
+        }
+      },
+      "UpdateStationReqBody": {
+        "type": "object",
+        "description": "Fields to update for a station. All fields are optional.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The new name for the station.",
+            "example": "Trạm Vincom Mega Mall Thảo Điền"
+          },
+          "address": {
+            "type": "string",
+            "description": "The new address for the station."
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "description": "The new latitude coordinate."
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "description": "The new longitude coordinate."
+          },
+          "capacity": {
+            "type": "integer",
+            "description": "The new capacity for the station."
+          },
+          "status": {
+            "$ref": "#/components/schemas/StationStatus"
           }
         }
       },
@@ -4272,6 +4643,61 @@
           "ĐÃ HOÀN THÀNH"
         ],
         "example": "ĐANG CHỜ XỬ LÝ"
+      },
+      "Station": {
+        "type": "object",
+        "description": "Represents a bike station.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "name": {
+            "type": "string",
+            "example": "Trạm Đại học FPT"
+          },
+          "address": {
+            "type": "string",
+            "example": "Lô E2a-7, Đường D1, Khu Công nghệ cao, Long Thạnh Mỹ, TP. Thủ Đức"
+          },
+          "location": {
+            "$ref": "#/components/schemas/GeoLocation"
+          },
+          "capacity": {
+            "type": "integer",
+            "description": "The maximum number of bikes the station can hold.",
+            "example": 20
+          },
+          "status": {
+            "$ref": "#/components/schemas/StationStatus"
+          },
+          "bikes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "mongoId"
+            },
+            "description": "A list of bike IDs currently at the station."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "StationStatus": {
+        "type": "string",
+        "description": "The operational status of a station.",
+        "enum": [
+          "HOẠT ĐỘNG",
+          "BẢO TRÌ",
+          "TẠM NGƯNG"
+        ],
+        "example": "HOẠT ĐỘNG"
       }
     },
     "securitySchemes": {

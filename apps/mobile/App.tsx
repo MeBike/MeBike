@@ -4,102 +4,151 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import type { RootStackParamList } from './types/navigation';
 import { Ionicons } from '@expo/vector-icons';
-// Import screens
+import Providers from '@providers/providers';
+import { AuthProvider } from '@providers/auth-providers';
 import HomeScreen from './screen/Home';
 import LoginScreen from './screen/Login';
 import IntroScreen from './screen/Intro';
 import RegisterScreen from './screen/Register';
-import Booking from './screen/Booking';
 import StationDetailScreen from './screen/StationDetail';
 import StationSelectScreen from './styles/StationSelect';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Profile from './screen/Profile';
+import BookingHistoryScreen from './screen/BookingHistoryScreen';
+import ProfileScreen from './screen/ProfileScreen';
+import BookingHistoryDetail from './screen/BookingHistoryDetail';
+import ChangePasswordScreen from './screen/ChangePasswordScreen';
+import ForgotPasswordScreen from './screen/ForgotPassword';
+import UpdateProfileScreen from './screen/UpdateProfileScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
 const BottomTab = () => {
   return (
     <Tab.Navigator>
-       <Tab.Screen 
-            name="Home" 
-            component={HomeScreen} 
-            options={{ 
-              headerShown: false,
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name="home-outline" size={size ?? 24} color={color ?? '#222'} />
-              )
-            }}
-          />
-           <Tab.Screen 
-            name="QR" 
-            component={HomeScreen} 
-            options={{ 
-              headerShown: false,
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name="qr-code-outline" size={size ?? 24} color={color ?? '#222'} />
-              )
-            }}
-          />
-      <Tab.Screen 
-        name="StationSelect" 
-        component={StationSelectScreen} 
-        options={{ headerShown: false,
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="map-outline" size={size ?? 24} color={color ?? '#222'} />
-          )
+            <Ionicons
+              name="home-outline"
+              size={size ?? 24}
+              color={color ?? "#222"}
+            />
+          ),
         }}
       />
-      {/* <Tab.Screen 
-        name="Booking" 
-        component={Booking} 
-        options={{ headerShown: false,
+      <Tab.Screen
+        name="QR"
+        component={HomeScreen}
+        options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size ?? 24} color={color ?? '#222'} />
-          )
-         }}
-      /> <Tab.Screen 
-        name="Profile" 
-        component={Profile} 
-        options={{ headerShown: false,
+            <Ionicons
+              name="qr-code-outline"
+              size={size ?? 24}
+              color={color ?? "#222"}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="StationSelect"
+        component={StationSelectScreen}
+        options={{
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size ?? 24} color={color ?? '#222'} />
-          )
-         }}
-      /> */}
+            <Ionicons
+              name="map-outline"
+              size={size ?? 24}
+              color={color ?? "#222"}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Booking"
+        component={BookingHistoryScreen}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name="calendar-outline"
+              size={size ?? 24}
+              color={color ?? "#222"}
+            />
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
+
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="auto" />
-      <Stack.Navigator initialRouteName="Main">
-        <Stack.Screen 
-          name="Main" 
-          component={BottomTab} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="Intro" 
-          component={IntroScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="Register" 
-          component={RegisterScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="StationDetail" 
-          component={StationDetailScreen} 
-          options={{ headerShown: false }}
-        />
-        {/* Add more screens here as you create them */}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Providers>
+      <NavigationContainer>
+        <AuthProvider>
+          <StatusBar style="auto" />
+          <Stack.Navigator initialRouteName="Main">
+            <Stack.Screen
+              name="Main"
+              component={BottomTab}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Intro"
+              component={IntroScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="StationDetail"
+              component={StationDetailScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="StationSelect"
+              component={StationSelectScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Profile"
+              component={ProfileScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="BookingHistoryDetail"
+              component={BookingHistoryDetail}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ChangePassword"
+              component={ChangePasswordScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPasswordScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="UpdateProfile"
+              component={UpdateProfileScreen}
+              options={{ headerShown: false }}
+            />
+          </Stack.Navigator>
+        </AuthProvider>
+      </NavigationContainer>
+    </Providers>
   );
 }

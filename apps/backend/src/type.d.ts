@@ -1,6 +1,7 @@
 import type { TokenPayLoad } from "./models/requests/users.requests";
 import type Bike from "./models/schemas/bike.schema";
 import type Rental from "./models/schemas/rental.schema";
+import Reservation from "./models/schemas/reservation.schema";
 import type Station from "./models/schemas/station.schema";
 import type User from "./models/schemas/user.schema";
 
@@ -15,5 +16,6 @@ declare module "express" {
     bike?: Bike;
     station?: Station;
     rental?: Rental;
+    reservation?: Reservation;
   };
 }

@@ -8,7 +8,7 @@ import {
   useColorScheme,
   ViewStyle,
 } from "react-native";
-import { appleBlue, zincColors } from "@/constants/Colors";
+import { appleBlue, zincColors } from "../constants/Colors";
 
 type ButtonVariant = "filled" | "outline" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";

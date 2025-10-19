@@ -1,0 +1,30 @@
+type: object
+required:
+  - name
+  - address
+  - latitude
+  - longitude
+  - capacity
+properties:
+  name:
+    type: string
+    description: "The name of the station."
+    example: "Trạm Vincom Mega Mall"
+  address:
+    type: string
+    description: "The address of the station."
+    example: "161 Xa lộ Hà Nội, Thảo Điền, TP. Thủ Đức"
+  latitude:
+    type: number
+    format: double
+    description: "The latitude coordinate of the station."
+    example: 10.8015
+  longitude:
+    type: number
+    format: double
+    description: "The longitude coordinate of the station."
+    example: 106.7423
+  capacity:
+    type: integer
+    description: "The maximum number of bikes the station can hold."
+    example: 25
