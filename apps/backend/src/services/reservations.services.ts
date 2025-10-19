@@ -32,7 +32,7 @@ class ReservationsService {
         const reservationId = new ObjectId()
         const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
 
-        await walletService.paymentRental(user_id.toString(), prepaid, description, reservationId)
+        await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
 
         reservation = new Reservation({
           _id: reservationId,
