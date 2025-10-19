@@ -18,7 +18,8 @@ import { Ionicons } from "@expo/vector-icons";
 import type { UpdateProfileSchemaFormData } from "@schemas/authSchema";
 import { useAuth } from "@providers/auth-providers";
 import type { DetailUser } from "@services/authService";
-
+import { zodResolver } from "@hookform/resolvers/zod";
+import { profileUpdateSchema } from "@schemas/authSchema";
 const UpdateProfileScreen = ({ navigation }: any) => {
 
   const { user, updateProfile, isUpdatingProfile } = useAuth();
@@ -35,8 +36,9 @@ const UpdateProfileScreen = ({ navigation }: any) => {
     handleSubmit,
     reset,
     getValues,
-    formState: { isDirty, dirtyFields },
+    formState: { isDirty, dirtyFields, errors },
   } = useForm<UpdateProfileSchemaFormData>({
+    resolver: zodResolver(profileUpdateSchema),
     defaultValues: initialProfile,
     mode: "onChange",
   });
@@ -133,9 +135,18 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
     editable: boolean = false,
     keyboardType: "default" | "email-address" | "phone-pad" = "default"
   ) => {
-    // Only allow editing for fields in UpdateProfileSchemaFormData
-    const isFormField = ["fullname", "username", "phone_number", "location", "avatar"].includes(key);
-    if (isFormField) {
+    const isFormField = (
+      key: keyof DetailUser
+    ): key is keyof UpdateProfileSchemaFormData => {
+      return [
+        "fullname",
+        "username",
+        "phone_number",
+        "location",
+        "avatar",
+      ].includes(key as string);
+    };
+    if (isFormField(key)) {
       return (
         <Controller
           control={control}
@@ -160,12 +171,18 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
                   keyboardType={keyboardType}
                 />
               </View>
+              {errors[key as keyof UpdateProfileSchemaFormData] && (
+                <Text style={styles.errorText}>
+                  {errors[
+                    key as keyof UpdateProfileSchemaFormData
+                  ]?.message?.toString()}
+                </Text>
+              )}
             </View>
           )}
         />
       );
     } else {
-      // Show as disabled input, value from user object
       return (
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>{label}</Text>
@@ -180,7 +197,6 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
               style={[styles.input, styles.inputDisabled]}
               value={user?.[key] ? String(user[key]) : ""}
               editable={false}
-              // placeholderTextColor="#ccc"
               keyboardType={keyboardType}
             />
           </View>
@@ -188,6 +204,8 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
       );
     }
   };
+
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -240,7 +258,7 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
           {!isEditing ? (
             <TouchableOpacity
               style={styles.editButton}
-              onPress={handleEditPress}
+              onPress={handleEditPress} 
             >
               <Ionicons name="pencil" size={18} color="#fff" />
               <Text style={styles.buttonText}>Chỉnh sửa thông tin</Text>
@@ -407,6 +425,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
     marginBottom: 20,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

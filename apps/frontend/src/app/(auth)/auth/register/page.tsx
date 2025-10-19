@@ -28,12 +28,12 @@ const RegisterPage = () => {
   const { register: registerUser } = useAuthActions();
   const {
     register,
-    handleSubmit, 
+    handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<RegisterSchemaFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      full_name: "",
+      fullname: "",
       email: "",
       password: "",
       phone_number: "",
@@ -51,6 +51,9 @@ const RegisterPage = () => {
       delete registerData.phone_number;
     }
     registerUser(registerData);
+    setTimeout(() => {
+      router.push("/user");
+    }, 2000);
     console.log(user);
 
   };
@@ -72,7 +75,7 @@ const RegisterPage = () => {
             MetroBike
           </h1>
         </div>
-      
+
         <Card className="shadow-floating border-0 bg-white/95 backdrop-blur-xl relative z-10 overflow-hidden animate-scale-in max-h-[90vh] flex flex-col">
           <div className="h-1 bg-gradient-metro rounded-t-lg"></div>
           <CardHeader className="space-y-2 text-center ">
@@ -83,11 +86,9 @@ const RegisterPage = () => {
               Nhập thông tin để tạo tài khoản mới
             </CardDescription>
           </CardHeader>
-        
+
           <CardContent className="space-y-4 overflow-y-auto">
-            
             <form onSubmit={handleSubmit(handleRegister)} className="space-y-4">
-            
               {/* Họ và tên */}
               <div className="space-y-2">
                 <Label htmlFor="full_name" className="text-sm font-medium">
@@ -97,13 +98,15 @@ const RegisterPage = () => {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="full_name"
-                    {...register("full_name")}
+                    {...register("fullname")}
                     type="text"
                     placeholder="Nguyễn Văn A"
                     className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   />
-                  {errors.full_name && (
-                    <p className="text-sm text-red-500 mt-1">{errors.full_name.message}</p>
+                  {errors.fullname && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.fullname.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -122,7 +125,9 @@ const RegisterPage = () => {
                     className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   />
                   {errors.email && (
-                    <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -142,7 +147,9 @@ const RegisterPage = () => {
                     className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   />
                   {errors.phone_number && (
-                    <p className="text-sm text-red-500 mt-1">{errors.phone_number.message}</p>
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.phone_number.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -173,12 +180,13 @@ const RegisterPage = () => {
                     )}
                   </button>
                   {errors.password && (
-                    <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.password.message}
+                    </p>
                   )}
                 </div>
               </div>
 
-             
               <div className="space-y-2">
                 <Label
                   htmlFor="confirm_password"
@@ -207,17 +215,20 @@ const RegisterPage = () => {
                     )}
                   </button>
                   {errors.confirm_password && (
-                    <p className="text-sm text-red-500 mt-1">{errors.confirm_password.message}</p>
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.confirm_password.message}
+                    </p>
                   )}
                 </div>
               </div>
 
-         
               <div className="flex items-start space-x-3 pt-2">
                 <Checkbox
                   id="terms"
                   checked={agreeTerms}
-                  onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setAgreeTerms(checked as boolean)
+                  }
                   className="mt-1"
                 />
                 <label
@@ -243,7 +254,6 @@ const RegisterPage = () => {
                 </label>
               </div>
 
-    
               <div>
                 <Button
                   type="submit"

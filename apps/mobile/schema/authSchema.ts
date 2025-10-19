@@ -73,9 +73,8 @@ export const profileUpdateSchema = z.object({
     .regex(
       /^[a-zA-Z0-9_]+$/,
       "Username can only contain letters, numbers, and underscores."
-    )
-    .optional()
-    .or(z.literal("")),
+    ).or(z.literal(""))
+    ,
   phone_number: z
     .string()
     .regex(vietnamesePhoneNumberRegex, {  

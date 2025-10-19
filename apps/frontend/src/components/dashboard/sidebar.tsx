@@ -15,7 +15,8 @@ import {
   ChevronRight,
   User,
   LogOut,
-  History
+  History,
+  Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
@@ -80,6 +81,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       icon: History,
       href: "/user/booking-history",
       roles: ["USER"],
+    },
+    {
+      title: "Quản lý ví",
+      icon: Wallet,
+      href: "/admin/wallet",
+      roles: ["ADMIN"],
     },
   ];
 };
