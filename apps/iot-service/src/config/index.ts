@@ -17,6 +17,7 @@ const envSchema = z.object({
   HTTP_PORT: z.coerce.number().default(3000),
   HTTP_HOST: z.string().default("0.0.0.0"),
   BACKEND_API_URL: z.string().url().default("http://localhost:4000"),
+  CARD_TAP_API_KEY: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;

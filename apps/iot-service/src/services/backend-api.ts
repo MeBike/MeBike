@@ -20,6 +20,7 @@ export async function createRentalFromCard(request: BackendContracts.CardRentalR
     method: "POST",
     headers: {
       "content-type": "application/json",
+      "x-card-tap-key": env.CARD_TAP_API_KEY,
     },
     body: JSON.stringify(payload),
   });
