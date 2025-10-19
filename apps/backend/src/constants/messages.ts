@@ -291,7 +291,9 @@ export const RESERVATIONS_MESSAGE = {
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
   // Payment
-  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s'
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s',  
+  // Quota
+  QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước'
 } as const
 export const WALLETS_MESSAGE = {
   USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',

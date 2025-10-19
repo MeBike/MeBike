@@ -50,6 +50,27 @@ export const reserveBikeValidator = validate(
               })
             }
 
+            const preReservingThreshold = process.env.RESERVE_QUOTA_PERCENT || '0.50'
+            const RESERVE_QUOTA_PERCENT = Number.parseFloat(preReservingThreshold)
+
+            const totalAvailableBikes = await databaseService.bikes.countDocuments({
+              station_id: stationId,
+              status: { $in: [BikeStatus.Available, BikeStatus.Reserved] }
+            })
+
+            const currentlyReservedBikes = await databaseService.bikes.countDocuments({
+              station_id: stationId,
+              status: BikeStatus.Reserved
+            })
+
+            const maxAllowedReserved = Math.floor(totalAvailableBikes * RESERVE_QUOTA_PERCENT)
+
+            if (currentlyReservedBikes >= maxAllowedReserved) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.QUOTA_EXCEEDED,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
             req.bike = bike
             return true
           }
@@ -65,7 +86,7 @@ export const reserveBikeValidator = validate(
         custom: {
           options: (value) => {
             const now = getLocalTime()
-            if(new Date(value) < now){
+            if (new Date(value) < now) {
               throw new ErrorWithStatus({
                 message: RESERVATIONS_MESSAGE.INVALID_START_TIME,
                 status: HTTP_STATUS.BAD_REQUEST
@@ -166,14 +187,14 @@ export const confirmReservationValidator = validate(
             })
           }
           const now = getLocalTime()
-          if(reservation.start_time > now){
+          if (reservation.start_time > now) {
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.NOT_AVAILABLE_FOR_CONFIRMATION,
               status: HTTP_STATUS.BAD_REQUEST
             })
           }
 
-          if(reservation.end_time && reservation.end_time < now){
+          if (reservation.end_time && reservation.end_time < now) {
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_EXPIRED_RESERVATION,
               status: HTTP_STATUS.BAD_REQUEST
@@ -187,4 +208,3 @@ export const confirmReservationValidator = validate(
     }
   })
 )
-
