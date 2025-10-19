@@ -17,6 +17,7 @@ import BookingHistoryScreen from './screen/BookingHistoryScreen';
 import ProfileScreen from './screen/ProfileScreen';
 import BookingHistoryDetail from './screen/BookingHistoryDetail';
 import ChangePasswordScreen from './screen/ChangePasswordScreen';
+import ForgotPasswordScreen from './screen/ForgotPassword';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
 const BottomTab = () => {
@@ -132,6 +133,11 @@ export default function App() {
             <Stack.Screen
               name="ChangePassword"
               component={ChangePasswordScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ForgotPassword"
+              component={ForgotPasswordScreen}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

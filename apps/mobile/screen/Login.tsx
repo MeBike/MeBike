@@ -25,7 +25,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const rotateAnim = new Animated.Value(0);
-  const { logIn, isLoggingIn, isLoading } = useAuth();
+  const { logIn, isLoggingIn, isLoading , forgotPassword , isLoadingForgottingPassword} = useAuth();
 
   useEffect(() => {
     const checkBackend = async () => {
@@ -56,8 +56,7 @@ export default function LoginScreen() {
         }
       ]);
       return;
-    }
-    
+    }    
     try {
       Animated.loop(
         Animated.timing(rotateAnim, {
@@ -80,7 +79,6 @@ export default function LoginScreen() {
       console.log('Login failed:', error);
     }
   };
-
   const goToRegister = () => {
     navigation.navigate('Register');
   };
@@ -88,6 +86,9 @@ export default function LoginScreen() {
   const goBack = () => {
     navigation.goBack();
   };
+  const handleForgotPassword = () => {
+    navigation.navigate("ForgotPassword");
+  }
 
   return (
     <KeyboardAvoidingView 
@@ -152,7 +153,7 @@ export default function LoginScreen() {
             />
           </View>
 
-          <Pressable style={styles.forgotPassword}>
+          <Pressable style={styles.forgotPassword} onPress={() => handleForgotPassword()}>
             <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
           </Pressable>
 

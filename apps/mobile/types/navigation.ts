@@ -16,6 +16,7 @@ export type RootStackParamList = {
   Wallet: undefined;
   BookingHistoryDetail: undefined;
   ChangePassword: undefined;
+  ForgotPassword: undefined;
 };
 
 // Common navigation hook types
@@ -42,5 +43,9 @@ export type BookingHistoryDetailNavigationProp = NativeStackNavigationProp<
 export type ChangePasswordNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "ChangePassword"
+>;
+export type ForgotPasswordNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ForgotPassword"
 >;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, 'StationDetail'>;
