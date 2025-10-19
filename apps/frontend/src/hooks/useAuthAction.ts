@@ -84,25 +84,6 @@ export const useAuthActions = () => {
                     window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     toast.success("Logged in successfully");
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                    // const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-                    //     if (event?.query?.queryKey?.[0] === "user" && 
-                    //         event?.query?.queryKey?.[1] === "me" && 
-                    //         event.type === "updated" &&
-                    //         event.query.state.data) {
-                    //         const userProfile = event.query.state.data as unknown as { role: string };
-                    //         if (userProfile?.role === "ADMIN") {
-                    //             router.push("/admin");
-                    //         } else if (userProfile?.role === "STAFF") {
-                    //             router.push("/staff");
-                    //         } else {
-                    //             router.push("/user");
-                    //         }
-                    //         unsubscribe(); 
-                    //     }
-                    // });
-                    // setTimeout(() => {
-                    //     unsubscribe();
-                    // }, 3000);
                 },
                 onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
@@ -232,23 +213,30 @@ export const useAuthActions = () => {
             }
         });
     }, [useResetPassword, router]);
-    const updateProfile = useCallback((data: UpdateProfileSchemaFormData) => {
+    const updateProfile = useCallback(
+      (data: Partial<UpdateProfileSchemaFormData>) => {
         useUpdateProfile.mutate(data, {
-            onSuccess: (result) => {
-                if(result.status === 200){
-                    toast.success("Profile updated successfully");
-                    queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                } else {
-                    const errorMessage = result.data?.message || "Error updating profile";
-                    toast.error(errorMessage);
-                }
-            },
-            onError: (error: unknown) => {
-                const errorMessage = getErrorMessage(error, "Error updating profile");
-                toast.error(errorMessage);
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Profile updated successfully");
+              queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+            } else {
+              const errorMessage =
+                result.data?.message || "Error updating profile";
+              toast.error(errorMessage);
             }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Error updating profile"
+            );
+            toast.error(errorMessage);
+          },
         });
-    }, [useUpdateProfile, queryClient]);
+      },
+      [useUpdateProfile, queryClient]
+    );
     return {
       changePassword,
       logIn,

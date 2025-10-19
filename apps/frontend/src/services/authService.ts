@@ -59,7 +59,7 @@ export const authService = {
         const response = await fetchHttpClient.post<AuthResponse>("/users/refresh-token", { refresh_token });
         return response;
     },
-    updateProfile : async(data : UpdateProfileSchemaFormData) : Promise<AxiosResponse<ProfileUserResponse>> => {
+    updateProfile : async(data : Partial<UpdateProfileSchemaFormData>) : Promise<AxiosResponse<ProfileUserResponse>> => {
         const response = await fetchHttpClient.patch<ProfileUserResponse>("/users/me", data);
         return response;
     },
