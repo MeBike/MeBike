@@ -61,6 +61,19 @@ export const reserveBikeValidator = validate(
         },
         isISO8601: {
           errorMessage: RESERVATIONS_MESSAGE.INVALID_START_TIME_FORMAT
+        },
+        custom: {
+          options: (value) => {
+            const now = getLocalTime()
+            if(new Date(value) < now){
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.INVALID_START_TIME,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+
+            return true
+          }
         }
       }
     },
@@ -100,6 +113,13 @@ export const cancelReservationValidator = validate(
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.CANNOT_CANCEL_OTHER_RESERVATION,
               status: HTTP_STATUS.FORBIDDEN
+            })
+          }
+
+          if (reservation.status !== ReservationStatus.Pending) {
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.CANNOT_CANCEL_THIS_RESERVATION,
+              status: HTTP_STATUS.BAD_REQUEST
             })
           }
 
@@ -146,7 +166,14 @@ export const confirmReservationValidator = validate(
             })
           }
           const now = getLocalTime()
-          if(reservation.end_time && reservation.end_time > now){
+          if(reservation.start_time > now){
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.NOT_AVAILABLE_FOR_CONFIRMATION,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+          if(reservation.end_time && reservation.end_time < now){
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_EXPIRED_RESERVATION,
               status: HTTP_STATUS.BAD_REQUEST
