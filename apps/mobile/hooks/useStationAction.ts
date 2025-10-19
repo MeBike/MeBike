@@ -15,37 +15,36 @@ interface ErrorWithMessage {
   message: string;
 }
 
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
+// const getErrorMessage = (error: unknown, defaultMessage: string): string => {
+//   const axiosError = error as ErrorResponse;
+//   if (axiosError?.response?.data) {
+//     const { errors, message } = axiosError.response.data;
+//     if (errors) {
+//       const firstError = Object.values(errors)[0];
+//       if (firstError?.msg) return firstError.msg;
+//     }
+//     if (message) return message;
+//   }
+//   const simpleError = error as ErrorWithMessage;
+//   if (simpleError?.message) {
+//     return simpleError.message;
+//   }
 
-  return defaultMessage;
-};
+//   return defaultMessage;
+// };
 export const useStationActions = (
   hasToken : boolean, 
   stationId?: string
 ) => {
 
-    const queryClient = useQueryClient();
-    const useGetAllStations = useGetAllStation();
-    const { refetch,  data : response , isLoading} = useGetAllStations;
+    // const queryClient = useQueryClient();
+    const {refetch, data: response, isLoading} = useGetAllStation();
     const useGetStationByID = useGetStationById(stationId || '');
     const getAllStations = useCallback(async () => {
         if(!hasToken){  
             return;
         };
-        return await refetch();
+        refetch();
     }, [refetch ,  hasToken ]);
     const getStationByID = useCallback(() => {
         if(!hasToken){
@@ -56,7 +55,8 @@ export const useStationActions = (
     return {
       getAllStations,
       getStationByID,
-      stations: response?.data.data ?? [],
+      refetch ,
+      stations: response ?? [],
       isLoadingGetAllStations: isLoading,
       isLoadingGetStationByID: useGetStationByID.isLoading,
     };
