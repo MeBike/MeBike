@@ -270,6 +270,7 @@ export const RESERVATIONS_MESSAGE = {
   REASON_TOO_LONG: 'Độ dài của nguyên nhân huỷ không hợp lệ (dưới 255 kí tự)',
   INVALID_START_TIME: 'Thời gian đặt trước không thể là thời điểm ở quá khứ',
   INVALID_STATION_ID: 'Id trạm xe không hợp lệ',
+  INVALID_USER_ID: 'Id người dùng không hợp lệ',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
