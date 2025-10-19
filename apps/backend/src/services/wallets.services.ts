@@ -171,6 +171,29 @@ class WalletService {
     return result
   }
 
+  async getUserTransaction(res: Response, next: NextFunction, query: GetTransactionReqQuery) {
+    const filter: Filter<Transaction> = {}
+    if (query.type) {
+      filter.type = query.type
+    }
+
+    if (query.user_id) {
+      const findWallet = await databaseService.wallets.findOne({
+        user_id: new ObjectId(query.user_id)
+      })
+      if (!findWallet) {
+        throw new ErrorWithStatus({
+          message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', query.user_id),
+          status: HTTP_STATUS.BAD_REQUEST
+        })
+      }
+
+      filter.wallet_id = new ObjectId(findWallet._id)
+    }
+
+    await sendPaginatedResponse(res, next, databaseService.transactions, query, filter)
+  }
+
   // lịch sử cộng trừ tiền của ví
   async getWalletHistory(res: Response, next: NextFunction, query: GetTransactionReqQuery, user_id: string) {
     try {
