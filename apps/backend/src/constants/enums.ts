@@ -109,7 +109,8 @@ export enum TransactionTypeEnum {
   Deposit = 'NẠP TIỀN',
   PAYMENT = 'THANH TOÁN',
   WithDrawal = 'RÚT TIỀN',
-  Refund = 'HOÀN TIỀN'
+  Refund = 'HOÀN TIỀN',
+  RESERVATION = 'ĐẶT TRUỚC'
 }
 
 export enum RefundStatus {
