@@ -19,8 +19,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useWalletActions } from "@hooks/useWalletAction";
 
 const MyWalletScreen = () => {
-  const { getMyWallet, myWallet, isLoadingGetMyWallet } =
-    useWalletActions(true);
+  const {
+    getMyWallet,
+    myWallet,
+    isLoadingGetMyWallet,
+    myTransactions: transactions,
+    isLoadingGetMyTransaction,
+  } = useWalletActions(true);
   const insets = useSafeAreaInsets();
   const [showQR, setShowQR] = useState(false);
 
@@ -50,16 +55,49 @@ const MyWalletScreen = () => {
     }
   };
 
-  const formatBalance = (balance?: string) => {
-    if (!balance) return "0";
-    return Number.parseInt(balance).toLocaleString("vi-VN");
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case "nạp":
+        return "arrow-down-circle";
+      case "rút":
+        return "arrow-up-circle";
+      case "thanh toán":
+        return "card";
+      default:
+        return "wallet";
+    }
   };
+
+  const getTransactionColor = (type: string) => {
+    switch (type) {
+      case "nạp":
+        return "#10B981";
+      case "rút":
+        return "#F59E0B";
+      case "thanh toán":
+        return "#EF4444";
+      default:
+        return "#0066FF";
+    }
+  };
+
+ const formatBalance = (balance: string) => {
+   return Number.parseInt(balance).toLocaleString("vi-VN");
+ };
 
   if (isLoadingGetMyWallet) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#0066FF" />
         <Text style={{ marginTop: 12, color: "#333" }}>Đang tải ví...</Text>
+      </View>
+    );
+  }
+  if (isLoadingGetMyTransaction) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0066FF" />
+        <Text style={{ marginTop: 12, color: "#333" }}>Đang tải giao dịch...</Text>
       </View>
     );
   }
@@ -116,7 +154,6 @@ const MyWalletScreen = () => {
           </View>
         </LinearGradient>
 
-        {/* Action Buttons */}
         <View style={styles.actionContainer}>
           <TouchableOpacity style={styles.actionButton} onPress={handleTopUp}>
             <LinearGradient
@@ -140,9 +177,19 @@ const MyWalletScreen = () => {
               <Text style={styles.actionButtonText}>Rút tiền</Text>
             </LinearGradient>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton}>
+            <LinearGradient
+              colors={["#8B5CF6", "#7C3AED"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.actionButtonGradient}
+            >
+              <Ionicons name="swap-horizontal" size={24} color="#fff" />
+              <Text style={styles.actionButtonText}>Hoàn tiền</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
 
-        {/* Transaction History */}
         <View style={styles.content}>
           <View style={styles.historyHeader}>
             <Text style={styles.historyTitle}>Lịch sử giao dịch</Text>
@@ -150,11 +197,54 @@ const MyWalletScreen = () => {
               <Text style={styles.viewAllText}>Xem tất cả</Text>
             </TouchableOpacity>
           </View>
-          <Text>Chưa có giao dịch nào</Text>
+
+          {transactions.map((transaction) => (
+            <View key={transaction._id} style={styles.transactionItem}>
+              <View style={styles.transactionLeft}>
+                <View
+                  style={[
+                    styles.transactionIcon,
+                    {
+                      backgroundColor:
+                        getTransactionColor(transaction.type) + "20",
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    name={getTransactionIcon(transaction.type) as any}
+                    size={20}
+                    color={getTransactionColor(transaction.type)}
+                  />
+                </View>
+                <View style={styles.transactionInfo}>
+                  <Text style={styles.transactionDescription}>
+                    {transaction.description}
+                  </Text>
+                  <Text style={styles.transactionDate}>
+                    {transaction.created_at} • {transaction.status}
+                  </Text>
+                </View>
+              </View>
+              <Text
+                style={[
+                  styles.transactionAmount,
+                  {
+                    color:
+                      transaction.type === "NẠP TIỀN"
+                        ? "#10B981"
+                        : transaction.type === "RÚT TIỀN"
+                          ? "#F59E0B"
+                          : "#EF4444",
+                  },
+                ]}
+              >
+                {formatBalance(transaction.amount.toString())} đ
+              </Text>
+            </View>
+          ))}
         </View>
       </ScrollView>
 
-      {/* Modal QR */}
       <Modal
         visible={showQR}
         transparent
@@ -299,6 +389,51 @@ const styles = StyleSheet.create({
   shareText: { color: "#fff", fontWeight: "600" },
   closeBtn: { marginTop: 12 },
   closeText: { color: "#666" },
+  transactionItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  transactionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  transactionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  transactionInfo: {
+    flex: 1,
+  },
+  transactionDescription: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 4,
+  },
+  transactionDate: {
+    fontSize: 12,
+    color: "#999",
+  },
+  transactionAmount: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
 });
 
 export default MyWalletScreen;

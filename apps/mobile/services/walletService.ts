@@ -10,16 +10,30 @@ export interface MyWallet {
   created_at : string;
   updated_at : string;
 }
+export interface Transaction {
+  _id: string;
+  wallet_id: string;
+  amount: number;
+  fee: number;
+  description: string;
+  transaction_hash: string;
+  type: "NẠP TIỀN" | "RÚT TIỀN";
+  created_at: string; 
+  updated_at: string;
+  status: "THÀNH CÔNG" | "THẤT BẠI" | "ĐANG XỬ LÝ";
+}
 const WALLET_BASE = "/wallets";
 const WALLET_ENDPOINTS = {
   BASE: WALLET_BASE,
   MY_WALLET: `${WALLET_BASE}`,
   TOP_UP: `${WALLET_BASE}/increase`,
   DEBIT: `${WALLET_BASE}/decrease`,
+  TRANSACTIONS: `${WALLET_BASE}/transaction`,
 } as const;
 interface ApiResponse<T> {
   message: string;
-  result: T;
+  data ?: T;
+  result ?: T;
 }
 import type { TopUpSchemaFormData , DecreaseSchemaFormData } from "@schemas/walletSchema";
 export const walletService = {
@@ -46,4 +60,9 @@ export const walletService = {
     );
     return response;
   },
+  transactions: async (): Promise<AxiosResponse<ApiResponse<Transaction[]>>> => {
+    return await fetchHttpClient.get<ApiResponse<Transaction[]>>(
+      WALLET_ENDPOINTS.TRANSACTIONS
+    );
+  }
 };

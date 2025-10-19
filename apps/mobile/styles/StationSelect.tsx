@@ -67,7 +67,7 @@ export default function StationSelectScreen() {
                 longitude: Number(item.longitude),
                 address: item.address,
               },
-              availableBikes: 0,
+              availableBikes: Number(item.availableBikes),
               totalSlots: Number(item.capacity),
               isActive: true,
               bikes: [],

@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useGetMyWalletQuery } from "./query/Wallet/useGetMyWalletQuery";
+import { useGetMyTransactionsQuery } from "./query/Wallet/useGetMyTransactionQuery";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -30,22 +31,29 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 
   return defaultMessage;
 };
-export const useWalletActions = (
-    hasToken : boolean,
-
-) => {
-    const queryClient = useQueryClient();
-    const useGetMyWallet = useGetMyWalletQuery();
-    const { refetch,  data : response , isLoading} = useGetMyWallet;
-    const getMyWallet = useCallback(async () => {
-        if(!hasToken){  
-            return;
-        }
-        return await refetch();
-    }, [refetch ,  hasToken ]);
-    return {
-      getMyWallet,
-      myWallet: response ?? null,
-      isLoadingGetMyWallet: isLoading,
-    };
-}
+export const useWalletActions = (hasToken: boolean) => {
+  const queryClient = useQueryClient();
+  const useGetMyWallet = useGetMyWalletQuery();
+  const useGetMyTransaction = useGetMyTransactionsQuery();
+  const { refetch, data: response, isLoading } = useGetMyWallet;
+  const getMyWallet = useCallback(async () => {
+    if (!hasToken) {
+      return;
+    }
+    return await refetch();
+  }, [refetch, hasToken]);
+  const getMyTransaction = useCallback(async () => {
+    if (!hasToken) {
+      return;
+    }
+    return await useGetMyTransaction.refetch();
+  }, [useGetMyTransaction, hasToken]);
+  return {
+    getMyWallet,
+    myWallet: response ?? null,
+    isLoadingGetMyWallet: isLoading,
+    getMyTransaction,
+    myTransactions: useGetMyTransaction.data ?? [],
+    isLoadingGetMyTransaction: useGetMyTransaction.isLoading,
+  };
+};
