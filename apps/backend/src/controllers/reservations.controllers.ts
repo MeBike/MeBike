@@ -95,9 +95,7 @@ export async function getReservationHistoryController(req: Request, res: Respons
   const { user_id } = req.decoded_authorization as TokenPayLoad
   const userIdObjectId = toObjectId(user_id)
 
-  let filter: Filter<Reservation> = {}
-  
-  filter = {
+  const filter: Filter<Reservation> = {
     user_id: userIdObjectId,
     status: {
       $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired]
