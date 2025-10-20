@@ -304,12 +304,17 @@ export const RESERVATIONS_MESSAGE = {
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
   // Payment
-  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s',  
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s',
   // Quota
   QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước',
   DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',
-  BIKE_NOT_AT_SOURCE_STATION: 'Xe (Id: %s) không nằm ở trạm nguồn đã khai báo'
-
+  BIKE_NOT_AT_SOURCE_STATION: 'Xe (Id: %s) không nằm ở trạm nguồn đã khai báo',
+  // Report
+  GET_REPORT_SUCCESS: 'Lấy báo cáo đặt trước thành công',
+  REPORT_PERIOD_DEFAULT: '12 tháng gần nhất',
+  REPORT_PERIOD_FULL_RANGE: 'Từ %s đến %s',
+  REPORT_PERIOD_START_ONLY: 'Từ ngày %s',
+  REPORT_PERIOD_END_ONLY: 'Đến ngày %s'
 } as const
 export const WALLETS_MESSAGE = {
   USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',

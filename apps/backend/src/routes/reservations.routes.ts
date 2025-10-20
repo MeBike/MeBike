@@ -6,6 +6,7 @@ import {
   dispatchSameStationController,
   getReservationHistoryController,
   getReservationListController,
+  getReservationReportController,
   notifyExpiringReservationsController,
   reserveBikeController
 } from '~/controllers/reservations.controllers'
@@ -31,6 +32,10 @@ reserveRouter
 reserveRouter
   .route('/dispatch')
   .post(accessTokenValidator, isAdminValidator, batchDispatchSameStationValidator, wrapAsync(dispatchSameStationController))
+
+reserveRouter
+  .route('/stats')
+  .post(accessTokenValidator, isAdminValidator, wrapAsync(getReservationReportController))
 
 reserveRouter
   .route('/')

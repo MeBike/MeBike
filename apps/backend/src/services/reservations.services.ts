@@ -259,19 +259,15 @@ class ReservationsService {
     const now = getLocalTime()
 
     const stations = await databaseService.stations
-    .find(
-      { _id: { $in: [source_id, destination_id] } },
-      { projection: { name: 1 } }
-    )
-    .toArray()
+      .find({ _id: { $in: [source_id, destination_id] } }, { projection: { name: 1 } })
+      .toArray()
 
-  const sourceStation = stations.find(s => s._id.equals(source_id))
-  const destinationStation = stations.find(s => s._id.equals(destination_id)) 
+    const sourceStation = stations.find((s) => s._id.equals(source_id))
+    const destinationStation = stations.find((s) => s._id.equals(destination_id))
 
     const session = databaseService.getClient().startSession()
     try {
       await session.withTransaction(async () => {
-        
         const updateResult = await databaseService.bikes.updateMany(
           { _id: { $in: bike_ids }, station_id: source_id },
           {
@@ -307,6 +303,103 @@ class ReservationsService {
     } finally {
       await session.endSession()
     }
+  }
+
+  async getReservationReport(startDateStr?: string, endDateStr?: string) {
+    let dateFilter: { $gte?: Date; $lte?: Date } = {}
+    let twelveMonthsAgo = getLocalTime()
+    twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1)
+    twelveMonthsAgo.setDate(1)
+
+    if (startDateStr) {
+      dateFilter.$gte = new Date(startDateStr)
+    } else {
+      dateFilter.$gte = twelveMonthsAgo
+    }
+
+    if (endDateStr) {
+      const endDate = new Date(endDateStr)
+      endDate.setDate(endDate.getDate() + 1)
+      dateFilter.$lte = endDate
+    } else {
+      dateFilter.$lte = getLocalTime()
+    }
+
+    const pipeline = [
+      {
+        $match: {
+          created_at: dateFilter,
+          status: {
+            $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            month: { $month: '$created_at' },
+            year: { $year: '$created_at' },
+            status: '$status'
+          },
+          count: { $sum: 1 },
+          totalPrepaidRevenue: { $sum: '$prepaid' }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          month: '$_id.month',
+          year: '$_id.year',
+          status: '$_id.status',
+          count: '$count',
+          revenue: '$totalPrepaidRevenue'
+        }
+      },
+      { $sort: { year: 1, month: 1 } }
+    ]
+
+    const monthlyStats = await databaseService.reservations.aggregate(pipeline).toArray()
+
+    const summaryMap = monthlyStats.reduce((acc, item) => {
+      const monthKey = `${item.year}-${item.month}`
+      if (!acc[monthKey]) {
+        acc[monthKey] = {
+          month_year: monthKey,
+          total: 0,
+          success: 0,
+          cancelled: 0,
+          total_revenue: 0
+        }
+      }
+
+      acc[monthKey].total += item.count
+      acc[monthKey].total_revenue += Number(item.revenue.toString())
+
+      if (item.status === ReservationStatus.Cancelled) {
+        acc[monthKey].cancelled += item.count
+      } else if (item.status === ReservationStatus.Active || item.status === ReservationStatus.Expired) {
+        acc[monthKey].success += item.count
+      }
+      return acc
+    }, {})
+
+    const finalReport = Object.keys(summaryMap).map((key) => {
+      const data = summaryMap[key]
+      const successRate = data.total > 0 ? (data.success / data.total) * 100 : 0
+      const cancelRate = data.total > 0 ? (data.cancelled / data.total) * 100 : 0
+
+      return {
+        month_year: key,
+        total_reservations: data.total,
+        success_count: data.success,
+        cancelled_count: data.cancelled,
+        total_prepaid_revenue: data.total_revenue,
+        success_rate: successRate.toFixed(2) + '%',
+        cancel_rate: cancelRate.toFixed(2) + '%'
+      }
+    })
+
+    return finalReport
   }
 
   generateEndTime(startTime: string) {

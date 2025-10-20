@@ -148,3 +148,32 @@ export async function dispatchSameStationController(req: Request, res: Response)
     result
   })
 }
+
+export async function getReservationReportController(req: Request, res: Response, next: NextFunction) {
+  const { startDate, endDate } = req.query
+
+  const result = await reservationsService.getReservationReport(
+    startDate as string | undefined,
+    endDate as string | undefined
+  )
+
+  let reportPeriod = ''
+  reportPeriod = RESERVATIONS_MESSAGE.REPORT_PERIOD_DEFAULT
+
+  if (startDate && endDate) {
+    reportPeriod = RESERVATIONS_MESSAGE.REPORT_PERIOD_FULL_RANGE.replace('%s', startDate as string).replace(
+      '%s',
+      endDate as string
+    )
+  } else if (startDate) {
+    reportPeriod = RESERVATIONS_MESSAGE.REPORT_PERIOD_START_ONLY.replace('%s', startDate as string)
+  } else if (endDate) {
+    reportPeriod = RESERVATIONS_MESSAGE.REPORT_PERIOD_END_ONLY.replace('%s', endDate as string)
+  }
+
+  res.json({
+    message: RESERVATIONS_MESSAGE.GET_REPORT_SUCCESS,
+    report_period: reportPeriod,
+    result
+  })
+}
