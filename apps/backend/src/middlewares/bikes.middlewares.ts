@@ -36,7 +36,6 @@ export const isAvailability = (status: BikeStatus) => {
 export const createBikeValidator = validate(
   checkSchema(
     {
-      // chip_id is validated below with specific messages
       station_id: {
         notEmpty: { errorMessage: BIKES_MESSAGES.STATION_ID_IS_REQUIRED },
         isString: { errorMessage: BIKES_MESSAGES.INVALID_STATION_ID },
@@ -83,24 +82,24 @@ export const createBikeValidator = validate(
         },
       },
       supplier_id: {
-        optional: true,
+        notEmpty: {
+          errorMessage: BIKES_MESSAGES.SUPPLIER_ID_IS_REQUIRED,
+        },
         custom: {
           options: async (value) => {
-            if (value) { // Chỉ kiểm tra nếu supplier_id được cung cấp
-              if (!ObjectId.isValid(value)) {
-                throw new ErrorWithStatus({
-                  message: BIKES_MESSAGES.INVALID_SUPPLIER_ID,
-                  status: HTTP_STATUS.BAD_REQUEST,
-                });
-              }
-              // Kiểm tra xem supplier có tồn tại trong database không
-              const supplier = await databaseService.suppliers.findOne({ _id: new ObjectId(value) });
-              if (!supplier) {
-                throw new ErrorWithStatus({
-                  message: BIKES_MESSAGES.SUPPLIER_NOT_FOUND,
-                  status: HTTP_STATUS.NOT_FOUND,
-                });
-              }
+            if (!ObjectId.isValid(value)) {
+              throw new ErrorWithStatus({
+                message: BIKES_MESSAGES.INVALID_SUPPLIER_ID,
+                status: HTTP_STATUS.BAD_REQUEST,
+              });
+            }
+            // Kiểm tra xem supplier có tồn tại trong database không
+            const supplier = await databaseService.suppliers.findOne({ _id: new ObjectId(value) });
+            if (!supplier) {
+              throw new ErrorWithStatus({
+                message: BIKES_MESSAGES.SUPPLIER_NOT_FOUND,
+                status: HTTP_STATUS.NOT_FOUND,
+              });
             }
             return true;
           },

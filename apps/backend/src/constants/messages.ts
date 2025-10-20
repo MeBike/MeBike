@@ -130,6 +130,7 @@ export const SUPPLIER_MESSAGE = {
 }
 
 export const BIKES_MESSAGES = {
+  // create bike
   CREATE_BIKE_SUCCESS: 'Tạo xe đạp mới thành công',
   GET_BIKES_SUCCESS: 'Lấy danh sách xe đạp thành công',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp',
@@ -142,6 +143,7 @@ export const BIKES_MESSAGES = {
   INVALID_SUPPLIER_ID: 'ID của nhà cung cấp không hợp lệ',
   SUPPLIER_NOT_FOUND: 'Không tìm thấy nhà cung cấp với ID được cung cấp',
   BIKE_ALREADY_EXISTS: 'Xe đạp với chip_id này đã tồn tại',
+  SUPPLIER_ID_IS_REQUIRED: 'ID của nhà cung cấp là bắt buộc',
   // get bikes by id
   GET_BIKE_SUCCESS: 'Lấy thông tin xe đạp thành công',
   BIKE_ID_IS_REQUIRED: 'ID của xe đạp là bắt buộc',
