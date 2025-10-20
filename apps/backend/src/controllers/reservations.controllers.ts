@@ -131,7 +131,7 @@ export async function getReservationHistoryController(req: Request, res: Respons
   await sendPaginatedResponse(res, next, databaseService.reservations, req.query, filter)
 }
 
-export async function dispatchSameStationController(req: Request, res: Response, next: NextFunction) {
+export async function dispatchSameStationController(req: Request, res: Response) {
   const { user_id } = (req as any).decoded_authorization as TokenPayLoad
   const { source_station_id, destination_station_id } = req.body as DispatchBikeReqBody
 

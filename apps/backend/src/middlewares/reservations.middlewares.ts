@@ -260,22 +260,29 @@ export const batchDispatchSameStationValidator = validate(
         }
       },
       bike_ids_to_move: {
-        isArray: { errorMessage: RESERVATIONS_MESSAGE.INVALID_BIKE_LIST, bail: true },
-        notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_BIKE_LIST, bail: true },
+        isArray: { errorMessage: RESERVATIONS_MESSAGE.INVALID_BIKE_LIST, options: { min: 1 }, bail: true },
         custom: {
           options: async (bikeIds: string[], { req }) => {
             const sourceId = toObjectId((req.body as DispatchBikeReqBody).source_station_id)
             const bikeObjectIds = bikeIds.map((id) => toObjectId(id))
 
             const bikes = await databaseService.bikes
-              .find({
-                _id: { $in: bikeObjectIds }
-              })
+              .find(
+                {
+                  _id: { $in: bikeObjectIds }
+                },
+                {
+                  projection: { status: 1, station_id: 1 }
+                }
+              )
               .toArray()
 
-            if (bikes.length !== bikeIds.length) {
+            const foundBikeIdStrings = new Set(bikes.map((bike) => bike._id.toString()))
+            const missingBikeId = bikeIds.find((id) => !foundBikeIdStrings.has(id))
+
+            if (missingBikeId) {
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.BIKE_NOT_FOUND_IN_LIST,
+                message: RESERVATIONS_MESSAGE.BIKE_NOT_FOUND.replace('%s', missingBikeId),
                 status: HTTP_STATUS.NOT_FOUND
               })
             }

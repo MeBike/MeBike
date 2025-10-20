@@ -30,7 +30,7 @@ reserveRouter
 
 reserveRouter
   .route('/dispatch')
-  .get(accessTokenValidator, isAdminValidator, batchDispatchSameStationValidator, wrapAsync(dispatchSameStationController))
+  .post(accessTokenValidator, isAdminValidator, batchDispatchSameStationValidator, wrapAsync(dispatchSameStationController))
 
 reserveRouter
   .route('/')

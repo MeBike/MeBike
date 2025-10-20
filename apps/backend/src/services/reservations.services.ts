@@ -258,9 +258,20 @@ class ReservationsService {
   }) {
     const now = getLocalTime()
 
+    const stations = await databaseService.stations
+    .find(
+      { _id: { $in: [source_id, destination_id] } },
+      { projection: { name: 1 } }
+    )
+    .toArray()
+
+  const sourceStation = stations.find(s => s._id.equals(source_id))
+  const destinationStation = stations.find(s => s._id.equals(destination_id)) 
+
     const session = databaseService.getClient().startSession()
     try {
       await session.withTransaction(async () => {
+        
         const updateResult = await databaseService.bikes.updateMany(
           { _id: { $in: bike_ids }, station_id: source_id },
           {
@@ -287,8 +298,8 @@ class ReservationsService {
 
       return {
         dispatched_count: bike_ids.length,
-        from_station: source_id,
-        to_station: destination_id,
+        from_station: sourceStation,
+        to_station: destinationStation,
         dispatched_bikes: bikes
       }
     } catch (error) {

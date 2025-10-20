@@ -279,7 +279,7 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_USER_ID: 'Id người dùng không hợp lệ',
   INVALID_SOURCE_STATION_ID: 'Id trạm nguồn không hợp lệ.',
   INVALID_DESTINATION_STATION_ID: 'Id trạm đích không hợp lệ',
-  INVALID_BIKE_LIST: 'Danh sách Id xe không hợp lệ',
+  INVALID_BIKE_LIST: 'Danh sách Id xe không hợp lệ (phải là 1 mảng chuỗi không rỗng)',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
