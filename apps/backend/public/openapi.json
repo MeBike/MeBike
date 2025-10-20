@@ -538,7 +538,7 @@
           "Bikes"
         ],
         "summary": "Get a list of bikes",
-        "description": "Retrieves a paginated list of bikes.\n- **Guests and Users** can only view bikes with 'Available' status.\n- **Admins/Staff** can filter by any status using the 'status' query parameter.\n",
+        "description": "Retrieves a paginated list of bikes. Filter bikes by status, chip_id, station_id, and supplier_id.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/PageQuery"
@@ -570,6 +570,16 @@
             "description": "Filter bikes by status. (Admin/Staff only for non-available statuses)",
             "schema": {
               "$ref": "#/components/schemas/BikeStatus"
+            }
+          },
+          {
+            "name": "chip_id",
+            "in": "query",
+            "description": "Filter bikes by chip ID.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "CHIP123456"
             }
           }
         ],
