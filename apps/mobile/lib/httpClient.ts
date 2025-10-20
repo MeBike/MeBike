@@ -194,7 +194,7 @@ const fetchHttpClient = new FetchHttpClient(
     const defaultUrl = "http://localhost:4000";
     console.log("Environment EXPO_PUBLIC_API_BASE_URL:", envUrl);
     console.log("Using API Base URL:", envUrl || defaultUrl);
-    const computerIP = "http://192.168.12.103:4000";
+    const computerIP = "http://192.168.12.101:4000";
     console.log("Using computer IP for device testing:", computerIP);
     return computerIP;
   })()
