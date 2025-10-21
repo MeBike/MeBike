@@ -144,7 +144,6 @@ export const useAuthActions = () => {
             queryClient.removeQueries({ queryKey: ["user", "me"] });
             toast.success("Logged out successfully");
             router.push("/auth/login");
-            router.refresh();
           } else {
             const errorMessage = result.data?.message || "Error logging out";
             toast.error(errorMessage);
@@ -292,5 +291,6 @@ export const useAuthActions = () => {
     isReseting: useResetPassword.isPending,
     isLoadingForgottingPassword: useForgotPassword.isPending,
     isLoggingIn: useLogin.isPending,
+    isLoggingOut: useLogout.isPending,  
   };
 };

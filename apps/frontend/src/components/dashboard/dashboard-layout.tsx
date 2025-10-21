@@ -15,7 +15,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const [sidebarCollapsed,] = useState(false);
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar userRole={user?.role} />
+      <Sidebar  />
       <div
         className={`transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}
       >

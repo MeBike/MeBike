@@ -12,27 +12,43 @@ interface StaffLayoutProps {
 }
 
 export default function StaffLayout({ children }: StaffLayoutProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, isLoggingOut } = useAuth();
   const router = useRouter();
   const [showUnauthorized, setShowUnauthorized] = useState(false);
-const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
+  const [hasAlreadyRedirected, setHasAlreadyRedirected] = useState(false);
   useEffect(() => {
-    if (!isLoading) {
-      if (
-        !isAuthenticated ||
-        !user ||
-        (user?.role !== "STAFF")
-      ) {
+    if (
+      !isLoading &&
+      !isLoggingOut &&
+      typeof isAuthenticated !== "undefined" &&
+      typeof user !== "undefined" &&
+      !hasAlreadyRedirected
+    ) {
+      if (!isAuthenticated && !user) {
+        router.push("/auth/login");
+        setHasAlreadyRedirected(true);
+      } else if (user && user.role !== "STAFF") {
         setShowUnauthorized(true);
         toast.error("Bạn không có quyền truy cập!");
         clearTokens();
-        
         queryClient.removeQueries({ queryKey: ["user", "me"] });
-        router.push("/auth/login"); 
+        router.push("/auth/login");
+        setHasAlreadyRedirected(true);
       }
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [
+    isLoading,
+    isAuthenticated,
+    user,
+    isLoggingOut,
+    router,
+    hasAlreadyRedirected,
+  ]);
 
+  useEffect(() => {
+    console.log("user:", user, "isAuthenticated:", isAuthenticated);
+  }, [user, isAuthenticated]);
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

@@ -102,15 +102,15 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const {user,logOut} = useAuth();
+  const {user,logOut , isAuthenticated} = useAuth();
   const pathname = usePathname();
   const handleLogout = () => {
     const refreshToken = getRefreshToken();
     if (refreshToken) {
       logOut(refreshToken);
+      console.log(user?.email + " đã đăng xuất" + isAuthenticated);
     }
   }
-  console.log("Current role:", user?.role);
   const menuItems = getMenuItems(user?.role as "STAFF" | "ADMIN" | "USER");
   const filteredMenuItems = menuItems.filter((item) =>
     item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER")

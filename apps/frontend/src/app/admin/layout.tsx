@@ -12,25 +12,42 @@ interface StaffLayoutProps {
 }
 
 export default function StaffLayout({ children }: StaffLayoutProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, isLoggingOut } = useAuth();
   const router = useRouter();
   const [showUnauthorized, setShowUnauthorized] = useState(false);
   const queryClient = useQueryClient();
+  const [hasAlreadyRedirected, setHasAlreadyRedirected] = useState(false);
+
   useEffect(() => {
-    if (!isLoading) {
-      if (
-        !isAuthenticated ||
-        !user ||
-        ( user?.role !== "ADMIN")
-      ) {
+    if (
+      !isLoading &&
+      !isLoggingOut &&
+      typeof isAuthenticated !== "undefined" &&
+      typeof user !== "undefined" &&
+      !hasAlreadyRedirected
+    ) {
+      if (!isAuthenticated && !user) {
+        // Vừa logout hoặc chưa đăng nhập, KHÔNG hiện toast error
+        router.push("/auth/login");
+        setHasAlreadyRedirected(true);
+      } else if (user && user.role !== "ADMIN") {
+        // User tồn tại nhưng sai quyền, mới hiện toast error
         setShowUnauthorized(true);
         toast.error("Bạn không có quyền truy cập!");
         clearTokens();
         queryClient.removeQueries({ queryKey: ["user", "me"] });
         router.push("/auth/login");
+        setHasAlreadyRedirected(true);
       }
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [
+    isLoading,
+    isAuthenticated,
+    user,
+    isLoggingOut,
+    router,
+    hasAlreadyRedirected,
+  ]);
 
   if (isLoading) {
     return (
