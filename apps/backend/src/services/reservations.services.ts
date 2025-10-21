@@ -12,6 +12,7 @@ import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
 import { readEmailTemplate } from '~/utils/email-templates'
+import { sleep } from '~/utils/timeout'
 
 class ReservationsService {
   async reserveBike({
@@ -279,7 +280,11 @@ class ReservationsService {
           subject: RESERVATIONS_MESSAGE.EMAIL_SUBJECT_NEAR_EXPIRY,
           html: htmlContent
         }
-        return transporter.sendMail(mailOptions)
+        const mailPromise = transporter.sendMail(mailOptions)
+        await mailPromise
+
+        this.scheduleDelayedCancellation(r, 16)
+        return true
       } catch (error) {
         console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
         return null
@@ -472,11 +477,46 @@ class ReservationsService {
         cancelledCount++
         console.log(RESERVATIONS_MESSAGE.CANCELLED_SUCCESS(r._id.toString(), r.user_id.toString()))
       } else {
-        console.error(RESERVATIONS_MESSAGE.CANCELLED_FAILURE(r._id.toString(), result.error || COMMON_MESSAGE.UNKNOWN_ERROR))
+        console.error(
+          RESERVATIONS_MESSAGE.CANCELLED_FAILURE(r._id.toString(), result.error || COMMON_MESSAGE.UNKNOWN_ERROR)
+        )
       }
     }
 
     return { cancelled_count: cancelledCount }
+  }
+
+  async scheduleDelayedCancellation(reservation: Reservation, delayMinutes: number = 16) {
+    const delayMs = delayMinutes * 60 * 1000
+
+    console.log(RESERVATIONS_MESSAGE.SCHEDULING_CANCEL_TASK(reservation._id!.toString(), delayMinutes))
+
+    await sleep(delayMs)
+
+    const currentReservation = await databaseService.reservations.findOne({
+      _id: reservation._id,
+      status: ReservationStatus.Pending
+    })
+
+    if (currentReservation) {
+      const result = await this.cancelReservationAndReleaseBike(currentReservation)
+
+      if (result.success) {
+        console.log(
+          RESERVATIONS_MESSAGE.CANCELLED_SUCCESS(
+            currentReservation._id.toString(),
+            currentReservation.user_id.toString()
+          )
+        )
+      } else {
+        console.error(
+          RESERVATIONS_MESSAGE.CANCELLED_FAILURE(
+            currentReservation._id.toString(),
+            result.error || COMMON_MESSAGE.UNKNOWN_ERROR
+          )
+        )
+      }
+    }
   }
 
   private async cancelReservationAndReleaseBike(reservation: Reservation) {

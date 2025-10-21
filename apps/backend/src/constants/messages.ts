@@ -323,6 +323,8 @@ export const RESERVATIONS_MESSAGE = {
     `[CANCELLED] Reservation ${reservationId} for user ${userId} expired and was cancelled.`,
   CANCELLED_FAILURE: (reservationId: string, error: string) =>
     `Failed to fully cancel reservation ${reservationId}: ${error}`,
+  SCHEDULING_CANCEL_TASK: (reservationId: string, delayMinutes: number) => 
+        `Scheduling cancellation task for reservation ${reservationId} in ${delayMinutes} minutes.`,
   // Email Messages
   EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn'
 } as const
