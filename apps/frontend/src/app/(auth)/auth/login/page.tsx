@@ -26,14 +26,15 @@ const Login = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (user && isNavigating) {
-      if(user.role === "ADMIN"){
+    if (user || isNavigating) {
+      if(user?.role === "ADMIN"){
         router.push("/admin");
-      } else if(user.role === "STAFF"){
+      } else if(user?.role === "STAFF"){
         router.push("/staff");
-      }{
-        router.push("/user"); 
+      } else if (user?.role === "USER"){
+        router.push("/user");
       }
+      return;
 
     }
   }, [user, isNavigating, router]);

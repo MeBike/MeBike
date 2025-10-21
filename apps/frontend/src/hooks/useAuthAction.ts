@@ -138,13 +138,13 @@ export const useAuthActions = () => {
         onSuccess: (result) => {
           if (result.status === 200) {
             clearTokens();
-            // Trigger storage event to update hasToken state
             window.dispatchEvent(
               new StorageEvent("storage", { key: "auth_tokens" })
             );
-            queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+            queryClient.removeQueries({ queryKey: ["user", "me"] });
             toast.success("Logged out successfully");
             router.push("/auth/login");
+            router.refresh();
           } else {
             const errorMessage = result.data?.message || "Error logging out";
             toast.error(errorMessage);
