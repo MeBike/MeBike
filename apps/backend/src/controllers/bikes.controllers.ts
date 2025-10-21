@@ -11,7 +11,6 @@ import bikesService from "~/services/bikes.services";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import { ObjectId } from "mongodb";
-import { verifyToken } from "~/utils/jwt";
 
 export async function createBikeController(req: Request<ParamsDictionary, any, CreateBikeReqBody>, res: Response) {
   const result = await bikesService.createBike(req.body);
@@ -50,48 +49,48 @@ export async function getBikesController(
   next: NextFunction,
 ) {
   const query = req.query;
-  let userRole: Role | null = null;
-  let decoded_authorization: TokenPayLoad | null = null;
+  // let userRole: Role | null = null;
+  // let decoded_authorization: TokenPayLoad | null = null;
 
-  const authorizationHeader = req.headers.authorization;
+  // const authorizationHeader = req.headers.authorization;
 
-  if (authorizationHeader) {
-    const accessToken = authorizationHeader.split(" ")[1];
+  // if (authorizationHeader) {
+  //   const accessToken = authorizationHeader.split(" ")[1];
 
-    if (accessToken) {
-      try {
-        decoded_authorization = (await verifyToken({
-          token: accessToken,
-          secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
-        })) as TokenPayLoad;
-      } catch (error) {
-        console.error("Optional token verification failed:", error);
-      }
-    }
-  }
+  //   if (accessToken) {
+  //     try {
+  //       decoded_authorization = (await verifyToken({
+  //         token: accessToken,
+  //         secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
+  //       })) as TokenPayLoad;
+  //     } catch (error) {
+  //       console.error("Optional token verification failed:", error);
+  //     }
+  //   }
+  // }
 
-  if (decoded_authorization) {
-    const { user_id } = decoded_authorization;
-    try {
-      const user = await databaseService.users.findOne({
-        _id: new ObjectId(user_id),
-      });
-      if (user) {
-        userRole = user.role as Role;
-      } else {
-         console.warn(`User ${user_id} not found despite valid token.`);
-      }
-    } catch (dbError) {
-        console.error("Database error fetching user role:", dbError);
-        userRole = null;
-    }
-  }
-  //nếu là guest (userRole là null)
-  //hoặc nếu là User (userRole là Role.User)
-  //thì chỉ cho xem xe 'AVAILABLE'
-  if (userRole === null || userRole === Role.User) {
-    query.status = BikeStatus.Available;
-  }
+  // if (decoded_authorization) {
+  //   const { user_id } = decoded_authorization;
+  //   try {
+  //     const user = await databaseService.users.findOne({
+  //       _id: new ObjectId(user_id),
+  //     });
+  //     if (user) {
+  //       userRole = user.role as Role;
+  //     } else {
+  //        console.warn(`User ${user_id} not found despite valid token.`);
+  //     }
+  //   } catch (dbError) {
+  //       console.error("Database error fetching user role:", dbError);
+  //       userRole = null;
+  //   }
+  // }
+  // //nếu là guest (userRole là null)
+  // //hoặc nếu là User (userRole là Role.User)
+  // //thì chỉ cho xem xe 'AVAILABLE'
+  // if (userRole === null || userRole === Role.User) {
+  //   query.status = BikeStatus.Available;
+  // }
   //nếu là Staff hoặc Admin, không set query.status mặc định.
   await bikesService.getAllBikes(res, next, query);
 }
