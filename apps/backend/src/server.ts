@@ -21,6 +21,10 @@ config();
 import swaggerJSDoc from "swagger-jsdoc";
 import stationRouter from "./routes/station.routes";
 import reserveRouter from "./routes/reservations.routes";
+import { warningExpiryReservation } from "./utils/cron/email.services";
+
+// cron-job
+warningExpiryReservation.start()
 
 const port = process.env.PORT || 4000;
 
