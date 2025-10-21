@@ -50,7 +50,7 @@ export const useWalletActions = (hasToken: boolean) => {
   }, [useGetMyTransaction, hasToken]);
   return {
     getMyWallet,
-    myWallet: response ?? null,
+    myWallet: response,
     isLoadingGetMyWallet: isLoading,
     getMyTransaction,
     myTransactions: useGetMyTransaction.data ?? [],

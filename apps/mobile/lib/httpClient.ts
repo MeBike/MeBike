@@ -55,41 +55,47 @@ export class FetchHttpClient {
         );
         const originalRequest = error.config;
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
-          // Remove window.dispatchEvent as it's not available in React Native
-          // You can use EventEmitter or React Context for event handling instead
-          if (this.isRefreshing) {
-            return new Promise((resolve, reject) => {
-              this.failedQueue.push({ resolve, reject });
-            })
-              .then((token) => {
-                if (token && originalRequest.headers) {
-                  originalRequest.headers.Authorization = `Bearer ${token}`;
-                }
-                return this.axiosInstance(originalRequest);
-              })
-              .catch((err) => {
-                return Promise.reject(err);
-              });
-          }
+          // Inspect response data for a token expiration error
+          const isTokenExpired =
+            error.response?.data?.error === "token_expired" ||
+            error.response?.data?.message === "Jwt expired"; // Adjust according to your backend
 
-          this.isRefreshing = true;
-          try {
-            const newToken = await this.refreshAccessToken();
-            this.processQueue(null, newToken);
-            // Remove window.dispatchEvent as it's not available in React Native
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          if (isTokenExpired) {
+            if (this.isRefreshing) {
+              return new Promise((resolve, reject) => {
+                this.failedQueue.push({ resolve, reject });
+              })
+                .then((token) => {
+                  if (token && originalRequest.headers) {
+                    originalRequest.headers.Authorization = `Bearer ${token}`;
+                  }
+                  return this.axiosInstance(originalRequest);
+                })
+                .catch((err) => {
+                  return Promise.reject(err);
+                });
             }
-            return this.axiosInstance(originalRequest);
-          } catch (refreshError) {
-            this.processQueue(refreshError, null);
-            return Promise.reject(refreshError);
-          } finally {
-            this.isRefreshing = false;
+
+            this.isRefreshing = true;
+            try {
+              const newToken = await this.refreshAccessToken();
+              this.processQueue(null, newToken);
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              }
+              return this.axiosInstance(originalRequest);
+            } catch (refreshError) {
+              this.processQueue(refreshError, null);
+              return Promise.reject(refreshError);
+            } finally {
+              this.isRefreshing = false;
+            }
+          } else {
+            return Promise.reject(error);
           }
         }
         // Error handling for React Native
-        // Use React Navigation or other navigation methods instead of window.location
+        // Use React Navigation or other navigation methods instead of window.locatio n
         switch (error.response?.status) {
           case HTTP_STATUS.FORBIDDEN:
             console.log("API: 403 Forbidden");
@@ -103,7 +109,7 @@ export class FetchHttpClient {
             // Handle navigation using React Navigation
             break;
           default:
-            console.error(`API Error: ${error.response?.status}`);
+            console.log(`API Error: ${error.response?.status}`);
         }
 
         return Promise.reject(error);
@@ -191,10 +197,11 @@ export class FetchHttpClient {
 const fetchHttpClient = new FetchHttpClient(
   (() => {
     const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-    const defaultUrl = "http://localhost:4000";
+    const defaultUrl =
+      process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:4000";
     console.log("Environment EXPO_PUBLIC_API_BASE_URL:", envUrl);
     console.log("Using API Base URL:", envUrl || defaultUrl);
-    const computerIP = "http://192.168.12.103:4000";
+    const computerIP = process.env.EXPO_COMPUTER_PUBLIC_API_BASE_URL_TANCHO || "http://192.168.12.101:4000";
     console.log("Using computer IP for device testing:", computerIP);
     return computerIP;
   })()
