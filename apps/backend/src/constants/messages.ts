@@ -391,3 +391,13 @@ export const STATIONS_MESSAGE = {
   STATION_DELETED_SUCCESSFULLY: 'Xóa trạm thành công',
   CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.'
 }
+
+export const RATING_MESSAGE = {
+  CREATE_RATING_SUCCESS: 'Đánh giá thành công',
+  GET_RATING_SUCCESS: 'Lấy danh sách đánh giá cho phiên thuê %s thành công',
+  RATING_NOT_FOUND: 'Không tìm thấy đánh giá của phiên thuê với ID %s',
+  RATING_ID_IS_REQUIRED: 'ID đánh giá là bắt buộc',
+  RATING_ID_INVALID: 'ID đánh giá không hợp lệ',
+  RATING_EXISTED: 'Đánh giá cho phiên thuê với ID %s đã tồn tại',
+  GET_RATING_REASONS_SUCCESS: 'Lấy danh sách lý do đánh giá thành công'
+}
