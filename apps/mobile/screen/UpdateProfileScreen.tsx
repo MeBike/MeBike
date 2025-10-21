@@ -1,5 +1,4 @@
-
-import { useMemo , useState} from "react";
+import { useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import {
   View,
@@ -21,15 +20,17 @@ import type { DetailUser } from "@services/authService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileUpdateSchema } from "@schemas/authSchema";
 const UpdateProfileScreen = ({ navigation }: any) => {
-
   const { user, updateProfile, isUpdatingProfile } = useAuth();
-  const initialProfile = useMemo<UpdateProfileSchemaFormData>(() => ({
-    fullname: user?.fullname || "",
-    username: user?.username || "",
-    phone_number: user?.phone_number || "",
-    location: user?.location || "",
-    avatar: user?.avatar || "",
-  }), [user]);
+  const initialProfile = useMemo<UpdateProfileSchemaFormData>(
+    () => ({
+      fullname: user?.fullname || "",
+      username: user?.username || "",
+      phone_number: user?.phone_number || "",
+      location: user?.location || "",
+      avatar: user?.avatar || "",
+    }),
+    [user]
+  );
 
   const {
     control,
@@ -44,87 +45,85 @@ const UpdateProfileScreen = ({ navigation }: any) => {
   });
   const [isEditing, setIsEditing] = useState(false);
 
-
   const handleEditPress = () => {
     setIsEditing(true);
     reset(getValues());
   };
 
+  const onSubmit = async (data: Partial<UpdateProfileSchemaFormData>) => {
+    if (!data.fullname || !data.fullname.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập họ tên");
+      return;
+    }
+    if (!data.phone_number?.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
+      return;
+    }
+    if (!isDirty) {
+      Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
+      setIsEditing(false);
+      return;
+    }
+    const changedData: Partial<UpdateProfileSchemaFormData> = {};
+    const dirtyFieldKeys = Object.keys(dirtyFields) as Array<
+      keyof UpdateProfileSchemaFormData
+    >;
+    for (const key of dirtyFieldKeys) {
+      changedData[key] = data[key];
+    }
 
-  // const onSubmit = async (data: UpdateProfileSchemaFormData) => {
-  //   if (!data.fullname.trim()) {
-  //     Alert.alert("Lỗi", "Vui lòng nhập họ tên");
-  //     return;
-  //   }
-  //   if (!data.phone_number?.trim()) {
-  //     Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
-  //     return;
-  //   }
-  //   if (!isDirty) {
-  //     Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
-  //     setIsEditing(false);
-  //     return;
-  //   }
-  //   try {
-  //     await updateProfile(data);
-  //     reset(data);
-  //     setIsEditing(false);
-  //     Alert.alert("Thành công", "Cập nhật thông tin thành công");
-  //   } catch (e) {
-  //     Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
-  //   }
-  // };
-
-const onSubmit = async (data: UpdateProfileSchemaFormData) => {
-  if (!data.fullname.trim()) {
-    Alert.alert("Lỗi", "Vui lòng nhập họ tên");
-    return;
-  }
-  if (!data.phone_number?.trim()) {
-    Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
-    return;
-  }
-  if (!isDirty) {
-    Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
-    setIsEditing(false);
-    return;
-  }
-  const changedData: Partial<UpdateProfileSchemaFormData> = {};
-  const dirtyFieldKeys = Object.keys(dirtyFields) as Array<
-    keyof UpdateProfileSchemaFormData
-  >;
-  for (const key of dirtyFieldKeys) {
-    changedData[key] = data[key];
-  }
-
-
-  try {
-    updateProfile(changedData); 
-    reset(data);
-    setIsEditing(false);
-
-  } catch (e) {
-    Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
-  }
-};
+    try {
+      updateProfile(changedData);
+      reset(data);
+      setIsEditing(false);
+    } catch (e) {
+      Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
+    }
+  };
   const handleCancel = () => {
     reset(initialProfile);
     setIsEditing(false);
   };
 
-
-  // Render all fields from DetailUser, only allow editing for UpdateProfileSchemaFormData fields
-  const detailUserFields: Array<{ key: keyof DetailUser; label: string; icon: string; editable?: boolean; keyboardType?: "default" | "email-address" | "phone-pad" }> = [
+  const detailUserFields: Array<{
+    key: keyof DetailUser;
+    label: string;
+    icon: string;
+    editable?: boolean;
+    keyboardType?: "default" | "email-address" | "phone-pad";
+  }> = [
     { key: "fullname", label: "Họ và tên", icon: "person", editable: true },
     { key: "username", label: "Username", icon: "person", editable: true },
-    { key: "email", label: "Email", icon: "mail", editable: false, keyboardType: "email-address" },
-    { key: "phone_number", label: "Điện thoại", icon: "call", editable: true, keyboardType: "phone-pad" },
+    {
+      key: "email",
+      label: "Email",
+      icon: "mail",
+      editable: false,
+      keyboardType: "email-address",
+    },
+    {
+      key: "phone_number",
+      label: "Điện thoại",
+      icon: "call",
+      editable: true,
+      keyboardType: "phone-pad",
+    },
     { key: "location", label: "Địa chỉ", icon: "location", editable: true },
     { key: "avatar", label: "Avatar", icon: "image", editable: true },
     { key: "role", label: "Vai trò", icon: "shield", editable: false },
-    { key: "verify", label: "Trạng thái xác thực", icon: "checkmark", editable: false },
+    {
+      key: "verify",
+      label: "Trạng thái xác thực",
+      icon: "checkmark",
+      editable: false,
+    },
     { key: "created_at", label: "Ngày tạo", icon: "calendar", editable: false },
-    { key: "updated_at", label: "Ngày cập nhật", icon: "calendar", editable: false },
+    {
+      key: "updated_at",
+      label: "Ngày cập nhật",
+      icon: "calendar",
+      editable: false,
+    },
     { key: "_id", label: "ID", icon: "key", editable: false },
   ];
 
@@ -205,10 +204,8 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
     }
   };
 
-
-
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
       {/* Header */}
       <LinearGradient
@@ -258,7 +255,7 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
           {!isEditing ? (
             <TouchableOpacity
               style={styles.editButton}
-              onPress={handleEditPress} 
+              onPress={handleEditPress}
             >
               <Ionicons name="pencil" size={18} color="#fff" />
               <Text style={styles.buttonText}>Chỉnh sửa thông tin</Text>
@@ -290,7 +287,7 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
           Cập nhật thông tin cá nhân của bạn để có trải nghiệm tốt hơn
         </Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -25,9 +25,9 @@ const ChangePasswordScreen = () => {
 			return;
 		}
 		changePassword(oldPassword, newPassword, confirmPassword);
-        setTimeout(() => {
-      navigation.navigate("Main");
-    }, 1000); 
+    //     setTimeout(() => {
+    //   navigation.navigate("Main");
+    // }, 1000); 
 	};
 
 	return (
