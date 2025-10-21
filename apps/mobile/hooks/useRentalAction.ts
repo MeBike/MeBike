@@ -6,6 +6,8 @@ import { useGetDetailRentalQuery } from "./query/Rent/useGetDetailRentalQuery";
 import usePutEndCurrentRental, { EndRentalVariables } from "./mutations/Rentals/usePutEndCurrentRental";
 import { Alert } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePostRentQuery } from "./mutations/Rentals/usePostRentQuery";
+import { RentalSchemaFormData } from "@schemas/rentalSchema";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -44,6 +46,7 @@ export const useRentalsActions = (
     const useGetAllRentals = useGetAllRentalsQuery();
     const useGetDetailRentals = useGetDetailRentalQuery(bikeId || "");
     const usePutEndRental = usePutEndCurrentRental();
+    const usePostRent = usePostRentQuery();
     const getAllRentals = useCallback(() => {
         useGetAllRentals.refetch();
     }, [hasToken, navigation, useGetAllRentals]);
@@ -71,6 +74,30 @@ export const useRentalsActions = (
               }, 
         });
     }, [hasToken, navigation, usePutEndRental]);
+    const postRent = useCallback(
+      async (data: RentalSchemaFormData) => {
+        usePostRent.mutate(data, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              Alert.alert("Success", "Thuê xe thành công.");
+              queryClient.invalidateQueries({
+                queryKey: ["rentals", data.bike_id],
+              });
+            } else {
+              Alert.alert("Error", "Failed to end the rental.");
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "An error occurred while ending the rental."
+            );
+            console.log(errorMessage);
+          },
+        });
+      },
+      [hasToken, navigation, usePutEndRental]
+    );
     return {
       getAllRentals,
       rentalsData: useGetAllRentals.data,
@@ -82,5 +109,7 @@ export const useRentalsActions = (
       isGetDetailRentalError: useGetDetailRentals.isError,
       endCurrentRental,
       isEndCurrentRentalLoading: usePutEndRental.isPending,
+      postRent,
+      isPostRentLoading: usePostRent.isPending,
     };
 }

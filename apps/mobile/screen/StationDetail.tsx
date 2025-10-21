@@ -25,6 +25,7 @@ import { Bike } from "../types/BikeTypes";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRentalsActions } from "@hooks/useRentalAction";
 const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
@@ -51,6 +52,7 @@ export default function StationDetailScreen() {
     hasToken: true,
     station_id: stationId,
   });
+  const { postRent, isPostRentLoading } = useRentalsActions(true , selectedBike?._id);
   useEffect(() => {
     if (stationId) {
       getStationByID();
@@ -102,11 +104,8 @@ export default function StationDetailScreen() {
             text: "Thuê ngay",
             onPress: () => {
               console.log("Renting bike:", bike.id);
+              postRent({ bike_id: bike._id });
               setSelectedBike(null);
-              Alert.alert(
-                "Thành công",
-                "Xe đã được mở khóa! Quét mã QR để bắt đầu."
-              );
             },
           },
         ]
