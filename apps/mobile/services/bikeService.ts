@@ -89,7 +89,7 @@ export const bikeService = {
     );
     return response;
   },
-  getAllBikes: async (data : GetAllBikesQueryParams): Promise<
+  getAllBikes: async (data : Partial<GetAllBikesQueryParams>): Promise<
     AxiosResponse<ApiReponse<Bike[]>>
   > => {
     const response = await fetchHttpClient.get<ApiReponse<Bike[]>>(

@@ -45,13 +45,13 @@ export const useStationActions = (hasToken: boolean, stationId?: string) => {
       return;
     }
     refetch();
-  }, [useGetAllStation, hasToken]);
+  }, [refetch, hasToken]);
   const getStationByID = useCallback(() => {
     if (!hasToken) {
       return;
     }
     fetchingStationID();
-  }, [useGetStationById, hasToken]);
+  }, [fetchingStationID, hasToken]);
   return {
     getAllStations,
     getStationByID,

@@ -123,7 +123,7 @@ export default function StationDetailScreen() {
     } else {
       Alert.alert(
         "Xe đang được sử dụng",
-        `Xe #${bike.id.slice(-3)} hiện đang được thuê bởi người khác.`,
+      `Xe #${bike._id.slice(-3)} hiện đang được thuê bởi người khác.`,
         [{ text: "OK", onPress: () => setSelectedBike(null) }]
       );
     }

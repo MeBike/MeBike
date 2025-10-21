@@ -1,5 +1,5 @@
 
-import { useCallback } from "react";
+import { use, useCallback } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { useGetAllRentalsQuery } from "./query/Rent/useGetAllRentalsQuery";
 import { useGetDetailRentalQuery } from "./query/Rent/useGetDetailRentalQuery";
@@ -109,7 +109,7 @@ export const useRentalsActions = (
           },
         });
       },
-      [hasToken, navigation, usePutEndRental]
+      [hasToken, navigation, usePostRent, queryClient]
     );
     return {
       getAllRentals,

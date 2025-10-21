@@ -13,6 +13,5 @@ export const useGetAllBikeQuery = (data: Partial<GetAllBikesQueryParams>) => {
     queryKey: ["bikes", "all", data.page, data.limit, data.station_id, data.supplier_id, data.status],
     queryFn: () => fetchAllBikes(data),
     staleTime: 3 * 60 * 1000,
-
     });
 };
