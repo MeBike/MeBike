@@ -17,8 +17,9 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useWalletActions } from "@hooks/useWalletAction";
-
+import { useNavigation } from "@react-navigation/native";
 const MyWalletScreen = () => {
+   const navigation = useNavigation();
   const {
     getMyWallet,
     myWallet,
@@ -115,41 +116,129 @@ const MyWalletScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
-          style={[styles.header, { paddingTop: insets.top + 16 }]}
+          style={{
+            paddingTop: insets.top + 32,
+            paddingBottom: 38,
+            paddingHorizontal: 24,
+            borderBottomLeftRadius: 32,
+            borderBottomRightRadius: 32,
+            marginBottom: 8,
+            alignItems: "center",
+            elevation: 8,
+          }}
           colors={["#0066FF", "#00B4D8"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
-          <View style={styles.headerTop}>
-            <Text style={styles.headerTitle}>Ví của tôi</Text>
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: insets.top + 8,
+              left: 10,
+              zIndex: 12,
+              padding: 5,
+            }}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: insets.top + 8,
+              right: 10,
+              zIndex: 12,
+              padding: 5,
+            }}
+            onPress={() => Alert.alert("Cài đặt ví đang phát triển!")}
+            activeOpacity={0.7}
+          >
             <Ionicons name="settings-outline" size={24} color="#fff" />
+          </TouchableOpacity>
+
+          <View
+            style={{ width: "100%", alignItems: "flex-start", marginTop: 14 }}
+          >
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "700",
+                color: "#fff",
+                marginBottom: 12,
+                letterSpacing: 0.2,
+              }}
+            >
+              Ví của tôi
+            </Text>
           </View>
 
-          <View style={styles.balanceCard}>
-            <View style={styles.balanceContent}>
-              <Text style={styles.balanceLabel}>Số dư hiện tại</Text>
-              <Text style={styles.balanceAmount}>
+          <View
+            style={{
+              width: "100%",
+              backgroundColor: "rgba(255,255,255,0.15)",
+              borderRadius: 18,
+              padding: 22,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: "#e0eaff",
+                  marginBottom: 10,
+                  fontWeight: "500",
+                }}
+              >
+                Số dư hiện tại
+              </Text>
+              <Text
+                style={{
+                  fontSize: 32,
+                  fontWeight: "800",
+                  color: "#fff",
+                  marginBottom: 12,
+                }}
+              >
                 {formatBalance(myWallet.balance?.$numberDecimal)} đ
               </Text>
-              <View style={styles.statusBadge}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  paddingHorizontal: 14,
+                  paddingVertical: 7,
+                  borderRadius: 22,
+                  alignSelf: "flex-start",
+                }}
+              >
                 <View
-                  style={[
-                    styles.statusDot,
-                    {
-                      backgroundColor:
-                        myWallet.status === "ĐANG HOẠT ĐỘNG"
-                          ? "#10B981"
-                          : "#EF4444",
-                    },
-                  ]}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    marginRight: 6,
+                    backgroundColor:
+                      myWallet.status === "ĐANG HOẠT ĐỘNG"
+                        ? "#10B981"
+                        : "#EF4444",
+                  }}
                 />
-                <Text style={styles.statusText}>{myWallet.status}</Text>
+                <Text
+                  style={{ fontSize: 13, color: "#fff", fontWeight: "600" }}
+                >
+                  {myWallet.status}
+                </Text>
               </View>
             </View>
             <Ionicons
               name="wallet-outline"
-              size={60}
-              color="rgba(255, 255, 255, 0.2)"
+              size={56}
+              color="rgba(255,255,255,0.16)"
+              style={{ marginLeft: 4 }}
             />
           </View>
         </LinearGradient>

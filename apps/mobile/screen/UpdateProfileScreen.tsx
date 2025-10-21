@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import React from "react";
 import {
   View,
   Text,
@@ -19,7 +20,9 @@ import { useAuth } from "@providers/auth-providers";
 import type { DetailUser } from "@services/authService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileUpdateSchema } from "@schemas/authSchema";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const UpdateProfileScreen = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const { user, updateProfile, isUpdatingProfile } = useAuth();
   const initialProfile = useMemo<UpdateProfileSchemaFormData>(
     () => ({
@@ -207,21 +210,20 @@ const UpdateProfileScreen = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-      {/* Header */}
+
       <LinearGradient
         colors={["#0066FF", "#00B4D8"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={28} color="#fff" />
+            <Ionicons name="chevron-back" size={20} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Cập nhật thông tin</Text>
           <View style={{ width: 28 }} />
         </View>
-        {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <Controller
             control={control}
@@ -240,15 +242,17 @@ const UpdateProfileScreen = ({ navigation }: any) => {
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
         {/* Form Fields */}
         <View style={styles.formSection}>
-          {detailUserFields.map((field) =>
-            renderInputField(
-              field.key,
-              field.label,
-              field.icon,
-              field.editable ?? false,
-              field.keyboardType ?? "default"
-            )
-          )}
+          {detailUserFields.map((field) => (
+            <React.Fragment key={field.key}>
+              {renderInputField(
+                field.key,
+                field.label,
+                field.icon,
+                field.editable ?? false,
+                field.keyboardType ?? "default"
+              )}
+            </React.Fragment>
+          ))}
         </View>
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>

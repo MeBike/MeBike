@@ -137,7 +137,7 @@ const BookingHistoryDetail = () => {
 
   if (isGetDetailRentalFetching && isLoadingGetAllStations) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
         <LinearGradient
           colors={["#0066FF", "#00B4D8"]}
@@ -149,7 +149,7 @@ const BookingHistoryDetail = () => {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="chevron-back" size={24} color="#fff" />
+            <Ionicons name="chevron-back" size={20} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Chi tiết thuê xe</Text>
         </LinearGradient>
@@ -157,7 +157,7 @@ const BookingHistoryDetail = () => {
           <ActivityIndicator size="large" color="#0066FF" />
           <Text style={styles.loadingText}>Đang tải chi tiết...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
   const isInitialLoading = isGetDetailRentalFetching || isLoadingGetAllStations;
