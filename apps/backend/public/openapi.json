@@ -538,12 +538,7 @@
           "Bikes"
         ],
         "summary": "Get a list of bikes",
-        "description": "Retrieves a paginated list of bikes. \n- **Users** can only view bikes with 'Available' status.\n- **Admins/Staff** can filter by any status.\n",
-        "security": [
-          {
-            "BearerAuth": []
-          }
-        ],
+        "description": "Retrieves a paginated list of bikes. Filter bikes by status, chip_id, station_id, and supplier_id.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/PageQuery"
@@ -575,6 +570,16 @@
             "description": "Filter bikes by status. (Admin/Staff only for non-available statuses)",
             "schema": {
               "$ref": "#/components/schemas/BikeStatus"
+            }
+          },
+          {
+            "name": "chip_id",
+            "in": "query",
+            "description": "Filter bikes by chip ID.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "CHIP123456"
             }
           }
         ],
@@ -3409,7 +3414,9 @@
       "CreateBikeReqBody": {
         "type": "object",
         "required": [
-          "station_id"
+          "station_id",
+          "chip_id",
+          "supplier_id"
         ],
         "properties": {
           "station_id": {
@@ -3428,7 +3435,7 @@
           "supplier_id": {
             "type": "string",
             "format": "mongoId",
-            "description": "The ID of the supplier. Optional."
+            "description": "The ID of the supplier."
           }
         }
       },
