@@ -64,8 +64,7 @@ export const profileUpdateSchema = z.object({
     .max(50, { message: "Họ và tên không được vượt quá 50 ký tự" }),
   location: z
     .string()
-    .min(20, { message: "Địa điểm phải có ít nhất 20 ký tự" })
-    .max(50, { message: "Địa điểm không được vượt quá 100 ký tự" }),
+    .optional(),
   username: z
     .string()
     .min(3, "Username must be at least 3 characters.")
@@ -73,15 +72,11 @@ export const profileUpdateSchema = z.object({
     .regex(
       /^[a-zA-Z0-9_]+$/,
       "Username can only contain letters, numbers, and underscores."
-    ).or(z.literal(""))
-    ,
+    )
+    .or(z.literal("")),
   phone_number: z
     .string()
-    .regex(vietnamesePhoneNumberRegex, {  
-      message: "Số điện thoại không hợp lệ",
-    })
-    .optional()
-    .or(z.literal("")),  
+    .optional(),
   avatar: z
     .url({ message: "Please enter a valid URL for the avatar." })
     .optional()

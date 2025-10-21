@@ -74,7 +74,7 @@ export default function HomeScreen() {
               {isAuthenticated ? (
                 <Pressable
                   style={styles.navButton}
-                  onPress={() => navigation.navigate("Profile")}
+                  onPress={() => navigation.navigate("Tôi")}
                 >
                   <User size={24} color="white" />
                 </Pressable>
@@ -99,7 +99,7 @@ export default function HomeScreen() {
               {isAuthenticated ? (
                 <Pressable
                   style={styles.primaryButton}
-                  onPress={() => navigation.navigate("StationSelect")}
+                  onPress={() => navigation.navigate("Trạm")}
                 >
                   <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
                   <IconSymbol
