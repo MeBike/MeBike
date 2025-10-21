@@ -126,7 +126,8 @@ export const SUPPLIER_MESSAGE = {
   STATUS_MUST_BE_STRING: 'Trạng thái mới phải là chuỗi ký tự',
   GET_BY_ID_SUCCESS: 'Lấy thông tin nhà cung cấp với ID %s thành công',
   GET_STATS_SUCCESS: 'Lấy thống kế của nhà cung cấp thành công',
-  GET_STATS_SUCCESS_BY_ID: 'Lấy thống kế của nhà cung cấp với ID %s thành công'
+  GET_STATS_SUCCESS_BY_ID: 'Lấy thống kế của nhà cung cấp với ID %s thành công',
+  SUPPLIER_NAME_DUPLICATED: 'Tên của nhà cung cấp đã tồn tại'
 }
 
 export const BIKES_MESSAGES = {
@@ -349,7 +350,7 @@ export const WALLETS_MESSAGE = {
   USER_ID_REQUIRED: 'User ID là bắt buộc',
   BANK_IS_REQUIRED: 'Ngân hàng là bắt buộc',
   ACCOUNT_IS_REQUIRED: 'Tài khoản là bắt buộc',
-  ACCOUNT_OWNER_IS_REQUIRED: 'Chủ tài khoản là bắt buộc',
+  ACCOUNT_OWNER_IS_REQUIRED: 'Chủ tài khoản là bắt buộc'
 }
 
 export const WITHDRAWLS_MESSAGE = {

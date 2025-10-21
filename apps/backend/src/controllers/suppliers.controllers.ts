@@ -15,30 +15,53 @@ import { SUPPLIER_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import databaseService from '~/services/database.services'
 import supplierService from '~/services/supplier.services'
+import util from 'node:util'
 
 export async function createSupplierController(req: Request<any, any, CreateSupplierReqBody>, res: Response) {
-  const result = await supplierService.createSupplier({
-    payload: req.body
-  })
+  try {
+    const result = await supplierService.createSupplier({
+      payload: req.body
+    })
 
-  res.json({
-    message: SUPPLIER_MESSAGE.CREATE_SUCCESS,
-    result
-  })
+    res.json({
+      message: SUPPLIER_MESSAGE.CREATE_SUCCESS,
+      result
+    })
+  } catch (error: any) {
+    if (error.code === 11000 && error.keyPattern?.name) {
+      const message = util.format(SUPPLIER_MESSAGE.SUPPLIER_NAME_DUPLICATED)
+      res.status(400).json({ message })
+      return
+    }
+
+    const statusCode = error instanceof ErrorWithStatus ? error.status : 500
+    res.status(statusCode).json({ status: statusCode, message: error?.message ?? 'Internal Server Error' })
+  }
 }
 
 export async function updateSupplierController(
   req: Request<ParamsDictionary, any, UpdateSupplierReqBody>,
   res: Response
 ) {
-  const supplierID = req.params.id
+  try {
+    const supplierID = req.params.id
 
-  const result = await supplierService.updateSupplier({ id: supplierID.toString(), payload: req.body })
+    const result = await supplierService.updateSupplier({ id: supplierID.toString(), payload: req.body })
 
-  res.json({
-    message: SUPPLIER_MESSAGE.UPDATE_SUCCESS,
-    result
-  })
+    res.json({
+      message: SUPPLIER_MESSAGE.UPDATE_SUCCESS,
+      result
+    })
+  } catch (error: any) {
+    if (error.code === 11000 && error.keyPattern?.name) {
+      const message = util.format(SUPPLIER_MESSAGE.SUPPLIER_NAME_DUPLICATED)
+      res.status(400).json({ message })
+      return
+    }
+
+    const statusCode = error instanceof ErrorWithStatus ? error.status : 500
+    res.status(statusCode).json({ status: statusCode, message: error?.message ?? 'Internal Server Error' })
+  }
 }
 
 export async function changeSupplierStatusController(req: Request<ParamsDictionary, any, any>, res: Response) {
