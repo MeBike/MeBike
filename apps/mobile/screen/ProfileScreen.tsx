@@ -1,10 +1,8 @@
-
 import { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   StatusBar,
@@ -18,9 +16,10 @@ import { useAuth } from "@providers/auth-providers";
 import type { DetailUser } from "@services/authService";
 import { getRefreshToken } from "@utils/tokenManager";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const { user , logOut} = useAuth();
+  const { user, logOut } = useAuth();
   const insets = useSafeAreaInsets();
   const [profile] = useState<DetailUser>(() => ({
     _id: user?._id ?? "",
@@ -40,9 +39,9 @@ const ProfileScreen = () => {
     if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN', {
-        year: 'numeric',
-        month: 'long'
+      return date.toLocaleDateString("vi-VN", {
+        year: "numeric",
+        month: "long",
       });
     } catch {
       return dateString;
@@ -52,34 +51,28 @@ const ProfileScreen = () => {
   const handleLogout = () => {
     Alert.alert("Đăng xuất", "Bạn có chắc chắn muốn đăng xuất?", [
       { text: "Hủy", onPress: () => {} },
-      { 
-        text: "Đăng xuất", 
+      {
+        text: "Đăng xuất",
         onPress: async () => {
           const refreshToken = await getRefreshToken();
           if (!refreshToken) return;
           logOut(String(refreshToken));
           navigation.navigate("Login" as never);
-        }
+        },
       },
     ]);
   };
 
   const handleChangePassword = () => {
-    Alert.alert("Đổi mật khẩu", "Chuyển đến trang đổi mật khẩu");
     navigation.navigate("ChangePassword" as never);
   };
 
   const handleUpdateProfile = () => {
-    Alert.alert("Thông báo", "Chuyển đến cài đặt thông tin cá nhân");
     navigation.navigate("UpdateProfile" as never);
-
   };
 
-  const handleSupport = () => {
-    Alert.alert("Hỗ trợ", "Liên hệ với đội hỗ trợ khách hàng");
-  };
+  const handleSupport = () => {};
   const handleWallet = () => {
-    Alert.alert("Ví điện tử", "Quản lý ví điện tử của bạn");
     navigation.navigate("MyWallet" as never);
   };
 
@@ -108,35 +101,99 @@ const ProfileScreen = () => {
         backgroundColor="transparent"
         translucent
       />
+
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={["#0066FF", "#00B4D8"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + 16 }]}
+          style={{
+            paddingTop: insets.top + 32,
+            paddingBottom: 38,
+            paddingHorizontal: 24,
+            borderBottomLeftRadius: 32,
+            borderBottomRightRadius: 32,
+            marginBottom: 8,
+            alignItems: "center", 
+            elevation: 8,
+          }}
         >
-          <View style={styles.profileHeader}>
-            <Image
-              source={{
-                uri: profile.avatar || "https://via.placeholder.com/80",
-              }}
-              style={styles.avatar}
-            />
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{profile.fullname}</Text>
-              <Text style={styles.profileMember}>
-                Thành viên từ {formatDate(profile.created_at)}
+          {/* Nút Back nổi lên trên cùng */}
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              top: insets.top + 10,
+              left: 16,
+              zIndex: 12,
+              borderRadius: 30,
+              padding: 6,
+            }}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="chevron-back" size={26} color="#fff" />
+          </TouchableOpacity>
+          <Image
+            source={{
+              uri: profile.avatar || "https://via.placeholder.com/110",
+            }}
+            style={{
+              width: 100,
+              height: 100,
+              borderRadius: 50,
+              borderWidth: 4,
+              borderColor: "#fff",
+              marginBottom: 14,
+              backgroundColor: "#EBF3FB",
+              shadowColor: "#000",
+              shadowOpacity: 0.14,
+              shadowRadius: 10,
+             
+            }}
+          />
+
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "700",
+              color: "#fff",
+              marginBottom: 6,
+            }}
+            numberOfLines={1}
+          >
+            {profile.fullname}
+          </Text>
+          {/* Thành viên + Stats */}
+          <Text
+            style={{
+              fontSize: 15,
+              color: "#e0eaff",
+              marginBottom: 18,
+              fontWeight: "500",
+            }}
+            numberOfLines={1}
+          >
+            Thành viên từ {formatDate(profile.created_at)}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 36,
+            }}
+          >
+            <View style={{ alignItems: "center" }}>
+              <Text style={{ fontSize: 17, fontWeight: "700", color: "#fff" }}>
+                0
               </Text>
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>0</Text>
-                  <Text style={styles.statLabel}>Chuyến đi</Text>
-                </View>
-              </View>
+              <Text style={{ fontSize: 13, color: "#e0eaff", marginTop: 2 }}>
+                Chuyến đi
+              </Text>
             </View>
+            {/* Thêm thống kê khác nếu có */}
           </View>
         </LinearGradient>
 
+        {/* ----- NỘI DUNG PHÍA DƯỚI ----- */}
         <View style={styles.content}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
@@ -213,52 +270,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f5f5f5",
-  },
-  header: {
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  profileHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 16,
-    borderWidth: 3,
-    borderColor: "#fff",
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#fff",
-    marginBottom: 2,
-  },
-  profileMember: {
-    fontSize: 13,
-    color: "rgba(255, 255, 255, 0.9)",
-    marginBottom: 8,
-  },
-  statsContainer: {
-    flexDirection: "row",
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statNumber: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "rgba(255, 255, 255, 0.8)",
   },
   content: {
     padding: 16,
@@ -349,7 +360,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF6B6B",
     paddingVertical: 14,
     borderRadius: 12,
-    marginTop: 20,
+    marginTop: 24,
     marginBottom: 16,
   },
   logoutButtonText: {
