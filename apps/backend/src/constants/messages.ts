@@ -399,5 +399,16 @@ export const RATING_MESSAGE = {
   RATING_ID_IS_REQUIRED: 'ID đánh giá là bắt buộc',
   RATING_ID_INVALID: 'ID đánh giá không hợp lệ',
   RATING_EXISTED: 'Đánh giá cho phiên thuê với ID %s đã tồn tại',
-  GET_RATING_REASONS_SUCCESS: 'Lấy danh sách lý do đánh giá thành công'
+  GET_RATING_REASONS_SUCCESS: 'Lấy danh sách lý do đánh giá thành công',
+  COMMENT_MUST_BE_STRING: 'Bình luận phải là chuỗi ký tự',
+  COMMENT_MAX_LENGTH: 'Bình luận tối đa 500 ký tự',
+  RATING_REQUIRED: 'Đánh giá là bắt buộc',
+  RATING_MUST_BE_INT_BETWEEN_1_AND_5: 'Đánh giá phải là số nguyên từ 1 đến 5',
+  REASON_IDS_MUST_BE_ARRAY: 'Danh sách ID lý do phải là mảng',
+  REASON_IDS_MUST_BE_ARRAY_OF_POSITIVE_INTEGERS: 'Danh sách ID lý do phải là mảng các số nguyên dương',
+  REASON_ID_INVALID: 'ID lý do không hợp lệ',
+  REASON_ID_MUST_BE_OBJECTID: 'ID lý do phải là ObjectId',
+  REASON_ID_NOT_FOUND: 'ID lý do %s không tồn tại',
+  RENTAL_ID_IS_REQUIRED: 'ID phiên thuê là bắt buộc',
+  RENTAL_ID_INVALID: 'ID phiên thuê không hợp lệ'
 }
