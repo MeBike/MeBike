@@ -83,6 +83,9 @@ export const useRentalsActions = (
               queryClient.invalidateQueries({
                 queryKey: ["rentals", data.bike_id],
               });
+              queryClient.invalidateQueries({
+                queryKey: ["rentals", "all", 1, 10],
+              });
             } else {
               Alert.alert("Error", "Failed to end the rental.");
             }

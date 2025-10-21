@@ -26,6 +26,7 @@ import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRentalsActions } from "@hooks/useRentalAction";
+import { useAuth } from "@providers/auth-providers";
 const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
@@ -35,6 +36,7 @@ export default function StationDetailScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   const route = useRoute<StationDetailRouteProp>();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const { stationId } = route.params;
   console.log("Giá trị stationId TRUYỀN VÀO:", stationId);
   const [selectedBike, setSelectedBike] = useState<any | null>(null);
@@ -104,6 +106,14 @@ export default function StationDetailScreen() {
             text: "Thuê ngay",
             onPress: () => {
               console.log("Renting bike:", bike.id);
+              if(user?.verify === "UNVERIFIED"){
+                Alert.alert(
+                  "Tài khoản chưa xác thực",
+                  "Vui lòng xác thực tài khoản để thuê xe.",
+                );
+                setSelectedBike(null);
+                return;
+              }
               postRent({ bike_id: bike._id });
               setSelectedBike(null);
             },
