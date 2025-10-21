@@ -47,9 +47,7 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-300">
             {/* Header với gradient */}
             <div className="bg-gradient-to-r from-red-500 to-orange-500 h-2"></div>
-            
             <div className="p-8 text-center">
-              {/* Ảnh 401 với shadow và animation */}
               <div className="mb-8 relative">
                 <div className="absolute inset-0 bg-red-100 rounded-2xl blur-xl opacity-50 animate-pulse"></div>
                 <Image
@@ -61,8 +59,6 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
                   priority
                 />
               </div>
-
-              {/* Content với spacing tốt hơn */}
               <div className="space-y-6">
                 <div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-3">
@@ -77,7 +73,6 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
                   mới có thể truy cập khu vực này.
                 </p>
 
-                {/* Countdown với design đẹp hơn */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
                   <div className="flex items-center justify-center space-x-3">
                     <div className="relative">

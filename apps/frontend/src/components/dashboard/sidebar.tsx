@@ -21,9 +21,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { getRefreshToken } from "@/utils/tokenManager";
-interface SidebarProps {
-  userRole: "STAFF" | "ADMIN" | "USER";
-}
 
 const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
   const baseUrl =
@@ -40,6 +37,18 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       href: baseUrl,
       roles: ["STAFF", "ADMIN"],
     },
+    // {
+    //   title: "Đơn thuê xe",
+    //   icon: FileText,
+    //   href: `${baseUrl}/rentals`,
+    //   roles: ["STAFF", "ADMIN"],
+    // },
+    {
+      title: "Quản lý người dùng",
+      icon: Users,
+      href: `${baseUrl}/customers`,
+      roles: ["STAFF", "ADMIN"],
+    },
     {
       title: "Quản lý xe đạp",
       icon: Bike,
@@ -50,14 +59,14 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       title: "Đơn thuê xe",
       icon: FileText,
       href: `${baseUrl}/rentals`,
-      roles: ["STAFF", "ADMIN"],
+      roles: ["STAFF", "ADMIN"],  
     },
-    {
-      title: "Khách hàng",
-      icon: Users,
-      href: `${baseUrl}/customers`,
-      roles: ["STAFF", "ADMIN"],
-    },
+    // {
+    //   title: "Khách hàng",
+    //   icon: Users,
+    //   href: `${baseUrl}/customers`,
+    //   roles: ["STAFF", "ADMIN"],
+    // },
     {
       title: "Báo cáo & Thống kê",
       icon: BarChart3,
@@ -91,9 +100,9 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
   ];
 };
 
-export function Sidebar({ userRole }: SidebarProps) {
+export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const { logOut } = useAuth();
+  const {user,logOut} = useAuth();
   const pathname = usePathname();
   const handleLogout = () => {
     const refreshToken = getRefreshToken();
@@ -101,9 +110,10 @@ export function Sidebar({ userRole }: SidebarProps) {
       logOut(refreshToken);
     }
   }
-  const menuItems = getMenuItems(userRole);
+  console.log("Current role:", user?.role);
+  const menuItems = getMenuItems(user?.role as "STAFF" | "ADMIN" | "USER");
   const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(userRole)
+    item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER")
   );
 
   return (
@@ -144,7 +154,6 @@ export function Sidebar({ userRole }: SidebarProps) {
           </button>
         </div>
 
-        {/* Navigation Menu */}
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-2">
             {filteredMenuItems.map((item) => {
@@ -180,7 +189,7 @@ export function Sidebar({ userRole }: SidebarProps) {
 
         <div className="border-t border-sidebar-border p-2">
           <Link
-            href={`${userRole === "ADMIN" ? "/admin" : "/staff"}/profile`}
+            href={`${user?.role === "ADMIN" ? "/admin" : "/staff"}/profile`}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
           >
             <User className="w-5 h-5 flex-shrink-0" />

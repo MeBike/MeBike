@@ -76,7 +76,7 @@ export const useAuthActions = () => {
         },[useChangePassword]
     );
     const logIn = useCallback(
-        (data : LoginSchemaFormData) => {
+        (data : LoginSchemaFormData , onComplete: (value : boolean) => void) => {
             useLogin.mutate(data, {
                 onSuccess: (result) => {
                     const { access_token, refresh_token } = result.data.result;
@@ -84,11 +84,13 @@ export const useAuthActions = () => {
                     window.dispatchEvent(new StorageEvent('storage', { key: 'auth_tokens' }));
                     toast.success("Logged in successfully");
                     queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+                    onComplete(true); 
                 },
                 onError: (error: unknown) => {
                     const errorMessage = getErrorMessage(error, "Error logging in");
                     toast.error(errorMessage);
-                }
+                    onComplete(false);
+                },
             });
         },[useLogin , queryClient]
     )
