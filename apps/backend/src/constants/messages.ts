@@ -240,7 +240,8 @@ export const RENTALS_MESSAGE = {
 } as const
 
 export const COMMON_MESSAGE = {
-  CREATE_SESSION_FAIL: 'Tạo phiên thất bại: '
+  CREATE_SESSION_FAIL: 'Tạo phiên thất bại: ',
+  UNKNOWN_ERROR: 'Lỗi không xác định'
 } as const
 
 export const AUTH_MESSAGE = {
@@ -314,7 +315,16 @@ export const RESERVATIONS_MESSAGE = {
   REPORT_PERIOD_DEFAULT: '12 tháng gần nhất',
   REPORT_PERIOD_FULL_RANGE: 'Từ %s đến %s',
   REPORT_PERIOD_START_ONLY: 'Từ ngày %s',
-  REPORT_PERIOD_END_ONLY: 'Đến ngày %s'
+  REPORT_PERIOD_END_ONLY: 'Đến ngày %s',
+  // Console Messages
+  SKIPPING_USER_NOT_FOUND: (userId: string) => `Skipping notification: User ${userId} not found or missing email.`,
+  ERROR_SENDING_EMAIL: (userId: string) => `Error preparing/sending email for user ${userId}:`,
+  CANCELLED_SUCCESS: (reservationId: string, userId: string) =>
+    `[CANCELLED] Reservation ${reservationId} for user ${userId} expired and was cancelled.`,
+  CANCELLED_FAILURE: (reservationId: string, error: string) =>
+    `Failed to fully cancel reservation ${reservationId}: ${error}`,
+  // Email Messages
+  EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn'
 } as const
 export const WALLETS_MESSAGE = {
   USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',

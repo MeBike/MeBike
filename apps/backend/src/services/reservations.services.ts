@@ -1,3 +1,4 @@
+import nodemailer from 'nodemailer'
 import { Decimal128, ObjectId } from 'mongodb'
 import { BikeStatus, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
@@ -5,11 +6,12 @@ import Reservation from '~/models/schemas/reservation.schema'
 import { getLocalTime } from '~/utils/date'
 import databaseService from './database.services'
 import { ErrorWithStatus } from '~/models/errors'
-import { RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
+import { COMMON_MESSAGE, RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
+import { readEmailTemplate } from '~/utils/email-templates'
 
 class ReservationsService {
   async reserveBike({
@@ -228,19 +230,64 @@ class ReservationsService {
     const now = getLocalTime()
     const threshold = new Date(now.getTime() + 15 * 60 * 1000)
 
-    const expiring = await databaseService.reservations
+    const expiringReservations = await databaseService.reservations
       .find({
         status: ReservationStatus.Pending,
         end_time: { $lte: threshold, $gte: now }
       })
       .toArray()
 
-    for (const r of expiring) {
-      // TODO: send notification to user (e.g. push/email)
-      console.log(`Notify user ${r.user_id}: reservation ${r._id} expires soon`)
+    if (expiringReservations.length === 0) {
+      return { count: 0 }
     }
 
-    return { count: expiring.length }
+    const userIds = [...new Set(expiringReservations.map((r) => r.user_id))]
+
+    const users = await databaseService.users
+      .find({
+        _id: { $in: userIds }
+      })
+      .toArray()
+
+    const userMap = new Map(users.map((u) => [u._id.toString(), u]))
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_APP,
+        pass: process.env.EMAIL_PASSWORD_APP
+      }
+    })
+
+    const notificationPromises = expiringReservations.map(async (r) => {
+      const userIdString = r.user_id.toString()
+      const user = userMap.get(userIdString)
+
+      if (!user || !user.email) {
+        console.error(RESERVATIONS_MESSAGE.SKIPPING_USER_NOT_FOUND(userIdString))
+        return null
+      }
+
+      try {
+        const htmlContent = readEmailTemplate('neer-expiry-reservation.html', {
+          fullname: user.fullname
+        })
+
+        const mailOptions = {
+          from: `"MeBike" <${process.env.EMAIL_APP}>`,
+          to: user.email,
+          subject: RESERVATIONS_MESSAGE.EMAIL_SUBJECT_NEAR_EXPIRY,
+          html: htmlContent
+        }
+        return transporter.sendMail(mailOptions)
+      } catch (error) {
+        console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
+        return null
+      }
+    })
+
+    await Promise.all(notificationPromises.filter((p) => p !== null))
+    return { count: expiringReservations.length }
   }
 
   async dispatchSameStation({
@@ -400,6 +447,66 @@ class ReservationsService {
     })
 
     return finalReport
+  }
+
+  async cancelExpiredReservations() {
+    const now = getLocalTime()
+
+    const expired = await databaseService.reservations
+      .find({
+        status: ReservationStatus.Pending,
+        end_time: { $lt: now }
+      })
+      .toArray()
+
+    if (expired.length === 0) {
+      return { cancelled_count: 0 }
+    }
+
+    let cancelledCount = 0
+
+    for (const r of expired) {
+      const result = await this.cancelReservationAndReleaseBike(r)
+
+      if (result.success) {
+        cancelledCount++
+        console.log(RESERVATIONS_MESSAGE.CANCELLED_SUCCESS(r._id.toString(), r.user_id.toString()))
+      } else {
+        console.error(RESERVATIONS_MESSAGE.CANCELLED_FAILURE(r._id.toString(), result.error || COMMON_MESSAGE.UNKNOWN_ERROR))
+      }
+    }
+
+    return { cancelled_count: cancelledCount }
+  }
+
+  private async cancelReservationAndReleaseBike(reservation: Reservation) {
+    const session = databaseService.getClient().startSession()
+
+    try {
+      await session.withTransaction(async () => {
+        const now = getLocalTime()
+
+        await databaseService.reservations.updateOne(
+          { _id: reservation._id, status: ReservationStatus.Pending },
+          { $set: { status: ReservationStatus.Cancelled, updated_at: now } },
+          { session }
+        )
+
+        await databaseService.bikes.updateOne(
+          { _id: reservation.bike_id, status: BikeStatus.Reserved },
+          { $set: { status: BikeStatus.Available, updated_at: now } },
+          { session }
+        )
+
+        // IoT Integration: Send 'cancel' command to bike
+      })
+
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : COMMON_MESSAGE.UNKNOWN_ERROR }
+    } finally {
+      await session.endSession()
+    }
   }
 
   generateEndTime(startTime: string) {

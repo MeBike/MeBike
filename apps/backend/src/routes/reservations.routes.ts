@@ -35,7 +35,7 @@ reserveRouter
 
 reserveRouter
   .route('/stats')
-  .post(accessTokenValidator, isAdminValidator, wrapAsync(getReservationReportController))
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getReservationReportController))
 
 reserveRouter
   .route('/')
