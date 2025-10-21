@@ -8,6 +8,7 @@ import {
   Alert,
   Dimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type {
   StationDetailScreenNavigationProp,
@@ -21,6 +22,9 @@ import { ActivityIndicator } from "react-native";
 import StationMap2D from "@components/StationMap2D";
 import { StationType } from "../types/StationType";
 import { Bike } from "../types/BikeTypes";
+import { TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
@@ -29,6 +33,7 @@ const MAP_HEIGHT = 300;
 export default function StationDetailScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   const route = useRoute<StationDetailRouteProp>();
+  const insets = useSafeAreaInsets();
   const { stationId } = route.params;
   console.log("Giá trị stationId TRUYỀN VÀO:", stationId);
   const [selectedBike, setSelectedBike] = useState<any | null>(null);
@@ -50,14 +55,12 @@ export default function StationDetailScreen() {
     if (stationId) {
       getStationByID();
       getBikes();
-
     }
   }, [stationId]);
   useEffect(() => {
     console.log("Station Detail Bikes:", allBikes);
   }, [allBikes]);
   let station = responseStationDetail as StationType | null;
-
 
   const isLoading = isLoadingGetStationByID && isFetchingAllBikes;
 
@@ -82,22 +85,13 @@ export default function StationDetailScreen() {
     );
   }
 
-  // if (!allBikes || allBikes.length === 0) {
-  //   return (
-  //     <View style={styles.errorContainer}>
-  //       <Text style={styles.errorText}>Không có xe nào trong trạm này</Text>
-  //     </View>
-  //   );
-  // }
-
   const handleBikePress = (bike: any) => {
     console.log("Bike selected:", bike.id);
     setSelectedBike(bike);
-
-    if (bike.isAvailable) {
+    if (bike.status === "CÓ SẴN") {
       Alert.alert(
         "Thuê xe đạp",
-        `Xe #${bike.id.slice(-3)}\nLoại: ${bike.type === "electric" ? "Điện" : "Thường"}\nPin: ${bike.batteryLevel}%\nGiá: ${bike.pricePerMinute.toLocaleString("vi-VN")}đ/phút\n\nBạn có muốn thuê xe này không?`,
+        `Xe #${bike._id}\nBạn có muốn thuê xe này không?`,
         [
           {
             text: "Hủy",
@@ -198,6 +192,20 @@ export default function StationDetailScreen() {
   };
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <LinearGradient
+        colors={["#0066FF", "#00B4D8"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.header, { paddingTop: insets.top + 16 }]}
+      >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Chi tiết thuê xe</Text>
+      </LinearGradient>
       <View style={styles.stationInfo}>
         <View style={styles.stationHeader}>
           <IconSymbol
@@ -247,7 +255,7 @@ export default function StationDetailScreen() {
         </View>
       </View>
 
-      {/* 2D Station Map */}
+
       <StationMap2D
         station={station}
         bikes={allBikes}
@@ -308,11 +316,11 @@ export default function StationDetailScreen() {
             );
           })}
         </View>
-      ) : ( 
+      ) : (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Xe đang được thuê hết</Text>
         </View>
-      )}  
+      )}
     </ScrollView>
   );
 }
@@ -555,6 +563,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
   },
   batteryText: {
     fontSize: 12,
