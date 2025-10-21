@@ -44,21 +44,8 @@ const BookingHistoryDetail = () => {
     endCurrentRental,
     isEndCurrentRentalLoading
   } = useRentalsActions(true, bookingId);
-  const handleEndRental = (rentalId: string, stationId: string) => {
-    // const walletBalance = myWallet?.balance?.$numberDecimal !== undefined
-    //   ? Number(myWallet.balance.$numberDecimal)
-    //   : 0;
-    // if (walletBalance < 0) {
-    //   Alert.alert(
-    //     "Số dư không đủ",
-    //     "Vui lòng nạp thêm tiền vào ví để có thể kết thúc phiên thuê.",
-    //   );
-    //   return;
-    // }
-    endCurrentRental({ id: rentalId, data: { end_station: stationId } });
-    // setTimeout(() => {
-    //   navigation.goBack();
-    // }, 1000);
+  const handleEndRental = (rentalId: string ) => {
+    endCurrentRental({id: rentalId});
   };
   useEffect(() => {
     useGetDetailRental();
@@ -454,60 +441,19 @@ const BookingHistoryDetail = () => {
         </View>
         {booking.status !== "HOÀN THÀNH" && (
           <>
-            {!showEndRentalConfirm ? (
-              <TouchableOpacity
-                style={[
-                  styles.endRentalButton,
-                  isEndCurrentRentalLoading && { opacity: 0.6 },
-                ]}
-                disabled={isEndCurrentRentalLoading}
-                onPress={() => setShowEndRentalConfirm(true)}
-              >
-                <Ionicons name="stop-circle" size={20} color="#fff" />
-                <Text style={styles.endRentalButtonText}>Kết thúc phiên thuê</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={[styles.infoCard, { marginBottom: 16 }]}> 
-                <View style={styles.cardHeader}>
-                  <Ionicons name="location" size={24} color="#0066FF" />
-                  <Text style={styles.cardTitle}>Chọn trạm trả xe</Text>
-                </View>
-                <Picker
-                  selectedValue={selectedStation}
-                  onValueChange={(value) => setSelectedStation(value)}
-                  enabled={!isEndCurrentRentalLoading}
-                >
-                  <Picker.Item label="-- Chọn trạm --" value="" />
-                  {stations.map((station) => (
-                    <Picker.Item key={station._id} label={station.name} value={station._id} />
-                  ))}
-                </Picker>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
-                  <TouchableOpacity
-                    style={[styles.supportButton, { flex: 1, marginRight: 8, borderColor: '#999' }]}
-                    onPress={() => setShowEndRentalConfirm(false)}
-                    disabled={isEndCurrentRentalLoading}
-                  >
-                    <Text style={[styles.supportButtonText, { color: '#999' }]}>Huỷ</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.endRentalButton,
-                      { flex: 1, marginLeft: 8 },
-                      (isEndCurrentRentalLoading || !selectedStation) && { opacity: 0.6 },
-                    ]}
-                    disabled={isEndCurrentRentalLoading || !selectedStation}
-                    onPress={() => handleEndRental(booking._id, selectedStation) }
-                  >
-                    {isEndCurrentRentalLoading ? (
-                      <ActivityIndicator color="#fff" />
-                    ) : (
-                      <Text style={styles.endRentalButtonText}>Xác nhận kết thúc</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
+            <TouchableOpacity
+              style={[
+                styles.endRentalButton,
+                isEndCurrentRentalLoading && { opacity: 0.6 },
+              ]}
+              // disabled={isEndCurrentRentalLoading}
+              onPress={() => handleEndRental(booking._id)}
+            >
+              <Ionicons name="stop-circle" size={20} color="#fff" />
+              <Text style={styles.endRentalButtonText}>
+                Kết thúc phiên thuê
+              </Text>
+            </TouchableOpacity>
           </>
         )}
         <TouchableOpacity style={styles.supportButton}>

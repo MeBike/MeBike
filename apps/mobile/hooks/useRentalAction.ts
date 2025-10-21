@@ -65,6 +65,9 @@ export const useRentalsActions = (
                 } else {
                   Alert.alert("Error", "Failed to end the rental.");
                 }
+                queryClient.invalidateQueries({
+                  queryKey: ["rentals", "detail", data.id],
+                }); 
               },
               onError: (error) => {
                const axiosError = error as AxiosError<any>;

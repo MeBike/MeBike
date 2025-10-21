@@ -109,7 +109,7 @@ export class FetchHttpClient {
             // Handle navigation using React Navigation
             break;
           default:
-             console.log(`API Error: ${error.response?.status}`);
+            console.log(`API Error: ${error.response?.status}`);
         }
 
         return Promise.reject(error);
@@ -197,10 +197,11 @@ export class FetchHttpClient {
 const fetchHttpClient = new FetchHttpClient(
   (() => {
     const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-    const defaultUrl = "http://localhost:4000";
+    const defaultUrl =
+      process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:4000";
     console.log("Environment EXPO_PUBLIC_API_BASE_URL:", envUrl);
     console.log("Using API Base URL:", envUrl || defaultUrl);
-    const computerIP = "http://192.168.12.101:4000";
+    const computerIP = process.env.EXPO_COMPUTER_PUBLIC_API_BASE_URL_TANCHO || "http://192.168.12.101:4000";
     console.log("Using computer IP for device testing:", computerIP);
     return computerIP;
   })()
