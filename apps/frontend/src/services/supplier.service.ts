@@ -1,10 +1,8 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { Supplier } from "@/types/Supplier";
-import {
-  CreateSupplierSchema,
-  StatsSupplierBike,
-} from "@/schemas/supplier.schema";
+import { CreateSupplierSchema } from "@/schemas/supplier.schema";
+import type { StatsSupplierBike } from "@custom-types";
 interface ApiResponse<T> {
   data: T[];
   pagination: {
@@ -67,14 +65,17 @@ export const supplierService = {
     );
     return response.data;
   },
-
-  statsSupplierBike: async (id: string): Promise<DetailApiResponse<any>> => {
+  statsSupplierBike: async (
+    id: string
+  ): Promise<DetailApiResponse<StatsSupplierBike>> => {
     const response = await fetchHttpClient.get<
       DetailApiResponse<StatsSupplierBike>
     >(SUPPLIER_ENDPOINTS.WITH_STATS_BIKE(id));
     return response.data;
   },
-  statsSupplie: async (id: string): Promise<DetailApiResponse<any>> => {
+  statsSupplier: async (
+    id: string
+  ): Promise<DetailApiResponse<StatsSupplierBike[]>> => {
     const response = await fetchHttpClient.get<
       DetailApiResponse<StatsSupplierBike[]>
     >(SUPPLIER_ENDPOINTS.WITH_STATS_BIKE(id));
