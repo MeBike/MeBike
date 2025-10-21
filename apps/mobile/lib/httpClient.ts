@@ -103,7 +103,7 @@ export class FetchHttpClient {
             // Handle navigation using React Navigation
             break;
           default:
-            console.error(`API Error: ${error.response?.status}`);
+             console.log(`API Error: ${error.response?.status}`);
         }
 
         return Promise.reject(error);

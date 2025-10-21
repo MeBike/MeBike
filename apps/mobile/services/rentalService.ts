@@ -57,7 +57,7 @@ export const rentalService = {
     id: string,
     data: EndRentalSchema
   ): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.put(
+    const response = await fetchHttpClient.put<AxiosResponse>(
       RENTAL_ENDPOINTS.END_USER_CURRENT_RENTAL(id),
       data
     );

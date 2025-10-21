@@ -8,6 +8,7 @@ import {
   StatusBar,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,16 +24,18 @@ interface RouteParams {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStationActions } from "@hooks/useStationAction";
 import { StationType } from "../types/StationType";
+import { useWalletActions } from "@hooks/useWalletAction";
 
 const BookingHistoryDetail = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
   const insets = useSafeAreaInsets();
+  const {myWallet,isLoadingGetMyWallet , getMyWallet} = useWalletActions(true);
   const { stations: data, isLoadingGetAllStations , refetch} = useStationActions(true);
   const [stations, setStations] = useState<StationType[]>(data || []);
   const [selectedStation, setSelectedStation] = useState<string>("");
-  const [showEndRentalConfirm, setShowEndRentalConfirm] = useState(false);
+  const [showEndRentalConfirm, setShowEndRentalConfirm] = useState<boolean>(false);
   const {
     useGetDetailRental,
     rentalDetailData,
@@ -42,13 +45,24 @@ const BookingHistoryDetail = () => {
     isEndCurrentRentalLoading
   } = useRentalsActions(true, bookingId);
   const handleEndRental = (rentalId: string, stationId: string) => {
+    // const walletBalance = myWallet?.balance?.$numberDecimal !== undefined
+    //   ? Number(myWallet.balance.$numberDecimal)
+    //   : 0;
+    // if (walletBalance < 0) {
+    //   Alert.alert(
+    //     "Số dư không đủ",
+    //     "Vui lòng nạp thêm tiền vào ví để có thể kết thúc phiên thuê.",
+    //   );
+    //   return;
+    // }
     endCurrentRental({ id: rentalId, data: { end_station: stationId } });
-    setTimeout(() => {
-      navigation.goBack();
-    }, 1000);
+    // setTimeout(() => {
+    //   navigation.goBack();
+    // }, 1000);
   };
   useEffect(() => {
     useGetDetailRental();
+    getMyWallet();
   }, [bookingId]);
   useEffect(() => {
     refetch();

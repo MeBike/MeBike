@@ -8,6 +8,7 @@ import { Alert } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePostRentQuery } from "./mutations/Rentals/usePostRentQuery";
 import { RentalSchemaFormData } from "@schemas/rentalSchema";
+import type { AxiosError } from "axios";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -66,11 +67,20 @@ export const useRentalsActions = (
                 }
               },
               onError: (error) => {
-                const errorMessage = getErrorMessage(
-                  error,
-                  "An error occurred while ending the rental."
-                );
-                console.log(errorMessage);
+               const axiosError = error as AxiosError<any>;
+               const status = axiosError.response?.status;
+               const message =
+                 axiosError.response?.data?.message ||
+                 "An error occurred while ending the rental.";
+               if (status === 400) {
+                 Alert.alert("Invalid Request", message);
+               } else if (status === 401) {
+                 Alert.alert("Unauthorized", "Your session has expired.");
+               } else {
+                 Alert.alert("Error", message);
+               }
+
+               console.log("Error detail:", axiosError.response?.data);
               }, 
         });
     }, [hasToken, navigation, usePutEndRental]);
