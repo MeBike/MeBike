@@ -1,4 +1,4 @@
-import { authService } from "@/services/authService";
+import { authService } from "@/services/auth.service";
 import { useMutation } from "@tanstack/react-query";
 export const useVerifyForgotPasswordMutation = () => {
     return useMutation({

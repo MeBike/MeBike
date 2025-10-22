@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Sidebar } from "./sidebar";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import type { DetailUser } from "@/services/authService";
+import type { DetailUser } from "@/services/auth.service";
 import Image from "next/image";
 interface DashboardLayoutProps {
   children: React.ReactNode;

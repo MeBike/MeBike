@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { bikeService } from "@/services/bikeService";
+import { bikeService } from "@/services/bike.service";
 
 export const useGetAllBikeQuery = (page: number = 1, limit: number = 10 , station_id?: string, supplier_id?: string, status?: string) => {
     return useQuery({

@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { DetailUser } from "@/services/authService";
+import { DetailUser } from "@/services/auth.service";
 import { Mail, MapPin, Phone, User, Calendar } from "lucide-react";
 
 interface ProfileHeaderProps {

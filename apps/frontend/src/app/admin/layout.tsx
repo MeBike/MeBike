@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 interface StaffLayoutProps {
   children: React.ReactNode;
 }
@@ -60,7 +61,6 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
     );
   }
 
-  // Nếu không hợp lệ, hiển thị trang trắng hoặc Loading sẽ redirect
   if (showUnauthorized) {
     return null;
   }
@@ -69,7 +69,9 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
     <div>
       <main>
         <div>
-          <div>{children}</div>
+          <div>
+            {user && <DashboardLayout user={user}>{children}</DashboardLayout>}
+          </div>
         </div>
       </main>
     </div>

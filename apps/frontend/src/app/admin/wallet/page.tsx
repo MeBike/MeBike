@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { WalletStats } from "@/components/wallet/wallet-stats";
 import { WalletUserList } from "@components/wallet/wallet-user-list";
 import { TransactionHistory } from "@components/wallet/transaction-history";
-import type { DetailUser } from "@/services/authService";
+import type { DetailUser } from "@/services/auth.service";
 import { UserWallet, WalletTransaction } from "@/types/Wallet";
 // Mock data
 const mockUser: DetailUser = {
