@@ -19,3 +19,15 @@ export function hashPassword(password: string) {
   const hash = bcrypt.hashSync(password, salt); // Hash mật khẩu
   return hash;
 }
+
+export function generateOTP(length: number = 6): string {
+  if (length <= 0) {
+    throw new Error("OTP length must be positive");
+  }
+  let otp = '';
+  const digits = '0123456789';
+  for (let i = 0; i < length; i++) {
+    otp += digits[Math.floor(Math.random() * 10)];
+  }
+  return otp;
+}

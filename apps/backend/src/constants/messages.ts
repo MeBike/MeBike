@@ -63,7 +63,14 @@ export const USERS_MESSAGES = {
   // check staff role messages
   ACCESS_DENIED_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho nhân viên',
   // check admin and staff role messages
-  ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên và nhân viên'
+  ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên và nhân viên',
+  EMAIL_OTP_IS_INCORRECT_OR_EXPIRED: 'Mã OTP xác thực email không chính xác hoặc đã hết hạn',
+  FORGOT_PASSWORD_OTP_IS_INCORRECT_OR_EXPIRED: 'Mã OTP đặt lại mật khẩu không chính xác hoặc đã hết hạn',
+  FORGOT_PASSWORD_OTP_IS_REQUIRED: 'Mã OTP đặt lại mật khẩu là bắt buộc',
+  EMAIL_OTP_IS_REQUIRED: 'Mã OTP xác thực email là bắt buộc',
+  // admin get all users
+  VERIFY_STATUS_MUST_BE_A_STRING: 'Trạng thái xác thực phải là chuỗi',
+  INVALID_VERIFY_STATUS: 'Trạng thái xác thực không hợp lệ',
 } as const
 
 export const REPORTS_MESSAGES = {
@@ -392,4 +399,27 @@ export const STATIONS_MESSAGE = {
   // delete station messages
   STATION_DELETED_SUCCESSFULLY: 'Xóa trạm thành công',
   CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.'
+}
+
+export const RATING_MESSAGE = {
+  CREATE_RATING_SUCCESS: 'Đánh giá thành công',
+  GET_RATING_SUCCESS: 'Lấy danh sách đánh giá cho phiên thuê %s thành công',
+  RATING_NOT_FOUND: 'Không tìm thấy đánh giá của phiên thuê với ID %s',
+  RATING_ID_IS_REQUIRED: 'ID đánh giá là bắt buộc',
+  RATING_ID_INVALID: 'ID đánh giá không hợp lệ',
+  RATING_EXISTED: 'Đánh giá cho phiên thuê với ID %s đã tồn tại',
+  GET_RATING_REASONS_SUCCESS: 'Lấy danh sách lý do đánh giá thành công',
+  COMMENT_MUST_BE_STRING: 'Bình luận phải là chuỗi ký tự',
+  COMMENT_MAX_LENGTH: 'Bình luận tối đa 500 ký tự',
+  RATING_REQUIRED: 'Đánh giá là bắt buộc',
+  RATING_MUST_BE_INT_BETWEEN_1_AND_5: 'Đánh giá phải là số nguyên từ 1 đến 5',
+  REASON_IDS_MUST_BE_ARRAY: 'Danh sách ID lý do phải là mảng',
+  REASON_IDS_MUST_BE_ARRAY_OF_POSITIVE_INTEGERS: 'Danh sách ID lý do phải là mảng các số nguyên dương',
+  REASON_ID_INVALID: 'ID lý do không hợp lệ',
+  REASON_ID_MUST_BE_OBJECTID: 'ID lý do phải là ObjectId',
+  REASON_ID_NOT_FOUND: 'ID lý do %s không tồn tại',
+  RENTAL_ID_IS_REQUIRED: 'ID phiên thuê là bắt buộc',
+  RENTAL_ID_INVALID: 'ID phiên thuê không hợp lệ',
+  CANNOT_RATE_UNCOMPLETED_RENTAL: 'Chỉ có thể đánh giá các phiên thuê đã hoàn thành',
+  RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này'
 }

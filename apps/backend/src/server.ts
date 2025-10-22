@@ -21,6 +21,7 @@ config()
 import swaggerJSDoc from 'swagger-jsdoc'
 import stationRouter from './routes/station.routes'
 import reserveRouter from './routes/reservations.routes'
+import ratingRouter from './routes/rating.routes'
 
 const port = process.env.PORT || 4000
 
@@ -50,6 +51,7 @@ app.use('/refunds', refundsRouter)
 app.use('/rentals', rentalsRouter)
 app.use('/stations', stationRouter)
 app.use('/reservations', reserveRouter)
+app.use('/ratings', ratingRouter)
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
