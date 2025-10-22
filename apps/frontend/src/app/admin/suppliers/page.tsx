@@ -147,7 +147,7 @@
                   value={statusFilter}
                   onChange={(e) =>
                     handleChangeStatusFilter(
-                      e.target.value as "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | ""
+                      e.target.value as "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
                     )
                   }
                   className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"

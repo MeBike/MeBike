@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import type { Rental, RentalStatus, PaymentStatus } from "@custom-types";
 import type { User as DetailUser } from "@custom-types";
 import { Plus, Download } from "lucide-react";
-
-// Mock data
 const mockRentals: Rental[] = [
   {
     _id: "1",
@@ -172,24 +170,6 @@ const mockRentals: Rental[] = [
     updated_at: "2024-06-09T11:15:00Z",
   },
 ];
-
-// Mock user for DashboardLayout
-const mockUser: DetailUser = {
-  _id: "507f1f77bcf86cd799439011",
-  fullname: "Nguyễn Văn Minh",
-  email: "minh.nguyen@bikerental.vn",
-  verify: "verified",
-  location: "Hà Nội, Việt Nam",
-  username: "minh_staff",
-  phone_number: "+84 912 345 678",
-  avatar: "/professional-avatar.png",
-  role: "ADMIN",
-  created_at: "2024-01-15T08:30:00Z",
-  updated_at: "2025-01-06T10:20:00Z",
-  password: "",
-  email_verify_token: "",
-  forgot_verify_token: "",
-};
 
 export default function RentalsPage() {
   const [searchQuery, setSearchQuery] = useState("");
