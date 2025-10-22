@@ -54,15 +54,22 @@ export const reserveBikeValidator = validate(
             const preReservingThreshold = process.env.RESERVE_QUOTA_PERCENT || '0.50'
             const RESERVE_QUOTA_PERCENT = Number.parseFloat(preReservingThreshold)
 
-            const totalAvailableBikes = await databaseService.bikes.countDocuments({
-              station_id: stationId,
-              status: { $in: [BikeStatus.Available, BikeStatus.Reserved] }
-            })
+            const aggResult = await databaseService.bikes
+              .aggregate([
+                { $match: { station_id: stationId, status: { $in: [BikeStatus.Available, BikeStatus.Reserved] } } },
+                {
+                  $group: {
+                    _id: null,
+                    totalAvailableBikes: { $sum: 1 },
+                    currentlyReservedBikes: {
+                      $sum: { $cond: [{ $eq: ['$status', BikeStatus.Reserved] }, 1, 0] }
+                    }
+                  }
+                }
+              ])
+              .toArray()
 
-            const currentlyReservedBikes = await databaseService.bikes.countDocuments({
-              station_id: stationId,
-              status: BikeStatus.Reserved
-            })
+            const { totalAvailableBikes = 0, currentlyReservedBikes = 0 } = aggResult[0] || {}
 
             const maxAllowedReserved = Math.floor(totalAvailableBikes * RESERVE_QUOTA_PERCENT)
 
@@ -287,23 +294,27 @@ export const batchDispatchSameStationValidator = validate(
               })
             }
 
+            const errors: string[] = []
             bikes.forEach((bike) => {
               if (bike.status !== BikeStatus.Available) {
-                throw new ErrorWithStatus({
-                  message: RESERVATIONS_MESSAGE.BIKE_NOT_AVAILABLE_FOR_DISPATCH.replace(
+                errors.push(
+                  RESERVATIONS_MESSAGE.BIKE_NOT_AVAILABLE_FOR_DISPATCH.replace('%s', bike._id.toString()).replace(
                     '%s',
-                    bike._id.toString()
-                  ).replace('%s', bike.status),
-                  status: HTTP_STATUS.BAD_REQUEST
-                })
+                    bike.status
+                  )
+                )
               }
               if (!bike.station_id || !bike.station_id.equals(sourceId)) {
-                throw new ErrorWithStatus({
-                  message: RESERVATIONS_MESSAGE.BIKE_NOT_AT_SOURCE_STATION.replace('%s', bike._id.toString()),
-                  status: HTTP_STATUS.BAD_REQUEST
-                })
+                errors.push(RESERVATIONS_MESSAGE.BIKE_NOT_AT_SOURCE_STATION.replace('%s', bike._id.toString()))
               }
             })
+
+            if (errors.length > 0) {
+              throw new ErrorWithStatus({
+                message: errors.join('; '),
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
             ;(req as any).dispatch_bike_ids = bikeObjectIds
             ;(req as any).dispatched_bikes = bikes
             return true

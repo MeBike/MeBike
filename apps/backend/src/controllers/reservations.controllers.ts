@@ -139,8 +139,8 @@ export async function dispatchSameStationController(req: Request<ParamsDictionar
     user_id: toObjectId(user_id),
     source_id: toObjectId(source_station_id),
     destination_id: toObjectId(destination_station_id),
-    bike_ids: (req as any).dispatch_bike_ids,
-    bikes: (req as any).dispatched_bikes
+    bike_ids: req.dispatch_bike_ids!,
+    bikes: req.dispatched_bikes!
   })
 
   res.json({

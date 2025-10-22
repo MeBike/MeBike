@@ -3,6 +3,8 @@ import { Filter, ObjectId } from 'mongodb'
 import { ReservationStatus } from '~/constants/enums'
 import { toObjectId } from './string'
 import { RESERVATIONS_MESSAGE } from '~/constants/messages'
+import { ErrorWithStatus } from '~/models/errors'
+import HTTP_STATUS from '~/constants/http-status'
 
 interface ReservationFilter {
   user_id?: ObjectId
@@ -20,7 +22,10 @@ export function buildAdminReservationFilter(query: Request['query']): Filter<Res
     try {
       filter.user_id = toObjectId(userId as string)
     } catch (error) {
-      console.error(RESERVATIONS_MESSAGE.INVALID_USER_ID)
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.INVALID_USER_ID,
+        status: HTTP_STATUS.BAD_REQUEST
+      });
     }
   }
 
