@@ -20,6 +20,7 @@ export type RegisterReqBody = {
   email: string;
   password: string;
   confirm_password: string;
+  phone_number: string;
   avatar?: string;
 };
 

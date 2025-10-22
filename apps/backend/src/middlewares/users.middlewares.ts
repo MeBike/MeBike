@@ -126,7 +126,7 @@ export const loginValidator = validate(
     ["body"],
   ),
 );
-
+const VIETNAMESE_PHONE_NUMBER_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})\b/;
 export const registerValidator = validate(
   checkSchema(
     {
@@ -144,6 +144,23 @@ export const registerValidator = validate(
             const isExist = await usersService.checkEmailExist(value);
             if (isExist) {
               throw new Error(USERS_MESSAGES.EMAIL_ALREADY_EXISTS);
+            }
+            return true;
+          },
+        },
+      },
+      phone_number: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_IS_REQUIRED,
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING,
+        },
+        trim: true,
+        custom: {
+          options: (value: string) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID);
             }
             return true;
           },

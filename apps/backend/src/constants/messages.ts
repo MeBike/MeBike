@@ -17,6 +17,9 @@ export const USERS_MESSAGES = {
   REGISTER_SUCCESS: 'Đăng ký thành công',
   IMAGE_URL_MUST_BE_A_STRING: 'URL hình ảnh phải là chuỗi',
   IMAGE_URL_MUST_BE_VALID: 'URL hình ảnh không hợp lệ',
+  PHONE_NUMBER_IS_REQUIRED: 'Số điện thoại là bắt buộc',
+  PHONE_NUMBER_MUST_BE_A_STRING: 'Số điện thoại phải là chuỗi',
+  PHONE_NUMBER_IS_INVALID: 'Số điện thoại không hợp lệ (phải đủ 10 số và bắt đầu bằng 03, 05, 07, 08, 09)',
   // đăng nhập messages
   EMAIL_OR_PASSWORD_IS_INCORRECT: 'Email hoặc mật khẩu không chính xác',
   LOGIN_SUCCESS: 'Đăng nhập thành công',
