@@ -4,7 +4,9 @@ import { WithDrawalStatus } from '~/constants/enums'
 export type WithdrawType = {
   _id?: ObjectId
   user_id: ObjectId
-  amount: Decimal128
+  amount: Decimal128,
+  bank: string,
+  account_owner: string,
   account: string
   reason?: string
   note?: string
@@ -17,6 +19,8 @@ export default class Withdraw {
   _id?: ObjectId
   user_id: ObjectId
   amount: Decimal128
+  bank: string
+  account_owner: string
   account: string
   reason?: string
   note?: string
@@ -34,6 +38,8 @@ export default class Withdraw {
     this.reason = withdraw.reason
     this.note = withdraw.note || ''
     this.amount = Decimal128.fromString(withdraw.amount.toString())
+    this.bank = withdraw.bank
+    this.account_owner = withdraw.account_owner
     this.account = withdraw.account
     this.status = withdraw.status || WithDrawalStatus.Pending
     this.created_at = withdraw.created_at || localTime

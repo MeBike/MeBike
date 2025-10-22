@@ -405,6 +405,8 @@ class WalletService {
       user_id: new ObjectId(user_id),
       amount: Decimal128.fromString(payload.amount.toString()),
       account: payload.account,
+      bank: payload.bank,
+      account_owner: payload.account_owner,
       reason: '',
       note: payload.note || '',
       status: WithDrawalStatus.Pending,

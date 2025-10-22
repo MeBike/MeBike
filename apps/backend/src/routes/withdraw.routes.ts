@@ -20,7 +20,7 @@ withdrawsRouter.post(
   '/',
   accessTokenValidator,
   createWithdrawRequestValidator,
-  filterMiddleware<CreateWithdrawlReqBody>(['account', 'amount', 'note']),
+  filterMiddleware<CreateWithdrawlReqBody>(['account', 'account_owner', 'bank', 'amount', 'note']),
   wrapAsync(createWithdrawalRequestController)
 )
 // admin get all withdraw

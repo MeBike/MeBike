@@ -1,6 +1,6 @@
-
-import { useMemo , useState} from "react";
+import { useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
+import React from "react";
 import {
   View,
   Text,
@@ -18,111 +18,115 @@ import { Ionicons } from "@expo/vector-icons";
 import type { UpdateProfileSchemaFormData } from "@schemas/authSchema";
 import { useAuth } from "@providers/auth-providers";
 import type { DetailUser } from "@services/authService";
-
+import { zodResolver } from "@hookform/resolvers/zod";
+import { profileUpdateSchema } from "@schemas/authSchema";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const UpdateProfileScreen = ({ navigation }: any) => {
-
+  const insets = useSafeAreaInsets();
   const { user, updateProfile, isUpdatingProfile } = useAuth();
-  const initialProfile = useMemo<UpdateProfileSchemaFormData>(() => ({
-    fullname: user?.fullname || "",
-    username: user?.username || "",
-    phone_number: user?.phone_number || "",
-    location: user?.location || "",
-    avatar: user?.avatar || "",
-  }), [user]);
+  const initialProfile = useMemo<UpdateProfileSchemaFormData>(
+    () => ({
+      fullname: user?.fullname || "",
+      username: user?.username || "",
+      phone_number: user?.phone_number || "",
+      location: user?.location || "",
+      avatar: user?.avatar || "",
+    }),
+    [user]
+  );
 
   const {
     control,
     handleSubmit,
     reset,
     getValues,
-    formState: { isDirty, dirtyFields },
+    formState: { isDirty, dirtyFields, errors },
   } = useForm<UpdateProfileSchemaFormData>({
+    resolver: zodResolver(profileUpdateSchema),
     defaultValues: initialProfile,
     mode: "onChange",
   });
   const [isEditing, setIsEditing] = useState(false);
-
 
   const handleEditPress = () => {
     setIsEditing(true);
     reset(getValues());
   };
 
+  const onSubmit = async (data: Partial<UpdateProfileSchemaFormData>) => {
+    if (!data.fullname || !data.fullname.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập họ tên");
+      return;
+    }
+    if (!data.phone_number?.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
+      return;
+    }
+    if (!isDirty) {
+      Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
+      setIsEditing(false);
+      return;
+    }
+    const changedData: Partial<UpdateProfileSchemaFormData> = {};
+    const dirtyFieldKeys = Object.keys(dirtyFields) as Array<
+      keyof UpdateProfileSchemaFormData
+    >;
+    for (const key of dirtyFieldKeys) {
+      changedData[key] = data[key];
+    }
 
-  // const onSubmit = async (data: UpdateProfileSchemaFormData) => {
-  //   if (!data.fullname.trim()) {
-  //     Alert.alert("Lỗi", "Vui lòng nhập họ tên");
-  //     return;
-  //   }
-  //   if (!data.phone_number?.trim()) {
-  //     Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
-  //     return;
-  //   }
-  //   if (!isDirty) {
-  //     Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
-  //     setIsEditing(false);
-  //     return;
-  //   }
-  //   try {
-  //     await updateProfile(data);
-  //     reset(data);
-  //     setIsEditing(false);
-  //     Alert.alert("Thành công", "Cập nhật thông tin thành công");
-  //   } catch (e) {
-  //     Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
-  //   }
-  // };
-
-const onSubmit = async (data: UpdateProfileSchemaFormData) => {
-  if (!data.fullname.trim()) {
-    Alert.alert("Lỗi", "Vui lòng nhập họ tên");
-    return;
-  }
-  if (!data.phone_number?.trim()) {
-    Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
-    return;
-  }
-  if (!isDirty) {
-    Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
-    setIsEditing(false);
-    return;
-  }
-  const changedData: Partial<UpdateProfileSchemaFormData> = {};
-  const dirtyFieldKeys = Object.keys(dirtyFields) as Array<
-    keyof UpdateProfileSchemaFormData
-  >;
-  for (const key of dirtyFieldKeys) {
-    changedData[key] = data[key];
-  }
-
-
-  try {
-    updateProfile(changedData); 
-    reset(data);
-    setIsEditing(false);
-
-  } catch (e) {
-    Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
-  }
-};
+    try {
+      updateProfile(changedData);
+      reset(data);
+      setIsEditing(false);
+    } catch (e) {
+      Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
+    }
+  };
   const handleCancel = () => {
     reset(initialProfile);
     setIsEditing(false);
   };
 
-
-  // Render all fields from DetailUser, only allow editing for UpdateProfileSchemaFormData fields
-  const detailUserFields: Array<{ key: keyof DetailUser; label: string; icon: string; editable?: boolean; keyboardType?: "default" | "email-address" | "phone-pad" }> = [
+  const detailUserFields: Array<{
+    key: keyof DetailUser;
+    label: string;
+    icon: string;
+    editable?: boolean;
+    keyboardType?: "default" | "email-address" | "phone-pad";
+  }> = [
     { key: "fullname", label: "Họ và tên", icon: "person", editable: true },
     { key: "username", label: "Username", icon: "person", editable: true },
-    { key: "email", label: "Email", icon: "mail", editable: false, keyboardType: "email-address" },
-    { key: "phone_number", label: "Điện thoại", icon: "call", editable: true, keyboardType: "phone-pad" },
+    {
+      key: "email",
+      label: "Email",
+      icon: "mail",
+      editable: false,
+      keyboardType: "email-address",
+    },
+    {
+      key: "phone_number",
+      label: "Điện thoại",
+      icon: "call",
+      editable: true,
+      keyboardType: "phone-pad",
+    },
     { key: "location", label: "Địa chỉ", icon: "location", editable: true },
     { key: "avatar", label: "Avatar", icon: "image", editable: true },
     { key: "role", label: "Vai trò", icon: "shield", editable: false },
-    { key: "verify", label: "Trạng thái xác thực", icon: "checkmark", editable: false },
+    {
+      key: "verify",
+      label: "Trạng thái xác thực",
+      icon: "checkmark",
+      editable: false,
+    },
     { key: "created_at", label: "Ngày tạo", icon: "calendar", editable: false },
-    { key: "updated_at", label: "Ngày cập nhật", icon: "calendar", editable: false },
+    {
+      key: "updated_at",
+      label: "Ngày cập nhật",
+      icon: "calendar",
+      editable: false,
+    },
     { key: "_id", label: "ID", icon: "key", editable: false },
   ];
 
@@ -133,9 +137,18 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
     editable: boolean = false,
     keyboardType: "default" | "email-address" | "phone-pad" = "default"
   ) => {
-    // Only allow editing for fields in UpdateProfileSchemaFormData
-    const isFormField = ["fullname", "username", "phone_number", "location", "avatar"].includes(key);
-    if (isFormField) {
+    const isFormField = (
+      key: keyof DetailUser
+    ): key is keyof UpdateProfileSchemaFormData => {
+      return [
+        "fullname",
+        "username",
+        "phone_number",
+        "location",
+        "avatar",
+      ].includes(key as string);
+    };
+    if (isFormField(key)) {
       return (
         <Controller
           control={control}
@@ -160,12 +173,18 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
                   keyboardType={keyboardType}
                 />
               </View>
+              {errors[key as keyof UpdateProfileSchemaFormData] && (
+                <Text style={styles.errorText}>
+                  {errors[
+                    key as keyof UpdateProfileSchemaFormData
+                  ]?.message?.toString()}
+                </Text>
+              )}
             </View>
           )}
         />
       );
     } else {
-      // Show as disabled input, value from user object
       return (
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>{label}</Text>
@@ -180,7 +199,6 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
               style={[styles.input, styles.inputDisabled]}
               value={user?.[key] ? String(user[key]) : ""}
               editable={false}
-              // placeholderTextColor="#ccc"
               keyboardType={keyboardType}
             />
           </View>
@@ -190,23 +208,22 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-      {/* Header */}
+
       <LinearGradient
         colors={["#0066FF", "#00B4D8"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.header}
+        style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
         <View style={styles.headerTop}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={28} color="#fff" />
+            <Ionicons name="chevron-back" size={20} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Cập nhật thông tin</Text>
           <View style={{ width: 28 }} />
         </View>
-        {/* Avatar Section */}
         <View style={styles.avatarSection}>
           <Controller
             control={control}
@@ -225,15 +242,17 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
         {/* Form Fields */}
         <View style={styles.formSection}>
-          {detailUserFields.map((field) =>
-            renderInputField(
-              field.key,
-              field.label,
-              field.icon,
-              field.editable ?? false,
-              field.keyboardType ?? "default"
-            )
-          )}
+          {detailUserFields.map((field) => (
+            <React.Fragment key={field.key}>
+              {renderInputField(
+                field.key,
+                field.label,
+                field.icon,
+                field.editable ?? false,
+                field.keyboardType ?? "default"
+              )}
+            </React.Fragment>
+          ))}
         </View>
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
@@ -272,7 +291,7 @@ const onSubmit = async (data: UpdateProfileSchemaFormData) => {
           Cập nhật thông tin cá nhân của bạn để có trải nghiệm tốt hơn
         </Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -407,6 +426,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
     marginBottom: 20,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

@@ -15,14 +15,34 @@ const STATION_ENDPOINTS = {
 //   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
 //   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
 } as const;
+interface ApiResponse<T> {
+  data: T;
+  pagination?: {
+    limit: number;
+    currentPage: number;
+    totalPages: number;
+    totalRecords: number;
+  };
+}
+interface ApiDetailResponse<T> {
+  result: T;
+  message: string;
+}
+
 
 export const stationService = {
-    getAllStations: async (): Promise<AxiosResponse> => {
-        const response = await fetchHttpClient.get<{ data: StationType[] }>(STATION_ENDPOINTS.ALL);
-        return response;
-    },
-    getStationById: async (stationId: string): Promise<AxiosResponse> => {
-        const response = await fetchHttpClient.get(STATION_ENDPOINTS.DETAIL(stationId));
-        return response;
-    }
+  getAllStations: async (): Promise<AxiosResponse<ApiResponse<StationType[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<StationType[]>>(
+      STATION_ENDPOINTS.ALL
+    );
+    return response;
+  },
+  getStationById: async (
+    stationId: string
+  ): Promise<AxiosResponse<ApiDetailResponse<StationType>>> => {
+    const response = await fetchHttpClient.get<ApiDetailResponse<StationType>>(
+      STATION_ENDPOINTS.DETAIL(stationId)
+    );
+    return response;
+  },
 };

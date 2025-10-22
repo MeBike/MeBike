@@ -12,6 +12,7 @@ import type { IntroScreenNavigationProp } from '../types/navigation';
 import { BikeColors } from '../constants/BikeColors';
 import { IconSymbol } from '../components/IconSymbol';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '@providers/auth-providers';
 // import { useAuth } from '../contexts/AuthContext';
 
 const { width, height } = Dimensions.get('window');
@@ -41,6 +42,7 @@ const introSlides = [
 ];
 
 export default function IntroScreen() {
+  const { user, isAuthenticated } = useAuth();
   const navigation = useNavigation<IntroScreenNavigationProp>();
   const [currentSlide, setCurrentSlide] = useState(0);
   // const { markIntroAsSeen } = useAuth();
@@ -49,14 +51,24 @@ export default function IntroScreen() {
     if (currentSlide < introSlides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
-      // await markIntroAsSeen();
-      navigation.navigate('Login');
+      if(isAuthenticated) {
+        navigation.navigate('Main');
+        return;
+      }
+      else {
+        navigation.navigate('Login');
+      }
     }
   };
 
   const skipIntro = async () => {
-    // await markIntroAsSeen();
-    navigation.navigate('Login');
+    if (isAuthenticated) {
+      navigation.navigate("Main");
+      return;
+    } else {
+      // await markIntroAsSeen();
+      navigation.navigate("Login");
+    }
   };
 
   const goBack = () => {

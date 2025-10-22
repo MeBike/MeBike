@@ -1,6 +1,8 @@
 type: object
 required:
   - station_id
+  - chip_id
+  - supplier_id
 properties:
   station_id:
     type: string
@@ -15,4 +17,4 @@ properties:
   supplier_id:
     type: string
     format: mongoId
-    description: The ID of the supplier. Optional.
+    description: The ID of the supplier.

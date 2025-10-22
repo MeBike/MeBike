@@ -6,6 +6,7 @@ import { eventBus } from "./events";
 import { createHttpApp, startHttpServer } from "./http";
 import { MessageRouter } from "./messaging";
 import { createCommandPublisher } from "./publishers";
+import { setCommandPublisherInstance } from "./publishers/context";
 import { createDeviceManager, createStateMachineService } from "./services";
 
 export async function bootstrap(): Promise<IotApplication> {
@@ -20,6 +21,7 @@ export async function bootstrap(): Promise<IotApplication> {
   const deviceDiscovery = new DeviceDiscovery(deviceManager);
 
   const commandPublisher = createCommandPublisher(connection);
+  setCommandPublisherInstance(commandPublisher);
 
   const httpApp = createHttpApp({
     commandPublisher,

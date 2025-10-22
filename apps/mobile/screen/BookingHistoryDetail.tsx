@@ -8,34 +8,53 @@ import {
   StatusBar,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useRentalsActions } from "@hooks/useRentalAction";
 import type { RentingHistory } from "../types/RentalTypes";
 import type { RentalDetail } from "../types/RentalTypes";
+import { useState } from "react";
 interface RouteParams {
   bookingId: string;
 }
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useStationActions } from "@hooks/useStationAction";
+import { StationType } from "../types/StationType";
+import { useWalletActions } from "@hooks/useWalletAction";
 
 const BookingHistoryDetail = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
-const insets = useSafeAreaInsets();
-  const { 
-    useGetDetailRental, 
-    rentalDetailData, 
-    isGetDetailRentalFetching, 
-    isGetDetailRentalError 
+  const insets = useSafeAreaInsets();
+  const {myWallet,isLoadingGetMyWallet , getMyWallet} = useWalletActions(true);
+  const { stations: data, isLoadingGetAllStations , refetch} = useStationActions(true);
+  const [stations, setStations] = useState<StationType[]>(data || []);
+  const [selectedStation, setSelectedStation] = useState<string>("");
+  const [showEndRentalConfirm, setShowEndRentalConfirm] = useState<boolean>(false);
+  const {
+    useGetDetailRental,
+    rentalDetailData,
+    isGetDetailRentalFetching,
+    isGetDetailRentalError,
+    endCurrentRental,
+    isEndCurrentRentalLoading
   } = useRentalsActions(true, bookingId);
-
+  const handleEndRental = (rentalId: string ) => {
+    endCurrentRental({id: rentalId});
+  };
   useEffect(() => {
     useGetDetailRental();
+    getMyWallet();
   }, [bookingId]);
-
+  useEffect(() => {
+    refetch();
+    setStations(data);
+  }, [data]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "HOÀN THÀNH":
@@ -78,18 +97,18 @@ const insets = useSafeAreaInsets();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("vi-VN", {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString("vi-VN", {
-      hour: '2-digit',
-      minute: '2-digit'
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -98,12 +117,38 @@ const insets = useSafeAreaInsets();
     const hours = Math.floor(duration / 3600);
     const minutes = Math.floor((duration % 3600) / 60);
     if (hours > 0) {
-      return `${hours} giờ ${minutes > 0 ? minutes + ' phút' : ''}`;
+      return `${hours} giờ ${minutes > 0 ? minutes + " phút" : ""}`;
     }
     return `${minutes} phút`;
   };
 
-  if (isGetDetailRentalFetching) {
+  if (isGetDetailRentalFetching && isLoadingGetAllStations) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
+        <LinearGradient
+          colors={["#0066FF", "#00B4D8"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.header, { paddingTop: insets.top + 16 }]}
+        >
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="chevron-back" size={20} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Chi tiết thuê xe</Text>
+        </LinearGradient>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0066FF" />
+          <Text style={styles.loadingText}>Đang tải chi tiết...</Text>
+        </View>
+      </View>
+    );
+  }
+  const isInitialLoading = isGetDetailRentalFetching || isLoadingGetAllStations;
+  if (isInitialLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
@@ -128,7 +173,6 @@ const insets = useSafeAreaInsets();
       </SafeAreaView>
     );
   }
-
   if (isGetDetailRentalError || !rentalDetailData?.data.result) {
     return (
       <SafeAreaView style={styles.container}>
@@ -150,10 +194,8 @@ const insets = useSafeAreaInsets();
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={64} color="#F44336" />
           <Text style={styles.errorText}>Không thể tải chi tiết</Text>
-          <Text style={styles.errorSubtext}>
-            Vui lòng thử lại sau
-          </Text>
-          <TouchableOpacity 
+          <Text style={styles.errorSubtext}>Vui lòng thử lại sau</Text>
+          <TouchableOpacity
             style={styles.retryButton}
             onPress={useGetDetailRental}
           >
@@ -397,8 +439,23 @@ const insets = useSafeAreaInsets();
             </Text>
           </View>
         </View>
-
-        {/* Support Button */}
+        {booking.status !== "HOÀN THÀNH" && (
+          <>
+            <TouchableOpacity
+              style={[
+                styles.endRentalButton,
+                isEndCurrentRentalLoading && { opacity: 0.6 },
+              ]}
+              // disabled={isEndCurrentRentalLoading}
+              onPress={() => handleEndRental(booking._id)}
+            >
+              <Ionicons name="stop-circle" size={20} color="#fff" />
+              <Text style={styles.endRentalButtonText}>
+                Kết thúc phiên thuê
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
         <TouchableOpacity style={styles.supportButton}>
           <Ionicons name="headset" size={20} color="#0066FF" />
           <Text style={styles.supportButtonText}>Liên hệ hỗ trợ</Text>
@@ -640,6 +697,22 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  endRentalButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F44336",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  endRentalButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+    marginLeft: 8,
   },
 });
 

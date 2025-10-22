@@ -2,6 +2,7 @@ import fetchHttpClient from "@lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { Pagination } from "../types/Pagination";
 import type { RentingHistory } from "../types/RentalTypes";
+import type { EndRentalSchema } from "@schemas/rentalSchema";
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
   BASE: RENTAL_BASE,
@@ -31,7 +32,10 @@ export const rentalService = {
     );
     return response;
   },
-  userGetAllRentals: async (page: number, limit: number): Promise<AxiosResponse<RentalResponse>> => {
+  userGetAllRentals: async (
+    page: number,
+    limit: number
+  ): Promise<AxiosResponse<RentalResponse>> => {
     const response = await fetchHttpClient.get<RentalResponse>(
       RENTAL_ENDPOINTS.USER_RENTAL_ME(),
       {
@@ -49,9 +53,11 @@ export const rentalService = {
     );
     return response;
   },
-  userPutEndCurrentRental: async (id: string): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.put(
-      RENTAL_ENDPOINTS.END_USER_CURRENT_RENTAL(id)
+  userPutEndCurrentRental: async (
+    id: string,
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.put<AxiosResponse>(
+      RENTAL_ENDPOINTS.END_USER_CURRENT_RENTAL(id)  
     );
     return response;
   },

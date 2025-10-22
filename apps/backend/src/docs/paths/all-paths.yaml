@@ -295,11 +295,9 @@
     tags: [Bikes]
     summary: Get a list of bikes
     description: |
-      Retrieves a paginated list of bikes. 
-      - **Users** can only view bikes with 'Available' status.
-      - **Admins/Staff** can filter by any status.
-    security:
-      - BearerAuth: []
+      Retrieves a paginated list of bikes. Filter bikes by status, chip_id, station_id, and supplier_id.
+    # security:
+    #   - BearerAuth: []
     parameters:
       - $ref: '../parameters/all-parameters.yaml#/PageQuery'
       - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
@@ -320,6 +318,14 @@
         description: "Filter bikes by status. (Admin/Staff only for non-available statuses)"
         schema:
           $ref: '../components/schemas/BikeStatus.yaml'
+      - name: chip_id
+        in: query
+        description: Filter bikes by chip ID.
+        required: false
+        schema: {
+          type: string,
+          example: "CHIP123456"
+        }
     responses:
       '200':
         description: A paginated list of bikes.

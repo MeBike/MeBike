@@ -19,13 +19,14 @@ import BookingHistoryDetail from './screen/BookingHistoryDetail';
 import ChangePasswordScreen from './screen/ChangePasswordScreen';
 import ForgotPasswordScreen from './screen/ForgotPassword';
 import UpdateProfileScreen from './screen/UpdateProfileScreen';
+import MyWalletScreen from './screen/MyWalletScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
 const BottomTab = () => {
   return (
     <Tab.Navigator>
       <Tab.Screen
-        name="Home"
+        name="Nhà"
         component={HomeScreen}
         options={{
           headerShown: false,
@@ -39,21 +40,7 @@ const BottomTab = () => {
         }}
       />
       <Tab.Screen
-        name="QR"
-        component={HomeScreen}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="qr-code-outline"
-              size={size ?? 24}
-              color={color ?? "#222"}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="StationSelect"
+        name="Trạm"
         component={StationSelectScreen}
         options={{
           headerShown: false,
@@ -80,6 +67,34 @@ const BottomTab = () => {
           ),
         }}
       />
+      <Tab.Screen
+        name="Tôi"
+        component={ProfileScreen}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name="person-outline"
+              size={size ?? 24}
+              color={color ?? "#222"}
+            />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Xe"
+        component={ProfileScreen}
+        options={{
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name="bicycle"
+              size={size ?? 24}
+              color={color ?? "#222"}
+            />
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -94,57 +109,57 @@ export default function App() {
             <Stack.Screen
               name="Main"
               component={BottomTab}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
               name="Login"
               component={LoginScreen}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
               name="Intro"
               component={IntroScreen}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
               name="Register"
               component={RegisterScreen}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
               name="StationDetail"
               component={StationDetailScreen}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
-              name="StationSelect"
+              name="Trạm"
               component={StationSelectScreen}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="Profile"
-              component={ProfileScreen}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
               name="BookingHistoryDetail"
               component={BookingHistoryDetail}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
               name="ChangePassword"
               component={ChangePasswordScreen}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
               name="ForgotPassword"
               component={ForgotPasswordScreen}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
               name="UpdateProfile"
               component={UpdateProfileScreen}
-              options={{ headerShown: false }}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="MyWallet"
+              component={MyWalletScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
             />
           </Stack.Navigator>
         </AuthProvider>
