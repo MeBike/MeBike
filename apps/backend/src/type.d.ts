@@ -18,7 +18,7 @@ declare module "express" {
     station?: Station;
     rental?: Rental;
     reservation?: Reservation;
-    dispatch_bike_ids?: ObjectId;
+    dispatch_bike_ids?: ObjectId[];
     dispatched_bikes?: Bike[]
   };
 }
