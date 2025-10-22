@@ -1,95 +1,11 @@
   "use client";
 
-  import { useEffect, useState } from "react";
-  // import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
+  import { use, useState } from "react";
   import { Button } from "@/components/ui/button";
   import type { Supplier, StatsSupplierBike } from "@custom-types";
-  import { DetailUser } from "@/services/auth.service";
   import { Plus, Download, Edit2, Trash2, Eye, X } from "lucide-react";
   import { useSupplierActions } from "@/hooks/useSupplierAction";
-  const mockSuppliers: Supplier[] = [
-    {
-      _id: "supplier_001",
-      name: "Giant Vietnam",
-      contact_info: {
-        address: "123 Đường Lê Lợi, Quận 1, TP.HCM",
-        phone_number: "0912345678",
-      },
-      contract_fee: "5000000",
-      status: "HOẠT ĐỘNG",
-      created_at: "2024-01-15T00:00:00Z",
-    },
-    {
-      _id: "supplier_002",
-      name: "Trek Bikes Vietnam",
-      contact_info: {
-        address: "456 Đường Nguyễn Huệ, Quận 1, TP.HCM",
-        phone_number: "0912345679",
-      },
-      contract_fee: "4500000",
-      status: "HOẠT ĐỘNG",
-      created_at: "2024-01-16T00:00:00Z",
-    },
-    {
-      _id: "supplier_003",
-      name: "Specialized Vietnam",
-      contact_info: {
-        address: "789 Đường Đồng Khởi, Quận 1, TP.HCM",
-        phone_number: "0912345680",
-      },
-      contract_fee: "6000000",
-      status: "NGƯNG HOẠT ĐỘNG",
-      created_at: "2024-01-17T00:00:00Z",
-    },
-  ];
-
-  const mockStats: StatsSupplierBike[] = [
-    {
-      supplier_id: "supplier_001",
-      supplier_name: "Giant Vietnam",
-      total_bikes: 150,
-      active_bikes: 120,
-      booked_bikes: 20,
-      broken_bikes: 5,
-      maintain_bikes: 3,
-      unavailable_bikes: 2,
-    },
-    {
-      supplier_id: "supplier_002",
-      supplier_name: "Trek Bikes Vietnam",
-      total_bikes: 100,
-      active_bikes: 85,
-      booked_bikes: 10,
-      broken_bikes: 3,
-      maintain_bikes: 2,
-      unavailable_bikes: 0,
-    },
-    {
-      supplier_id: "supplier_003",
-      supplier_name: "Specialized Vietnam",
-      total_bikes: 80,
-      active_bikes: 60,
-      booked_bikes: 15,
-      broken_bikes: 3,
-      maintain_bikes: 2,
-      unavailable_bikes: 0,
-    },
-  ];
-
-  // const mockUser: DetailUser = {
-  //   _id: "507f1f77bcf86cd799439011",
-  //   fullname: "Nguyễn Văn Minh",
-  //   email: "minh.nguyen@bikerental.vn",
-  //   verify: "verified",
-  //   location: "Hà Nội, Việt Nam",
-  //   username: "minh_staff",
-  //   phone_number: "+84 912 345 678",
-  //   avatar: "/professional-avatar.png",
-  //   role: "ADMIN",
-  //   created_at: "2024-01-15T08:30:00Z",
-  //   updated_at: "2025-01-06T10:20:00Z",
-  // };
-
+  import { useBikeActions } from "@/hooks/useBikeAction";
   const getStatusColor = (status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
     return status === "HOẠT ĐỘNG"
       ? "bg-green-100 text-green-800"
@@ -101,6 +17,7 @@
     const [statusFilter, setStatusFilter] = useState<
       "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | ""
     >("");
+    const { useGetAllBikeQuery } = useBikeActions(true);
     const { useGetAllSupplierQuery, useGetAllStatsSupplierQuery } =
       useSupplierActions(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -111,12 +28,13 @@
       contract_fee: "",
       status: "HOẠT ĐỘNG" as "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG",
     });
-    const { data: supplierData, isLoading : isLoadingGetAllSuppliers } = useGetAllSupplierQuery(
+    const { data: supplierData, isLoading: isLoadingGetAllSuppliers } = useGetAllSupplierQuery(
       1,
       10,
       statusFilter
     );
     const { data: statsData, isLoading: isLoadingStats } = useGetAllStatsSupplierQuery();
+    const {data : bikeData , isLoading : isLoadingBike } = useGetAllBikeQuery();
     const handleAddSupplier = () => {
       console.log("[v0] Adding supplier:", formData);
       setFormData({
@@ -135,7 +53,7 @@
     };
     return (
       <div>
-        {isLoadingGetAllSuppliers && isLoadingStats ? (
+        {isLoadingGetAllSuppliers && isLoadingStats && isLoadingBike ? (
           <div>Loading suppliers...</div>
         ) : (
           <div className="space-y-6">
@@ -165,20 +83,19 @@
                   Tổng nhà cung cấp
                 </p>
                 <p className="text-2xl font-bold text-foreground mt-1">
-                  {mockSuppliers.length}
+                  {supplierData?.pagination.totalRecords || 0}
                 </p>
               </div>
               <div className="bg-card border border-border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">Đang hoạt động</p>
                 <p className="text-2xl font-bold text-green-500 mt-1">
-                  {mockSuppliers.filter((s) => s.status === "HOẠT ĐỘNG").length}
+                  {supplierData?.data?.filter((s) => s.status === "HOẠT ĐỘNG")
+                    .length || 0}
                 </p>
               </div>
               <div className="bg-card border border-border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">Tổng xe đạp</p>
-                <p className="text-2xl font-bold text-blue-500 mt-1">
-                  {mockStats.reduce((sum, stat) => sum + stat.total_bikes, 0)}
-                </p>
+                <p className="text-2xl font-bold text-blue-500 mt-1">{bikeData?.pagination.totalRecords || 0}</p>
               </div>
             </div>
 
@@ -241,7 +158,7 @@
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {supplierData?.map((supplier) => (
+                  {supplierData?.data?.map((supplier) => (
                     <tr
                       key={supplier._id}
                       className="hover:bg-muted/50 transition-colors"
@@ -298,7 +215,7 @@
                 Thống kê xe đạp theo nhà cung cấp
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {statsData?.result?.map((stat : StatsSupplierBike) => (
+                {statsData?.result?.map((stat: StatsSupplierBike) => (
                   <div
                     key={stat.supplier_id}
                     className="bg-card border border-border rounded-lg p-4"

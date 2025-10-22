@@ -9,7 +9,7 @@ import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 import { useReportBike } from "./mutations/Bike/useReportBike";
 import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
 import { useGetStatusBikeQuery } from "./query/Bike/useGetStatusBike";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useGetStatusBikeIDQuery } from "./query/Bike/useGetStatusBikeByID";
 interface ErrorResponse {
   response?: {
@@ -194,5 +194,6 @@ export const useBikeActions = (
       isGettingBikes: useGetBikes.isFetching,
       isUpdatingBike: updateBikeMutation.isPending,
       isCreatingBike: useCreateBike.isPending,
+      useGetAllBikeQuery,
     };
 }

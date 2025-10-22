@@ -13,7 +13,7 @@ const fetchAllSuppliers = async (
       status: status ?? "",
     });
     if (response.status === 200) {
-      return response.data.data;
+      return response.data;
     }
   } catch (error) {
     throw new Error("Failed to fetch suppliers");
