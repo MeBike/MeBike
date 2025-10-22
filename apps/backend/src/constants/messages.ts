@@ -67,7 +67,10 @@ export const USERS_MESSAGES = {
   EMAIL_OTP_IS_INCORRECT_OR_EXPIRED: 'Mã OTP xác thực email không chính xác hoặc đã hết hạn',
   FORGOT_PASSWORD_OTP_IS_INCORRECT_OR_EXPIRED: 'Mã OTP đặt lại mật khẩu không chính xác hoặc đã hết hạn',
   FORGOT_PASSWORD_OTP_IS_REQUIRED: 'Mã OTP đặt lại mật khẩu là bắt buộc',
-  EMAIL_OTP_IS_REQUIRED: 'Mã OTP xác thực email là bắt buộc'
+  EMAIL_OTP_IS_REQUIRED: 'Mã OTP xác thực email là bắt buộc',
+  // admin get all users
+  VERIFY_STATUS_MUST_BE_A_STRING: 'Trạng thái xác thực phải là chuỗi',
+  INVALID_VERIFY_STATUS: 'Trạng thái xác thực không hợp lệ',
 } as const
 
 export const REPORTS_MESSAGES = {

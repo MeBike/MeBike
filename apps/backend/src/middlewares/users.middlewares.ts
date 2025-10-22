@@ -552,3 +552,31 @@ export const updateMeValidator = validate(
     ["body"],
   ),
 );
+
+export const adminGetAllUsersValidator = validate(
+  checkSchema(
+    {
+      fullname: {
+        in: ['query'],
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.FULL_NAME_MUST_BE_A_STRING
+        },
+        trim: true
+      },
+      verify: {
+        in: ['query'],
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.VERIFY_STATUS_MUST_BE_A_STRING
+        },
+        trim: true,
+        isIn: {
+          options: [Object.values(UserVerifyStatus)],
+          errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
+        }
+      }
+    },
+    ['query']
+  )
+)

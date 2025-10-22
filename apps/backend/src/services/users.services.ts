@@ -1,8 +1,8 @@
-import { ObjectId } from "mongodb";
+import { Filter, ObjectId } from "mongodb";
 import process from "node:process";
 import nodemailer from "nodemailer";
 
-import type { RegisterReqBody, UpdateMeReqBody } from "~/models/requests/users.requests";
+import type { AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody } from "~/models/requests/users.requests";
 
 import { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
@@ -16,6 +16,9 @@ import { signToken, verifyToken } from "~/utils/jwt";
 
 import databaseService from "./database.services";
 import walletService from "./wallets.services";
+import { NextFunction, Request, Response } from "express";
+import { ParamsDictionary } from "express-serve-static-core";
+import { sendPaginatedResponse } from "~/utils/pagination.helper";
 
 class UsersService {
   private decodeRefreshToken(refresh_token: string) {
@@ -466,6 +469,42 @@ class UsersService {
       new RefreshToken({ user_id: new ObjectId(user_id), token: new_refresh_token, exp, iat }),
     );
     return { access_token, refresh_token: new_refresh_token };
+  }
+
+  async adminGetAllUsers(
+    req: Request<ParamsDictionary, any, any, AdminGetAllUsersReqQuery>,
+    res: Response,
+    next: NextFunction
+  ) {
+    const { fullname, verify } = req.query
+    const query = req.query
+
+    const filter: Filter<User> = {}
+
+    if (fullname) {
+      filter.fullname = { $regex: fullname, $options: 'i' }
+    }
+
+    if (verify) {
+      filter.verify = verify
+    }
+
+    const projection = {
+      password: 0,
+      email_verify_otp: 0,
+      email_verify_otp_expires: 0,
+      forgot_password_otp: 0,
+      forgot_password_otp_expires: 0
+    }
+
+    await sendPaginatedResponse(
+      res,
+      next,
+      databaseService.users,
+      query,
+      filter,
+      projection
+    )
   }
 }
 

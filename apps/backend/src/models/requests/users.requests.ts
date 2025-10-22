@@ -65,3 +65,10 @@ export type ResetPasswordOtpReqBody = {
   password: string;
   confirm_password: string;
 };
+
+export type AdminGetAllUsersReqQuery = {
+  limit?: string
+  page?: string
+  fullname?: string
+  verify?: UserVerifyStatus
+}

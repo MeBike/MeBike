@@ -3,7 +3,7 @@ import type { ParamsDictionary } from "express-serve-static-core";
 
 import { ObjectId } from "mongodb";
 
-import type { ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, resetPasswordReqBody, TokenPayLoad, VerifyEmailOtpReqBody, VerifyEmailReqBody } from "~/models/requests/users.requests";
+import type { AdminGetAllUsersReqQuery, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, resetPasswordReqBody, TokenPayLoad, VerifyEmailOtpReqBody, VerifyEmailReqBody } from "~/models/requests/users.requests";
 import type User from "~/models/schemas/user.schema";
 
 import { UserVerifyStatus } from "~/constants/enums";
@@ -238,4 +238,12 @@ export async function refreshController(req: Request<ParamsDictionary, any, Refr
     message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESS,
     result,
   });
+}
+
+export async function adminGetAllUsersController(
+  req: Request<ParamsDictionary, any, any, AdminGetAllUsersReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  await usersService.adminGetAllUsers(req, res, next)
 }

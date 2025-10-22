@@ -4,8 +4,10 @@ import type { UpdateMeReqBody } from "~/models/requests/users.requests";
 
 import { changePasswordController, forgotPasswordController, getMeController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, updateMeController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
-import { accessTokenValidator, changePasswordValidator, checkNewPasswordValidator, emailVerifyTokenValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, updateMeValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, adminGetAllUsersValidator, changePasswordValidator, checkNewPasswordValidator, emailVerifyTokenValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, updateMeValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
+import { isAdminValidator } from "~/middlewares/admin.middlewares";
+import { getAllUserRefundController } from "~/controllers/wallet.controllers";
 
 const usersRouter = Router();
 
@@ -44,5 +46,6 @@ usersRouter.patch(
   wrapAsync(updateMeController),
 );
 usersRouter.post("/refresh-token", refreshTokenValidator, wrapAsync(refreshController));
+usersRouter.get("manage-users", accessTokenValidator, isAdminValidator, adminGetAllUsersValidator, wrapAsync(getAllUserRefundController))
 
 export default usersRouter;
