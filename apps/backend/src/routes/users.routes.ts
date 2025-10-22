@@ -32,7 +32,7 @@ usersRouter.get("/me", accessTokenValidator, wrapAsync(getMeController));
 usersRouter.patch(
   "/me",
   accessTokenValidator,
-  filterMiddleware<UpdateMeReqBody>(["fullname", "location", "username", "avatar"]),
+  filterMiddleware<UpdateMeReqBody>(["fullname", "location", "username", "avatar", "phone_number"]),
   updateMeValidator,
   wrapAsync(updateMeController),
 );

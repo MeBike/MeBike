@@ -49,6 +49,7 @@ export type UpdateMeReqBody = {
   location?: string;
   username?: string;
   avatar?: string;
+  phone_number?: string;
 };
 
 export type RefreshTokenReqBody = {

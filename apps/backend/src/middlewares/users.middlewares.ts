@@ -502,6 +502,32 @@ export const updateMeValidator = validate(
         },
         trim: true,
       },
+      phone_number: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING,
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID);
+            }
+            
+            const user = await databaseService.users.findOne({ phone_number: value });
+            
+            if (user) {
+              //kiểm tra xem SĐT này có phải là của chính người dùng đang request không
+              //(tránh báo lỗi khi người dùng chỉ bấm "lưu" mà không đổi SĐT)
+              const { user_id } = (req as Request).decoded_authorization as TokenPayLoad;
+              if (user._id.toString() !== user_id) {
+                throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS);
+              }
+            }
+            return true;
+          },
+        },
+      },
     },
     ["body"],
   ),

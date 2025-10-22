@@ -59,6 +59,7 @@ export const USERS_MESSAGES = {
   USERNAME_MUST_BE_A_STRING: 'Tên người dùng phải là chuỗi',
   USERNAME_ALREADY_EXISTS: 'Tên người dùng đã tồn tại',
   UPDATE_ME_SUCCESS: 'Cập nhật thông tin người dùng thành công',
+  PHONE_NUMBER_ALREADY_EXISTS: 'Số điện thoại đã tồn tại',
   // refresh token messages
   REFRESH_TOKEN_SUCCESS: 'Làm mới token thành công',
   // check admin role messages
