@@ -23,6 +23,8 @@ tags:
     description: Operations related to managing bikes.
   - name: Rentals
     description: Operations related to bike rentals.
+  - name: Reservations
+    description: Operations for managing bike reservations.
   - name: Reports
     description: Operations for user reports and management.
   - name: Suppliers
@@ -82,6 +84,11 @@ components:
       $ref: './components/schemas/CancelRentalReqBody.yaml'
     EndRentalByAdminOrStaffReqBody:
       $ref: './components/schemas/EndRentalByAdminOrStaffReqBody.yaml'
+    # reservation
+    CreateReservationReqBody:
+      $ref: './components/schemas/CreateReservationReqBody.yaml'
+    CancelReservationReqBody:
+      $ref: './components/schemas/CancelReservationReqBody.yaml'
     # report
     CreateReportReqBody:
       $ref: './components/schemas/CreateReportReqBody.yaml'
@@ -145,6 +152,10 @@ components:
       $ref: "./components/schemas/Rental.yaml"
     RentalStatus:
       $ref: "./components/schemas/RentalStatus.yaml"
+    Reservation:
+      $ref: "./components/schemas/Reservation.yaml"
+    ReservationStatus:
+      $ref: "./components/schemas/ReservationStatus.yaml"
     Report:
       $ref: "./components/schemas/Report.yaml"
     ReportStatus:

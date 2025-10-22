@@ -37,6 +37,10 @@
       "description": "Operations related to bike rentals."
     },
     {
+      "name": "Reservations",
+      "description": "Operations for managing bike reservations."
+    },
+    {
       "name": "Reports",
       "description": "Operations for user reports and management."
     },
@@ -1844,6 +1848,281 @@
             "$ref": "#/components/schemas/ErrorStatusResponse"
           },
           "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Create a new reservation",
+        "description": "Allows a user to create a reservation for a bike.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reservation created successfully."
+          },
+          "400": {
+            "description": "Bad Request (e.g., bike not available, user already has reservation)."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Get all reservations (Admin/Staff only)",
+        "description": "Retrieves a paginated list of all reservations.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ReservationStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of reservations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Reservation"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations/me": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Get my reservations",
+        "description": "Retrieves a paginated list of the authenticated user's reservations.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of the user's reservations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Reservation"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations/me/{id}": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Get my reservation details",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservation details."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (not the user's reservation)."
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations/{id}": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Get reservation details (Admin/Staff only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservation details."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Cancel my reservation",
+        "description": "Allows a user to cancel their own reservation.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReservationReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reservation cancelled successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (not the user's reservation)."
+          },
+          "404": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
           }
         }
@@ -3660,6 +3939,32 @@
           }
         }
       },
+      "CreateReservationReqBody": {
+        "type": "object",
+        "required": [
+          "bike_id"
+        ],
+        "properties": {
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the bike to be reserved."
+          }
+        }
+      },
+      "CancelReservationReqBody": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "The reason for cancelling the reservation.",
+            "example": "User changed their mind."
+          }
+        }
+      },
       "CreateReportReqBody": {
         "type": "object",
         "required": [
@@ -4346,6 +4651,51 @@
           "ĐÃ ĐẶT TRƯỚC"
         ],
         "example": "ĐANG THUÊ"
+      },
+      "Reservation": {
+        "type": "object",
+        "description": "Represents a bike reservation.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "expire_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time when the reservation expires."
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReservationStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReservationStatus": {
+        "type": "string",
+        "description": "The status of a reservation.",
+        "enum": [
+          "ĐANG GIỮ",
+          "ĐÃ HỦY",
+          "HẾT HẠN",
+          "ĐÃ THUÊ"
+        ],
+        "example": "ĐANG GIỮ"
       },
       "Report": {
         "type": "object",

@@ -1,0 +1,24 @@
+type: object
+description: Represents a bike reservation.
+properties:
+  _id:
+    type: string
+    format: mongoId
+  user_id:
+    type: string
+    format: mongoId
+  bike_id:
+    type: string
+    format: mongoId
+  expire_at:
+    type: string
+    format: date-time
+    description: The time when the reservation expires.
+  status:
+    $ref: './ReservationStatus.yaml'
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time
