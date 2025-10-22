@@ -273,69 +273,6 @@ export const forgotPasswordValidator = validate(
   ),
 );
 
-// export const verifyForgotPasswordTokenValidator = validate(
-//   checkSchema(
-//     {
-//       forgot_password_token: {
-//         trim: true,
-//         custom: {
-//           options: async (value: string, { req }) => {
-//             if (!value) {
-//               throw new ErrorWithStatus({
-//                 message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED,
-//                 status: HTTP_STATUS.UNAUTHORIZED,
-//               });
-//             }
-//             try {
-//               const decoded_forgot_password_token = await verifyToken({
-//                 token: value,
-//                 secretOrPublicKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
-//               })
-//               ;(req as Request).decoded_forgot_password_token = decoded_forgot_password_token;
-
-//               const { user_id } = decoded_forgot_password_token;
-//               const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) });
-//               if (user === null) {
-//                 throw new ErrorWithStatus({
-//                   message: USERS_MESSAGES.USER_NOT_FOUND,
-//                   status: HTTP_STATUS.NOT_FOUND,
-//                 });
-//               }
-//               if (user.forgot_password_token !== value) {
-//                 throw new ErrorWithStatus({
-//                   message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INCORRECT,
-//                   status: HTTP_STATUS.UNAUTHORIZED,
-//                 });
-//               }
-//               (req as Request).user = user;
-//             }
-//             catch (error) {
-//               if (error instanceof JsonWebTokenError) {
-//                 throw new ErrorWithStatus({
-//                   message: capitalize((error as JsonWebTokenError).message),
-//                   status: HTTP_STATUS.UNAUTHORIZED,
-//                 });
-//               }
-//               throw error;
-//             }
-//             return true;
-//           },
-//         },
-//       },
-//     },
-//     ["body"],
-//   ),
-// );
-
-// export const resetPasswordValidator = validate(
-//   checkSchema(
-//     {
-//       password: passwordSchema,
-//       confirm_password: confirmPasswordSchema,
-//     },
-//     ["body"],
-//   ),
-// );
 export const resetPasswordValidator = validate(
   checkSchema(
     {
@@ -346,8 +283,8 @@ export const resetPasswordValidator = validate(
       },
       otp: {
         notEmpty: { errorMessage: USERS_MESSAGES.FORGOT_PASSWORD_OTP_IS_REQUIRED },
-        isString: { errorMessage: 'OTP must be a string' },
-        isLength: { options: { min: 6, max: 6 }, errorMessage: 'OTP must be 6 digits' },
+        isString: { errorMessage: USERS_MESSAGES.FORGOT_PASSWORD_OTP_MUST_BE_A_STRING },
+        isLength: { options: { min: 6, max: 6 }, errorMessage: USERS_MESSAGES.FORGOT_PASSWORD_OTP_MUST_BE_6_DIGITS },
         trim: true,
       },
       password: passwordSchema,
@@ -367,8 +304,8 @@ export const verifyEmailOtpValidator = validate(
       },
       otp: {
         notEmpty: { errorMessage: USERS_MESSAGES.EMAIL_OTP_IS_REQUIRED },
-        isString: { errorMessage: 'OTP must be a string' },
-        isLength: { options: { min: 6, max: 6 }, errorMessage: 'OTP must be 6 digits' },
+        isString: { errorMessage: USERS_MESSAGES.EMAIL_OTP_MUST_BE_A_STRING },
+        isLength: { options: { min: 6, max: 6 }, errorMessage: USERS_MESSAGES.EMAIL_OTP_MUST_BE_6_DIGITS },
         trim: true,
       },
     },
