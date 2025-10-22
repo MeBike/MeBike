@@ -1,7 +1,7 @@
 import { CronJob } from 'cron'
 import reservationsService from '~/services/reservations.services'
 
-const NOTIFICATION_CRON_SCHEDULE = '*/10 5-22 * * *' // Runs every 10 minutes, only between 5 AM and 10:59 PM
+const NOTIFICATION_CRON_SCHEDULE = '*/5 5-22 * * *' // Runs every 5 minutes, only between 5 AM and 10:59 PM
 export const warningExpiryReservation = new CronJob(NOTIFICATION_CRON_SCHEDULE, async () => {
   console.log(`[Cron] Running notify and schedule cancellation job (${new Date().toLocaleTimeString()})`)
   try {

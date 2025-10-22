@@ -283,7 +283,11 @@ class ReservationsService {
         const mailPromise = transporter.sendMail(mailOptions)
         await mailPromise
 
-        this.scheduleDelayedCancellation(r, 16)
+        const bufferMs = 60 *  1000
+        const timeUntilExpiryMs = r.end_time?.getTime()! - now.getTime()
+        const totalDelayMs = timeUntilExpiryMs + bufferMs
+
+        this.scheduleDelayedCancellation(r, totalDelayMs)
         return true
       } catch (error) {
         console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
@@ -486,12 +490,11 @@ class ReservationsService {
     return { cancelled_count: cancelledCount }
   }
 
-  async scheduleDelayedCancellation(reservation: Reservation, delayMinutes: number = 16) {
-    const delayMs = delayMinutes * 60 * 1000
+  async scheduleDelayedCancellation(reservation: Reservation, delayMs: number) {
+    const effectiveDelayMs = Math.max(1000, delayMs)
+    console.log(RESERVATIONS_MESSAGE.SCHEDULING_CANCEL_TASK(reservation._id!.toString(), Math.round(effectiveDelayMs / 60000)))
 
-    console.log(RESERVATIONS_MESSAGE.SCHEDULING_CANCEL_TASK(reservation._id!.toString(), delayMinutes))
-
-    await sleep(delayMs)
+    await sleep(effectiveDelayMs)
 
     const currentReservation = await databaseService.reservations.findOne({
       _id: reservation._id,
