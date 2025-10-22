@@ -3,7 +3,7 @@ import type { ParamsDictionary } from "express-serve-static-core";
 
 import { ObjectId } from "mongodb";
 
-import type { ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, resetPasswordReqBody, TokenPayLoad, VerifyEmailReqBody } from "~/models/requests/users.requests";
+import type { AdminGetAllUsersReqQuery, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, resetPasswordReqBody, TokenPayLoad, VerifyEmailOtpReqBody, VerifyEmailReqBody } from "~/models/requests/users.requests";
 import type User from "~/models/schemas/user.schema";
 
 import { UserVerifyStatus } from "~/constants/enums";
@@ -12,6 +12,8 @@ import { USERS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
 import databaseService from "~/services/database.services";
 import usersService from "~/services/users.services";
+import bcrypt from "bcryptjs";
+
 
 export async function loginController(req: Request<ParamsDictionary, any, LoginReqBody>, res: Response) {
   const user = req.user as User;
@@ -53,40 +55,125 @@ export async function forgotPasswordController(req: Request, res: Response) {
   res.json(result);
 }
 
-export async function verifyForgotPasswordTokenController(req: Request, res: Response) {
-  res.json({
-    message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS,
-  });
-}
+// export async function verifyForgotPasswordTokenController(req: Request, res: Response) {
+//   res.json({
+//     message: USERS_MESSAGES.VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS,
+//   });
+// }
 
-export async function resetPasswordController(req: Request<ParamsDictionary, any, resetPasswordReqBody>, res: Response) {
-  const { user_id } = req.decoded_forgot_password_token as TokenPayLoad;
-  const { password } = req.body;
-  const result = await usersService.resetPassword({ user_id, password });
-  res.json(result);
-}
+export async function resetPasswordController(req: Request<ParamsDictionary, any, ResetPasswordOtpReqBody>, res: Response) {
+  // const { user_id } = req.decoded_forgot_password_token as TokenPayLoad;
+  // const { password } = req.body;
+  // const result = await usersService.resetPassword({ user_id, password });
+  // res.json(result);
+  const { email, otp, password } = req.body;
+  const user = await databaseService.users.findOne({ email });
 
-export async function emailVerifyTokenController(req: Request<ParamsDictionary, any, VerifyEmailReqBody>, res: Response) {
-  const { user_id } = req.decoded_email_verify_token as TokenPayLoad;
-  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) });
-  if (user === null) {
+  if (!user) {
     throw new ErrorWithStatus({
       message: USERS_MESSAGES.USER_NOT_FOUND,
-      status: 404,
+      status: HTTP_STATUS.NOT_FOUND,
     });
   }
-  if (user.verify === UserVerifyStatus.Verified && user.email_verify_token === "") {
-    res.json({
-      message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE,
-    });
-  }
-  if (user.email_verify_token !== (req.body.email_verify_token as string)) {
+   if (user.verify === UserVerifyStatus.Banned) {
+      throw new ErrorWithStatus({ message: USERS_MESSAGES.USER_BANNED, status: HTTP_STATUS.FORBIDDEN });
+   }
+   const now = new Date();
+  if (!user.forgot_password_otp || user.forgot_password_otp !== otp || (user.forgot_password_otp_expires && user.forgot_password_otp_expires < now)) {
     throw new ErrorWithStatus({
-      message: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INCORRECT,
+      message: USERS_MESSAGES.FORGOT_PASSWORD_OTP_IS_INCORRECT_OR_EXPIRED,
       status: HTTP_STATUS.UNAUTHORIZED,
     });
   }
-  const result = await usersService.verifyEmail(user_id);
+
+   const isSameAsOldPassword = bcrypt.compareSync(password, user.password);
+   if (isSameAsOldPassword) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.NEW_PASSWORD_CANNOT_BE_THE_SAME_AS_OLD_PASSWORD,
+        status: HTTP_STATUS.BAD_REQUEST
+      });
+   }
+
+  const result = await usersService.resetPassword({ user_id: user._id.toString(), password });
+  res.json(result);
+}
+
+// export async function emailVerifyTokenController(req: Request<ParamsDictionary, any, VerifyEmailOtpReqBody>, res: Response) {
+//   const { email, otp } = req.body;
+
+//   const user = await databaseService.users.findOne({ email });
+
+//   if (user === null) {
+//     throw new ErrorWithStatus({
+//       message: USERS_MESSAGES.USER_NOT_FOUND,
+//       status: HTTP_STATUS.NOT_FOUND,
+//     });
+//   }
+//   // if (user.verify === UserVerifyStatus.Verified && user.email_verify_token === "") {
+//   //   res.json({
+//   //     message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE,
+//   //   });
+//   // }
+//   if (user.verify === UserVerifyStatus.Verified) {
+//      res.json({ message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE });
+//      return; // Return early if already verified
+//   }
+//   if (user.verify === UserVerifyStatus.Banned) {
+//     throw new ErrorWithStatus({ message: USERS_MESSAGES.USER_BANNED, status: HTTP_STATUS.FORBIDDEN });
+//   }
+//   // if (user.email_verify_token !== (req.body.email_verify_token as string)) {
+//   //   throw new ErrorWithStatus({
+//   //     message: USERS_MESSAGES.EMAIL_VERIFY_TOKEN_IS_INCORRECT,
+//   //     status: HTTP_STATUS.UNAUTHORIZED,
+//   //   });
+//   // }
+
+//   const now = new Date();
+//   if (!user.email_verify_otp || user.email_verify_otp !== otp || (user.email_verify_otp_expires && user.email_verify_otp_expires < now)) {
+//     throw new ErrorWithStatus({
+//       // Use the new message constant you added
+//       message: USERS_MESSAGES.EMAIL_OTP_IS_INCORRECT_OR_EXPIRED,
+//       status: HTTP_STATUS.UNAUTHORIZED,
+//     });
+//   }
+
+//   // const result = await usersService.verifyEmail(user_id);
+//   const result = await usersService.verifyEmail(user._id.toString());
+//   res.json({
+//     message: USERS_MESSAGES.VERIFY_EMAIL_SUCCESS,
+//     result,
+//   });
+// }
+export async function verifyEmailOtpController(req: Request<ParamsDictionary, any, VerifyEmailOtpReqBody>, res: Response) {
+  const { email, otp } = req.body;
+
+  const user = await databaseService.users.findOne({ email });
+
+  if (!user) {
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.USER_NOT_FOUND,
+      status: HTTP_STATUS.NOT_FOUND,
+    });
+  }
+  if (user.verify === UserVerifyStatus.Verified) {
+     res.json({ message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE });
+     return;
+  }
+  if (user.verify === UserVerifyStatus.Banned) {
+    throw new ErrorWithStatus({ message: USERS_MESSAGES.USER_BANNED, status: HTTP_STATUS.FORBIDDEN });
+  }
+
+  const now = new Date();
+  if (!user.email_verify_otp || user.email_verify_otp !== otp || (user.email_verify_otp_expires && user.email_verify_otp_expires < now)) {
+    throw new ErrorWithStatus({
+      message: USERS_MESSAGES.EMAIL_OTP_IS_INCORRECT_OR_EXPIRED,
+      status: HTTP_STATUS.UNAUTHORIZED,
+    });
+  }
+
+  const result = await usersService.verifyEmail(user._id.toString());
+
+
   res.json({
     message: USERS_MESSAGES.VERIFY_EMAIL_SUCCESS,
     result,
@@ -102,7 +189,7 @@ export async function resendEmailVerifyController(req: Request, res: Response) {
       status: 404,
     });
   }
-  if (user.verify === UserVerifyStatus.Verified && user.email_verify_token === "") {
+  if (user.verify === UserVerifyStatus.Verified) {
     return res.json({
       message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE,
     });
@@ -151,4 +238,12 @@ export async function refreshController(req: Request<ParamsDictionary, any, Refr
     message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESS,
     result,
   });
+}
+
+export async function adminGetAllUsersController(
+  req: Request<ParamsDictionary, any, any, AdminGetAllUsersReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  await usersService.adminGetAllUsers(req, res, next)
 }
