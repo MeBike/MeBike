@@ -27,11 +27,9 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
       !hasAlreadyRedirected
     ) {
       if (!isAuthenticated && !user) {
-        // Vừa logout hoặc chưa đăng nhập, KHÔNG hiện toast error
         router.push("/auth/login");
         setHasAlreadyRedirected(true);
       } else if (user && user.role !== "ADMIN") {
-        // User tồn tại nhưng sai quyền, mới hiện toast error
         setShowUnauthorized(true);
         toast.error("Bạn không có quyền truy cập!");
         clearTokens();

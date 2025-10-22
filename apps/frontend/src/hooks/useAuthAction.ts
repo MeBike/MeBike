@@ -97,7 +97,11 @@ export const useAuthActions = () => {
           );
           queryClient.invalidateQueries({ queryKey: ["user", "me"] });
           onComplete(true);
-          toast.success("Logged in successfully");
+          setTimeout(() => {
+            toast.success("Login Successful", {
+              description: "Welcome back!",
+            });
+          }, 2000);
         },
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(error, "Error logging in");
