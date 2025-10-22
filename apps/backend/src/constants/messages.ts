@@ -412,5 +412,7 @@ export const RATING_MESSAGE = {
   REASON_ID_MUST_BE_OBJECTID: 'ID lý do phải là ObjectId',
   REASON_ID_NOT_FOUND: 'ID lý do %s không tồn tại',
   RENTAL_ID_IS_REQUIRED: 'ID phiên thuê là bắt buộc',
-  RENTAL_ID_INVALID: 'ID phiên thuê không hợp lệ'
+  RENTAL_ID_INVALID: 'ID phiên thuê không hợp lệ',
+  CANNOT_RATE_UNCOMPLETED_RENTAL: 'Chỉ có thể đánh giá các phiên thuê đã hoàn thành',
+  RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này'
 }

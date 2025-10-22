@@ -1,5 +1,6 @@
 import { checkSchema } from 'express-validator'
 import { ObjectId } from 'mongodb'
+import { RentalStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RATING_MESSAGE, RENTALS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -72,6 +73,25 @@ export const createRatingValidator = validate(
             throw new ErrorWithStatus({
               message: RENTALS_MESSAGE.NOT_FOUND.replace('%s', value),
               status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          if (findRetal.status !== RentalStatus.Completed) {
+            throw new ErrorWithStatus({
+              message: RATING_MESSAGE.CANNOT_RATE_UNCOMPLETED_RENTAL,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+          const now = new Date()
+
+          // chỉ được đánh giá sau 7 ngày kể từ khi hoàn thành
+          const expriredRatingTime = new Date(now)
+          expriredRatingTime.setDate(expriredRatingTime.getDate() - 7)
+          if (findRetal.updated_at && findRetal.updated_at < expriredRatingTime) {
+            throw new ErrorWithStatus({
+              message: RATING_MESSAGE.RATING_EXPIRED,
+              status: HTTP_STATUS.BAD_REQUEST
             })
           }
 
