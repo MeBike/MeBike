@@ -35,7 +35,7 @@ void setup()
   Global::ledStatusManager->begin();
 
   Global::bufferedLogger.reset(new BufferedLogger());
-  Global::bufferedLogger->setTopic(Global::getTopics().logTopic.c_str()); // Use MAC-suffixed topic
+  Global::bufferedLogger->setTopic(Global::getTopics().logTopic.c_str()); 
   Global::logInfoLocal("Buffered logger initialized");
   Wire.begin(HardwareConfig::I2C_SDA_PIN, HardwareConfig::I2C_SCL_PIN);
   nfcManager = std::unique_ptr<NFCManager>(new NFCManager(HardwareConfig::PN532_IRQ_PIN, HardwareConfig::PN532_RESET_PIN));
