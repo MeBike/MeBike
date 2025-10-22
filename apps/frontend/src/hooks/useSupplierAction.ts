@@ -6,6 +6,7 @@ import { useGetAllStatsSupplierQuery } from "./query/Supplier/useGetAllStatsSupp
 import { useCreateSupplierMutation } from "./mutations/Supplier/useCreateSupplierMutation";
 import { CreateSupplierSchema } from "@/schemas/supplier.schema";
 import { toast } from "sonner";
+import { useGetBikeStatsSupplierQuery } from "./query/Supplier/useGetBikeStatsSupplierQuery";
 
 interface ErrorResponse {
   response?: {
@@ -37,22 +38,34 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 
   return defaultMessage;
 };
-export const useSupplierActions = (
-    hasToken : boolean,
-) => {
-    const router = useRouter();
-    const queryClient = useQueryClient();
-    const {refetch : refetchAllSuppliers , data : allSupplier , isFetching : isFetchingAllSupplier} = useGetAllSupplierQuery();
-    const {data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier} = useGetAllStatsSupplierQuery();
-    const useCreateSupplier = useCreateSupplierMutation();
-    const getAllSuppliers = useCallback(() => {
-      if (!hasToken) {
-        router.push("/login");
-        return;
-      }
-      refetchAllSuppliers();
-    }, [refetchAllSuppliers, hasToken, router]);
-    const createSupplier = useCallback(async (supplierData: CreateSupplierSchema) => {
+export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const {
+    refetch: refetchAllSuppliers,
+    data: allSupplier,
+  } = useGetAllSupplierQuery();
+  const { data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier , refetch : fetchAllStatsSupplier } =
+    useGetAllStatsSupplierQuery();
+  const useCreateSupplier = useCreateSupplierMutation();
+  const { data: bikeStats, refetch: fetchBikeStatsSupplier , isLoading: isLoadingBikeStatsSupplier } =
+    useGetBikeStatsSupplierQuery(supplier_id);
+  const getAllSuppliers = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchAllSuppliers();
+  }, [refetchAllSuppliers, hasToken, router]);
+  const getAllStatsSupplier = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    fetchAllStatsSupplier();
+  }, [hasToken, router, fetchAllStatsSupplier]);
+  const createSupplier = useCallback(
+    async (supplierData: CreateSupplierSchema) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -61,10 +74,13 @@ export const useSupplierActions = (
         onSuccess: (result) => {
           if (result.status === 200) {
             toast.success("Supplier created successfully");
-            queryClient.invalidateQueries({ queryKey: ["suppliers", "all"] });
+            queryClient.invalidateQueries({
+              queryKey: ["suppliers", "all", 1, 10],
+            });
             queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
           } else {
-            const errorMessage = result.data?.message || "Error creating suppliers";
+            const errorMessage =
+              result.data?.message || "Error creating suppliers";
             toast.error(errorMessage);
           }
         },
@@ -73,15 +89,31 @@ export const useSupplierActions = (
           toast.error(errorMessage);
         },
       });
-    }, [hasToken, router]);
-    
-    return {
-      useGetAllSupplierQuery,
-      getAllSuppliers,
-      allSupplier,
-      createSupplier,
-      isCreatingSupplier: useCreateSupplier.isPending,
-      useGetAllStatsSupplierQuery,
-      isLoadingGetAllStatsSupplier: isLoadingAllStatsSupplier,
-    };
-}
+    },
+    [hasToken, router, queryClient, useCreateSupplier]
+  );
+  const getBikeStatsSupplier = useCallback(async () => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    const result = await fetchBikeStatsSupplier();
+    console.log("Fetched Data:", result.data);
+  }, [hasToken, router, fetchBikeStatsSupplier]);
+
+  return {
+    useGetAllSupplierQuery,
+    getAllSuppliers,
+    allSupplier,
+    createSupplier,
+    isCreatingSupplier: useCreateSupplier.isPending,
+    useGetAllStatsSupplierQuery,
+    useGetBikeStatsSupplierQuery,
+    getBikeStatsSupplier,
+    bikeStats,
+    isLoadingBikeStatsSupplier,
+    isLoadingGetAllStatsSupplier: isLoadingAllStatsSupplier,
+    getAllStatsSupplier,
+    allStatsSupplier,
+  };
+};

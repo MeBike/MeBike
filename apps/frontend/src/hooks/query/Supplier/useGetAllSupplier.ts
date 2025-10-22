@@ -9,19 +9,20 @@ const fetchAllSuppliers = async (
   try {
     const response = await supplierService.getAllSuppliers({
       page: page ?? 1,
-      limit: limit ?? 100,
+      limit: limit ?? 10,
       status: status ?? "",
     });
     if (response.status === 200) {
       return response.data;
     }
   } catch (error) {
+    console.log(error);
     throw new Error("Failed to fetch suppliers");
   }
 };
 export const useGetAllSupplierQuery = (page ?: number , limit ?:number , status?: "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | "") => {
   return useQuery({
-    queryKey: ["suppliers", "all"],
+    queryKey: ["suppliers", "all" , page , limit , status],
     queryFn: () => fetchAllSuppliers(page, limit, status),
   });
 };

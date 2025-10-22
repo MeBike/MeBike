@@ -80,11 +80,11 @@ export const supplierService = {
   },
   statsSupplierBike: async (
     id: string
-  ): Promise<DetailApiResponse<StatsSupplierBike>> => {
+  ): Promise<AxiosResponse<DetailApiResponse<StatsSupplierBike[]>>> => {
     const response = await fetchHttpClient.get<
-      DetailApiResponse<StatsSupplierBike>
+      DetailApiResponse<StatsSupplierBike[]>
     >(SUPPLIER_ENDPOINTS.WITH_STATS_BIKE(id));
-    return response.data;
+    return response;
   },
   statsSupplier: async (): Promise<
     AxiosResponse<DetailApiResponse<StatsSupplierBike[]>>

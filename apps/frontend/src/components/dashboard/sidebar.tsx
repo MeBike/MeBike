@@ -11,8 +11,6 @@ import {
   Users,
   BarChart3,
   Settings,
-  ChevronLeft,
-  ChevronRight,
   User,
   LogOut,
   History,
@@ -108,7 +106,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
 };
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed,] = useState(false);
   const {user,logOut , isAuthenticated} = useAuth();
   const pathname = usePathname();
   const handleLogout = () => {
@@ -148,17 +146,6 @@ export function Sidebar() {
               </div>
             </div>
           )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 hover:bg-sidebar-accent rounded-md transition-colors"
-            aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
-          >
-            {collapsed ? (
-              <ChevronRight className="w-4 h-4 text-sidebar-foreground" />
-            ) : (
-              <ChevronLeft className="w-4 h-4 text-sidebar-foreground" />
-            )}
-          </button>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4">

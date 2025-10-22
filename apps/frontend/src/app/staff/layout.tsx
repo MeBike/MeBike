@@ -4,7 +4,6 @@ import { useAuth } from "@/providers/auth-providers";
 import { clearTokens } from "@/utils/tokenManager";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 interface StaffLayoutProps {
@@ -39,6 +38,7 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
     }
   }, [
     isLoading,
+    queryClient,
     isAuthenticated,
     user,
     isLoggingOut,

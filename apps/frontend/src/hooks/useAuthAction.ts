@@ -146,6 +146,7 @@ export const useAuthActions = () => {
               new StorageEvent("storage", { key: "auth_tokens" })
             );
             queryClient.removeQueries({ queryKey: ["user", "me"] });
+            queryClient.clear();
             toast.success("Logged out successfully");
             router.push("/auth/login");
           } else {

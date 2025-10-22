@@ -7,8 +7,6 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Bike, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@/components/ui/progress";
-import { toast } from "sonner";
-import { useEffect } from "react";
 export default function DashboardPage() {
   const { user } = useAuth();
   if (!user) {
