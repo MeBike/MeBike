@@ -3,6 +3,7 @@
 #include <ArduinoLog.h>
 #include <cstdio>
 #include <algorithm>
+#include <cctype>
 
 CardTapWatcher::CardTapWatcher(
     NFCManager& manager,
@@ -14,7 +15,7 @@ CardTapWatcher::CardTapWatcher(
   , debounceInterval(debounceMs)
   , scanTimeout(scanTimeoutMs) {}
 
-bool CardTapWatcher::poll(String& cardUidDecimalOut) {
+bool CardTapWatcher::poll(std::string& cardUidOut) {
   const unsigned long now = millis();
   if (now - lastPollTime < pollInterval) {
     return false;
@@ -37,8 +38,22 @@ bool CardTapWatcher::poll(String& cardUidDecimalOut) {
   }
 
   consecutiveMisses = 0;
-  String decimalUid = convertUidToDecimal(uid, uidLength);
-  const bool sameUidAsLast = decimalUid.equalsIgnoreCase(lastPublishedUid);
+  std::string decimalUid = convertUidToDecimal(uid, uidLength);
+
+  auto stringsEqualIgnoreCase = [](const std::string& lhs, const std::string& rhs) {
+    if (lhs.size() != rhs.size()) {
+      return false;
+    }
+    for (size_t i = 0; i < lhs.size(); ++i) {
+      if (std::tolower(static_cast<unsigned char>(lhs[i])) !=
+          std::tolower(static_cast<unsigned char>(rhs[i]))) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const bool sameUidAsLast = stringsEqualIgnoreCase(decimalUid, lastPublishedUid);
   const bool withinDebounce = (now - lastPublishTime) < debounceInterval;
   const bool isDuplicate = cardPresent && sameUidAsLast && withinDebounce;
 
@@ -53,13 +68,13 @@ bool CardTapWatcher::poll(String& cardUidDecimalOut) {
   cardPresent = true;
   lastPublishedUid = decimalUid;
   lastPublishTime = now;
-  cardUidDecimalOut = decimalUid;
+  cardUidOut = decimalUid;
   Serial.print("NFC card detected: ");
-  Serial.println(decimalUid);
+  Serial.println(decimalUid.c_str());
   return true;
 }
 
-String CardTapWatcher::convertUidToDecimal(const uint8_t* uidBytes, uint8_t length) {
+std::string CardTapWatcher::convertUidToDecimal(const uint8_t* uidBytes, uint8_t length) {
   uint64_t uidValue = 0;
   for (uint8_t i = 0; i < length; i++) {
     uidValue = (uidValue << 8) | uidBytes[i];
@@ -69,17 +84,16 @@ String CardTapWatcher::convertUidToDecimal(const uint8_t* uidBytes, uint8_t leng
     char buffer[21];
     const int written = snprintf(buffer, sizeof(buffer), "%llu", static_cast<unsigned long long>(uidValue));
     if (written > 0) {
-      return String(buffer);
+      return std::string(buffer, static_cast<size_t>(written));
     }
   }
 
-  String fallback;
+  std::string fallback;
+  fallback.reserve(static_cast<size_t>(length) * 2);
   for (uint8_t i = 0; i < length; i++) {
-    if (uidBytes[i] < 0x10) {
-      fallback += "0";
-    }
-    fallback += String(uidBytes[i], HEX);
+    char byteBuffer[3];
+    snprintf(byteBuffer, sizeof(byteBuffer), "%02X", uidBytes[i]);
+    fallback += byteBuffer;
   }
-  fallback.toUpperCase();
   return fallback;
 }

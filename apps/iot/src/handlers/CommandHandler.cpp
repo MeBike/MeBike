@@ -23,18 +23,25 @@
 
 #include "CommandHandler.h"
 #include <ArduinoLog.h>
-#include <cstring>
+#include <string>
+#include <unordered_map>
 #include "globals.h"
 #include "LEDStatusManager.h"
 #include "StateMachine.h"
 
 static bool matchesTopic(const char *incoming, const char *baseTopic, const std::string &deviceTopic)
 {
-    if (strcmp(incoming, baseTopic) == 0)
+    if (!incoming)
+    {
+        return false;
+    }
+
+    const std::string incomingStr(incoming);
+    if (incomingStr == baseTopic)
     {
         return true;
     }
-    return !deviceTopic.empty() && strcmp(incoming, deviceTopic.c_str()) == 0;
+    return !deviceTopic.empty() && incomingStr == deviceTopic;
 }
 
 static const char *statusTopic()
@@ -75,39 +82,32 @@ void CommandHandler::processCommand(const char *topic, const char *message)
 
 void CommandHandler::handleStateCommand(const char *command)
 {
-    Log.info("Handling state command: %s\n", command);
-
-    DeviceState targetState = currentState;
-
-    if (strcmp(command, "available") == 0)
+    if (!command)
     {
-        targetState = STATE_AVAILABLE;
-    }
-    else if (strcmp(command, "reserved") == 0)
-    {
-        targetState = STATE_RESERVED;
-    }
-    else if (strcmp(command, "booked") == 0)
-    {
-        targetState = STATE_BOOKED;
-    }
-    else if (strcmp(command, "broken") == 0)
-    {
-        targetState = STATE_BROKEN;
-    }
-    else if (strcmp(command, "maintained") == 0)
-    {
-        targetState = STATE_MAINTAINED;
-    }
-    else if (strcmp(command, "unavailable") == 0)
-    {
-        targetState = STATE_UNAVAILABLE;
-    }
-    else
-    {
-        Log.error("Unknown state command: %s\n", command);
+        Log.error("State command is null\n");
         return;
     }
+
+    const std::string commandStr(command);
+    Log.info("Handling state command: %s\n", commandStr.c_str());
+
+    static const std::unordered_map<std::string, DeviceState> stateMap = {
+        {"available", STATE_AVAILABLE},
+        {"reserved", STATE_RESERVED},
+        {"booked", STATE_BOOKED},
+        {"broken", STATE_BROKEN},
+        {"maintained", STATE_MAINTAINED},
+        {"unavailable", STATE_UNAVAILABLE}
+    };
+
+    const auto targetIt = stateMap.find(commandStr);
+    if (targetIt == stateMap.end())
+    {
+        Log.error("Unknown state command: %s\n", commandStr.c_str());
+        return;
+    }
+
+    const DeviceState targetState = targetIt->second;
 
     if (canTransitionTo(targetState))
     {
@@ -130,9 +130,16 @@ void CommandHandler::handleStateCommand(const char *command)
 
 void CommandHandler::handleBookingCommand(const char *command)
 {
-    Log.info("Handling booking command: %s\n", command);
+    if (!command)
+    {
+        Log.error("Booking command is null\n");
+        return;
+    }
 
-    if (strcmp(command, "book") == 0)
+    const std::string commandStr(command);
+    Log.info("Handling booking command: %s\n", commandStr.c_str());
+
+    if (commandStr == "book")
     {
         if (currentState == STATE_AVAILABLE || currentState == STATE_RESERVED) // nếu có hoặc người dùng muốn giữ chỗ
         {
@@ -150,7 +157,7 @@ void CommandHandler::handleBookingCommand(const char *command)
             Log.warning("Cannot book device in current state: %s\n", getStateName(currentState));
         }
     }
-    else if (strcmp(command, "claim") == 0)
+    else if (commandStr == "claim" || commandStr == "claimed")
     {
         if (currentState == STATE_RESERVED)
         {
@@ -159,7 +166,7 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "claimed", false);
+                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "claimed", false); 
             }
             Global::logInfoMQTT("Booking command: claim");
         }
@@ -168,7 +175,7 @@ void CommandHandler::handleBookingCommand(const char *command)
             Log.warning("Cannot claim device in current state: %s\n", getStateName(currentState));
         }
     }
-    else if (strcmp(command, "release") == 0)
+    else if (commandStr == "release")
     {
         if (currentState == STATE_BOOKED)
         {
@@ -186,13 +193,24 @@ void CommandHandler::handleBookingCommand(const char *command)
             Log.warning("Cannot release device in current state: %s\n", getStateName(currentState));
         }
     }
+    else
+    {
+        Log.error("Unknown booking command: %s\n", commandStr.c_str());
+    }
 }
 
 void CommandHandler::handleReservationCommand(const char *command)
 {
-    Log.info("Handling reservation command: %s\n", command);
+    if (!command)
+    {
+        Log.error("Reservation command is null\n");
+        return;
+    }
 
-    if (strcmp(command, "reserve") == 0)
+    const std::string commandStr(command);
+    Log.info("Handling reservation command: %s\n", commandStr.c_str());
+
+    if (commandStr == "reserve")
     {
         if (currentState == STATE_AVAILABLE)
         {
@@ -210,7 +228,7 @@ void CommandHandler::handleReservationCommand(const char *command)
             Log.warning("Cannot reserve device in current state: %s\n", getStateName(currentState));
         }
     }
-    else if (strcmp(command, "cancel") == 0)
+    else if (commandStr == "cancel")
     {
         if (currentState == STATE_RESERVED)
         {
@@ -228,13 +246,24 @@ void CommandHandler::handleReservationCommand(const char *command)
             Log.warning("Cannot cancel reservation in current state: %s\n", getStateName(currentState));
         }
     }
+    else
+    {
+        Log.error("Unknown reservation command: %s\n", commandStr.c_str());
+    }
 }
 
 void CommandHandler::handleMaintenanceCommand(const char *command)
 {
-    Log.info("Handling maintenance command: %s\n", command);
+    if (!command)
+    {
+        Log.error("Maintenance command is null\n");
+        return;
+    }
 
-    if (strcmp(command, "start") == 0)
+    const std::string commandStr(command);
+    Log.info("Handling maintenance command: %s\n", commandStr.c_str());
+
+    if (commandStr == "start")
     {
         if (currentState == STATE_AVAILABLE ||
             currentState == STATE_UNAVAILABLE ||
@@ -255,7 +284,7 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
             Log.warning("Cannot start maintenance in current state: %s\n", getStateName(currentState));
         }
     }
-    else if (strcmp(command, "complete") == 0)
+    else if (commandStr == "complete")
     {
         if (currentState == STATE_MAINTAINED)
         {
@@ -273,13 +302,24 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
             Log.warning("Cannot complete maintenance in current state: %s\n", getStateName(currentState));
         }
     }
+    else
+    {
+        Log.error("Unknown maintenance command: %s\n", commandStr.c_str());
+    }
 }
 
 void CommandHandler::handleStatusCommand(const char *command)
 {
-    Log.info("Handling status command: %s\n", command);
+    if (!command)
+    {
+        Log.error("Status command is null\n");
+        return;
+    }
 
-    if (strcmp(command, "request") == 0)
+    const std::string commandStr(command);
+    Log.info("Handling status command: %s\n", commandStr.c_str());
+
+    if (commandStr == "request")
     {
         if (Global::mqttManager)
         {
@@ -288,6 +328,10 @@ void CommandHandler::handleStatusCommand(const char *command)
             Global::mqttManager->publish(statusTopic(), statusMsg, false);
         }
         Global::logInfoMQTT("Status requested -> %s", getStateName(currentState));
+    }
+    else
+    {
+        Log.error("Unknown status command: %s\n", commandStr.c_str());
     }
 }
 

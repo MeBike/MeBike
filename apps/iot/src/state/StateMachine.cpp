@@ -130,9 +130,18 @@ void handleConnectingWifiState()
     }
     else
     {
+        static unsigned long lastAttempt = 0;
+        static unsigned int attemptCount = 0;
+        constexpr unsigned long reconnectIntervalMs = 2000;
 
-        Log.info("Attempting WiFi connection...\n");
-        WiFi.reconnect();
+        unsigned long now = millis();
+        if (now - lastAttempt >= reconnectIntervalMs)
+        {
+            lastAttempt = now;
+            ++attemptCount;
+            Log.info("Attempting WiFi connection... (attempt %u)\n", attemptCount);
+            WiFi.reconnect();
+        }
     }
 }
 
