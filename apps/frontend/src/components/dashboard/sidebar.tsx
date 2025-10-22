@@ -106,7 +106,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
 };
 
 export function Sidebar() {
-  const [collapsed,] = useState(false);
+  const [collapsed] = useState(false);
   const {user,logOut , isAuthenticated} = useAuth();
   const pathname = usePathname();
   const handleLogout = () => {

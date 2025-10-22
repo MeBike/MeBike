@@ -24,7 +24,7 @@ const Login = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (user || isNavigating) {
+    if (user) {
       if(user?.role === "ADMIN"){
         router.push("/admin");
       } else if(user?.role === "STAFF"){
@@ -32,8 +32,10 @@ const Login = () => {
       } else if (user?.role === "USER"){
         router.push("/user");
       }
+      resetFormData();
+    }
+    else if(isNavigating){
       return;
-
     }
   }, [user, isNavigating, router]);
 const resetFormData = () => {

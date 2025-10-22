@@ -37,7 +37,7 @@
     });
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<
-      "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | ""
+      "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
     >("");
     const [page, setPage] = useState<number>(1);
     const [limit, setLimit] = useState<number>(10);
@@ -74,7 +74,7 @@
       setIsModalOpen(false);
     };
     const handleChangeStatusFilter = (
-      status: "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | ""
+      status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
     ) => {
       setStatusFilter(status);
     };

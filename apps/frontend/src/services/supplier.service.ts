@@ -31,7 +31,7 @@ export const supplierService = {
   }: {
     page?: number;
     limit?: number;
-    status: "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | "";
+    status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | "";
   }): Promise<AxiosResponse<ApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Supplier>>(
       SUPPLIER_ENDPOINTS.BASE,
