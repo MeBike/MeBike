@@ -113,8 +113,8 @@
 /users/reset-password:
   post:
     tags: [Users]
-    summary: Reset user password
-    description: Sets a new password for the user using a valid forgot password token.
+    summary: "Reset user password with OTP"
+    description: "Sets a new password for the user using a valid email and OTP."
     requestBody:
       required: true
       content:
@@ -135,7 +135,7 @@
   post:
     tags: [Users]
     summary: Verify user email
-    description: Verifies a user's email with the provided token. Returns new tokens upon successful first-time verification.
+    description: "Verifies a user's email with the provided OTP."
     requestBody:
       required: true
       content:

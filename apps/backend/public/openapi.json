@@ -242,8 +242,8 @@
         "tags": [
           "Users"
         ],
-        "summary": "Reset user password",
-        "description": "Sets a new password for the user using a valid forgot password token.",
+        "summary": "Reset user password with OTP",
+        "description": "Sets a new password for the user using a valid email and OTP.",
         "requestBody": {
           "required": true,
           "content": {
@@ -276,7 +276,7 @@
           "Users"
         ],
         "summary": "Verify user email",
-        "description": "Verifies a user's email with the provided token. Returns new tokens upon successful first-time verification.",
+        "description": "Verifies a user's email with the provided OTP.",
         "requestBody": {
           "required": true,
           "content": {
@@ -3210,7 +3210,8 @@
           "fullname",
           "email",
           "password",
-          "confirm_password"
+          "confirm_password",
+          "phone_number"
         ],
         "properties": {
           "fullname": {
@@ -3223,6 +3224,12 @@
             "type": "string",
             "format": "email",
             "example": "user@example.com"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Số điện thoại người dùng (10 số, theo định dạng Việt Nam)",
+            "example": "0912345678",
+            "pattern": "^(0[3|5|7|8|9])+([0-9]{8})$"
           },
           "password": {
             "type": "string",
@@ -3307,16 +3314,25 @@
       },
       "ResetPasswordReqBody": {
         "type": "object",
-        "description": "Requires forgot_password_token alongside new password details.",
+        "description": "Đặt lại mật khẩu bằng email và mã OTP.",
         "required": [
-          "forgot_password_token",
+          "email",
+          "otp",
           "password",
           "confirm_password"
         ],
         "properties": {
-          "forgot_password_token": {
+          "email": {
             "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "otp": {
+            "type": "string",
+            "description": "Mã OTP 6 số được gửi qua email",
+            "example": "123456",
+            "minLength": 6,
+            "maxLength": 6
           },
           "password": {
             "type": "string",
@@ -3328,21 +3344,28 @@
           "confirm_password": {
             "type": "string",
             "format": "password",
-            "minLength": 8,
-            "maxLength": 30,
-            "example": "NewStr0ngP@sswOrd"
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
         }
       },
       "VerifyEmailReqBody": {
         "type": "object",
         "required": [
-          "email_verify_token"
+          "email",
+          "otp"
         ],
         "properties": {
-          "email_verify_token": {
+          "email": {
             "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "otp": {
+            "type": "string",
+            "description": "Mã OTP 6 số được gửi qua email",
+            "example": "123456",
+            "minLength": 6,
+            "maxLength": 6
           }
         }
       },
@@ -3395,6 +3418,12 @@
             "description": "A URL pointing to the user's new avatar image.",
             "format": "uri",
             "example": "https://example.com/avatars/new_avatar.png"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Số điện thoại mới của người dùng (10 số, Việt Nam)",
+            "pattern": "^(0[3|5|7|8|9])+([0-9]{8})$",
+            "example": "0987654321"
           }
         }
       },
