@@ -17,7 +17,7 @@ export default function DashboardPage() {
     );
   }
   return (
-    <DashboardLayout user={user}>
+    <div>
       <div className="space-y-8">
         <section>
           <ProfileHeader user={user} />
@@ -67,6 +67,6 @@ export default function DashboardPage() {
           </div>
         </section>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

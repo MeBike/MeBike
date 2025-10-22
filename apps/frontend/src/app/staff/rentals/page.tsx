@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { RentalTable } from "@/components/rentals/rental-table";
 import { RentalFilters } from "@/components/rentals/rental-filters";
 import { RentalStats } from "@/components/rentals/rental-stats";
@@ -253,7 +252,7 @@ export default function RentalsPage() {
   };
 
   return (
-    <DashboardLayout user={mockUser}>
+    <div>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -313,6 +312,6 @@ export default function RentalsPage() {
           />
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

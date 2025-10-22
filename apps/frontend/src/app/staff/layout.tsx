@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 interface StaffLayoutProps {
   children: React.ReactNode;
 }
@@ -71,7 +72,7 @@ export default function StaffLayout({ children }: StaffLayoutProps) {
     <div>
       <main>
         <div>
-          <div>{children}</div>
+          {user && <DashboardLayout user={user}>{children}</DashboardLayout>}
         </div>
       </main>
     </div>
