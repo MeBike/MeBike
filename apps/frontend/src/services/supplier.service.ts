@@ -24,12 +24,21 @@ const SUPPLIER_ENDPOINTS = {
   WITH_STATS_BIKE: (id: string) => `${SUPPLIER_BASE}/${id}/stats`,
 } as const;
 export const supplierService = {
-  getAllSuppliers: async ({ page, limit , status }: { page?: number; limit?: number , status : "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | ""}): Promise<AxiosResponse<ApiResponse<Supplier>>> => {
+  getAllSuppliers: async ({
+    page,
+    limit,
+    status,
+  }: {
+    page?: number;
+    limit?: number;
+    status: "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | "";
+  }): Promise<AxiosResponse<ApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.BASE , {
-        page : page,
-        limit : limit,
-        status : status
+      SUPPLIER_ENDPOINTS.BASE,
+      {
+        page: page,
+        limit: limit,
+        status: status,
       }
     );
     return response;
@@ -77,12 +86,12 @@ export const supplierService = {
     >(SUPPLIER_ENDPOINTS.WITH_STATS_BIKE(id));
     return response.data;
   },
-  statsSupplier: async (
-    id: string
-  ): Promise<DetailApiResponse<StatsSupplierBike[]>> => {
+  statsSupplier: async (): Promise<
+    AxiosResponse<DetailApiResponse<StatsSupplierBike[]>>
+  > => {
     const response = await fetchHttpClient.get<
       DetailApiResponse<StatsSupplierBike[]>
-    >(SUPPLIER_ENDPOINTS.WITH_STATS_BIKE(id));
-    return response.data;
+    >(SUPPLIER_ENDPOINTS.STATS);
+    return response;
   },
 };

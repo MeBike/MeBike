@@ -101,12 +101,8 @@
     const [statusFilter, setStatusFilter] = useState<
       "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | ""
     >("");
-    const {
-      getAllSuppliers,
-      isLoadingGetAllSuppliers,
-      allSupplier,
-      useGetAllSupplierQuery,
-    } = useSupplierActions(true);
+    const { useGetAllSupplierQuery, useGetAllStatsSupplierQuery } =
+      useSupplierActions(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
       name: "",
@@ -115,24 +111,12 @@
       contract_fee: "",
       status: "HOẠT ĐỘNG" as "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG",
     });
-    const { data: supplierData, isLoading } = useGetAllSupplierQuery(
+    const { data: supplierData, isLoading : isLoadingGetAllSuppliers } = useGetAllSupplierQuery(
       1,
       10,
       statusFilter
     );
-
-    useEffect(() => {
-      getAllSuppliers();
-      // const filteredSuppliers = allSupplier?.filter((supplier) => {
-      //   const matchesSearch = supplier.name
-      //     .toLowerCase()
-      //     .includes(searchQuery.toLowerCase());
-      //   const matchesStatus =
-      //     statusFilter === "" || supplier.status === statusFilter;
-      //   return matchesSearch && matchesStatus;
-      // });
-    }, [statusFilter]);
-
+    const { data: statsData, isLoading: isLoadingStats } = useGetAllStatsSupplierQuery();
     const handleAddSupplier = () => {
       console.log("[v0] Adding supplier:", formData);
       setFormData({
@@ -151,7 +135,7 @@
     };
     return (
       <div>
-        {isLoadingGetAllSuppliers ? (
+        {isLoadingGetAllSuppliers && isLoadingStats ? (
           <div>Loading suppliers...</div>
         ) : (
           <div className="space-y-6">
@@ -177,7 +161,9 @@
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">Tổng nhà cung cấp</p>
+                <p className="text-sm text-muted-foreground">
+                  Tổng nhà cung cấp
+                </p>
                 <p className="text-2xl font-bold text-foreground mt-1">
                   {mockSuppliers.length}
                 </p>
@@ -312,7 +298,7 @@
                 Thống kê xe đạp theo nhà cung cấp
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mockStats.map((stat) => (
+                {statsData?.result?.map((stat : StatsSupplierBike) => (
                   <div
                     key={stat.supplier_id}
                     className="bg-card border border-border rounded-lg p-4"
@@ -334,7 +320,9 @@
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Đang thuê:</span>
+                        <span className="text-muted-foreground">
+                          Đang thuê:
+                        </span>
                         <span className="font-medium text-blue-600">
                           {stat.booked_bikes}
                         </span>
