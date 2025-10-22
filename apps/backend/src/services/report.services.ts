@@ -1,4 +1,3 @@
-import type { Filter } from 'mongodb'
 import type { Buffer } from 'node:buffer'
 
 import { v2 as cloudinary } from 'cloudinary'

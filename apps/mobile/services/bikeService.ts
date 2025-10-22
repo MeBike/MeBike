@@ -4,7 +4,16 @@ import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "../schema/bikeSchema";
-
+import { Bike } from "../types/BikeTypes";
+interface ApiReponse<T> {
+  data: T;
+  pagination?: {
+    totalPages: number;
+    totalRecords: number;
+    limit: number;
+    currentPage: number;
+  };
+}
 const BIKE_BASE = "/bikes";
 const BIKE_ENDPOINTS = {
   BASE: BIKE_BASE,
@@ -16,7 +25,19 @@ const BIKE_ENDPOINTS = {
   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
 } as const;
-
+export interface GetAllBikesQueryParams {
+  page: number;
+  limit: number;
+  station_id: string;
+  supplier_id: string;
+  status:
+    | "CÓ SẴN"
+    | "ĐANG ĐƯỢC THUÊ"
+    | "BỊ HỎNG"
+    | "ĐÃ ĐẶT TRƯỚC"
+    | "ĐANG BẢO TRÌ"
+    | "KHÔNG CÓ SẴN";
+}
 export const bikeService = {
   //for admin
 
@@ -68,13 +89,13 @@ export const bikeService = {
     );
     return response;
   },
-  getAllBikes: async (
-    page?: number,
-    limit?: number
-  ): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BASE, {
-      params: { page, limit },
-    });
+  getAllBikes: async (data : Partial<GetAllBikesQueryParams>): Promise<
+    AxiosResponse<ApiReponse<Bike[]>>
+  > => {
+    const response = await fetchHttpClient.get<ApiReponse<Bike[]>>(
+      BIKE_ENDPOINTS.BASE,
+      { ...data }
+    );
     return response;
   },
 };

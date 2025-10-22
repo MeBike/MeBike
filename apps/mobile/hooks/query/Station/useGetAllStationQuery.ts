@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { stationService } from "@services/stationService";
+import type { StationType } from "../../../types/StationType";
 const fetchAllStations = async () => {
   try {
     const response = await stationService.getAllStations();
@@ -13,6 +14,6 @@ const fetchAllStations = async () => {
 export const useGetAllStation = () => {
     return useQuery({
       queryKey: ["all-stations"],
-      queryFn: fetchAllStations,
+      queryFn: () => fetchAllStations(),
     });
 }

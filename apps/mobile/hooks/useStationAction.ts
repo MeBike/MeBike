@@ -32,32 +32,34 @@ interface ErrorWithMessage {
 
 //   return defaultMessage;
 // };
-export const useStationActions = (
-  hasToken : boolean, 
-  stationId?: string
-) => {
-
-    // const queryClient = useQueryClient();
-    const {refetch, data: response, isLoading} = useGetAllStation();
-    const useGetStationByID = useGetStationById(stationId || '');
-    const getAllStations = useCallback(async () => {
-        if(!hasToken){  
-            return;
-        };
-        refetch();
-    }, [refetch ,  hasToken ]);
-    const getStationByID = useCallback(() => {
-        if(!hasToken){
-            return;
-        };
-        useGetStationByID.refetch();
-    }, [useGetStationByID, hasToken ]);
-    return {
-      getAllStations,
-      getStationByID,
-      refetch ,
-      stations: response ?? [],
-      isLoadingGetAllStations: isLoading,
-      isLoadingGetStationByID: useGetStationByID.isLoading,
-    };
-}
+export const useStationActions = (hasToken: boolean, stationId?: string) => {
+  // const queryClient = useQueryClient();
+  const { refetch, data: response, isLoading } = useGetAllStation();
+  const {
+    refetch: fetchingStationID,
+    data: responseStationDetail,
+    isLoading: isLoadingStationID,
+  } = useGetStationById(stationId || "");
+  const getAllStations = useCallback(async () => {
+    if (!hasToken) {
+      return;
+    }
+    refetch();
+  }, [refetch, hasToken]);
+  const getStationByID = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    fetchingStationID();
+  }, [fetchingStationID, hasToken]);
+  return {
+    getAllStations,
+    getStationByID,
+    refetch,
+    stations: response ?? [],
+    isLoadingGetAllStations: isLoading,
+    fetchingStationID,
+  responseStationDetail,
+    isLoadingGetStationByID: isLoadingStationID,
+  };
+};

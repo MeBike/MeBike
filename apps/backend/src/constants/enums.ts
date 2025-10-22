@@ -126,3 +126,14 @@ export enum WithDrawalStatus {
   Rejected = 'TỪ CHỐI',
   Completed = 'ĐÃ HOÀN THÀNH'
 }
+
+export enum RatingReasonTypeEnum {
+  ISSUE = 'Vấn đề',
+  COMPLIMENT = 'Khen ngợi'
+}
+
+export enum AppliesToEnum {
+  Bike = 'bike',
+  Station = 'station',
+  App = 'app'
+}

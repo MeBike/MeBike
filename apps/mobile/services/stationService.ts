@@ -24,6 +24,10 @@ interface ApiResponse<T> {
     totalRecords: number;
   };
 }
+interface ApiDetailResponse<T> {
+  result: T;
+  message: string;
+}
 
 
 export const stationService = {
@@ -35,10 +39,10 @@ export const stationService = {
   },
   getStationById: async (
     stationId: string
-  ): Promise<ApiResponse<StationType>> => {
-    const response = await fetchHttpClient.get<ApiResponse<StationType>>(
+  ): Promise<AxiosResponse<ApiDetailResponse<StationType>>> => {
+    const response = await fetchHttpClient.get<ApiDetailResponse<StationType>>(
       STATION_ENDPOINTS.DETAIL(stationId)
     );
-    return response.data;
+    return response;
   },
 };
