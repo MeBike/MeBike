@@ -55,12 +55,11 @@ bool ensureMqttConnected()
     lastMqttReconnectAttempt = now;
     mqttReconnectRetries++;
 
-    Log.warning("MQTT disconnected, attempting reconnection (attempt %d/%d)...\n",
-                mqttReconnectRetries, maxMqttReconnectRetries);
+    Global::logInfoBoth("MQTT disconnected, attempting reconnection (attempt %d/%d)", mqttReconnectRetries, maxMqttReconnectRetries);
 
     if (Global::mqttManager->connect())
     {
-        Log.info("MQTT reconnected successfully!\n");
+        Global::logInfoBoth("MQTT reconnected successfully!");
 
         const auto &topics = Global::getTopics();
         Global::mqttManager->subscribe(topics.commandStateTopic.c_str());
@@ -76,11 +75,11 @@ bool ensureMqttConnected()
     }
     else
     {
-        Log.error("MQTT reconnection failed (state: %d)\n", mqttReconnectRetries);
+        Global::logInfoBoth("MQTT reconnection failed (attempt: %d)", mqttReconnectRetries);
 
         if (mqttReconnectRetries >= maxMqttReconnectRetries)
         {
-            Log.error("Max MQTT reconnection attempts reached, entering ERROR state\n");
+            Global::logInfoBoth("Max MQTT reconnection attempts reached, entering ERROR state");
             currentState = STATE_ERROR;
             mqttReconnectRetries = 0;
         }
@@ -96,7 +95,7 @@ void handleConnectedState()
     if (WiFi.status() != WL_CONNECTED)
     {
         currentState = STATE_ERROR;
-        Log.error("WiFi lost, entering ERROR state\n");
+        Global::logInfoBoth("WiFi lost, entering ERROR state");
         recoveryRetries = 0;
         return;
     }
@@ -110,14 +109,13 @@ void handleConnectedState()
     if (millis() - connectedStartTime > 2000)
     {
         currentState = STATE_AVAILABLE;
-        Log.info("Connection stable, transitioning to AVAILABLE state\n");
-        Global::logInfoBoth("Status -> available (from CONNECTED)");
+        Global::logInfoBoth("Connection stable, transitioning to AVAILABLE state");
     }
 }
 
 void handleInitState()
 {
-    Log.info("Initializing device...\n");
+    Global::logInfoBoth("Initializing device...");
     currentState = STATE_CONNECTING_WIFI;
 }
 
@@ -126,7 +124,7 @@ void handleConnectingWifiState()
     if (WiFi.status() == WL_CONNECTED)
     {
         currentState = STATE_CONNECTED;
-        Log.info("WiFi connected, transitioning to CONNECTED state\n");
+        Global::logInfoBoth("WiFi connected, transitioning to CONNECTED state");
     }
     else
     {
@@ -139,7 +137,7 @@ void handleConnectingWifiState()
         {
             lastAttempt = now;
             ++attemptCount;
-            Log.info("Attempting WiFi connection... (attempt %u)\n", attemptCount);
+            Global::logInfoBoth("Attempting WiFi connection... (attempt %u)", attemptCount);
             WiFi.reconnect();
         }
     }
@@ -158,25 +156,25 @@ void handleErrorState()
     if (WiFi.status() != WL_CONNECTED)
     {
         recoveryRetries++;
-        Log.info("Attempting recovery... (attempt %d/%d)\n", recoveryRetries, maxRecoveryRetries);
+        Global::logInfoBoth("Attempting recovery... (attempt %d/%d)", recoveryRetries, maxRecoveryRetries);
         WiFi.reconnect();
 
         if (WiFi.status() != WL_CONNECTED)
         {
             if (recoveryRetries >= maxRecoveryRetries)
             {
-                Log.error("Max recovery attempts reached. Staying in ERROR state.\n");
+                Global::logInfoBoth("Max recovery attempts reached. Staying in ERROR state.");
             }
             return;
         }
 
-        Log.info("WiFi recovered\n");
+        Global::logInfoBoth("WiFi recovered");
         recoveryRetries = 0;
     }
 
     if (Global::mqttManager && !Global::mqttManager->isConnected())
     {
-        Log.info("Attempting MQTT reconnection after WiFi recovery...\n");
+        Global::logInfoBoth("Attempting MQTT reconnection after WiFi recovery...");
         if (!ensureMqttConnected())
         {
             return;
@@ -184,13 +182,13 @@ void handleErrorState()
     }
 
     currentState = STATE_CONNECTED;
-    Log.info("Recovered to CONNECTED state\n");
+    Global::logInfoBoth("Recovered to CONNECTED state");
     mqttReconnectRetries = 0;
 }
 
 void handleUnknownState()
 {
-    Log.error("Unknown state, transitioning to ERROR\n");
+    Global::logInfoBoth("Unknown state, transitioning to ERROR");
     currentState = STATE_ERROR;
 }
 
@@ -203,7 +201,7 @@ void handleAvailableState()
     if (WiFi.status() != WL_CONNECTED)
     {
         currentState = STATE_ERROR;
-        Log.error("WiFi lost in AVAILABLE state, entering ERROR state\n");
+        Global::logInfoBoth("WiFi lost in AVAILABLE state, entering ERROR state");
         recoveryRetries = 0;
         return;
     }
@@ -242,7 +240,7 @@ void handleBookedState()
     if (WiFi.status() != WL_CONNECTED)
     {
         currentState = STATE_ERROR;
-        Log.error("WiFi lost in BOOKED state, entering ERROR state\n");
+        Global::logInfoBoth("WiFi lost in BOOKED state, entering ERROR state");
         recoveryRetries = 0;
         return;
     }
@@ -281,7 +279,7 @@ void handleMaintainedState()
     if (WiFi.status() != WL_CONNECTED)
     {
         currentState = STATE_ERROR;
-        Log.error("WiFi lost in MAINTAINED state, entering ERROR state\n");
+        Global::logInfoBoth("WiFi lost in MAINTAINED state, entering ERROR state");
         recoveryRetries = 0;
         return;
     }
@@ -320,7 +318,7 @@ void handleUnavailableState()
     if (WiFi.status() != WL_CONNECTED)
     {
         currentState = STATE_ERROR;
-        Log.error("WiFi lost in UNAVAILABLE state, entering ERROR state\n");
+        Global::logInfoBoth("WiFi lost in UNAVAILABLE state, entering ERROR state");
         recoveryRetries = 0;
         return;
     }
@@ -358,7 +356,7 @@ void handleReservedState()
     if (WiFi.status() != WL_CONNECTED)
     {
         currentState = STATE_ERROR;
-        Log.error("WiFi lost in RESERVED state, entering ERROR state\n");
+        Global::logInfoBoth("WiFi lost in RESERVED state, entering ERROR state");
         recoveryRetries = 0;
         return;
     }
@@ -396,7 +394,7 @@ void handleBrokenState()
     if (WiFi.status() != WL_CONNECTED)
     {
         currentState = STATE_ERROR;
-        Log.error("WiFi lost in BROKEN state, entering ERROR state\n");
+        Global::logInfoBoth("WiFi lost in BROKEN state, entering ERROR state");
         recoveryRetries = 0;
         return;
     }

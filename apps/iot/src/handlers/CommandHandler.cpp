@@ -166,7 +166,7 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "claimed", false); 
+                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "claimed", false);
             }
             Global::logInfoMQTT("Booking command: claim");
         }
@@ -393,3 +393,4 @@ void CommandHandler::changeState(DeviceState newState)
 
     resetStateEntryFlags();
 }
+

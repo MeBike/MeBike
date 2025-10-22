@@ -7,14 +7,14 @@
 
 void mqttCallback(char *topic, byte *payload, unsigned int length)
 {
-    Log.info("Message arrived on topic: %s\n", topic);
+    Global::logInfoBoth("Message arrived on topic: %s", topic);
     std::string message;
     message.reserve(length);
     for (unsigned int i = 0; i < length; ++i)
     {
         message.push_back(static_cast<char>(payload[i]));
     }
-    Log.info("Message: %s\n", message.c_str());
+    Global::logInfoBoth("Message: %s", message.c_str());
 
     CommandHandler::processCommand(topic, message.c_str());
 }

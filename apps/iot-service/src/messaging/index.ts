@@ -3,7 +3,7 @@ import { IOT_PUBLISH_TOPICS } from "@mebike/shared";
 import type { MqttConnection } from "../connection/types";
 import type { MessageHandler } from "../handlers";
 
-import { messageHandlers } from "../handlers";
+import { messageHandlers, wildcardHandlers } from "../handlers";
 import logger from "../lib/logger";
 
 export class MessageRouter {
@@ -42,8 +42,8 @@ export class MessageRouter {
       return messageHandlers[topic as keyof typeof messageHandlers];
     }
 
-    for (const [baseTopic, handler] of Object.entries(messageHandlers)) {
-      if (topic === baseTopic || topic.startsWith(`${baseTopic}/`)) {
+    for (const [baseTopic, handler] of Object.entries(wildcardHandlers)) {
+      if (topic.startsWith(`${baseTopic}/`)) {
         return handler;
       }
     }

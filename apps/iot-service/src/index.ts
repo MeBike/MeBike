@@ -13,6 +13,8 @@ async function main() {
         brokerUrl: env.MQTT_URL,
         username: env.MQTT_USERNAME,
         password: env.MQTT_PASSWORD,
+        retryAttempts: env.MQTT_CONNECTION_RETRY_ATTEMPTS,
+        retryDelayMs: env.MQTT_CONNECTION_RETRY_DELAY_MS,
       },
       http: {
         port: env.HTTP_PORT,

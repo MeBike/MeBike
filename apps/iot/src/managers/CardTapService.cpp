@@ -24,7 +24,7 @@ void CardTapService::loop() {
 
 void CardTapService::publishCardTap(const std::string& cardUid) {
   if (!Global::mqttManager || !Global::mqttManager->isConnected()) {
-    Log.warning("MQTT not ready, skipping card tap publish\n");
+    Global::logInfoBoth("MQTT not ready, skipping card tap publish");
     return;
   }
 
@@ -34,7 +34,7 @@ void CardTapService::publishCardTap(const std::string& cardUid) {
 
   const std::string& topicRef = Global::getTopics().cardTapTopic;
   if (topicRef.empty()) {
-    Log.error("Card tap topic is not configured\n");
+    Global::logInfoBoth("Card tap topic is not configured");
     return;
   }
 
@@ -46,12 +46,12 @@ void CardTapService::publishCardTap(const std::string& cardUid) {
   const size_t payloadLength = serializeJson(doc, payload, sizeof(payload));
   if (payloadLength == 0 || payloadLength >= sizeof(payload))
   {
-    Log.error("Failed to serialize card tap payload\n");
+    Global::logInfoBoth("Failed to serialize card tap payload");
     return;
   }
   if (Global::mqttManager->publish(topicRef.c_str(), payload, false)) {
     Global::logInfoBoth("Card tap published: chip_id=%s card_uid=%s", deviceChipId.c_str(), cardUid.c_str());
   } else {
-    Log.error("Failed to publish card tap payload\n");
+    Global::logInfoBoth("Failed to publish card tap payload");
   }
 }

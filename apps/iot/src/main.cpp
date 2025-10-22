@@ -35,14 +35,13 @@ void setup()
   Global::ledStatusManager->begin();
 
   Global::bufferedLogger.reset(new BufferedLogger());
-  Global::bufferedLogger->setTopic("esp/logs"); // temporary
+  Global::bufferedLogger->setTopic(Global::getTopics().logTopic.c_str()); // Use MAC-suffixed topic
   Global::logInfoLocal("Buffered logger initialized");
   Wire.begin(HardwareConfig::I2C_SDA_PIN, HardwareConfig::I2C_SCL_PIN);
   nfcManager = std::unique_ptr<NFCManager>(new NFCManager(HardwareConfig::PN532_IRQ_PIN, HardwareConfig::PN532_RESET_PIN));
   if (!nfcManager->begin())
   {
-    Log.error("PN532 not detected; continuing without NFC support\n");
-    Global::logInfoLocal("PN532 not detected; continuing without NFC support");
+    Global::logInfoBoth("PN532 not detected; continuing without NFC support");
     nfcManager.reset();
   }
   Serial.println("Hello from ESP32!");

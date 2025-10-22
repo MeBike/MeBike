@@ -21,6 +21,8 @@ export type ApplicationConfig = {
     brokerUrl: string;
     username: string;
     password: string;
+    retryAttempts: number;
+    retryDelayMs: number;
   };
   http: {
     port: number;
@@ -46,7 +48,7 @@ export class IotApplication {
 
     this.setupConnectionHandlers(config.mqtt.brokerUrl);
 
-    await this.deps.connection.connect();
+    await this.connectWithRetry(config.mqtt.retryAttempts, config.mqtt.retryDelayMs);
 
     this.deps.messageRouter.start();
 
@@ -107,6 +109,29 @@ export class IotApplication {
         timestamp: new Date(),
       });
     });
+  }
+
+  private async connectWithRetry(attempts: number, delayMs: number): Promise<void> {
+    let lastError: Error | undefined;
+
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        await this.deps.connection.connect();
+        return;
+      }
+      catch (error) {
+        lastError = error as Error;
+        logger.warn({ attempt, maxAttempts: attempts, err: error }, `MQTT connection attempt ${attempt} failed`);
+
+        if (attempt < attempts) {
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+
+    if (lastError) {
+      throw lastError;
+    }
   }
 
   private async closeHttpServer(): Promise<void> {
