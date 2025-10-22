@@ -93,6 +93,34 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
     </body>
     </html>
   `,
+
+  "verify-otp.html": data => `
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head><meta charset="UTF-8"><title>Mã OTP xác thực - MeBike</title></head>
+    <body style="font-family: Arial, sans-serif; padding: 20px;">
+      <h2>Xin chào ${data.fullname || "bạn"},</h2>
+      <p>Mã OTP để xác thực email MeBike của bạn là:</p>
+      <p style="font-size: 24px; font-weight: bold; color: #007bff; letter-spacing: 5px; margin: 20px 0;">${data.otp || "######"}</p>
+      <p>Mã này sẽ hết hạn sau ${data.expiryMinutes || "vài"} phút.</p>
+      <p style="color: #666;">Trân trọng,<br>Đội ngũ MeBike</p>
+    </body>
+    </html>
+  `,
+
+  "forgot-password-otp.html": data => `
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head><meta charset="UTF-8"><title>Mã OTP đặt lại mật khẩu - MeBike</title></head>
+    <body style="font-family: Arial, sans-serif; padding: 20px;">
+      <h2>Xin chào ${data.fullname || "bạn"},</h2>
+      <p>Bạn đã yêu cầu đặt lại mật khẩu. Mã OTP của bạn là:</p>
+      <p style="font-size: 24px; font-weight: bold; color: #dc3545; letter-spacing: 5px; margin: 20px 0;">${data.otp || "######"}</p>
+      <p>Mã này sẽ hết hạn sau ${data.expiryMinutes || "vài"} phút. Vui lòng không chia sẻ mã này.</p>
+      <p style="color: #666;">Trân trọng,<br>Đội ngũ MeBike</p>
+    </body>
+    </html>
+  `,
 };
 
 export function readEmailTemplate(templateName: string, data: TemplateData): string {

@@ -63,7 +63,11 @@ export const USERS_MESSAGES = {
   // check staff role messages
   ACCESS_DENIED_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho nhân viên',
   // check admin and staff role messages
-  ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên và nhân viên'
+  ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên và nhân viên',
+  EMAIL_OTP_IS_INCORRECT_OR_EXPIRED: 'Mã OTP xác thực email không chính xác hoặc đã hết hạn',
+  FORGOT_PASSWORD_OTP_IS_INCORRECT_OR_EXPIRED: 'Mã OTP đặt lại mật khẩu không chính xác hoặc đã hết hạn',
+  FORGOT_PASSWORD_OTP_IS_REQUIRED: 'Mã OTP đặt lại mật khẩu là bắt buộc',
+  EMAIL_OTP_IS_REQUIRED: 'Mã OTP xác thực email là bắt buộc'
 } as const
 
 export const REPORTS_MESSAGES = {

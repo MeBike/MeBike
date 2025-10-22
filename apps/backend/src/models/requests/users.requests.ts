@@ -53,3 +53,15 @@ export type UpdateMeReqBody = {
 export type RefreshTokenReqBody = {
   refresh_token: string;
 };
+
+export type VerifyEmailOtpReqBody = {
+  email: string;
+  otp: string;
+};
+
+export type ResetPasswordOtpReqBody = {
+  email: string;
+  otp: string;
+  password: string;
+  confirm_password: string;
+};

@@ -10,7 +10,7 @@ import { USERS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
 import RefreshToken from "~/models/schemas/refresh-token.schemas";
 import User from "~/models/schemas/user.schema";
-import { hashPassword } from "~/utils/crypto";
+import { generateOTP, hashPassword } from "~/utils/crypto";
 import { readEmailTemplate } from "~/utils/email-templates";
 import { signToken, verifyToken } from "~/utils/jwt";
 
@@ -94,17 +94,22 @@ class UsersService {
 
   async register(payload: RegisterReqBody) {
     const user_id = new ObjectId();
-    const email_verify_token = await this.signEmailVerifyToken({
-      user_id: user_id.toString(),
-      verify: UserVerifyStatus.Unverified,
-    });
+    // const email_verify_token = await this.signEmailVerifyToken({
+    //   user_id: user_id.toString(),
+    //   verify: UserVerifyStatus.Unverified,
+    // });
+    const emailVerifyOtp = generateOTP();
+    const emailVerifyOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
     await databaseService.users.insertOne(
       new User({
         ...payload,
         _id: user_id,
         fullname: payload.fullname,
         username: `user${user_id.toString()}`,
-        email_verify_token,
+        // email_verify_token,
+        email_verify_otp: emailVerifyOtp,
+        email_verify_otp_expires: emailVerifyOtpExpires,
         password: hashPassword(payload.password),
         role: Role.User,
       }),
@@ -135,22 +140,27 @@ class UsersService {
         },
       });
 
-      const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`; // Đường dẫn xác nhận email
+      // const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`; // Đường dẫn xác nhận email
 
-      const htmlContent = readEmailTemplate("verify-email.html", {
+      // const htmlContent = readEmailTemplate("verify-email.html", {
+      //   fullname: payload.fullname,
+      //   verifyURL,
+      // });
+      const htmlContent = readEmailTemplate("verify-otp.html", {
         fullname: payload.fullname,
-        verifyURL,
+        otp: emailVerifyOtp,
+        expiryMinutes: "10"
       });
 
       const mailOptions = {
         from: `"MeBike" <${process.env.EMAIL_APP}>`,
         to: payload.email,
         subject: "Xác nhận đăng ký tài khoản MeBike",
-        html: htmlContent, // truyền nội dung html vào
+        html: htmlContent,
       };
 
       transporter.sendMail(mailOptions);
-      console.log("Email verification sent successfully to:", payload.email);
+      console.log("OTP verification email sent successfully to:", payload.email);
     }
     catch (error) {
       console.error("Error sending email:", error);
@@ -174,19 +184,24 @@ class UsersService {
     email: string;
     fullname: string;
   }) {
-    const forgot_password_token = await this.signForgotPasswordToken({
-      user_id,
-      verify,
-    });
+    // const forgot_password_token = await this.signForgotPasswordToken({
+    //   user_id,
+    //   verify,
+    // });
     const currentDate = new Date();
     const vietnamTimezoneOffset = 7 * 60;
     const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
+
+    const forgotPasswordOtp = generateOTP();
+    const forgotPasswordOtpExpires = new Date(Date.now() + 5 * 60 * 1000);
 
     await databaseService.users.updateOne(
       { _id: new ObjectId(user_id) },
       {
         $set: {
-          forgot_password_token,
+          // forgot_password_token,
+          forgot_password_otp: forgotPasswordOtp,
+          forgot_password_otp_expires: forgotPasswordOtpExpires,
           updated_at: localTime,
         },
       },
@@ -203,22 +218,28 @@ class UsersService {
       });
 
       // const resetURL = `${process.env.FRONTEND_URL}/reset-password?token=${forgot_password_token}`
-      const resetURL = `${process.env.FRONTEND_URL}/auth/reset-password?token=${forgot_password_token}`;
+      // const resetURL = `${process.env.FRONTEND_URL}/auth/reset-password?token=${forgot_password_token}`;
 
-      const htmlContent = readEmailTemplate("forgot-password.html", {
+      // const htmlContent = readEmailTemplate("forgot-password.html", {
+      //   fullname,
+      //   resetURL,
+      // });
+      const htmlContent = readEmailTemplate("forgot-password-otp.html", {
         fullname,
-        resetURL,
+        otp: forgotPasswordOtp,
+        expiryMinutes: "5"
       });
 
       const mailOptions = {
         from: `"MeBike" <${process.env.EMAIL_APP}>`,
         to: email,
-        subject: "Yêu cầu đặt lại mật khẩu cho tài khoản MeBike",
+        subject: "[MeBike] Mã OTP đặt lại mật khẩu của bạn",
         html: htmlContent,
       };
 
       transporter.sendMail(mailOptions);
-      console.log("Forgot password email sent successfully to:", email);
+      // console.log("Forgot password email sent successfully to:", email);
+      console.log("Forgot password OTP email sent successfully to:", email);
     }
     catch (error) {
       console.error("Error sending forgot-password email:", error);
@@ -236,7 +257,9 @@ class UsersService {
       {
         $set: {
           password: hashPassword(password),
-          forgot_password_token: "",
+          // forgot_password_token: "",
+          forgot_password_otp: null,
+          forgot_password_otp_expires: null,
           updated_at: localTime,
         },
       },
@@ -252,7 +275,9 @@ class UsersService {
     await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
       $set: {
         verify: UserVerifyStatus.Verified,
-        email_verify_token: "",
+        // email_verify_token: "",
+        email_verify_otp: null,
+        email_verify_otp_expires: null,
         updated_at: localTime,
       },
     });
@@ -280,17 +305,34 @@ class UsersService {
         status: HTTP_STATUS.NOT_FOUND,
       });
     }
-    const email_verify_token = await this.signEmailVerifyToken({
-      user_id,
-      verify: UserVerifyStatus.Unverified,
-    });
+    if (user.verify === UserVerifyStatus.Verified) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.EMAIL_ALREADY_VERIFIED_BEFORE,
+        status: HTTP_STATUS.BAD_REQUEST,
+      });
+    }
+    if (user.verify === UserVerifyStatus.Banned) {
+        throw new ErrorWithStatus({ 
+          message: USERS_MESSAGES.USER_BANNED,
+          status: HTTP_STATUS.FORBIDDEN
+        });
+    }
+    // const email_verify_token = await this.signEmailVerifyToken({
+    //   user_id,
+    //   verify: UserVerifyStatus.Unverified,
+    // });
     const currentDate = new Date();
     const vietnamTimezoneOffset = 7 * 60;
     const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
 
+    const emailVerifyOtp = generateOTP();
+    const emailVerifyOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
     await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
       $set: {
-        email_verify_token,
+        // email_verify_token,
+        email_verify_otp: emailVerifyOtp,
+        email_verify_otp_expires: emailVerifyOtpExpires,
         updated_at: localTime,
       },
     });
@@ -303,23 +345,35 @@ class UsersService {
           pass: process.env.EMAIL_PASSWORD_APP,
         },
       });
-      const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`;
+      // const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`;
 
       // Sử dụng template 'resend-verify-email.html'
-      const htmlContent = readEmailTemplate("resend-verify-email.html", {
-        fullname: user.fullname, // Truyền tên người dùng vào template
-        verifyURL,
+      // const htmlContent = readEmailTemplate("resend-verify-email.html", {
+      //   fullname: user.fullname, // Truyền tên người dùng vào template
+      //   verifyURL,
+      // });
+      const htmlContent = readEmailTemplate("verify-otp.html", {
+        fullname: user.fullname,
+        otp: emailVerifyOtp,
+        expiryMinutes: "10"
       });
 
+      // const mailOptions = {
+      //   from: `"MeBike" <${process.env.EMAIL_APP}>`,
+      //   to: user.email, // Gửi đến email của người dùng
+      //   subject: "Yêu cầu gửi lại email xác thực tài khoản MeBike",
+      //   html: htmlContent,
+      // };
       const mailOptions = {
         from: `"MeBike" <${process.env.EMAIL_APP}>`,
-        to: user.email, // Gửi đến email của người dùng
-        subject: "Yêu cầu gửi lại email xác thực tài khoản MeBike",
+        to: user.email,
+        subject: "[MeBike] Mã OTP xác thực email mới của bạn",
         html: htmlContent,
       };
 
       transporter.sendMail(mailOptions);
-      console.log("Resend verification email sent successfully to:", user.email);
+      // console.log("Resend verification email sent successfully to:", user.email);
+      console.log("Resend OTP verification email sent successfully to:", user.email);
     }
     catch (error) {
       console.error("Error sending resend-verification email:", error);
