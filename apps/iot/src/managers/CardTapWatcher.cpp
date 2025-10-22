@@ -89,10 +89,8 @@ std::string CardTapWatcher::convertUidToDecimal(const uint8_t* uidBytes, uint8_t
   }
 
   std::string fallback;
+  fallback.reserve(static_cast<size_t>(length) * 2);
   for (uint8_t i = 0; i < length; i++) {
-    if (uidBytes[i] < 0x10) {
-      fallback += '0';
-    }
     char byteBuffer[3];
     snprintf(byteBuffer, sizeof(byteBuffer), "%02X", uidBytes[i]);
     fallback += byteBuffer;
