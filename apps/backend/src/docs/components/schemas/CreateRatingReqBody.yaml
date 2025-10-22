@@ -1,0 +1,15 @@
+type: object
+required:
+  - score
+properties:
+  score:
+    type: number
+    description: "The rating score from 1 to 5."
+    minimum: 1
+    maximum: 5
+    example: 5
+  comment:
+    type: string
+    nullable: true
+    description: "An optional comment for the rating."
+    example: "Xe đạp còn mới, chạy tốt."

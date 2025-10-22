@@ -37,6 +37,8 @@ tags:
     description: Operations for managing withdrawal requests.
   - name: Stations
     description: Operations for managing bike stations.
+  - name: Ratings
+    description: Operations for managing ratings and feedback.
   
 paths:
   $ref: './paths/all-paths.yaml'
@@ -116,6 +118,9 @@ components:
       $ref: './components/schemas/CreateStationReqBody.yaml'
     UpdateStationReqBody:
       $ref: './components/schemas/UpdateStationReqBody.yaml'
+    # Rating
+    CreateRatingReqBody:
+      $ref: './components/schemas/CreateRatingReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:
@@ -188,6 +193,8 @@ components:
       $ref: "./components/schemas/Station.yaml"
     StationStatus:
       $ref: "./components/schemas/StationStatus.yaml"
+    Rating:
+      $ref: "./components/schemas/Rating.yaml"
 
   securitySchemes:
     BearerAuth:
