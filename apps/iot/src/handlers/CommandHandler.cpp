@@ -157,7 +157,7 @@ void CommandHandler::handleBookingCommand(const char *command)
             Log.warning("Cannot book device in current state: %s\n", getStateName(currentState));
         }
     }
-    else if (commandStr == "claim")
+    else if (commandStr == "claim" || commandStr == "claimed")
     {
         if (currentState == STATE_RESERVED)
         {
@@ -166,7 +166,7 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "claimed", false);
+                Global::mqttManager->publish(Global::getTopics().statusTopic.c_str(), "claimed", false);
             }
             Global::logInfoMQTT("Booking command: claim");
         }
