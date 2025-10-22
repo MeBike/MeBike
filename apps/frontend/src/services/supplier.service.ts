@@ -51,12 +51,12 @@ export const supplierService = {
   },
   createSupplier: async (
     supplierData: CreateSupplierSchema
-  ): Promise<DetailApiResponse<Supplier>> => {
+  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.post<DetailApiResponse<Supplier>>(
       SUPPLIER_ENDPOINTS.BASE,
       supplierData
     );
-    return response.data;
+    return response;
   },
   changeSupplierStatus: async (
     id: string,

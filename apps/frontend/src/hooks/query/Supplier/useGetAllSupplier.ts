@@ -21,7 +21,7 @@ const fetchAllSuppliers = async (
 };
 export const useGetAllSupplierQuery = (page ?: number , limit ?:number , status?: "HOẠT ĐÔNG" | "NGƯNG HOẠT ĐỘNG" | "") => {
   return useQuery({
-    queryKey: ["suppliers", "all", { page, limit, status }],
+    queryKey: ["suppliers", "all"],
     queryFn: () => fetchAllSuppliers(page, limit, status),
   });
 };
