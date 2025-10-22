@@ -1,13 +1,20 @@
 #include "DeviceUtils.h"
 
 #include <WiFi.h>
+#include <cstdio>
 
 std::string getMacAddress()
 {
-    String mac = WiFi.macAddress();
-    mac.replace(":", "");
-    mac.toUpperCase();
-    return std::string(mac.c_str());
+    uint8_t raw[6] = {0};
+    WiFi.macAddress(raw);
+
+    char macBuffer[13] = {0};
+    for (size_t i = 0; i < 6; ++i)
+    {
+        std::snprintf(&macBuffer[i * 2], 3, "%02X", raw[i]);
+    }
+
+    return std::string(macBuffer, 12);
 }
 
 std::string makeTopicWithMac(const std::string &baseTopic)

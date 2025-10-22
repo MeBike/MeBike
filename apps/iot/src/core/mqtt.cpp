@@ -1,16 +1,18 @@
 #include "mqtt.h"
 #include <Arduino.h>
 #include <ArduinoLog.h>
+#include <string>
 #include "globals.h"
 #include "CommandHandler.h"
 
 void mqttCallback(char *topic, byte *payload, unsigned int length)
 {
     Log.info("Message arrived on topic: %s\n", topic);
-    String message;
-    for (unsigned int i = 0; i < length; i++)
+    std::string message;
+    message.reserve(length);
+    for (unsigned int i = 0; i < length; ++i)
     {
-        message += (char)payload[i];
+        message.push_back(static_cast<char>(payload[i]));
     }
     Log.info("Message: %s\n", message.c_str());
 

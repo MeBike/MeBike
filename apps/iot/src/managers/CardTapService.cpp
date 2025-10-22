@@ -1,6 +1,8 @@
 #include "CardTapService.h"
 
 #include <ArduinoLog.h>
+#include <ArduinoJson.h>
+#include <string>
 
 #include "DeviceUtils.h"
 #include "globals.h"
@@ -13,14 +15,14 @@ void CardTapService::begin(const std::string& chipId) {
 }
 
 void CardTapService::loop() {
-  String cardUidDecimal;
-  if (!watcher.poll(cardUidDecimal)) {
+  std::string cardUid;
+  if (!watcher.poll(cardUid)) {
     return;
   }
-  publishCardTap(cardUidDecimal);
+  publishCardTap(cardUid);
 }
 
-void CardTapService::publishCardTap(const String& cardUid) {
+void CardTapService::publishCardTap(const std::string& cardUid) {
   if (!Global::mqttManager || !Global::mqttManager->isConnected()) {
     Log.warning("MQTT not ready, skipping card tap publish\n");
     return;
@@ -36,13 +38,18 @@ void CardTapService::publishCardTap(const String& cardUid) {
     return;
   }
 
-  String payload = "{\"chip_id\":\"";
-  payload += deviceChipId.c_str();
-  payload += "\",\"card_uid\":\"";
-  payload += cardUid;
-  payload += "\"}";
+  DynamicJsonDocument doc(128);
+  doc["chip_id"] = deviceChipId.c_str();
+  doc["card_uid"] = cardUid.c_str();
 
-  if (Global::mqttManager->publish(topicRef.c_str(), payload.c_str(), false)) {
+  char payload[128];
+  const size_t payloadLength = serializeJson(doc, payload, sizeof(payload));
+  if (payloadLength == 0 || payloadLength >= sizeof(payload))
+  {
+    Log.error("Failed to serialize card tap payload\n");
+    return;
+  }
+  if (Global::mqttManager->publish(topicRef.c_str(), payload, false)) {
     Global::logInfoBoth("Card tap published: chip_id=%s card_uid=%s", deviceChipId.c_str(), cardUid.c_str());
   } else {
     Log.error("Failed to publish card tap payload\n");

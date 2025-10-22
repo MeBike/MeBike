@@ -15,8 +15,8 @@
 #include "HardwareConfig.h"
 #include "DeviceUtils.h"
 
-NFCManager *nfcManager = nullptr;
-CardTapService *cardTapService = nullptr;
+static std::unique_ptr<NFCManager> nfcManager;
+static std::unique_ptr<CardTapService> cardTapService;
 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
@@ -38,20 +38,22 @@ void setup()
   Global::bufferedLogger->setTopic("esp/logs"); // temporary
   Global::logInfoLocal("Buffered logger initialized");
   Wire.begin(HardwareConfig::I2C_SDA_PIN, HardwareConfig::I2C_SCL_PIN);
-  nfcManager = new NFCManager(HardwareConfig::PN532_IRQ_PIN, HardwareConfig::PN532_RESET_PIN);
+  nfcManager = std::unique_ptr<NFCManager>(new NFCManager(HardwareConfig::PN532_IRQ_PIN, HardwareConfig::PN532_RESET_PIN));
   if (!nfcManager->begin())
   {
-    while (1)
-    {
-      delay(10);
-    }
+    Log.error("PN532 not detected; continuing without NFC support\n");
+    Global::logInfoLocal("PN532 not detected; continuing without NFC support");
+    nfcManager.reset();
   }
   Serial.println("Hello from ESP32!");
   deviceChipId = getMacAddress();
   Serial.print("Chip ID: ");
   Serial.println(deviceChipId.c_str());
-  cardTapService = new CardTapService(*nfcManager);
-  cardTapService->begin(deviceChipId);
+  if (nfcManager)
+  {
+    cardTapService = std::unique_ptr<CardTapService>(new CardTapService(*nfcManager));
+    cardTapService->begin(deviceChipId);
+  }
 
   Serial.println("BLE advertising started");
 

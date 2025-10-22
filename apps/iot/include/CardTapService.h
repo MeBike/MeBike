@@ -1,7 +1,6 @@
 #ifndef CARD_TAP_SERVICE_H
 #define CARD_TAP_SERVICE_H
 
-#include <Arduino.h>
 #include <string>
 
 #include "CardTapWatcher.h"
@@ -19,7 +18,7 @@ private:
   CardTapWatcher watcher;
   std::string deviceChipId;
 
-  void publishCardTap(const String& cardUid);
+  void publishCardTap(const std::string& cardUid);
 };
 
 #endif // CARD_TAP_SERVICE_H
