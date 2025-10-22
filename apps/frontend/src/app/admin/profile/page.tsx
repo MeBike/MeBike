@@ -2,8 +2,7 @@
 
 import type React from "react";
 import { useEffect, useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import type { DetailUser } from "@/services/authService";
+import type { DetailUser } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,7 +92,7 @@ export default function ProfilePage() {
     resendVerifyEmail();
   };
   return (
-    <DashboardLayout user={data}>
+    <div>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -380,6 +379,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

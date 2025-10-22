@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { authService } from "@/services/authService";
-import type { DetailUser } from "@/services/authService";
+import { authService } from "@/services/auth.service";
+import type { DetailUser } from "@/services/auth.service";
 import { AxiosError } from "axios";
 
 export const USER_PROFILE_QUERY_KEY = ["user","me"];

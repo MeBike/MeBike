@@ -4,7 +4,7 @@ import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "@schemas/bikeSchema";
-
+import { Bike } from "@custom-types";
 const BIKE_BASE = "/bikes";
 const BIKE_ENDPOINTS = {
   BASE: BIKE_BASE,
@@ -16,12 +16,15 @@ const BIKE_ENDPOINTS = {
   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
 } as const;
-
+interface ApiResponse<T> {
+  data: T;
+  message: string;
+}
 export const bikeService = {
   //for admin
 
-  createBikeAdmin: async (data: BikeSchemaFormData): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.post(BIKE_ENDPOINTS.BASE, data);
+  createBikeAdmin: async (data: BikeSchemaFormData): Promise<AxiosResponse<ApiResponse<Bike>>> => {
+    const response = await fetchHttpClient.post<ApiResponse<Bike>>(BIKE_ENDPOINTS.BASE, data);
     return response;
   },
   getStatusBikeAdmin: async (): Promise<AxiosResponse> => {

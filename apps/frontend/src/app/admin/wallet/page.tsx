@@ -1,26 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { WalletStats } from "@/components/wallet/wallet-stats";
 import { WalletUserList } from "@components/wallet/wallet-user-list";
 import { TransactionHistory } from "@components/wallet/transaction-history";
-import type { DetailUser } from "@/services/authService";
 import { UserWallet, WalletTransaction } from "@/types/Wallet";
-// Mock data
-const mockUser: DetailUser = {
-  _id: "1",
-  fullname: "Admin User",
-  email: "admin@metrobike.com",
-  verify: "verified",
-  location: "TP.HCM",
-  username: "admin",
-  phone_number: "0901234567",
-  avatar: "/admin-avatar.png",
-  role: "ADMIN",
-  created_at: "2024-01-01",
-  updated_at: "2024-10-19",
-};
+
 
 const mockUsers: UserWallet[] = [
   {
@@ -199,7 +184,6 @@ export default function WalletPage() {
     .reduce((sum, t) => sum + t.amount, 0);
 
   return (
-    <DashboardLayout user={mockUser}>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -230,6 +214,5 @@ export default function WalletPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
   );
 }
