@@ -203,6 +203,8 @@ components:
       $ref: "./components/schemas/Rating.yaml"
     UserStats:
       $ref: './components/schemas/UserStats.yaml'
+    ActiveUserStatItem:
+      $ref: './components/schemas/ActiveUserStatItem.yaml'
 
   securitySchemes:
     BearerAuth:

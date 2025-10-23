@@ -1048,6 +1048,101 @@
         }
       }
     },
+    "/users/manage-users/stats/active-users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get active user statistics (Admin/Staff only)",
+        "description": "Retrieves a timeseries of active user counts, grouped by day or month.\nActive users are defined as users who have had token activity (login/refresh).\nRequires Admin or Staff privileges.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupBy",
+            "in": "query",
+            "required": true,
+            "description": "Group the statistics by 'day' or 'month'.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day",
+                "month"
+              ],
+              "example": "day"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "description": "The start date of the period (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-10-20"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "description": "The end date of the period (YYYY-MM-DD). Must be after or the same as startDate.",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-10-23"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active user statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê người dùng hoạt động thành công"
+                    },
+                    "result": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ActiveUserStatItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "description": "Validation error (e.g., missing params, invalid groupBy, endDate before startDate).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [
@@ -6206,6 +6301,22 @@
             "type": "integer",
             "description": "Total number of banned users.",
             "example": 5
+          }
+        }
+      },
+      "ActiveUserStatItem": {
+        "type": "object",
+        "description": "Một điểm dữ liệu trong chuỗi thời gian thống kê người dùng hoạt động.",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Ngày hoặc tháng cho điểm dữ liệu (YYYY-MM-DD hoặc YYYY-MM).",
+            "example": "2025-10-23"
+          },
+          "active_users_count": {
+            "type": "integer",
+            "description": "Số lượng người dùng hoạt động duy nhất trong kỳ đó.",
+            "example": 78
           }
         }
       }

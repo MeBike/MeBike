@@ -596,6 +596,69 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/users/manage-users/stats/active-users:
+  get:
+    tags: [Users]
+    summary: Get active user statistics (Admin/Staff only)
+    description: |
+      Retrieves a timeseries of active user counts, grouped by day or month.
+      Active users are defined as users who have had token activity (login/refresh).
+      Requires Admin or Staff privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: groupBy
+        in: query
+        required: true
+        description: "Group the statistics by 'day' or 'month'."
+        schema:
+          type: string
+          enum: [day, month]
+          example: "day"
+      - name: startDate
+        in: query
+        required: true
+        description: "The start date of the period (YYYY-MM-DD)."
+        schema:
+          type: string
+          format: date
+          example: "2025-10-20"
+      - name: endDate
+        in: query
+        required: true
+        description: "The end date of the period (YYYY-MM-DD). Must be after or the same as startDate."
+        schema:
+          type: string
+          format: date
+          example: "2025-10-23"
+    responses:
+      '200':
+        description: "Active user statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê người dùng hoạt động thành công"
+                result:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/ActiveUserStatItem.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: "Validation error (e.g., missing params, invalid groupBy, endDate before startDate)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
 # ===================================================================
 # Bikes API
 # ===================================================================
