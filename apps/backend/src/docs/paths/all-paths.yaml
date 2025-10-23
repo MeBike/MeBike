@@ -499,6 +499,64 @@
             schema:
               $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
+/users/manage-users/admin-reset-password/{_id}:
+  post:
+    tags: [Users]
+    summary: Reset a user's password (Admin only)
+    description: "Allows an Admin to forcibly set a new password for any user. This action is irreversible."
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        description: "The ID of the user whose password will be reset."
+        schema:
+          type: string
+          format: mongoId
+          example: "60c72b2f9b1d8e001f8e8e8e"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AdminResetPasswordReqBody.yaml'
+    responses:
+      '200':
+        description: "Password reset successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Đặt lại mật khẩu thành công"
+      '401':
+        description: "Unauthorized (Invalid access token)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden (User is not an Admin)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "User not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: "Validation error (e.g., passwords do not match, password not strong enough)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
 # ===================================================================
 # Bikes API
 # ===================================================================

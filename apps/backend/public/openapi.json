@@ -888,6 +888,101 @@
         }
       }
     },
+    "/users/manage-users/admin-reset-password/{_id}": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reset a user's password (Admin only)",
+        "description": "Allows an Admin to forcibly set a new password for any user. This action is irreversible.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the user whose password will be reset.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "60c72b2f9b1d8e001f8e8e8e"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminResetPasswordReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Đặt lại mật khẩu thành công"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User is not an Admin).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., passwords do not match, password not strong enough).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [
@@ -5117,6 +5212,31 @@
             "nullable": true,
             "description": "The user's NFC card UID. Must be unique. Send null or empty string to remove.",
             "example": "A1-B2-C3-D4"
+          }
+        }
+      },
+      "AdminResetPasswordReqBody": {
+        "type": "object",
+        "required": [
+          "new_password",
+          "confirm_new_password"
+        ],
+        "properties": {
+          "new_password": {
+            "type": "string",
+            "format": "password",
+            "description": "The user's new password (8-30 characters).",
+            "minLength": 8,
+            "maxLength": 30,
+            "example": "NewP@ssword123"
+          },
+          "confirm_new_password": {
+            "type": "string",
+            "format": "password",
+            "description": "Must match new_password.",
+            "minLength": 8,
+            "maxLength": 30,
+            "example": "NewP@ssword123"
           }
         }
       },

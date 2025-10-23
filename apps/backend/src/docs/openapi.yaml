@@ -124,6 +124,9 @@ components:
     # Update User by Admin/Staff
     UpdateUserReqBody:
       $ref: './components/schemas/UpdateUserReqBody.yaml'
+    # Admin Reset Password Req Body
+    AdminResetPasswordReqBody:
+      $ref: './components/schemas/AdminResetPasswordReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:
