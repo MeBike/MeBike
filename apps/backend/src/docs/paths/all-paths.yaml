@@ -2297,6 +2297,109 @@
             schema:
               $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
+/stations/{id}/rentals:
+  get:
+    tags: [Stations]
+    summary: Get rentals by station (Admin/Staff only)
+    description: |
+      Retrieves a paginated list of rentals associated with a specific station. 
+      - Requires Admin or Staff privileges.
+      - Can be used to filter by status (e.g., 'ĐANG THUÊ').
+      - **Special Feature**: If `status` is set to 'ĐÃ ĐẶT TRƯỚC', you can use `expired_within` to find reservations expiring soon.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the station to check.
+        schema:
+          type: string
+          format: mongoId
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: status
+        in: query
+        required: false
+        description: Filter rentals by status.
+        schema:
+          $ref: '../components/schemas/RentalStatus.yaml'
+      - name: expired_within
+        in: query
+        required: false
+        description: "Only used if status='ĐÃ ĐẶT TRƯỚC'. Finds reservations expiring within this many minutes. (Default: 60)"
+        schema:
+          type: integer
+          default: 60
+          example: 30
+    responses:
+      '200':
+        description: A paginated list of rentals for the station, with populated bike info.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        # Đây là schema response tùy chỉnh dựa trên $project của bạn
+                        type: object
+                        properties:
+                          _id:
+                            type: string
+                            format: mongoId
+                          user_id:
+                            type: string
+                            format: mongoId
+                          bike:
+                            $ref: '../components/schemas/Bike.yaml'
+                          status:
+                            $ref: '../components/schemas/RentalStatus.yaml'
+                          timeRemainingMinutes:
+                            type: integer
+                            description: "Minutes remaining until the reservation expires (only for 'ĐÃ ĐẶT TRƯỚC' status)."
+                            example: 15
+                          start_station:
+                            type: string
+                            format: mongoId
+                          end_station:
+                            type: string
+                            format: mongoId
+                          start_time:
+                            type: string
+                            format: date-time
+                          end_time:
+                            type: string
+                            format: date-time
+                          duration:
+                            type: integer
+                          total_price:
+                            type: number
+                            format: double
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (User does not have Admin or Staff rights).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: Station not found.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Ratings API
 # ===================================================================
