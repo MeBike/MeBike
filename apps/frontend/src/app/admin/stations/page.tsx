@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus , X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useStationActions } from "@/hooks/useStationAction";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,7 +22,7 @@ export default function StationsPage() {
   const editMapRef = useRef<HTMLDivElement>(null); // Map ref cho edit
   const editMapInstanceRef = useRef<tt.Map | null>(null);
   const [page, setPage] = useState<number>(1);
-  const [limits] = useState<number>(10);
+  const [limit] = useState<number>(10);
   const [stationID, setStationID] = useState<string>("");
 
   const {
@@ -110,6 +110,8 @@ export default function StationsPage() {
   // MAP FOR CREATE MODAL
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
+    const markerRef = { current: null as tt.Marker | null };
+
     if (isModalOpen && mapRef.current && !mapInstanceRef.current) {
       timer = setTimeout(() => {
         const apiKey =
@@ -123,20 +125,28 @@ export default function StationsPage() {
           style:
             "https://api.tomtom.com/style/1/style/20.3.2-*?map=hybrid_main",
         });
+
         setTimeout(() => {
           mapInstanceRef.current?.resize();
         }, 300);
 
+        // Select location by click
         mapInstanceRef.current.on("click", function (e) {
-          setCreateValue("latitude", e.lngLat.lat.toString());
-          setCreateValue("longitude", e.lngLat.lng.toString());
-        });
+          const { lat, lng } = e.lngLat;
+          setCreateValue("latitude", lat.toString());
+          setCreateValue("longitude", lng.toString());
 
-        new tt.Marker()
-          .setLngLat([106.69, 10.762])
-          .addTo(mapInstanceRef.current);
+          if (markerRef.current) {
+            markerRef.current.setLngLat([lng, lat]);
+          } else {
+            markerRef.current = new tt.Marker({ draggable: false })
+              .setLngLat([lng, lat])
+              .addTo(mapInstanceRef.current!);
+          }
+        });
       }, 400);
     }
+
     return () => {
       if (timer) clearTimeout(timer);
       if (!isModalOpen && mapInstanceRef.current) {
@@ -147,50 +157,66 @@ export default function StationsPage() {
   }, [isModalOpen, setCreateValue]);
 
   // MAP FOR EDIT MODAL
- useEffect(() => {
-   let timer: NodeJS.Timeout | undefined;
-   if (
-     isEditModalOpen &&
-     editMapRef.current &&
-     !editMapInstanceRef.current &&
-     responseStationDetail?.latitude &&
-     responseStationDetail?.longitude
-   ) {
-     timer = setTimeout(() => {
-       const apiKey =
-         process.env.NEXT_PUBLIC_TOMTOM_API_KEY ||
-         "N5uyS5ZiQ4Uwxmu0JqgpLXG0exsrmeMP";
-       const lat = parseFloat(responseStationDetail.latitude);
-       const lng = parseFloat(responseStationDetail.longitude);
-       editMapInstanceRef.current = tt.map({
-         key: apiKey,
-         container: editMapRef.current as HTMLElement,
-         center: [lng, lat],
-         zoom: 14,
-         style: "https://api.tomtom.com/style/1/style/20.3.2-*?map=basic_main",
-       });
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    const editMarkerRef = { current: null as tt.Marker | null };
 
-       setTimeout(() => {
-         editMapInstanceRef.current?.resize();
-       }, 300);
+    if (
+      isEditModalOpen &&
+      editMapRef.current &&
+      !editMapInstanceRef.current &&
+      responseStationDetail?.latitude &&
+      responseStationDetail?.longitude
+    ) {
+      timer = setTimeout(() => {
+        const apiKey =
+          process.env.NEXT_PUBLIC_TOMTOM_API_KEY ||
+          "N5uyS5ZiQ4Uwxmu0JqgpLXG0exsrmeMP";
+        const lat = parseFloat(responseStationDetail.latitude);
+        const lng = parseFloat(responseStationDetail.longitude);
 
-       editMapInstanceRef.current.on("click", function (e) {
-         setEditValue("latitude", e.lngLat.lat.toString());
-         setEditValue("longitude", e.lngLat.lng.toString());
-       });
+        editMapInstanceRef.current = tt.map({
+          key: apiKey,
+          container: editMapRef.current as HTMLElement,
+          center: [lng, lat],
+          zoom: 14,
+          style: "https://api.tomtom.com/style/1/style/20.3.2-*?map=basic_main",
+        });
 
-       new tt.Marker().setLngLat([lng, lat]).addTo(editMapInstanceRef.current);
-     }, 400);
-   }
-   return () => {
-     if (timer) clearTimeout(timer);
-     if (!isEditModalOpen && editMapInstanceRef.current) {
-       editMapInstanceRef.current.remove();
-       editMapInstanceRef.current = null;
-     }
-   };
- }, [isEditModalOpen, responseStationDetail, setEditValue]);
+        setTimeout(() => {
+          editMapInstanceRef.current?.resize();
+        }, 300);
 
+        // Add initial marker at existing location
+        editMarkerRef.current = new tt.Marker({ draggable: false })
+          .setLngLat([lng, lat])
+          .addTo(editMapInstanceRef.current!);
+
+        // Update position on click
+        editMapInstanceRef.current.on("click", function (e) {
+          const { lat, lng } = e.lngLat;
+          setEditValue("latitude", lat.toString());
+          setEditValue("longitude", lng.toString());
+
+          if (editMarkerRef.current) {
+            editMarkerRef.current.setLngLat([lng, lat]);
+          } else {
+            editMarkerRef.current = new tt.Marker({ draggable: false })
+              .setLngLat([lng, lat])
+              .addTo(editMapInstanceRef.current!);
+          }
+        });
+      }, 400);
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (!isEditModalOpen && editMapInstanceRef.current) {
+        editMapInstanceRef.current.remove();
+        editMapInstanceRef.current = null;
+      }
+    };
+  }, [isEditModalOpen, responseStationDetail, setEditValue]);
 
   // ADD STATION
   const handleAddStation = (data: StationSchemaFormData) => {
@@ -341,17 +367,13 @@ export default function StationsPage() {
                   <label className="block text-sm font-medium text-foreground mb-1">
                     Latitude
                   </label>
-                  <Input type="text" {...createRegister("latitude")}  />
+                  <Input type="text" {...createRegister("latitude")} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">
                     Longitude
                   </label>
-                  <Input
-                    type="text"
-                    {...createRegister("longitude")}
-                    
-                  />
+                  <Input type="text" {...createRegister("longitude")} />
                 </div>
               </div>
               <label className="block text-sm font-medium text-foreground mb-1">

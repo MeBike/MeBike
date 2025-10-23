@@ -40,7 +40,7 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 };
 interface StationActionProps {
   hasToken: boolean;
-  stationId: string;
+  stationId?: string;
   page: number;
   limit: number;
 }
