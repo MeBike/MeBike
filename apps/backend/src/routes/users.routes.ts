@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import type { UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
-import { adminAndStaffGetAllUsersController, adminResetPasswordController, changePasswordController, forgotPasswordController, getMeController, getUserDetailController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
+import { adminAndStaffGetAllUsersController, adminResetPasswordController, changePasswordController, forgotPasswordController, getMeController, getUserDetailController, getUserStatsController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
 import { accessTokenValidator, adminAndStaffGetAllUsersValidator, adminResetPasswordValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, updateUserByIdValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
@@ -41,6 +41,20 @@ usersRouter.patch(
   wrapAsync(updateMeController),
 );
 usersRouter.post("/refresh-token", refreshTokenValidator, wrapAsync(refreshController));
+
+/**
+ * Description: Get user statistics (for Admin/Staff)
+ * Path: /users/manage-users/stats
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN, STAFF
+ */
+usersRouter.get(
+  '/manage-users/stats',
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  wrapAsync(getUserStatsController)
+)
 
 /**
  * Description: Admin and Staff get all users with pagination and filters

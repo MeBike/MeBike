@@ -201,6 +201,8 @@ components:
       $ref: "./components/schemas/StationStatus.yaml"
     Rating:
       $ref: "./components/schemas/Rating.yaml"
+    UserStats:
+      $ref: './components/schemas/UserStats.yaml'
 
   securitySchemes:
     BearerAuth:

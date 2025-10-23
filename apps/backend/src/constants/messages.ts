@@ -93,7 +93,9 @@ export const USERS_MESSAGES = {
   // update user by admin/staff
   NFC_CARD_UID_MUST_BE_A_STRING: 'NFC Card UID phải là chuỗi',
   NFC_CARD_UID_ALREADY_EXISTS: 'NFC Card UID đã tồn tại trên một người dùng khác',
-  UPDATE_USER_INFORMATION_SUCCESS: 'Cập nhật thông tin người dùng thành công'
+  UPDATE_USER_INFORMATION_SUCCESS: 'Cập nhật thông tin người dùng thành công',
+  // get user stats
+  GET_USER_STATS_SUCCESS: 'Lấy thống kê người dùng thành công'
 } as const
 
 export const REPORTS_MESSAGES = {

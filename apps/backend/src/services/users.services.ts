@@ -595,6 +595,52 @@ class UsersService {
 
     return result
   }
+
+  async getUserStats() {
+    //$facet chạy nhiều pipeline đếm song song
+    const statsPipeline = [
+      {
+        $facet: {
+          //pipeline 1: Đếm tổng số người dùng
+          "total_users": [
+            { $count: "count" }
+          ],
+          //pipeline 2: Đếm số người dùng đã xác thực
+          "total_verified": [
+            { $match: { verify: UserVerifyStatus.Verified } },
+            { $count: "count" }
+          ],
+          //pipeline 3: Đếm số người dùng chưa xác thực
+          "total_unverified": [
+            { $match: { verify: UserVerifyStatus.Unverified } },
+            { $count: "count" }
+          ],
+          //pipeline 4: Đếm số người dùng bị cấm
+          "total_banned": [
+            { $match: { verify: UserVerifyStatus.Banned } },
+            { $count: "count" }
+          ]
+        }
+      },
+      {
+        //làm sạch output
+        $project: {
+          // $arrayElemAt lấy phần tử đầu tiên của mảng (hoặc null)
+          // $ifNull xử lý trường hợp mảng rỗng (không có user nào) và trả về 0
+          "total_users": { $ifNull: [{ $arrayElemAt: ["$total_users.count", 0] }, 0] },
+          "total_verified": { $ifNull: [{ $arrayElemAt: ["$total_verified.count", 0] }, 0] },
+          "total_unverified": { $ifNull: [{ $arrayElemAt: ["$total_unverified.count", 0] }, 0] },
+          "total_banned": { $ifNull: [{ $arrayElemAt: ["$total_banned.count", 0] }, 0] }
+        }
+      }
+    ];
+
+    //chạy pipeline
+    const result = await databaseService.users.aggregate(statsPipeline).toArray();
+
+    //$facet luôn trả về một mảng chứa 1 document, kể cả khi collection rỗng
+    return result[0];
+  }
 }
 
 const usersService = new UsersService();

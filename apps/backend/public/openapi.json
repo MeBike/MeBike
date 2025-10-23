@@ -983,6 +983,71 @@
         }
       }
     },
+    "/users/manage-users/stats": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user statistics (Admin/Staff only)",
+        "description": "Retrieves statistics about the user base (total, verified, unverified, banned). Requires Admin or Staff privileges.",
+        "security": [
+          {
+            "BeararAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/UserStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (user from token does not exist).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [
@@ -6115,6 +6180,32 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "UserStats": {
+        "type": "object",
+        "description": "An object containing user statistics.",
+        "properties": {
+          "total_users": {
+            "type": "integer",
+            "description": "Total number of all user accounts.",
+            "example": 150
+          },
+          "total_verified": {
+            "type": "integer",
+            "description": "Total number of verified users.",
+            "example": 120
+          },
+          "total_unverified": {
+            "type": "integer",
+            "description": "Total number of unverified users.",
+            "example": 25
+          },
+          "total_banned": {
+            "type": "integer",
+            "description": "Total number of banned users.",
+            "example": 5
           }
         }
       }

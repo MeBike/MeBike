@@ -242,3 +242,11 @@ export const adminResetPasswordController = async (
     message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS
   })
 }
+
+export const getUserStatsController = async (req: Request, res: Response) => {
+  const stats = await usersService.getUserStats()
+  res.json({
+    message: USERS_MESSAGES.GET_USER_STATS_SUCCESS,
+    result: stats
+  })
+}
