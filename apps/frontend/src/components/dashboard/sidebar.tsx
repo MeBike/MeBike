@@ -16,7 +16,6 @@ import {
   History,
   Wallet,
   Truck,
-  LocateIcon,
   MapIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";

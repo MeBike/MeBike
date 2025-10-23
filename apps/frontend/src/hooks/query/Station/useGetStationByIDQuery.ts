@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { stationService } from "@services/station.service";
-import type { Station } from "@custom-types";
-
 const fetchStationByID = async (id: string) => {
   try {
     const response = await stationService.getStationById(id);
@@ -10,6 +8,7 @@ const fetchStationByID = async (id: string) => {
     }
     return null;
   } catch (error) {
+    console.log(error);
     throw new Error("Failed to fetch stations with id " + id);
   }
 };

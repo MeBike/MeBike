@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
-import type { Station } from "@custom-types";
-import { DetailUser } from "@/services/auth.service";
-import { Plus, Edit2, Trash2, Eye, X } from "lucide-react";
+import { Plus , X } from "lucide-react";
 import { useStationActions } from "@/hooks/useStationAction";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,9 +21,8 @@ export default function StationsPage() {
   const mapInstanceRef = useRef<tt.Map | null>(null);
   const editMapRef = useRef<HTMLDivElement>(null); // Map ref cho edit
   const editMapInstanceRef = useRef<tt.Map | null>(null);
-
   const [page, setPage] = useState<number>(1);
-  const [limit, setLimit] = useState<number>(10);
+  const [limits] = useState<number>(10);
   const [stationID, setStationID] = useState<string>("");
 
   const {

@@ -10,11 +10,6 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-const getStatusColor = (status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
-  return status === "HOẠT ĐỘNG"
-    ? "bg-green-100 text-green-800"
-    : "bg-red-100 text-red-800";
-};
 export function formatDateVN(dateString: string) {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return ""; // Nếu date không hợp lệ trả về rỗng

@@ -2,12 +2,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useGetAllStation } from "./query/Station/useGetAllStationQuery";
 import { useGetStationByIDQuery } from "./query/Station/useGetStationByIDQuery";
-import { useCreateBikeMutation } from "./mutations/Bike/useCreateBike";
 import { StationSchemaFormData } from "@/schemas/stationSchema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useCreateSupplierMutation } from "./mutations/Station/useCreateStationQuery";
-import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 import { useSoftDeleteStationMutation } from "./mutations/Station/useSoftDeleteStationMutation";
 import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQuery";
 interface ErrorResponse {
