@@ -134,7 +134,7 @@ export const useStationActions = ({
         },
       });
     },
-    [hasToken, router, queryClient, useCreateStation]
+    [hasToken, router, queryClient, useSoftDeleteStation]
   );
   const updateStation = useCallback(
     async (data: StationSchemaFormData) => {
