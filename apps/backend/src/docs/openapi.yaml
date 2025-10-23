@@ -121,6 +121,9 @@ components:
     # Rating
     CreateRatingReqBody:
       $ref: './components/schemas/CreateRatingReqBody.yaml'
+    # Update User by Admin/Staff
+    UpdateUserReqBody:
+      $ref: './components/schemas/UpdateUserReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:

@@ -789,6 +789,103 @@
             }
           }
         }
+      },
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user by ID (Admin/Staff only)",
+        "description": "Partially updates a user's profile. Requires Admin or Staff privileges.\n- Only fields included in the request body will be updated.\n- **Important**: If the 'email' field is changed, the user's 'verify' status will be automatically reset to 'UNVERIFIED' and a new verification OTP will be sent to the new email.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the user to update.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "60c72b2f9b1d8e001f8e8e8e"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A JSON object containing the fields to update. All fields are optional.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Cập nhật thông tin người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (either the user from the token or the user specified by _id).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., email/username/phone/nfc already exists, invalid format).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/bikes": {
@@ -4822,6 +4919,50 @@
             "nullable": true,
             "description": "An optional comment for the rating.",
             "example": "Xe đạp còn mới, chạy tốt."
+          }
+        }
+      },
+      "UpdateUserReqBody": {
+        "type": "object",
+        "description": "Fields to update for the user's profile. All fields are optional. If 'email' is changed, 'verify' status will be reset to 'UNVERIFIED'.",
+        "properties": {
+          "fullname": {
+            "type": "string",
+            "description": "The user's full name (1-50 characters).",
+            "example": "Nguyen Van C"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "The user's new email. Must be unique.",
+            "example": "new.email@example.com"
+          },
+          "verify": {
+            "$ref": "#/components/schemas/User/properties/verify"
+          },
+          "location": {
+            "type": "string",
+            "description": "The user's location (1-200 characters).",
+            "example": "Da Nang, Vietnam"
+          },
+          "username": {
+            "type": "string",
+            "description": "The user's new username. Must be unique.",
+            "example": "nguyenvanc123"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "The user's new phone number (10 digits). Must be unique.",
+            "example": "0905123456"
+          },
+          "role": {
+            "$ref": "#/components/schemas/User/properties/role"
+          },
+          "nfc_card_uid": {
+            "type": "string",
+            "nullable": true,
+            "description": "The user's NFC card UID. Must be unique. Send null or empty string to remove.",
+            "example": "A1-B2-C3-D4"
           }
         }
       },

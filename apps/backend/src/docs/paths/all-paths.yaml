@@ -436,6 +436,68 @@
           application/json:
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  patch:
+    tags: [Users]
+    summary: Update user by ID (Admin/Staff only)
+    description: |
+      Partially updates a user's profile. Requires Admin or Staff privileges.
+      - Only fields included in the request body will be updated.
+      - **Important**: If the 'email' field is changed, the user's 'verify' status will be automatically reset to 'UNVERIFIED' and a new verification OTP will be sent to the new email.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        description: The ID of the user to update.
+        schema:
+          type: string
+          format: mongoId
+          example: "60c72b2f9b1d8e001f8e8e8e"
+    requestBody:
+      description: A JSON object containing the fields to update. All fields are optional.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateUserReqBody.yaml'
+    responses:
+      '200':
+        description: User updated successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Cập nhật thông tin người dùng thành công"
+                result:
+                  $ref: '../components/schemas/User.yaml'
+      '401':
+        description: Unauthorized (Invalid access token).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (User does not have Admin or Staff rights).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: User not found (either the user from the token or the user specified by _id).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: "Validation error (e.g., email/username/phone/nfc already exists, invalid format)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
 # ===================================================================
 # Bikes API
