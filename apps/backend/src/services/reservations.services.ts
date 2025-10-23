@@ -89,7 +89,7 @@ class ReservationsService {
   }: {
     user_id: ObjectId
     reservation: Reservation
-    reason?: string
+    reason: string
   }) {
     const session = databaseService.getClient().startSession()
     try {
@@ -97,8 +97,9 @@ class ReservationsService {
       await session.withTransaction(async () => {
         const now = getLocalTime()
         const updatedData: any = {}
-        if (reservation.created_at && this.isCancellable(reservation.created_at)) {
+        if (reservation.created_at && this.isRefundable(reservation.created_at)) {
           // TODO: handle refund
+          console.log("Handle refund")
         }
         updatedData.status = ReservationStatus.Cancelled
         result = await databaseService.reservations.findOneAndUpdate(
@@ -133,23 +134,13 @@ class ReservationsService {
           }
         )
 
-        const user = await databaseService.users.findOne({ _id: user_id }, { session })
-        if (!user) {
-          throw new ErrorWithStatus({
-            message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
-            status: HTTP_STATUS.NOT_FOUND
-          })
-        }
-
-        if ([Role.Admin, Role.Staff].includes(user.role)) {
-          const log = new RentalLog({
-            rental_id: reservation._id!,
-            user_id,
-            changes: updatedData,
-            reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
-          })
-          await databaseService.rentalLogs.insertOne({ ...log }, { session })
-        }
+        const log = new RentalLog({
+          rental_id: reservation._id!,
+          user_id,
+          changes: updatedData,
+          reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
+        })
+        await databaseService.rentalLogs.insertOne({ ...log }, { session })
       })
       return result
     } catch (error) {
@@ -188,17 +179,16 @@ class ReservationsService {
             status: HTTP_STATUS.NOT_FOUND
           })
         }
-        
-        const user = await databaseService.users.findOne({_id: user_id})
-        if(!user){
+
+        const user = await databaseService.users.findOne({ _id: user_id })
+        if (!user) {
           throw new ErrorWithStatus({
-            message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace("%s", rental.user_id.toString()),
+            message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', rental.user_id.toString()),
             status: HTTP_STATUS.BAD_REQUEST
-          }) 
+          })
         }
 
-        if(user.role === Role.User && !rental.user_id.equals(user_id)){
-
+        if (user.role === Role.User && !rental.user_id.equals(user_id)) {
           throw new ErrorWithStatus({
             message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_OTHER_RESERVATION,
             status: HTTP_STATUS.BAD_REQUEST
@@ -276,7 +266,7 @@ class ReservationsService {
     reservation: Reservation
     reason: string
   }) {
-    return await this.confirmReservationCore({ user_id: staff_id, reservation, reason})
+    return await this.confirmReservationCore({ user_id: staff_id, reservation, reason })
   }
 
   async notifyExpiringReservations() {
@@ -611,7 +601,7 @@ class ReservationsService {
     return new Date(new Date(startTime).getTime() + holdTimeMs)
   }
 
-  isCancellable(createdTime: Date) {
+  isRefundable(createdTime: Date) {
     const now = getLocalTime()
     const cancellableMs = Number(process.env.CANCELLABLE_HOURS || '1') * 60 * 60 * 1000
     return new Date(createdTime.getTime() + cancellableMs) < now

@@ -14,9 +14,10 @@ import {
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
 import {
   batchDispatchSameStationValidator,
-  cancelReservationValidator,
   reserveBikeValidator,
+  staffCancelReservationValidator,
   staffConfirmReservationValidator,
+  userCancelReservationValidator,
   userConfirmReservationValidator
 } from '~/middlewares/reservations.middlewares'
 import { isStaffValidator } from '~/middlewares/staff.middlewares'
@@ -50,10 +51,14 @@ reserveRouter
   .post(accessTokenValidator, isStaffValidator, staffConfirmReservationValidator, wrapAsync(staffConfirmReservationController))
 
 reserveRouter
+  .route('/:id/staff-cancel')
+  .post(accessTokenValidator, isStaffValidator, staffCancelReservationValidator, wrapAsync(cancelReservationController))
+
+reserveRouter
   .route('/:id/confirm')
   .post(accessTokenValidator, userConfirmReservationValidator, wrapAsync(confirmReservationController))
 
 reserveRouter
   .route('/:id/cancel')
-  .post(accessTokenValidator, cancelReservationValidator, wrapAsync(cancelReservationController))
+  .post(accessTokenValidator, userCancelReservationValidator, wrapAsync(cancelReservationController))
 export default reserveRouter

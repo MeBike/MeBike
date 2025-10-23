@@ -73,7 +73,7 @@ export async function cancelReservationController(
     reason: req.body.reason
   })
   res.json({
-    message: RESERVATIONS_MESSAGE.CANCEL_SUCCESS,
+    message: RESERVATIONS_MESSAGE.STAFF_CANCEL_SUCCESS,
     result
   })
 }

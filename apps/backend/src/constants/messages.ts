@@ -282,6 +282,7 @@ export const RESERVATIONS_MESSAGE = {
   CONFIRM_SUCCESS: 'Xác nhận phiên đặt trước thành công',
   DISPATCH_BIKE_SUCCESS: 'Phân phối xe thành công',
   STAFF_CONFIRM_SUCCESS: 'Nhân viên hỗ trợ xác nhận phiên đặt trước thành công',
+  STAFF_CANCEL_SUCCESS: 'Nhân viên hỗ trợ huỷ phiên đặt trước thành công',
   // Fail action
   PARTIAL_UPDATE_FAILURE: 'Lỗi hệ thống: Chỉ %s/%s xe được cập nhật. Hành động bị hủy',
   // Required data
@@ -325,6 +326,7 @@ export const RESERVATIONS_MESSAGE = {
   NOT_AVAILABLE_FOR_CONFIRMATION: 'Chưa đến thời gian cho phép xác nhận phiên đặt trước này',
   CANNOT_CANCEL_THIS_RESERVATION: 'Bạn chỉ có thể huỷ phiên đặt trước ở trạng thái đang được xử lí',
   CANNOT_CONFIRM_OTHER_RESERVATION: 'Bạn không có quyền xác nhận phiên đặt trước của người khác',
+  CANNOT_CANCEL_EXPIRED_RESERVATION: 'Phiên đặt trước này đã hết hạn, bạn không thể huỷ',
   // Over time
   OVER_CANCELLED_TIME: 'Đã quá thời gian quy định để có thể huỷ phiên đặt trước',
   // Default

@@ -6,7 +6,7 @@ export type ReserveBikeReqBody = {
 }
 
 export type CancelReservationReqBody = {
-  reason?: string
+  reason: string
 }
 
 export type ReservationParam = {
