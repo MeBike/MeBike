@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useCreateSupplierMutation } from "./mutations/Station/useCreateStationQuery";
 import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
+import { useSoftDeleteStationMutation } from "./mutations/Station/useSoftDeleteStationMutation";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -54,7 +55,7 @@ export const useStationActions = ({hasToken , stationId , page , limit} : Statio
     isLoading: isLoadingStationID,
   } = useGetStationById(stationId || "");
   const useCreateStation = useCreateSupplierMutation();
-  const useSoftDeleteStation = useSoftDeleteBikeMutation();
+  const useSoftDeleteStation = useSoftDeleteStationMutation();
   const getAllStations = useCallback(async ({page,limit} : {page ?: number , limit ?: number}) => {
     if (!hasToken) {
       return;

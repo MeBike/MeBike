@@ -1,6 +1,15 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Edit2, Trash2 } from "lucide-react";
 import type { Station } from "@custom-types";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 const getStatusColor = (status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
   return status === "HOẠT ĐỘNG"
     ? "bg-green-100 text-green-800"
@@ -27,7 +36,7 @@ export const stationColumns = ({
   onView?: (supplier: Station) => void;
   setIsDetailModalOpen?: (isOpen: boolean) => void;
   onEdit?: (supplier: Station) => void;
-  onDelete?: (supplier: Station) => void;
+  onDelete?: ({ id }: { id: string }) => void;
 }): ColumnDef<Station>[] => [
   {
     accessorKey: "name",
@@ -94,17 +103,43 @@ export const stationColumns = ({
         >
           <Edit2 className="w-4 h-4 text-muted-foreground" />
         </button>
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xóa"
-          onClick={() => {
-            if (onDelete) {
-              onDelete(row.original);
-            }
-          }}
-        >
-          <Trash2 className="w-4 h-4 text-red-500" />
-        </button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              title="Xóa"
+              type="button"
+            >
+              <Trash2 className="w-4 h-4 text-red-500" />
+            </button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Bạn có chắc muốn xóa trạm này?</DialogTitle>
+            </DialogHeader>
+            <div>
+              Tên trạm: <b>{row.original.name}</b>
+            </div>
+            <DialogFooter className="gap-2 flex">
+              <DialogClose asChild>
+                <button className="px-4 py-2 rounded border" type="button">
+                  Hủy
+                </button>
+              </DialogClose>
+              <DialogClose asChild>
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded"
+                  type="button"
+                  onClick={() => {
+                    if (onDelete) onDelete({ id: row.original._id });
+                  }}
+                >
+                  Xóa
+                </button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     ),
   },

@@ -67,7 +67,7 @@ export default function StationsPage() {
   const mapInstanceRef = useRef<tt.Map | null>(null);
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
-  const { getAllStations, stations, paginationStations, createStation } =
+  const { getAllStations, stations, paginationStations, createStation, deleteStation } =
     useStationActions({hasToken: true , page , limit});
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -168,10 +168,6 @@ export default function StationsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {/* <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Xuất Excel
-            </Button> */}
             <Button onClick={() => setIsModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Thêm trạm mới
@@ -187,21 +183,6 @@ export default function StationsPage() {
               {paginationStations?.totalRecords}
             </p>
           </div>
-          {/* <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Đang hoạt động</p>
-            <p className="text-2xl font-bold text-green-500 mt-1">
-              {mockStations.filter((s) => s.status === "HOẠT ĐỘNG").length}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Ngưng hoạt động</p>
-            <p className="text-2xl font-bold text-red-500 mt-1">
-              {
-                mockStations.filter((s) => s.status === "NGƯNG HOẠT ĐỘNG")
-                  .length
-              }
-            </p>
-          </div> */}
         </div>
 
         {/* Filters */}
@@ -226,7 +207,7 @@ export default function StationsPage() {
         </div>
         <div className="w-full rounded-lg space-y-4  flex flex-col">
           <div>
-            <DataTable columns={stationColumns({})} data={stations ?? []} />
+            <DataTable columns={stationColumns({onDelete: ({ id }) => deleteStation(id)})} data={stations ?? []} />
           </div>
           <div className="">
             <PaginationDemo
