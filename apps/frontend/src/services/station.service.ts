@@ -76,4 +76,17 @@ export const stationService = {
     );
     return response;
   },
+  updateStation : async ({
+    stationID,
+    stationData
+  }: {
+    stationID: string;
+    stationData: StationSchemaFormData
+  }): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
+    const response = await fetchHttpClient.put<ApiDetailResponse<Station>>(
+      STATION_ENDPOINTS.ID(stationID),
+      stationData
+    );
+    return response;
+  },
 };

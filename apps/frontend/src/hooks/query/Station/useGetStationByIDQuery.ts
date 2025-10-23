@@ -8,11 +8,12 @@ const fetchStationByID = async (id: string) => {
     if (response.status === 200 && response.data?.result) {
       return response.data.result;
     }
+    return null;
   } catch (error) {
     throw new Error("Failed to fetch stations with id " + id);
   }
 };
-export const useGetStationById = (stationId: string) => {
+export const useGetStationByIDQuery = (stationId: string) => {
   return useQuery({
     queryKey: ["station", stationId],
     queryFn: () => fetchStationByID(stationId),

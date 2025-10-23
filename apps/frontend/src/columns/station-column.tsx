@@ -33,9 +33,9 @@ export const stationColumns = ({
   onEdit,
   onDelete,
 }: {
-  onView?: (supplier: Station) => void;
+  onView?: ({ id }: { id: string }) => void;
   setIsDetailModalOpen?: (isOpen: boolean) => void;
-  onEdit?: (supplier: Station) => void;
+  onEdit?: ({ id }: { id: string }) => void;
   onDelete?: ({ id }: { id: string }) => void;
 }): ColumnDef<Station>[] => [
   {
@@ -83,7 +83,7 @@ export const stationColumns = ({
           title="Xem chi tiết"
           onClick={() => {
             if (onView) {
-              onView(row.original);
+              onView({ id: row.original._id });
             }
             if (setIsDetailModalOpen) {
               setIsDetailModalOpen(true);
@@ -97,7 +97,7 @@ export const stationColumns = ({
           title="Chỉnh sửa"
           onClick={() => {
             if (onEdit) {
-              onEdit(row.original);
+              onEdit({ id: row.original._id });
             }
           }}
         >

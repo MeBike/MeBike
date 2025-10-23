@@ -4,7 +4,7 @@ export const stationSchema = z.object({
     .string()
     .min(1, "Name is required")
     .max(200, "Name must be at most 200 characters"),
-  address: z.string().min(1, "Address is required"),
+  address: z.string().min(10, "Address is required"),
   latitude: z
     .string({
       error: "Latitude is required",
