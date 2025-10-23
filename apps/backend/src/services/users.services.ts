@@ -2,7 +2,7 @@ import { Filter, ObjectId } from "mongodb";
 import process from "node:process";
 import nodemailer from "nodemailer";
 
-import type { AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody } from "~/models/requests/users.requests";
+import type { AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
 import { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
@@ -411,12 +411,12 @@ class UsersService {
     return { access_token, refresh_token: new_refresh_token };
   }
 
-  async adminGetAllUsers(
+  async adminAndStaffGetAllUsers(
     req: Request<ParamsDictionary, any, any, AdminGetAllUsersReqQuery>,
     res: Response,
     next: NextFunction
   ) {
-    const { fullname, verify } = req.query
+    const { fullname, verify, role } = req.query
     const query = req.query
 
     const filter: Filter<User> = {}
@@ -427,6 +427,10 @@ class UsersService {
 
     if (verify) {
       filter.verify = verify
+    }
+
+    if(role) {
+      filter.role = role as Role;
     }
 
     const projection = {
@@ -445,6 +449,123 @@ class UsersService {
       filter,
       projection
     )
+  }
+
+  async searchUsers(query: string) {
+    const regex = new RegExp(query, "i");
+
+    const filter: Filter<User> = {
+      $or: [
+        { email: regex },
+        { phone_number: regex },
+      ],
+    };
+
+    const users = await databaseService.users
+      .find(filter)
+      .project({
+        password: 0,
+        email_verify_otp: 0,
+        forgot_password_otp: 0,
+      })
+      .toArray();
+
+    return users;
+  }
+
+  async getUserDetail(_id: string) {
+    const user = await databaseService.users.findOne(
+    { _id: new ObjectId(_id) },
+    {
+      projection: {
+        password: 0,
+        email_verify_otp: 0,
+        forgot_password_otp: 0,
+      },
+    }
+  );
+    if (user == null) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+    return user
+  }
+
+  async updateUserById(_id: string, payload: UpdateUserReqBody) {
+    const localTime = getLocalTime()
+    
+    // Tạo object $set cơ bản
+    const updatePayload: any = {
+      ...payload,
+      updated_at: localTime
+    }
+
+    //xử lý logic đặc biệt nếu email thay đổi
+    if (payload.email) {
+      const userToUpdate = await databaseService.users.findOne({ _id: new ObjectId(_id) })
+      
+      //chỉ kích hoạt nếu email mới khác email cũ
+      if (userToUpdate && userToUpdate.email !== payload.email) {
+        const emailVerifyOtp = generateOTP()
+        const emailVerifyOtpExpires = new Date(localTime.getTime() + 10 * 60 * 1000)
+
+        updatePayload.email = payload.email
+        updatePayload.verify = UserVerifyStatus.Unverified //buộc user xác thực lại email mới
+        updatePayload.email_verify_otp = emailVerifyOtp
+        updatePayload.email_verify_otp_expires = emailVerifyOtpExpires
+
+        //gửi email OTP đến địa chỉ email MỚI
+        try {
+          const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: process.env.EMAIL_APP,
+              pass: process.env.EMAIL_PASSWORD_APP
+            }
+          })
+          const htmlContent = readEmailTemplate('verify-otp.html', {
+            fullname: payload.fullname || userToUpdate.fullname,
+            otp: emailVerifyOtp,
+            expiryMinutes: '10'
+          })
+          const mailOptions = {
+            from: `"MeBike" <${process.env.EMAIL_APP}>`,
+            to: payload.email,
+            subject: '[MeBike] MÃ OTP XÁC THỰC EMAIL MỚI CỦA BẠN',
+            html: htmlContent
+          }
+          transporter.sendMail(mailOptions)
+        } catch (error) {
+          console.error('Error sending re-verification email:', error)
+        }
+      }
+    }
+    
+    const user = await databaseService.users.findOneAndUpdate(
+      { _id: new ObjectId(_id) },
+      { $set: updatePayload },
+      {
+        returnDocument: 'after',
+        projection: {
+          password: 0,
+          email_verify_otp: 0,
+          email_verify_otp_expires: 0,
+          forgot_password_otp: 0,
+          forgot_password_otp_expires: 0
+        }
+      }
+    )
+
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return user
   }
 }
 

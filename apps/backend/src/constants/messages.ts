@@ -75,11 +75,25 @@ export const USERS_MESSAGES = {
   // admin get all users
   VERIFY_STATUS_MUST_BE_A_STRING: 'Trạng thái xác thực phải là chuỗi',
   INVALID_VERIFY_STATUS: 'Trạng thái xác thực không hợp lệ',
+  ROLE_MUST_BE_A_STRING: 'Vai trò phải là chuỗi',
+  ROLE_IS_INVALID: 'Vai trò không hợp lệ',
   // OTP messages
   FORGOT_PASSWORD_OTP_MUST_BE_A_STRING: 'Mã OTP đặt lại mật khẩu phải là chuỗi',
   FORGOT_PASSWORD_OTP_MUST_BE_6_DIGITS: 'Mã OTP đặt lại mật khẩu phải gồm 6 chữ số',
   EMAIL_OTP_MUST_BE_A_STRING: 'Mã OTP xác thực email phải là chuỗi',
   EMAIL_OTP_MUST_BE_6_DIGITS: 'Mã OTP xác thực email phải gồm 6 chữ số',
+  // search users messages
+  SEARCH_QUERY_IS_REQUIRED: 'Tham số truy vấn tìm kiếm là bắt buộc',
+  SEARCH_QUERY_MUST_BE_A_STRING: 'Tham số truy vấn tìm kiếm phải là chuỗi',
+  SEARCH_USERS_SUCCESSFULLY: 'Tìm kiếm người dùng thành công',
+  // get user details by id
+  GET_USER_DETAIL_SUCCESS: 'Lấy chi tiết người dùng thành công',
+  USER_ID_IS_REQUIRED: 'User ID là bắt buộc',
+  INVALID_USER_ID: 'User ID không hợp lệ',
+  // update user by admin/staff
+  NFC_CARD_UID_MUST_BE_A_STRING: 'NFC Card UID phải là chuỗi',
+  NFC_CARD_UID_ALREADY_EXISTS: 'NFC Card UID đã tồn tại trên một người dùng khác',
+  UPDATE_USER_INFORMATION_SUCCESS: 'Cập nhật thông tin người dùng thành công'
 } as const
 
 export const REPORTS_MESSAGES = {

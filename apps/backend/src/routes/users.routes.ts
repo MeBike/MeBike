@@ -1,12 +1,12 @@
 import { Router } from "express";
 
-import type { UpdateMeReqBody } from "~/models/requests/users.requests";
+import type { UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
-import { adminGetAllUsersController, changePasswordController, forgotPasswordController, getMeController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, updateMeController, verifyEmailOtpController } from "~/controllers/users.controllers";
+import { adminAndStaffGetAllUsersController, changePasswordController, forgotPasswordController, getMeController, getUserDetailController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
-import { accessTokenValidator, adminGetAllUsersValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, updateMeValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, adminAndStaffGetAllUsersValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, updateUserByIdValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
-import { isAdminValidator } from "~/middlewares/admin.middlewares";
+import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 
 const usersRouter = Router();
 
@@ -19,8 +19,12 @@ usersRouter.post(
   resetPasswordValidator,
   wrapAsync(resetPasswordController),
 );
-usersRouter.post("/verify-email", verifyEmailOtpValidator, wrapAsync(verifyEmailOtpController));
-usersRouter.post("/resend-verify-email", accessTokenValidator, wrapAsync(resendEmailVerifyController));
+usersRouter.post("/verify-email",
+  verifyEmailOtpValidator,
+  wrapAsync(verifyEmailOtpController));
+usersRouter.post("/resend-verify-email",
+  accessTokenValidator,
+  wrapAsync(resendEmailVerifyController));
 usersRouter.put(
   "/change-password",
   accessTokenValidator,
@@ -37,6 +41,82 @@ usersRouter.patch(
   wrapAsync(updateMeController),
 );
 usersRouter.post("/refresh-token", refreshTokenValidator, wrapAsync(refreshController));
-usersRouter.get("/manage-users", accessTokenValidator, isAdminValidator, adminGetAllUsersValidator, wrapAsync(adminGetAllUsersController))
+
+/**
+ * Description: Admin and Staff get all users with pagination and filters
+ * Path: /users/manage-users/get-all
+ * Method: GET
+ * Header: Authorization
+ * Roles: Admin, Staff
+ * Query Params:
+ *    - fullname: string (optional)
+ *    - verify: 'VERIFIED' | 'UNVERIFIED' | 'BANNED' (optional)
+ *    - role: 'USER' | 'STAFF' | 'ADMIN' (optional)
+ */
+usersRouter.get("/manage-users/get-all",
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  adminAndStaffGetAllUsersValidator,
+  wrapAsync(adminAndStaffGetAllUsersController)
+);
+
+/**
+ * Description: Search for users by email or phone (for Admin/Staff)
+ * Path: /users/search
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Query: { q: string }
+ * Roles: ADMIN, STAFF
+ */
+usersRouter.get(
+  "/manage-users/search",
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  searchUsersValidator,
+  wrapAsync(searchUsersController)
+);
+
+/**
+ * Description: Get user detail by ID (for Admin/Staff)
+ * Path: /users/manage-users/:_id
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Params: { _id: string }
+ * Roles: ADMIN, STAFF
+ */
+usersRouter.get('/manage-users/:_id',
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  userDetailValidator,
+  wrapAsync(getUserDetailController)
+);
+
+/**
+ * Description: Update user by ID (for Admin/Staff)
+ * Path: /users/manage-users/:_id
+ * Method: PATCH
+ * Headers: { Authorization: Bearer <access_token> }
+ * Params: { _id: string }
+ * Body: UpdateUserReqBody (optional fields)
+ * Roles: ADMIN, STAFF
+ */
+usersRouter.patch(
+  '/manage-users/:_id',
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  userDetailValidator,
+  filterMiddleware<UpdateUserReqBody>([
+    'fullname',
+    'email',
+    'verify',
+    'location',
+    'username',
+    'phone_number',
+    'role',
+    'nfc_card_uid'
+  ]),
+  updateUserByIdValidator,
+  wrapAsync(updateUserByIdController)
+)
 
 export default usersRouter;

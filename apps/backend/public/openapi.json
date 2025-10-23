@@ -540,6 +540,354 @@
         }
       }
     },
+    "/users/manage-users/get-all": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get all users (Admin/Staff only)",
+        "description": "Retrieves a paginated list of all users. This endpoint is accessible only by Admin and Staff.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "description": "Filter users by role.",
+            "schema": {
+              "$ref": "#/components/schemas/User/properties/role"
+            }
+          },
+          {
+            "name": "verify",
+            "in": "query",
+            "required": false,
+            "description": "Filter users by verification status.",
+            "schema": {
+              "$ref": "#/components/schemas/User/properties/verify"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of users retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/User"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User does not have Admin or Staff rights.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., invalid role or verify status).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/manage-users/search": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Search users by email or phone (Admin/Staff only)",
+        "description": "Searches for users by matching email or phone number. Requires Admin or Staff privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "The search query (full or partial email or phone number).",
+            "schema": {
+              "type": "string",
+              "example": "09123456"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search successful. Returns a list of matching users.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Search users successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User does not have Admin or Staff rights.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User from token not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., search query 'q' is missing).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/manage-users/{_id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user detail by ID (Admin/Staff only)",
+        "description": "Retrieves the full profile information of a specific user by their ID. Requires Admin or Staff privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the user to retrieve.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "60c72b2f9b1d8e001f8e8e8e"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User detail retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thông tin chi tiết người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (either the user from the token or the user specified by _id).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user by ID (Admin/Staff only)",
+        "description": "Partially updates a user's profile. Requires Admin or Staff privileges.\n- Only fields included in the request body will be updated.\n- **Important**: If the 'email' field is changed, the user's 'verify' status will be automatically reset to 'UNVERIFIED' and a new verification OTP will be sent to the new email.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the user to update.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "60c72b2f9b1d8e001f8e8e8e"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A JSON object containing the fields to update. All fields are optional.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Cập nhật thông tin người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (either the user from the token or the user specified by _id).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., email/username/phone/nfc already exists, invalid format).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [
@@ -3554,6 +3902,160 @@
         }
       }
     },
+    "/stations/{id}/rentals": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get rentals by station (Admin/Staff only)",
+        "description": "Retrieves a paginated list of rentals associated with a specific station. \n- Requires Admin or Staff privileges.\n- Can be used to filter by status (e.g., 'ĐANG THUÊ').\n- **Special Feature**: If `status` is set to 'ĐÃ ĐẶT TRƯỚC', you can use `expired_within` to find reservations expiring soon.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the station to check.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Filter rentals by status.",
+            "schema": {
+              "$ref": "#/components/schemas/RentalStatus"
+            }
+          },
+          {
+            "name": "expired_within",
+            "in": "query",
+            "required": false,
+            "description": "Only used if status='ĐÃ ĐẶT TRƯỚC'. Finds reservations expiring within this many minutes. (Default: 60)",
+            "schema": {
+              "type": "integer",
+              "default": 60,
+              "example": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of rentals for the station, with populated bike info.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "format": "mongoId"
+                              },
+                              "user_id": {
+                                "type": "string",
+                                "format": "mongoId"
+                              },
+                              "bike": {
+                                "$ref": "#/components/schemas/Bike"
+                              },
+                              "status": {
+                                "$ref": "#/components/schemas/RentalStatus"
+                              },
+                              "timeRemainingMinutes": {
+                                "type": "integer",
+                                "description": "Minutes remaining until the reservation expires (only for 'ĐÃ ĐẶT TRƯỚC' status).",
+                                "example": 15
+                              },
+                              "start_station": {
+                                "type": "string",
+                                "format": "mongoId"
+                              },
+                              "end_station": {
+                                "type": "string",
+                                "format": "mongoId"
+                              },
+                              "start_time": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "end_time": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "duration": {
+                                "type": "integer"
+                              },
+                              "total_price": {
+                                "type": "number",
+                                "format": "double"
+                              },
+                              "created_at": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "updated_at": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Station not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ratings": {
       "get": {
         "tags": [
@@ -4571,6 +5073,50 @@
             "nullable": true,
             "description": "An optional comment for the rating.",
             "example": "Xe đạp còn mới, chạy tốt."
+          }
+        }
+      },
+      "UpdateUserReqBody": {
+        "type": "object",
+        "description": "Fields to update for the user's profile. All fields are optional. If 'email' is changed, 'verify' status will be reset to 'UNVERIFIED'.",
+        "properties": {
+          "fullname": {
+            "type": "string",
+            "description": "The user's full name (1-50 characters).",
+            "example": "Nguyen Van C"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "The user's new email. Must be unique.",
+            "example": "new.email@example.com"
+          },
+          "verify": {
+            "$ref": "#/components/schemas/User/properties/verify"
+          },
+          "location": {
+            "type": "string",
+            "description": "The user's location (1-200 characters).",
+            "example": "Da Nang, Vietnam"
+          },
+          "username": {
+            "type": "string",
+            "description": "The user's new username. Must be unique.",
+            "example": "nguyenvanc123"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "The user's new phone number (10 digits). Must be unique.",
+            "example": "0905123456"
+          },
+          "role": {
+            "$ref": "#/components/schemas/User/properties/role"
+          },
+          "nfc_card_uid": {
+            "type": "string",
+            "nullable": true,
+            "description": "The user's NFC card UID. Must be unique. Send null or empty string to remove.",
+            "example": "A1-B2-C3-D4"
           }
         }
       },
