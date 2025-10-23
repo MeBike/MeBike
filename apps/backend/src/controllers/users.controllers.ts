@@ -3,7 +3,7 @@ import type { ParamsDictionary } from "express-serve-static-core";
 
 import { ObjectId } from "mongodb";
 
-import type { AdminGetAllUsersReqQuery, AdminResetPasswordReqBody, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, TokenPayLoad, UpdateUserReqBody, VerifyEmailOtpReqBody } from "~/models/requests/users.requests";
+import type { AdminCreateUserReqBody, AdminGetAllUsersReqQuery, AdminResetPasswordReqBody, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, TokenPayLoad, UpdateUserReqBody, VerifyEmailOtpReqBody } from "~/models/requests/users.requests";
 import type User from "~/models/schemas/user.schema";
 
 import { UserVerifyStatus } from "~/constants/enums";
@@ -274,6 +274,17 @@ export const getTopRentersStatsController = async (req: Request, res: Response) 
 
   res.json({
     message: USERS_MESSAGES.GET_TOP_RENTERS_STATS_SUCCESS,
+    result
+  })
+}
+
+export const adminCreateUserController = async (
+  req: Request<ParamsDictionary, any, AdminCreateUserReqBody>,
+  res: Response
+) => {
+  const result = await usersService.adminCreateUser(req.body)
+  res.status(HTTP_STATUS.CREATED).json({
+    message: USERS_MESSAGES.CREATE_USER_SUCCESS,
     result
   })
 }

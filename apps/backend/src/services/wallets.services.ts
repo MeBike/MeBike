@@ -1,4 +1,4 @@
-import { Decimal128, Filter, ObjectId } from 'mongodb'
+import { ClientSession, Decimal128, Filter, ObjectId } from 'mongodb'
 
 import type {
   CreateWithdrawlReqBody,
@@ -34,8 +34,8 @@ import Refund, { RefundType } from '~/models/schemas/refund.schema'
 import Withdraw, { WithdrawType } from '~/models/schemas/withdraw-request'
 
 class WalletService {
-  async createWallet(user_id: string) {
-    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+  async createWallet(user_id: string, session?: ClientSession) {
+    const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) }, { session })
 
     if (findWallet) {
       throw new ErrorWithStatus({
@@ -58,7 +58,8 @@ class WalletService {
       updated_at: localTime
     }
 
-    const result = await databaseService.wallets.insertOne(new Wallet(walletData))
+    //nguyen them session vao insertOne
+    const result = await databaseService.wallets.insertOne(new Wallet(walletData), { session })
 
     return result
   }

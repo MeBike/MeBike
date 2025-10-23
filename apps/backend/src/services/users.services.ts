@@ -2,7 +2,7 @@ import { Filter, ObjectId } from "mongodb";
 import process from "node:process";
 import nodemailer from "nodemailer";
 
-import type { AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
+import type { AdminCreateUserReqBody, AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
 import { RentalStatus, Role, TokenType, UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
@@ -783,6 +783,45 @@ class UsersService {
         total_pages,
         total_records
       }
+    }
+  }
+
+  async adminCreateUser(payload: AdminCreateUserReqBody) {
+    const user_id = new ObjectId()
+    const localTime = getLocalTime()
+
+    const newUser = new User({
+      ...payload,
+      _id: user_id,
+      username: `user${user_id.toString()}`,
+      password: hashPassword(payload.password),
+      role: payload.role,
+      verify: payload.verify || UserVerifyStatus.Verified, //mặc định là Verified
+      email_verify_otp: null,
+      email_verify_otp_expires: null,
+      forgot_password_otp: null,
+      forgot_password_otp_expires: null,
+      created_at: localTime,
+      updated_at: localTime
+    })
+
+    const session = databaseService.getClient().startSession()
+
+    try {
+      await session.withTransaction(async () => {
+        await databaseService.users.insertOne(newUser, { session })
+        
+        await walletService.createWallet(user_id.toString(), session)
+      })
+
+      //lấy lại user vừa tạo (để bỏ password)
+      const createdUser = await this.getMe(user_id.toString())
+      return createdUser
+
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
     }
   }
 }

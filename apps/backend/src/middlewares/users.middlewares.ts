@@ -852,3 +852,74 @@ export const statsPaginationValidator = validate(
     ['query']
   )
 )
+
+export const adminCreateUserValidator = validate(
+  checkSchema(
+    {
+      fullname: fullNameSchema,
+      email: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
+        },
+        isEmail: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+        },
+        trim: true,
+        custom: {
+          options: async (value: string) => {
+            const isExist = await usersService.checkEmailExist(value)
+            if (isExist) {
+              throw new Error(USERS_MESSAGES.EMAIL_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      phone_number: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_IS_REQUIRED
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID)
+            }
+            const user = await databaseService.users.findOne({ phone_number: value })
+            if (user) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      password: passwordSchema,
+      role: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.ROLE_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(Role)],
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID
+        }
+      },
+      verify: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.VERIFY_STATUS_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(UserVerifyStatus)],
+          errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
+        }
+      }
+    },
+    ['body']
+  )
+)

@@ -91,3 +91,12 @@ export type AdminResetPasswordReqBody = {
   new_password: string;
   confirm_new_password: string;
 };
+
+export type AdminCreateUserReqBody = {
+  fullname: string
+  email: string
+  password: string
+  phone_number: string
+  role: Role
+  verify?: UserVerifyStatus
+}
