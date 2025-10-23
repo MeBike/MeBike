@@ -3,7 +3,7 @@ import type { ParamsDictionary } from "express-serve-static-core";
 
 import { ObjectId } from "mongodb";
 
-import type { AdminGetAllUsersReqQuery, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, TokenPayLoad, UpdateUserReqBody, VerifyEmailOtpReqBody } from "~/models/requests/users.requests";
+import type { AdminGetAllUsersReqQuery, AdminResetPasswordReqBody, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, TokenPayLoad, UpdateUserReqBody, VerifyEmailOtpReqBody } from "~/models/requests/users.requests";
 import type User from "~/models/schemas/user.schema";
 
 import { UserVerifyStatus } from "~/constants/enums";
@@ -226,5 +226,19 @@ export const updateUserByIdController = async (
   res.json({
     message: USERS_MESSAGES.UPDATE_USER_INFORMATION_SUCCESS,
     result: user
+  })
+}
+
+export const adminResetPasswordController = async (
+  req: Request<{ _id: string }, any, AdminResetPasswordReqBody>,
+  res: Response
+) => {
+  const { _id } = req.params
+  const { new_password } = req.body
+
+  await usersService.adminResetPassword(_id, new_password)
+
+  res.json({
+    message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS
   })
 }

@@ -2,9 +2,9 @@ import { Router } from "express";
 
 import type { UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
-import { adminAndStaffGetAllUsersController, changePasswordController, forgotPasswordController, getMeController, getUserDetailController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
+import { adminAndStaffGetAllUsersController, adminResetPasswordController, changePasswordController, forgotPasswordController, getMeController, getUserDetailController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
-import { accessTokenValidator, adminAndStaffGetAllUsersValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, updateUserByIdValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, adminAndStaffGetAllUsersValidator, adminResetPasswordValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, updateUserByIdValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 
@@ -117,6 +117,24 @@ usersRouter.patch(
   ]),
   updateUserByIdValidator,
   wrapAsync(updateUserByIdController)
+)
+
+/**
+ * Description: Admin force reset password for a user
+ * Path: /users/manage-users/admin-reset-password/:_id
+ * Method: POST
+ * Headers: { Authorization: Bearer <access_token> }
+ * Params: { _id: string }
+ * Body: { new_password: string, confirm_new_password: string }
+ * Roles: ADMIN
+ */
+usersRouter.post(
+  '/manage-users/admin-reset-password/:_id',
+  accessTokenValidator,
+  isAdminValidator,
+  userDetailValidator,
+  adminResetPasswordValidator,
+  wrapAsync(adminResetPasswordController)
 )
 
 export default usersRouter;

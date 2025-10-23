@@ -752,3 +752,32 @@ export const updateUserByIdValidator = validate(
     ['body']
   )
 )
+
+export const adminResetPasswordValidator = validate(
+  checkSchema(
+    {
+      new_password: passwordSchema,
+      confirm_new_password: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED,
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_A_STRING,
+        },
+        isLength: {
+          options: { min: 8, max: 30 },
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_8_TO_30,
+        },
+        custom: {
+          options: (value: string, { req }: Meta) => {
+            if (value !== req.body.new_password) {
+              throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD);
+            }
+            return true;
+          },
+        },
+      }
+    },
+    ['body']
+  )
+)

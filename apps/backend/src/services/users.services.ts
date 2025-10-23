@@ -567,6 +567,34 @@ class UsersService {
 
     return user
   }
+
+  async adminResetPassword(user_id: string, new_password: string) {
+    const localTime = getLocalTime()
+
+    const hashedPassword = hashPassword(new_password)
+
+    //cập nhật mật khẩu mới và xóa các token reset cũ
+    const result = await databaseService.users.findOneAndUpdate(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          password: hashedPassword,
+          forgot_password_otp: null,
+          forgot_password_otp_expires: null,
+          updated_at: localTime
+        }
+      }
+    )
+
+    if (!result) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return result
+  }
 }
 
 const usersService = new UsersService();

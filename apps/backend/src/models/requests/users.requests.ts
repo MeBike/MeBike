@@ -86,3 +86,8 @@ export type UpdateUserReqBody = {
   role?: Role
   nfc_card_uid?: string | null //cho phép null/empty để xóa
 }
+
+export type AdminResetPasswordReqBody = {
+  new_password: string;
+  confirm_new_password: string;
+};
