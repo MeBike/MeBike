@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Sidebar } from "./sidebar";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import type { DetailUser } from "@/services/authService";
+import type { DetailUser } from "@/services/auth.service";
 import Image from "next/image";
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,7 +15,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const [sidebarCollapsed,] = useState(false);
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar userRole={user?.role} />
+      <Sidebar  />
       <div
         className={`transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}
       >

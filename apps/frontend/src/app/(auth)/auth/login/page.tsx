@@ -15,7 +15,6 @@ import { Separator } from "@components/ui/separator";
 import { Bike, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import React from "react";
 import { useAuth } from "@providers/auth-providers";
-
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { user, logIn, isLoggingIn, isLoading } = useAuth();
@@ -25,28 +24,34 @@ const Login = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (user && isNavigating) {
-      const timer = setTimeout(() => {
-        if (user?.role === "ADMIN"){
-          router.push("/admin");
-        } else if (user?.role === "STAFF") {
-          router.push("/staff");
-        } else {
-          router.push("/user");
-        }
-        setIsNavigating(false);
-      }, 3000);
-
-      return () => clearTimeout(timer);
+    if (user) {
+      if(user?.role === "ADMIN"){
+        router.push("/admin");
+      } else if(user?.role === "STAFF"){
+        router.push("/staff");
+      } else if (user?.role === "USER"){
+        router.push("/user");
+      }
+      resetFormData();
+    }
+    else if(isNavigating){
+      return;
     }
   }, [user, isNavigating, router]);
+const resetFormData = () => {
+  setEmail("");
+  setPassword("");
+};
+const handleLogin = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (isLoggingIn || isLoading || isNavigating) return;
+  setIsNavigating(true);
+  logIn({ email, password }, (success) => {
+    if (!success) setIsNavigating(false);
+  });
+  resetFormData();
+};
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isLoggingIn || isLoading || isNavigating) return;
-    setIsNavigating(true);
-    logIn({ email, password });
-  };  
 
   return (
     <div

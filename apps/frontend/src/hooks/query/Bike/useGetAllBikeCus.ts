@@ -1,12 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
-import { bikeService } from "@/services/bikeService";
+import { bikeService } from "@/services/bike.service";
 
-export const useGetAllBikeQuery = (page: number = 1, limit: number = 10 , station_id?: string, supplier_id?: string, status?: string) => {
-    return useQuery({
-        queryKey: ["bikes", "all", page, limit],
-        queryFn: ({ queryKey }) => {
-            const [, , pageParam, limitParam] = queryKey;
-            return bikeService.getAllBikes(pageParam as number, limitParam as number, station_id, supplier_id, status);
-        },
-    });
+const getAllBikes = async (
+  page?: number,
+  limit?: number,
+  station_id?: string,
+  supplier_id?: string,
+  status?: string
+) => {
+  try {
+    const response = await bikeService.getAllBikes(
+      page,
+      limit,
+      station_id,
+      supplier_id,
+      status
+    );
+    if (response.status === 200) {
+      return response.data;
+    }
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to fetch bikes");
+  }
+};
+export const useGetAllBikeQuery = (
+  page: number = 1,
+  limit: number = 10,
+  station_id?: string,
+  supplier_id?: string,
+  status?: string
+) => {
+  return useQuery({
+    queryKey: ["bikes", "all", page, limit],
+    queryFn: () => getAllBikes(page, limit, station_id, supplier_id, status),
+  });
 };
