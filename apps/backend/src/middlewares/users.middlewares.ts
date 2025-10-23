@@ -826,3 +826,29 @@ export const activeUserStatsValidator = validate(
     ['query']
   )
 )
+
+export const statsPaginationValidator = validate(
+  checkSchema(
+    {
+      page: {
+        in: ['query'],
+        optional: true,
+        isInt: {
+          options: { min: 1 },
+          errorMessage: USERS_MESSAGES.INVALID_PAGE_OR_LIMIT
+        },
+        toInt: true
+      },
+      limit: {
+        in: ['query'],
+        optional: true,
+        isInt: {
+          options: { min: 1 },
+          errorMessage: USERS_MESSAGES.INVALID_PAGE_OR_LIMIT
+        },
+        toInt: true
+      }
+    },
+    ['query']
+  )
+)

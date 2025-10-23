@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
 
 import type { AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
-import { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
+import { RentalStatus, Role, TokenType, UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { USERS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
@@ -697,6 +697,93 @@ class UsersService {
 
     const result = await databaseService.refreshTokens.aggregate(pipeline).toArray()
     return result
+  }
+
+  async getTopRentersStats(page: number, limit: number) {
+    //tính skip và limit cho pipeline
+    const skip = (page - 1) * limit
+
+    const pipeline = [
+      {
+        //chỉ lọc các chuyến đi đã "Hoàn thành"
+        $match: {
+          status: RentalStatus.Completed
+        }
+      },
+      {
+        //nhóm theo user_id và đếm số chuyến
+        $group: {
+          _id: '$user_id',
+          total_rentals: { $sum: 1 }
+        }
+      },
+      {
+        //sắp xếp: người thuê nhiều nhất lên đầu
+        $sort: {
+          total_rentals: -1
+        }
+      },
+      {
+        //phân trang
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        //join với collection 'users' để lấy thông tin chi tiết
+        $lookup: {
+          from: 'users', //tên collection 'users'
+          localField: '_id', //user_id từ collection 'rentals'
+          foreignField: '_id', //_id từ collection 'users'
+          as: 'user_info'
+        }
+      },
+      {
+        // $lookup trả về 1 mảng, ta $unwind để lấy object
+        $unwind: '$user_info'
+      },
+      {
+        //định dạng lại output
+        $project: {
+          _id: 0,
+          total_rentals: 1,
+          user: {
+            _id: '$user_info._id',
+            fullname: '$user_info.fullname',
+            email: '$user_info.email',
+            phone_number: '$user_info.phone_number',
+            avatar: '$user_info.avatar',
+            location: '$user_info.location'
+          }
+        }
+      }
+    ]
+
+    // Pipeline để đếm tổng số user đã từng thuê (cho phân trang)
+    const countPipeline = [
+      { $match: { status: RentalStatus.Completed } },
+      { $group: { _id: '$user_id' } },
+      { $count: 'total_records' }
+    ]
+
+    const [results, countResult] = await Promise.all([
+      databaseService.rentals.aggregate(pipeline).toArray(),
+      databaseService.rentals.aggregate(countPipeline).toArray()
+    ])
+
+    const total_records = countResult[0]?.total_records || 0
+    const total_pages = Math.ceil(total_records / limit)
+
+    return {
+      data: results,
+      pagination: {
+        page,
+        limit,
+        total_pages,
+        total_records
+      }
+    }
   }
 }
 

@@ -2,9 +2,9 @@ import { Router } from "express";
 
 import type { UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
-import { adminAndStaffGetAllUsersController, adminResetPasswordController, changePasswordController, forgotPasswordController, getActiveUserStatsController, getMeController, getUserDetailController, getUserStatsController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
+import { adminAndStaffGetAllUsersController, adminResetPasswordController, changePasswordController, forgotPasswordController, getActiveUserStatsController, getMeController, getTopRentersStatsController, getUserDetailController, getUserStatsController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
-import { accessTokenValidator, activeUserStatsValidator, adminAndStaffGetAllUsersValidator, adminResetPasswordValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, updateUserByIdValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, activeUserStatsValidator, adminAndStaffGetAllUsersValidator, adminResetPasswordValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, statsPaginationValidator, updateMeValidator, updateUserByIdValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 
@@ -74,6 +74,25 @@ usersRouter.get(
   isAdminAndStaffValidator,
   activeUserStatsValidator,
   wrapAsync(getActiveUserStatsController)
+)
+
+/**
+ * Description: Get top renters statistics (for Admin/Staff)
+ * Path: /users/manage-users/stats/top-renters
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Query: {
+ * page?: number,
+ * limit?: number
+ * }
+ * Roles: ADMIN, STAFF
+ */
+usersRouter.get(
+  '/manage-users/stats/top-renters',
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  statsPaginationValidator,
+  wrapAsync(getTopRentersStatsController)
 )
 
 /**

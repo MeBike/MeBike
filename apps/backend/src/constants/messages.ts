@@ -104,6 +104,9 @@ export const USERS_MESSAGES = {
   END_DATE_MUST_BE_AFTER_START_DATE: 'endDate phải sau startDate.',
   START_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD: 'startDate phải là định dạng YYYY-MM-DD',
   END_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD: 'endDate phải là định dạng YYYY-MM-DD',
+  // get top users by rental count
+  GET_TOP_RENTERS_STATS_SUCCESS: 'Lấy thống kê top người thuê xe thành công',
+  INVALID_PAGE_OR_LIMIT: 'Page hoặc limit phải là số nguyên dương.'
 } as const
 
 export const REPORTS_MESSAGES = {

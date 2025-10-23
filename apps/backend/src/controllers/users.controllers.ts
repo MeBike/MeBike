@@ -265,3 +265,15 @@ export const getActiveUserStatsController = async (req: Request, res: Response) 
     result: stats
   })
 }
+
+export const getTopRentersStatsController = async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1
+  const limit = parseInt(req.query.limit as string) || 10
+
+  const result = await usersService.getTopRentersStats(page, limit)
+
+  res.json({
+    message: USERS_MESSAGES.GET_TOP_RENTERS_STATS_SUCCESS,
+    result
+  })
+}
