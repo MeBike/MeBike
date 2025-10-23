@@ -3,12 +3,16 @@ import { Router } from 'express'
 import {
   cancelReservationController,
   confirmReservationController,
+  dispatchSameStationController,
   getReservationHistoryController,
   getReservationListController,
+  getReservationReportController,
   notifyExpiringReservationsController,
   reserveBikeController
 } from '~/controllers/reservations.controllers'
+import { isAdminValidator } from '~/middlewares/admin.middlewares'
 import {
+  batchDispatchSameStationValidator,
   cancelReservationValidator,
   confirmReservationValidator,
   reserveBikeValidator
@@ -21,9 +25,17 @@ reserveRouter
   .route('/notify/expiring')
   .post(wrapAsync(notifyExpiringReservationsController))
 
-  reserveRouter
+reserveRouter
   .route('/history')
   .get(accessTokenValidator, wrapAsync(getReservationHistoryController))
+
+reserveRouter
+  .route('/dispatch')
+  .post(accessTokenValidator, isAdminValidator, batchDispatchSameStationValidator, wrapAsync(dispatchSameStationController))
+
+reserveRouter
+  .route('/stats')
+  .get(accessTokenValidator, isAdminValidator, wrapAsync(getReservationReportController))
 
 reserveRouter
   .route('/')

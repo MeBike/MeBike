@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import type { TokenPayLoad } from "./models/requests/users.requests";
 import type Bike from "./models/schemas/bike.schema";
 import type Rental from "./models/schemas/rental.schema";
@@ -17,5 +18,7 @@ declare module "express" {
     station?: Station;
     rental?: Rental;
     reservation?: Reservation;
+    dispatch_bike_ids?: ObjectId[];
+    dispatched_bikes?: Bike[]
   };
 }
