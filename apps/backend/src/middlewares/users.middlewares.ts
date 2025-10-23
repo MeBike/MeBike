@@ -10,7 +10,7 @@ import process from "node:process";
 
 import type { TokenPayLoad } from "~/models/requests/users.requests";
 
-import { UserVerifyStatus } from "~/constants/enums";
+import { Role, UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { USERS_MESSAGES } from "~/constants/messages";
 import { REGEX_USERNAME } from "~/constants/regex";
@@ -533,7 +533,7 @@ export const updateMeValidator = validate(
   ),
 );
 
-export const adminGetAllUsersValidator = validate(
+export const adminAndStaffGetAllUsersValidator = validate(
   checkSchema(
     {
       fullname: {
@@ -555,7 +555,18 @@ export const adminGetAllUsersValidator = validate(
           options: [Object.values(UserVerifyStatus)],
           errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
         }
-      }
+      },
+      role: {
+        in: ["query"],
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.ROLE_MUST_BE_A_STRING,
+        },
+        isIn: {
+          options: [Object.values(Role)],
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID,
+        },
+      },
     },
     ['query']
   )

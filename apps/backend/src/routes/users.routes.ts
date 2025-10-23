@@ -2,11 +2,11 @@ import { Router } from "express";
 
 import type { UpdateMeReqBody } from "~/models/requests/users.requests";
 
-import { adminGetAllUsersController, changePasswordController, forgotPasswordController, getMeController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, updateMeController, verifyEmailOtpController } from "~/controllers/users.controllers";
+import { adminAndStaffGetAllUsersController, changePasswordController, forgotPasswordController, getMeController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, updateMeController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
-import { accessTokenValidator, adminGetAllUsersValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, updateMeValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, adminAndStaffGetAllUsersValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, updateMeValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
-import { isAdminValidator } from "~/middlewares/admin.middlewares";
+import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 
 const usersRouter = Router();
 
@@ -19,8 +19,12 @@ usersRouter.post(
   resetPasswordValidator,
   wrapAsync(resetPasswordController),
 );
-usersRouter.post("/verify-email", verifyEmailOtpValidator, wrapAsync(verifyEmailOtpController));
-usersRouter.post("/resend-verify-email", accessTokenValidator, wrapAsync(resendEmailVerifyController));
+usersRouter.post("/verify-email",
+  verifyEmailOtpValidator,
+  wrapAsync(verifyEmailOtpController));
+usersRouter.post("/resend-verify-email",
+  accessTokenValidator,
+  wrapAsync(resendEmailVerifyController));
 usersRouter.put(
   "/change-password",
   accessTokenValidator,
@@ -37,6 +41,11 @@ usersRouter.patch(
   wrapAsync(updateMeController),
 );
 usersRouter.post("/refresh-token", refreshTokenValidator, wrapAsync(refreshController));
-usersRouter.get("/manage-users", accessTokenValidator, isAdminValidator, adminGetAllUsersValidator, wrapAsync(adminGetAllUsersController))
+usersRouter.get("/manage-users/get-all",
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  adminAndStaffGetAllUsersValidator,
+  wrapAsync(adminAndStaffGetAllUsersController)
+);
 
 export default usersRouter;

@@ -184,10 +184,10 @@ export async function refreshController(req: Request<ParamsDictionary, any, Refr
   });
 }
 
-export async function adminGetAllUsersController(
+export async function adminAndStaffGetAllUsersController(
   req: Request<ParamsDictionary, any, any, AdminGetAllUsersReqQuery>,
   res: Response,
   next: NextFunction
 ) {
-  await usersService.adminGetAllUsers(req, res, next)
+  await usersService.adminAndStaffGetAllUsers(req, res, next)
 }

@@ -411,12 +411,12 @@ class UsersService {
     return { access_token, refresh_token: new_refresh_token };
   }
 
-  async adminGetAllUsers(
+  async adminAndStaffGetAllUsers(
     req: Request<ParamsDictionary, any, any, AdminGetAllUsersReqQuery>,
     res: Response,
     next: NextFunction
   ) {
-    const { fullname, verify } = req.query
+    const { fullname, verify, role } = req.query
     const query = req.query
 
     const filter: Filter<User> = {}
@@ -427,6 +427,10 @@ class UsersService {
 
     if (verify) {
       filter.verify = verify
+    }
+
+    if(role) {
+      filter.role = role as Role;
     }
 
     const projection = {

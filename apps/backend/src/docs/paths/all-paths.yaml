@@ -287,6 +287,57 @@
       '500':
         $ref: '../components/schemas/ErrorServerResponse.yaml'
 
+/users/manage-users/get-all:
+  get:
+    tags: [Users]
+    summary: Get all users (Admin/Staff only)
+    description: Retrieves a paginated list of all users. This endpoint is accessible only by Admin and Staff.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: role
+        in: query
+        required: false
+        description: Filter users by role.
+        schema:
+          $ref: '../components/schemas/User.yaml#/properties/role' 
+      - name: verify
+        in: query
+        required: false
+        description: Filter users by verification status.
+        schema:
+          $ref: '../components/schemas/User.yaml#/properties/verify' 
+    responses:
+      '200':
+        description: A paginated list of users retrieved successfully.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/User.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden. User does not have Admin or Staff rights.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: Validation error (e.g., invalid role or verify status).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
 # ===================================================================
 # Bikes API
 # ===================================================================

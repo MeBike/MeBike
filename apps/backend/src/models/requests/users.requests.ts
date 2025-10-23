@@ -73,4 +73,5 @@ export type AdminGetAllUsersReqQuery = {
   page?: string
   fullname?: string
   verify?: UserVerifyStatus
+  role?: string;
 }

@@ -75,6 +75,8 @@ export const USERS_MESSAGES = {
   // admin get all users
   VERIFY_STATUS_MUST_BE_A_STRING: 'Trạng thái xác thực phải là chuỗi',
   INVALID_VERIFY_STATUS: 'Trạng thái xác thực không hợp lệ',
+  ROLE_MUST_BE_A_STRING: 'Vai trò phải là chuỗi',
+  ROLE_IS_INVALID: 'Vai trò không hợp lệ',
   // OTP messages
   FORGOT_PASSWORD_OTP_MUST_BE_A_STRING: 'Mã OTP đặt lại mật khẩu phải là chuỗi',
   FORGOT_PASSWORD_OTP_MUST_BE_6_DIGITS: 'Mã OTP đặt lại mật khẩu phải gồm 6 chữ số',
