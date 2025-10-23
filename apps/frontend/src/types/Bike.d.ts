@@ -1,21 +1,19 @@
-export type BikeStatus = "available" | "rented" | "maintenance" | "retired";
-export type BikeType = "mountain" | "road" | "city" | "electric" | "hybrid";
 
 export interface Bike {
   _id: string;
-  name: string;
-  type: BikeType;
-  brand: string;
-  model: string;
-  status: BikeStatus;
-  price_per_hour: number;
-  price_per_day: number;
-  image: string;
-  description: string;
-  features: string[];
-  location: string;
-  total_rentals: number;
-  rating: number;
+  station_id: string;
+  status:
+    | "CÓ SẴN"
+    | "ĐANG ĐƯỢC THUÊ"
+    | "BỊ HỎNG"
+    | "ĐÃ ĐẶT TRƯỚC"
+    | "ĐANG BẢO TRÌ"
+    | "KHÔNG CÓ SẴN";
+  supplier_id: string | null;
   created_at: string;
   updated_at: string;
+  chip_id: string;
 }
+
+
+

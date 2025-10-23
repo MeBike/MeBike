@@ -17,6 +17,9 @@ export const USERS_MESSAGES = {
   REGISTER_SUCCESS: 'Đăng ký thành công',
   IMAGE_URL_MUST_BE_A_STRING: 'URL hình ảnh phải là chuỗi',
   IMAGE_URL_MUST_BE_VALID: 'URL hình ảnh không hợp lệ',
+  PHONE_NUMBER_IS_REQUIRED: 'Số điện thoại là bắt buộc',
+  PHONE_NUMBER_MUST_BE_A_STRING: 'Số điện thoại phải là chuỗi',
+  PHONE_NUMBER_IS_INVALID: 'Số điện thoại không hợp lệ (phải đủ 10 số và bắt đầu bằng 03, 05, 07, 08, 09)',
   // đăng nhập messages
   EMAIL_OR_PASSWORD_IS_INCORRECT: 'Email hoặc mật khẩu không chính xác',
   LOGIN_SUCCESS: 'Đăng nhập thành công',
@@ -56,6 +59,7 @@ export const USERS_MESSAGES = {
   USERNAME_MUST_BE_A_STRING: 'Tên người dùng phải là chuỗi',
   USERNAME_ALREADY_EXISTS: 'Tên người dùng đã tồn tại',
   UPDATE_ME_SUCCESS: 'Cập nhật thông tin người dùng thành công',
+  PHONE_NUMBER_ALREADY_EXISTS: 'Số điện thoại đã tồn tại',
   // refresh token messages
   REFRESH_TOKEN_SUCCESS: 'Làm mới token thành công',
   // check admin role messages
@@ -71,6 +75,11 @@ export const USERS_MESSAGES = {
   // admin get all users
   VERIFY_STATUS_MUST_BE_A_STRING: 'Trạng thái xác thực phải là chuỗi',
   INVALID_VERIFY_STATUS: 'Trạng thái xác thực không hợp lệ',
+  // OTP messages
+  FORGOT_PASSWORD_OTP_MUST_BE_A_STRING: 'Mã OTP đặt lại mật khẩu phải là chuỗi',
+  FORGOT_PASSWORD_OTP_MUST_BE_6_DIGITS: 'Mã OTP đặt lại mật khẩu phải gồm 6 chữ số',
+  EMAIL_OTP_MUST_BE_A_STRING: 'Mã OTP xác thực email phải là chuỗi',
+  EMAIL_OTP_MUST_BE_6_DIGITS: 'Mã OTP xác thực email phải gồm 6 chữ số',
 } as const
 
 export const REPORTS_MESSAGES = {

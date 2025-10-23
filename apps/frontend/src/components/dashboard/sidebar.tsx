@@ -11,19 +11,15 @@ import {
   Users,
   BarChart3,
   Settings,
-  ChevronLeft,
-  ChevronRight,
   User,
   LogOut,
   History,
-  Wallet
+  Wallet,
+  Truck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { getRefreshToken } from "@/utils/tokenManager";
-interface SidebarProps {
-  userRole: "STAFF" | "ADMIN" | "USER";
-}
 
 const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
   const baseUrl =
@@ -40,6 +36,18 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       href: baseUrl,
       roles: ["STAFF", "ADMIN"],
     },
+    // {
+    //   title: "Đơn thuê xe",
+    //   icon: FileText,
+    //   href: `${baseUrl}/rentals`,
+    //   roles: ["STAFF", "ADMIN"],
+    // },
+    {
+      title: "Quản lý người dùng",
+      icon: Users,
+      href: `${baseUrl}/customers`,
+      roles: ["STAFF", "ADMIN"],
+    },
     {
       title: "Quản lý xe đạp",
       icon: Bike,
@@ -52,12 +60,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       href: `${baseUrl}/rentals`,
       roles: ["STAFF", "ADMIN"],
     },
-    {
-      title: "Khách hàng",
-      icon: Users,
-      href: `${baseUrl}/customers`,
-      roles: ["STAFF", "ADMIN"],
-    },
+    // {
+    //   title: "Khách hàng",
+    //   icon: Users,
+    //   href: `${baseUrl}/customers`,
+    //   roles: ["STAFF", "ADMIN"],
+    // },
     {
       title: "Báo cáo & Thống kê",
       icon: BarChart3,
@@ -88,22 +96,29 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       href: "/admin/wallet",
       roles: ["ADMIN"],
     },
+    {
+      title: "Quản lý nhà cung cấp",
+      icon: Truck,
+      href: "/admin/suppliers",
+      roles: ["ADMIN"],
+    },
   ];
 };
 
-export function Sidebar({ userRole }: SidebarProps) {
-  const [collapsed, setCollapsed] = useState(false);
-  const { logOut } = useAuth();
+export function Sidebar() {
+  const [collapsed] = useState(false);
+  const {user,logOut , isAuthenticated} = useAuth();
   const pathname = usePathname();
   const handleLogout = () => {
     const refreshToken = getRefreshToken();
     if (refreshToken) {
       logOut(refreshToken);
+      console.log(user?.email + " đã đăng xuất" + isAuthenticated);
     }
   }
-  const menuItems = getMenuItems(userRole);
+  const menuItems = getMenuItems(user?.role as "STAFF" | "ADMIN" | "USER");
   const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(userRole)
+    item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER")
   );
 
   return (
@@ -131,20 +146,8 @@ export function Sidebar({ userRole }: SidebarProps) {
               </div>
             </div>
           )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 hover:bg-sidebar-accent rounded-md transition-colors"
-            aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
-          >
-            {collapsed ? (
-              <ChevronRight className="w-4 h-4 text-sidebar-foreground" />
-            ) : (
-              <ChevronLeft className="w-4 h-4 text-sidebar-foreground" />
-            )}
-          </button>
         </div>
 
-        {/* Navigation Menu */}
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-2">
             {filteredMenuItems.map((item) => {
@@ -180,7 +183,7 @@ export function Sidebar({ userRole }: SidebarProps) {
 
         <div className="border-t border-sidebar-border p-2">
           <Link
-            href={`${userRole === "ADMIN" ? "/admin" : "/staff"}/profile`}
+            href={`${user?.role === "ADMIN" ? "/admin" : "/staff"}/profile`}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
           >
             <User className="w-5 h-5 flex-shrink-0" />

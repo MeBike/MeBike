@@ -4,6 +4,7 @@ required:
   - email
   - password
   - confirm_password
+  - phone_number
 properties:
   fullname:
     type: string
@@ -14,6 +15,11 @@ properties:
     type: string
     format: email
     example: "user@example.com"
+  phone_number:
+    type: "string"
+    description: "Số điện thoại người dùng (10 số, theo định dạng Việt Nam)"
+    example: "0912345678"
+    pattern: "^(0[3|5|7|8|9])+([0-9]{8})$"
   password:
     type: string
     format: password

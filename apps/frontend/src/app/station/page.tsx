@@ -436,7 +436,7 @@ const Page = () => {
                     Xem bản đồ
                   </Button>
                   <Button
-                    variant="success"
+                    variant="outline"
                     className="flex-1 hover:bg-green-50"
                     onClick={() =>
                       alert(

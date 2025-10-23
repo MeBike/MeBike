@@ -19,20 +19,13 @@ import walletService from "./wallets.services";
 import { NextFunction, Request, Response } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import { sendPaginatedResponse } from "~/utils/pagination.helper";
+import { getLocalTime } from "~/utils/date";
 
 class UsersService {
   private decodeRefreshToken(refresh_token: string) {
     return verifyToken({
       token: refresh_token,
       secretOrPublicKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
-    });
-  }
-
-  private signEmailVerifyToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
-    return signToken({
-      payload: { user_id, token_type: TokenType.EmailVerificationToken, verify },
-      options: { expiresIn: "1d" },
-      privateKey: process.env.JWT_SECRET_EMAIL_VERIFY_TOKEN as string,
     });
   }
 
@@ -64,14 +57,6 @@ class UsersService {
     return Promise.all([this.signAccessToken({ user_id, verify }), this.signRefreshToken({ user_id, verify })]);
   }
 
-  private signForgotPasswordToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
-    return signToken({
-      payload: { user_id, token_type: TokenType.ForgotPasswordToken, verify },
-      options: { expiresIn: "1d" },
-      privateKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
-    });
-  }
-
   async login({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
     const [access_token, refresh_token] = await this.signAccessAndRefreshTokens({
       user_id,
@@ -97,12 +82,9 @@ class UsersService {
 
   async register(payload: RegisterReqBody) {
     const user_id = new ObjectId();
-    // const email_verify_token = await this.signEmailVerifyToken({
-    //   user_id: user_id.toString(),
-    //   verify: UserVerifyStatus.Unverified,
-    // });
     const emailVerifyOtp = generateOTP();
-    const emailVerifyOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    const localTime = getLocalTime();
+    const emailVerifyOtpExpires = new Date(localTime.getTime() + 10 * 60 * 1000);
 
     await databaseService.users.insertOne(
       new User({
@@ -110,7 +92,6 @@ class UsersService {
         _id: user_id,
         fullname: payload.fullname,
         username: `user${user_id.toString()}`,
-        // email_verify_token,
         email_verify_otp: emailVerifyOtp,
         email_verify_otp_expires: emailVerifyOtpExpires,
         password: hashPassword(payload.password),
@@ -143,12 +124,6 @@ class UsersService {
         },
       });
 
-      // const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`; // Đường dẫn xác nhận email
-
-      // const htmlContent = readEmailTemplate("verify-email.html", {
-      //   fullname: payload.fullname,
-      //   verifyURL,
-      // });
       const htmlContent = readEmailTemplate("verify-otp.html", {
         fullname: payload.fullname,
         otp: emailVerifyOtp,
@@ -187,22 +162,17 @@ class UsersService {
     email: string;
     fullname: string;
   }) {
-    // const forgot_password_token = await this.signForgotPasswordToken({
-    //   user_id,
-    //   verify,
-    // });
     const currentDate = new Date();
     const vietnamTimezoneOffset = 7 * 60;
     const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
 
     const forgotPasswordOtp = generateOTP();
-    const forgotPasswordOtpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    const forgotPasswordOtpExpires = new Date(localTime.getTime() + 5 * 60 * 1000);
 
     await databaseService.users.updateOne(
       { _id: new ObjectId(user_id) },
       {
         $set: {
-          // forgot_password_token,
           forgot_password_otp: forgotPasswordOtp,
           forgot_password_otp_expires: forgotPasswordOtpExpires,
           updated_at: localTime,
@@ -220,13 +190,6 @@ class UsersService {
         },
       });
 
-      // const resetURL = `${process.env.FRONTEND_URL}/reset-password?token=${forgot_password_token}`
-      // const resetURL = `${process.env.FRONTEND_URL}/auth/reset-password?token=${forgot_password_token}`;
-
-      // const htmlContent = readEmailTemplate("forgot-password.html", {
-      //   fullname,
-      //   resetURL,
-      // });
       const htmlContent = readEmailTemplate("forgot-password-otp.html", {
         fullname,
         otp: forgotPasswordOtp,
@@ -241,7 +204,6 @@ class UsersService {
       };
 
       transporter.sendMail(mailOptions);
-      // console.log("Forgot password email sent successfully to:", email);
       console.log("Forgot password OTP email sent successfully to:", email);
     }
     catch (error) {
@@ -260,7 +222,6 @@ class UsersService {
       {
         $set: {
           password: hashPassword(password),
-          // forgot_password_token: "",
           forgot_password_otp: null,
           forgot_password_otp_expires: null,
           updated_at: localTime,
@@ -278,7 +239,6 @@ class UsersService {
     await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
       $set: {
         verify: UserVerifyStatus.Verified,
-        // email_verify_token: "",
         email_verify_otp: null,
         email_verify_otp_expires: null,
         updated_at: localTime,
@@ -320,26 +280,20 @@ class UsersService {
           status: HTTP_STATUS.FORBIDDEN
         });
     }
-    // const email_verify_token = await this.signEmailVerifyToken({
-    //   user_id,
-    //   verify: UserVerifyStatus.Unverified,
-    // });
     const currentDate = new Date();
     const vietnamTimezoneOffset = 7 * 60;
     const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000);
 
     const emailVerifyOtp = generateOTP();
-    const emailVerifyOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    const emailVerifyOtpExpires = new Date(localTime.getTime() + 10 * 60 * 1000);
 
     await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, {
       $set: {
-        // email_verify_token,
         email_verify_otp: emailVerifyOtp,
         email_verify_otp_expires: emailVerifyOtpExpires,
         updated_at: localTime,
       },
     });
-    // mail
     try {
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -348,25 +302,12 @@ class UsersService {
           pass: process.env.EMAIL_PASSWORD_APP,
         },
       });
-      // const verifyURL = `${process.env.FRONTEND_URL}/auth/verify-email?email_verify_token=${email_verify_token}`;
-
-      // Sử dụng template 'resend-verify-email.html'
-      // const htmlContent = readEmailTemplate("resend-verify-email.html", {
-      //   fullname: user.fullname, // Truyền tên người dùng vào template
-      //   verifyURL,
-      // });
       const htmlContent = readEmailTemplate("verify-otp.html", {
         fullname: user.fullname,
         otp: emailVerifyOtp,
         expiryMinutes: "10"
       });
 
-      // const mailOptions = {
-      //   from: `"MeBike" <${process.env.EMAIL_APP}>`,
-      //   to: user.email, // Gửi đến email của người dùng
-      //   subject: "Yêu cầu gửi lại email xác thực tài khoản MeBike",
-      //   html: htmlContent,
-      // };
       const mailOptions = {
         from: `"MeBike" <${process.env.EMAIL_APP}>`,
         to: user.email,
@@ -375,7 +316,6 @@ class UsersService {
       };
 
       transporter.sendMail(mailOptions);
-      // console.log("Resend verification email sent successfully to:", user.email);
       console.log("Resend OTP verification email sent successfully to:", user.email);
     }
     catch (error) {

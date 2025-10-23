@@ -70,6 +70,7 @@ bikesRouter.patch(
 );
 
 // Admin/Staff updates a bike's info (status, station_id, supplier_id)
+//dùng cho điều phối xe giữa các trạm, sửa trạng thái xe
 bikesRouter.patch(
   "/admin-update/:_id",
   accessTokenValidator,

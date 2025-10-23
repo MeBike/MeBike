@@ -18,3 +18,8 @@ properties:
     description: "A URL pointing to the user's new avatar image."
     format: uri
     example: 'https://example.com/avatars/new_avatar.png'
+  phone_number:
+    type: "string"
+    description: "Số điện thoại mới của người dùng (10 số, Việt Nam)"
+    pattern: "^(0[3|5|7|8|9])+([0-9]{8})$"
+    example: "0987654321"

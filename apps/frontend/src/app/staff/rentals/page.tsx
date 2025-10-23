@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { RentalTable } from "@/components/rentals/rental-table";
 import { RentalFilters } from "@/components/rentals/rental-filters";
 import { RentalStats } from "@/components/rentals/rental-stats";
@@ -9,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import type { Rental, RentalStatus, PaymentStatus } from "@custom-types";
 import type { User as DetailUser } from "@custom-types";
 import { Plus, Download } from "lucide-react";
-
-// Mock data
 const mockRentals: Rental[] = [
   {
     _id: "1",
@@ -174,24 +171,6 @@ const mockRentals: Rental[] = [
   },
 ];
 
-// Mock user for DashboardLayout
-const mockUser: DetailUser = {
-  _id: "507f1f77bcf86cd799439011",
-  fullname: "Nguyễn Văn Minh",
-  email: "minh.nguyen@bikerental.vn",
-  verify: "verified",
-  location: "Hà Nội, Việt Nam",
-  username: "minh_staff",
-  phone_number: "+84 912 345 678",
-  avatar: "/professional-avatar.png",
-  role: "ADMIN",
-  created_at: "2024-01-15T08:30:00Z",
-  updated_at: "2025-01-06T10:20:00Z",
-  password: "",
-  email_verify_token: "",
-  forgot_verify_token: "",
-};
-
 export default function RentalsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RentalStatus | "all">("all");
@@ -253,7 +232,7 @@ export default function RentalsPage() {
   };
 
   return (
-    <DashboardLayout user={mockUser}>
+    <div>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -313,6 +292,6 @@ export default function RentalsPage() {
           />
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
