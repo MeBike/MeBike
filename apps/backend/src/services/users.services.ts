@@ -450,6 +450,28 @@ class UsersService {
       projection
     )
   }
+
+  async searchUsers(query: string) {
+    const regex = new RegExp(query, "i");
+
+    const filter: Filter<User> = {
+      $or: [
+        { email: regex },
+        { phone_number: regex },
+      ],
+    };
+
+    const users = await databaseService.users
+      .find(filter)
+      .project({
+        password: 0,
+        email_verify_otp: 0,
+        forgot_password_otp: 0,
+      })
+      .toArray();
+
+    return users;
+  }
 }
 
 const usersService = new UsersService();

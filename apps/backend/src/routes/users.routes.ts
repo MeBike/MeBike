@@ -2,9 +2,9 @@ import { Router } from "express";
 
 import type { UpdateMeReqBody } from "~/models/requests/users.requests";
 
-import { adminAndStaffGetAllUsersController, changePasswordController, forgotPasswordController, getMeController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, updateMeController, verifyEmailOtpController } from "~/controllers/users.controllers";
+import { adminAndStaffGetAllUsersController, changePasswordController, forgotPasswordController, getMeController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
-import { accessTokenValidator, adminAndStaffGetAllUsersValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, updateMeValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, adminAndStaffGetAllUsersValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 
@@ -41,6 +41,17 @@ usersRouter.patch(
   wrapAsync(updateMeController),
 );
 usersRouter.post("/refresh-token", refreshTokenValidator, wrapAsync(refreshController));
+/**
+ * Description: Admin and Staff get all users with pagination and filters
+ * Path: /users/manage-users/get-all
+ * Method: GET
+ * Header: Authorization
+ * Roles: Admin, Staff
+ * Query Params:
+ *    - fullname: string (optional)
+ *    - verify: 'VERIFIED' | 'UNVERIFIED' | 'BANNED' (optional)
+ *    - role: 'USER' | 'STAFF' | 'ADMIN' (optional)
+ */
 usersRouter.get("/manage-users/get-all",
   accessTokenValidator,
   isAdminAndStaffValidator,
@@ -48,4 +59,19 @@ usersRouter.get("/manage-users/get-all",
   wrapAsync(adminAndStaffGetAllUsersController)
 );
 
+/**
+ * Description: Search for users by email or phone (for Admin/Staff)
+ * Path: /users/search
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Query: { q: string }
+ * Roles: ADMIN, STAFF
+ */
+usersRouter.get(
+  "/manage-users/search",
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  searchUsersValidator,
+  wrapAsync(searchUsersController)
+);
 export default usersRouter;

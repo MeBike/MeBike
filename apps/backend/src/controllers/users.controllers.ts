@@ -191,3 +191,16 @@ export async function adminAndStaffGetAllUsersController(
 ) {
   await usersService.adminAndStaffGetAllUsers(req, res, next)
 }
+
+export async function searchUsersController(
+  req: Request<ParamsDictionary, any, any>,
+  res: Response,
+  next: NextFunction
+){
+  const { q } = req.query as { q: string };
+    const users = await usersService.searchUsers(q);
+    return res.json({
+      message: USERS_MESSAGES.SEARCH_USERS_SUCCESSFULLY,
+      data: users,
+  });
+}

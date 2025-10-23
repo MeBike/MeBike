@@ -82,6 +82,10 @@ export const USERS_MESSAGES = {
   FORGOT_PASSWORD_OTP_MUST_BE_6_DIGITS: 'Mã OTP đặt lại mật khẩu phải gồm 6 chữ số',
   EMAIL_OTP_MUST_BE_A_STRING: 'Mã OTP xác thực email phải là chuỗi',
   EMAIL_OTP_MUST_BE_6_DIGITS: 'Mã OTP xác thực email phải gồm 6 chữ số',
+  // search users messages
+  SEARCH_QUERY_IS_REQUIRED: 'Tham số truy vấn tìm kiếm là bắt buộc',
+  SEARCH_QUERY_MUST_BE_A_STRING: 'Tham số truy vấn tìm kiếm phải là chuỗi',
+  SEARCH_USERS_SUCCESSFULLY: 'Tìm kiếm người dùng thành công'
 } as const
 
 export const REPORTS_MESSAGES = {

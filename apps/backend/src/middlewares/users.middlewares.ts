@@ -571,3 +571,21 @@ export const adminAndStaffGetAllUsersValidator = validate(
     ['query']
   )
 )
+
+export const searchUsersValidator = validate(
+  checkSchema(
+    {
+      q: {
+        in: ["query"],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.SEARCH_QUERY_IS_REQUIRED,
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.SEARCH_QUERY_MUST_BE_A_STRING,
+        },
+        trim: true,
+      },
+    },
+    ["query"]
+  )
+);

@@ -338,6 +338,57 @@
             schema:
               $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
+/users/manage-users/search:
+  get:
+    tags: [Users]
+    summary: Search users by email or phone (Admin/Staff only)
+    description: Searches for users by matching email or phone number. Requires Admin or Staff privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: q
+        in: query
+        required: true
+        description: "The search query (full or partial email or phone number)."
+        schema:
+          type: string
+          example: "09123456"
+    responses:
+      '200':
+        description: Search successful. Returns a list of matching users.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Search users successfully"
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/User.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden. User does not have Admin or Staff rights.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: User from token not found.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: Validation error (e.g., search query 'q' is missing).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
 # ===================================================================
 # Bikes API
 # ===================================================================
