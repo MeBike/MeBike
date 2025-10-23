@@ -86,20 +86,34 @@ class UsersService {
     const localTime = getLocalTime();
     const emailVerifyOtpExpires = new Date(localTime.getTime() + 10 * 60 * 1000);
 
-    await databaseService.users.insertOne(
-      new User({
-        ...payload,
-        _id: user_id,
-        fullname: payload.fullname,
-        username: `user${user_id.toString()}`,
-        email_verify_otp: emailVerifyOtp,
-        email_verify_otp_expires: emailVerifyOtpExpires,
-        password: hashPassword(payload.password),
-        role: Role.User,
-      }),
-    );
+    // await databaseService.users.insertOne(
+    //   new User({
+    //     ...payload,
+    //     _id: user_id,
+    //     fullname: payload.fullname,
+    //     username: `user${user_id.toString()}`,
+    //     email_verify_otp: emailVerifyOtp,
+    //     email_verify_otp_expires: emailVerifyOtpExpires,
+    //     password: hashPassword(payload.password),
+    //     role: Role.User,
+    //   }),
+    // );
+
     // create wallet for user
-    await walletService.createWallet(user_id.toString());
+    // await walletService.createWallet(user_id.toString());
+
+    //dữ liệu của user
+    const newUser = new User({
+      ...payload,
+      _id: user_id,
+      fullname: payload.fullname,
+      username: `user${user_id.toString()}`,
+      email_verify_otp: emailVerifyOtp,
+      email_verify_otp_expires: emailVerifyOtpExpires,
+      password: hashPassword(payload.password),
+      role: Role.User
+    })
+
     const [access_token, refresh_token] = await this.signAccessAndRefreshTokens({
       user_id: user_id.toString(),
       verify: UserVerifyStatus.Unverified,
@@ -107,14 +121,50 @@ class UsersService {
 
     const { exp, iat } = await this.decodeRefreshToken(refresh_token);
 
-    await databaseService.refreshTokens.insertOne(
-      new RefreshToken({
-        token: refresh_token,
-        user_id: new ObjectId(user_id),
-        exp,
-        iat,
-      }),
-    );
+    // await databaseService.refreshTokens.insertOne(
+    //   new RefreshToken({
+    //     token: refresh_token,
+    //     user_id: new ObjectId(user_id),
+    //     exp,
+    //     iat,
+    //   }),
+    // );
+    // dữ liệu của refresh token
+    const newRefreshToken = new RefreshToken({
+      token: refresh_token,
+      user_id: new ObjectId(user_id),
+      exp,
+      iat
+    })
+
+    //khởi tạo session
+    const session = databaseService.getClient().startSession()
+
+    try {
+      //bắt đầu transaction
+      await session.withTransaction(async () => {
+        //tất cả các lệnh ghi database PHẢI được await bên trong này
+        //và phải truyền `{ session }`
+        
+        //ghi vào users
+        await databaseService.users.insertOne(newUser, { session })
+        
+        //ghi vào wallets (sử dụng hàm createWallet)
+        await walletService.createWallet(user_id.toString(), session)
+        
+        //ghi vào refreshTokens
+        await databaseService.refreshTokens.insertOne(newRefreshToken, { session })
+      })
+      //nếu transaction thành công, tiếp tục gửi email
+    } catch (error) {
+      //nếu transaction thất bại
+      // `users.insertOne` và `refreshTokens.insertOne` sẽ tự động được rollback.
+      throw error //ném lỗi ra controller
+    } finally {
+      //luôn đóng session
+      await session.endSession()
+    }
+
     try {
       const transporter = nodemailer.createTransport({
         service: "gmail",

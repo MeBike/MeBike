@@ -127,6 +127,9 @@ components:
     # Admin Reset Password Req Body
     AdminResetPasswordReqBody:
       $ref: './components/schemas/AdminResetPasswordReqBody.yaml'
+    # Admin Create User Req Body
+    AdminCreateUserReqBody:
+      $ref: './components/schemas/AdminCreateUserReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:

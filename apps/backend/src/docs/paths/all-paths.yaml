@@ -689,6 +689,57 @@
             schema:
               $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
+/users/manage-users/create:
+  post:
+    tags: [Users]
+    summary: Create a new user (Admin only)
+    description: "Allows an Admin to create a new user account (e.g., a Staff account). A wallet is automatically created for the new user. The account is set to 'VERIFIED' by default unless specified otherwise."
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/AdminCreateUserReqBody.yaml'
+    responses:
+      '201':
+        description: "User created successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Tạo người dùng thành công"
+                result:
+                  $ref: '../components/schemas/User.yaml'
+      '401':
+        description: "Unauthorized (Invalid access token)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden (User is not an Admin)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user (from token) not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: "Validation error (e.g., email/phone already exists, invalid role, weak password)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
 # ===================================================================
 # Bikes API
 # ===================================================================

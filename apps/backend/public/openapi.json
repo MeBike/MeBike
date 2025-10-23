@@ -1196,6 +1196,91 @@
         }
       }
     },
+    "/users/manage-users/create": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create a new user (Admin only)",
+        "description": "Allows an Admin to create a new user account (e.g., a Staff account). A wallet is automatically created for the new user. The account is set to 'VERIFIED' by default unless specified otherwise.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCreateUserReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Tạo người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User is not an Admin).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user (from token) not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., email/phone already exists, invalid role, weak password).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [
@@ -5450,6 +5535,50 @@
             "minLength": 8,
             "maxLength": 30,
             "example": "NewP@ssword123"
+          }
+        }
+      },
+      "AdminCreateUserReqBody": {
+        "type": "object",
+        "required": [
+          "fullname",
+          "email",
+          "password",
+          "phone_number",
+          "role"
+        ],
+        "properties": {
+          "fullname": {
+            "type": "string",
+            "description": "Full name of the new user.",
+            "example": "Le Van Nhan Vien"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email of the new user. Must be unique.",
+            "example": "staff_new@mebike.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "Password for the new user (8-30 characters).",
+            "minLength": 8,
+            "maxLength": 30,
+            "example": "StrongP@ss123"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Phone number of the new user (10 digits). Must be unique.",
+            "example": "0905111222"
+          },
+          "role": {
+            "description": "Role to assign to the new user.",
+            "$ref": "#/components/schemas/User/properties/role"
+          },
+          "verify": {
+            "description": "Verification status. If omitted, defaults to 'VERIFIED'.",
+            "$ref": "#/components/schemas/User/properties/verify"
           }
         }
       },

@@ -67,7 +67,7 @@ usersRouter.get(
 usersRouter.post(
   '/manage-users/create',
   accessTokenValidator,
-  isAdminValidator, // Chỉ Admin
+  isAdminValidator,
   adminCreateUserValidator,
   wrapAsync(adminCreateUserController)
 )
