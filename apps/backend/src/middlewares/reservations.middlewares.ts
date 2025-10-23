@@ -162,56 +162,84 @@ export const cancelReservationValidator = validate(
         errorMessage: RESERVATIONS_MESSAGE.REQUIRED_CANCELLED_REASON
       },
       isString: {
-        errorMessage: RESERVATIONS_MESSAGE.INVALID_CANCELLED_REASON
+        errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON
       },
       isLength: {
-        options: { max: 255 },
-        errorMessage: RESERVATIONS_MESSAGE.REASON_TOO_LONG
+        options: { min: 5, max: 255 },
+        errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON_LENGTH
       }
     }
   })
 )
 
-export const confirmReservationValidator = validate(
+const checkReservationState = async (reservationId: string, req: any) => {
+  const reservation = await databaseService.reservations.findOne({ _id: toObjectId(reservationId) })
+
+  if (!reservation) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', reservationId),
+      status: HTTP_STATUS.NOT_FOUND
+    })
+  }
+
+  if (reservation.status !== ReservationStatus.Pending) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_THIS_RESERVATION,
+      status: HTTP_STATUS.BAD_REQUEST
+    })
+  }
+
+  const now = getLocalTime()
+
+  if (reservation.start_time > now) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.NOT_AVAILABLE_FOR_CONFIRMATION,
+      status: HTTP_STATUS.BAD_REQUEST
+    })
+  }
+
+  if (reservation.end_time && reservation.end_time < now) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_EXPIRED_RESERVATION,
+      status: HTTP_STATUS.BAD_REQUEST
+    })
+  }
+
+  req.reservation = reservation
+  return true
+}
+
+export const userConfirmReservationValidator = validate(
   checkSchema({
     id: {
       in: ['params'],
       notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_ID },
       isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Id') },
       custom: {
-        options: async (value, { req }) => {
-          const reservation = await databaseService.reservations.findOne({ _id: toObjectId(value) })
-          if (!reservation) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', value),
-              status: HTTP_STATUS.NOT_FOUND
-            })
-          }
+        options: (value, { req }) => checkReservationState(value, req)
+      }
+    }
+  })
+)
 
-          if (reservation.status !== ReservationStatus.Pending) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_THIS_RESERVATION,
-              status: HTTP_STATUS.BAD_REQUEST
-            })
-          }
-          const now = getLocalTime()
-          if (reservation.start_time > now) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.NOT_AVAILABLE_FOR_CONFIRMATION,
-              status: HTTP_STATUS.BAD_REQUEST
-            })
-          }
-
-          if (reservation.end_time && reservation.end_time < now) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_EXPIRED_RESERVATION,
-              status: HTTP_STATUS.BAD_REQUEST
-            })
-          }
-
-          req.reservation = reservation
-          return true
-        }
+export const staffConfirmReservationValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_ID },
+      isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Id') },
+      custom: {
+        options: (value, { req }) => checkReservationState(value, req)
+      }
+    },
+    reason: {
+      in: ['body'],
+      notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_CONFIRM_REASON },
+      isString: { errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON },
+      trim: true,
+      isLength: {
+        options: { min: 5, max: 255 },
+        errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON_LENGTH
       }
     }
   })
