@@ -68,6 +68,7 @@ class DatabaseService {
 
   async indexStations() {
     await this.stations.createIndex({ name: 1 }, { unique: true })
+    await this.stations.createIndex({ location_geo: "2dsphere" });
   }
 
   get reports(): Collection<Report> {

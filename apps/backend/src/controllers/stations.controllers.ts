@@ -74,3 +74,13 @@ export const deleteStationController = wrapAsync(
     });
   }
 );
+
+export const getNearbyStationsController = wrapAsync(
+  async (
+    req: Request<ParamsDictionary, any, any, GetStationsReqQuery>,
+    res: Response,
+    next: NextFunction
+  ) => {
+    await stationsService.getNearbyStations(res, next, req.query);
+  }
+);

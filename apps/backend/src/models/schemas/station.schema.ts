@@ -9,6 +9,10 @@ type StationType = {
   capacity: string;
   created_at?: Date;
   updated_at?: Date;
+  location_geo?: {
+    type: "Point";
+    coordinates: [number, number];//longitude, latitude
+  };
 };
 
 export default class Station {
@@ -20,6 +24,10 @@ export default class Station {
   capacity: string;
   created_at?: Date;
   updated_at?: Date;
+  location_geo?: {
+    type: "Point";
+    coordinates: [number, number];//longitude, latitude
+  };
 
   constructor(station: StationType) {
     const currentDate = new Date();
@@ -34,5 +42,13 @@ export default class Station {
     this.capacity = station.capacity;
     this.created_at = station.created_at || localTime;
     this.updated_at = station.updated_at || localTime;
+    const lng = parseFloat(station.longitude);
+    const lat = parseFloat(station.latitude);
+    if (!isNaN(lng) && !isNaN(lat)) {
+      this.location_geo = {
+        type: "Point",
+        coordinates: [lng, lat],//longitude, latitude
+      };
+    }
   }
 }
