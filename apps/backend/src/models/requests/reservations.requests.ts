@@ -13,4 +13,10 @@ export type ReservationParam = {
   id: string
 }
 
+export type DispatchBikeReqBody = {
+    destination_station_id: string; 
+    bike_ids_to_move: string[];         
+    source_station_id: string;
+}
+
 

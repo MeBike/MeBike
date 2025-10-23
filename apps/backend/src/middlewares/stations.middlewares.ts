@@ -204,3 +204,39 @@ export const updateStationValidator = validate(
     ["body"]
   )
 );
+
+export const getNearbyStationsValidator = validate(
+  checkSchema(
+    {
+      latitude: {
+        in: ["query"],
+        notEmpty: {
+          errorMessage: STATIONS_MESSAGE.LATITUDE_IS_REQUIRED,
+        },
+        isFloat: {
+          errorMessage: STATIONS_MESSAGE.LATITUDE_MUST_BE_NUMERIC,
+        },
+        toFloat: true,
+      },
+      longitude: {
+        in: ["query"],
+        notEmpty: {
+          errorMessage: STATIONS_MESSAGE.LONGITUDE_IS_REQUIRED,
+        },
+        isFloat: {
+          errorMessage: STATIONS_MESSAGE.LONGITUDE_MUST_BE_NUMERIC,
+        },
+        toFloat: true,
+      },
+      maxDistance: {
+        in: ["query"],
+        optional: true,
+        isFloat: {
+          errorMessage: "maxDistance phải là một con số (mét)",
+        },
+        toFloat: true,
+      },
+    },
+    ["query"]
+  )
+);

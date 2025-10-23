@@ -10,7 +10,7 @@ import process from "node:process";
 
 import type { TokenPayLoad } from "~/models/requests/users.requests";
 
-import { UserVerifyStatus } from "~/constants/enums";
+import { Role, UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { USERS_MESSAGES } from "~/constants/messages";
 import { REGEX_USERNAME } from "~/constants/regex";
@@ -126,7 +126,7 @@ export const loginValidator = validate(
     ["body"],
   ),
 );
-
+const VIETNAMESE_PHONE_NUMBER_REGEX = /^(0[3|5|7|8|9])+([0-9]{8})\b/;
 export const registerValidator = validate(
   checkSchema(
     {
@@ -144,6 +144,23 @@ export const registerValidator = validate(
             const isExist = await usersService.checkEmailExist(value);
             if (isExist) {
               throw new Error(USERS_MESSAGES.EMAIL_ALREADY_EXISTS);
+            }
+            return true;
+          },
+        },
+      },
+      phone_number: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_IS_REQUIRED,
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING,
+        },
+        trim: true,
+        custom: {
+          options: (value: string) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID);
             }
             return true;
           },
@@ -273,69 +290,6 @@ export const forgotPasswordValidator = validate(
   ),
 );
 
-// export const verifyForgotPasswordTokenValidator = validate(
-//   checkSchema(
-//     {
-//       forgot_password_token: {
-//         trim: true,
-//         custom: {
-//           options: async (value: string, { req }) => {
-//             if (!value) {
-//               throw new ErrorWithStatus({
-//                 message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED,
-//                 status: HTTP_STATUS.UNAUTHORIZED,
-//               });
-//             }
-//             try {
-//               const decoded_forgot_password_token = await verifyToken({
-//                 token: value,
-//                 secretOrPublicKey: process.env.JWT_SECRET_FORGOT_PASSWORD_TOKEN as string,
-//               })
-//               ;(req as Request).decoded_forgot_password_token = decoded_forgot_password_token;
-
-//               const { user_id } = decoded_forgot_password_token;
-//               const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) });
-//               if (user === null) {
-//                 throw new ErrorWithStatus({
-//                   message: USERS_MESSAGES.USER_NOT_FOUND,
-//                   status: HTTP_STATUS.NOT_FOUND,
-//                 });
-//               }
-//               if (user.forgot_password_token !== value) {
-//                 throw new ErrorWithStatus({
-//                   message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_INCORRECT,
-//                   status: HTTP_STATUS.UNAUTHORIZED,
-//                 });
-//               }
-//               (req as Request).user = user;
-//             }
-//             catch (error) {
-//               if (error instanceof JsonWebTokenError) {
-//                 throw new ErrorWithStatus({
-//                   message: capitalize((error as JsonWebTokenError).message),
-//                   status: HTTP_STATUS.UNAUTHORIZED,
-//                 });
-//               }
-//               throw error;
-//             }
-//             return true;
-//           },
-//         },
-//       },
-//     },
-//     ["body"],
-//   ),
-// );
-
-// export const resetPasswordValidator = validate(
-//   checkSchema(
-//     {
-//       password: passwordSchema,
-//       confirm_password: confirmPasswordSchema,
-//     },
-//     ["body"],
-//   ),
-// );
 export const resetPasswordValidator = validate(
   checkSchema(
     {
@@ -346,8 +300,8 @@ export const resetPasswordValidator = validate(
       },
       otp: {
         notEmpty: { errorMessage: USERS_MESSAGES.FORGOT_PASSWORD_OTP_IS_REQUIRED },
-        isString: { errorMessage: 'OTP must be a string' },
-        isLength: { options: { min: 6, max: 6 }, errorMessage: 'OTP must be 6 digits' },
+        isString: { errorMessage: USERS_MESSAGES.FORGOT_PASSWORD_OTP_MUST_BE_A_STRING },
+        isLength: { options: { min: 6, max: 6 }, errorMessage: USERS_MESSAGES.FORGOT_PASSWORD_OTP_MUST_BE_6_DIGITS },
         trim: true,
       },
       password: passwordSchema,
@@ -367,8 +321,8 @@ export const verifyEmailOtpValidator = validate(
       },
       otp: {
         notEmpty: { errorMessage: USERS_MESSAGES.EMAIL_OTP_IS_REQUIRED },
-        isString: { errorMessage: 'OTP must be a string' },
-        isLength: { options: { min: 6, max: 6 }, errorMessage: 'OTP must be 6 digits' },
+        isString: { errorMessage: USERS_MESSAGES.EMAIL_OTP_MUST_BE_A_STRING },
+        isLength: { options: { min: 6, max: 6 }, errorMessage: USERS_MESSAGES.EMAIL_OTP_MUST_BE_6_DIGITS },
         trim: true,
       },
     },
@@ -548,12 +502,38 @@ export const updateMeValidator = validate(
         },
         trim: true,
       },
+      phone_number: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING,
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID);
+            }
+            
+            const user = await databaseService.users.findOne({ phone_number: value });
+            
+            if (user) {
+              //kiểm tra xem SĐT này có phải là của chính người dùng đang request không
+              //(tránh báo lỗi khi người dùng chỉ bấm "lưu" mà không đổi SĐT)
+              const { user_id } = (req as Request).decoded_authorization as TokenPayLoad;
+              if (user._id.toString() !== user_id) {
+                throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS);
+              }
+            }
+            return true;
+          },
+        },
+      },
     },
     ["body"],
   ),
 );
 
-export const adminGetAllUsersValidator = validate(
+export const adminAndStaffGetAllUsersValidator = validate(
   checkSchema(
     {
       fullname: {
@@ -575,8 +555,200 @@ export const adminGetAllUsersValidator = validate(
           options: [Object.values(UserVerifyStatus)],
           errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
         }
-      }
+      },
+      role: {
+        in: ["query"],
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.ROLE_MUST_BE_A_STRING,
+        },
+        isIn: {
+          options: [Object.values(Role)],
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID,
+        },
+      },
     },
     ['query']
+  )
+)
+
+export const searchUsersValidator = validate(
+  checkSchema(
+    {
+      q: {
+        in: ["query"],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.SEARCH_QUERY_IS_REQUIRED,
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.SEARCH_QUERY_MUST_BE_A_STRING,
+        },
+        trim: true,
+      },
+    },
+    ["query"]
+  )
+);
+
+export const userDetailValidator = validate(
+  checkSchema(
+    {
+      _id: {
+        in: ["params"],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.USER_ID_IS_REQUIRED,
+        },
+        isMongoId: {
+          errorMessage: USERS_MESSAGES.INVALID_USER_ID,
+        },
+      },
+    },
+    ["params"]
+  )
+);
+
+export const updateUserByIdValidator = validate(
+  checkSchema(
+    {
+      fullname: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.FULL_NAME_MUST_BE_A_STRING
+        },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 50 },
+          errorMessage: USERS_MESSAGES.FULL_NAME_LENGTH_MUST_BE_FROM_1_TO_50
+        }
+      },
+      email: {
+        optional: true,
+        isEmail: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            const userId = req.params?._id
+            if (!ObjectId.isValid(userId)) {
+              throw new ErrorWithStatus({ 
+                message: USERS_MESSAGES.INVALID_USER_ID,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            const user = await databaseService.users.findOne({
+              email: value,
+              _id: { $ne: new ObjectId(userId) } //kiếm tra email này trên những user khác
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.EMAIL_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      verify: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.VERIFY_STATUS_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(UserVerifyStatus)],
+          errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
+        }
+      },
+      location: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.LOCATION_MUST_BE_A_STRING
+        },
+        trim: true,
+        isLength: {
+          options: { 
+            min: 1,
+            max: 200
+          },
+          errorMessage: USERS_MESSAGES.LOCATION_LENGTH_MUST_BE_LESS_THAN_200
+        }
+      },
+      username: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.USERNAME_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (REGEX_USERNAME.test(value) === false) {
+              throw new Error(USERS_MESSAGES.USERNAME_MUST_BE_A_STRING)
+            }
+            const userId = req.params?._id
+            const user = await databaseService.users.findOne({
+              username: value,
+              _id: { $ne: new ObjectId(userId) }
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.USERNAME_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      phone_number: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID)
+            }
+            const userId = req.params?._id
+            const user = await databaseService.users.findOne({
+              phone_number: value,
+              _id: { $ne: new ObjectId(userId) }
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      role: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.ROLE_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(Role)],
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID
+        }
+      },
+      nfc_card_uid: {
+        optional: { options: { nullable: true } }, //cho phép null hoặc bỏ qua
+        isString: {
+          errorMessage: USERS_MESSAGES.NFC_CARD_UID_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string | null, { req }) => {
+            if (value === null || value === '') return true //cho phép gán rỗng hoặc null
+            const userId = req.params?._id
+            const user = await databaseService.users.findOne({
+              nfc_card_uid: value,
+              _id: { $ne: new ObjectId(userId) }
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.NFC_CARD_UID_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
   )
 )

@@ -17,6 +17,9 @@ export const USERS_MESSAGES = {
   REGISTER_SUCCESS: 'Đăng ký thành công',
   IMAGE_URL_MUST_BE_A_STRING: 'URL hình ảnh phải là chuỗi',
   IMAGE_URL_MUST_BE_VALID: 'URL hình ảnh không hợp lệ',
+  PHONE_NUMBER_IS_REQUIRED: 'Số điện thoại là bắt buộc',
+  PHONE_NUMBER_MUST_BE_A_STRING: 'Số điện thoại phải là chuỗi',
+  PHONE_NUMBER_IS_INVALID: 'Số điện thoại không hợp lệ (phải đủ 10 số và bắt đầu bằng 03, 05, 07, 08, 09)',
   // đăng nhập messages
   EMAIL_OR_PASSWORD_IS_INCORRECT: 'Email hoặc mật khẩu không chính xác',
   LOGIN_SUCCESS: 'Đăng nhập thành công',
@@ -56,6 +59,7 @@ export const USERS_MESSAGES = {
   USERNAME_MUST_BE_A_STRING: 'Tên người dùng phải là chuỗi',
   USERNAME_ALREADY_EXISTS: 'Tên người dùng đã tồn tại',
   UPDATE_ME_SUCCESS: 'Cập nhật thông tin người dùng thành công',
+  PHONE_NUMBER_ALREADY_EXISTS: 'Số điện thoại đã tồn tại',
   // refresh token messages
   REFRESH_TOKEN_SUCCESS: 'Làm mới token thành công',
   // check admin role messages
@@ -71,6 +75,25 @@ export const USERS_MESSAGES = {
   // admin get all users
   VERIFY_STATUS_MUST_BE_A_STRING: 'Trạng thái xác thực phải là chuỗi',
   INVALID_VERIFY_STATUS: 'Trạng thái xác thực không hợp lệ',
+  ROLE_MUST_BE_A_STRING: 'Vai trò phải là chuỗi',
+  ROLE_IS_INVALID: 'Vai trò không hợp lệ',
+  // OTP messages
+  FORGOT_PASSWORD_OTP_MUST_BE_A_STRING: 'Mã OTP đặt lại mật khẩu phải là chuỗi',
+  FORGOT_PASSWORD_OTP_MUST_BE_6_DIGITS: 'Mã OTP đặt lại mật khẩu phải gồm 6 chữ số',
+  EMAIL_OTP_MUST_BE_A_STRING: 'Mã OTP xác thực email phải là chuỗi',
+  EMAIL_OTP_MUST_BE_6_DIGITS: 'Mã OTP xác thực email phải gồm 6 chữ số',
+  // search users messages
+  SEARCH_QUERY_IS_REQUIRED: 'Tham số truy vấn tìm kiếm là bắt buộc',
+  SEARCH_QUERY_MUST_BE_A_STRING: 'Tham số truy vấn tìm kiếm phải là chuỗi',
+  SEARCH_USERS_SUCCESSFULLY: 'Tìm kiếm người dùng thành công',
+  // get user details by id
+  GET_USER_DETAIL_SUCCESS: 'Lấy chi tiết người dùng thành công',
+  USER_ID_IS_REQUIRED: 'User ID là bắt buộc',
+  INVALID_USER_ID: 'User ID không hợp lệ',
+  // update user by admin/staff
+  NFC_CARD_UID_MUST_BE_A_STRING: 'NFC Card UID phải là chuỗi',
+  NFC_CARD_UID_ALREADY_EXISTS: 'NFC Card UID đã tồn tại trên một người dùng khác',
+  UPDATE_USER_INFORMATION_SUCCESS: 'Cập nhật thông tin người dùng thành công'
 } as const
 
 export const REPORTS_MESSAGES = {
@@ -254,6 +277,7 @@ export const RENTALS_MESSAGE = {
 
 export const COMMON_MESSAGE = {
   CREATE_SESSION_FAIL: 'Tạo phiên thất bại: ',
+  UNKNOWN_ERROR: 'Lỗi không xác định',
   SERVICE_TOKEN_NOT_CONFIGURED: 'Dịch vụ chưa cấu hình khóa truy cập',
   INVALID_SERVICE_TOKEN: 'Khóa truy cập dịch vụ không hợp lệ'
 } as const
@@ -270,6 +294,9 @@ export const RESERVATIONS_MESSAGE = {
   CANCEL_SUCCESS: 'Huỷ phiên đặt trước thành công',
   GET_HISTORY_SUCCESS: 'Xem lịch sử đặt trước thành công',
   CONFIRM_SUCCESS: 'Xác nhận phiên đặt trước thành công',
+  DISPATCH_BIKE_SUCCESS: 'Phân phối xe thành công',
+  // Fail action
+  PARTIAL_UPDATE_FAILURE: 'Lỗi hệ thống: Chỉ %s/%s xe được cập nhật. Hành động bị hủy',
   // Required data
   REQUIRED_ID: 'Vui lòng nhập Id phiên đặt trước',
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
@@ -278,6 +305,9 @@ export const RESERVATIONS_MESSAGE = {
   REQUIRED_END_STATION: 'Vui lòng nhập trạm kết thúc',
   REQUIRED_START_TIME: 'Vui lòng nhập thời gian bắt đầu hiệu lực',
   REQUIRED_CANCELLED_REASON: 'Vui lòng nhập nguyên nhân huỷ',
+  REQUIRED_SOURCE_STATION_ID: 'Vui lòng cung cấp Id trạm nguồn',
+  REQUIRED_DESTINATION_STATION_ID: 'Vui lòng cung cấp Id trạm đích',
+  REQUIRED_BIKE_LIST: 'Danh sách xe cần điều phối không được để trống',
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
@@ -285,13 +315,21 @@ export const RESERVATIONS_MESSAGE = {
   REASON_TOO_LONG: 'Độ dài của nguyên nhân huỷ không hợp lệ (dưới 255 kí tự)',
   INVALID_START_TIME: 'Thời gian đặt trước không thể là thời điểm ở quá khứ',
   INVALID_STATION_ID: 'Id trạm xe không hợp lệ',
+  INVALID_USER_ID: 'Id người dùng không hợp lệ',
+  INVALID_SOURCE_STATION_ID: 'Id trạm nguồn không hợp lệ.',
+  INVALID_DESTINATION_STATION_ID: 'Id trạm đích không hợp lệ',
+  INVALID_BIKE_LIST: 'Danh sách Id xe không hợp lệ (phải là 1 mảng chuỗi không rỗng)',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
   STATION_NOT_FOUND: 'Không tìm thấy trạm với Id %s',
   NOT_FOUND: 'Không tìm thấy phiên đặt trước với Id %s',
+  SOURCE_STATION_NOT_FOUND: 'Không tìm thấy trạm nguồn với Id %s',
+  DESTINATION_STATION_NOT_FOUND: 'Không tìm thấy trạm đích với Id %s',
+  BIKE_NOT_FOUND_IN_LIST: 'Danh sách chứa Id xe không tồn tại',
   // Unavailable object
   UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
+  BIKE_NOT_AVAILABLE_FOR_DISPATCH: 'Xe (Id: %s) không có sẵn để điều phối (trạng thái: %s)',
   // Not allowed action
   CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền huỷ phiên đặt trước của người khác',
   CANNOT_CONFIRM_THIS_RESERVATION: 'Bạn chỉ có thể xác nhận phiên đặt trước ở trạng thái đang được xử lí',
@@ -305,7 +343,28 @@ export const RESERVATIONS_MESSAGE = {
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
   // Payment
-  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s'
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s',
+  // Quota
+  QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước',
+  DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',
+  BIKE_NOT_AT_SOURCE_STATION: 'Xe (Id: %s) không nằm ở trạm nguồn đã khai báo',
+  // Report
+  GET_REPORT_SUCCESS: 'Lấy báo cáo đặt trước thành công',
+  REPORT_PERIOD_DEFAULT: '12 tháng gần nhất',
+  REPORT_PERIOD_FULL_RANGE: 'Từ %s đến %s',
+  REPORT_PERIOD_START_ONLY: 'Từ ngày %s',
+  REPORT_PERIOD_END_ONLY: 'Đến ngày %s',
+  // Console Messages
+  SKIPPING_USER_NOT_FOUND: (userId: string) => `Skipping notification: User ${userId} not found or missing email.`,
+  ERROR_SENDING_EMAIL: (userId: string) => `Error preparing/sending email for user ${userId}:`,
+  CANCELLED_SUCCESS: (reservationId: string, userId: string) =>
+    `[CANCELLED] Reservation ${reservationId} for user ${userId} expired and was cancelled.`,
+  CANCELLED_FAILURE: (reservationId: string, error: string) =>
+    `Failed to fully cancel reservation ${reservationId}: ${error}`,
+  SCHEDULING_CANCEL_TASK: (reservationId: string, delayMinutes: number) => 
+        `Scheduling cancellation task for reservation ${reservationId} in ${delayMinutes} minutes.`,
+  // Email Messages
+  EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn'
 } as const
 export const WALLETS_MESSAGE = {
   USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',

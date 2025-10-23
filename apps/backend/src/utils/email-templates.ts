@@ -1,14 +1,14 @@
-import fs from "node:fs";
-import path from "node:path";
+import fs from 'node:fs'
+import path from 'node:path'
 
 type TemplateData = {
-  [key: string]: string;
-};
+  [key: string]: string
+}
 
-const MBIKE_PRIMARY_COLOR = "#007bff";
+const MBIKE_PRIMARY_COLOR = '#007bff'
 
 const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
-  "verify-email.html": data => `
+  'verify-email.html': (data) => `
     <!DOCTYPE html>
     <html lang="vi">
     <head>
@@ -19,10 +19,10 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
     <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
       <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
         <h1 style="color: ${MBIKE_PRIMARY_COLOR}; text-align: center;">MeBike</h1>
-        <h2>Xin chào ${data.fullname || "bạn"},</h2>
+        <h2>Xin chào ${data.fullname || 'bạn'},</h2>
         <p>Cảm ơn bạn đã đăng ký tài khoản MeBike. Vui lòng nhấn vào nút bên dưới để xác nhận email của bạn:</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${data.verifyURL || "#"}" style="background: ${MBIKE_PRIMARY_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Xác nhận đăng ký</a>
+          <a href="${data.verifyURL || '#'}" style="background: ${MBIKE_PRIMARY_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Xác nhận đăng ký</a>
         </div>
         <p style="color: #666; font-size: 14px;">Trân trọng,<br>Đội ngũ MeBike</p>
       </div>
@@ -30,7 +30,7 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
     </html>
   `,
 
-  "forgot-password.html": data => `
+  'forgot-password.html': (data) => `
     <!DOCTYPE html>
     <html lang="vi">
     <head>
@@ -40,10 +40,10 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
     <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
       <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
         <h1 style="color: ${MBIKE_PRIMARY_COLOR}; text-align: center;">MeBike</h1>
-        <h2>Xin chào ${data.fullname || "bạn"},</h2>
+        <h2>Xin chào ${data.fullname || 'bạn'},</h2>
         <p>Bạn đã yêu cầu đặt lại mật khẩu. Nhấn vào nút bên dưới để tiếp tục:</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${data.resetURL || "#"}" style="background: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Đặt lại mật khẩu</a>
+          <a href="${data.resetURL || '#'}" style="background: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Đặt lại mật khẩu</a>
         </div>
         <p style="color: #666; font-size: 14px;">Trân trọng,<br>Đội ngũ MeBike</p>
       </div>
@@ -51,7 +51,7 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
     </html>
   `,
 
-  "google-register-success.html": data => `
+  'google-register-success.html': (data) => `
     <!DOCTYPE html>
     <html lang="vi">
     <head>
@@ -59,20 +59,20 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
       <title>Chào mừng bạn đến với MeBike</title>
     </head>
     <body>
-      <p>Xin chào ${data.fullname || "bạn"},</p>
+      <p>Xin chào ${data.fullname || 'bạn'},</p>
       <p>Cảm ơn bạn đã đăng ký tài khoản MeBike qua Google.</p>
       <p>Đây là thông tin đăng nhập của bạn:</p>
       <ul>
-        <li><strong>Email:</strong> ${data.email || ""}</li>
-        <li><strong>Mật khẩu tạm thời:</strong> ${data.password || ""}</li>
+        <li><strong>Email:</strong> ${data.email || ''}</li>
+        <li><strong>Mật khẩu tạm thời:</strong> ${data.password || ''}</li>
       </ul>
       <p>Vui lòng đổi mật khẩu sau khi đăng nhập. Một email xác thực cũng đã được gửi đến bạn.</p>
-      <a href="${data.loginURL || "#"}">Đăng nhập ngay</a>
+      <a href="${data.loginURL || '#'}">Đăng nhập ngay</a>
     </body>
     </html>
   `,
 
-  "resend-verify-email.html": data => `
+  'resend-verify-email.html': (data) => `
     <!DOCTYPE html>
     <html lang="vi">
     <head>
@@ -83,10 +83,10 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
     <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
       <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
         <h1 style="color: ${MBIKE_PRIMARY_COLOR}; text-align: center;">MeBike</h1>
-        <h2>Xin chào ${data.fullname || "bạn"},</h2>
+        <h2>Xin chào ${data.fullname || 'bạn'},</h2>
         <p>Bạn đã yêu cầu gửi lại email xác thực. Vui lòng nhấn vào nút bên dưới để hoàn tất việc xác thực tài khoản:</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${data.verifyURL || "#"}" style="background: ${MBIKE_PRIMARY_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Xác thực tài khoản</a>
+          <a href="${data.verifyURL || '#'}" style="background: ${MBIKE_PRIMARY_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Xác thực tài khoản</a>
         </div>
         <p style="color: #666; font-size: 14px;">Trân trọng,<br>Đội ngũ MeBike</p>
       </div>
@@ -94,6 +94,40 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
     </html>
   `,
 
+  'neer-expiry-reservation.html': (data) => `
+    <!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cảnh báo Đặt trước Gần Hết Hạn - MeBike</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+    <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
+        <h1 style="color: ${MBIKE_PRIMARY_COLOR}; text-align: center; margin-bottom: 20px;">MeBike</h1>
+        
+        <h2 style="font-size: 18px; color: #333333; margin-top: 0;">Xin chào ${data.fullname},</h2>
+        
+        <p style="color: #333333; line-height: 1.5;">Đây là lời nhắc nhở từ MeBike:</p>
+
+        <div style="background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
+            <p style="font-size: 16px; font-weight: bold; margin: 0;">Phiên đặt trước xe đạp của bạn sắp <span style="color: #dc3545;">HẾT HẠN TRONG VÒNG 15 PHÚT</span>.</p>
+        </div>
+
+        <p style="color: #333333; line-height: 1.5;">Để bắt đầu chuyến đi, vui lòng đến trạm xe và mở khóa xe đạp đã đặt bằng ứng dụng của bạn ngay lập tức.</p>
+        
+        <p style="color: #333333; line-height: 1.5;">Nếu bạn không mở khóa xe trước thời điểm hết hạn, phiên đặt trước sẽ **tự động bị hủy**.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.callBackUrl || '#'}" style="background: ${MBIKE_PRIMARY_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Mở Ứng Dụng để Mở Khóa</a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">Trân trọng,<br>Đội ngũ MeBike</p>
+    </div>
+</body>
+</html>
+
+  `,
   "verify-otp.html": data => `
     <!DOCTYPE html>
     <html lang="vi">
@@ -124,22 +158,29 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
 };
 
 export function readEmailTemplate(templateName: string, data: TemplateData): string {
-  try {
-    const templatePath = path.join(__dirname, "templates", templateName);
-    let htmlContent = fs.readFileSync(templatePath, "utf-8");
-    Object.keys(data).forEach((key) => {
-      const regex = new RegExp(`{{${key}}}`, "g");
-      htmlContent = htmlContent.replace(regex, data[key]);
-    });
-    return htmlContent;
+  // try {
+  //   const templatePath = path.join(__dirname, "templates", templateName);
+  //   let htmlContent = fs.readFileSync(templatePath, "utf-8");
+  //   Object.keys(data).forEach((key) => {
+  //     const regex = new RegExp(`{{${key}}}`, "g");
+  //     htmlContent = htmlContent.replace(regex, data[key]);
+  //   });
+  //   return htmlContent;
+  // }
+  // catch (error) {
+  //   console.error(`Error reading email template ${templateName}:`, error);
+  //   const fallbackTemplate = FALLBACK_TEMPLATES[templateName];
+  //   if (fallbackTemplate) {
+  //     return fallbackTemplate(data);
+  //   }
+  //   // fallback chung nếu không có template cụ thể
+  //   return `Xin chào ${data.fullname || "bạn"}, cảm ơn bạn đã sử dụng dịch vụ của MeBike.`;
+  // }
+  const fallbackTemplate = FALLBACK_TEMPLATES[templateName];
+
+  if (fallbackTemplate) {
+    return fallbackTemplate(data);
   }
-  catch (error) {
-    console.error(`Error reading email template ${templateName}:`, error);
-    const fallbackTemplate = FALLBACK_TEMPLATES[templateName];
-    if (fallbackTemplate) {
-      return fallbackTemplate(data);
-    }
-    // fallback chung nếu không có template cụ thể
-    return `Xin chào ${data.fullname || "bạn"}, cảm ơn bạn đã sử dụng dịch vụ của MeBike.`;
-  }
+  console.error(`Email template ${templateName} not found in FALLBACK_TEMPLATES.`);
+  return `Xin chào ${data.fullname || "bạn"}, cảm ơn bạn đã sử dụng dịch vụ của MeBike.`;
 }

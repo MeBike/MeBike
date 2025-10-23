@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { getRentalsByStationIdController } from "~/controllers/rentals.controllers";
-import { createStationController, deleteStationController, getStationByIdController, getStationsController, updateStationController } from "~/controllers/stations.controllers";
+import { createStationController, deleteStationController, getNearbyStationsController, getStationByIdController, getStationsController, updateStationController } from "~/controllers/stations.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
-import { createStationValidator, stationIdValidator, updateStationValidator } from "~/middlewares/stations.middlewares";
+import { createStationValidator, getNearbyStationsValidator, stationIdValidator, updateStationValidator } from "~/middlewares/stations.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
@@ -26,6 +26,19 @@ stationRouter.post(
   isAdminValidator,
   createStationValidator,
   wrapAsync(createStationController)
+);
+
+/**
+ * Description: lấy danh sách xe gần nhất theo tọa độ
+ * Path: /stations/nearby
+ * Method: GET
+ * Query: { latitude: number, longitude: number, maxDistance?: number, page?: number, limit?: number }
+ * Roles: Public
+ */
+stationRouter.get(
+  "/nearby",
+  getNearbyStationsValidator,
+  wrapAsync(getNearbyStationsController)
 );
 
 /**

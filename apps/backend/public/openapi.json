@@ -37,6 +37,10 @@
       "description": "Operations related to bike rentals."
     },
     {
+      "name": "Reservations",
+      "description": "Operations for managing bike reservations."
+    },
+    {
       "name": "Reports",
       "description": "Operations for user reports and management."
     },
@@ -59,6 +63,10 @@
     {
       "name": "Stations",
       "description": "Operations for managing bike stations."
+    },
+    {
+      "name": "Ratings",
+      "description": "Operations for managing ratings and feedback."
     }
   ],
   "paths": {
@@ -242,8 +250,8 @@
         "tags": [
           "Users"
         ],
-        "summary": "Reset user password",
-        "description": "Sets a new password for the user using a valid forgot password token.",
+        "summary": "Reset user password with OTP",
+        "description": "Sets a new password for the user using a valid email and OTP.",
         "requestBody": {
           "required": true,
           "content": {
@@ -276,7 +284,7 @@
           "Users"
         ],
         "summary": "Verify user email",
-        "description": "Verifies a user's email with the provided token. Returns new tokens upon successful first-time verification.",
+        "description": "Verifies a user's email with the provided OTP.",
         "requestBody": {
           "required": true,
           "content": {
@@ -528,6 +536,354 @@
           },
           "500": {
             "$ref": "#/components/schemas/ErrorServerResponse"
+          }
+        }
+      }
+    },
+    "/users/manage-users/get-all": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get all users (Admin/Staff only)",
+        "description": "Retrieves a paginated list of all users. This endpoint is accessible only by Admin and Staff.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "required": false,
+            "description": "Filter users by role.",
+            "schema": {
+              "$ref": "#/components/schemas/User/properties/role"
+            }
+          },
+          {
+            "name": "verify",
+            "in": "query",
+            "required": false,
+            "description": "Filter users by verification status.",
+            "schema": {
+              "$ref": "#/components/schemas/User/properties/verify"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of users retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/User"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User does not have Admin or Staff rights.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., invalid role or verify status).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/manage-users/search": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Search users by email or phone (Admin/Staff only)",
+        "description": "Searches for users by matching email or phone number. Requires Admin or Staff privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "The search query (full or partial email or phone number).",
+            "schema": {
+              "type": "string",
+              "example": "09123456"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search successful. Returns a list of matching users.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Search users successfully"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/User"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User does not have Admin or Staff rights.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User from token not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., search query 'q' is missing).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/manage-users/{_id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user detail by ID (Admin/Staff only)",
+        "description": "Retrieves the full profile information of a specific user by their ID. Requires Admin or Staff privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the user to retrieve.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "60c72b2f9b1d8e001f8e8e8e"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User detail retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thông tin chi tiết người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (either the user from the token or the user specified by _id).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Update user by ID (Admin/Staff only)",
+        "description": "Partially updates a user's profile. Requires Admin or Staff privileges.\n- Only fields included in the request body will be updated.\n- **Important**: If the 'email' field is changed, the user's 'verify' status will be automatically reset to 'UNVERIFIED' and a new verification OTP will be sent to the new email.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the user to update.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "60c72b2f9b1d8e001f8e8e8e"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "A JSON object containing the fields to update. All fields are optional.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Cập nhật thông tin người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (either the user from the token or the user specified by _id).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., email/username/phone/nfc already exists, invalid format).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1844,6 +2200,281 @@
             "$ref": "#/components/schemas/ErrorStatusResponse"
           },
           "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Create a new reservation",
+        "description": "Allows a user to create a reservation for a bike.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reservation created successfully."
+          },
+          "400": {
+            "description": "Bad Request (e.g., bike not available, user already has reservation)."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Get all reservations (Admin/Staff only)",
+        "description": "Retrieves a paginated list of all reservations.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ReservationStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of reservations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Reservation"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations/me": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Get my reservations",
+        "description": "Retrieves a paginated list of the authenticated user's reservations.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of the user's reservations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Reservation"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations/me/{id}": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Get my reservation details",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservation details."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (not the user's reservation)."
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations/{id}": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Get reservation details (Admin/Staff only)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reservation details."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/reservations/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "summary": "Cancel my reservation",
+        "description": "Allows a user to cancel their own reservation.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReservationReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reservation cancelled successfully."
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (not the user's reservation)."
+          },
+          "404": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
           }
         }
@@ -3200,6 +3831,455 @@
           }
         }
       }
+    },
+    "/stations/nearby": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Find nearby stations",
+        "description": "Finds and returns a list of stations near a given geographical coordinate.",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "description": "The latitude of the location to search from.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 10.8015
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "description": "The longitude of the location to search from.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 106.7423
+            }
+          },
+          {
+            "name": "maxDistance",
+            "in": "query",
+            "required": false,
+            "description": "Maximum distance in meters. (Default: 1000m)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 20000,
+              "example": 5000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of nearby stations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Station"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., latitude/longitude is not numeric or is missing).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stations/{id}/rentals": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get rentals by station (Admin/Staff only)",
+        "description": "Retrieves a paginated list of rentals associated with a specific station. \n- Requires Admin or Staff privileges.\n- Can be used to filter by status (e.g., 'ĐANG THUÊ').\n- **Special Feature**: If `status` is set to 'ĐÃ ĐẶT TRƯỚC', you can use `expired_within` to find reservations expiring soon.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the station to check.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Filter rentals by status.",
+            "schema": {
+              "$ref": "#/components/schemas/RentalStatus"
+            }
+          },
+          {
+            "name": "expired_within",
+            "in": "query",
+            "required": false,
+            "description": "Only used if status='ĐÃ ĐẶT TRƯỚC'. Finds reservations expiring within this many minutes. (Default: 60)",
+            "schema": {
+              "type": "integer",
+              "default": 60,
+              "example": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of rentals for the station, with populated bike info.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "format": "mongoId"
+                              },
+                              "user_id": {
+                                "type": "string",
+                                "format": "mongoId"
+                              },
+                              "bike": {
+                                "$ref": "#/components/schemas/Bike"
+                              },
+                              "status": {
+                                "$ref": "#/components/schemas/RentalStatus"
+                              },
+                              "timeRemainingMinutes": {
+                                "type": "integer",
+                                "description": "Minutes remaining until the reservation expires (only for 'ĐÃ ĐẶT TRƯỚC' status).",
+                                "example": 15
+                              },
+                              "start_station": {
+                                "type": "string",
+                                "format": "mongoId"
+                              },
+                              "end_station": {
+                                "type": "string",
+                                "format": "mongoId"
+                              },
+                              "start_time": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "end_time": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "duration": {
+                                "type": "integer"
+                              },
+                              "total_price": {
+                                "type": "number",
+                                "format": "double"
+                              },
+                              "created_at": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "updated_at": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Station not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ratings": {
+      "get": {
+        "tags": [
+          "Ratings"
+        ],
+        "summary": "Get my ratings",
+        "description": "Retrieves a paginated list of ratings submitted by the currently authenticated user.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of the user's ratings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Rating"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/ratings/{rentalId}": {
+      "post": {
+        "tags": [
+          "Ratings"
+        ],
+        "summary": "Create a new rating for a rental",
+        "description": "Allows a user to submit a rating (score and comment) for a completed rental session.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rentalId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the rental session to be rated.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRatingReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rating created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request (e.g., rental already rated, rental not completed).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden (user did not rent this bike).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/schemas/ErrorValidationResponse"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Ratings"
+        ],
+        "summary": "Get rating by rental ID",
+        "description": "Retrieves the rating associated with a specific rental ID.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rentalId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the rental session.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rating details retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rating"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/ratings/bike/{bikeId}": {
+      "get": {
+        "tags": [
+          "Ratings"
+        ],
+        "summary": "Get ratings by bike ID",
+        "description": "Retrieves a paginated list of all ratings for a specific bike. (Public endpoint)",
+        "parameters": [
+          {
+            "name": "bikeId",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the bike.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A paginated list of ratings for the bike.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Rating"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3210,7 +4290,8 @@
           "fullname",
           "email",
           "password",
-          "confirm_password"
+          "confirm_password",
+          "phone_number"
         ],
         "properties": {
           "fullname": {
@@ -3223,6 +4304,12 @@
             "type": "string",
             "format": "email",
             "example": "user@example.com"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Số điện thoại người dùng (10 số, theo định dạng Việt Nam)",
+            "example": "0912345678",
+            "pattern": "^(0[3|5|7|8|9])+([0-9]{8})$"
           },
           "password": {
             "type": "string",
@@ -3307,16 +4394,25 @@
       },
       "ResetPasswordReqBody": {
         "type": "object",
-        "description": "Requires forgot_password_token alongside new password details.",
+        "description": "Đặt lại mật khẩu bằng email và mã OTP.",
         "required": [
-          "forgot_password_token",
+          "email",
+          "otp",
           "password",
           "confirm_password"
         ],
         "properties": {
-          "forgot_password_token": {
+          "email": {
             "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "otp": {
+            "type": "string",
+            "description": "Mã OTP 6 số được gửi qua email",
+            "example": "123456",
+            "minLength": 6,
+            "maxLength": 6
           },
           "password": {
             "type": "string",
@@ -3328,21 +4424,28 @@
           "confirm_password": {
             "type": "string",
             "format": "password",
-            "minLength": 8,
-            "maxLength": 30,
-            "example": "NewStr0ngP@sswOrd"
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
         }
       },
       "VerifyEmailReqBody": {
         "type": "object",
         "required": [
-          "email_verify_token"
+          "email",
+          "otp"
         ],
         "properties": {
-          "email_verify_token": {
+          "email": {
             "type": "string",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "otp": {
+            "type": "string",
+            "description": "Mã OTP 6 số được gửi qua email",
+            "example": "123456",
+            "minLength": 6,
+            "maxLength": 6
           }
         }
       },
@@ -3395,6 +4498,12 @@
             "description": "A URL pointing to the user's new avatar image.",
             "format": "uri",
             "example": "https://example.com/avatars/new_avatar.png"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Số điện thoại mới của người dùng (10 số, Việt Nam)",
+            "pattern": "^(0[3|5|7|8|9])+([0-9]{8})$",
+            "example": "0987654321"
           }
         }
       },
@@ -3628,6 +4737,32 @@
             "type": "string",
             "description": "The reason for ending the rental session.",
             "example": "Staff assisted user to end rental session."
+          }
+        }
+      },
+      "CreateReservationReqBody": {
+        "type": "object",
+        "required": [
+          "bike_id"
+        ],
+        "properties": {
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "The ID of the bike to be reserved."
+          }
+        }
+      },
+      "CancelReservationReqBody": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "The reason for cancelling the reservation.",
+            "example": "User changed their mind."
           }
         }
       },
@@ -3917,6 +5052,71 @@
           },
           "status": {
             "$ref": "#/components/schemas/StationStatus"
+          }
+        }
+      },
+      "CreateRatingReqBody": {
+        "type": "object",
+        "required": [
+          "score"
+        ],
+        "properties": {
+          "score": {
+            "type": "number",
+            "description": "The rating score from 1 to 5.",
+            "minimum": 1,
+            "maximum": 5,
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true,
+            "description": "An optional comment for the rating.",
+            "example": "Xe đạp còn mới, chạy tốt."
+          }
+        }
+      },
+      "UpdateUserReqBody": {
+        "type": "object",
+        "description": "Fields to update for the user's profile. All fields are optional. If 'email' is changed, 'verify' status will be reset to 'UNVERIFIED'.",
+        "properties": {
+          "fullname": {
+            "type": "string",
+            "description": "The user's full name (1-50 characters).",
+            "example": "Nguyen Van C"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "The user's new email. Must be unique.",
+            "example": "new.email@example.com"
+          },
+          "verify": {
+            "$ref": "#/components/schemas/User/properties/verify"
+          },
+          "location": {
+            "type": "string",
+            "description": "The user's location (1-200 characters).",
+            "example": "Da Nang, Vietnam"
+          },
+          "username": {
+            "type": "string",
+            "description": "The user's new username. Must be unique.",
+            "example": "nguyenvanc123"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "The user's new phone number (10 digits). Must be unique.",
+            "example": "0905123456"
+          },
+          "role": {
+            "$ref": "#/components/schemas/User/properties/role"
+          },
+          "nfc_card_uid": {
+            "type": "string",
+            "nullable": true,
+            "description": "The user's NFC card UID. Must be unique. Send null or empty string to remove.",
+            "example": "A1-B2-C3-D4"
           }
         }
       },
@@ -4318,6 +5518,51 @@
         ],
         "example": "ĐANG THUÊ"
       },
+      "Reservation": {
+        "type": "object",
+        "description": "Represents a bike reservation.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "expire_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time when the reservation expires."
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReservationStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReservationStatus": {
+        "type": "string",
+        "description": "The status of a reservation.",
+        "enum": [
+          "ĐANG GIỮ",
+          "ĐÃ HỦY",
+          "HẾT HẠN",
+          "ĐÃ THUÊ"
+        ],
+        "example": "ĐANG GIỮ"
+      },
       "Report": {
         "type": "object",
         "description": "Represents a user-submitted report.",
@@ -4705,6 +5950,53 @@
           "TẠM NGƯNG"
         ],
         "example": "HOẠT ĐỘNG"
+      },
+      "Rating": {
+        "type": "object",
+        "description": "Represents a user's rating for a rental.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "rental_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "score": {
+            "type": "number",
+            "description": "The rating score from 1 to 5.",
+            "enum": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true,
+            "example": "Xe chạy rất êm!"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       }
     },
     "securitySchemes": {

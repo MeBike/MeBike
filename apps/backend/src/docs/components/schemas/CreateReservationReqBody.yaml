@@ -1,0 +1,8 @@
+type: object
+required:
+  - bike_id
+properties:
+  bike_id:
+    type: string
+    format: mongoId
+    description: The ID of the bike to be reserved.

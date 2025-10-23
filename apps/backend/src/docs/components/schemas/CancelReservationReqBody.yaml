@@ -1,0 +1,8 @@
+type: object
+required:
+  - reason
+properties:
+  reason:
+    type: string
+    description: The reason for cancelling the reservation.
+    example: "User changed their mind."

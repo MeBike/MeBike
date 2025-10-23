@@ -18,9 +18,10 @@ import swaggerDocument from '../public/openapi.json'
 
 config()
 
-import swaggerJSDoc from 'swagger-jsdoc'
-import stationRouter from './routes/station.routes'
-import reserveRouter from './routes/reservations.routes'
+import swaggerJSDoc from "swagger-jsdoc";
+import stationRouter from "./routes/station.routes";
+import reserveRouter from "./routes/reservations.routes";
+import { warningExpiryReservation } from "./utils/cron/email.services";
 import ratingRouter from './routes/rating.routes'
 
 const port = process.env.PORT || 4000
@@ -35,6 +36,9 @@ databaseService.connect().then(async () => {
   databaseService.indexBikes()
   databaseService.indexStations()
   databaseService.indexSuppliers()
+
+  // cron-job
+  warningExpiryReservation.start()
 })
 
 app.get('/', (req, res) => {

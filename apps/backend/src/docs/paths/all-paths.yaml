@@ -113,8 +113,8 @@
 /users/reset-password:
   post:
     tags: [Users]
-    summary: Reset user password
-    description: Sets a new password for the user using a valid forgot password token.
+    summary: "Reset user password with OTP"
+    description: "Sets a new password for the user using a valid email and OTP."
     requestBody:
       required: true
       content:
@@ -135,7 +135,7 @@
   post:
     tags: [Users]
     summary: Verify user email
-    description: Verifies a user's email with the provided token. Returns new tokens upon successful first-time verification.
+    description: "Verifies a user's email with the provided OTP."
     requestBody:
       required: true
       content:
@@ -286,6 +286,218 @@
         $ref: '../components/schemas/ErrorValidationResponse.yaml'
       '500':
         $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/users/manage-users/get-all:
+  get:
+    tags: [Users]
+    summary: Get all users (Admin/Staff only)
+    description: Retrieves a paginated list of all users. This endpoint is accessible only by Admin and Staff.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: role
+        in: query
+        required: false
+        description: Filter users by role.
+        schema:
+          $ref: '../components/schemas/User.yaml#/properties/role' 
+      - name: verify
+        in: query
+        required: false
+        description: Filter users by verification status.
+        schema:
+          $ref: '../components/schemas/User.yaml#/properties/verify' 
+    responses:
+      '200':
+        description: A paginated list of users retrieved successfully.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/User.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden. User does not have Admin or Staff rights.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: Validation error (e.g., invalid role or verify status).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/users/manage-users/search:
+  get:
+    tags: [Users]
+    summary: Search users by email or phone (Admin/Staff only)
+    description: Searches for users by matching email or phone number. Requires Admin or Staff privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: q
+        in: query
+        required: true
+        description: "The search query (full or partial email or phone number)."
+        schema:
+          type: string
+          example: "09123456"
+    responses:
+      '200':
+        description: Search successful. Returns a list of matching users.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Search users successfully"
+                data:
+                  type: array
+                  items:
+                    $ref: '../components/schemas/User.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden. User does not have Admin or Staff rights.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: User from token not found.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: Validation error (e.g., search query 'q' is missing).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/users/manage-users/{_id}:
+  get:
+    tags: [Users]
+    summary: Get user detail by ID (Admin/Staff only)
+    description: Retrieves the full profile information of a specific user by their ID. Requires Admin or Staff privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        description: The ID of the user to retrieve.
+        schema:
+          type: string
+          format: mongoId
+          example: "60c72b2f9b1d8e001f8e8e8e"
+    responses:
+      '200':
+        description: User detail retrieved successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thông tin chi tiết người dùng thành công"
+                result:
+                  $ref: '../components/schemas/User.yaml'
+      '401':
+        description: Unauthorized (Invalid access token).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (User does not have Admin or Staff rights).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: User not found (either the user from the token or the user specified by _id).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+  patch:
+    tags: [Users]
+    summary: Update user by ID (Admin/Staff only)
+    description: |
+      Partially updates a user's profile. Requires Admin or Staff privileges.
+      - Only fields included in the request body will be updated.
+      - **Important**: If the 'email' field is changed, the user's 'verify' status will be automatically reset to 'UNVERIFIED' and a new verification OTP will be sent to the new email.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        description: The ID of the user to update.
+        schema:
+          type: string
+          format: mongoId
+          example: "60c72b2f9b1d8e001f8e8e8e"
+    requestBody:
+      description: A JSON object containing the fields to update. All fields are optional.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/UpdateUserReqBody.yaml'
+    responses:
+      '200':
+        description: User updated successfully.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Cập nhật thông tin người dùng thành công"
+                result:
+                  $ref: '../components/schemas/User.yaml'
+      '401':
+        description: Unauthorized (Invalid access token).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (User does not have Admin or Staff rights).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: User not found (either the user from the token or the user specified by _id).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: "Validation error (e.g., email/username/phone/nfc already exists, invalid format)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
 # ===================================================================
 # Bikes API
@@ -1077,6 +1289,166 @@
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '400':
         description: Bad Request (e.g., rental cannot be cancelled in its current state).
+
+# ===================================================================
+# Reservations API
+# ===================================================================
+/reservations:
+  post:
+    tags: [Reservations]
+    summary: Create a new reservation
+    description: Allows a user to create a reservation for a bike.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CreateReservationReqBody.yaml'
+    responses:
+      '201':
+        description: Reservation created successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '400':
+        description: Bad Request (e.g., bike not available, user already has reservation).
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+  get:
+    tags: [Reservations]
+    summary: Get all reservations (Admin/Staff only)
+    description: Retrieves a paginated list of all reservations.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: status
+        in: query
+        schema:
+          $ref: '../components/schemas/ReservationStatus.yaml'
+    responses:
+      '200':
+        description: A paginated list of reservations.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Reservation.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/reservations/me:
+  get:
+    tags: [Reservations]
+    summary: Get my reservations
+    description: Retrieves a paginated list of the authenticated user's reservations.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: A paginated list of the user's reservations.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Reservation.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/reservations/me/{id}:
+  get:
+    tags: [Reservations]
+    summary: Get my reservation details
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Reservation details.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (not the user's reservation).
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/reservations/{id}:
+  get:
+    tags: [Reservations]
+    summary: Get reservation details (Admin/Staff only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Reservation details.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/reservations/{id}/cancel:
+  post:
+    tags: [Reservations]
+    summary: Cancel my reservation
+    description: Allows a user to cancel their own reservation.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CancelReservationReqBody.yaml'
+    responses:
+      '200':
+        description: Reservation cancelled successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (not the user's reservation).
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
 # ===================================================================
 # Reports API
@@ -1875,5 +2247,287 @@
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '403':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/stations/nearby:
+  get:
+    tags: [Stations]
+    summary: Find nearby stations
+    description: Finds and returns a list of stations near a given geographical coordinate.
+    parameters:
+      - name: latitude
+        in: query
+        required: true
+        description: The latitude of the location to search from.
+        schema:
+          type: number
+          format: double
+          example: 10.8015
+      - name: longitude
+        in: query
+        required: true
+        description: The longitude of the location to search from.
+        schema:
+          type: number
+          format: double
+          example: 106.7423
+      - name: maxDistance
+        in: query
+        required: false
+        description: "Maximum distance in meters. (Default: 1000m)"
+        schema:
+          type: integer
+          minimum: 1
+          default: 20000
+          example: 5000
+    responses:
+      '200':
+        description: A list of nearby stations.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas/Station.yaml'
+      '422':
+        description: Validation error (e.g., latitude/longitude is not numeric or is missing).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/stations/{id}/rentals:
+  get:
+    tags: [Stations]
+    summary: Get rentals by station (Admin/Staff only)
+    description: |
+      Retrieves a paginated list of rentals associated with a specific station. 
+      - Requires Admin or Staff privileges.
+      - Can be used to filter by status (e.g., 'ĐANG THUÊ').
+      - **Special Feature**: If `status` is set to 'ĐÃ ĐẶT TRƯỚC', you can use `expired_within` to find reservations expiring soon.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the station to check.
+        schema:
+          type: string
+          format: mongoId
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: status
+        in: query
+        required: false
+        description: Filter rentals by status.
+        schema:
+          $ref: '../components/schemas/RentalStatus.yaml'
+      - name: expired_within
+        in: query
+        required: false
+        description: "Only used if status='ĐÃ ĐẶT TRƯỚC'. Finds reservations expiring within this many minutes. (Default: 60)"
+        schema:
+          type: integer
+          default: 60
+          example: 30
+    responses:
+      '200':
+        description: A paginated list of rentals for the station, with populated bike info.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        # Đây là schema response tùy chỉnh dựa trên $project của bạn
+                        type: object
+                        properties:
+                          _id:
+                            type: string
+                            format: mongoId
+                          user_id:
+                            type: string
+                            format: mongoId
+                          bike:
+                            $ref: '../components/schemas/Bike.yaml'
+                          status:
+                            $ref: '../components/schemas/RentalStatus.yaml'
+                          timeRemainingMinutes:
+                            type: integer
+                            description: "Minutes remaining until the reservation expires (only for 'ĐÃ ĐẶT TRƯỚC' status)."
+                            example: 15
+                          start_station:
+                            type: string
+                            format: mongoId
+                          end_station:
+                            type: string
+                            format: mongoId
+                          start_time:
+                            type: string
+                            format: date-time
+                          end_time:
+                            type: string
+                            format: date-time
+                          duration:
+                            type: integer
+                          total_price:
+                            type: number
+                            format: double
+                          created_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (User does not have Admin or Staff rights).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: Station not found.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+# ===================================================================
+# Ratings API
+# ===================================================================
+/ratings:
+  get:
+    tags: [Ratings]
+    summary: Get my ratings
+    description: Retrieves a paginated list of ratings submitted by the currently authenticated user.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: A paginated list of the user's ratings.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Rating.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/ratings/{rentalId}:
+  post:
+    tags: [Ratings]
+    summary: Create a new rating for a rental
+    description: Allows a user to submit a rating (score and comment) for a completed rental session.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: rentalId
+        in: path
+        required: true
+        description: The ID of the rental session to be rated.
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CreateRatingReqBody.yaml'
+    responses:
+      '201':
+        description: Rating created successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '400':
+        description: Bad Request (e.g., rental already rated, rental not completed).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (user did not rent this bike).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+  get:
+    tags: [Ratings]
+    summary: Get rating by rental ID
+    description: Retrieves the rating associated with a specific rental ID.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: rentalId
+        in: path
+        required: true
+        description: The ID of the rental session.
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Rating details retrieved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Rating.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/ratings/bike/{bikeId}:
+  get:
+    tags: [Ratings]
+    summary: Get ratings by bike ID
+    description: Retrieves a paginated list of all ratings for a specific bike. (Public endpoint)
+    parameters:
+      - name: bikeId
+        in: path
+        required: true
+        description: The ID of the bike.
+        schema:
+          type: string
+          format: mongoId
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: A paginated list of ratings for the bike.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Rating.yaml'
       '404':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
