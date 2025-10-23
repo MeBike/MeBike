@@ -781,3 +781,48 @@ export const adminResetPasswordValidator = validate(
     ['body']
   )
 )
+
+export const activeUserStatsValidator = validate(
+  checkSchema(
+    {
+      groupBy: {
+        in: ['query'],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.INVALID_GROUP_BY
+        },
+        isIn: {
+          options: [['day', 'month']],
+          errorMessage: USERS_MESSAGES.INVALID_GROUP_BY
+        }
+      },
+      startDate: {
+        in: ['query'],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.START_DATE_IS_REQUIRED
+        },
+        isISO8601: {
+          errorMessage: USERS_MESSAGES.START_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD
+        }
+      },
+      endDate: {
+        in: ['query'],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.END_DATE_IS_REQUIRED
+        },
+        isISO8601: {
+          errorMessage: USERS_MESSAGES.END_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD
+        },
+        custom: {
+          options: (value, { req }) => {
+            const startDate = (req as any)?.query?.startDate;
+            if (startDate && new Date(value) < new Date(String(startDate))) {
+              throw new Error(USERS_MESSAGES.END_DATE_MUST_BE_AFTER_START_DATE)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['query']
+  )
+)

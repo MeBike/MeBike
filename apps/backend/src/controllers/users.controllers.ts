@@ -250,3 +250,18 @@ export const getUserStatsController = async (req: Request, res: Response) => {
     result: stats
   })
 }
+
+export const getActiveUserStatsController = async (req: Request, res: Response) => {
+  const { groupBy, startDate, endDate } = req.query as {
+    groupBy: 'day' | 'month',
+    startDate: string,
+    endDate: string
+  }
+
+  const stats = await usersService.getActiveUserTimeseries(groupBy, startDate, endDate)
+
+  res.json({
+    message: USERS_MESSAGES.GET_ACTIVE_USER_STATS_SUCCESS,
+    result: stats
+  })
+}

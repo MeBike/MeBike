@@ -95,7 +95,15 @@ export const USERS_MESSAGES = {
   NFC_CARD_UID_ALREADY_EXISTS: 'NFC Card UID đã tồn tại trên một người dùng khác',
   UPDATE_USER_INFORMATION_SUCCESS: 'Cập nhật thông tin người dùng thành công',
   // get user stats
-  GET_USER_STATS_SUCCESS: 'Lấy thống kê người dùng thành công'
+  GET_USER_STATS_SUCCESS: 'Lấy thống kê người dùng thành công',
+  // get user active stats
+  GET_ACTIVE_USER_STATS_SUCCESS: 'Lấy thống kê người dùng active thành công',
+  INVALID_GROUP_BY: 'Giá trị groupBy không hợp lệ. Chỉ chấp nhận "day" hoặc "month".',
+  START_DATE_IS_REQUIRED: 'startDate là bắt buộc.',
+  END_DATE_IS_REQUIRED: 'endDate là bắt buộc.',
+  END_DATE_MUST_BE_AFTER_START_DATE: 'endDate phải sau startDate.',
+  START_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD: 'startDate phải là định dạng YYYY-MM-DD',
+  END_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD: 'endDate phải là định dạng YYYY-MM-DD',
 } as const
 
 export const REPORTS_MESSAGES = {

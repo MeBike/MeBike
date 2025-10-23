@@ -2,9 +2,9 @@ import { Router } from "express";
 
 import type { UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
-import { adminAndStaffGetAllUsersController, adminResetPasswordController, changePasswordController, forgotPasswordController, getMeController, getUserDetailController, getUserStatsController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
+import { adminAndStaffGetAllUsersController, adminResetPasswordController, changePasswordController, forgotPasswordController, getActiveUserStatsController, getMeController, getUserDetailController, getUserStatsController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
-import { accessTokenValidator, adminAndStaffGetAllUsersValidator, adminResetPasswordValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, updateUserByIdValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, activeUserStatsValidator, adminAndStaffGetAllUsersValidator, adminResetPasswordValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, updateUserByIdValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 
@@ -54,6 +54,26 @@ usersRouter.get(
   accessTokenValidator,
   isAdminAndStaffValidator,
   wrapAsync(getUserStatsController)
+)
+
+/**
+ * Description: Get active user statistics (DAY/MONTH) (for Admin/Staff)
+ * Path: /users/manage-users/stats/active-users
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Query: {
+ * groupBy: 'day' | 'month',
+ * startDate: 'YYYY-MM-DD',
+ * endDate: 'YYYY-MM-DD'
+ * }
+ * Roles: ADMIN, STAFF
+ */
+usersRouter.get(
+  '/manage-users/stats/active-users',
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  activeUserStatsValidator,
+  wrapAsync(getActiveUserStatsController)
 )
 
 /**

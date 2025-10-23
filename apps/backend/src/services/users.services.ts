@@ -641,6 +641,63 @@ class UsersService {
     //$facet luôn trả về một mảng chứa 1 document, kể cả khi collection rỗng
     return result[0];
   }
+
+  async getActiveUserTimeseries(groupBy: 'day' | 'month', startDate: string, endDate: string) {
+    const start = new Date(startDate)
+    //thêm 1 ngày vào endDate để bao gồm cả ngày đó
+    const end = new Date(endDate)
+    end.setDate(end.getDate() + 1)
+
+    //xác định định dạng group theo ngày hay tháng
+    const dateFormat = groupBy === 'day' ? '%Y-%m-%d' : '%Y-%m'
+
+    const pipeline = [
+      {
+        //lọc các refresh token được tạo trong khoảng thời gian
+        $match: {
+          iat: { // 'iat' (issued at) là trường Date trong schema RefreshToken
+            $gte: start,
+            $lt: end
+          }
+        }
+      },
+      {
+        //nhóm theo (ngày/tháng) VÀ user_id để lấy user duy nhất mỗi kỳ
+        $group: {
+          _id: {
+            date: {
+              $dateToString: { format: dateFormat, date: '$iat', timezone: 'Asia/Ho_Chi_Minh' }
+            },
+            user_id: '$user_id'
+          }
+        }
+      },
+      {
+        //nhóm lại một lần nữa chỉ theo ngày/tháng để đếm số user duy nhất
+        $group: {
+          _id: '$_id.date',
+          active_users_count: { $sum: 1 }
+        }
+      },
+      {
+        //định dạng lại output
+        $project: {
+          _id: 0,
+          date: '$_id',
+          active_users_count: 1
+        }
+      },
+      {
+        //sắp xếp theo ngày
+        $sort: {
+          date: 1
+        }
+      }
+    ]
+
+    const result = await databaseService.refreshTokens.aggregate(pipeline).toArray()
+    return result
+  }
 }
 
 const usersService = new UsersService();
