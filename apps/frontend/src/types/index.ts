@@ -4,3 +4,4 @@ export * from "./Bike";
 export * from "./Customer";
 export * from "./Rental";
 export * from "./Supplier";
+export * from "./Refund";
