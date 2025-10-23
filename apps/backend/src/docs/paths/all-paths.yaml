@@ -113,8 +113,8 @@
 /users/reset-password:
   post:
     tags: [Users]
-    summary: Reset user password
-    description: Sets a new password for the user using a valid forgot password token.
+    summary: "Reset user password with OTP"
+    description: "Sets a new password for the user using a valid email and OTP."
     requestBody:
       required: true
       content:
@@ -135,7 +135,7 @@
   post:
     tags: [Users]
     summary: Verify user email
-    description: Verifies a user's email with the provided token. Returns new tokens upon successful first-time verification.
+    description: "Verifies a user's email with the provided OTP."
     requestBody:
       required: true
       content:
@@ -1079,6 +1079,166 @@
         description: Bad Request (e.g., rental cannot be cancelled in its current state).
 
 # ===================================================================
+# Reservations API
+# ===================================================================
+/reservations:
+  post:
+    tags: [Reservations]
+    summary: Create a new reservation
+    description: Allows a user to create a reservation for a bike.
+    security:
+      - BearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CreateReservationReqBody.yaml'
+    responses:
+      '201':
+        description: Reservation created successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '400':
+        description: Bad Request (e.g., bike not available, user already has reservation).
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+  get:
+    tags: [Reservations]
+    summary: Get all reservations (Admin/Staff only)
+    description: Retrieves a paginated list of all reservations.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: status
+        in: query
+        schema:
+          $ref: '../components/schemas/ReservationStatus.yaml'
+    responses:
+      '200':
+        description: A paginated list of reservations.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Reservation.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/reservations/me:
+  get:
+    tags: [Reservations]
+    summary: Get my reservations
+    description: Retrieves a paginated list of the authenticated user's reservations.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: A paginated list of the user's reservations.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Reservation.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/reservations/me/{id}:
+  get:
+    tags: [Reservations]
+    summary: Get my reservation details
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Reservation details.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (not the user's reservation).
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/reservations/{id}:
+  get:
+    tags: [Reservations]
+    summary: Get reservation details (Admin/Staff only)
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Reservation details.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/reservations/{id}/cancel:
+  post:
+    tags: [Reservations]
+    summary: Cancel my reservation
+    description: Allows a user to cancel their own reservation.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CancelReservationReqBody.yaml'
+    responses:
+      '200':
+        description: Reservation cancelled successfully.
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (not the user's reservation).
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+# ===================================================================
 # Reports API
 # ===================================================================
 /reports:
@@ -1875,5 +2035,184 @@
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '403':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/stations/nearby:
+  get:
+    tags: [Stations]
+    summary: Find nearby stations
+    description: Finds and returns a list of stations near a given geographical coordinate.
+    parameters:
+      - name: latitude
+        in: query
+        required: true
+        description: The latitude of the location to search from.
+        schema:
+          type: number
+          format: double
+          example: 10.8015
+      - name: longitude
+        in: query
+        required: true
+        description: The longitude of the location to search from.
+        schema:
+          type: number
+          format: double
+          example: 106.7423
+      - name: maxDistance
+        in: query
+        required: false
+        description: "Maximum distance in meters. (Default: 1000m)"
+        schema:
+          type: integer
+          minimum: 1
+          default: 20000
+          example: 5000
+    responses:
+      '200':
+        description: A list of nearby stations.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '../components/schemas/Station.yaml'
+      '422':
+        description: Validation error (e.g., latitude/longitude is not numeric or is missing).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+# ===================================================================
+# Ratings API
+# ===================================================================
+/ratings:
+  get:
+    tags: [Ratings]
+    summary: Get my ratings
+    description: Retrieves a paginated list of ratings submitted by the currently authenticated user.
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: A paginated list of the user's ratings.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Rating.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/ratings/{rentalId}:
+  post:
+    tags: [Ratings]
+    summary: Create a new rating for a rental
+    description: Allows a user to submit a rating (score and comment) for a completed rental session.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: rentalId
+        in: path
+        required: true
+        description: The ID of the rental session to be rated.
+        schema:
+          type: string
+          format: mongoId
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas/CreateRatingReqBody.yaml'
+    responses:
+      '201':
+        description: Rating created successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/MessageResponse.yaml'
+      '400':
+        description: Bad Request (e.g., rental already rated, rental not completed).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: Forbidden (user did not rent this bike).
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+  get:
+    tags: [Ratings]
+    summary: Get rating by rental ID
+    description: Retrieves the rating associated with a specific rental ID.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: rentalId
+        in: path
+        required: true
+        description: The ID of the rental session.
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: Rating details retrieved successfully.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/Rating.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/ratings/bike/{bikeId}:
+  get:
+    tags: [Ratings]
+    summary: Get ratings by bike ID
+    description: Retrieves a paginated list of all ratings for a specific bike. (Public endpoint)
+    parameters:
+      - name: bikeId
+        in: path
+        required: true
+        description: The ID of the bike.
+        schema:
+          type: string
+          format: mongoId
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: A paginated list of ratings for the bike.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '../components/schemas/PaginatedResponse.yaml'
+                - type: object
+                  properties:
+                    data:
+                      type: array
+                      items:
+                        $ref: '../components/schemas/Rating.yaml'
       '404':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'

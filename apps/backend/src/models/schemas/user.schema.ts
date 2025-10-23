@@ -19,8 +19,6 @@ type UserType = {
   fullname: string;
   email: string;
   password: string;
-  // email_verify_token?: string;
-  // forgot_password_token?: string;
   email_verify_otp?: string | null;
   email_verify_otp_expires?: Date | null;
   forgot_password_otp?: string | null;
@@ -41,8 +39,6 @@ export default class User {
   fullname: string;
   email: string;
   password: string;
-  // email_verify_token: string;
-  // forgot_password_token: string;
   email_verify_otp: string | null;
   email_verify_otp_expires: Date | null;
   forgot_password_otp: string | null;
@@ -66,8 +62,6 @@ export default class User {
     this.fullname = user.fullname;
     this.email = user.email;
     this.password = user.password;
-    // this.email_verify_token = user.email_verify_token || "";
-    // this.forgot_password_token = user.forgot_password_token || "";
     this.email_verify_otp = user.email_verify_otp || null;
     this.email_verify_otp_expires = user.email_verify_otp_expires || null;
     this.forgot_password_otp = user.forgot_password_otp || null;

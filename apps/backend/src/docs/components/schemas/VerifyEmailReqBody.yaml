@@ -1,7 +1,15 @@
 type: object
 required:
-  - email_verify_token
+  - email
+  - otp
 properties:
-  email_verify_token:
+  email:
     type: string
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    format: email
+    example: 'user@example.com'
+  otp:
+    type: string
+    description: 'Mã OTP 6 số được gửi qua email'
+    example: '123456'
+    minLength: 6
+    maxLength: 6

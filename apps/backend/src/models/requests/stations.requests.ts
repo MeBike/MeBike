@@ -22,4 +22,5 @@ export type GetStationsReqQuery = {
   latitude?: string;
   longitude?: string;
   capacity?: string;
+  maxDistance?: string;
 };

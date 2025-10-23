@@ -39,31 +39,6 @@ class StationsService {
     return insertedStation;
   }
 
-//   async getAllStations(
-//     res: Response,
-//     next: NextFunction,
-//     query: GetStationsReqQuery
-//   ) {
-//     const filter: Filter<Station> = {};
-//     if (query.name) {
-//       filter.name = { $regex: query.name, $options: 'i' };
-//     }
-//     if (query.address) {
-//       filter.address = { $regex: query.address, $options: 'i' };
-//     }
-//     if (query.latitude) {
-//       filter.latitude = query.latitude;
-//     }
-//     if (query.longitude) {
-//       filter.longitude = query.longitude;
-//     }
-//     if (query.capacity) {
-//       filter.capacity = query.capacity;
-//     }
-
-//     await sendPaginatedResponse(res, next, databaseService.stations, query, filter);
-//   }
-
   async getAllStations(
     res: Response,
     next: NextFunction,
@@ -209,39 +184,6 @@ class StationsService {
     );
   }
 
-//   async getStationDetailsById(stationId: string) {
-//     const objectId = new ObjectId(stationId);
-//     const station = await databaseService.stations.findOne({ _id: objectId });
-
-//     if (!station) {
-//       throw new ErrorWithStatus({
-//         message: STATIONS_MESSAGE.STATION_NOT_FOUND,
-//         status: HTTP_STATUS.NOT_FOUND,
-//       });
-//     }
-
-//     //tính toán available bikes and empty slots
-//     const totalBikesAtStation = await databaseService.bikes.countDocuments({
-//       station_id: objectId,
-//     });
-//     const availableBikes = await databaseService.bikes.countDocuments({
-//       station_id: objectId,
-//       status: BikeStatus.Available,
-//     });
-
-//     //Parse capacity string to number for calculation, handle potential errors
-//     const capacityNumber = parseInt(station.capacity, 10);
-//     const emptySlots = Number.isNaN(capacityNumber)
-//       ? 0 //Default to 0 if capacity is not a valid number string
-//       : Math.max(0, capacityNumber - totalBikesAtStation);
-
-//     return {
-//       ...station,
-//       availableBikes,
-//       emptySlots,
-//     };
-//   }
-
   async getStationDetailsById(stationId: string) {
     const objectId = new ObjectId(stationId);
     
@@ -366,6 +308,143 @@ class StationsService {
 
     return { deletedCount: result.deletedCount ?? 0 };
   }
+
+  async getNearbyStations(
+  res: Response,
+  next: NextFunction,
+  query: GetStationsReqQuery
+ ) {
+  const lat = Number(query.latitude);
+  const lng = Number(query.longitude);
+  const maxDistance = query.maxDistance ? Number(query.maxDistance) : 20000;//mặc định 20km
+
+  const geoNearStage = {
+   $geoNear: {
+    near: {
+     type: "Point",
+     coordinates: [lng, lat],
+    },
+    distanceField: "distance_meters",//trả về khoảng cách (mét)
+    maxDistance: maxDistance,
+    spherical: true,
+    query: {}, 
+    key: "location_geo",
+   },
+  };
+
+  const lookupStage = {
+   $lookup: {
+    from: "bikes",
+    localField: "_id",
+    foreignField: "station_id",
+    as: "bikesData",
+   },
+  };
+  
+  const addFieldsStage1 = {
+   $addFields: {
+    totalBikes: { $size: "$bikesData" },
+    availableBikesCount: {
+     $size: {
+      $filter: {
+       input: "$bikesData", as: "bike",
+       cond: { $eq: ["$$bike.status", BikeStatus.Available] },
+      },
+     },
+    },
+    bookedBikesCount: {
+     $size: {
+      $filter: {
+       input: "$bikesData", as: "bike",
+       cond: { $eq: ["$$bike.status", BikeStatus.Booked] },
+      },
+     },
+    },
+    brokenBikesCount: {
+     $size: {
+      $filter: {
+       input: "$bikesData", as: "bike",
+       cond: { $eq: ["$$bike.status", BikeStatus.Broken] },
+      },
+     },
+    },
+    reservedBikesCount: {
+     $size: {
+      $filter: {
+       input: "$bikesData", as: "bike",
+       cond: { $eq: ["$$bike.status", BikeStatus.Reserved] },
+      },
+     },
+    },
+    maintainedBikesCount: {
+     $size: {
+      $filter: {
+       input: "$bikesData", as: "bike",
+       cond: { $eq: ["$$bike.status", BikeStatus.Maintained] },
+      },
+     },
+    },
+    unavailableBikesCount: {
+     $size: {
+      $filter: {
+       input: "$bikesData", as: "bike",
+       cond: { $eq: ["$$bike.status", BikeStatus.Unavailable] },
+      },
+     },
+    },
+   },
+  };
+
+  const addFieldsStage2 = {
+   $addFields: {
+    emptySlots: {
+     $max: [
+      0,
+      {
+       $subtract: [
+        { $toInt: "$capacity" },
+        "$totalBikes",
+       ],
+      },
+     ],
+    },
+    availableBikes: "$availableBikesCount",
+    bookedBikes: "$bookedBikesCount",
+    brokenBikes: "$brokenBikesCount",
+    reservedBikes: "$reservedBikesCount",
+    maintainedBikes: "$maintainedBikesCount",
+    unavailableBikes: "$unavailableBikesCount",
+   },
+  };
+  
+  const projectStage = {
+   $project: {
+    bikesData: 0, 
+    availableBikesCount: 0,
+    bookedBikesCount: 0,
+    brokenBikesCount: 0,
+    reservedBikesCount: 0,
+    maintainedBikesCount: 0,
+    unavailableBikesCount: 0,
+   },
+  };
+
+  const pipeline: Document[] = [
+   geoNearStage,
+   lookupStage,
+   addFieldsStage1,
+   addFieldsStage2,
+   projectStage,
+  ];
+
+  await sendPaginatedAggregationResponse(
+   res,
+   next,
+   databaseService.stations,
+   query,
+   pipeline
+  );
+ }
 }
 
 const stationsService = new StationsService();

@@ -1,0 +1,30 @@
+type: object
+description: "Represents a user's rating for a rental."
+properties:
+  _id:
+    type: string
+    format: mongoId
+  user_id:
+    type: string
+    format: mongoId
+  bike_id:
+    type: string
+    format: mongoId
+  rental_id:
+    type: string
+    format: mongoId
+  score:
+    type: number
+    description: "The rating score from 1 to 5."
+    enum: [1, 2, 3, 4, 5]
+    example: 5
+  comment:
+    type: string
+    nullable: true
+    example: "Xe chạy rất êm!"
+  created_at:
+    type: string
+    format: date-time
+  updated_at:
+    type: string
+    format: date-time

@@ -1,0 +1,8 @@
+type: string
+description: "The status of a reservation."
+enum:
+  - "ĐANG GIỮ"
+  - "ĐÃ HỦY"
+  - "HẾT HẠN"
+  - "ĐÃ THUÊ"
+example: "ĐANG GIỮ"
