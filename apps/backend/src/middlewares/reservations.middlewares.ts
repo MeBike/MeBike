@@ -10,6 +10,7 @@ import { isAvailability } from './bikes.middlewares'
 import { BikeStatus } from '~/constants/enums'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import { getLocalTime } from '~/utils/date'
+import { DispatchBikeReqBody } from '~/models/requests/reservations.requests'
 
 export const reserveBikeValidator = validate(
   checkSchema(
@@ -50,6 +51,34 @@ export const reserveBikeValidator = validate(
               })
             }
 
+            const preReservingThreshold = process.env.RESERVE_QUOTA_PERCENT || '0.50'
+            const RESERVE_QUOTA_PERCENT = Number.parseFloat(preReservingThreshold)
+
+            const aggResult = await databaseService.bikes
+              .aggregate([
+                { $match: { station_id: stationId, status: { $in: [BikeStatus.Available, BikeStatus.Reserved] } } },
+                {
+                  $group: {
+                    _id: null,
+                    totalAvailableBikes: { $sum: 1 },
+                    currentlyReservedBikes: {
+                      $sum: { $cond: [{ $eq: ['$status', BikeStatus.Reserved] }, 1, 0] }
+                    }
+                  }
+                }
+              ])
+              .toArray()
+
+            const { totalAvailableBikes = 0, currentlyReservedBikes = 0 } = aggResult[0] || {}
+
+            const maxAllowedReserved = Math.floor(totalAvailableBikes * RESERVE_QUOTA_PERCENT)
+
+            if (currentlyReservedBikes >= maxAllowedReserved) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.QUOTA_EXCEEDED,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
             req.bike = bike
             return true
           }
@@ -65,7 +94,7 @@ export const reserveBikeValidator = validate(
         custom: {
           options: (value) => {
             const now = getLocalTime()
-            if(new Date(value) < now){
+            if (new Date(value) < now) {
               throw new ErrorWithStatus({
                 message: RESERVATIONS_MESSAGE.INVALID_START_TIME,
                 status: HTTP_STATUS.BAD_REQUEST
@@ -166,14 +195,14 @@ export const confirmReservationValidator = validate(
             })
           }
           const now = getLocalTime()
-          if(reservation.start_time > now){
+          if (reservation.start_time > now) {
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.NOT_AVAILABLE_FOR_CONFIRMATION,
               status: HTTP_STATUS.BAD_REQUEST
             })
           }
 
-          if(reservation.end_time && reservation.end_time < now){
+          if (reservation.end_time && reservation.end_time < now) {
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_EXPIRED_RESERVATION,
               status: HTTP_STATUS.BAD_REQUEST
@@ -188,3 +217,111 @@ export const confirmReservationValidator = validate(
   })
 )
 
+export const batchDispatchSameStationValidator = validate(
+  checkSchema(
+    {
+      source_station_id: {
+        notEmpty: {
+          errorMessage: RESERVATIONS_MESSAGE.REQUIRED_SOURCE_STATION_ID
+        },
+        isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_SOURCE_STATION_ID, bail: true },
+        custom: {
+          options: async (value) => {
+            const station = await databaseService.stations.findOne({ _id: toObjectId(value) })
+            if (!station) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.SOURCE_STATION_NOT_FOUND.replace('%s', value),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            return true
+          }
+        }
+      },
+      destination_station_id: {
+        notEmpty: {
+          errorMessage: RESERVATIONS_MESSAGE.REQUIRED_DESTINATION_STATION_ID
+        },
+        isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_DESTINATION_STATION_ID, bail: true },
+        custom: {
+          options: async (value, { req }) => {
+            const destId = toObjectId(value)
+            const sourceId = toObjectId((req.body as DispatchBikeReqBody).source_station_id)
+
+            if (destId.equals(sourceId)) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.DESTINATION_SAME_AS_SOURCE,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+
+            const station = await databaseService.stations.findOne({ _id: destId })
+            if (!station) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.DESTINATION_STATION_NOT_FOUND.replace('%s', value),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            return true
+          }
+        }
+      },
+      bike_ids_to_move: {
+        isArray: { errorMessage: RESERVATIONS_MESSAGE.INVALID_BIKE_LIST, options: { min: 1 }, bail: true },
+        custom: {
+          options: async (bikeIds: string[], { req }) => {
+            const sourceId = toObjectId((req.body as DispatchBikeReqBody).source_station_id)
+            const bikeObjectIds = bikeIds.map((id) => toObjectId(id))
+
+            const bikes = await databaseService.bikes
+              .find(
+                {
+                  _id: { $in: bikeObjectIds }
+                },
+                {
+                  projection: { status: 1, station_id: 1 }
+                }
+              )
+              .toArray()
+
+            const foundBikeIdStrings = new Set(bikes.map((bike) => bike._id.toString()))
+            const missingBikeId = bikeIds.find((id) => !foundBikeIdStrings.has(id))
+
+            if (missingBikeId) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.BIKE_NOT_FOUND.replace('%s', missingBikeId),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+
+            const errors: string[] = []
+            bikes.forEach((bike) => {
+              if (bike.status !== BikeStatus.Available) {
+                errors.push(
+                  RESERVATIONS_MESSAGE.BIKE_NOT_AVAILABLE_FOR_DISPATCH.replace('%s', bike._id.toString()).replace(
+                    '%s',
+                    bike.status
+                  )
+                )
+              }
+              if (!bike.station_id || !bike.station_id.equals(sourceId)) {
+                errors.push(RESERVATIONS_MESSAGE.BIKE_NOT_AT_SOURCE_STATION.replace('%s', bike._id.toString()))
+              }
+            })
+
+            if (errors.length > 0) {
+              throw new ErrorWithStatus({
+                message: errors.join('; '),
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            ;(req as any).dispatch_bike_ids = bikeObjectIds
+            ;(req as any).dispatched_bikes = bikes
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
