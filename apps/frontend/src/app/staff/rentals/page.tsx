@@ -170,7 +170,7 @@ const mockRentals: Rental[] = [
     updated_at: "2024-06-09T11:15:00Z",
   },
 ];
-
+  
 export default function RentalsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RentalStatus | "all">("all");
