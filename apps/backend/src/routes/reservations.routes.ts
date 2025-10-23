@@ -8,7 +8,8 @@ import {
   getReservationListController,
   getReservationReportController,
   notifyExpiringReservationsController,
-  reserveBikeController
+  reserveBikeController,
+  staffConfirmReservationController
 } from '~/controllers/reservations.controllers'
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
 import {
@@ -46,7 +47,7 @@ reserveRouter
 
 reserveRouter
   .route('/:id/staff-confirm')
-  .post(accessTokenValidator, isStaffValidator, staffConfirmReservationValidator, wrapAsync(confirmReservationController))
+  .post(accessTokenValidator, isStaffValidator, staffConfirmReservationValidator, wrapAsync(staffConfirmReservationController))
 
 reserveRouter
   .route('/:id/confirm')

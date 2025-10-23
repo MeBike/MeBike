@@ -324,10 +324,11 @@ export const RESERVATIONS_MESSAGE = {
   CANNOT_CONFIRM_EXPIRED_RESERVATION: 'Đã vượt quá thời gian cho phép xác nhận phiên đặt trước này',
   NOT_AVAILABLE_FOR_CONFIRMATION: 'Chưa đến thời gian cho phép xác nhận phiên đặt trước này',
   CANNOT_CANCEL_THIS_RESERVATION: 'Bạn chỉ có thể huỷ phiên đặt trước ở trạng thái đang được xử lí',
+  CANNOT_CONFIRM_OTHER_RESERVATION: 'Bạn không có quyền xác nhận phiên đặt trước của người khác',
   // Over time
   OVER_CANCELLED_TIME: 'Đã quá thời gian quy định để có thể huỷ phiên đặt trước',
-  // Reason
-  NO_CANCELLED_REASON: 'Không có nguyên nhân nào được cung cấp',
+  // Default
+  NO_REASON_PROVIDED: 'Không có nguyên nhân nào được cung cấp',
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
   // Payment

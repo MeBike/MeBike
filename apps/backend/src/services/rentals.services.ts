@@ -210,7 +210,7 @@ async processRentalEndTransaction(
     
     await walletService.paymentRental(rental.user_id.toString(), decimalTotalPrice, description, rental._id as ObjectId);
 
-    const updatedData: Partial<Rental> = {
+    const updatedData: any = {
         end_station: end_station_id,
         end_time: effective_end_time,
         duration: new Int32(duration),
@@ -241,7 +241,7 @@ async processRentalEndTransaction(
         const log = new RentalLog({
             rental_id: rental._id!,
             user_id,
-            changes: Object.keys(updatedData),
+            changes: updatedData,
             reason
         });
         await databaseService.rentalLogs.insertOne({ ...log }, { session });
@@ -436,7 +436,7 @@ async processRentalEndTransaction(
           rental_id: rental._id,
           user_id: toObjectId(admin_id),
           reason: reason || RENTALS_MESSAGE.NO_REASON,
-          changes: Object.keys(changedFields)
+          changes: changedFields
         })
 
         await databaseService.rentalLogs.insertOne({ ...log }, { session })
@@ -510,7 +510,7 @@ async processRentalEndTransaction(
           rental_id: rental._id,
           user_id: toObjectId(admin_id),
           reason: reason || RENTALS_MESSAGE.NO_REASON,
-          changes: Object.keys(changedFields)
+          changes: changedFields
         })
 
         await databaseService.rentalLogs.insertOne({ ...log }, { session })

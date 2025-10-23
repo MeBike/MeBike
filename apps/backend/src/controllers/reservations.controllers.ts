@@ -94,11 +94,11 @@ export async function confirmReservationController(req: Request<ReservationParam
 }
 
 export async function staffConfirmReservationController(req: Request<ReservationParam, any, ConfirmReservationByStaffReqBody>, res: Response) {
-  const { user_id: staff_id } = req.decoded_authorization as TokenPayLoad;
+  const { user_id } = req.decoded_authorization as TokenPayLoad;
   const reservation = req.reservation as Reservation;
 
   const result = await reservationsService.staffConfirmReservation({
-    staff_id: toObjectId(staff_id),
+    staff_id: toObjectId(user_id),
     reservation,
     reason: req.body.reason
   });

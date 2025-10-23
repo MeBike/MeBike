@@ -13,7 +13,6 @@ import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
 import { readEmailTemplate } from '~/utils/email-templates'
 import { sleep } from '~/utils/timeout'
-import { StaffConfirmReservation } from '~/models/requests/reservations.requests'
 
 class ReservationsService {
   async reserveBike({
@@ -146,8 +145,8 @@ class ReservationsService {
           const log = new RentalLog({
             rental_id: reservation._id!,
             user_id,
-            changes: Object.keys(updatedData),
-            reason: reason || RESERVATIONS_MESSAGE.NO_CANCELLED_REASON
+            changes: updatedData,
+            reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
           })
           await databaseService.rentalLogs.insertOne({ ...log }, { session })
         }
@@ -163,11 +162,11 @@ class ReservationsService {
   async confirmReservationCore({
     user_id,
     reservation,
-    staff_payload
+    reason
   }: {
     user_id: ObjectId
     reservation: Reservation
-    staff_payload?: StaffConfirmReservation
+    reason?: string
   }) {
     const session = databaseService.getClient().startSession()
     try {
@@ -178,7 +177,6 @@ class ReservationsService {
         const rental = await databaseService.rentals.findOne(
           {
             _id: reservation._id,
-            user_id,
             status: RentalStatus.Reserved
           },
           { session }
@@ -188,6 +186,22 @@ class ReservationsService {
           throw new ErrorWithStatus({
             message: RENTALS_MESSAGE.NOT_FOUND_RESERVED_RENTAL.replace('%s', reservation._id!.toString()),
             status: HTTP_STATUS.NOT_FOUND
+          })
+        }
+        
+        const user = await databaseService.users.findOne({_id: user_id})
+        if(!user){
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace("%s", rental.user_id.toString()),
+            status: HTTP_STATUS.BAD_REQUEST
+          }) 
+        }
+
+        if(user.role === Role.User && !rental.user_id.equals(user_id)){
+
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_OTHER_RESERVATION,
+            status: HTTP_STATUS.BAD_REQUEST
           })
         }
 
@@ -229,12 +243,12 @@ class ReservationsService {
           { session }
         )
 
-        if (staff_payload && reservation._id) {
+        if (user.role === Role.Staff && rental._id) {
           const rentalLog = new RentalLog({
-            rental_id: reservation._id,
-            user_id: staff_payload.staff_id,
+            rental_id: rental._id,
+            user_id,
             changes: updatedData,
-            reason: staff_payload.reason
+            reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
           })
           await databaseService.rentalLogs.insertOne(rentalLog, { session })
         }
@@ -262,8 +276,7 @@ class ReservationsService {
     reservation: Reservation
     reason: string
   }) {
-    const user_id = reservation.user_id
-    return await this.confirmReservationCore({ user_id, reservation, staff_payload: { staff_id, reason } })
+    return await this.confirmReservationCore({ user_id: staff_id, reservation, reason})
   }
 
   async notifyExpiringReservations() {

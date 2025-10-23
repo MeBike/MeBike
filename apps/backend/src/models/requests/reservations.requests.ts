@@ -23,9 +23,4 @@ export type ConfirmReservationByStaffReqBody = {
   reason: string
 }
 
-export type StaffConfirmReservation = {
-  staff_id: ObjectId
-  reason: string
-}
-
 
