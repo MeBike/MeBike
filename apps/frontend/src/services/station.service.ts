@@ -7,6 +7,7 @@ const STATION_ENDPOINTS = {
   BASE: STATION_BASE,
   ALL: `${STATION_BASE}`,
   DETAIL: (id: string) => `${STATION_BASE}/${id}`,
+  ID: (id: string) => `${STATION_BASE}/${id}`,
   //   STATS: `${STATION_BASE}/stats`,
   //   BY_ID: (id: string) => `${BIKE_BASE}/${id}/rentals`,
   //   BY_ID_ADMIN_STATS: (id: string) => `${BIKE_BASE}/${id}/stats`,
@@ -25,7 +26,10 @@ interface ApiResponse<T> {
   };
 }
 interface ApiDetailResponse<T> {
-  result: T;
+  result?: T;
+  message?: string;
+}
+interface DeleteResponse {
   message: string;
 }
 export const stationService = {
@@ -59,6 +63,16 @@ export const stationService = {
     const response = await fetchHttpClient.post<ApiDetailResponse<Station>>(
       STATION_ENDPOINTS.BASE,
       stationData
+    );
+    return response;
+  },
+  softDeleteStation: async ({
+    stationID,
+  }: {
+    stationID: string;
+  }): Promise<AxiosResponse<DeleteResponse>> => {
+    const response = await fetchHttpClient.delete<DeleteResponse>(
+      STATION_ENDPOINTS.ID(stationID)
     );
     return response;
   },

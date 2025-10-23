@@ -7,6 +7,7 @@ import { StationSchemaFormData } from "@/schemas/stationSchema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useCreateSupplierMutation } from "./mutations/Station/useCreateStationQuery";
+import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -53,6 +54,7 @@ export const useStationActions = ({hasToken , stationId , page , limit} : Statio
     isLoading: isLoadingStationID,
   } = useGetStationById(stationId || "");
   const useCreateStation = useCreateSupplierMutation();
+  const useSoftDeleteStation = useSoftDeleteBikeMutation();
   const getAllStations = useCallback(async ({page,limit} : {page ?: number , limit ?: number}) => {
     if (!hasToken) {
       return;
@@ -93,12 +95,41 @@ export const useStationActions = ({hasToken , stationId , page , limit} : Statio
     },
     [hasToken, router, queryClient, useCreateStation]
   );
+    const deleteStation = useCallback(
+      async (stationId: string) => {
+        if (!hasToken) {
+          router.push("/auth/login");
+          return;
+        }
+        useSoftDeleteStation.mutate(stationId, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Station deleted successfully");
+              queryClient.invalidateQueries({
+                queryKey: ["stations", "all"],
+              });
+              queryClient.invalidateQueries({ queryKey: ["station-stats"] });
+            } else {
+              const errorMessage =
+                result.data?.message || "Error deleting stations";
+              toast.error(errorMessage);
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(error, "Error deleting stations");
+            toast.error(errorMessage);
+          },
+        });
+      },
+      [hasToken, router, queryClient, useCreateStation]
+    );
   return {
     getAllStations,
     getStationByID,
     refetch,
     createStation,
     useGetAllStation,
+    deleteStation,
     stations: response?.data || [],
     paginationStations: response?.pagination,
     isLoadingGetAllStations: isLoading,
