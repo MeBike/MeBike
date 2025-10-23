@@ -14,53 +14,9 @@ import { Input } from "@/components/ui/input";
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
 import * as tt from "@tomtom-international/web-sdk-maps";
 import { DataTable } from "@/components/TableCustom";
-// Mock data
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { stationColumns } from "@/columns/station-column";
-const mockStations: Station[] = [
-  {
-    _id: "68e0b2ae63beb4054de09d10",
-    name: "Ga Bến Thành",
-    address: "Quận 1, TP.HCM",
-    latitude: "10.7620",
-    longitude: "106.6900",
-    capacity: "20",
-    created_at: "2025-10-18T19:57:05.496Z",
-    updated_at: "2025-10-18T19:57:05.496Z",
-    location_geo: {
-      type: "Point",
-      coordinates: [106.69, 10.762],
-    },
-  },
-  {
-    _id: "68e0b2ae63beb4054de09d11",
-    name: "Nhà hát Thành phố",
-    address: "Quận 1, TP.HCM",
-    latitude: "10.7730",
-    longitude: "106.7020",
-    capacity: "25",
-    created_at: "2025-10-18T19:57:05.496Z",
-    updated_at: "2025-10-18T19:57:05.496Z",
-    location_geo: {
-      type: "Point",
-      coordinates: [106.702, 10.773],
-    },
-  },
-  {
-    _id: "68e0b2ae63beb4054de09d12",
-    name: "Ba Son",
-    address: "Quận 1, TP.HCM",
-    latitude: "10.7550",
-    longitude: "106.7150",
-    capacity: "15",
-    created_at: "2025-10-18T19:57:05.496Z",
-    updated_at: "2025-10-18T19:57:05.496Z",
-    location_geo: {
-      type: "Point",
-      coordinates: [106.715, 10.755],
-    },
-  },
-];
+
 
 export default function StationsPage() {
   const mapRef = useRef<HTMLDivElement>(null);
