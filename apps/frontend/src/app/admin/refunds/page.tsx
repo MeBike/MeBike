@@ -1,62 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import type { RefundRequest, RefundStatus } from "@custom-types";
 import type { DetailUser } from "@/services/auth.service";
 import { Download, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
+import { useRefundAction } from "@/hooks/useRefundAction";
 
-const mockRefundRequests: RefundRequest[] = [
-  {
-    _id: "68f47fdd11682ab6726fb566",
-    user_id: "507f1f77bcf86cd799439011",
-    user_name: "Nguyễn Văn A",
-    user_email: "nguyenvana@example.com",
-    rental_id: "RENTAL001",
-    amount: 50000,
-    reason: "Xe bị hỏng trong quá trình sử dụng",
-    status: "PENDING",
-    created_at: "2025-10-20T10:30:00Z",
-    updated_at: "2025-10-20T10:30:00Z",
-  },
-  {
-    _id: "68f47fdd11682ab6726fb567",
-    user_id: "507f1f77bcf86cd799439012",
-    user_name: "Trần Thị B",
-    user_email: "tranthib@example.com",
-    rental_id: "RENTAL002",
-    amount: 100000,
-    reason: "Không thể sử dụng dịch vụ",
-    status: "APPROVED",
-    admin_note: "Đã kiểm tra, phê duyệt hoàn tiền",
-    created_at: "2025-10-19T14:20:00Z",
-    updated_at: "2025-10-20T09:15:00Z",
-  },
-  {
-    _id: "68f47fdd11682ab6726fb568",
-    user_id: "507f1f77bcf86cd799439013",
-    user_name: "Lê Văn C",
-    user_email: "levanc@example.com",
-    rental_id: "RENTAL003",
-    amount: 75000,
-    reason: "Yêu cầu hủy đơn",
-    status: "COMPLETED",
-    admin_note: "Hoàn tiền thành công",
-    created_at: "2025-10-18T08:45:00Z",
-    updated_at: "2025-10-20T11:00:00Z",
-  },
-];
 
 const getStatusColor = (status: RefundStatus) => {
   switch (status) {
-    case "PENDING":
+    case "ĐANG CHỜ XỬ LÝ":
       return "bg-yellow-100 text-yellow-800";
-    case "APPROVED":
+    case "ĐÃ DUYỆT":
       return "bg-blue-100 text-blue-800";
-    case "COMPLETED":
+    case "ĐÃ HOÀN TIỀN":
       return "bg-green-100 text-green-800";
-    case "REJECTED":
+    case "TỪ CHỐI":
       return "bg-red-100 text-red-800";
     default:
       return "bg-gray-100 text-gray-800";
@@ -65,13 +26,13 @@ const getStatusColor = (status: RefundStatus) => {
 
 const getStatusIcon = (status: RefundStatus) => {
   switch (status) {
-    case "PENDING":
+    case "ĐANG CHỜ XỬ LÝ":
       return <Clock className="w-4 h-4" />;
-    case "APPROVED":
+    case "ĐÃ DUYỆT":
       return <CheckCircle className="w-4 h-4" />;
-    case "COMPLETED":
+    case "ĐÃ HOÀN TIỀN":
       return <CheckCircle className="w-4 h-4" />;
-    case "REJECTED":
+    case "TỪ CHỐI":
       return <XCircle className="w-4 h-4" />;
     default:
       return null;
@@ -80,13 +41,13 @@ const getStatusIcon = (status: RefundStatus) => {
 
 const getStatusLabel = (status: RefundStatus) => {
   switch (status) {
-    case "PENDING":
+    case "ĐANG CHỜ XỬ LÝ":
       return "Chờ xử lý";
-    case "APPROVED":
-      return "Đã phê duyệt";
-    case "COMPLETED":
+    case "ĐÃ DUYỆT":
+      return "Đã duyệt";
+    case "ĐÃ HOÀN TIỀN":
       return "Hoàn thành";
-    case "REJECTED":
+    case "TỪ CHỐI":
       return "Từ chối";
     default:
       return status;
@@ -99,21 +60,29 @@ export default function RefundPage() {
   const [selectedRequest, setSelectedRequest] = useState<RefundRequest | null>(
     null
   );
+  const [page , setPage] = useState(1);
+  const [limit , setLimit] = useState(10);
+  const { response, isLoading, isError, refetch } = useRefundAction({
+    hasToken: true,
+    page: page,
+    limit: limit,
+  });
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState<RefundStatus>("PENDING");
+  const [newStatus, setNewStatus] = useState<RefundStatus>("ĐANG CHỜ XỬ LÝ");
   const [adminNote, setAdminNote] = useState("");
-
-  const filteredRequests = mockRefundRequests.filter((request) => {
-    const matchesSearch =
-      request.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.user_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.rental_id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || request.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
+  // const filteredRequests = mockRefundRequests.filter((request) => {
+  //   const matchesSearch =
+  //     request.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     request.user_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     request.rental_id.toLowerCase().includes(searchQuery.toLowerCase());
+  //   const matchesStatus =
+  //     statusFilter === "all" || request.status === statusFilter;
+  //   return matchesSearch && matchesStatus;
+  // });
+  useEffect(() => {
+    refetch();
+  }, [page, limit, statusFilter, searchQuery, refetch]);
   const handleViewDetails = (request: RefundRequest) => {
     setSelectedRequest(request);
     setIsDetailModalOpen(true);
@@ -122,7 +91,7 @@ export default function RefundPage() {
   const handleUpdateStatus = (request: RefundRequest) => {
     setSelectedRequest(request);
     setNewStatus(request.status);
-    setAdminNote(request.admin_note || "");
+    // setAdminNote(request.admin_note || "");
     setIsUpdateModalOpen(true);
   };
 
@@ -137,13 +106,13 @@ export default function RefundPage() {
     setSelectedRequest(null);
   };
 
-  const totalAmount = mockRefundRequests.reduce(
-    (sum, req) => sum + req.amount,
-    0
-  );
-  const pendingAmount = mockRefundRequests
-    .filter((req) => req.status === "PENDING")
-    .reduce((sum, req) => sum + req.amount, 0);
+  // const totalAmount = mockRefundRequests.reduce(
+  //   (sum, req) => sum + req.amount,
+  //   0
+  // );
+  // const pendingAmount = mockRefundRequests
+  //   .filter((req) => req.status === "ĐANG CHỜ XỬ LÝ")
+  //   .reduce((sum, req) => sum + req.amount, 0);
 
   return (
     <div>
@@ -168,22 +137,25 @@ export default function RefundPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Tổng số yêu cầu</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
+            {/* <p className="text-2xl font-bold text-foreground mt-1">
               {mockRefundRequests.length}
-            </p>
+            </p> */}
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Chờ xử lý</p>
-            <p className="text-2xl font-bold text-yellow-500 mt-1">
-              {mockRefundRequests.filter((r) => r.status === "PENDING").length}
-            </p>
+            {/* <p className="text-2xl font-bold text-yellow-500 mt-1">
+              {
+                mockRefundRequests.filter((r) => r.status === "ĐANG CHỜ XỬ LÝ")
+                  .length
+              }
+            </p> */}
           </div>
-          <div className="bg-card border border-border rounded-lg p-4">
+          {/* <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Tổng tiền chờ xử lý</p>
             <p className="text-2xl font-bold text-foreground mt-1">
               {pendingAmount.toLocaleString("vi-VN")} đ
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* Filters */}
@@ -226,18 +198,18 @@ export default function RefundPage() {
           <table className="w-full">
             <thead className="bg-muted border-b border-border">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                {/* <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                   Người dùng
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                   Mã đơn
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                   Số tiền
                 </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                {/* <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                   Lý do
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                   Trạng thái
                 </th>
@@ -247,28 +219,28 @@ export default function RefundPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredRequests.map((request) => (
+              {response?.map((request) => (
                 <tr
                   key={request._id}
                   className="hover:bg-muted/50 transition-colors"
                 >
-                  <td className="px-6 py-4 text-sm text-foreground font-medium">
+                  {/* <td className="px-6 py-4 text-sm text-foreground font-medium">
                     <div>
                       <p>{request.user_name}</p>
                       <p className="text-xs text-muted-foreground">
                         {request.user_email}
                       </p>
                     </div>
-                  </td>
+                  </td> */}
                   <td className="px-6 py-4 text-sm text-foreground font-mono">
-                    {request.rental_id}
+                    {request._id}
                   </td>
                   <td className="px-6 py-4 text-sm text-foreground font-semibold">
                     {request.amount.toLocaleString("vi-VN")} đ
                   </td>
-                  <td className="px-6 py-4 text-sm text-foreground">
+                  {/* <td className="px-6 py-4 text-sm text-foreground">
                     {request.reason}
-                  </td>
+                  </td> */}
                   <td className="px-6 py-4 text-sm">
                     <span
                       className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}
@@ -287,7 +259,7 @@ export default function RefundPage() {
                         <Eye className="w-4 h-4 mr-1" />
                         Chi tiết
                       </Button>
-                      {request.status === "PENDING" && (
+                      {request.status === "ĐANG CHỜ XỬ LÝ" && (
                         <Button
                           size="sm"
                           onClick={() => handleUpdateStatus(request)}
@@ -305,12 +277,10 @@ export default function RefundPage() {
 
         {/* Results info */}
         <p className="text-sm text-muted-foreground">
-          Hiển thị {filteredRequests.length} / {mockRefundRequests.length} yêu
-          cầu
+          Hiển thị {response?.length} / {response?.length} yêu cầu
         </p>
       </div>
-
-      {/* Detail Modal */}
+{/* 
       {isDetailModalOpen && selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
@@ -379,7 +349,6 @@ export default function RefundPage() {
         </div>
       )}
 
-      {/* Update Status Modal */}
       {isUpdateModalOpen && selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
@@ -437,7 +406,7 @@ export default function RefundPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

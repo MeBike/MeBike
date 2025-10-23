@@ -10,7 +10,7 @@ export const useRefundAction = ({ page, limit, status , hasToken}: {
     const queryClient = useQueryClient();
     const { data, isLoading, isError , refetch} = useGetAllRefundRequestQuery({ page, limit, status });
     return {
-        data,
+        response : data?.data,
         isLoading,
         isError,
         refetch
