@@ -606,3 +606,149 @@ export const userDetailValidator = validate(
     ["params"]
   )
 );
+
+export const updateUserByIdValidator = validate(
+  checkSchema(
+    {
+      fullname: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.FULL_NAME_MUST_BE_A_STRING
+        },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 50 },
+          errorMessage: USERS_MESSAGES.FULL_NAME_LENGTH_MUST_BE_FROM_1_TO_50
+        }
+      },
+      email: {
+        optional: true,
+        isEmail: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            const userId = req.params?._id
+            if (!ObjectId.isValid(userId)) {
+              throw new ErrorWithStatus({ 
+                message: USERS_MESSAGES.INVALID_USER_ID,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            const user = await databaseService.users.findOne({
+              email: value,
+              _id: { $ne: new ObjectId(userId) } //kiếm tra email này trên những user khác
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.EMAIL_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      verify: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.VERIFY_STATUS_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(UserVerifyStatus)],
+          errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
+        }
+      },
+      location: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.LOCATION_MUST_BE_A_STRING
+        },
+        trim: true,
+        isLength: {
+          options: { 
+            min: 1,
+            max: 200
+          },
+          errorMessage: USERS_MESSAGES.LOCATION_LENGTH_MUST_BE_LESS_THAN_200
+        }
+      },
+      username: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.USERNAME_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (REGEX_USERNAME.test(value) === false) {
+              throw new Error(USERS_MESSAGES.USERNAME_MUST_BE_A_STRING)
+            }
+            const userId = req.params?._id
+            const user = await databaseService.users.findOne({
+              username: value,
+              _id: { $ne: new ObjectId(userId) }
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.USERNAME_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      phone_number: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID)
+            }
+            const userId = req.params?._id
+            const user = await databaseService.users.findOne({
+              phone_number: value,
+              _id: { $ne: new ObjectId(userId) }
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      role: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.ROLE_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(Role)],
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID
+        }
+      },
+      nfc_card_uid: {
+        optional: { options: { nullable: true } }, //cho phép null hoặc bỏ qua
+        isString: {
+          errorMessage: USERS_MESSAGES.NFC_CARD_UID_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string | null, { req }) => {
+            if (value === null || value === '') return true //cho phép gán rỗng hoặc null
+            const userId = req.params?._id
+            const user = await databaseService.users.findOne({
+              nfc_card_uid: value,
+              _id: { $ne: new ObjectId(userId) }
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.NFC_CARD_UID_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)

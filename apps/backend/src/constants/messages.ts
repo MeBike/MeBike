@@ -89,7 +89,11 @@ export const USERS_MESSAGES = {
   // get user details by id
   GET_USER_DETAIL_SUCCESS: 'Lấy chi tiết người dùng thành công',
   USER_ID_IS_REQUIRED: 'User ID là bắt buộc',
-  INVALID_USER_ID: 'User ID không hợp lệ'
+  INVALID_USER_ID: 'User ID không hợp lệ',
+  // update user by admin/staff
+  NFC_CARD_UID_MUST_BE_A_STRING: 'NFC Card UID phải là chuỗi',
+  NFC_CARD_UID_ALREADY_EXISTS: 'NFC Card UID đã tồn tại trên một người dùng khác',
+  UPDATE_USER_INFORMATION_SUCCESS: 'Cập nhật thông tin người dùng thành công'
 } as const
 
 export const REPORTS_MESSAGES = {

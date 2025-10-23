@@ -1,6 +1,6 @@
 import type { JwtPayload } from "jsonwebtoken";
 
-import type { TokenType, UserVerifyStatus } from "~/constants/enums";
+import type { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
 
 export type TokenPayLoad = {
   user_id: string;
@@ -74,4 +74,15 @@ export type AdminGetAllUsersReqQuery = {
   fullname?: string
   verify?: UserVerifyStatus
   role?: string;
+}
+
+export type UpdateUserReqBody = {
+  fullname?: string
+  email?: string
+  verify?: UserVerifyStatus
+  location?: string
+  username?: string
+  phone_number?: string
+  role?: Role
+  nfc_card_uid?: string | null //cho phép null/empty để xóa
 }

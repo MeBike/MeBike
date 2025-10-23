@@ -3,7 +3,7 @@ import type { ParamsDictionary } from "express-serve-static-core";
 
 import { ObjectId } from "mongodb";
 
-import type { AdminGetAllUsersReqQuery, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, TokenPayLoad, VerifyEmailOtpReqBody } from "~/models/requests/users.requests";
+import type { AdminGetAllUsersReqQuery, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, TokenPayLoad, UpdateUserReqBody, VerifyEmailOtpReqBody } from "~/models/requests/users.requests";
 import type User from "~/models/schemas/user.schema";
 
 import { UserVerifyStatus } from "~/constants/enums";
@@ -210,6 +210,21 @@ export const getUserDetailController = async (req: Request, res: Response) => {
   const user = await usersService.getUserDetail(_id)
   res.json({
     message: USERS_MESSAGES.GET_USER_DETAIL_SUCCESS,
+    result: user
+  })
+}
+
+export const updateUserByIdController = async (
+  req: Request<{ _id: string }, any, UpdateUserReqBody>,
+  res: Response
+) => {
+  const { _id } = req.params
+  const payload = req.body
+
+  const user = await usersService.updateUserById(_id, payload)
+
+  res.json({
+    message: USERS_MESSAGES.UPDATE_USER_INFORMATION_SUCCESS,
     result: user
   })
 }
