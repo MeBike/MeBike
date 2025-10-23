@@ -240,7 +240,7 @@ async processRentalEndTransaction(
     if (reason) {
         const log = new RentalLog({
             rental_id: rental._id!,
-            admin_id: user_id,
+            user_id,
             changes: Object.keys(updatedData),
             reason
         });
@@ -434,7 +434,7 @@ async processRentalEndTransaction(
 
         const log = new RentalLog({
           rental_id: rental._id,
-          admin_id: toObjectId(admin_id),
+          user_id: toObjectId(admin_id),
           reason: reason || RENTALS_MESSAGE.NO_REASON,
           changes: Object.keys(changedFields)
         })
@@ -508,7 +508,7 @@ async processRentalEndTransaction(
 
         const log = new RentalLog({
           rental_id: rental._id,
-          admin_id: toObjectId(admin_id),
+          user_id: toObjectId(admin_id),
           reason: reason || RENTALS_MESSAGE.NO_REASON,
           changes: Object.keys(changedFields)
         })
