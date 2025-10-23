@@ -19,4 +19,13 @@ export type DispatchBikeReqBody = {
     source_station_id: string;
 }
 
+export type ConfirmReservationByStaffReqBody = {
+  reason: string
+}
+
+export type StaffConfirmReservation = {
+  staff_id: ObjectId
+  reason: string
+}
+
 

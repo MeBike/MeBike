@@ -7,6 +7,7 @@ import { RESERVATIONS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import {
   CancelReservationReqBody,
+  ConfirmReservationByStaffReqBody,
   DispatchBikeReqBody,
   ReservationParam,
   ReserveBikeReqBody
@@ -90,6 +91,22 @@ export async function confirmReservationController(req: Request<ReservationParam
     message: RESERVATIONS_MESSAGE.CONFIRM_SUCCESS,
     result
   })
+}
+
+export async function staffConfirmReservationController(req: Request<ReservationParam, any, ConfirmReservationByStaffReqBody>, res: Response) {
+  const { user_id: staff_id } = req.decoded_authorization as TokenPayLoad;
+  const reservation = req.reservation as Reservation;
+
+  const result = await reservationsService.staffConfirmReservation({
+    staff_id: toObjectId(staff_id),
+    reservation,
+    reason: req.body.reason
+  });
+
+  res.json({
+    message: RESERVATIONS_MESSAGE.STAFF_CONFIRM_SUCCESS,
+    result
+  });
 }
 
 export async function notifyExpiringReservationsController(req: Request, res: Response) {

@@ -14,9 +14,11 @@ import { isAdminValidator } from '~/middlewares/admin.middlewares'
 import {
   batchDispatchSameStationValidator,
   cancelReservationValidator,
-  confirmReservationValidator,
-  reserveBikeValidator
+  reserveBikeValidator,
+  staffConfirmReservationValidator,
+  userConfirmReservationValidator
 } from '~/middlewares/reservations.middlewares'
+import { isStaffValidator } from '~/middlewares/staff.middlewares'
 import { wrapAsync } from '~/utils/handler'
 
 const reserveRouter = Router()
@@ -43,8 +45,12 @@ reserveRouter
   .post(accessTokenValidator, verifiedUserValidator, reserveBikeValidator, wrapAsync(reserveBikeController))
 
 reserveRouter
+  .route('/:id/staff-confirm')
+  .post(accessTokenValidator, isStaffValidator, staffConfirmReservationValidator, wrapAsync(confirmReservationController))
+
+reserveRouter
   .route('/:id/confirm')
-  .post(accessTokenValidator, confirmReservationValidator, wrapAsync(confirmReservationController))
+  .post(accessTokenValidator, userConfirmReservationValidator, wrapAsync(confirmReservationController))
 
 reserveRouter
   .route('/:id/cancel')
