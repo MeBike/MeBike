@@ -13,6 +13,7 @@ import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
 import { readEmailTemplate } from '~/utils/email-templates'
 import { sleep } from '~/utils/timeout'
+import { StaffConfirmReservation } from '~/models/requests/reservations.requests'
 
 class ReservationsService {
   async reserveBike({
@@ -144,7 +145,7 @@ class ReservationsService {
         if ([Role.Admin, Role.Staff].includes(user.role)) {
           const log = new RentalLog({
             rental_id: reservation._id!,
-            admin_id: user_id,
+            user_id,
             changes: Object.keys(updatedData),
             reason: reason || RESERVATIONS_MESSAGE.NO_CANCELLED_REASON
           })
@@ -159,7 +160,15 @@ class ReservationsService {
     }
   }
 
-  async confirmReservation({ user_id, reservation }: { user_id: ObjectId; reservation: Reservation }) {
+  async confirmReservationCore({
+    user_id,
+    reservation,
+    staff_payload
+  }: {
+    user_id: ObjectId
+    reservation: Reservation
+    staff_payload?: StaffConfirmReservation
+  }) {
     const session = databaseService.getClient().startSession()
     try {
       let result
@@ -182,12 +191,15 @@ class ReservationsService {
           })
         }
 
+        const updatedData: any = {
+          start_time: now,
+          status: RentalStatus.Rented
+        }
         const updatedRental = await databaseService.rentals.findOneAndUpdate(
           { _id: reservation._id },
           {
             $set: {
-              start_time: now,
-              status: RentalStatus.Rented,
+              ...updatedData,
               updated_at: now
             }
           },
@@ -217,6 +229,16 @@ class ReservationsService {
           { session }
         )
 
+        if (staff_payload && reservation._id) {
+          const rentalLog = new RentalLog({
+            rental_id: reservation._id,
+            user_id: staff_payload.staff_id,
+            changes: updatedData,
+            reason: staff_payload.reason
+          })
+          await databaseService.rentalLogs.insertOne(rentalLog, { session })
+        }
+
         result = updatedRental
       })
       return result
@@ -225,6 +247,23 @@ class ReservationsService {
     } finally {
       await session.endSession()
     }
+  }
+
+  async confirmReservation({ user_id, reservation }: { user_id: ObjectId; reservation: Reservation }) {
+    return await this.confirmReservationCore({ user_id, reservation })
+  }
+
+  async staffConfirmReservation({
+    staff_id,
+    reservation,
+    reason
+  }: {
+    staff_id: ObjectId
+    reservation: Reservation
+    reason: string
+  }) {
+    const user_id = reservation.user_id
+    return await this.confirmReservationCore({ user_id, reservation, staff_payload: { staff_id, reason } })
   }
 
   async notifyExpiringReservations() {
@@ -283,7 +322,7 @@ class ReservationsService {
         const mailPromise = transporter.sendMail(mailOptions)
         await mailPromise
 
-        const bufferMs = 60 *  1000
+        const bufferMs = 60 * 1000
         const timeUntilExpiryMs = r.end_time?.getTime()! - now.getTime()
         const totalDelayMs = timeUntilExpiryMs + bufferMs
 
@@ -492,7 +531,9 @@ class ReservationsService {
 
   async scheduleDelayedCancellation(reservation: Reservation, delayMs: number) {
     const effectiveDelayMs = Math.max(1000, delayMs)
-    console.log(RESERVATIONS_MESSAGE.SCHEDULING_CANCEL_TASK(reservation._id!.toString(), Math.round(effectiveDelayMs / 60000)))
+    console.log(
+      RESERVATIONS_MESSAGE.SCHEDULING_CANCEL_TASK(reservation._id!.toString(), Math.round(effectiveDelayMs / 60000))
+    )
 
     await sleep(effectiveDelayMs)
 
