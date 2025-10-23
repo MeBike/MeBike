@@ -98,8 +98,8 @@ class ReservationsService {
         const now = getLocalTime()
         const updatedData: any = {}
         if (reservation.created_at && this.isRefundable(reservation.created_at)) {
-          // TODO: handle refund
-          console.log('Handle refund')
+          const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace("%s", reservation.bike_id.toString())
+          await walletService.refundReservation(reservation.user_id.toString(), reservation.prepaid, description, reservation._id!)
         }
         updatedData.status = ReservationStatus.Cancelled
         result = await databaseService.reservations.findOneAndUpdate(
