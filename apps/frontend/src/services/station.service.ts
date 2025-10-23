@@ -29,11 +29,19 @@ interface ApiDetailResponse<T> {
   message: string;
 }
 export const stationService = {
-  getAllStations: async (): Promise<
-    AxiosResponse<ApiResponse<Station[]>>
-  > => {
+  getAllStations: async ({
+    page,
+    limit,
+  }: {
+    page?: number;
+    limit?: number;
+  }): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
-      STATION_ENDPOINTS.ALL
+      STATION_ENDPOINTS.ALL,
+      {
+        page: page,
+        limit: limit,
+      }
     );
     return response;
   },
@@ -45,11 +53,13 @@ export const stationService = {
     );
     return response;
   },
-  createStation : async (stationData: StationSchemaFormData): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
+  createStation: async (
+    stationData: StationSchemaFormData
+  ): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
     const response = await fetchHttpClient.post<ApiDetailResponse<Station>>(
       STATION_ENDPOINTS.BASE,
       stationData
     );
     return response;
-  }
+  },
 };

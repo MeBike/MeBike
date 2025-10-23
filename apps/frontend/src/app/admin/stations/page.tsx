@@ -13,8 +13,10 @@ import { stationSchema, StationSchemaFormData } from "@/schemas/stationSchema";
 import { Input } from "@/components/ui/input";
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
 import * as tt from "@tomtom-international/web-sdk-maps";
+import { DataTable } from "@/components/TableCustom";
 // Mock data
-
+import { PaginationDemo } from "@/components/PaginationCustomer";
+import { stationColumns } from "@/columns/station-column";
 const mockStations: Station[] = [
   {
     _id: "68e0b2ae63beb4054de09d10",
@@ -63,9 +65,10 @@ const mockStations: Station[] = [
 export default function StationsPage() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<tt.Map | null>(null);
-
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(10);
   const { getAllStations, stations, paginationStations, createStation } =
-    useStationActions(true);
+    useStationActions({hasToken: true , page , limit});
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -93,8 +96,8 @@ export default function StationsPage() {
   });
 
   useEffect(() => {
-    getAllStations();
-  }, []);
+    getAllStations({page : page , limit : limit});
+  }, [limit , page , getAllStations]);
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
     if (isModalOpen && mapRef.current && !mapInstanceRef.current) {
@@ -221,80 +224,18 @@ export default function StationsPage() {
             </Button>
           </div>
         </div>
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted border-b border-border">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Tên trạm
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Địa chỉ
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Sức chứa
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Tọa độ
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Ngày tạo
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Hành động
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {stations.map((station) => (
-                <tr
-                  key={station._id}
-                  className="hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-6 py-4 text-sm text-foreground font-medium">
-                    {station.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">
-                    {station.address}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">
-                    {station.capacity} xe
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {station.latitude}, {station.longitude}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {new Date(station.created_at).toLocaleDateString("vi-VN")}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
-                        title="Xem chi tiết"
-                      >
-                        <Eye className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                      <button
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
-                        title="Chỉnh sửa"
-                      >
-                        <Edit2 className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                      <button
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
-                        title="Xóa"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="w-full rounded-lg space-y-4  flex flex-col">
+          <div>
+            <DataTable columns={stationColumns({})} data={stations ?? []} />
+          </div>
+          <div className="">
+            <PaginationDemo
+              totalPages={paginationStations?.totalPages ?? 1}
+              currentPage={paginationStations?.currentPage ?? 1}
+              onPageChange={setPage}
+            />
+          </div>
         </div>
-
-        {/* Results info */}
         <p className="text-sm text-muted-foreground">
           Hiển thị {paginationStations?.totalRecords} /{" "}
           {paginationStations?.totalRecords} trạm

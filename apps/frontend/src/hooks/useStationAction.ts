@@ -37,22 +37,28 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 
   return defaultMessage;
 };
-export const useStationActions = (hasToken: boolean, stationId?: string) => {
+interface StationActionProps {
+  hasToken: boolean;
+  stationId?: string;
+  page ?: number ;
+  limit ?: number ;
+}
+export const useStationActions = ({hasToken , stationId , page , limit} : StationActionProps ) => {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { refetch, data: response, isLoading } = useGetAllStation();
+  const { refetch, data: response, isLoading } = useGetAllStation({page: page , limit: limit});
   const {
     refetch: fetchingStationID,
     data: responseStationDetail,
     isLoading: isLoadingStationID,
   } = useGetStationById(stationId || "");
   const useCreateStation = useCreateSupplierMutation();
-  const getAllStations = useCallback(async () => {
+  const getAllStations = useCallback(async ({page,limit} : {page ?: number , limit ?: number}) => {
     if (!hasToken) {
       return;
     }
     refetch();
-  }, [refetch, hasToken]);
+  }, [refetch, hasToken ]);
   const getStationByID = useCallback(() => {
     if (!hasToken) {
       return;
@@ -92,6 +98,7 @@ export const useStationActions = (hasToken: boolean, stationId?: string) => {
     getStationByID,
     refetch,
     createStation,
+    useGetAllStation,
     stations: response?.data || [],
     paginationStations: response?.pagination,
     isLoadingGetAllStations: isLoading,
