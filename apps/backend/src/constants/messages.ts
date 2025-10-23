@@ -85,7 +85,11 @@ export const USERS_MESSAGES = {
   // search users messages
   SEARCH_QUERY_IS_REQUIRED: 'Tham số truy vấn tìm kiếm là bắt buộc',
   SEARCH_QUERY_MUST_BE_A_STRING: 'Tham số truy vấn tìm kiếm phải là chuỗi',
-  SEARCH_USERS_SUCCESSFULLY: 'Tìm kiếm người dùng thành công'
+  SEARCH_USERS_SUCCESSFULLY: 'Tìm kiếm người dùng thành công',
+  // get user details by id
+  GET_USER_DETAIL_SUCCESS: 'Lấy chi tiết người dùng thành công',
+  USER_ID_IS_REQUIRED: 'User ID là bắt buộc',
+  INVALID_USER_ID: 'User ID không hợp lệ'
 } as const
 
 export const REPORTS_MESSAGES = {

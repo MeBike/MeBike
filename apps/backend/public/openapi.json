@@ -713,6 +713,84 @@
         }
       }
     },
+    "/users/manage-users/{_id}": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user detail by ID (Admin/Staff only)",
+        "description": "Retrieves the full profile information of a specific user by their ID. Requires Admin or Staff privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the user to retrieve.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "60c72b2f9b1d8e001f8e8e8e"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User detail retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thông tin chi tiết người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (either the user from the token or the user specified by _id).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [

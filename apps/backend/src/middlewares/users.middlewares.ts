@@ -589,3 +589,20 @@ export const searchUsersValidator = validate(
     ["query"]
   )
 );
+
+export const userDetailValidator = validate(
+  checkSchema(
+    {
+      _id: {
+        in: ["params"],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.USER_ID_IS_REQUIRED,
+        },
+        isMongoId: {
+          errorMessage: USERS_MESSAGES.INVALID_USER_ID,
+        },
+      },
+    },
+    ["params"]
+  )
+);

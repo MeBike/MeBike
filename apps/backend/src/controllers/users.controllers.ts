@@ -204,3 +204,12 @@ export async function searchUsersController(
       data: users,
   });
 }
+
+export const getUserDetailController = async (req: Request, res: Response) => {
+  const { _id } = req.params
+  const user = await usersService.getUserDetail(_id)
+  res.json({
+    message: USERS_MESSAGES.GET_USER_DETAIL_SUCCESS,
+    result: user
+  })
+}

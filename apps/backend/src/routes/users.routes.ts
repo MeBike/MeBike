@@ -2,9 +2,9 @@ import { Router } from "express";
 
 import type { UpdateMeReqBody } from "~/models/requests/users.requests";
 
-import { adminAndStaffGetAllUsersController, changePasswordController, forgotPasswordController, getMeController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, verifyEmailOtpController } from "~/controllers/users.controllers";
+import { adminAndStaffGetAllUsersController, changePasswordController, forgotPasswordController, getMeController, getUserDetailController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
-import { accessTokenValidator, adminAndStaffGetAllUsersValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, adminAndStaffGetAllUsersValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, updateMeValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 
@@ -41,6 +41,7 @@ usersRouter.patch(
   wrapAsync(updateMeController),
 );
 usersRouter.post("/refresh-token", refreshTokenValidator, wrapAsync(refreshController));
+
 /**
  * Description: Admin and Staff get all users with pagination and filters
  * Path: /users/manage-users/get-all
@@ -74,4 +75,20 @@ usersRouter.get(
   searchUsersValidator,
   wrapAsync(searchUsersController)
 );
+
+/**
+ * Description: Get user detail by ID (for Admin/Staff)
+ * Path: /users/manage-users/:_id
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Params: { _id: string }
+ * Roles: ADMIN, STAFF
+ */
+usersRouter.get('/manage-users/:_id',
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  userDetailValidator,
+  wrapAsync(getUserDetailController)
+);
+
 export default usersRouter;

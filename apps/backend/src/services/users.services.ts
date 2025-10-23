@@ -472,6 +472,26 @@ class UsersService {
 
     return users;
   }
+
+  async getUserDetail(_id: string) {
+    const user = await databaseService.users.findOne(
+    { _id: new ObjectId(_id) },
+    {
+      projection: {
+        password: 0,
+        email_verify_otp: 0,
+        forgot_password_otp: 0,
+      },
+    }
+  );
+    if (user == null) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+    return user
+  }
 }
 
 const usersService = new UsersService();
