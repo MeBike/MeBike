@@ -9,7 +9,7 @@ import type {
 import Station from "~/models/schemas/station.schema";
 import databaseService from "./database.services";
 import { sendPaginatedResponse } from "~/utils/pagination.helper";
-import { getLocalTime } from "~/utils/date";
+import { getLocalTime } from "~/utils/date-time";
 import { ErrorWithStatus } from "~/models/errors";
 import HTTP_STATUS from "~/constants/http-status";
 import { BikeStatus } from "~/constants/enums";

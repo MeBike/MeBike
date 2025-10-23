@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb'
-import { getLocalTime } from '~/utils/date'
+import { getLocalTime } from '~/utils/date-time'
 
 type RentalLogType = {
   _id?: ObjectId

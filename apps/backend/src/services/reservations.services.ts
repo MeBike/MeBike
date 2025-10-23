@@ -3,7 +3,7 @@ import { Decimal128, ObjectId } from 'mongodb'
 import { BikeStatus, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
-import { getLocalTime } from '~/utils/date'
+import { fromHoursToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import { ErrorWithStatus } from '~/models/errors'
 import { COMMON_MESSAGE, RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
@@ -597,14 +597,14 @@ class ReservationsService {
   }
 
   generateEndTime(startTime: string) {
-    const holdTimeMs = Number(process.env.HOLD_HOURS_RESERVATION || '1') * 60 * 60 * 1000
+    const holdTimeMs = fromHoursToMs(Number(process.env.HOLD_HOURS_RESERVATION || '1'))
     return new Date(new Date(startTime).getTime() + holdTimeMs)
   }
 
   isRefundable(createdTime: Date) {
     const now = getLocalTime()
-    const cancellableMs = Number(process.env.CANCELLABLE_HOURS || '1') * 60 * 60 * 1000
-    return new Date(createdTime.getTime() + cancellableMs) < now
+    const cancellableMs =  fromHoursToMs(Number(process.env.CANCELLABLE_HOURS || '1'))
+    return new Date(createdTime.getTime() + cancellableMs) > now
   }
 
   async getStationReservations({ stationId }: { stationId: ObjectId }) {

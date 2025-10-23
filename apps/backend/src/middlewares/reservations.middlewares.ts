@@ -9,7 +9,7 @@ import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { BikeStatus } from '~/constants/enums'
 import { TokenPayLoad } from '~/models/requests/users.requests'
-import { getLocalTime } from '~/utils/date'
+import { getLocalTime } from '~/utils/date-time'
 import { DispatchBikeReqBody } from '~/models/requests/reservations.requests'
 
 export const reserveBikeValidator = validate(

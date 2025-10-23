@@ -10,7 +10,7 @@ import Rental from '~/models/schemas/rental.schema'
 import { toObjectId } from '~/utils/string'
 
 import databaseService from './database.services'
-import { getLocalTime } from '~/utils/date'
+import { fromMinutesToMs, getLocalTime } from '~/utils/date-time'
 import {
   CancelRentalReqBody,
   EndRentalByAdminOrStaffReqBody,
@@ -806,7 +806,7 @@ async processRentalEndTransaction(
     if (status === RentalStatus.Reserved && expired_within) {
       const minutes = parseInt(expired_within, 10)
       if (!isNaN(minutes)) {
-        const expiryLimit = new Date(now.getTime() + minutes * 60 * 1000)
+        const expiryLimit = new Date(now.getTime() + fromMinutesToMs(minutes))
 
         matchQuery.start_time = {
           $gt: now,
