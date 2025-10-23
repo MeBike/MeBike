@@ -7,11 +7,12 @@ import {
   getReservationHistoryController,
   getReservationListController,
   getReservationReportController,
+  getStationReservationsController,
   notifyExpiringReservationsController,
   reserveBikeController,
   staffConfirmReservationController
 } from '~/controllers/reservations.controllers'
-import { isAdminValidator } from '~/middlewares/admin.middlewares'
+import { isAdminAndStaffValidator, isAdminValidator } from '~/middlewares/admin.middlewares'
 import {
   batchDispatchSameStationValidator,
   reserveBikeValidator,
@@ -45,6 +46,10 @@ reserveRouter
   .route('/')
   .get(accessTokenValidator, wrapAsync(getReservationListController))
   .post(accessTokenValidator, verifiedUserValidator, reserveBikeValidator, wrapAsync(reserveBikeController))
+  
+reserveRouter
+  .route('/:stationId/stats')
+  .get(accessTokenValidator, isAdminAndStaffValidator, wrapAsync(getStationReservationsController))
 
 reserveRouter
   .route('/:id/staff-confirm')

@@ -99,7 +99,7 @@ class ReservationsService {
         const updatedData: any = {}
         if (reservation.created_at && this.isRefundable(reservation.created_at)) {
           // TODO: handle refund
-          console.log("Handle refund")
+          console.log('Handle refund')
         }
         updatedData.status = ReservationStatus.Cancelled
         result = await databaseService.reservations.findOneAndUpdate(
@@ -605,6 +605,63 @@ class ReservationsService {
     const now = getLocalTime()
     const cancellableMs = Number(process.env.CANCELLABLE_HOURS || '1') * 60 * 60 * 1000
     return new Date(createdTime.getTime() + cancellableMs) < now
+  }
+
+  async getStationReservations({ stationId }: { stationId: ObjectId }) {
+    const station = await databaseService.stations.findOne(
+      { _id: stationId },
+      {
+        projection: {
+          name: 1
+        }
+      }
+    )
+
+    if (!station) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.STATION_NOT_FOUND.replace('%s', stationId.toString()),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+    const reservations = await databaseService.reservations
+      .find({
+        station_id: stationId
+      })
+      .sort({ end_time: 1 })
+      .toArray()
+
+    if (reservations.length === 0) {
+      return {
+        station,
+        total_count: 0,
+        status_counts: {},
+        reservations: []
+      }
+    }
+
+    const statusCounts = reservations.reduce(
+      (counts, r) => {
+        const statusKey = r.status as string
+        counts[statusKey] = (counts[statusKey] || 0) + 1
+        return counts
+      },
+      {} as Record<string, number>
+    )
+
+    const bikeIds = reservations.filter((r) => r.status === ReservationStatus.Pending).map((r) => r.bike_id)
+
+    const bikes = await databaseService.bikes.find({ _id: { $in: bikeIds } }).toArray()
+
+    const bikeMap = new Map(bikes.map((b) => [b._id.toString(), b]))
+
+    return {
+      station,
+      total_count: reservations.length,
+      status_counts: statusCounts,
+      reserving_bikes: reservations.filter((r) => r.status === ReservationStatus.Pending).map((r) => ({
+        ...bikeMap.get(r.bike_id.toString())
+      }))
+    }
   }
 }
 

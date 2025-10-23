@@ -10,7 +10,8 @@ import {
   ConfirmReservationByStaffReqBody,
   DispatchBikeReqBody,
   ReservationParam,
-  ReserveBikeReqBody
+  ReserveBikeReqBody,
+  StationParam
 } from '~/models/requests/reservations.requests'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import Reservation from '~/models/schemas/reservation.schema'
@@ -191,6 +192,16 @@ export async function getReservationReportController(req: Request, res: Response
   res.json({
     message: RESERVATIONS_MESSAGE.GET_REPORT_SUCCESS,
     report_period: reportPeriod,
+    result
+  })
+}
+
+export async function getStationReservationsController(req: Request<StationParam>, res: Response) {
+
+  const result = await reservationsService.getStationReservations({stationId: toObjectId(req.params.stationId)})
+
+  res.json({
+    message: RESERVATIONS_MESSAGE.GET_STATION_RESERVATIONS_SUCCESS,
     result
   })
 }

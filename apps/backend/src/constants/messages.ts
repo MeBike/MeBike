@@ -283,6 +283,7 @@ export const RESERVATIONS_MESSAGE = {
   DISPATCH_BIKE_SUCCESS: 'Phân phối xe thành công',
   STAFF_CONFIRM_SUCCESS: 'Nhân viên hỗ trợ xác nhận phiên đặt trước thành công',
   STAFF_CANCEL_SUCCESS: 'Nhân viên hỗ trợ huỷ phiên đặt trước thành công',
+  GET_STATION_RESERVATIONS_SUCCESS: 'Xem chi tiết thống kê các phiên đặt trước tại trạm thành công',
   // Fail action
   PARTIAL_UPDATE_FAILURE: 'Lỗi hệ thống: Chỉ %s/%s xe được cập nhật. Hành động bị hủy',
   // Required data
