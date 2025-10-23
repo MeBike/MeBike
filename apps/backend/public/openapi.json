@@ -3484,6 +3484,76 @@
         }
       }
     },
+    "/stations/nearby": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Find nearby stations",
+        "description": "Finds and returns a list of stations near a given geographical coordinate.",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "description": "The latitude of the location to search from.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 10.8015
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "description": "The longitude of the location to search from.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 106.7423
+            }
+          },
+          {
+            "name": "maxDistance",
+            "in": "query",
+            "required": false,
+            "description": "Maximum distance in meters. (Default: 1000m)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 20000,
+              "example": 5000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of nearby stations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Station"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., latitude/longitude is not numeric or is missing).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ratings": {
       "get": {
         "tags": [

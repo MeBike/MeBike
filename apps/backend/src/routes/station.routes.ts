@@ -37,8 +37,8 @@ stationRouter.post(
  */
 stationRouter.get(
   "/nearby",
-  getNearbyStationsValidator, // <-- Validator mới
-  wrapAsync(getNearbyStationsController) // <-- Controller mới
+  getNearbyStationsValidator,
+  wrapAsync(getNearbyStationsController)
 );
 
 /**
