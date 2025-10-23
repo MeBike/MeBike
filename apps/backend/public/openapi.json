@@ -1143,6 +1143,59 @@
         }
       }
     },
+    "/users/manage-users/stats/top-renters": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get top renters statistics (Admin/Staff only)",
+        "description": "Retrieves a paginated list of users with the most completed rentals. Requires Admin or Staff privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top renters statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTopRentersStatsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "description": "Validation error (e.g., page or limit is not a number).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [
@@ -5559,6 +5612,29 @@
           }
         }
       },
+      "GetTopRentersStatsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Lấy thống kê top người thuê thành công"
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TopRenterStatItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginatedResponse/properties/pagination"
+              }
+            }
+          }
+        }
+      },
       "User": {
         "type": "object",
         "description": "Represents a user object.",
@@ -6317,6 +6393,44 @@
             "type": "integer",
             "description": "Số lượng người dùng hoạt động duy nhất trong kỳ đó.",
             "example": 78
+          }
+        }
+      },
+      "TopRenterStatItem": {
+        "type": "object",
+        "description": "Thông tin thống kê của một người dùng thuê xe hàng đầu.",
+        "properties": {
+          "total_rentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê đã hoàn thành của người dùng.",
+            "example": 25
+          },
+          "user": {
+            "type": "object",
+            "description": "Thông tin cơ bản của người dùng.",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "mongoId"
+              },
+              "fullname": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "phone_number": {
+                "type": "string"
+              },
+              "avatar": {
+                "type": "string",
+                "format": "uri"
+              },
+              "location": {
+                "type": "string"
+              }
+            }
           }
         }
       }

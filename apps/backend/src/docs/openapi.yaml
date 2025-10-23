@@ -149,6 +149,8 @@ components:
       $ref: './components/schemas/ErrorStatusResponse.yaml'
     ErrorServerResponse:
       $ref: './components/schemas/ErrorServerResponse.yaml'
+    GetTopRentersStatsResponse:
+      $ref: './components/schemas/GetTopRentersStatsResponse.yaml'
 
     # --- Model Schemas ---
     User:
@@ -205,6 +207,8 @@ components:
       $ref: './components/schemas/UserStats.yaml'
     ActiveUserStatItem:
       $ref: './components/schemas/ActiveUserStatItem.yaml'
+    TopRenterStatItem:
+      $ref: './components/schemas/TopRenterStatItem.yaml'
 
   securitySchemes:
     BearerAuth:

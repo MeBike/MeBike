@@ -659,6 +659,36 @@
             schema:
               $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
+/users/manage-users/stats/top-renters:
+  get:
+    tags: [Users]
+    summary: Get top renters statistics (Admin/Staff only)
+    description: "Retrieves a paginated list of users with the most completed rentals. Requires Admin or Staff privileges."
+    security:
+      - BearerAuth: []
+    parameters:
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: "Top renters statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetTopRentersStatsResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: "Validation error (e.g., page or limit is not a number)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
 # ===================================================================
 # Bikes API
 # ===================================================================

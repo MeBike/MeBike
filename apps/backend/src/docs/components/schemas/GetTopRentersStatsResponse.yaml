@@ -1,0 +1,14 @@
+type: object
+properties:
+  message:
+    type: string
+    example: "Lấy thống kê top người thuê thành công"
+  result:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: './TopRenterStatItem.yaml'
+      pagination:
+        $ref: './PaginatedResponse.yaml#/properties/pagination'
