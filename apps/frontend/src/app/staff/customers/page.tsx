@@ -13,14 +13,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useUserActions } from "@/hooks/useUserAction";
 
 export default function CustomersPage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<UserProfile>({
-    resolver: zodResolver(userProfileSchema),
-  });
+  // const {
+  //   register,
+  //   handleSubmit,
+  //   formState: { errors },
+  //   reset,
+  // } = useForm<UserProfile>({
+  //   resolver: zodResolver(userProfileSchema),
+  // });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
@@ -36,7 +36,6 @@ export default function CustomersPage() {
     isLoadingStatistics,
     statistics,
     getSearchUsers,
-    createUser,
     paginationUser,
   } = useUserActions({
     hasToken: true,
