@@ -1,11 +1,11 @@
 import { ObjectId } from 'mongodb'
-import { getLocalTime } from '~/utils/date'
+import { getLocalTime } from '~/utils/date-time'
 
 type RentalLogType = {
   _id?: ObjectId
   rental_id: ObjectId
-  admin_id: ObjectId
-  changes?: string[]
+  user_id: ObjectId
+  changes?: Object
   reason?: string
   created_at?: Date
 }
@@ -13,8 +13,8 @@ type RentalLogType = {
 export default class RentalLog {
   _id?: ObjectId
   rental_id: ObjectId
-  admin_id: ObjectId
-  changes: string[]
+  user_id: ObjectId
+  changes: Object
   reason?: string
   created_at?: Date
 
@@ -23,8 +23,8 @@ export default class RentalLog {
 
     this._id = log._id || new ObjectId()
     this.rental_id = log.rental_id
-    this.admin_id = log.admin_id
-    this.changes = log.changes ?? []
+    this.user_id = log.user_id
+    this.changes = log.changes ?? {}
     this.reason = log.reason ?? ''
     this.created_at = log.created_at || localTime
   }

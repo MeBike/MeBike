@@ -7,9 +7,11 @@ import { RESERVATIONS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import {
   CancelReservationReqBody,
+  ConfirmReservationByStaffReqBody,
   DispatchBikeReqBody,
   ReservationParam,
-  ReserveBikeReqBody
+  ReserveBikeReqBody,
+  StationParam
 } from '~/models/requests/reservations.requests'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import Reservation from '~/models/schemas/reservation.schema'
@@ -72,7 +74,7 @@ export async function cancelReservationController(
     reason: req.body.reason
   })
   res.json({
-    message: RESERVATIONS_MESSAGE.CANCEL_SUCCESS,
+    message: RESERVATIONS_MESSAGE.STAFF_CANCEL_SUCCESS,
     result
   })
 }
@@ -90,6 +92,22 @@ export async function confirmReservationController(req: Request<ReservationParam
     message: RESERVATIONS_MESSAGE.CONFIRM_SUCCESS,
     result
   })
+}
+
+export async function staffConfirmReservationController(req: Request<ReservationParam, any, ConfirmReservationByStaffReqBody>, res: Response) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad;
+  const reservation = req.reservation as Reservation;
+
+  const result = await reservationsService.staffConfirmReservation({
+    staff_id: toObjectId(user_id),
+    reservation,
+    reason: req.body.reason
+  });
+
+  res.json({
+    message: RESERVATIONS_MESSAGE.STAFF_CONFIRM_SUCCESS,
+    result
+  });
 }
 
 export async function notifyExpiringReservationsController(req: Request, res: Response) {
@@ -174,6 +192,16 @@ export async function getReservationReportController(req: Request, res: Response
   res.json({
     message: RESERVATIONS_MESSAGE.GET_REPORT_SUCCESS,
     report_period: reportPeriod,
+    result
+  })
+}
+
+export async function getStationReservationsController(req: Request<StationParam>, res: Response) {
+
+  const result = await reservationsService.getStationReservations({stationId: toObjectId(req.params.stationId)})
+
+  res.json({
+    message: RESERVATIONS_MESSAGE.GET_STATION_RESERVATIONS_SUCCESS,
     result
   })
 }

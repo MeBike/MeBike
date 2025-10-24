@@ -10,7 +10,7 @@ import Rental from '~/models/schemas/rental.schema'
 import { toObjectId } from '~/utils/string'
 
 import databaseService from './database.services'
-import { getLocalTime } from '~/utils/date'
+import { fromMinutesToMs, getLocalTime } from '~/utils/date-time'
 import {
   CancelRentalReqBody,
   EndRentalByAdminOrStaffReqBody,
@@ -210,7 +210,7 @@ async processRentalEndTransaction(
     
     await walletService.paymentRental(rental.user_id.toString(), decimalTotalPrice, description, rental._id as ObjectId);
 
-    const updatedData: Partial<Rental> = {
+    const updatedData: any = {
         end_station: end_station_id,
         end_time: effective_end_time,
         duration: new Int32(duration),
@@ -240,8 +240,8 @@ async processRentalEndTransaction(
     if (reason) {
         const log = new RentalLog({
             rental_id: rental._id!,
-            admin_id: user_id,
-            changes: Object.keys(updatedData),
+            user_id,
+            changes: updatedData,
             reason
         });
         await databaseService.rentalLogs.insertOne({ ...log }, { session });
@@ -434,9 +434,9 @@ async processRentalEndTransaction(
 
         const log = new RentalLog({
           rental_id: rental._id,
-          admin_id: toObjectId(admin_id),
+          user_id: toObjectId(admin_id),
           reason: reason || RENTALS_MESSAGE.NO_REASON,
-          changes: Object.keys(changedFields)
+          changes: changedFields
         })
 
         await databaseService.rentalLogs.insertOne({ ...log }, { session })
@@ -508,9 +508,9 @@ async processRentalEndTransaction(
 
         const log = new RentalLog({
           rental_id: rental._id,
-          admin_id: toObjectId(admin_id),
+          user_id: toObjectId(admin_id),
           reason: reason || RENTALS_MESSAGE.NO_REASON,
-          changes: Object.keys(changedFields)
+          changes: changedFields
         })
 
         await databaseService.rentalLogs.insertOne({ ...log }, { session })
@@ -806,7 +806,7 @@ async processRentalEndTransaction(
     if (status === RentalStatus.Reserved && expired_within) {
       const minutes = parseInt(expired_within, 10)
       if (!isNaN(minutes)) {
-        const expiryLimit = new Date(now.getTime() + minutes * 60 * 1000)
+        const expiryLimit = new Date(now.getTime() + fromMinutesToMs(minutes))
 
         matchQuery.start_time = {
           $gt: now,

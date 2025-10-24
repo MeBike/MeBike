@@ -9,7 +9,7 @@ import rentalsService from './rentals.services'
 import { getReservationFacade } from './reservations.facade'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
-import { getLocalTime } from '~/utils/date'
+import { getLocalTime } from '~/utils/date-time'
 import { toObjectId } from '~/utils/string'
 import walletService from './wallets.services'
 

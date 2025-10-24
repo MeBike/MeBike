@@ -3,7 +3,7 @@ import { Decimal128, ObjectId } from 'mongodb'
 import { BikeStatus, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
-import { getLocalTime } from '~/utils/date'
+import { fromHoursToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import { ErrorWithStatus } from '~/models/errors'
 import { COMMON_MESSAGE, RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
@@ -28,16 +28,15 @@ class ReservationsService {
   }) {
     const now = getLocalTime()
     const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '0')
+    const reservationId = new ObjectId()
+    const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
+
+    await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
 
     const session = databaseService.getClient().startSession()
     try {
       let reservation
       await session.withTransaction(async () => {
-        const reservationId = new ObjectId()
-        const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
-
-        await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
-
         reservation = new Reservation({
           _id: reservationId,
           user_id,
@@ -48,28 +47,25 @@ class ReservationsService {
           status: ReservationStatus.Pending,
           prepaid
         })
-        await databaseService.reservations.insertOne(reservation, { session })
-
-        const { end_time, status, station_id: start_station, prepaid: pre, ...restReservation } = reservation
 
         const rental = new Rental({
-          ...restReservation,
-          start_station,
+          _id: reservationId,
+          user_id,
+          bike_id,
+          start_station: station_id,
+          start_time: reservation.start_time,
           status: RentalStatus.Reserved
         })
 
-        await databaseService.rentals.insertOne(rental, { session })
-
-        await databaseService.bikes.updateOne(
-          { _id: bike_id },
-          {
-            $set: {
-              status: BikeStatus.Reserved,
-              updated_at: now
-            }
-          },
-          { session }
-        )
+        await Promise.all([
+          databaseService.reservations.insertOne(reservation, { session }),
+          databaseService.rentals.insertOne(rental, { session }),
+          databaseService.bikes.updateOne(
+            { _id: bike_id },
+            { $set: { status: BikeStatus.Reserved, updated_at: now } },
+            { session }
+          )
+        ])
       })
       return {
         ...(reservation as any),
@@ -89,7 +85,7 @@ class ReservationsService {
   }: {
     user_id: ObjectId
     reservation: Reservation
-    reason?: string
+    reason: string
   }) {
     const session = databaseService.getClient().startSession()
     try {
@@ -97,8 +93,14 @@ class ReservationsService {
       await session.withTransaction(async () => {
         const now = getLocalTime()
         const updatedData: any = {}
-        if (reservation.created_at && this.isCancellable(reservation.created_at)) {
-          // TODO: handle refund
+        if (reservation.created_at && this.isRefundable(reservation.created_at)) {
+          const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace('%s', reservation.bike_id.toString())
+          await walletService.refundReservation(
+            reservation.user_id.toString(),
+            reservation.prepaid,
+            description,
+            reservation._id!
+          )
         }
         updatedData.status = ReservationStatus.Cancelled
         result = await databaseService.reservations.findOneAndUpdate(
@@ -133,23 +135,13 @@ class ReservationsService {
           }
         )
 
-        const user = await databaseService.users.findOne({ _id: user_id }, { session })
-        if (!user) {
-          throw new ErrorWithStatus({
-            message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
-            status: HTTP_STATUS.NOT_FOUND
-          })
-        }
-
-        if ([Role.Admin, Role.Staff].includes(user.role)) {
-          const log = new RentalLog({
-            rental_id: reservation._id!,
-            admin_id: user_id,
-            changes: Object.keys(updatedData),
-            reason: reason || RESERVATIONS_MESSAGE.NO_CANCELLED_REASON
-          })
-          await databaseService.rentalLogs.insertOne({ ...log }, { session })
-        }
+        const log = new RentalLog({
+          rental_id: reservation._id!,
+          user_id,
+          changes: updatedData,
+          reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
+        })
+        await databaseService.rentalLogs.insertOne({ ...log }, { session })
       })
       return result
     } catch (error) {
@@ -159,7 +151,15 @@ class ReservationsService {
     }
   }
 
-  async confirmReservation({ user_id, reservation }: { user_id: ObjectId; reservation: Reservation }) {
+  async confirmReservationCore({
+    user_id,
+    reservation,
+    reason
+  }: {
+    user_id: ObjectId
+    reservation: Reservation
+    reason?: string
+  }) {
     const session = databaseService.getClient().startSession()
     try {
       let result
@@ -169,7 +169,6 @@ class ReservationsService {
         const rental = await databaseService.rentals.findOne(
           {
             _id: reservation._id,
-            user_id,
             status: RentalStatus.Reserved
           },
           { session }
@@ -182,12 +181,30 @@ class ReservationsService {
           })
         }
 
+        const user = await databaseService.users.findOne({ _id: user_id })
+        if (!user) {
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', rental.user_id.toString()),
+            status: HTTP_STATUS.BAD_REQUEST
+          })
+        }
+
+        if (user.role === Role.User && !rental.user_id.equals(user_id)) {
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_OTHER_RESERVATION,
+            status: HTTP_STATUS.BAD_REQUEST
+          })
+        }
+
+        const updatedData: any = {
+          start_time: now,
+          status: RentalStatus.Rented
+        }
         const updatedRental = await databaseService.rentals.findOneAndUpdate(
           { _id: reservation._id },
           {
             $set: {
-              start_time: now,
-              status: RentalStatus.Rented,
+              ...updatedData,
               updated_at: now
             }
           },
@@ -217,6 +234,16 @@ class ReservationsService {
           { session }
         )
 
+        if (user.role === Role.Staff && rental._id) {
+          const rentalLog = new RentalLog({
+            rental_id: rental._id,
+            user_id,
+            changes: updatedData,
+            reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
+          })
+          await databaseService.rentalLogs.insertOne(rentalLog, { session })
+        }
+
         result = updatedRental
       })
       return result
@@ -225,6 +252,22 @@ class ReservationsService {
     } finally {
       await session.endSession()
     }
+  }
+
+  async confirmReservation({ user_id, reservation }: { user_id: ObjectId; reservation: Reservation }) {
+    return await this.confirmReservationCore({ user_id, reservation })
+  }
+
+  async staffConfirmReservation({
+    staff_id,
+    reservation,
+    reason
+  }: {
+    staff_id: ObjectId
+    reservation: Reservation
+    reason: string
+  }) {
+    return await this.confirmReservationCore({ user_id: staff_id, reservation, reason })
   }
 
   async notifyExpiringReservations() {
@@ -283,7 +326,7 @@ class ReservationsService {
         const mailPromise = transporter.sendMail(mailOptions)
         await mailPromise
 
-        const bufferMs = 60 *  1000
+        const bufferMs = 60 * 1000
         const timeUntilExpiryMs = r.end_time?.getTime()! - now.getTime()
         const totalDelayMs = timeUntilExpiryMs + bufferMs
 
@@ -492,7 +535,9 @@ class ReservationsService {
 
   async scheduleDelayedCancellation(reservation: Reservation, delayMs: number) {
     const effectiveDelayMs = Math.max(1000, delayMs)
-    console.log(RESERVATIONS_MESSAGE.SCHEDULING_CANCEL_TASK(reservation._id!.toString(), Math.round(effectiveDelayMs / 60000)))
+    console.log(
+      RESERVATIONS_MESSAGE.SCHEDULING_CANCEL_TASK(reservation._id!.toString(), Math.round(effectiveDelayMs / 60000))
+    )
 
     await sleep(effectiveDelayMs)
 
@@ -553,14 +598,73 @@ class ReservationsService {
   }
 
   generateEndTime(startTime: string) {
-    const holdTimeMs = Number(process.env.HOLD_HOURS_RESERVATION || '1') * 60 * 60 * 1000
+    const holdTimeMs = fromHoursToMs(Number(process.env.HOLD_HOURS_RESERVATION || '1'))
     return new Date(new Date(startTime).getTime() + holdTimeMs)
   }
 
-  isCancellable(createdTime: Date) {
+  isRefundable(createdTime: Date) {
     const now = getLocalTime()
-    const cancellableMs = Number(process.env.CANCELLABLE_HOURS || '1') * 60 * 60 * 1000
-    return new Date(createdTime.getTime() + cancellableMs) < now
+    const cancellableMs = fromHoursToMs(Number(process.env.CANCELLABLE_HOURS || '1'))
+    return new Date(createdTime.getTime() + cancellableMs) > now
+  }
+
+  async getStationReservations({ stationId }: { stationId: ObjectId }) {
+    const station = await databaseService.stations.findOne(
+      { _id: stationId },
+      {
+        projection: {
+          name: 1
+        }
+      }
+    )
+
+    if (!station) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.STATION_NOT_FOUND.replace('%s', stationId.toString()),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+    const reservations = await databaseService.reservations
+      .find({
+        station_id: stationId
+      })
+      .sort({ end_time: 1 })
+      .toArray()
+
+    if (reservations.length === 0) {
+      return {
+        station,
+        total_count: 0,
+        status_counts: {},
+        reserving_bikes: []
+      }
+    }
+
+    const statusCounts = reservations.reduce(
+      (counts, r) => {
+        const statusKey = r.status as string
+        counts[statusKey] = (counts[statusKey] || 0) + 1
+        return counts
+      },
+      {} as Record<string, number>
+    )
+
+    const bikeIds = reservations.filter((r) => r.status === ReservationStatus.Pending).map((r) => r.bike_id)
+
+    const bikes = await databaseService.bikes.find({ _id: { $in: bikeIds } }).toArray()
+
+    const bikeMap = new Map(bikes.map((b) => [b._id.toString(), b]))
+
+    return {
+      station,
+      total_count: reservations.length,
+      status_counts: statusCounts,
+      reserving_bikes: reservations
+        .filter((r) => r.status === ReservationStatus.Pending)
+        .map((r) => ({
+          ...bikeMap.get(r.bike_id.toString())
+        }))
+    }
   }
 }
 
