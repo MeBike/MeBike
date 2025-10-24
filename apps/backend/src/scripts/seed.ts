@@ -24,18 +24,56 @@ async function seedDatabase() {
     console.log('Connecting to database...')
     await databaseService.connect()
 
-    console.log('Clearing old prototype data...')
-    await databaseService.users.deleteMany({
-      nfc_card_uid: { $in: CARD_UIDS }
+    console.log('Checking for existing prototype data...')
+    const existingUsersCount = await databaseService.users.countDocuments({
+      $or: [
+        { nfc_card_uid: { $in: CARD_UIDS } },
+        { email: { $in: USER_EMAILS } }
+      ]
     })
-    await databaseService.users.deleteMany({
-      email: { $in: USER_EMAILS }
+    if (existingUsersCount > 0) {
+      await databaseService.users.deleteMany({
+        $or: [
+          { nfc_card_uid: { $in: CARD_UIDS } },
+          { email: { $in: USER_EMAILS } }
+        ]
+      })
+      console.log(`Deleted ${existingUsersCount} existing users`)
+    }
+
+    const existingBikeCount = await databaseService.bikes.countDocuments({
+      $or: [
+        { _id: BIKE_ID },
+        { chip_id: BIKE_CHIP_ID }
+      ]
     })
-    await databaseService.bikes.deleteOne({ _id: BIKE_ID })
-    await databaseService.bikes.deleteOne({ chip_id: BIKE_CHIP_ID })
-    await databaseService.reservations.deleteMany({ bike_id: BIKE_ID })
-    await databaseService.rentals.deleteMany({ bike_id: BIKE_ID })
-    await databaseService.stations.deleteOne({ _id: STATION_ID })
+    if (existingBikeCount > 0) {
+      await databaseService.bikes.deleteMany({
+        $or: [
+          { _id: BIKE_ID },
+          { chip_id: BIKE_CHIP_ID }
+        ]
+      })
+      console.log(`Deleted ${existingBikeCount} existing bikes`)
+    }
+
+    const existingReservationsCount = await databaseService.reservations.countDocuments({ bike_id: BIKE_ID })
+    if (existingReservationsCount > 0) {
+      await databaseService.reservations.deleteMany({ bike_id: BIKE_ID })
+      console.log(`Deleted ${existingReservationsCount} existing reservations`)
+    }
+
+    const existingRentalsCount = await databaseService.rentals.countDocuments({ bike_id: BIKE_ID })
+    if (existingRentalsCount > 0) {
+      await databaseService.rentals.deleteMany({ bike_id: BIKE_ID })
+      console.log(`Deleted ${existingRentalsCount} existing rentals`)
+    }
+
+    const existingStationCount = await databaseService.stations.countDocuments({ _id: STATION_ID })
+    if (existingStationCount > 0) {
+      await databaseService.stations.deleteOne({ _id: STATION_ID })
+      console.log(`Deleted ${existingStationCount} existing stations`)
+    }
 
     console.log('Creating prototype station...')
     const station = new Station({
@@ -56,7 +94,8 @@ async function seedDatabase() {
       password: hashPassword('password123'),
       role: Role.User,
       verify: UserVerifyStatus.Verified,
-      nfc_card_uid: CARD_UIDS[0]
+      nfc_card_uid: CARD_UIDS[0],
+      phone_number: '1234567890'
     })
 
     const user2 = new User({
@@ -66,15 +105,24 @@ async function seedDatabase() {
       password: hashPassword('password123'),
       role: Role.User,
       verify: UserVerifyStatus.Verified,
-      nfc_card_uid: CARD_UIDS[1]
+      nfc_card_uid: CARD_UIDS[1],
+      phone_number: '0987654321'
     })
 
     await databaseService.users.insertMany([user1, user2])
-    await databaseService.reservations.deleteMany({ user_id: { $in: [user1._id!, user2._id!] } })
+    const existingUserReservationsCount = await databaseService.reservations.countDocuments({ user_id: { $in: [user1._id!, user2._id!] } })
+    if (existingUserReservationsCount > 0) {
+      await databaseService.reservations.deleteMany({ user_id: { $in: [user1._id!, user2._id!] } })
+      console.log(`Deleted ${existingUserReservationsCount} existing user reservations`)
+    }
     console.log('Users created successfully.')
 
     console.log('Creating prototype wallets...')
-    await databaseService.wallets.deleteMany({ user_id: { $in: [user1._id!, user2._id!] } })
+    const existingWalletsCount = await databaseService.wallets.countDocuments({ user_id: { $in: [user1._id!, user2._id!] } })
+    if (existingWalletsCount > 0) {
+      await databaseService.wallets.deleteMany({ user_id: { $in: [user1._id!, user2._id!] } })
+      console.log(`Deleted ${existingWalletsCount} existing wallets`)
+    }
     const wallets = [
       new Wallet({
         user_id: user1._id!,
