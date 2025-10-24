@@ -127,7 +127,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       title: "Rút tiền",
       icon: Download,
       href: "/admin/withdrawals",
-      roles: ["admin"],
+      roles: ["ADMIN"],
     },
   ];
 };
