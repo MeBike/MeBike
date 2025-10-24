@@ -4,38 +4,76 @@ import { useGetAllRefundRequestQuery } from "./query/Refund/useGetAllRefundReque
 import { useGetDetailRefundRequestQuery } from "./query/Refund/useGetDetailRefundRequestQuery";
 import { RefundStatus } from "@/types";
 import { useRouter } from "next/navigation";
-export const useRefundAction = ({ page, limit, status , hasToken , id}: {
-    hasToken?: boolean,
-    page?: number,
-    limit?: number,
-    status?: RefundStatus
-    id?: string
+import { useUpdateRefundRequestMutation } from "./mutations/Refund/useUpdateRefundRequestMutation";
+import { toast } from "sonner";
+export const useRefundAction = ({
+  page,
+  limit,
+  status,
+  hasToken,
+  id,
+}: {
+  hasToken?: boolean;
+  page?: number;
+  limit?: number;
+  status?: RefundStatus;
+  id?: string;
 }) => {
-    const router = useRouter();
-    const queryClient = useQueryClient();
-    const { data, isLoading, isError , refetch} = useGetAllRefundRequestQuery({ page, limit, status });
-    const getAllRefundRequest = useCallback(() => {
-        if(!hasToken){
-            router.push('/auth/login');
-        };
-        refetch();
-    }, [hasToken, router, refetch ]);
-    const { data: detailData , isLoading: isDetailLoading , refetch: refetchDetail } = useGetDetailRefundRequestQuery({ id: id || "" });
-    const getDetailRefundRequest = useCallback(() => {  
-        if(!hasToken){
-            router.push('/auth/login');
-        };
-        refetchDetail();
-    }, [hasToken, router, refetchDetail]);
-    return {
-        response : data?.data,
-        isLoading,
-        isError,
-        getAllRefundRequest,
-        getDetailRefundRequest,
-        detailResponse : detailData?.result,
-        isDetailLoading,
-        pagination : data?.pagination,
-        refetch
-    };
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data, isLoading, isError, refetch } = useGetAllRefundRequestQuery({
+    page,
+    limit,
+    status,
+  });
+  const getAllRefundRequest = useCallback(() => {
+    if (!hasToken) {
+      router.push("/auth/login");
+    }
+    refetch();
+  }, [hasToken, router, refetch]);
+  const {
+    data: detailData,
+    isLoading: isDetailLoading,
+    refetch: refetchDetail,
+  } = useGetDetailRefundRequestQuery({ id: id || "" });
+  const getDetailRefundRequest = useCallback(() => {
+    if (!hasToken) {
+      router.push("/auth/login");
+    }
+    refetchDetail();
+  }, [hasToken, router, refetchDetail]);
+  const useUpdateRefundRequest = useUpdateRefundRequestMutation(id || "");
+  const updateRefundRequest = useCallback(
+    async (data: Parameters<typeof useUpdateRefundRequest.mutateAsync>[0]) => {
+      if (!hasToken) {
+        router.push("/auth/login");
+        return;
+      }
+      await useUpdateRefundRequest.mutateAsync(data, {
+        onSuccess: () => {
+          toast.success("Cập nhật yêu cầu hoàn tiền thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["refundRequests", 1, 10, ""],
+          });
+          queryClient.invalidateQueries({ queryKey: ["refundRequest", id] });
+        },
+        onError: (error) => {
+          console.log(error);
+        },
+      });
+    },
+    [hasToken, router, useUpdateRefundRequest, queryClient, id]
+  );
+  return {
+    response: data?.data,
+    isLoading,
+    isError,
+    getAllRefundRequest,
+    getDetailRefundRequest,
+    detailResponse: detailData?.result,
+    isDetailLoading,
+    pagination: data?.pagination,
+    refetch,
+  };
 };

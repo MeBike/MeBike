@@ -236,6 +236,11 @@ export default function RefundPage() {
                 setSelectedID(id);
                 setIsDetailModalOpen(true);
               },
+              onUpdateStatus: (request) => {
+                setSelectedRequest(request);
+                setNewStatus(request.status);
+                setIsUpdateModalOpen(true);
+              }
             })}
             data={response || []}
           />

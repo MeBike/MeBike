@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Edit2, Trash2 } from "lucide-react";
+import { Eye, Edit2, Trash2, RefreshCw } from "lucide-react";
 import type { RefundRequest , RefundStatus } from "@/types";
 export const getStatusColor = (status: RefundStatus) => {
   switch (status) {
@@ -21,12 +21,10 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 };
 export const refundColumn = ({
   onView,
-  onEdit,
-  onDelete,
+  onUpdateStatus,
 }: {
   onView?: ({ id }: { id: string }) => void;
-  onEdit?: ({ id }: { id: string }) => void;
-  onDelete?: ({ id }: { id: string }) => void;
+  onUpdateStatus?: ((refundRequest: RefundRequest) => void) | undefined;
 }): ColumnDef<RefundRequest>[] => [
   {
     accessorKey: "_id",
@@ -71,24 +69,20 @@ export const refundColumn = ({
         <button
           className="p-2 hover:bg-muted rounded-lg transition-colors"
           title="Xem chi tiết"
-            onClick={() => {
-              if (onView) {
-                onView({ id: row.original._id });
-              }
-            }}
+          onClick={() => {
+            if (onView) {
+              onView({ id: row.original._id });
+            }
+          }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
         </button>
         <button
+          title="Cập nhật trạng thái"
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xóa"
-          //   onClick={() => {
-          //     if (onDelete) {
-          //       onDelete(row.original);
-          //     }
-          //   }}
+          onClick={() => onUpdateStatus?.(row.original)}
         >
-          <Trash2 className="w-4 h-4 text-red-500" />
+          <RefreshCw className="w-4 h-4 text-blue-500" />
         </button>
       </div>
     ),
