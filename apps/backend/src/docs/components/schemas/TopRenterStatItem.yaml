@@ -1,0 +1,26 @@
+type: object
+description: "Thông tin thống kê của một người dùng thuê xe hàng đầu."
+properties:
+  total_rentals:
+    type: integer
+    description: "Tổng số lượt thuê đã hoàn thành của người dùng."
+    example: 25
+  user:
+    type: object
+    description: "Thông tin cơ bản của người dùng."
+    properties:
+      _id:
+        type: string
+        format: mongoId
+      fullname:
+        type: string
+      email:
+        type: string
+        format: email
+      phone_number:
+        type: string
+      avatar:
+        type: string
+        format: uri
+      location:
+        type: string

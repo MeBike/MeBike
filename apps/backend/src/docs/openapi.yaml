@@ -124,6 +124,12 @@ components:
     # Update User by Admin/Staff
     UpdateUserReqBody:
       $ref: './components/schemas/UpdateUserReqBody.yaml'
+    # Admin Reset Password Req Body
+    AdminResetPasswordReqBody:
+      $ref: './components/schemas/AdminResetPasswordReqBody.yaml'
+    # Admin Create User Req Body
+    AdminCreateUserReqBody:
+      $ref: './components/schemas/AdminCreateUserReqBody.yaml'
     
     # --- Response Schemas ---
     AuthSuccessResponse:
@@ -146,6 +152,8 @@ components:
       $ref: './components/schemas/ErrorStatusResponse.yaml'
     ErrorServerResponse:
       $ref: './components/schemas/ErrorServerResponse.yaml'
+    GetTopRentersStatsResponse:
+      $ref: './components/schemas/GetTopRentersStatsResponse.yaml'
 
     # --- Model Schemas ---
     User:
@@ -198,6 +206,12 @@ components:
       $ref: "./components/schemas/StationStatus.yaml"
     Rating:
       $ref: "./components/schemas/Rating.yaml"
+    UserStats:
+      $ref: './components/schemas/UserStats.yaml'
+    ActiveUserStatItem:
+      $ref: './components/schemas/ActiveUserStatItem.yaml'
+    TopRenterStatItem:
+      $ref: './components/schemas/TopRenterStatItem.yaml'
 
   securitySchemes:
     BearerAuth:

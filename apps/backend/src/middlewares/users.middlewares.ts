@@ -752,3 +752,174 @@ export const updateUserByIdValidator = validate(
     ['body']
   )
 )
+
+export const adminResetPasswordValidator = validate(
+  checkSchema(
+    {
+      new_password: passwordSchema,
+      confirm_new_password: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED,
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_A_STRING,
+        },
+        isLength: {
+          options: { min: 8, max: 30 },
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_8_TO_30,
+        },
+        custom: {
+          options: (value: string, { req }: Meta) => {
+            if (value !== req.body.new_password) {
+              throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD);
+            }
+            return true;
+          },
+        },
+      }
+    },
+    ['body']
+  )
+)
+
+export const activeUserStatsValidator = validate(
+  checkSchema(
+    {
+      groupBy: {
+        in: ['query'],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.INVALID_GROUP_BY
+        },
+        isIn: {
+          options: [['day', 'month']],
+          errorMessage: USERS_MESSAGES.INVALID_GROUP_BY
+        }
+      },
+      startDate: {
+        in: ['query'],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.START_DATE_IS_REQUIRED
+        },
+        isISO8601: {
+          errorMessage: USERS_MESSAGES.START_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD
+        }
+      },
+      endDate: {
+        in: ['query'],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.END_DATE_IS_REQUIRED
+        },
+        isISO8601: {
+          errorMessage: USERS_MESSAGES.END_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD
+        },
+        custom: {
+          options: (value, { req }) => {
+            const startDate = (req as any)?.query?.startDate;
+            if (startDate && new Date(value) < new Date(String(startDate))) {
+              throw new Error(USERS_MESSAGES.END_DATE_MUST_BE_AFTER_START_DATE)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['query']
+  )
+)
+
+export const statsPaginationValidator = validate(
+  checkSchema(
+    {
+      page: {
+        in: ['query'],
+        optional: true,
+        isInt: {
+          options: { min: 1 },
+          errorMessage: USERS_MESSAGES.INVALID_PAGE_OR_LIMIT
+        },
+        toInt: true
+      },
+      limit: {
+        in: ['query'],
+        optional: true,
+        isInt: {
+          options: { min: 1 },
+          errorMessage: USERS_MESSAGES.INVALID_PAGE_OR_LIMIT
+        },
+        toInt: true
+      }
+    },
+    ['query']
+  )
+)
+
+export const adminCreateUserValidator = validate(
+  checkSchema(
+    {
+      fullname: fullNameSchema,
+      email: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
+        },
+        isEmail: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+        },
+        trim: true,
+        custom: {
+          options: async (value: string) => {
+            const isExist = await usersService.checkEmailExist(value)
+            if (isExist) {
+              throw new Error(USERS_MESSAGES.EMAIL_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      phone_number: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_IS_REQUIRED
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID)
+            }
+            const user = await databaseService.users.findOne({ phone_number: value })
+            if (user) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      password: passwordSchema,
+      role: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.ROLE_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(Role)],
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID
+        }
+      },
+      verify: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.VERIFY_STATUS_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(UserVerifyStatus)],
+          errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
+        }
+      }
+    },
+    ['body']
+  )
+)

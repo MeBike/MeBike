@@ -888,6 +888,399 @@
         }
       }
     },
+    "/users/manage-users/admin-reset-password/{_id}": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reset a user's password (Admin only)",
+        "description": "Allows an Admin to forcibly set a new password for any user. This action is irreversible.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the user whose password will be reset.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "60c72b2f9b1d8e001f8e8e8e"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminResetPasswordReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Đặt lại mật khẩu thành công"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User is not an Admin).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., passwords do not match, password not strong enough).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/manage-users/stats": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user statistics (Admin/Staff only)",
+        "description": "Retrieves statistics about the user base (total, verified, unverified, banned). Requires Admin or Staff privileges.",
+        "security": [
+          {
+            "BeararAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/UserStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User does not have Admin or Staff rights).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (user from token does not exist).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/manage-users/stats/active-users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get active user statistics (Admin/Staff only)",
+        "description": "Retrieves a timeseries of active user counts, grouped by day or month.\nActive users are defined as users who have had token activity (login/refresh).\nRequires Admin or Staff privileges.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "groupBy",
+            "in": "query",
+            "required": true,
+            "description": "Group the statistics by 'day' or 'month'.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day",
+                "month"
+              ],
+              "example": "day"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": true,
+            "description": "The start date of the period (YYYY-MM-DD).",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-10-20"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": true,
+            "description": "The end date of the period (YYYY-MM-DD). Must be after or the same as startDate.",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-10-23"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active user statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê người dùng hoạt động thành công"
+                    },
+                    "result": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ActiveUserStatItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "description": "Validation error (e.g., missing params, invalid groupBy, endDate before startDate).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/manage-users/stats/top-renters": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get top renters statistics (Admin/Staff only)",
+        "description": "Retrieves a paginated list of users with the most completed rentals. Requires Admin or Staff privileges.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top renters statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetTopRentersStatsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "422": {
+            "description": "Validation error (e.g., page or limit is not a number).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/manage-users/create": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Create a new user (Admin only)",
+        "description": "Allows an Admin to create a new user account (e.g., a Staff account). A wallet is automatically created for the new user. The account is set to 'VERIFIED' by default unless specified otherwise.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminCreateUserReqBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Tạo người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/User"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User is not an Admin).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user (from token) not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., email/phone already exists, invalid role, weak password).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [
@@ -5120,6 +5513,75 @@
           }
         }
       },
+      "AdminResetPasswordReqBody": {
+        "type": "object",
+        "required": [
+          "new_password",
+          "confirm_new_password"
+        ],
+        "properties": {
+          "new_password": {
+            "type": "string",
+            "format": "password",
+            "description": "The user's new password (8-30 characters).",
+            "minLength": 8,
+            "maxLength": 30,
+            "example": "NewP@ssword123"
+          },
+          "confirm_new_password": {
+            "type": "string",
+            "format": "password",
+            "description": "Must match new_password.",
+            "minLength": 8,
+            "maxLength": 30,
+            "example": "NewP@ssword123"
+          }
+        }
+      },
+      "AdminCreateUserReqBody": {
+        "type": "object",
+        "required": [
+          "fullname",
+          "email",
+          "password",
+          "phone_number",
+          "role"
+        ],
+        "properties": {
+          "fullname": {
+            "type": "string",
+            "description": "Full name of the new user.",
+            "example": "Le Van Nhan Vien"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email of the new user. Must be unique.",
+            "example": "staff_new@mebike.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "Password for the new user (8-30 characters).",
+            "minLength": 8,
+            "maxLength": 30,
+            "example": "StrongP@ss123"
+          },
+          "phone_number": {
+            "type": "string",
+            "description": "Phone number of the new user (10 digits). Must be unique.",
+            "example": "0905111222"
+          },
+          "role": {
+            "description": "Role to assign to the new user.",
+            "$ref": "#/components/schemas/User/properties/role"
+          },
+          "verify": {
+            "description": "Verification status. If omitted, defaults to 'VERIFIED'.",
+            "$ref": "#/components/schemas/User/properties/verify"
+          }
+        }
+      },
       "AuthSuccessResponse": {
         "type": "object",
         "properties": {
@@ -5276,6 +5738,29 @@
             "type": "object",
             "nullable": true,
             "description": "Additional error information (excluding stack trace)."
+          }
+        }
+      },
+      "GetTopRentersStatsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Lấy thống kê top người thuê thành công"
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TopRenterStatItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginatedResponse/properties/pagination"
+              }
+            }
           }
         }
       },
@@ -5995,6 +6480,86 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "UserStats": {
+        "type": "object",
+        "description": "An object containing user statistics.",
+        "properties": {
+          "total_users": {
+            "type": "integer",
+            "description": "Total number of all user accounts.",
+            "example": 150
+          },
+          "total_verified": {
+            "type": "integer",
+            "description": "Total number of verified users.",
+            "example": 120
+          },
+          "total_unverified": {
+            "type": "integer",
+            "description": "Total number of unverified users.",
+            "example": 25
+          },
+          "total_banned": {
+            "type": "integer",
+            "description": "Total number of banned users.",
+            "example": 5
+          }
+        }
+      },
+      "ActiveUserStatItem": {
+        "type": "object",
+        "description": "Một điểm dữ liệu trong chuỗi thời gian thống kê người dùng hoạt động.",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "Ngày hoặc tháng cho điểm dữ liệu (YYYY-MM-DD hoặc YYYY-MM).",
+            "example": "2025-10-23"
+          },
+          "active_users_count": {
+            "type": "integer",
+            "description": "Số lượng người dùng hoạt động duy nhất trong kỳ đó.",
+            "example": 78
+          }
+        }
+      },
+      "TopRenterStatItem": {
+        "type": "object",
+        "description": "Thông tin thống kê của một người dùng thuê xe hàng đầu.",
+        "properties": {
+          "total_rentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê đã hoàn thành của người dùng.",
+            "example": 25
+          },
+          "user": {
+            "type": "object",
+            "description": "Thông tin cơ bản của người dùng.",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "mongoId"
+              },
+              "fullname": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "phone_number": {
+                "type": "string"
+              },
+              "avatar": {
+                "type": "string",
+                "format": "uri"
+              },
+              "location": {
+                "type": "string"
+              }
+            }
           }
         }
       }

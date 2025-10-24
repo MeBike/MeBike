@@ -3,7 +3,7 @@ import type { ParamsDictionary } from "express-serve-static-core";
 
 import { ObjectId } from "mongodb";
 
-import type { AdminGetAllUsersReqQuery, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, TokenPayLoad, UpdateUserReqBody, VerifyEmailOtpReqBody } from "~/models/requests/users.requests";
+import type { AdminCreateUserReqBody, AdminGetAllUsersReqQuery, AdminResetPasswordReqBody, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, TokenPayLoad, UpdateUserReqBody, VerifyEmailOtpReqBody } from "~/models/requests/users.requests";
 import type User from "~/models/schemas/user.schema";
 
 import { UserVerifyStatus } from "~/constants/enums";
@@ -226,5 +226,65 @@ export const updateUserByIdController = async (
   res.json({
     message: USERS_MESSAGES.UPDATE_USER_INFORMATION_SUCCESS,
     result: user
+  })
+}
+
+export const adminResetPasswordController = async (
+  req: Request<{ _id: string }, any, AdminResetPasswordReqBody>,
+  res: Response
+) => {
+  const { _id } = req.params
+  const { new_password } = req.body
+
+  await usersService.adminResetPassword(_id, new_password)
+
+  res.json({
+    message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS
+  })
+}
+
+export const getUserStatsController = async (req: Request, res: Response) => {
+  const stats = await usersService.getUserStats()
+  res.json({
+    message: USERS_MESSAGES.GET_USER_STATS_SUCCESS,
+    result: stats
+  })
+}
+
+export const getActiveUserStatsController = async (req: Request, res: Response) => {
+  const { groupBy, startDate, endDate } = req.query as {
+    groupBy: 'day' | 'month',
+    startDate: string,
+    endDate: string
+  }
+
+  const stats = await usersService.getActiveUserTimeseries(groupBy, startDate, endDate)
+
+  res.json({
+    message: USERS_MESSAGES.GET_ACTIVE_USER_STATS_SUCCESS,
+    result: stats
+  })
+}
+
+export const getTopRentersStatsController = async (req: Request, res: Response) => {
+  const page = parseInt(req.query.page as string) || 1
+  const limit = parseInt(req.query.limit as string) || 10
+
+  const result = await usersService.getTopRentersStats(page, limit)
+
+  res.json({
+    message: USERS_MESSAGES.GET_TOP_RENTERS_STATS_SUCCESS,
+    result
+  })
+}
+
+export const adminCreateUserController = async (
+  req: Request<ParamsDictionary, any, AdminCreateUserReqBody>,
+  res: Response
+) => {
+  const result = await usersService.adminCreateUser(req.body)
+  res.status(HTTP_STATUS.CREATED).json({
+    message: USERS_MESSAGES.CREATE_USER_SUCCESS,
+    result
   })
 }
