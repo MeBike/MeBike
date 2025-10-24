@@ -875,6 +875,89 @@ class UsersService {
       await session.endSession()
     }
   }
+
+  async getNewUserStats() {
+    const now = getLocalTime() //ví dụ: 2025-10-24)
+
+    //xác định các khoảng thời gian
+    //Month-to-Date (MTD) cho tháng này
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1) // 2025-10-01
+    const endOfThisMonth = now // 2025-10-24 lúc này là lúc mình làm API này
+
+    //Month-to-Date (MTD) cho tháng trước (để so sánh)
+    //case này mình làm để tránh có tháng trước không có ngày tương ứng (ví dụ: tháng 2 không có ngày 30,31)
+    //nên ta sẽ lấy ngày bắt đầu là ngày 1 của tháng trước
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1) // 2025-09-01
+
+    //lấy ngày cuối cùng của tháng trước
+    //new Date(year, month, 0) sẽ trả về ngày cuối cùng của tháng TRƯỚC ĐÓ
+    const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate() //(Vd: Tháng 10, new Date(2025, 9, 0) là 30/09 -> 30)
+
+    //lấy ngày hiện tại
+    const currentDayOfMonth = now.getDate() // (Vd: 24)
+
+    //so sánh: Lấy ngày nhỏ hơn.
+    // Vd 1: (Hôm nay 31/03) Math.min(28, 31) -> 28 (Đúng, lấy 28/02)
+    // Vd 2: (Hôm nay 30/09) Math.min(31, 30) -> 30 (Đúng, lấy 30/08)
+    // Vd 3: (Hôm nay 24/10) Math.min(30, 24) -> 24 (Đúng, lấy 24/09)
+    const correctDayForLastMonth = Math.min(lastDayOfLastMonth, currentDayOfMonth)
+
+    //ngày kết thúc của tháng trước
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, correctDayForLastMonth) // (Vd: 2025-09-24)
+    
+    //tạo Aggregation Pipeline
+    const statsPipeline = [
+      {
+        $facet: {
+          "thisMonth": [
+            { 
+              $match: { 
+                role: Role.User,
+                created_at: { $gte: startOfThisMonth, $lte: endOfThisMonth } 
+              } 
+            },
+            { $count: "count" }
+          ],
+          "lastMonth": [
+            { 
+              $match: { 
+                role: Role.User,
+                created_at: { $gte: startOfLastMonth, $lte: endOfLastMonth } //dùng ngày kết thúc đã sửa
+              } 
+            },
+            { $count: "count" }
+          ]
+        }
+      },
+      {
+        //định dạng output
+        $project: {
+          "newUsersThisMonth": { $ifNull: [{ $arrayElemAt: ["$thisMonth.count", 0] }, 0] },
+          "newUsersLastMonth": { $ifNull: [{ $arrayElemAt: ["$lastMonth.count", 0] }, 0] }
+        }
+      }
+    ]
+
+    //chạy pipeline
+    const result = await databaseService.users.aggregate(statsPipeline).toArray()
+    const counts = result[0] || { newUsersThisMonth: 0, newUsersLastMonth: 0 }
+
+    //tính toán phần trăm thay đổi
+    const { newUsersThisMonth, newUsersLastMonth } = counts
+    let percentageChange: number = 0.0
+
+    if (newUsersLastMonth === 0) {
+      percentageChange = (newUsersThisMonth > 0) ? 100.0 : 0.0
+    } else {
+      percentageChange = ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100
+    }
+
+    return {
+      newUsersThisMonth: newUsersThisMonth,
+      newUsersLastMonth: newUsersLastMonth,
+      percentageChange: parseFloat(percentageChange.toFixed(2))
+    }
+  }
 }
 
 const usersService = new UsersService();
