@@ -63,7 +63,7 @@ export const userService = {
   }: {
     page?: number;
     limit?: number;
-    verify: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
+    verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
     role?: "ADMIN" | "USER" | "STAFF" | "";
   }): Promise<AxiosResponse<ApiReponse<DetailUser[]>>> => {
     const response = await fetchHttpClient.get<ApiReponse<DetailUser[]>>(

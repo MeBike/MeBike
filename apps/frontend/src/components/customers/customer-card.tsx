@@ -5,16 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Eye,
-  Edit,
-  Ban,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Star,
-} from "lucide-react";
+import { Eye, Edit, Ban, Mail, Phone, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -57,9 +48,7 @@ export function CustomerCard({
   onEdit,
   onBlock,
 }: CustomerCardProps) {
-  const status = statusConfig[customer.status];
-  const type = typeConfig[customer.customer_type];
-  const initials = customer.full_name
+  const initials = customer.fullname
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -74,7 +63,7 @@ export function CustomerCard({
           <Avatar className="w-16 h-16 border-2 border-border">
             <AvatarImage
               src={customer.avatar || "/placeholder.svg"}
-              alt={customer.full_name}
+              alt={customer.fullname}
             />
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {initials}
@@ -84,17 +73,27 @@ export function CustomerCard({
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h3 className="font-semibold text-lg text-foreground truncate">
-                  {customer.full_name}
+                  {customer.fullname}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {customer.customer_code}
+                  @{customer.username}
                 </p>
               </div>
               <div className="flex gap-2">
-                <Badge className={status.className}>{status.label}</Badge>
+                <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+                  {customer.role === "ADMIN"
+                    ? "Quản trị viên"
+                    : customer.role === "STAFF"
+                      ? "Nhân viên"
+                      : "Người dùng"}
+                </Badge>
               </div>
             </div>
-            <Badge className={`${type.className} mt-2`}>{type.label}</Badge>
+            <Badge
+              className={`${customer.verify === "VERIFIED" ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"} mt-2`}
+            >
+              {customer.verify === "VERIFIED" ? "Đã xác thực" : "Chưa xác thực"}
+            </Badge>
           </div>
         </div>
 
@@ -110,53 +109,27 @@ export function CustomerCard({
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <MapPin className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">{customer.city}</span>
+            <span className="truncate">{customer.location}</span>
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Info */}
         <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
           <div>
-            <p className="text-xs text-muted-foreground">Tổng đơn thuê</p>
-            <p className="text-lg font-bold text-foreground">
-              {customer.total_rentals}
+            <p className="text-xs text-muted-foreground">NFC Card UID</p>
+            <p className="text-sm font-mono text-foreground">
+              {customer.nfc_card_uid || "N/A"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Tổng chi tiêu</p>
-            <p className="text-lg font-bold text-primary">
-              {customer.total_spent.toLocaleString()}đ
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Đang thuê</p>
-            <p className="text-lg font-bold text-blue-500">
-              {customer.current_rentals}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Đánh giá</p>
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-              <p className="text-lg font-bold text-foreground">
-                {customer.rating.toFixed(1)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Last Rental */}
-        {customer.last_rental_date && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
-            <Calendar className="w-3 h-3" />
-            <span>
-              Thuê gần nhất:{" "}
-              {format(new Date(customer.last_rental_date), "dd/MM/yyyy", {
+            <p className="text-xs text-muted-foreground">Ngày tạo</p>
+            <p className="text-sm font-bold text-foreground">
+              {format(new Date(customer.created_at), "dd/MM/yyyy", {
                 locale: vi,
               })}
-            </span>
+            </p>
           </div>
-        )}
+        </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2 pt-2">
@@ -178,7 +151,7 @@ export function CustomerCard({
             <Edit className="w-4 h-4 mr-1" />
             Sửa
           </Button>
-          {customer.status !== "blocked" && (
+          {customer.verify !== "BANNED" && (
             <Button
               variant="outline"
               size="sm"

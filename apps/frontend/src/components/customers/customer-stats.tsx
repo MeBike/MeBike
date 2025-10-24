@@ -3,16 +3,22 @@
 import { Card } from "@/components/ui/card";
 import { Users, UserCheck, TrendingUp, DollarSign, Award } from "lucide-react";
 
-interface CustomerStatsProps {
+export interface CustomerStatsProps {
   stats: {
-    total: number;
-    active: number;
-    inactive: number;
-    blocked: number;
-    newThisMonth: number;
-    totalRevenue: number;
-    averageSpent: number;
-    topCustomers: number;
+    total?: number;
+    active?: number;
+    verified?: number;
+    unverified?: number;
+    inactive?: number;
+    banned?: number;
+    admins?: number;
+    staffs?: number;
+    users?: number;
+    blocked?: number;
+    newThisMonth?: number;
+    totalRevenue?: number;
+    averageSpent?: number;
+    topCustomers?: number;
   };
 }
 
@@ -82,7 +88,7 @@ export function CustomerStats({ stats }: CustomerStatsProps) {
               Tổng doanh thu từ khách hàng
             </p>
             <p className="text-3xl font-bold text-accent mt-1">
-              {stats.totalRevenue.toLocaleString()}đ
+              {(stats.totalRevenue || 0).toLocaleString()}đ
             </p>
           </div>
           <div className="p-3 bg-accent/10 rounded-lg">
@@ -98,7 +104,7 @@ export function CustomerStats({ stats }: CustomerStatsProps) {
               Chi tiêu trung bình/khách
             </p>
             <p className="text-3xl font-bold text-purple-500 mt-1">
-              {stats.averageSpent.toLocaleString()}đ
+              {(stats.averageSpent || 0).toLocaleString()}đ
             </p>
           </div>
           <div className="p-3 bg-purple-500/10 rounded-lg">
