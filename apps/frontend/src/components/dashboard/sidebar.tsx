@@ -15,7 +15,10 @@ import {
   LogOut,
   History,
   Wallet,
-  Truck
+  Truck,
+  Download,
+  RotateCcw,
+  MapIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
@@ -100,6 +103,30 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       title: "Quản lý nhà cung cấp",
       icon: Truck,
       href: "/admin/suppliers",
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Quản lý trạm",
+      icon: MapIcon,
+      href: "/staff/stations",
+      roles: ["STAFF"],
+    },
+    {
+      title: "Quản lý trạm",
+      icon: MapIcon,
+      href: "/admin/stations",
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Hoàn tiền",
+      icon: RotateCcw,
+      href: "/admin/refunds",
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Rút tiền",
+      icon: Download,
+      href: "/admin/withdrawals",
       roles: ["ADMIN"],
     },
   ];

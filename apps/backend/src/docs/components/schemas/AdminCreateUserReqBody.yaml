@@ -1,0 +1,34 @@
+type: object
+required:
+  - fullname
+  - email
+  - password
+  - phone_number
+  - role
+properties:
+  fullname:
+    type: string
+    description: "Full name of the new user."
+    example: "Le Van Nhan Vien"
+  email:
+    type: string
+    format: email
+    description: "Email of the new user. Must be unique."
+    example: "staff_new@mebike.com"
+  password:
+    type: string
+    format: password
+    description: "Password for the new user (8-30 characters)."
+    minLength: 8
+    maxLength: 30
+    example: "StrongP@ss123"
+  phone_number:
+    type: string
+    description: "Phone number of the new user (10 digits). Must be unique."
+    example: "0905111222"
+  role:
+    description: "Role to assign to the new user."
+    $ref: './User.yaml#/properties/role' 
+  verify:
+    description: "Verification status. If omitted, defaults to 'VERIFIED'."
+    $ref: './User.yaml#/properties/verify'

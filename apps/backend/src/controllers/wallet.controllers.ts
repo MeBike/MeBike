@@ -160,9 +160,9 @@ export async function updateWithdrawStatusController(
 
 export async function getWithdrawDetailController(req: Request<ParamsDictionary, any, any>, res: Response) {
   const { id } = req.params
-  const { role, user_id } = req.decoded_authorization as TokenPayLoad
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
-  const result = await walletService.getWithdrawRequestDetail(id, role, user_id)
+  const result = await walletService.getWithdrawRequestDetail(id, user_id)
 
   res.json({
     message: WITHDRAWLS_MESSAGE.GET_DETAIL_SUCCESS,
@@ -216,10 +216,10 @@ export async function getRefundDetailController(
   req: Request<ParamsDictionary, any, any, GetAllRefundReqQuery>,
   res: Response
 ) {
-  const { role, user_id } = req.decoded_authorization as TokenPayLoad
+  const { user_id } = req.decoded_authorization as TokenPayLoad
   const { id } = req.params
 
-  const result = await walletService.getRefundDetail(id, role, user_id)
+  const result = await walletService.getRefundDetail(id, user_id)
 
   res.json({
     message: WALLETS_MESSAGE.REFUND_DETAIL_SUCCESS,

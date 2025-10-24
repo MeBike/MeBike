@@ -75,11 +75,40 @@ export const USERS_MESSAGES = {
   // admin get all users
   VERIFY_STATUS_MUST_BE_A_STRING: 'Trạng thái xác thực phải là chuỗi',
   INVALID_VERIFY_STATUS: 'Trạng thái xác thực không hợp lệ',
+  ROLE_MUST_BE_A_STRING: 'Vai trò phải là chuỗi',
+  ROLE_IS_INVALID: 'Vai trò không hợp lệ',
   // OTP messages
   FORGOT_PASSWORD_OTP_MUST_BE_A_STRING: 'Mã OTP đặt lại mật khẩu phải là chuỗi',
   FORGOT_PASSWORD_OTP_MUST_BE_6_DIGITS: 'Mã OTP đặt lại mật khẩu phải gồm 6 chữ số',
   EMAIL_OTP_MUST_BE_A_STRING: 'Mã OTP xác thực email phải là chuỗi',
   EMAIL_OTP_MUST_BE_6_DIGITS: 'Mã OTP xác thực email phải gồm 6 chữ số',
+  // search users messages
+  SEARCH_QUERY_IS_REQUIRED: 'Tham số truy vấn tìm kiếm là bắt buộc',
+  SEARCH_QUERY_MUST_BE_A_STRING: 'Tham số truy vấn tìm kiếm phải là chuỗi',
+  SEARCH_USERS_SUCCESSFULLY: 'Tìm kiếm người dùng thành công',
+  // get user details by id
+  GET_USER_DETAIL_SUCCESS: 'Lấy chi tiết người dùng thành công',
+  USER_ID_IS_REQUIRED: 'User ID là bắt buộc',
+  INVALID_USER_ID: 'User ID không hợp lệ',
+  // update user by admin/staff
+  NFC_CARD_UID_MUST_BE_A_STRING: 'NFC Card UID phải là chuỗi',
+  NFC_CARD_UID_ALREADY_EXISTS: 'NFC Card UID đã tồn tại trên một người dùng khác',
+  UPDATE_USER_INFORMATION_SUCCESS: 'Cập nhật thông tin người dùng thành công',
+  // get user stats
+  GET_USER_STATS_SUCCESS: 'Lấy thống kê người dùng thành công',
+  // get user active stats
+  GET_ACTIVE_USER_STATS_SUCCESS: 'Lấy thống kê người dùng active thành công',
+  INVALID_GROUP_BY: 'Giá trị groupBy không hợp lệ. Chỉ chấp nhận "day" hoặc "month".',
+  START_DATE_IS_REQUIRED: 'startDate là bắt buộc.',
+  END_DATE_IS_REQUIRED: 'endDate là bắt buộc.',
+  END_DATE_MUST_BE_AFTER_START_DATE: 'endDate phải sau startDate.',
+  START_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD: 'startDate phải là định dạng YYYY-MM-DD',
+  END_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD: 'endDate phải là định dạng YYYY-MM-DD',
+  // get top users by rental count
+  GET_TOP_RENTERS_STATS_SUCCESS: 'Lấy thống kê top người thuê xe thành công',
+  INVALID_PAGE_OR_LIMIT: 'Page hoặc limit phải là số nguyên dương.',
+  // admin create user messages
+  CREATE_USER_SUCCESS: 'Tạo người dùng mới thành công'
 } as const
 
 export const REPORTS_MESSAGES = {
@@ -411,7 +440,9 @@ export const WALLETS_MESSAGE = {
   USER_ID_REQUIRED: 'User ID là bắt buộc',
   BANK_IS_REQUIRED: 'Ngân hàng là bắt buộc',
   ACCOUNT_IS_REQUIRED: 'Tài khoản là bắt buộc',
-  ACCOUNT_OWNER_IS_REQUIRED: 'Chủ tài khoản là bắt buộc'
+  ACCOUNT_OWNER_IS_REQUIRED: 'Chủ tài khoản là bắt buộc',
+  REFUND_ALREADY_REQUESTED: 'Yêu cầu hoàn tiền cho giao dịch %s đã được tạo',
+  WITHDRAW_NOT_FOUND: 'Không tìm thấy yêu cầu rút tiền',
 }
 
 export const WITHDRAWLS_MESSAGE = {

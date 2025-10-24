@@ -10,7 +10,7 @@ import process from "node:process";
 
 import type { TokenPayLoad } from "~/models/requests/users.requests";
 
-import { UserVerifyStatus } from "~/constants/enums";
+import { Role, UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { USERS_MESSAGES } from "~/constants/messages";
 import { REGEX_USERNAME } from "~/constants/regex";
@@ -533,7 +533,7 @@ export const updateMeValidator = validate(
   ),
 );
 
-export const adminGetAllUsersValidator = validate(
+export const adminAndStaffGetAllUsersValidator = validate(
   checkSchema(
     {
       fullname: {
@@ -555,8 +555,371 @@ export const adminGetAllUsersValidator = validate(
           options: [Object.values(UserVerifyStatus)],
           errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
         }
+      },
+      role: {
+        in: ["query"],
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.ROLE_MUST_BE_A_STRING,
+        },
+        isIn: {
+          options: [Object.values(Role)],
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID,
+        },
+      },
+    },
+    ['query']
+  )
+)
+
+export const searchUsersValidator = validate(
+  checkSchema(
+    {
+      q: {
+        in: ["query"],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.SEARCH_QUERY_IS_REQUIRED,
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.SEARCH_QUERY_MUST_BE_A_STRING,
+        },
+        trim: true,
+      },
+    },
+    ["query"]
+  )
+);
+
+export const userDetailValidator = validate(
+  checkSchema(
+    {
+      _id: {
+        in: ["params"],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.USER_ID_IS_REQUIRED,
+        },
+        isMongoId: {
+          errorMessage: USERS_MESSAGES.INVALID_USER_ID,
+        },
+      },
+    },
+    ["params"]
+  )
+);
+
+export const updateUserByIdValidator = validate(
+  checkSchema(
+    {
+      fullname: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.FULL_NAME_MUST_BE_A_STRING
+        },
+        trim: true,
+        isLength: {
+          options: { min: 1, max: 50 },
+          errorMessage: USERS_MESSAGES.FULL_NAME_LENGTH_MUST_BE_FROM_1_TO_50
+        }
+      },
+      email: {
+        optional: true,
+        isEmail: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            const userId = req.params?._id
+            if (!ObjectId.isValid(userId)) {
+              throw new ErrorWithStatus({ 
+                message: USERS_MESSAGES.INVALID_USER_ID,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            const user = await databaseService.users.findOne({
+              email: value,
+              _id: { $ne: new ObjectId(userId) } //kiếm tra email này trên những user khác
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.EMAIL_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      verify: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.VERIFY_STATUS_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(UserVerifyStatus)],
+          errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
+        }
+      },
+      location: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.LOCATION_MUST_BE_A_STRING
+        },
+        trim: true,
+        isLength: {
+          options: { 
+            min: 1,
+            max: 200
+          },
+          errorMessage: USERS_MESSAGES.LOCATION_LENGTH_MUST_BE_LESS_THAN_200
+        }
+      },
+      username: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.USERNAME_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (REGEX_USERNAME.test(value) === false) {
+              throw new Error(USERS_MESSAGES.USERNAME_MUST_BE_A_STRING)
+            }
+            const userId = req.params?._id
+            const user = await databaseService.users.findOne({
+              username: value,
+              _id: { $ne: new ObjectId(userId) }
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.USERNAME_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      phone_number: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string, { req }) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID)
+            }
+            const userId = req.params?._id
+            const user = await databaseService.users.findOne({
+              phone_number: value,
+              _id: { $ne: new ObjectId(userId) }
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      role: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.ROLE_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(Role)],
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID
+        }
+      },
+      nfc_card_uid: {
+        optional: { options: { nullable: true } }, //cho phép null hoặc bỏ qua
+        isString: {
+          errorMessage: USERS_MESSAGES.NFC_CARD_UID_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string | null, { req }) => {
+            if (value === null || value === '') return true //cho phép gán rỗng hoặc null
+            const userId = req.params?._id
+            const user = await databaseService.users.findOne({
+              nfc_card_uid: value,
+              _id: { $ne: new ObjectId(userId) }
+            })
+            if (user) {
+              throw new Error(USERS_MESSAGES.NFC_CARD_UID_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)
+
+export const adminResetPasswordValidator = validate(
+  checkSchema(
+    {
+      new_password: passwordSchema,
+      confirm_new_password: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_IS_REQUIRED,
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_A_STRING,
+        },
+        isLength: {
+          options: { min: 8, max: 30 },
+          errorMessage: USERS_MESSAGES.CONFIRM_PASSWORD_LENGTH_MUST_BE_FROM_8_TO_30,
+        },
+        custom: {
+          options: (value: string, { req }: Meta) => {
+            if (value !== req.body.new_password) {
+              throw new Error(USERS_MESSAGES.CONFIRM_PASSWORD_MUST_BE_THE_SAME_AS_PASSWORD);
+            }
+            return true;
+          },
+        },
+      }
+    },
+    ['body']
+  )
+)
+
+export const activeUserStatsValidator = validate(
+  checkSchema(
+    {
+      groupBy: {
+        in: ['query'],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.INVALID_GROUP_BY
+        },
+        isIn: {
+          options: [['day', 'month']],
+          errorMessage: USERS_MESSAGES.INVALID_GROUP_BY
+        }
+      },
+      startDate: {
+        in: ['query'],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.START_DATE_IS_REQUIRED
+        },
+        isISO8601: {
+          errorMessage: USERS_MESSAGES.START_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD
+        }
+      },
+      endDate: {
+        in: ['query'],
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.END_DATE_IS_REQUIRED
+        },
+        isISO8601: {
+          errorMessage: USERS_MESSAGES.END_DATE_MUST_BE_IN_FORMAT_YYYY_MM_DD
+        },
+        custom: {
+          options: (value, { req }) => {
+            const startDate = (req as any)?.query?.startDate;
+            if (startDate && new Date(value) < new Date(String(startDate))) {
+              throw new Error(USERS_MESSAGES.END_DATE_MUST_BE_AFTER_START_DATE)
+            }
+            return true
+          }
+        }
       }
     },
     ['query']
+  )
+)
+
+export const statsPaginationValidator = validate(
+  checkSchema(
+    {
+      page: {
+        in: ['query'],
+        optional: true,
+        isInt: {
+          options: { min: 1 },
+          errorMessage: USERS_MESSAGES.INVALID_PAGE_OR_LIMIT
+        },
+        toInt: true
+      },
+      limit: {
+        in: ['query'],
+        optional: true,
+        isInt: {
+          options: { min: 1 },
+          errorMessage: USERS_MESSAGES.INVALID_PAGE_OR_LIMIT
+        },
+        toInt: true
+      }
+    },
+    ['query']
+  )
+)
+
+export const adminCreateUserValidator = validate(
+  checkSchema(
+    {
+      fullname: fullNameSchema,
+      email: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_REQUIRED
+        },
+        isEmail: {
+          errorMessage: USERS_MESSAGES.EMAIL_IS_INVALID
+        },
+        trim: true,
+        custom: {
+          options: async (value: string) => {
+            const isExist = await usersService.checkEmailExist(value)
+            if (isExist) {
+              throw new Error(USERS_MESSAGES.EMAIL_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      phone_number: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_IS_REQUIRED
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.PHONE_NUMBER_MUST_BE_A_STRING
+        },
+        trim: true,
+        custom: {
+          options: async (value: string) => {
+            if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID)
+            }
+            const user = await databaseService.users.findOne({ phone_number: value })
+            if (user) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS)
+            }
+            return true
+          }
+        }
+      },
+      password: passwordSchema,
+      role: {
+        notEmpty: {
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID
+        },
+        isString: {
+          errorMessage: USERS_MESSAGES.ROLE_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(Role)],
+          errorMessage: USERS_MESSAGES.ROLE_IS_INVALID
+        }
+      },
+      verify: {
+        optional: true,
+        isString: {
+          errorMessage: USERS_MESSAGES.VERIFY_STATUS_MUST_BE_A_STRING
+        },
+        isIn: {
+          options: [Object.values(UserVerifyStatus)],
+          errorMessage: USERS_MESSAGES.INVALID_VERIFY_STATUS
+        }
+      }
+    },
+    ['body']
   )
 )
