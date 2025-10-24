@@ -24,6 +24,8 @@ export interface DetailUser {
   avatar: string;
   role: "STAFF" | "ADMIN" | "USER";
   nfc_card_uid: string;
+  email_verify_otp_expires: string;
+  forgot_password_otp_expires : string;
   created_at: string;
   updated_at: string;
 }
