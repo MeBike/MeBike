@@ -1,14 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { refundService } from "@services/refund.service";
+import { withdrawalsService } from "@/services/withdrawal.service";
 import axios from "axios";
 import { toast } from "sonner";
-const fetchDetailRefundRequests = async ({
-    id
-}: {
-  id :string
-}) => {
+const fetchDetailWithdrawRequests = async ({ id }: { id: string }) => {
   try {
-    const response = await refundService.getRefundRequestById(id);
+    const response = await withdrawalsService.getWithdrawRequestById(id);
     if (response.status === 200) {
       return response.data;
     }
@@ -25,14 +21,10 @@ const fetchDetailRefundRequests = async ({
     throw error;
   }
 };
-export const useGetDetailRefundRequestQuery = ({
-  id
-}: {
-  id : string
-}) => {
+export const useGetDetailWithdrawRequestQuery = ({ id }: { id: string }) => {
   return useQuery({
-    queryKey: ["refundRequests", id],
-    queryFn: () => fetchDetailRefundRequests({ id }),
-    enabled: !!id
+    queryKey: ["withdrawRequests", id],
+    queryFn: () => fetchDetailWithdrawRequests({ id }),
+    enabled: !!id,
   });
 };

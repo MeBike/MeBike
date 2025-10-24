@@ -25,8 +25,8 @@ const WITHDRAW_ENDPOINTS = {
   MANAGE_WITHDRAW_REQUEST: () => `${WITHDRAW_BASE}/manage-withdrawals`,
   ID: (id: string) => `${WITHDRAW_BASE}/${id}`,
 } as const;
-export const refundService = {
-  getAllRefundRequests: async ({
+export const withdrawalsService = {
+  getAllWithdrawRequests: async ({
     page,
     limit,
     status,

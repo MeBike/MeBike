@@ -1,11 +1,16 @@
-export type WithdrawStatus = "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
+export type WithdrawStatus =
+  | "ĐANG CHỜ XỬ LÝ"
+  | "ĐÃ DUYỆT"
+  | "TỪ CHỐI"
+  | "ĐÃ HOÀN THÀNH"
+  | "";
 import { DetailUser } from "@/services/auth.service";
 export interface WithdrawRequest {
   _id: string;
   user_id: string;
   user_name: string;
   user_email: string;
-  reason:string;
+  reason: string;
   amount: number;
   bank_account: string;
   bank_name: string;
@@ -26,7 +31,7 @@ export interface DetailWithdrawRequest {
   };
   bank: string;
   account_owner: string;
-  account : string;
+  account: string;
   status: RefundStatus;
   created_at: string;
   updated_at: string;
