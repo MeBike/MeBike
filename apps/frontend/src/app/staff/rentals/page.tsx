@@ -6,7 +6,6 @@ import { RentalFilters } from "@/components/rentals/rental-filters";
 import { RentalStats } from "@/components/rentals/rental-stats";
 import { Button } from "@/components/ui/button";
 import type { Rental, RentalStatus, PaymentStatus } from "@custom-types";
-import type { User as DetailUser } from "@custom-types";
 import { Plus, Download } from "lucide-react";
 const mockRentals: Rental[] = [
   {
@@ -170,7 +169,7 @@ const mockRentals: Rental[] = [
     updated_at: "2024-06-09T11:15:00Z",
   },
 ];
-
+  
 export default function RentalsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RentalStatus | "all">("all");
