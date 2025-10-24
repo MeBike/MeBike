@@ -431,7 +431,9 @@ export const WALLETS_MESSAGE = {
   USER_ID_REQUIRED: 'User ID là bắt buộc',
   BANK_IS_REQUIRED: 'Ngân hàng là bắt buộc',
   ACCOUNT_IS_REQUIRED: 'Tài khoản là bắt buộc',
-  ACCOUNT_OWNER_IS_REQUIRED: 'Chủ tài khoản là bắt buộc'
+  ACCOUNT_OWNER_IS_REQUIRED: 'Chủ tài khoản là bắt buộc',
+  REFUND_ALREADY_REQUESTED: 'Yêu cầu hoàn tiền cho giao dịch %s đã được tạo',
+  WITHDRAW_NOT_FOUND: 'Không tìm thấy yêu cầu rút tiền',
 }
 
 export const WITHDRAWLS_MESSAGE = {
