@@ -7,8 +7,9 @@ import type { RefundRequest, RefundStatus } from "@custom-types";
 import type { DetailUser } from "@/services/auth.service";
 import { Download, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useRefundAction } from "@/hooks/useRefundAction";
-
-
+import { refundColumn } from "@/columns/refund-column";
+import { Pagination } from "@/components/ui/pagination";
+import { DataTable } from "@/components/TableCustom";
 const getStatusColor = (status: RefundStatus) => {
   switch (status) {
     case "ĐANG CHỜ XỬ LÝ":
@@ -195,84 +196,7 @@ export default function RefundPage() {
 
         {/* Table */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted border-b border-border">
-              <tr>
-                {/* <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Người dùng
-                </th> */}
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Mã đơn
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Số tiền
-                </th>
-                {/* <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Lý do
-                </th> */}
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Hành động
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {response?.map((request) => (
-                <tr
-                  key={request._id}
-                  className="hover:bg-muted/50 transition-colors"
-                >
-                  {/* <td className="px-6 py-4 text-sm text-foreground font-medium">
-                    <div>
-                      <p>{request.user_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {request.user_email}
-                      </p>
-                    </div>
-                  </td> */}
-                  <td className="px-6 py-4 text-sm text-foreground font-mono">
-                    {request._id}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground font-semibold">
-                    {request.amount.toLocaleString("vi-VN")} đ
-                  </td>
-                  {/* <td className="px-6 py-4 text-sm text-foreground">
-                    {request.reason}
-                  </td> */}
-                  <td className="px-6 py-4 text-sm">
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}
-                    >
-                      {getStatusIcon(request.status)}
-                      {getStatusLabel(request.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewDetails(request)}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Chi tiết
-                      </Button>
-                      {request.status === "ĐANG CHỜ XỬ LÝ" && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleUpdateStatus(request)}
-                        >
-                          Xử lý
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable columns={refundColumn({})} data={response || []} />
         </div>
 
         {/* Results info */}
