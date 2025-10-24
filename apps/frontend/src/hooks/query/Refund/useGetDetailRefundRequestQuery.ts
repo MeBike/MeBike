@@ -21,7 +21,7 @@ const fetchDetailRefundRequests = async ({
         "Đã xảy ra lỗi không xác định";
       toast.error(message);
       return;
-      throw new Error(message); // React Query có thể bắt lại và hiển thị
+      throw new Error(message);
     }
     toast.error("Lỗi không xác định");
     throw error;
