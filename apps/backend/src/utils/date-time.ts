@@ -10,17 +10,14 @@ export const getLocalTime = () => {
 const toMs = (from: TimeType, value: number) => {
     switch (from) {
         case TimeType.Second:
-            value * 1000
-            break;
+            return value * 1000
     
         case TimeType.Minute:
-            value * 60 * 1000
-            break;
+            return value * 60 * 1000
+
         default:
-            value * 60 * 60 * 1000
-            break;
+            return value * 60 * 60 * 1000
     }
-    return value
 }
 
 export const fromHoursToMs = (value: number) => {

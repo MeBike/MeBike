@@ -139,15 +139,15 @@ const checkReservationBeforeCancel = async (reservationId: string, req: any) => 
   return reservation
 }
 
-const ReasonValidationSchema: ParamSchema = {
+const ReasonValidationSchema = (requiredMessage: string): ParamSchema => ({
     in: ['body'],
-    notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_CANCELLED_REASON },
+    notEmpty: { errorMessage: requiredMessage },
     isString: { errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON },
     isLength: {
         options: { min: 5, max: 255 },
         errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON_LENGTH
     }
-};
+});
 
 export const userCancelReservationValidator = validate(
   checkSchema({
@@ -176,7 +176,7 @@ export const userCancelReservationValidator = validate(
         }
       }
     },
-    reason: ReasonValidationSchema
+    reason: ReasonValidationSchema(RESERVATIONS_MESSAGE.REQUIRED_CANCELLED_REASON)
   })
 )
 
@@ -197,7 +197,7 @@ export const staffCancelReservationValidator = validate(
         }
       }
     },
-    reason: ReasonValidationSchema
+    reason: ReasonValidationSchema(RESERVATIONS_MESSAGE.REQUIRED_CANCELLED_REASON)
   })
 )
 
@@ -261,16 +261,7 @@ export const staffConfirmReservationValidator = validate(
         options: (value, { req }) => checkReservationState(value, req)
       }
     },
-    reason: {
-      in: ['body'],
-      notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_CONFIRM_REASON },
-      isString: { errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON },
-      trim: true,
-      isLength: {
-        options: { min: 5, max: 255 },
-        errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON_LENGTH
-      }
-    }
+    reason: ReasonValidationSchema(RESERVATIONS_MESSAGE.REQUIRED_CONFIRM_REASON)
   })
 )
 

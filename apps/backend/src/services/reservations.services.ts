@@ -635,7 +635,7 @@ class ReservationsService {
         station,
         total_count: 0,
         status_counts: {},
-        reservations: []
+        reserving_bikes: []
       }
     }
 
