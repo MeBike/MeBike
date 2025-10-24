@@ -158,21 +158,29 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
 };
 
 export function readEmailTemplate(templateName: string, data: TemplateData): string {
-  try {
-    const templatePath = path.join(__dirname, 'templates', templateName)
-    let htmlContent = fs.readFileSync(templatePath, 'utf-8')
-    Object.keys(data).forEach((key) => {
-      const regex = new RegExp(`{{${key}}}`, 'g')
-      htmlContent = htmlContent.replace(regex, data[key])
-    })
-    return htmlContent
-  } catch (error) {
-    console.error(`Error reading email template ${templateName}:`, error)
-    const fallbackTemplate = FALLBACK_TEMPLATES[templateName]
-    if (fallbackTemplate) {
-      return fallbackTemplate(data)
-    }
-    // fallback chung nếu không có template cụ thể
-    return `Xin chào ${data.fullname || 'bạn'}, cảm ơn bạn đã sử dụng dịch vụ của MeBike.`
+  // try {
+  //   const templatePath = path.join(__dirname, "templates", templateName);
+  //   let htmlContent = fs.readFileSync(templatePath, "utf-8");
+  //   Object.keys(data).forEach((key) => {
+  //     const regex = new RegExp(`{{${key}}}`, "g");
+  //     htmlContent = htmlContent.replace(regex, data[key]);
+  //   });
+  //   return htmlContent;
+  // }
+  // catch (error) {
+  //   console.error(`Error reading email template ${templateName}:`, error);
+  //   const fallbackTemplate = FALLBACK_TEMPLATES[templateName];
+  //   if (fallbackTemplate) {
+  //     return fallbackTemplate(data);
+  //   }
+  //   // fallback chung nếu không có template cụ thể
+  //   return `Xin chào ${data.fullname || "bạn"}, cảm ơn bạn đã sử dụng dịch vụ của MeBike.`;
+  // }
+  const fallbackTemplate = FALLBACK_TEMPLATES[templateName];
+
+  if (fallbackTemplate) {
+    return fallbackTemplate(data);
   }
+  console.error(`Email template ${templateName} not found in FALLBACK_TEMPLATES.`);
+  return `Xin chào ${data.fullname || "bạn"}, cảm ơn bạn đã sử dụng dịch vụ của MeBike.`;
 }

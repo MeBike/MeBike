@@ -1,0 +1,35 @@
+type: object
+description: "Fields to update for the user's profile. All fields are optional. If 'email' is changed, 'verify' status will be reset to 'UNVERIFIED'."
+properties:
+  fullname:
+    type: string
+    description: "The user's full name (1-50 characters)."
+    example: "Nguyen Van C"
+  email:
+    type: string
+    format: email
+    description: "The user's new email. Must be unique."
+    example: "new.email@example.com"
+  verify:
+    # Tham chiếu đến enum 'verify' đã có trong User.yaml
+    $ref: './User.yaml#/properties/verify'
+  location:
+    type: string
+    description: "The user's location (1-200 characters)."
+    example: "Da Nang, Vietnam"
+  username:
+    type: string
+    description: "The user's new username. Must be unique."
+    example: "nguyenvanc123"
+  phone_number:
+    type: string
+    description: "The user's new phone number (10 digits). Must be unique."
+    example: "0905123456"
+  role:
+    # Tham chiếu đến enum 'role' đã có trong User.yaml
+    $ref: './User.yaml#/properties/role'
+  nfc_card_uid:
+    type: string
+    nullable: true
+    description: "The user's NFC card UID. Must be unique. Send null or empty string to remove."
+    example: "A1-B2-C3-D4"
