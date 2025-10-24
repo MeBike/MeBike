@@ -151,7 +151,7 @@ export function CustomerCard({
             <Edit className="w-4 h-4 mr-1" />
             Sửa
           </Button>
-          {customer.verify !== "BANNED" && (
+          {/* {customer.verify !== "BANNED" && (
             <Button
               variant="outline"
               size="sm"
@@ -159,7 +159,7 @@ export function CustomerCard({
             >
               <Ban className="w-4 h-4 text-destructive" />
             </Button>
-          )}
+          )} */}
         </div>
       </div>
     </Card>
