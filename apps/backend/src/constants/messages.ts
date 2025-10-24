@@ -108,7 +108,9 @@ export const USERS_MESSAGES = {
   GET_TOP_RENTERS_STATS_SUCCESS: 'Lấy thống kê top người thuê xe thành công',
   INVALID_PAGE_OR_LIMIT: 'Page hoặc limit phải là số nguyên dương.',
   // admin create user messages
-  CREATE_USER_SUCCESS: 'Tạo người dùng mới thành công'
+  CREATE_USER_SUCCESS: 'Tạo người dùng mới thành công',
+  // get new users stats
+  GET_NEW_USER_STATS_SUCCESS: 'Lấy thống kê người dùng mới thành công'
 } as const
 
 export const REPORTS_MESSAGES = {
