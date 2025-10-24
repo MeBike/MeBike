@@ -43,7 +43,7 @@ export const useGetAllUserQuery = ({
   role?: "ADMIN" | "USER" | "STAFF" | "";
 }) => {
   return useQuery({
-    queryKey: ["all","user" ,  page, limit, verify, role],
+    queryKey: ["all", "user", page, limit, verify, role],
     queryFn: () => fetchAllUserRequests({ page, limit, verify, role }),
   });
 };

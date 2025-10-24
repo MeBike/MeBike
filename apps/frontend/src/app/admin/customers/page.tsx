@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 // import { DetailUser } from "@/services/auth.service";
 import type { DetailUser, VerifyStatus, UserRole } from "@custom-types";
 import { Plus, Download, ChevronLeft, ChevronRight } from "lucide-react";
-import { CustomerStatsProps } from "@/components/customers/customer-stats";
 import { useUserActions } from "@/hooks/useUserAction";
 const mockUsers: DetailUser[] = [
   {
@@ -182,12 +181,22 @@ export default function CustomersPage() {
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState<number>(5); // Items per page
-  const { users, getAllUsers, isFetching } = useUserActions({
+  const {
+    users,
+    getAllUsers,
+    isFetching,
+    getAllStatistics,
+    isLoadingStatistics,
+    statistics,
+    getSearchUsers,
+    isLoadingSearch,
+  } = useUserActions({
     hasToken: true,
     limit: limit,
     page: currentPage,
     verify: verifyFilter === "all" ? "" : verifyFilter,
     role: roleFilter === "all" ? undefined : (roleFilter as UserRole),
+    searchQuery: searchQuery,
   });
   const filteredUsers = mockUsers.filter((user) => {
     const matchesSearch =
@@ -198,7 +207,6 @@ export default function CustomersPage() {
     const matchesVerify =
       verifyFilter === "all" || user.verify === verifyFilter;
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
-
     return matchesSearch && matchesVerify && matchesRole;
   });
 
@@ -208,6 +216,7 @@ export default function CustomersPage() {
   const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
   useEffect(() => {
     getAllUsers;
+    getAllStatistics;
   }, [searchQuery, verifyFilter, roleFilter]);
   const handleReset = () => {
     setSearchQuery("");
@@ -215,36 +224,34 @@ export default function CustomersPage() {
     setRoleFilter("all");
     setCurrentPage(1);
   };
-
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
-
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
-
-  const stats: Partial<CustomerStatsProps["stats"]> = {
-    total: mockUsers.length,
-    verified: mockUsers.filter((u) => u.verify === "VERIFIED").length,
-    unverified: mockUsers.filter((u) => u.verify === "UNVERIFIED").length,
-    banned: mockUsers.filter((u) => u.verify === "BANNED").length,
-    admins: mockUsers.filter((u) => u.role === "ADMIN").length,
-    staffs: mockUsers.filter((u) => u.role === "STAFF").length,
-    users: mockUsers.filter((u) => u.role === "USER").length,
-  };
-
-  if (isFetching) {
+useEffect(() => {
+  if (!searchQuery) getAllUsers();
+  else getSearchUsers();
+  console.log(users);
+}, [searchQuery, verifyFilter, roleFilter, users]);
+  if (isFetching && isLoadingStatistics) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
         <Loader2 className="animate-spin w-16 h-16 text-primary" />
       </div>
     );
   }
+  // if (isLoadingSearch) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+  //       <Loader2 className="animate-spin w-16 h-16 text-primary" />
+  //     </div>
+  //   );
+  // }
   return (
     <div>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
@@ -255,10 +262,10 @@ export default function CustomersPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline">
+            {/* <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Xuất Excel
-            </Button>
+            </Button> */}
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               Thêm người dùng
@@ -267,7 +274,19 @@ export default function CustomersPage() {
         </div>
 
         {/* Stats */}
-        <CustomerStats stats={stats} />
+        <CustomerStats
+          stats={
+            statistics?.result ?? {
+              total_users: 0,
+              total_verified: 0,
+              total_unverified: 0,
+              total_banned: 0,
+              // admins: 0,
+              // staffs: 0,
+              // users: 0,
+            }
+          }
+        />
 
         {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">

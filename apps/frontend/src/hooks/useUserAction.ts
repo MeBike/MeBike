@@ -4,6 +4,8 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { VerifyStatus } from "@/types";
+import { useGetAllStatisticsUserQuery } from "./query/User/useGetAllStatisticsQuery";
+import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 interface ErrorWithMessage {
   message: string;
 }
@@ -39,21 +41,33 @@ export const useUserActions = ({
   role,
   limit,
   page,
+  searchQuery,
 }: {
   hasToken: boolean;
   verify?: VerifyStatus;
   role?: "ADMIN" | "USER" | "STAFF" | "";
   limit?: number;
   page?: number;
+  searchQuery?: string;
 }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data , refetch , isFetching } = useGetAllUserQuery({
+  const { data, refetch, isFetching } = useGetAllUserQuery({
     page,
     limit,
     role: role || "",
     verify: verify || "",
   });
+  const {
+    data: statisticsData,
+    refetch: refetchStatistics,
+    isLoading: isLoadingStatistics,
+  } = useGetAllStatisticsUserQuery();
+  const {
+    data: searchData,
+    refetch: refetchSearch,
+    isLoading: isLoadingSearch,
+  } = useGetSearchUserQuery(searchQuery || "");
   const getAllUsers = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -61,10 +75,31 @@ export const useUserActions = ({
     }
     refetch();
   }, [hasToken, queryClient, router]);
+  const getAllStatistics = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchStatistics();
+  }, [hasToken, queryClient, router]);
+  const getSearchUsers = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    } 
+    refetchSearch();
+  }, [hasToken, queryClient, router]);
+  const users = searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
   return {
-    users : data?.data,
+    users: users,
     refetch,
     isFetching,
     getAllUsers,
+    statistics: statisticsData,
+    refetchStatistics,
+    getAllStatistics,
+    isLoadingStatistics,
+    getSearchUsers,
+    isLoadingSearch,
   };
 };

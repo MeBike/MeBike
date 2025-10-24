@@ -87,9 +87,9 @@ export const userService = {
   },
   getSearchUser: async (
     query: string
-  ): Promise<ApiReponse<DetailUserResponse<DetailUser[]>>> => {
+  ): Promise<AxiosResponse<ApiReponse<DetailUser[]>>> => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<DetailUser[]>
+      ApiReponse<DetailUser[]>
     >(USER_ENDPOINTS.SEARCH_USER, {
       q: query,
     });
@@ -105,11 +105,11 @@ export const userService = {
     return response;
   },
   userStatistics: async (): Promise<
-    AxiosResponse<ApiReponse<UserStatistics>>
+    AxiosResponse<DetailUserResponse<UserStatistics>>
   > => {
-    const response = await fetchHttpClient.get<ApiReponse<UserStatistics>>(
-      USER_ENDPOINTS.STATISTICS
-    );
+    const response = await fetchHttpClient.get<
+      DetailUserResponse<UserStatistics>
+    >(USER_ENDPOINTS.STATISTICS);
     return response;
   },
   resetUserPassword: async (
@@ -139,9 +139,10 @@ export const userService = {
   createUser: async (
     data: UserProfile
   ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
-    const response = await fetchHttpClient.post<
-      DetailUserResponse<DetailUser>
-    >(USER_ENDPOINTS.CREATE_USER, data);
+    const response = await fetchHttpClient.post<DetailUserResponse<DetailUser>>(
+      USER_ENDPOINTS.CREATE_USER,
+      data
+    );
     return response;
   },
 };
