@@ -740,6 +740,48 @@
             schema:
               $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
+/users/manage-users/stats/new-users:
+  get:
+    tags: [Users]
+    summary: Get new user registration stats (Admin only)
+    description: |
+      Retrieves statistics on new user registrations.
+      Compares Month-to-Date (MTD) registrations of this month against the same period last month.
+      **Requires Admin privileges (not Staff).**
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: "New user statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê người dùng mới thành công"
+                result:
+                  $ref: '../components/schemas/NewUserStats.yaml'
+      '401':
+        description: "Unauthorized (Invalid access token)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden (User is not an Admin)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "User not found (Admin user from token does not exist)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Bikes API
 # ===================================================================
