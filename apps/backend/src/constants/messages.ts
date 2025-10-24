@@ -310,6 +310,9 @@ export const RESERVATIONS_MESSAGE = {
   GET_HISTORY_SUCCESS: 'Xem lịch sử đặt trước thành công',
   CONFIRM_SUCCESS: 'Xác nhận phiên đặt trước thành công',
   DISPATCH_BIKE_SUCCESS: 'Phân phối xe thành công',
+  STAFF_CONFIRM_SUCCESS: 'Nhân viên hỗ trợ xác nhận phiên đặt trước thành công',
+  STAFF_CANCEL_SUCCESS: 'Nhân viên hỗ trợ huỷ phiên đặt trước thành công',
+  GET_STATION_RESERVATIONS_SUCCESS: 'Xem chi tiết thống kê các phiên đặt trước tại trạm thành công',
   // Fail action
   PARTIAL_UPDATE_FAILURE: 'Lỗi hệ thống: Chỉ %s/%s xe được cập nhật. Hành động bị hủy',
   // Required data
@@ -319,15 +322,16 @@ export const RESERVATIONS_MESSAGE = {
   REQUIRED_START_STATION: 'Vui lòng nhập trạm bắt đầu',
   REQUIRED_END_STATION: 'Vui lòng nhập trạm kết thúc',
   REQUIRED_START_TIME: 'Vui lòng nhập thời gian bắt đầu hiệu lực',
-  REQUIRED_CANCELLED_REASON: 'Vui lòng nhập nguyên nhân huỷ',
+  REQUIRED_CANCELLED_REASON: 'Vui lòng nhập nguyên nhân huỷ phiên đặt trước này',
   REQUIRED_SOURCE_STATION_ID: 'Vui lòng cung cấp Id trạm nguồn',
   REQUIRED_DESTINATION_STATION_ID: 'Vui lòng cung cấp Id trạm đích',
   REQUIRED_BIKE_LIST: 'Danh sách xe cần điều phối không được để trống',
+  REQUIRED_CONFIRM_REASON: 'Vui lòng nhập nguyên nhân xác nhận phiên đặt trước này',
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
-  INVALID_CANCELLED_REASON: 'Nguyên nhân huỷ không hợp lệ (phải là dạng chuỗi)',
-  REASON_TOO_LONG: 'Độ dài của nguyên nhân huỷ không hợp lệ (dưới 255 kí tự)',
+  INVALID_REASON: 'Nguyên nhân không hợp lệ (phải là dạng chuỗi)',
+  INVALID_REASON_LENGTH: 'Độ dài của nguyên nhân không hợp lệ (phải từ 5 đến 255 kí tự)',
   INVALID_START_TIME: 'Thời gian đặt trước không thể là thời điểm ở quá khứ',
   INVALID_STATION_ID: 'Id trạm xe không hợp lệ',
   INVALID_USER_ID: 'Id người dùng không hợp lệ',
@@ -351,14 +355,17 @@ export const RESERVATIONS_MESSAGE = {
   CANNOT_CONFIRM_EXPIRED_RESERVATION: 'Đã vượt quá thời gian cho phép xác nhận phiên đặt trước này',
   NOT_AVAILABLE_FOR_CONFIRMATION: 'Chưa đến thời gian cho phép xác nhận phiên đặt trước này',
   CANNOT_CANCEL_THIS_RESERVATION: 'Bạn chỉ có thể huỷ phiên đặt trước ở trạng thái đang được xử lí',
+  CANNOT_CONFIRM_OTHER_RESERVATION: 'Bạn không có quyền xác nhận phiên đặt trước của người khác',
+  CANNOT_CANCEL_EXPIRED_RESERVATION: 'Phiên đặt trước này đã hết hạn, bạn không thể huỷ',
   // Over time
   OVER_CANCELLED_TIME: 'Đã quá thời gian quy định để có thể huỷ phiên đặt trước',
-  // Reason
-  NO_CANCELLED_REASON: 'Không có nguyên nhân nào được cung cấp',
+  // Default
+  NO_REASON_PROVIDED: 'Không có nguyên nhân nào được cung cấp',
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
   // Payment
   PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s',
+  REFUND_DESCRIPTION: 'Hoàn tiền cho phiên đặt trước của xe %s',
   // Quota
   QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước',
   DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',
@@ -379,7 +386,9 @@ export const RESERVATIONS_MESSAGE = {
   SCHEDULING_CANCEL_TASK: (reservationId: string, delayMinutes: number) => 
         `Scheduling cancellation task for reservation ${reservationId} in ${delayMinutes} minutes.`,
   // Email Messages
-  EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn'
+  EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn',
+  // Status
+  RESERVATION_NOT_PENDING: 'Phiên đặt trước phải ở trạng thái "ĐANG CHỜ XỬ LÍ"'
 } as const
 export const WALLETS_MESSAGE = {
   USER_ALREADY_HAVE_WALLET: 'Người dùng với ID %s đã có ví',

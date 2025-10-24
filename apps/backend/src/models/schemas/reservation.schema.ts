@@ -1,7 +1,7 @@
 import { Decimal128, ObjectId } from "mongodb";
 
 import { ReservationStatus } from "~/constants/enums";
-import { getLocalTime } from "~/utils/date";
+import { getLocalTime } from "~/utils/date-time";
 
 type ReservationType = {
   _id?: ObjectId;
