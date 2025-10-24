@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { CustomerCard } from "@/components/customers/customer-card";
@@ -9,25 +9,25 @@ import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userProfileSchema, UserProfile } from "@schemas/userSchema";
 import type { VerifyStatus, UserRole, DetailUser } from "@custom-types";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUserActions } from "@/hooks/useUserAction";
 
 export default function CustomersPage() {
-  // const {
-  //   register,
-  //   handleSubmit,
-  //   formState: { errors },
-  //   reset,
-  // } = useForm<UserProfile>({
-  //   resolver: zodResolver(userProfileSchema),
-  // });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<UserProfile>({
+    resolver: zodResolver(userProfileSchema),
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit] = useState<number>(5);
-  // const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [limit,] = useState<number>(5);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const {
     users,
     getAllUsers,
@@ -36,6 +36,7 @@ export default function CustomersPage() {
     isLoadingStatistics,
     statistics,
     getSearchUsers,
+    createUser,
     paginationUser,
   } = useUserActions({
     hasToken: true,
@@ -50,14 +51,7 @@ export default function CustomersPage() {
   useEffect(() => {
     getAllUsers();
     getAllStatistics();
-  }, [
-    searchQuery,
-    verifyFilter,
-    roleFilter,
-    getAllUsers,
-    getAllStatistics,
-    currentPage,
-  ]);
+  }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getAllStatistics, currentPage]);
   const handleReset = () => {
     setSearchQuery("");
     setVerifyFilter("all");
@@ -90,19 +84,19 @@ export default function CustomersPage() {
   //     </div>
   //   );
   // }
-  // const handleCreateUser = handleSubmit((data) => {
-  //   createUser({
-  //     fullname: data.fullname,
-  //     email: data.email,
-  //     verify: "UNVERIFIED" as VerifyStatus,
-  //     phone_number: data.phone_number,
-  //     password: data.password,
-  //     role: data.role,
-  //   });
-  //   console.log("[v0] Create user:", data);
-  //   setIsCreateModalOpen(false);
-  //   reset();
-  // });
+  const handleCreateUser = handleSubmit((data) => {
+    createUser({
+      fullname: data.fullname,
+      email: data.email,
+      verify: "UNVERIFIED" as VerifyStatus,
+      phone_number: data.phone_number,
+      password: data.password,
+      role: data.role,
+    });
+    console.log("[v0] Create user:", data);
+    setIsCreateModalOpen(false);
+    reset();
+  });
   return (
     <div>
       <div className="space-y-6">
@@ -115,7 +109,7 @@ export default function CustomersPage() {
               Theo dõi và quản lý thông tin người dùng hệ thống
             </p>
           </div>
-          {/* <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <Button
               onClick={() => {
                 setIsCreateModalOpen(true);
@@ -124,7 +118,7 @@ export default function CustomersPage() {
               <Plus className="w-4 h-4 mr-2" />
               Thêm người dùng
             </Button>
-          </div> */}
+          </div>
         </div>
 
         <CustomerStats
@@ -258,7 +252,7 @@ export default function CustomersPage() {
               </div>
             </div>
           )}
-          {/* {isCreateModalOpen && (
+          {isCreateModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
                 <h2 className="text-xl font-bold text-foreground mb-4">
@@ -356,7 +350,7 @@ export default function CustomersPage() {
                       </p>
                     )}
                   </div>
-                  <div>
+                  {/* <div>
                     <label className="text-sm font-medium text-foreground">
                       Vai trò
                     </label>
@@ -373,7 +367,7 @@ export default function CustomersPage() {
                         {errors.role.message}
                       </p>
                     )}
-                  </div>
+                  </div> */}
                 </form>
 
                 <div className="flex gap-3 mt-6">
@@ -394,7 +388,7 @@ export default function CustomersPage() {
                 </div>
               </div>
             </div>
-          )} */}
+          )}
         </div>
       </div>
     </div>

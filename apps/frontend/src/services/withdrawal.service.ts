@@ -1,6 +1,5 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import type { UpdateRefundSchemaFormData } from "@/schemas/refund.schema";
 import type {
   WithdrawRequest,
   WithdrawStatus,

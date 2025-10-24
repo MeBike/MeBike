@@ -1,6 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw } from "lucide-react";
-import type { WithdrawRequest, WithdrawStatus } from "@/types";
+import type { WithdrawRequest } from "@/types";
 import { getStatusColor } from "@/utils/refund-status";
 // export const getStatusColor = (status: WithdrawStatus) => {
 //   switch (status) {
