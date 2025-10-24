@@ -17,9 +17,9 @@ import { stationColumns } from "@/columns/station-column";
 // MAIN
 export default function StationsPage() {
   // STATES
-  const mapRef = useRef<HTMLDivElement>(null); // Map ref cho thêm mới
+  const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<tt.Map | null>(null);
-  const editMapRef = useRef<HTMLDivElement>(null); // Map ref cho edit
+  const editMapRef = useRef<HTMLDivElement>(null);
   const editMapInstanceRef = useRef<tt.Map | null>(null);
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
@@ -114,11 +114,9 @@ export default function StationsPage() {
 
     if (isModalOpen && mapRef.current && !mapInstanceRef.current) {
       timer = setTimeout(() => {
-        const apiKey =
-          process.env.NEXT_PUBLIC_TOMTOM_API_KEY ||
-          "N5uyS5ZiQ4Uwxmu0JqgpLXG0exsrmeMP";
+        const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY
         mapInstanceRef.current = tt.map({
-          key: apiKey,
+          key: apiKey as string,
           container: mapRef.current as HTMLElement,
           center: [106.70098, 10.77689],
           zoom: 14,
@@ -170,13 +168,12 @@ export default function StationsPage() {
     ) {
       timer = setTimeout(() => {
         const apiKey =
-          process.env.NEXT_PUBLIC_TOMTOM_API_KEY ||
-          "N5uyS5ZiQ4Uwxmu0JqgpLXG0exsrmeMP";
+          process.env.NEXT_PUBLIC_TOMTOM_API_KEY
         const lat = parseFloat(responseStationDetail.latitude);
         const lng = parseFloat(responseStationDetail.longitude);
 
         editMapInstanceRef.current = tt.map({
-          key: apiKey,
+          key: apiKey as string,
           container: editMapRef.current as HTMLElement,
           center: [lng, lat],
           zoom: 14,
