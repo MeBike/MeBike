@@ -73,12 +73,12 @@ export const reserveBikeValidator = validate(
 
             const maxAllowedReserved = Math.floor(totalAvailableBikes * RESERVE_QUOTA_PERCENT)
 
-            // if (currentlyReservedBikes >= maxAllowedReserved) {
-            //   throw new ErrorWithStatus({
-            //     message: RESERVATIONS_MESSAGE.QUOTA_EXCEEDED,
-            //     status: HTTP_STATUS.BAD_REQUEST
-            //   })
-            // }
+            if (currentlyReservedBikes >= maxAllowedReserved) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.QUOTA_EXCEEDED,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
             req.bike = bike
             return true
           }
