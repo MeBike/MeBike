@@ -2,9 +2,9 @@ import { Filter, ObjectId } from "mongodb";
 import process from "node:process";
 import nodemailer from "nodemailer";
 
-import type { AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
+import type { AdminCreateUserReqBody, AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
-import { Role, TokenType, UserVerifyStatus } from "~/constants/enums";
+import { RentalStatus, Role, TokenType, UserVerifyStatus } from "~/constants/enums";
 import HTTP_STATUS from "~/constants/http-status";
 import { USERS_MESSAGES } from "~/constants/messages";
 import { ErrorWithStatus } from "~/models/errors";
@@ -86,20 +86,34 @@ class UsersService {
     const localTime = getLocalTime();
     const emailVerifyOtpExpires = new Date(localTime.getTime() + 10 * 60 * 1000);
 
-    await databaseService.users.insertOne(
-      new User({
-        ...payload,
-        _id: user_id,
-        fullname: payload.fullname,
-        username: `user${user_id.toString()}`,
-        email_verify_otp: emailVerifyOtp,
-        email_verify_otp_expires: emailVerifyOtpExpires,
-        password: hashPassword(payload.password),
-        role: Role.User,
-      }),
-    );
+    // await databaseService.users.insertOne(
+    //   new User({
+    //     ...payload,
+    //     _id: user_id,
+    //     fullname: payload.fullname,
+    //     username: `user${user_id.toString()}`,
+    //     email_verify_otp: emailVerifyOtp,
+    //     email_verify_otp_expires: emailVerifyOtpExpires,
+    //     password: hashPassword(payload.password),
+    //     role: Role.User,
+    //   }),
+    // );
+
     // create wallet for user
-    await walletService.createWallet(user_id.toString());
+    // await walletService.createWallet(user_id.toString());
+
+    //dữ liệu của user
+    const newUser = new User({
+      ...payload,
+      _id: user_id,
+      fullname: payload.fullname,
+      username: `user${user_id.toString()}`,
+      email_verify_otp: emailVerifyOtp,
+      email_verify_otp_expires: emailVerifyOtpExpires,
+      password: hashPassword(payload.password),
+      role: Role.User
+    })
+
     const [access_token, refresh_token] = await this.signAccessAndRefreshTokens({
       user_id: user_id.toString(),
       verify: UserVerifyStatus.Unverified,
@@ -107,14 +121,50 @@ class UsersService {
 
     const { exp, iat } = await this.decodeRefreshToken(refresh_token);
 
-    await databaseService.refreshTokens.insertOne(
-      new RefreshToken({
-        token: refresh_token,
-        user_id: new ObjectId(user_id),
-        exp,
-        iat,
-      }),
-    );
+    // await databaseService.refreshTokens.insertOne(
+    //   new RefreshToken({
+    //     token: refresh_token,
+    //     user_id: new ObjectId(user_id),
+    //     exp,
+    //     iat,
+    //   }),
+    // );
+    // dữ liệu của refresh token
+    const newRefreshToken = new RefreshToken({
+      token: refresh_token,
+      user_id: new ObjectId(user_id),
+      exp,
+      iat
+    })
+
+    //khởi tạo session
+    const session = databaseService.getClient().startSession()
+
+    try {
+      //bắt đầu transaction
+      await session.withTransaction(async () => {
+        //tất cả các lệnh ghi database PHẢI được await bên trong này
+        //và phải truyền `{ session }`
+        
+        //ghi vào users
+        await databaseService.users.insertOne(newUser, { session })
+        
+        //ghi vào wallets (sử dụng hàm createWallet)
+        await walletService.createWallet(user_id.toString(), session)
+        
+        //ghi vào refreshTokens
+        await databaseService.refreshTokens.insertOne(newRefreshToken, { session })
+      })
+      //nếu transaction thành công, tiếp tục gửi email
+    } catch (error) {
+      //nếu transaction thất bại
+      // `users.insertOne` và `refreshTokens.insertOne` sẽ tự động được rollback.
+      throw error //ném lỗi ra controller
+    } finally {
+      //luôn đóng session
+      await session.endSession()
+    }
+
     try {
       const transporter = nodemailer.createTransport({
         service: "gmail",
@@ -566,6 +616,263 @@ class UsersService {
     }
 
     return user
+  }
+
+  async adminResetPassword(user_id: string, new_password: string) {
+    const localTime = getLocalTime()
+
+    const hashedPassword = hashPassword(new_password)
+
+    //cập nhật mật khẩu mới và xóa các token reset cũ
+    const result = await databaseService.users.findOneAndUpdate(
+      { _id: new ObjectId(user_id) },
+      {
+        $set: {
+          password: hashedPassword,
+          forgot_password_otp: null,
+          forgot_password_otp_expires: null,
+          updated_at: localTime
+        }
+      }
+    )
+
+    if (!result) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return result
+  }
+
+  async getUserStats() {
+    //$facet chạy nhiều pipeline đếm song song
+    const statsPipeline = [
+      {
+        $facet: {
+          //pipeline 1: Đếm tổng số người dùng
+          "total_users": [
+            { $count: "count" }
+          ],
+          //pipeline 2: Đếm số người dùng đã xác thực
+          "total_verified": [
+            { $match: { verify: UserVerifyStatus.Verified } },
+            { $count: "count" }
+          ],
+          //pipeline 3: Đếm số người dùng chưa xác thực
+          "total_unverified": [
+            { $match: { verify: UserVerifyStatus.Unverified } },
+            { $count: "count" }
+          ],
+          //pipeline 4: Đếm số người dùng bị cấm
+          "total_banned": [
+            { $match: { verify: UserVerifyStatus.Banned } },
+            { $count: "count" }
+          ]
+        }
+      },
+      {
+        //làm sạch output
+        $project: {
+          // $arrayElemAt lấy phần tử đầu tiên của mảng (hoặc null)
+          // $ifNull xử lý trường hợp mảng rỗng (không có user nào) và trả về 0
+          "total_users": { $ifNull: [{ $arrayElemAt: ["$total_users.count", 0] }, 0] },
+          "total_verified": { $ifNull: [{ $arrayElemAt: ["$total_verified.count", 0] }, 0] },
+          "total_unverified": { $ifNull: [{ $arrayElemAt: ["$total_unverified.count", 0] }, 0] },
+          "total_banned": { $ifNull: [{ $arrayElemAt: ["$total_banned.count", 0] }, 0] }
+        }
+      }
+    ];
+
+    //chạy pipeline
+    const result = await databaseService.users.aggregate(statsPipeline).toArray();
+
+    //$facet luôn trả về một mảng chứa 1 document, kể cả khi collection rỗng
+    return result[0];
+  }
+
+  async getActiveUserTimeseries(groupBy: 'day' | 'month', startDate: string, endDate: string) {
+    const start = new Date(startDate)
+    //thêm 1 ngày vào endDate để bao gồm cả ngày đó
+    const end = new Date(endDate)
+    end.setDate(end.getDate() + 1)
+
+    //xác định định dạng group theo ngày hay tháng
+    const dateFormat = groupBy === 'day' ? '%Y-%m-%d' : '%Y-%m'
+
+    const pipeline = [
+      {
+        //lọc các refresh token được tạo trong khoảng thời gian
+        $match: {
+          iat: { // 'iat' (issued at) là trường Date trong schema RefreshToken
+            $gte: start,
+            $lt: end
+          }
+        }
+      },
+      {
+        //nhóm theo (ngày/tháng) VÀ user_id để lấy user duy nhất mỗi kỳ
+        $group: {
+          _id: {
+            date: {
+              $dateToString: { format: dateFormat, date: '$iat', timezone: 'Asia/Ho_Chi_Minh' }
+            },
+            user_id: '$user_id'
+          }
+        }
+      },
+      {
+        //nhóm lại một lần nữa chỉ theo ngày/tháng để đếm số user duy nhất
+        $group: {
+          _id: '$_id.date',
+          active_users_count: { $sum: 1 }
+        }
+      },
+      {
+        //định dạng lại output
+        $project: {
+          _id: 0,
+          date: '$_id',
+          active_users_count: 1
+        }
+      },
+      {
+        //sắp xếp theo ngày
+        $sort: {
+          date: 1
+        }
+      }
+    ]
+
+    const result = await databaseService.refreshTokens.aggregate(pipeline).toArray()
+    return result
+  }
+
+  async getTopRentersStats(page: number, limit: number) {
+    //tính skip và limit cho pipeline
+    const skip = (page - 1) * limit
+
+    const pipeline = [
+      {
+        //chỉ lọc các chuyến đi đã "Hoàn thành"
+        $match: {
+          status: RentalStatus.Completed
+        }
+      },
+      {
+        //nhóm theo user_id và đếm số chuyến
+        $group: {
+          _id: '$user_id',
+          total_rentals: { $sum: 1 }
+        }
+      },
+      {
+        //sắp xếp: người thuê nhiều nhất lên đầu
+        $sort: {
+          total_rentals: -1
+        }
+      },
+      {
+        //phân trang
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        //join với collection 'users' để lấy thông tin chi tiết
+        $lookup: {
+          from: 'users', //tên collection 'users'
+          localField: '_id', //user_id từ collection 'rentals'
+          foreignField: '_id', //_id từ collection 'users'
+          as: 'user_info'
+        }
+      },
+      {
+        // $lookup trả về 1 mảng, ta $unwind để lấy object
+        $unwind: '$user_info'
+      },
+      {
+        //định dạng lại output
+        $project: {
+          _id: 0,
+          total_rentals: 1,
+          user: {
+            _id: '$user_info._id',
+            fullname: '$user_info.fullname',
+            email: '$user_info.email',
+            phone_number: '$user_info.phone_number',
+            avatar: '$user_info.avatar',
+            location: '$user_info.location'
+          }
+        }
+      }
+    ]
+
+    // Pipeline để đếm tổng số user đã từng thuê (cho phân trang)
+    const countPipeline = [
+      { $match: { status: RentalStatus.Completed } },
+      { $group: { _id: '$user_id' } },
+      { $count: 'total_records' }
+    ]
+
+    const [results, countResult] = await Promise.all([
+      databaseService.rentals.aggregate(pipeline).toArray(),
+      databaseService.rentals.aggregate(countPipeline).toArray()
+    ])
+
+    const total_records = countResult[0]?.total_records || 0
+    const total_pages = Math.ceil(total_records / limit)
+
+    return {
+      data: results,
+      pagination: {
+        page,
+        limit,
+        total_pages,
+        total_records
+      }
+    }
+  }
+
+  async adminCreateUser(payload: AdminCreateUserReqBody) {
+    const user_id = new ObjectId()
+    const localTime = getLocalTime()
+
+    const newUser = new User({
+      ...payload,
+      _id: user_id,
+      username: `user${user_id.toString()}`,
+      password: hashPassword(payload.password),
+      role: payload.role,
+      verify: payload.verify || UserVerifyStatus.Verified, //mặc định là Verified
+      email_verify_otp: null,
+      email_verify_otp_expires: null,
+      forgot_password_otp: null,
+      forgot_password_otp_expires: null,
+      created_at: localTime,
+      updated_at: localTime
+    })
+
+    const session = databaseService.getClient().startSession()
+
+    try {
+      await session.withTransaction(async () => {
+        await databaseService.users.insertOne(newUser, { session })
+        
+        await walletService.createWallet(user_id.toString(), session)
+      })
+
+      //lấy lại user vừa tạo (để bỏ password)
+      const createdUser = await this.getMe(user_id.toString())
+      return createdUser
+
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
   }
 }
 

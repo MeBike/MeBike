@@ -1,0 +1,11 @@
+type: object
+description: "Một điểm dữ liệu trong chuỗi thời gian thống kê người dùng hoạt động."
+properties:
+  date:
+    type: string
+    description: "Ngày hoặc tháng cho điểm dữ liệu (YYYY-MM-DD hoặc YYYY-MM)."
+    example: "2025-10-23"
+  active_users_count:
+    type: integer
+    description: "Số lượng người dùng hoạt động duy nhất trong kỳ đó."
+    example: 78
