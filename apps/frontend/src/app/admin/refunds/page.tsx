@@ -55,6 +55,30 @@ const getStatusLabel = (status: RefundStatus) => {
       return status;
   }
 };
+function InfoRow({
+  label,
+  value,
+  mono,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  highlight?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+      <p
+        className={`${
+          mono ? "font-mono" : "font-medium"
+        } ${highlight ? "text-lg font-bold text-foreground" : "text-foreground"}`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
 
 export default function RefundPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -125,6 +149,7 @@ export default function RefundPage() {
   useEffect(() => {
     console.log(detailResponse);
   }, [detailResponse]);
+  
   return (
     <div>
       <div className="space-y-6">
@@ -228,76 +253,55 @@ export default function RefundPage() {
       </div>
 
       {isDetailModalOpen && selectedID && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           {isDetailLoading ? (
             <div className="flex items-center justify-center h-40">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
             </div>
           ) : (
-            <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-              <h2 className="text-xl font-bold text-foreground mb-4">
+            <div className="bg-card border border-border shadow-lg rounded-xl w-full max-w-md p-6 relative animate-in fade-in-50 slide-in-from-bottom-5">
+              <h2 className="text-lg md:text-xl font-semibold text-foreground mb-5 flex items-center justify-between">
                 Chi tiết yêu cầu hoàn tiền
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-4 text-sm">
+                <InfoRow
+                  label="Người dùng"
+                  value={detailResponse?.user_info.fullname ?? "—"}
+                />
+                <InfoRow
+                  label="Email"
+                  value={detailResponse?.user_info.email ?? "—"}
+                />
+                <InfoRow
+                  label="Mã đơn thuê"
+                  value={detailResponse?.transaction_id ?? "—"}
+                  mono
+                />
+                <InfoRow
+                  label="Số tiền"
+                  value={`${Number(detailResponse?.amount?.$numberDecimal ?? 0).toLocaleString()} đ`}
+                  highlight
+                />
                 <div>
-                  <p className="text-sm text-muted-foreground">Người dùng</p>
-                  <p className="text-foreground font-medium">
-                    {detailResponse?._id}
-                  </p>
-                </div>
-                {/* <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="text-foreground font-medium">
-                    {detailResponse?.user_email}
-                  </p>
-                </div> */}
-                <div>
-                  <p className="text-sm text-muted-foreground">Mã đơn thuê</p>
-                  <p className="text-foreground font-mono">
-                    {detailResponse?._id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Số tiền</p>
-                  <p className="text-foreground font-bold text-lg">
-                    {detailResponse?.amount.$numberDecimal.toLocaleString(
-                      "vi-VN"
-                    )}{" "}
-                    đ
-                  </p>
-                </div>
-                {/* <div>
-                  <p className="text-sm text-muted-foreground">Lý do</p>
-                  <p className="text-foreground font-medium">
-                    {detailResponse?.reason}
-                  </p>
-                </div> */}
-                {/* {selectedRequest?.admin_note && (
-                  <div>
-                    <p className="text-sm text-muted-foreground">Ghi chú admin</p>
-                    <p className="text-foreground font-medium">
-                      {selectedRequest.admin_note}
-                    </p>
-                  </div>
-                )} */}
-                <div>
-                  <p className="text-sm text-muted-foreground">Trạng thái</p>
+                  <p className="text-xs text-muted-foreground">Trạng thái</p>
                   <span
-                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium mt-1 ${getStatusColor(detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ")}`}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium mt-2 ${getStatusColor(
+                      detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ"
+                    )}`}
                   >
                     {getStatusIcon(detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ")}
                     {getStatusLabel(detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ")}
                   </span>
                 </div>
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsDetailModalOpen(false)}
-                    className="flex-1"
-                  >
-                    Đóng
-                  </Button>
-                </div>
+              </div>
+              <div className="mt-6 flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="flex-1"
+                >
+                  Đóng
+                </Button>
               </div>
             </div>
           )}

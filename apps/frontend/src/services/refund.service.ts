@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import type { RefundRequest , RefundStatus} from "@/types";
+import type { RefundRequest , RefundStatus , DetailRefundRequest} from "@/types";
 import { get } from "http";
 interface ApiResponse<T> {
   data: T[];
@@ -22,7 +22,7 @@ const REFUND_ENDPOINTS = {
   ID : (id: string) => `${REFUND_BASE}/${id}`,
 } as const;
 export const refundService = {
-    getAllRefundRequests: async ({
+  getAllRefundRequests: async ({
     page,
     limit,
     status,
@@ -30,21 +30,23 @@ export const refundService = {
     page?: number;
     limit?: number;
     status: RefundStatus;
-    }): Promise<AxiosResponse<ApiResponse<RefundRequest>>> => { 
+  }): Promise<AxiosResponse<ApiResponse<RefundRequest>>> => {
     const response = await fetchHttpClient.get<ApiResponse<RefundRequest>>(
-        REFUND_ENDPOINTS.MANAGE_REFUND_REQUEST(),
-        {
+      REFUND_ENDPOINTS.MANAGE_REFUND_REQUEST(),
+      {
         page: page,
         limit: limit,
         status: status,
-        }
+      }
     );
     return response;
   },
-  getRefundRequestById: async (id: string): Promise<AxiosResponse<DetailApiResponse<RefundRequest>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<RefundRequest>>(
-      REFUND_ENDPOINTS.ID(id)
-    );
+  getRefundRequestById: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<DetailRefundRequest>>> => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<DetailRefundRequest>
+    >(REFUND_ENDPOINTS.ID(id));
     return response;
-  }
+  },
 };
