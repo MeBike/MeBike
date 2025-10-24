@@ -23,6 +23,7 @@ export interface DetailUser {
   phone_number: string;
   avatar: string;
   role: "STAFF" | "ADMIN" | "USER";
+  nfc_card_uid: string;
   created_at: string;
   updated_at: string;
 }
