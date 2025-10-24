@@ -137,3 +137,9 @@ export enum AppliesToEnum {
   Station = 'station',
   App = 'app'
 }
+
+export enum TimeType {
+  Hour = 'GIỜ',
+  Minute = 'PHÚT',
+  Second = 'GIÂY'
+}

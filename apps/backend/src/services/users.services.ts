@@ -19,7 +19,7 @@ import walletService from "./wallets.services";
 import { NextFunction, Request, Response } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import { sendPaginatedResponse } from "~/utils/pagination.helper";
-import { getLocalTime } from "~/utils/date";
+import { getLocalTime } from "~/utils/date-time";
 
 class UsersService {
   private decodeRefreshToken(refresh_token: string) {

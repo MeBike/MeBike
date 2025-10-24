@@ -7,16 +7,21 @@ import {
   getReservationHistoryController,
   getReservationListController,
   getReservationReportController,
+  getStationReservationsController,
   notifyExpiringReservationsController,
-  reserveBikeController
+  reserveBikeController,
+  staffConfirmReservationController
 } from '~/controllers/reservations.controllers'
-import { isAdminValidator } from '~/middlewares/admin.middlewares'
+import { isAdminAndStaffValidator, isAdminValidator } from '~/middlewares/admin.middlewares'
 import {
   batchDispatchSameStationValidator,
-  cancelReservationValidator,
-  confirmReservationValidator,
-  reserveBikeValidator
+  reserveBikeValidator,
+  staffCancelReservationValidator,
+  staffConfirmReservationValidator,
+  userCancelReservationValidator,
+  userConfirmReservationValidator
 } from '~/middlewares/reservations.middlewares'
+import { isStaffValidator } from '~/middlewares/staff.middlewares'
 import { wrapAsync } from '~/utils/handler'
 
 const reserveRouter = Router()
@@ -41,12 +46,24 @@ reserveRouter
   .route('/')
   .get(accessTokenValidator, wrapAsync(getReservationListController))
   .post(accessTokenValidator, verifiedUserValidator, reserveBikeValidator, wrapAsync(reserveBikeController))
+  
+reserveRouter
+  .route('/:stationId/stats')
+  .get(accessTokenValidator, isAdminAndStaffValidator, wrapAsync(getStationReservationsController))
+
+reserveRouter
+  .route('/:id/staff-confirm')
+  .post(accessTokenValidator, isStaffValidator, staffConfirmReservationValidator, wrapAsync(staffConfirmReservationController))
+
+reserveRouter
+  .route('/:id/staff-cancel')
+  .post(accessTokenValidator, isStaffValidator, staffCancelReservationValidator, wrapAsync(cancelReservationController))
 
 reserveRouter
   .route('/:id/confirm')
-  .post(accessTokenValidator, confirmReservationValidator, wrapAsync(confirmReservationController))
+  .post(accessTokenValidator, userConfirmReservationValidator, wrapAsync(confirmReservationController))
 
 reserveRouter
   .route('/:id/cancel')
-  .post(accessTokenValidator, cancelReservationValidator, wrapAsync(cancelReservationController))
+  .post(accessTokenValidator, userCancelReservationValidator, wrapAsync(cancelReservationController))
 export default reserveRouter

@@ -1,5 +1,5 @@
 import { ReservationStatus, Role } from './../constants/enums'
-import { checkSchema } from 'express-validator'
+import { checkSchema, ParamSchema } from 'express-validator'
 import HTTP_STATUS from '~/constants/http-status'
 import { RESERVATIONS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -9,7 +9,7 @@ import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { BikeStatus } from '~/constants/enums'
 import { TokenPayLoad } from '~/models/requests/users.requests'
-import { getLocalTime } from '~/utils/date'
+import { getLocalTime } from '~/utils/date-time'
 import { DispatchBikeReqBody } from '~/models/requests/reservations.requests'
 
 export const reserveBikeValidator = validate(
@@ -43,34 +43,42 @@ export const reserveBikeValidator = validate(
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }
-            const station = await databaseService.stations.findOne({ _id: stationId })
-            if (!station) {
+
+            const [stationExists, aggResult] = await Promise.all([
+              databaseService.stations.findOne(
+                { _id: stationId },
+                { projection: { _id: 1 } }
+              ),
+              databaseService.bikes
+                .aggregate([
+                  {
+                    $match: {
+                      station_id: stationId,
+                      status: { $in: [BikeStatus.Available, BikeStatus.Reserved] }
+                    }
+                  },
+                  {
+                    $group: {
+                      _id: null,
+                      totalAvailableBikes: { $sum: 1 },
+                      currentlyReservedBikes: {
+                        $sum: { $cond: [{ $eq: ['$status', BikeStatus.Reserved] }, 1, 0] }
+                      }
+                    }
+                  }
+                ])
+                .toArray()
+            ])
+
+            if (!stationExists) {
               throw new ErrorWithStatus({
                 message: RESERVATIONS_MESSAGE.STATION_NOT_FOUND.replace('%s', stationId.toString()),
                 status: HTTP_STATUS.NOT_FOUND
               })
             }
 
-            const preReservingThreshold = process.env.RESERVE_QUOTA_PERCENT || '0.50'
-            const RESERVE_QUOTA_PERCENT = Number.parseFloat(preReservingThreshold)
-
-            const aggResult = await databaseService.bikes
-              .aggregate([
-                { $match: { station_id: stationId, status: { $in: [BikeStatus.Available, BikeStatus.Reserved] } } },
-                {
-                  $group: {
-                    _id: null,
-                    totalAvailableBikes: { $sum: 1 },
-                    currentlyReservedBikes: {
-                      $sum: { $cond: [{ $eq: ['$status', BikeStatus.Reserved] }, 1, 0] }
-                    }
-                  }
-                }
-              ])
-              .toArray()
-
             const { totalAvailableBikes = 0, currentlyReservedBikes = 0 } = aggResult[0] || {}
-
+            const RESERVE_QUOTA_PERCENT = parseFloat(process.env.RESERVE_QUOTA_PERCENT || '0.50')
             const maxAllowedReserved = Math.floor(totalAvailableBikes * RESERVE_QUOTA_PERCENT)
 
             if (currentlyReservedBikes >= maxAllowedReserved) {
@@ -79,6 +87,7 @@ export const reserveBikeValidator = validate(
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }
+
             req.bike = bike
             return true
           }
@@ -110,7 +119,46 @@ export const reserveBikeValidator = validate(
   )
 )
 
-export const cancelReservationValidator = validate(
+const checkReservationBeforeCancel = async (reservationId: string, req: any) => {
+  const reservation = await databaseService.reservations.findOne({ _id: toObjectId(reservationId) })
+
+  if (!reservation) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', reservationId),
+      status: HTTP_STATUS.NOT_FOUND
+    })
+  }
+
+  if (reservation.status !== ReservationStatus.Pending) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.CANNOT_CANCEL_THIS_RESERVATION,
+      status: HTTP_STATUS.BAD_REQUEST
+    })
+  }
+
+  const now = getLocalTime()
+  if (reservation.end_time && reservation.end_time < now) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.CANNOT_CANCEL_EXPIRED_RESERVATION,
+      status: HTTP_STATUS.BAD_REQUEST
+    })
+  }
+
+  req.reservation = reservation
+  return reservation
+}
+
+const ReasonValidationSchema = (requiredMessage: string): ParamSchema => ({
+    in: ['body'],
+    notEmpty: { errorMessage: requiredMessage },
+    isString: { errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON },
+    isLength: {
+        options: { min: 5, max: 255 },
+        errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON_LENGTH
+    }
+});
+
+export const userCancelReservationValidator = validate(
   checkSchema({
     id: {
       in: ['params'],
@@ -122,98 +170,107 @@ export const cancelReservationValidator = validate(
       },
       custom: {
         options: async (value, { req }) => {
-          const reservation = await databaseService.reservations.findOne({ _id: toObjectId(value) })
-          if (!reservation) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', value),
-              status: HTTP_STATUS.NOT_FOUND
-            })
-          }
-          const { user_id } = req.decoded_authorization as TokenPayLoad
-          const user = await databaseService.users.findOne({ _id: toObjectId(user_id) })
-          if (!user) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id),
-              status: HTTP_STATUS.NOT_FOUND
-            })
-          }
+          const reservation = await checkReservationBeforeCancel(value, req)
 
-          if (user.role === Role.User && reservation.user_id.toString().localeCompare(user_id) !== 0) {
+          const { user_id } = req.decoded_authorization as TokenPayLoad
+
+          if (!reservation.user_id.equals(user_id)) {
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.CANNOT_CANCEL_OTHER_RESERVATION,
               status: HTTP_STATUS.FORBIDDEN
             })
           }
 
-          if (reservation.status !== ReservationStatus.Pending) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.CANNOT_CANCEL_THIS_RESERVATION,
-              status: HTTP_STATUS.BAD_REQUEST
-            })
-          }
-
-          req.reservation = reservation
           return true
         }
       }
     },
-    reason: {
-      notEmpty: {
-        errorMessage: RESERVATIONS_MESSAGE.REQUIRED_CANCELLED_REASON
-      },
-      isString: {
-        errorMessage: RESERVATIONS_MESSAGE.INVALID_CANCELLED_REASON
-      },
-      isLength: {
-        options: { max: 255 },
-        errorMessage: RESERVATIONS_MESSAGE.REASON_TOO_LONG
-      }
-    }
+    reason: ReasonValidationSchema(RESERVATIONS_MESSAGE.REQUIRED_CANCELLED_REASON)
   })
 )
 
-export const confirmReservationValidator = validate(
+export const staffCancelReservationValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: {
+        errorMessage: RESERVATIONS_MESSAGE.REQUIRED_ID
+      },
+      isMongoId: {
+        errorMessage: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Id')
+      },
+      custom: {
+        options: async (value, { req }) => {
+          await checkReservationBeforeCancel(value, req)
+          return true
+        }
+      }
+    },
+    reason: ReasonValidationSchema(RESERVATIONS_MESSAGE.REQUIRED_CANCELLED_REASON)
+  })
+)
+
+const checkReservationState = async (reservationId: string, req: any) => {
+  const reservation = await databaseService.reservations.findOne({ _id: toObjectId(reservationId) })
+
+  if (!reservation) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', reservationId),
+      status: HTTP_STATUS.NOT_FOUND
+    })
+  }
+
+  if (reservation.status !== ReservationStatus.Pending) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_THIS_RESERVATION,
+      status: HTTP_STATUS.BAD_REQUEST
+    })
+  }
+
+  const now = getLocalTime()
+
+  if (reservation.start_time > now) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.NOT_AVAILABLE_FOR_CONFIRMATION,
+      status: HTTP_STATUS.BAD_REQUEST
+    })
+  }
+
+  if (reservation.end_time && reservation.end_time < now) {
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_EXPIRED_RESERVATION,
+      status: HTTP_STATUS.BAD_REQUEST
+    })
+  }
+
+  req.reservation = reservation
+  return true
+}
+
+export const userConfirmReservationValidator = validate(
   checkSchema({
     id: {
       in: ['params'],
       notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_ID },
       isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Id') },
       custom: {
-        options: async (value, { req }) => {
-          const reservation = await databaseService.reservations.findOne({ _id: toObjectId(value) })
-          if (!reservation) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', value),
-              status: HTTP_STATUS.NOT_FOUND
-            })
-          }
-
-          if (reservation.status !== ReservationStatus.Pending) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_THIS_RESERVATION,
-              status: HTTP_STATUS.BAD_REQUEST
-            })
-          }
-          const now = getLocalTime()
-          if (reservation.start_time > now) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.NOT_AVAILABLE_FOR_CONFIRMATION,
-              status: HTTP_STATUS.BAD_REQUEST
-            })
-          }
-
-          if (reservation.end_time && reservation.end_time < now) {
-            throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_EXPIRED_RESERVATION,
-              status: HTTP_STATUS.BAD_REQUEST
-            })
-          }
-
-          req.reservation = reservation
-          return true
-        }
+        options: (value, { req }) => checkReservationState(value, req)
       }
     }
+  })
+)
+
+export const staffConfirmReservationValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_ID },
+      isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Id') },
+      custom: {
+        options: (value, { req }) => checkReservationState(value, req)
+      }
+    },
+    reason: ReasonValidationSchema(RESERVATIONS_MESSAGE.REQUIRED_CONFIRM_REASON)
   })
 )
 
