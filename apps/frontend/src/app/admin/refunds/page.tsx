@@ -19,7 +19,7 @@ export const getStatusColor = (status: RefundStatus) => {
       return "bg-blue-100 text-blue-800";
     case "TỪ CHỐI":
       return "bg-red-100 text-red-800";
-    case "ĐÃ HOÀN TIỀN":
+    case "ĐÃ HOÀN THÀNH":
       return "bg-green-100 text-green-800";
     default:
       return "bg-gray-100 text-gray-800";
@@ -32,7 +32,7 @@ const getStatusIcon = (status: RefundStatus) => {
       return <Clock className="w-4 h-4" />;
     case "ĐÃ DUYỆT":
       return <CheckCircle className="w-4 h-4" />;
-    case "ĐÃ HOÀN TIỀN":
+    case "ĐÃ HOÀN THÀNH":
       return <CheckCircle className="w-4 h-4" />;
     case "TỪ CHỐI":
       return <XCircle className="w-4 h-4" />;
@@ -47,7 +47,7 @@ const getStatusLabel = (status: RefundStatus) => {
       return "Chờ xử lý";
     case "ĐÃ DUYỆT":
       return "Đã duyệt";
-    case "ĐÃ HOÀN TIỀN":
+    case "ĐÃ HOÀN THÀNH":
       return "Hoàn thành";
     case "TỪ CHỐI":
       return "Từ chối";
@@ -99,12 +99,13 @@ export default function RefundPage() {
     detailResponse,
     isDetailLoading,
     getDetailRefundRequest,
+    updateRefundRequest,
   } = useRefundAction({
     hasToken: true,
     page: page,
     limit: limit,
     id: selectedID || "",
-    status: statusFilter === "all" ? undefined : (statusFilter as RefundStatus)
+    status: statusFilter === "all" ? undefined : (statusFilter as RefundStatus),
   });
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -117,7 +118,20 @@ export default function RefundPage() {
     setSelectedRequest(request);
     setIsDetailModalOpen(true);
   };
-
+const refundTransitions: Record<RefundStatus, RefundStatus[]> = {
+  "": ["ĐANG CHỜ XỬ LÝ"],
+  "ĐANG CHỜ XỬ LÝ": ["ĐÃ DUYỆT", "TỪ CHỐI"],
+  "ĐÃ DUYỆT": ["ĐÃ HOÀN THÀNH"],
+  "TỪ CHỐI": [],
+  "ĐÃ HOÀN THÀNH": [],
+};
+const handleSaveStatus = async () => {
+  if (!selectedRequest?._id) return;
+  await updateRefundRequest({
+    newStatus: newStatus,
+  });
+  setIsUpdateModalOpen(false);
+};
   // const handleUpdateStatus = (request: RefundRequest) => {
   //   setSelectedRequest(request);
   //   setNewStatus(request.status);
@@ -125,16 +139,16 @@ export default function RefundPage() {
   //   setIsUpdateModalOpen(true);
   // };
 
-  const handleSaveStatus = () => {
-    console.log(
-      "[v0] Updating refund status:",
-      selectedRequest?._id,
-      newStatus,
-      adminNote
-    );
-    setIsUpdateModalOpen(false);
-    setSelectedRequest(null);
-  };
+  // const handleSaveStatus = () => {
+  //   console.log(
+  //     "[v0] Updating refund status:",
+  //     selectedRequest?._id,
+  //     newStatus,
+  //     adminNote
+  //   );
+  //   setIsUpdateModalOpen(false);
+  //   setSelectedRequest(null);
+  // };
 
   // const totalAmount = mockRefundRequests.reduce(
   //   (sum, req) => sum + req.amount,
@@ -150,7 +164,22 @@ export default function RefundPage() {
   useEffect(() => {
     console.log(detailResponse);
   }, [detailResponse]);
-  
+  function getNextStatuses(current: RefundStatus): RefundStatus[] {
+    return (refundTransitions[current] ?? []).filter((s) => s !== current);
+  }
+  const nextStatuses = getNextStatuses(detailResponse?.status as RefundStatus);
+  useEffect(() => {
+    console.log("Next statuses:", newStatus);
+  }, [newStatus]);
+  useEffect(() => {
+    if (detailResponse?.status) {
+      setNewStatus(detailResponse.status as RefundStatus);
+    }
+  }, [detailResponse]);
+  useEffect(() => {
+    const next = getNextStatuses(detailResponse?.status as RefundStatus);
+    if (next.length > 0) setNewStatus(next[0]);
+  }, [detailResponse]);
   return (
     <div>
       <div className="space-y-6">
@@ -215,7 +244,7 @@ export default function RefundPage() {
               <option value="all">Tất cả trạng thái</option>
               <option value="ĐANG CHỜ XỬ LÝ">Chờ xử lý</option>
               <option value="ĐÃ DUYỆT">Đã phê duyệt</option>
-              <option value="ĐÃ HOÀN TIỀN">Hoàn thành</option>
+              <option value="ĐÃ HOÀN THÀNH">Hoàn thành</option>
               <option value="TỪ CHỐI">Từ chối</option>
             </select>
             <Button
@@ -236,12 +265,12 @@ export default function RefundPage() {
                 setSelectedID(id);
                 setIsDetailModalOpen(true);
               },
-              onUpdateStatus: (request) => {
-                setSelectedRequest(request);
-                setNewStatus(request.status);
-                setIsUpdateModalOpen(true);
-              }
-            })}
+                onUpdateStatus: (request) => {
+                  setSelectedID(request._id);
+                  setIsUpdateModalOpen(true);
+                  setSelectedRequest(request);
+                },
+            })} 
             data={response || []}
           />
           <PaginationDemo
@@ -311,64 +340,69 @@ export default function RefundPage() {
         </div>
       )}
 
-      {/* {isUpdateModalOpen && selectedRequest && (
+      {isUpdateModalOpen && selectedID && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              Cập nhật trạng thái
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Người dùng: {selectedRequest.user_name}
-                </p>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Số tiền: {selectedRequest.amount.toLocaleString("vi-VN")} đ
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Trạng thái mới
-                </label>
-                <select
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value as RefundStatus)}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                >
-                  <option value="PENDING">Chờ xử lý</option>
-                  <option value="APPROVED">Đã phê duyệt</option>
-                  <option value="COMPLETED">Hoàn thành</option>
-                  <option value="REJECTED">Từ chối</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Ghi chú
-                </label>
-                <textarea
-                  value={adminNote}
-                  onChange={(e) => setAdminNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                  placeholder="Nhập ghi chú..."
-                  rows={3}
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsUpdateModalOpen(false)}
-                  className="flex-1"
-                >
-                  Hủy
-                </Button>
-                <Button onClick={handleSaveStatus} className="flex-1">
-                  Lưu
-                </Button>
+          {isDetailLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            </div>
+          ) : (
+            <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Cập nhật trạng thái
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Người dùng: {detailResponse?.user_info.fullname || "—"}
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Số tiền:{" "}
+                    {Number(
+                      detailResponse?.amount?.$numberDecimal ?? 0
+                    ).toLocaleString("vi-VN")}{" "}
+                    đ
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Trạng thái mới
+                  </label>
+                  <select
+                    value={newStatus}
+                    onChange={(e) =>
+                      setNewStatus(e.target.value as RefundStatus)
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                  >
+                    {nextStatuses.length > 0 ? (
+                      nextStatuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">Không có trạng thái khả dụng</option>
+                    )}
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsUpdateModalOpen(false)}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button onClick={() => handleSaveStatus()} className="flex-1">
+                    Lưu 
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      )}  */}
+      )}
     </div>
   );
 }

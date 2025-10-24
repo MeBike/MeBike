@@ -54,7 +54,7 @@ export const useRefundAction = ({
         onSuccess: () => {
           toast.success("Cập nhật yêu cầu hoàn tiền thành công");
           queryClient.invalidateQueries({
-            queryKey: ["refundRequests", 1, 10, ""],
+            queryKey: ["refundRequests", page, limit, status ],
           });
           queryClient.invalidateQueries({ queryKey: ["refundRequest", id] });
         },
@@ -75,5 +75,6 @@ export const useRefundAction = ({
     isDetailLoading,
     pagination: data?.pagination,
     refetch,
+    updateRefundRequest,
   };
 };

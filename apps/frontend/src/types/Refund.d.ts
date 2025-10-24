@@ -1,4 +1,4 @@
-export type RefundStatus = "ĐANG CHỜ XỬ LÝ" | "ĐÃ DUYỆT" | "TỪ CHỐI" | "ĐÃ HOÀN TIỀN" | "";
+export type RefundStatus = "ĐANG CHỜ XỬ LÝ" | "ĐÃ DUYỆT" | "TỪ CHỐI" | "ĐÃ HOÀN THÀNH" | "";
 import { DetailUser } from "@/services/auth.service";
 export interface RefundRequest {
   _id: string;
