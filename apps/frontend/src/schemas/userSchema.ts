@@ -1,14 +1,12 @@
 import * as z from "zod";
-
+import type { VerifyStatus } from "@/types";
 export const userProfileSchema = z.object({
-  fullname: z.string(),
-  email: z.email(),
-  verify: z.string(),
-  location: z.string(),
-  username: z.string(),
-  phone_number: z.string(),
-  role: z.enum(["USER", "ADMIN", "STAFF"]),
-  nfc_card_uid: z.string(),
+  fullname: z.string().min(1, "Họ tên là bắt buộc"),
+  email: z.email("Email không hợp lệ"),
+  phone_number: z.string().min(10, "Số điện thoại phải ít nhất 10 ký tự"),
+  password: z.string().min(6, "Mật khẩu phải ít nhất 6 ký tự"),
+  role: z.enum(["USER", "STAFF", "ADMIN"]),
+  verify: z.enum([] as VerifyStatus[]).optional(),
 });
 
 export type UserProfile = z.infer<typeof userProfileSchema>;

@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { VerifyStatus } from "@/types";
 import { useGetAllStatisticsUserQuery } from "./query/User/useGetAllStatisticsQuery";
 import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
+import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
+import { UserProfile } from "@/schemas/userSchema";
 interface ErrorWithMessage {
   message: string;
 }
@@ -51,6 +53,7 @@ export const useUserActions = ({
   searchQuery?: string;
 }) => {
   const router = useRouter();
+  const useCreateUser = useCreateUserMutation();  
   const queryClient = useQueryClient();
   const { data, refetch, isFetching } = useGetAllUserQuery({
     page,
@@ -90,6 +93,47 @@ export const useUserActions = ({
     refetchSearch();
   }, [hasToken, queryClient, router]);
   const users = searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
+  const createUser = useCallback(
+      async (userData: UserProfile) => {
+        if (!hasToken) {
+          router.push("/login");
+          return;
+        }
+        useCreateUser.mutate(userData, {
+          onSuccess: (result: any) => {
+            if (result?.status === 200) {
+              toast.success("Tạo người dùng thành công");
+              // Sửa queryKey cho đúng thứ tự và giá trị như useGetAllUserQuery
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "all",
+                  "user",
+                  page,
+                  limit,
+                  verify,
+                  role 
+                ],
+              });
+              queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+              if (searchQuery && searchQuery.length > 0) {
+                refetchSearch();
+              } else {
+                refetch();
+              }
+            } else {
+              const errorMessage =
+                result?.data?.message || "Lỗi khi tạo người dùng";
+              toast.error(errorMessage);
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
+            toast.error(errorMessage);
+          },
+        });
+      },
+      [hasToken, router, queryClient, useCreateUser, searchQuery, refetch, refetchSearch]
+    );
   return {
     users: users,
     refetch,
@@ -100,6 +144,8 @@ export const useUserActions = ({
     getAllStatistics,
     isLoadingStatistics,
     getSearchUsers,
+    createUser,
+    paginationUser : data?.pagination,
     isLoadingSearch,
   };
 };

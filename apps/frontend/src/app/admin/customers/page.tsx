@@ -2,185 +2,35 @@
 
 import { use, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { CustomerCard } from "@/components/customers/customer-card";
 import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
-// import { DetailUser } from "@/services/auth.service";
-import type { DetailUser, VerifyStatus, UserRole } from "@custom-types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userProfileSchema, UserProfile } from "@schemas/userSchema";
+import * as z from "zod";
+import type {  VerifyStatus, UserRole } from "@custom-types";
 import { Plus, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUserActions } from "@/hooks/useUserAction";
-const mockUsers: DetailUser[] = [
-  {
-    _id: "68e260a5d04813da448c56f1",
-    fullname: "Nguyễn Văn An",
-    email: "nguyenvanan@email.com",
-    verify: "VERIFIED",
-    location: "123 Nguyễn Huệ, Quận 1, TP.HCM",
-    username: "nguyenvanan",
-    phone_number: "0901234567",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "USER",
-    nfc_card_uid: "NFC001",
-    email_verify_otp_expires: "2025-01-15T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-15T00:00:00Z",
-    created_at: "2024-01-15T00:00:00Z",
-    updated_at: "2024-06-10T00:00:00Z",
-  },
-  {
-    _id: "68e260a5d04813da448c56f2",
-    fullname: "Lê Thị Mai",
-    email: "lethimai@email.com",
-    verify: "VERIFIED",
-    location: "456 Lê Lợi, Quận Hoàn Kiếm, Hà Nội",
-    username: "lethimai",
-    phone_number: "0912345678",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "USER",
-    nfc_card_uid: "NFC002",
-    email_verify_otp_expires: "2025-01-15T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-15T00:00:00Z",
-    created_at: "2024-01-10T00:00:00Z",
-    updated_at: "2024-06-09T00:00:00Z",
-  },
-  {
-    _id: "68e260a5d04813da448c56f3",
-    fullname: "Phạm Minh Tuấn",
-    email: "phamminhtuan@email.com",
-    verify: "UNVERIFIED",
-    location: "789 Trần Hưng Đạo, Quận Hải Châu, Đà Nẵng",
-    username: "phamminhtuan",
-    phone_number: "0923456789",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "USER",
-    nfc_card_uid: "NFC003",
-    email_verify_otp_expires: "2025-01-20T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-20T00:00:00Z",
-    created_at: "2024-02-20T00:00:00Z",
-    updated_at: "2024-06-10T00:00:00Z",
-  },
-  {
-    _id: "68e260a5d04813da448c56f4",
-    fullname: "Võ Thị Hương",
-    email: "vothihuong@email.com",
-    verify: "BANNED",
-    location: "321 Hai Bà Trưng, Quận 1, TP.HCM",
-    username: "vothihuong",
-    phone_number: "0934567890",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "USER",
-    nfc_card_uid: "NFC004",
-    email_verify_otp_expires: "2025-01-15T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-15T00:00:00Z",
-    created_at: "2024-03-05T00:00:00Z",
-    updated_at: "2024-04-15T00:00:00Z",
-  },
-  {
-    _id: "68e260a5d04813da448c56f5",
-    fullname: "Trần Văn Hùng",
-    email: "tranvanhung@email.com",
-    verify: "VERIFIED",
-    location: "555 Võ Văn Tần, Quận 3, TP.HCM",
-    username: "tranvanhung",
-    phone_number: "0945678901",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "STAFF",
-    nfc_card_uid: "NFC005",
-    email_verify_otp_expires: "2025-01-15T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-15T00:00:00Z",
-    created_at: "2023-12-01T00:00:00Z",
-    updated_at: "2024-06-08T00:00:00Z",
-  },
-  {
-    _id: "68e260a5d04813da448c56f6",
-    fullname: "Đặng Quốc Bảo",
-    email: "dangquocbao@email.com",
-    verify: "VERIFIED",
-    location: "888 Nguyễn Thị Minh Khai, Quận Ninh Kiều, Cần Thơ",
-    username: "dangquocbao",
-    phone_number: "0956789012",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "USER",
-    nfc_card_uid: "NFC006",
-    email_verify_otp_expires: "2025-01-15T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-15T00:00:00Z",
-    created_at: "2024-02-10T00:00:00Z",
-    updated_at: "2024-06-07T00:00:00Z",
-  },
-  {
-    _id: "68e260a5d04813da448c56f7",
-    fullname: "Hoàng Minh Khôi",
-    email: "hoangminhkhoi@email.com",
-    verify: "VERIFIED",
-    location: "999 Lý Thường Kiệt, Quận 10, TP.HCM",
-    username: "hoangminhkhoi",
-    phone_number: "0967890123",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "USER",
-    nfc_card_uid: "NFC007",
-    email_verify_otp_expires: "2025-01-15T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-15T00:00:00Z",
-    created_at: "2024-03-15T00:00:00Z",
-    updated_at: "2024-06-06T00:00:00Z",
-  },
-  {
-    _id: "68e260a5d04813da448c56f8",
-    fullname: "Ngô Thị Linh",
-    email: "ngothilinh@email.com",
-    verify: "UNVERIFIED",
-    location: "111 Cách Mạng Tháng 8, Quận 3, TP.HCM",
-    username: "ngothilinh",
-    phone_number: "0978901234",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "USER",
-    nfc_card_uid: "NFC008",
-    email_verify_otp_expires: "2025-01-20T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-20T00:00:00Z",
-    created_at: "2024-04-01T00:00:00Z",
-    updated_at: "2024-06-05T00:00:00Z",
-  },
-  {
-    _id: "68e260a5d04813da448c56f9",
-    fullname: "Lý Văn Sơn",
-    email: "lyvanson@email.com",
-    verify: "VERIFIED",
-    location: "222 Nguyễn Văn Cừ, Quận 5, TP.HCM",
-    username: "lyvanson",
-    phone_number: "0989012345",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "STAFF",
-    nfc_card_uid: "NFC009",
-    email_verify_otp_expires: "2025-01-15T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-15T00:00:00Z",
-    created_at: "2024-01-20T00:00:00Z",
-    updated_at: "2024-06-04T00:00:00Z",
-  },
-  {
-    _id: "68e260a5d04813da448c56fa",
-    fullname: "Trịnh Thị Hà",
-    email: "trinhthiha@email.com",
-    verify: "VERIFIED",
-    location: "333 Đinh Tiên Hoàng, Quận 1, TP.HCM",
-    username: "trinhthiha",
-    phone_number: "0990123456",
-    avatar: "/placeholder.svg?height=100&width=100",
-    role: "USER",
-    nfc_card_uid: "NFC010",
-    email_verify_otp_expires: "2025-01-15T00:00:00Z",
-    forgot_password_otp_expires: "2025-01-15T00:00:00Z",
-    created_at: "2024-02-05T00:00:00Z",
-    updated_at: "2024-06-03T00:00:00Z",
-  },
-];
-
-// Mock user for DashboardLayout
 
 export default function CustomersPage() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<UserProfile>({
+    resolver: zodResolver(userProfileSchema),
+  });
+
+
   const [searchQuery, setSearchQuery] = useState("");
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit, setLimit] = useState<number>(5); // Items per page
+  const [limit, setLimit] = useState<number>(5);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const {
     users,
     getAllUsers,
@@ -190,33 +40,22 @@ export default function CustomersPage() {
     statistics,
     getSearchUsers,
     isLoadingSearch,
+    createUser,
+    paginationUser,
   } = useUserActions({
     hasToken: true,
     limit: limit,
     page: currentPage,
     verify: verifyFilter === "all" ? "" : verifyFilter,
-    role: roleFilter === "all" ? undefined : (roleFilter as UserRole),
+    role: roleFilter === "all" ? "" : (roleFilter as UserRole),
     searchQuery: searchQuery,
   });
-  const filteredUsers = mockUsers.filter((user) => {
-    const matchesSearch =
-      user.fullname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.phone_number.includes(searchQuery) ||
-      user.username.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesVerify =
-      verifyFilter === "all" || user.verify === verifyFilter;
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    return matchesSearch && matchesVerify && matchesRole;
-  });
 
-  const totalPages = Math.ceil(filteredUsers.length / limit);
-  const startIndex = (currentPage - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  const totalPages = paginationUser?.totalPages ?? 1;
   useEffect(() => {
-    getAllUsers;
-    getAllStatistics;
+    getAllUsers();
+    getAllStatistics();
   }, [searchQuery, verifyFilter, roleFilter]);
   const handleReset = () => {
     setSearchQuery("");
@@ -228,8 +67,15 @@ export default function CustomersPage() {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+    setCurrentPage((prev) => Math.min(prev + 1, paginationUser?.totalPages ?? 1));
   };
+  const [newUser, setNewUser] = useState({
+    fullname: "",
+    email: "",
+    phone_number: "",
+    password: "",
+    role: "USER" as UserRole,
+  });
 useEffect(() => {
   if (!searchQuery) getAllUsers();
   else getSearchUsers();
@@ -249,6 +95,19 @@ useEffect(() => {
   //     </div>
   //   );
   // }
+  const handleCreateUser = handleSubmit((data) => {
+    createUser({
+      fullname: data.fullname,
+      email: data.email,
+      verify: "UNVERIFIED" as VerifyStatus,
+      phone_number: data.phone_number,
+      password: data.password,
+      role: data.role,
+    });
+    console.log("[v0] Create user:", data);
+    setIsCreateModalOpen(false);
+    reset();
+  });
   return (
     <div>
       <div className="space-y-6">
@@ -262,18 +121,17 @@ useEffect(() => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {/* <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Xuất Excel
-            </Button> */}
-            <Button>
+            <Button
+              onClick={() => {
+                setIsCreateModalOpen(true);
+              }}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Thêm người dùng
             </Button>
           </div>
         </div>
 
-        {/* Stats */}
         <CustomerStats
           stats={
             statistics?.result ?? {
@@ -345,8 +203,8 @@ useEffect(() => {
 
         <div>
           <p className="text-sm text-muted-foreground mb-4">
-            Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)}{" "}
-            / {filteredUsers.length} người dùng
+            Hiển thị {paginationUser?.currentPage ?? 1} /{" "}
+            {paginationUser?.totalPages ?? 1} trang
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {users?.map((user) => (
@@ -363,7 +221,7 @@ useEffect(() => {
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
               <div className="text-sm text-muted-foreground">
-                Trang {currentPage} / {totalPages}
+                Trang {currentPage} / {paginationUser?.totalPages ?? 1}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -377,8 +235,10 @@ useEffect(() => {
                 </Button>
 
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    const page = Math.max(1, currentPage - 2) + i;
+                    if (page > totalPages) return null;
+                    return (
                       <Button
                         key={page}
                         variant={currentPage === page ? "default" : "outline"}
@@ -388,19 +248,155 @@ useEffect(() => {
                       >
                         {page}
                       </Button>
-                    )
-                  )}
+                    );
+                  })}
                 </div>
-
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === (paginationUser?.totalPages ?? 1)}
                 >
                   Sau
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
+              </div>
+            </div>
+          )}
+          {isCreateModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+                <h2 className="text-xl font-bold text-foreground mb-4">
+                  Thêm người dùng mới
+                </h2>
+
+                <form
+                  id="create-user-form"
+                  onSubmit={handleCreateUser}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Họ tên
+                    </label>
+                    <input
+                      type="text"
+                      {...register("fullname")}
+                      placeholder="Nhập họ tên"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errors.fullname && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.fullname.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      {...register("email")}
+                      placeholder="Nhập email"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.email.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      {...register("phone_number")}
+                      placeholder="Nhập số điện thoại"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errors.phone_number && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.phone_number.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Mật khẩu
+                    </label>
+                    <input
+                      type="password"
+                      {...register("password")}
+                      placeholder="Nhập mật khẩu"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errors.password && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.password.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Vai trò
+                    </label>
+                    <select
+                      {...register("role")}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    >
+                      <option value="USER">Nguời dùng</option>
+                      <option value="STAFF">Nhân viên</option>
+                      <option value="ADMIN">Quản trị viên</option>
+                    </select>
+                    {errors.role && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.role.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Vai trò
+                    </label>
+                    <select
+                      {...register("verify")}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    >
+                      <option value="VERIFIED">Đã xác thực</option>
+                      <option value="UNVERIFIED">Chưa xác thực</option>
+                      <option value="BANNED">Bị cấm</option>
+                    </select>
+                    {errors.role && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.role.message}
+                      </p>
+                    )}
+                  </div>
+                </form>
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCreateModalOpen(false)}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    form="create-user-form"
+                    className="flex-1"
+                  >
+                    Tạo người dùng
+                  </Button>
+                </div>
               </div>
             </div>
           )}
