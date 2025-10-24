@@ -286,6 +286,16 @@ class WalletService {
       })
     }
 
+    const existingRefund = await databaseService.refunds.findOne({
+      transaction_id: new ObjectId(findTransaction._id)
+    })
+    if (existingRefund) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.REFUND_ALREADY_REQUESTED.replace('%s', payload.transaction_id),
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
     const refundID = new ObjectId()
     const refundData: RefundType = {
       _id: refundID,
@@ -523,10 +533,53 @@ class WalletService {
     return result
   }
 
-  async getWithdrawRequestDetail(withdrawID: string, role: Role, user_id: string) {
-    const result = await databaseService.withdraws.findOne({ _id: new ObjectId(withdrawID) })
-    if (role !== Role.Admin) {
-      if (result?.user_id.toString() !== user_id) {
+  async getWithdrawRequestDetail(withdrawID: string, user_id: string) {
+    const findUser = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+    if (!findUser) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const [result] = await databaseService.withdraws
+      .aggregate([
+        {
+          $match: { _id: new ObjectId(withdrawID) }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user_info'
+          }
+        },
+        {
+          $unwind: '$user_info'
+        },
+        {
+          $project: {
+            'user_info.password': 0,
+            'user_info.email_verify_otp': 0,
+            'user_info.email_verify_otp_expires': 0,
+            'user_info.forgot_password_otp': 0,
+            'user_info.forgot_password_otp_expires': 0,
+            'user_info.nfc_card_uid': 0
+          }
+        }
+      ])
+      .toArray()
+
+    if (!result) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.WITHDRAW_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (findUser.role !== Role.Admin) {
+      if (result.user_id.toString() !== user_id) {
         throw new ErrorWithStatus({
           message: WALLETS_MESSAGE.FORBIDDEN_WITHDRAW_ACCESS,
           status: HTTP_STATUS.FORBIDDEN
@@ -587,8 +640,47 @@ class WalletService {
     await sendPaginatedResponse(res, next, databaseService.refunds, query, filter)
   }
 
-  async getRefundDetail(refund_id: string, role: Role, user_id: string) {
-    const findRefund = await databaseService.refunds.findOne({ _id: new ObjectId(refund_id) })
+  async getRefundDetail(refund_id: string, user_id: string) {
+    const findUser = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+    if (!findUser) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const [findRefund] = await databaseService.refunds
+      .aggregate([
+        {
+          $match: { _id: new ObjectId(refund_id) }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user_info'
+          }
+        },
+        {
+          $unwind: {
+            path: '$user_info',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $project: {
+            'user_info.password': 0,
+            'user_info.email_verify_otp': 0,
+            'user_info.email_verify_otp_expires': 0,
+            'user_info.forgot_password_otp': 0,
+            'user_info.forgot_password_otp_expires': 0,
+            'user_info.nfc_card_uid': 0
+          }
+        }
+      ])
+      .toArray()
+
     if (!findRefund) {
       throw new ErrorWithStatus({
         message: WALLETS_MESSAGE.REFUND_NOT_FOUND.replace('%s', refund_id),
@@ -596,8 +688,8 @@ class WalletService {
       })
     }
 
-    if (role !== Role.Admin) {
-      if (user_id !== findRefund.user_id!.toString()) {
+    if (findUser.role !== Role.Admin) {
+      if (user_id !== findRefund.user_id.toString()) {
         throw new ErrorWithStatus({
           message: WALLETS_MESSAGE.FORBIDDEN_ACCESS,
           status: HTTP_STATUS.FORBIDDEN
