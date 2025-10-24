@@ -1,0 +1,19 @@
+type: object
+description: "An object containing user statistics."
+properties:
+  total_users:
+    type: integer
+    description: "Total number of all user accounts."
+    example: 150
+  total_verified:
+    type: integer
+    description: "Total number of verified users."
+    example: 120
+  total_unverified:
+    type: integer
+    description: "Total number of unverified users."
+    example: 25
+  total_banned:
+    type: integer
+    description: "Total number of banned users."
+    example: 5
