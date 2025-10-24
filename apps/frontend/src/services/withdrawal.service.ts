@@ -22,7 +22,7 @@ interface DetailApiResponse<T> {
 const WITHDRAW_BASE = "/withdraws";
 const WITHDRAW_ENDPOINTS = {
   BASE: WITHDRAW_BASE,
-  MANAGE_WITHDRAW_REQUEST: () => `${WITHDRAW_BASE}/manage-withdrawals`,
+  MANAGE_WITHDRAW_REQUEST: () => `${WITHDRAW_BASE}/manage-withdrawal`,
   ID: (id: string) => `${WITHDRAW_BASE}/${id}`,
 } as const;
 export const withdrawalsService = {

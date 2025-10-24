@@ -1,152 +1,117 @@
 "use client";
 
-import { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import type { WithdrawRequest, WithdrawStatus } from "@custom-types";
-import type { DetailUser } from "@/services/auth.service";
-import { Download, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
-
-const mockWithdrawRequests: WithdrawRequest[] = [
-  {
-    _id: "68f47fdd11682ab6726fb563",
-    user_id: "507f1f77bcf86cd799439011",
-    user_name: "Nguyễn Văn A",
-    user_email: "nguyenvana@example.com",
-    amount: 500000,
-    bank_account: "1234567890",
-    bank_name: "Vietcombank",
-    account_holder: "Nguyễn Văn A",
-    status: "PENDING",
-    created_at: "2025-10-20T10:30:00Z",
-    updated_at: "2025-10-20T10:30:00Z",
-  },
-  {
-    _id: "68f47fdd11682ab6726fb564",
-    user_id: "507f1f77bcf86cd799439012",
-    user_name: "Trần Thị B",
-    user_email: "tranthib@example.com",
-    amount: 1000000,
-    bank_account: "0987654321",
-    bank_name: "Techcombank",
-    account_holder: "Trần Thị B",
-    status: "APPROVED",
-    created_at: "2025-10-19T14:20:00Z",
-    updated_at: "2025-10-20T09:15:00Z",
-  },
-  {
-    _id: "68f47fdd11682ab6726fb565",
-    user_id: "507f1f77bcf86cd799439013",
-    user_name: "Lê Văn C",
-    user_email: "levanc@example.com",
-    amount: 750000,
-    bank_account: "1122334455",
-    bank_name: "BIDV",
-    account_holder: "Lê Văn C",
-    status: "COMPLETED",
-    created_at: "2025-10-18T08:45:00Z",
-    updated_at: "2025-10-20T11:00:00Z",
-  },
-];
-
-
-const getStatusColor = (status: WithdrawStatus) => {
-  switch (status) {
-    case "PENDING":
-      return "bg-yellow-100 text-yellow-800";
-    case "APPROVED":
-      return "bg-blue-100 text-blue-800";
-    case "COMPLETED":
-      return "bg-green-100 text-green-800";
-    case "REJECTED":
-      return "bg-red-100 text-red-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
-
-const getStatusIcon = (status: WithdrawStatus) => {
-  switch (status) {
-    case "PENDING":
-      return <Clock className="w-4 h-4" />;
-    case "APPROVED":
-      return <CheckCircle className="w-4 h-4" />;
-    case "COMPLETED":
-      return <CheckCircle className="w-4 h-4" />;
-    case "REJECTED":
-      return <XCircle className="w-4 h-4" />;
-    default:
-      return null;
-  }
-};
-
-const getStatusLabel = (status: WithdrawStatus) => {
-  switch (status) {
-    case "PENDING":
-      return "Chờ xử lý";
-    case "APPROVED":
-      return "Đã phê duyệt";
-    case "COMPLETED":
-      return "Hoàn thành";
-    case "REJECTED":
-      return "Từ chối";
-    default:
-      return status;
-  }
-};
-
-export default function WithdrawPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<WithdrawStatus | "all">(
-    "all"
+import type { WithdrawStatus , WithdrawRequest } from "@custom-types";
+import { Download } from "lucide-react";
+import { useWithdrawAction } from "@/hooks/useWithdrawalAction";
+import { withdrawColumn } from "@/columns/withdraw-column";
+import { PaginationDemo } from "@/components/PaginationCustomer";
+import { DataTable } from "@/components/TableCustom";
+import {
+  getStatusColor,
+  getStatusIcon,
+  getStatusLabel,
+} from "@/utils/refund-status";
+function InfoRow({
+  label,
+  value,
+  mono,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  highlight?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+      <p
+        className={`${
+          mono ? "font-mono" : "font-medium"
+        } ${highlight ? "text-lg font-bold text-foreground" : "text-foreground"}`}
+      >
+        {value}
+      </p>
+    </div>
   );
-  const [selectedRequest, setSelectedRequest] =
-    useState<WithdrawRequest | null>(null);
+}
+
+export default function RefundPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<WithdrawStatus | "all">("all");
+  const [selectedRequest, setSelectedRequest] = useState<WithdrawRequest | null>(
+    null
+  );
+  const [selectedID, setSelectedID] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const {
+    response,
+    refetch,
+    pagination,
+    getAllWithdrawRequest,
+    detailResponse,
+    isDetailLoading,
+    updateWithdrawRequest,
+  } = useWithdrawAction({
+    hasToken: true,
+    page: page,
+    limit: limit,
+    id: selectedID || "",
+    status: statusFilter === "all" ? undefined : (statusFilter as WithdrawStatus),
+  });
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [newStatus, setNewStatus] = useState<WithdrawStatus>("PENDING");
+  const [newStatus, setNewStatus] = useState<WithdrawStatus>("ĐANG CHỜ XỬ LÝ");
+  useEffect(() => {
+    getAllWithdrawRequest();
+  }, [page, limit, statusFilter, searchQuery, refetch, getAllWithdrawRequest]);
 
-  const filteredRequests = mockWithdrawRequests.filter((request) => {
-    const matchesSearch =
-      request.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      request.user_email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || request.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const handleViewDetails = (request: WithdrawRequest) => {
-    setSelectedRequest(request);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleUpdateStatus = (request: WithdrawRequest) => {
-    setSelectedRequest(request);
-    setNewStatus(request.status);
-    setIsUpdateModalOpen(true);
-  };
-
-  const handleSaveStatus = () => {
-    console.log(
-      "[v0] Updating withdraw status:",
-      selectedRequest?._id,
-      newStatus
-    );
-    setIsUpdateModalOpen(false);
-    setSelectedRequest(null);
-  };
-
-  const totalAmount = mockWithdrawRequests.reduce(
-    (sum, req) => sum + req.amount,
-    0
+  const withdrawTransitions = useMemo(
+    (): Record<WithdrawStatus, WithdrawStatus[]> => ({
+      "": ["ĐANG CHỜ XỬ LÝ"],
+      "ĐANG CHỜ XỬ LÝ": ["ĐÃ DUYỆT", "TỪ CHỐI"],
+      "ĐÃ DUYỆT": ["ĐÃ HOÀN THÀNH"],
+      "TỪ CHỐI": [],
+      "ĐÃ HOÀN THÀNH": [],
+    }),
+    []
   );
-  const pendingAmount = mockWithdrawRequests
-    .filter((req) => req.status === "PENDING")
-    .reduce((sum, req) => sum + req.amount, 0);
-  const completedAmount = mockWithdrawRequests
-    .filter((req) => req.status === "COMPLETED")
-    .reduce((sum, req) => sum + req.amount, 0);
-
+  const handleSaveStatus = async () => {
+    if (!selectedRequest?._id) return;
+    await updateWithdrawRequest({
+      newStatus: newStatus,
+    });
+    setIsUpdateModalOpen(false);
+  };
+  useEffect(() => {
+    getAllWithdrawRequest();
+    console.log(detailResponse);
+  }, [selectedID, detailResponse, getAllWithdrawRequest]);
+  useEffect(() => {
+    console.log(detailResponse);
+  }, [detailResponse]);
+  const getNextStatuses = useCallback(
+    (current: WithdrawStatus): WithdrawStatus[] => {
+      return (withdrawTransitions[current] ?? []).filter((s) => s !== current);
+    },
+    [withdrawTransitions]
+  );
+  const nextStatuses = getNextStatuses(detailResponse?.status as WithdrawStatus);
+  useEffect(() => {
+    console.log("Next statuses:", newStatus);
+  }, [newStatus]);
+  useEffect(() => {
+    if (detailResponse?.status) {
+      setNewStatus(detailResponse.status as WithdrawStatus);
+    }
+  }, [detailResponse]);
+  useEffect(() => {
+    const next = getNextStatuses(detailResponse?.status as WithdrawStatus);
+    if (next.length > 0) setNewStatus(next[0]);
+  }, [detailResponse, getNextStatuses]);
   return (
     <div>
       <div className="space-y-6">
@@ -154,10 +119,10 @@ export default function WithdrawPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Quản lý rút tiền
+              Quản lý hoàn tiền
             </h1>
             <p className="text-muted-foreground mt-1">
-              Xem và xử lý các yêu cầu rút tiền từ người dùng
+              Xem và xử lý các yêu cầu hoàn tiền từ người dùng
             </p>
           </div>
           <Button variant="outline">
@@ -171,36 +136,17 @@ export default function WithdrawPage() {
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Tổng số yêu cầu</p>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {mockWithdrawRequests.length}
+              {pagination?.totalRecords}
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Chờ xử lý</p>
-            <p className="text-2xl font-bold text-yellow-500 mt-1">
-              {
-                mockWithdrawRequests.filter((r) => r.status === "PENDING")
-                  .length
-              }
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Tổng tiền chờ xử lý</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              {pendingAmount.toLocaleString("vi-VN")} đ
-            </p>
           </div>
         </div>
 
         {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center gap-4">
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo tên hoặc email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground"
-            />
             <select
               value={statusFilter}
               onChange={(e) =>
@@ -209,10 +155,10 @@ export default function WithdrawPage() {
               className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
             >
               <option value="all">Tất cả trạng thái</option>
-              <option value="PENDING">Chờ xử lý</option>
-              <option value="APPROVED">Đã phê duyệt</option>
-              <option value="COMPLETED">Hoàn thành</option>
-              <option value="REJECTED">Từ chối</option>
+              <option value="ĐANG CHỜ XỬ LÝ">Chờ xử lý</option>
+              <option value="ĐÃ DUYỆT">Đã phê duyệt</option>
+              <option value="ĐÃ HOÀN THÀNH">Hoàn thành</option>
+              <option value="TỪ CHỐI">Từ chối</option>
             </select>
             <Button
               variant="outline"
@@ -225,150 +171,75 @@ export default function WithdrawPage() {
             </Button>
           </div>
         </div>
-
-        {/* Table */}
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted border-b border-border">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Người dùng
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Số tiền
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Ngân hàng
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Ngày tạo
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Hành động
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredRequests.map((request) => (
-                <tr
-                  key={request._id}
-                  className="hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-6 py-4 text-sm text-foreground font-medium">
-                    <div>
-                      <p>{request.user_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {request.user_email}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground font-semibold">
-                    {request.amount.toLocaleString("vi-VN")} đ
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">
-                    {request.bank_name}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}
-                    >
-                      {getStatusIcon(request.status)}
-                      {getStatusLabel(request.status)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {new Date(request.created_at).toLocaleDateString("vi-VN")}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewDetails(request)}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Chi tiết
-                      </Button>
-                      {request.status === "PENDING" && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleUpdateStatus(request)}
-                        >
-                          Xử lý
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="w-full rounded-lg space-y-4  flex flex-col">
+          <DataTable
+            columns={withdrawColumn({
+              onView: ({ id }) => {
+                setSelectedID(id);
+                setIsDetailModalOpen(true);
+              },
+              onUpdateStatus: (request) => {
+                setSelectedID(request._id);
+                setIsUpdateModalOpen(true);
+                setSelectedRequest(request);
+              },
+            })}
+            data={response || []}
+          />
+          <PaginationDemo
+            totalPages={pagination?.totalPages ?? 1}
+            onPageChange={setPage}
+            currentPage={pagination?.currentPage ?? 1}
+          />
         </div>
-
-        {/* Results info */}
         <p className="text-sm text-muted-foreground">
-          Hiển thị {filteredRequests.length} / {mockWithdrawRequests.length} yêu
-          cầu
+          Hiển thị {response?.length} / {response?.length} yêu cầu
         </p>
       </div>
 
-      {/* Detail Modal */}
-      {isDetailModalOpen && selectedRequest && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              Chi tiết yêu cầu rút tiền
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-muted-foreground">Người dùng</p>
-                <p className="text-foreground font-medium">
-                  {selectedRequest.user_name}
-                </p>
+      {isDetailModalOpen && selectedID && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          {isDetailLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            </div>
+          ) : (
+            <div className="bg-card border border-border shadow-lg rounded-xl w-full max-w-md p-6 relative animate-in fade-in-50 slide-in-from-bottom-5">
+              <h2 className="text-lg md:text-xl font-semibold text-foreground mb-5 flex items-center justify-between">
+                Chi tiết yêu cầu hoàn tiền
+              </h2>
+              <div className="space-y-4 text-sm">
+                <InfoRow
+                  label="Người dùng"
+                  value={detailResponse?.user_info.fullname ?? "—"}
+                />
+                <InfoRow
+                  label="Email"
+                  value={detailResponse?.user_info.email ?? "—"}
+                />
+                {/* <InfoRow
+                  label="Mã đơn thuê"
+                  value={detailResponse?.transaction_id ?? "—"}
+                  mono
+                /> */}
+                <InfoRow
+                  label="Số tiền"
+                  value={`${Number(detailResponse?.amount?.$numberDecimal ?? 0).toLocaleString()} đ`}
+                  highlight
+                />
+                <div>
+                  <p className="text-xs text-muted-foreground">Trạng thái</p>
+                  <span
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium mt-2 ${getStatusColor(
+                      detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ"
+                    )}`}
+                  >
+                    {getStatusIcon(detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ")}
+                    {getStatusLabel(detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ")}
+                  </span>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="text-foreground font-medium">
-                  {selectedRequest.user_email}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Số tiền</p>
-                <p className="text-foreground font-bold text-lg">
-                  {selectedRequest.amount.toLocaleString("vi-VN")} đ
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Ngân hàng</p>
-                <p className="text-foreground font-medium">
-                  {selectedRequest.bank_name}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Chủ tài khoản</p>
-                <p className="text-foreground font-medium">
-                  {selectedRequest.account_holder}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Số tài khoản</p>
-                <p className="text-foreground font-medium">
-                  {selectedRequest.bank_account}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Trạng thái</p>
-                <span
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium mt-1 ${getStatusColor(selectedRequest.status)}`}
-                >
-                  {getStatusIcon(selectedRequest.status)}
-                  {getStatusLabel(selectedRequest.status)}
-                </span>
-              </div>
-              <div className="flex gap-3 pt-4">
+              <div className="mt-6 flex gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setIsDetailModalOpen(false)}
@@ -378,57 +249,71 @@ export default function WithdrawPage() {
                 </Button>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* Update Status Modal */}
-      {isUpdateModalOpen && selectedRequest && (
+      {isUpdateModalOpen && selectedID && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              Cập nhật trạng thái
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Người dùng: {selectedRequest.user_name}
-                </p>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Số tiền: {selectedRequest.amount.toLocaleString("vi-VN")} đ
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Trạng thái mới
-                </label>
-                <select
-                  value={newStatus}
-                  onChange={(e) =>
-                    setNewStatus(e.target.value as WithdrawStatus)
-                  }
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                >
-                  <option value="PENDING">Chờ xử lý</option>
-                  <option value="APPROVED">Đã phê duyệt</option>
-                  <option value="COMPLETED">Hoàn thành</option>
-                  <option value="REJECTED">Từ chối</option>
-                </select>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsUpdateModalOpen(false)}
-                  className="flex-1"
-                >
-                  Hủy
-                </Button>
-                <Button onClick={handleSaveStatus} className="flex-1">
-                  Lưu
-                </Button>
+          {isDetailLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            </div>
+          ) : (
+            <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Cập nhật trạng thái
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Người dùng: {detailResponse?.user_info.fullname || "—"}
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Số tiền:{" "}
+                    {Number(
+                      detailResponse?.amount?.$numberDecimal ?? 0
+                    ).toLocaleString("vi-VN")}{" "}
+                    đ
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Trạng thái mới
+                  </label>
+                  <select
+                    value={newStatus}
+                    onChange={(e) =>
+                      setNewStatus(e.target.value as WithdrawStatus)
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                  >
+                    {nextStatuses.length > 0 ? (
+                      nextStatuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">Không có trạng thái khả dụng</option>
+                    )}
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsUpdateModalOpen(false)}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button onClick={() => handleSaveStatus()} className="flex-1">
+                    Lưu
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
