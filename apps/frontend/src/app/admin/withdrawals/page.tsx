@@ -121,7 +121,7 @@ export default function RefundPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Quản lý hoàn tiền
+              Quản lý rút tiền
             </h1>
             <p className="text-muted-foreground mt-1">
               Xem và xử lý các yêu cầu hoàn tiền từ người dùng

@@ -6,6 +6,7 @@ import type {
   WithdrawStatus,
   DetailWithdrawRequest,
 } from "@/types";
+import { UpdateWithdrawSchemaFormData } from "@/schemas/withdrawalSchema";
 interface ApiResponse<T> {
   data: T[];
   pagination: {
@@ -55,7 +56,7 @@ export const withdrawalsService = {
   },
   updateWithdrawRequestById: async (
     id: string,
-    data: UpdateRefundSchemaFormData
+    data: UpdateWithdrawSchemaFormData
   ): Promise<AxiosResponse<DetailApiResponse<DetailWithdrawRequest>>> => {
     const response = await fetchHttpClient.put<
       DetailApiResponse<DetailWithdrawRequest>

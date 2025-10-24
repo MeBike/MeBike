@@ -21,6 +21,7 @@ const fetchAllRefundRequests = async ({
     }
   } catch (error) {
     console.log(error);
+    throw error;
   }
 };
 export const useGetAllRefundRequestQuery = ({
