@@ -104,6 +104,7 @@ export default function RefundPage() {
     page: page,
     limit: limit,
     id: selectedID || "",
+    status: statusFilter === "all" ? undefined : (statusFilter as RefundStatus)
   });
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -173,9 +174,9 @@ export default function RefundPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Tổng số yêu cầu</p>
-            {/* <p className="text-2xl font-bold text-foreground mt-1">
-              {mockRefundRequests.length}
-            </p> */}
+            <p className="text-2xl font-bold text-foreground mt-1">
+              {pagination?.totalRecords}
+            </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Chờ xử lý</p>
@@ -197,13 +198,13 @@ export default function RefundPage() {
         {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center gap-4">
-            <input
+            {/* <input
               type="text"
               placeholder="Tìm kiếm theo tên, email hoặc mã đơn..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground"
-            />
+            /> */}
             <select
               value={statusFilter}
               onChange={(e) =>
@@ -212,10 +213,10 @@ export default function RefundPage() {
               className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
             >
               <option value="all">Tất cả trạng thái</option>
-              <option value="PENDING">Chờ xử lý</option>
-              <option value="APPROVED">Đã phê duyệt</option>
-              <option value="COMPLETED">Hoàn thành</option>
-              <option value="REJECTED">Từ chối</option>
+              <option value="ĐANG CHỜ XỬ LÝ">Chờ xử lý</option>
+              <option value="ĐÃ DUYỆT">Đã phê duyệt</option>
+              <option value="ĐÃ HOÀN TIỀN">Hoàn thành</option>
+              <option value="TỪ CHỐI">Từ chối</option>
             </select>
             <Button
               variant="outline"
@@ -228,7 +229,6 @@ export default function RefundPage() {
             </Button>
           </div>
         </div>
-
         <div className="w-full rounded-lg space-y-4  flex flex-col">
           <DataTable
             columns={refundColumn({
@@ -245,8 +245,6 @@ export default function RefundPage() {
             currentPage={pagination?.currentPage ?? 1}
           />
         </div>
-
-        {/* Results info */}
         <p className="text-sm text-muted-foreground">
           Hiển thị {response?.length} / {response?.length} yêu cầu
         </p>
