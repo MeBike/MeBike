@@ -8,8 +8,9 @@ import type { DetailUser } from "@/services/auth.service";
 import { Download, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useRefundAction } from "@/hooks/useRefundAction";
 import { refundColumn } from "@/columns/refund-column";
-import { Pagination } from "@/components/ui/pagination";
+import { PaginationDemo } from "@/components/PaginationCustomer";
 import { DataTable } from "@/components/TableCustom";
+import { set } from "zod";
 const getStatusColor = (status: RefundStatus) => {
   switch (status) {
     case "ĐANG CHỜ XỬ LÝ":
@@ -61,13 +62,15 @@ export default function RefundPage() {
   const [selectedRequest, setSelectedRequest] = useState<RefundRequest | null>(
     null
   );
-  const [page , setPage] = useState(1);
-  const [limit , setLimit] = useState(10);
-  const { response, isLoading, isError, refetch } = useRefundAction({
-    hasToken: true,
-    page: page,
-    limit: limit,
-  });
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { response, isLoading, isError, refetch, pagination } = useRefundAction(
+    {
+      hasToken: true,
+      page: page,
+      limit: limit,
+    }
+  );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<RefundStatus>("ĐANG CHỜ XỬ LÝ");
@@ -195,8 +198,13 @@ export default function RefundPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="w-full rounded-lg space-y-4  flex flex-col">
           <DataTable columns={refundColumn({})} data={response || []} />
+          <PaginationDemo
+            totalPages={pagination?.totalPages ?? 1}
+            onPageChange={setPage}
+            currentPage={pagination?.currentPage ?? 1}
+          />
         </div>
 
         {/* Results info */}
@@ -204,8 +212,8 @@ export default function RefundPage() {
           Hiển thị {response?.length} / {response?.length} yêu cầu
         </p>
       </div>
-{/* 
-      {isDetailModalOpen && selectedRequest && (
+
+      {/* {isDetailModalOpen && selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-bold text-foreground mb-4">
@@ -215,7 +223,7 @@ export default function RefundPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Người dùng</p>
                 <p className="text-foreground font-medium">
-                  {selectedRequest.user_name}
+                  {selectedRequest._id}
                 </p>
               </div>
               <div>
@@ -271,9 +279,9 @@ export default function RefundPage() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
-      {isUpdateModalOpen && selectedRequest && (
+      {/* {isUpdateModalOpen && selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
             <h2 className="text-xl font-bold text-foreground mb-4">
@@ -330,7 +338,7 @@ export default function RefundPage() {
             </div>
           </div>
         </div>
-      )} */}
+      )}  */}
     </div>
   );
 }

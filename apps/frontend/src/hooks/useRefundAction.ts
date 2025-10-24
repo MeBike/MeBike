@@ -13,6 +13,7 @@ export const useRefundAction = ({ page, limit, status , hasToken}: {
         response : data?.data,
         isLoading,
         isError,
+        pagination : data?.pagination,
         refetch
     };
 };

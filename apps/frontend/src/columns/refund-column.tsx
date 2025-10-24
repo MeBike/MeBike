@@ -86,17 +86,6 @@ export const refundColumn = ({
         </button>
         <button
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Chỉnh sửa"
-        //   onClick={() => {
-        //     if (onEdit) {
-        //       onEdit(row.original);
-        //     }
-        //   }}
-        >
-          <Edit2 className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
           title="Xóa"
         //   onClick={() => {
         //     if (onDelete) {
