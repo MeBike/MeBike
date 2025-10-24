@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import type { Bike, BikeStatus } from "@custom-types";
 import { Plus, Download, Edit2, Trash2, Eye } from "lucide-react";
 import { useBikeActions } from "@/hooks/useBikeAction";
-// Mock data - only pedal bikes
 const mockBikes: Bike[] = [
   {
     _id: "bike_001",
@@ -54,8 +53,6 @@ const mockBikes: Bike[] = [
   },
 ];
 
-
-
 const getStatusColor = (status: BikeStatus) => {
   const colors: Record<BikeStatus, string> = {
     "CÓ SẴN": "bg-green-100 text-green-800",
@@ -69,7 +66,7 @@ const getStatusColor = (status: BikeStatus) => {
 };
 
 export default function BikesPage() {
- const { getBikes, data } = useBikeActions(true);
+  const { getBikes, data } = useBikeActions(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -116,12 +113,12 @@ export default function BikesPage() {
     broken: mockBikes.filter((b) => b.status === "BỊ HỎNG").length,
     maintenance: mockBikes.filter((b) => b.status === "ĐANG BẢO TRÌ").length,
   };
-  // useEffect(() => {
-  //   getBikes();
-  // }, []);
-  // useEffect(() => {
-  //   console.log("Bike data:", data);
-  // }, [data]);
+  useEffect(() => {
+    getBikes();
+  }, []);
+  useEffect(() => {
+    console.log("Bike data:", data);
+  }, [data]);
   return (
     <div>
       <div className="space-y-6">
@@ -247,7 +244,7 @@ export default function BikesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {mockBikes.map((bike) => (
+              {data?.data.map((bike) => (
                 <tr
                   key={bike._id}
                   className="hover:bg-muted/50 transition-colors"

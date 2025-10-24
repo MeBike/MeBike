@@ -5,6 +5,20 @@ import type {
   UpdateBikeSchemaFormData,
 } from "@schemas/bikeSchema";
 import { Bike } from "@custom-types";
+interface ApiResponse<T> {
+  data: T;
+  pagination: {
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+    totalRecords: number;
+  };
+  message: string;
+}
+interface DetailApiResponse<T> {
+  result: T;
+  message: string;
+}
 const BIKE_BASE = "/bikes";
 const BIKE_ENDPOINTS = {
   BASE: BIKE_BASE,
@@ -16,10 +30,10 @@ const BIKE_ENDPOINTS = {
   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
 } as const;
-interface ApiResponse<T> {
-  data: T;
-  message: string;
-}
+// interface ApiResponse<T> {
+//   data: T;
+//   message: string;
+// }
 export const bikeService = {
   //for admin
 
@@ -77,8 +91,8 @@ export const bikeService = {
     station_id?: string,
     supplier_id?: string,
     status ?: string
-  ): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BASE, {
+  ): Promise<AxiosResponse<ApiResponse<Bike[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Bike[]>>(BIKE_ENDPOINTS.BASE, {
       params: { page, limit, station_id, supplier_id, status },
     });
     return response;

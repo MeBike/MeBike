@@ -49,22 +49,26 @@ export const useBikeActions = (
   status?: string
 ) => {
     const router = useRouter();
-    const useGetBikes = useGetAllBikeQuery( 1, 10, station_id , supplier_id, status);
+    const { refetch : useGetAllRefetch , data , isFetching : isLoading } = useGetAllBikeQuery(
+      1,
+      10,
+      station_id,
+      supplier_id,
+      status
+    );
     const useCreateBike = useCreateBikeMutation();
-    const useGetStatusBike = useGetStatusBikeQuery();
-    const useGetStatusBikeByID = useGetStatusBikeIDQuery(bikeId || '');
     const updateBikeMutation = useUpdateBike();
     const deleteBikeMutation = useSoftDeleteBikeMutation();
     const reportBikeMutation = useReportBike();
     const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || '');
     const queryClient = useQueryClient();
     const getBikes = useCallback(() => {
-        if (!hasToken) {
-            router.push('/login');
-            return;
-        }
-        useGetBikes.refetch();
-    }, [useGetBikes, hasToken, router]);
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useGetAllRefetch();
+    }, [useGetAllRefetch, hasToken, router]);
     const createBike = useCallback(
       (data: BikeSchemaFormData) => {
         if (!hasToken) {
@@ -170,12 +174,12 @@ export const useBikeActions = (
     const getBikeByID = useCallback(() => {
       useGetDetailBike.refetch();
     }, [useGetDetailBike]);
-    const getStatusBike = useCallback(() => {
-      useGetStatusBike.refetch();
-    }, [useGetStatusBike]);
-    const getStatusBikeByID = useCallback(() => {
-      useGetStatusBikeByID.refetch();
-    } , [useGetStatusBikeByID]);
+    // const getStatusBike = useCallback(() => {
+    //   useGetStatusBike.refetch();
+    // }, [useGetStatusBike]);
+    // const getStatusBikeByID = useCallback(() => {
+    //   useGetStatusBikeByID.refetch();
+    // } , [useGetStatusBikeByID]);
     return {
       getBikes,
       createBike,
@@ -183,17 +187,16 @@ export const useBikeActions = (
       deleteBike,
       reportBike,
       getBikeByID,
-      getStatusBike,
-      getStatusBikeByID,
-      isFetchingStatusBikeByID: useGetStatusBikeByID.isFetching,
-      isFetchingStatusBike: useGetStatusBike.isFetching,
-      isFetchingBikeDetail: useGetBikes.isFetching,
+      // getStatusBike,
+      // isFetchingStatusBikeByID: useGetStatusBikeByID.isFetching,
+      // isFetchingStatusBike: useGetStatusBike.isFetching,
+      isFetchingBikeDetail: isLoading,
       isFetchingBike: useGetDetailBike.isFetching,
       isReportingBike: reportBikeMutation.isPending,
       isDeletingBike: deleteBikeMutation.isPending,
-      isGettingBikes: useGetBikes.isFetching,
       isUpdatingBike: updateBikeMutation.isPending,
       isCreatingBike: useCreateBike.isPending,
       useGetAllBikeQuery,
+      data : data,
     };
 }

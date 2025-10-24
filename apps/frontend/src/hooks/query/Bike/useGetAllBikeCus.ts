@@ -32,7 +32,7 @@ export const useGetAllBikeQuery = (
   status?: string
 ) => {
   return useQuery({
-    queryKey: ["bikes", "all", page, limit],
+    queryKey: ["bikes", "all", page, limit , station_id, supplier_id, status],
     queryFn: () => getAllBikes(page, limit, station_id, supplier_id, status),
   });
 };
