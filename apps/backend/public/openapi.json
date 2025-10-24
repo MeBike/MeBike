@@ -1281,6 +1281,71 @@
         }
       }
     },
+    "/users/manage-users/stats/new-users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get new user registration stats (Admin only)",
+        "description": "Retrieves statistics on new user registrations.\nCompares Month-to-Date (MTD) registrations of this month against the same period last month.\n**Requires Admin privileges (not Staff).**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New user statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê người dùng mới thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/NewUserStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User is not an Admin).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (Admin user from token does not exist).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [
@@ -6560,6 +6625,28 @@
                 "type": "string"
               }
             }
+          }
+        }
+      },
+      "NewUserStats": {
+        "type": "object",
+        "description": "Thống kê so sánh lượng người dùng (Role: User) đăng ký mới trong tháng này so với cùng kỳ tháng trước.",
+        "properties": {
+          "newUsersThisMonth": {
+            "type": "integer",
+            "description": "Số lượng người dùng mới đăng ký từ đầu tháng này đến hôm nay.",
+            "example": 45
+          },
+          "newUsersLastMonth": {
+            "type": "integer",
+            "description": "Số lượng người dùng mới đăng ký từ đầu tháng trước đến ngày tương ứng của tháng trước.",
+            "example": 30
+          },
+          "percentageChange": {
+            "type": "number",
+            "format": "float",
+            "description": "Phần trăm thay đổi (tăng/giảm) so với tháng trước.",
+            "example": 50
           }
         }
       }

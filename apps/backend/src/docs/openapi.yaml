@@ -212,6 +212,8 @@ components:
       $ref: './components/schemas/ActiveUserStatItem.yaml'
     TopRenterStatItem:
       $ref: './components/schemas/TopRenterStatItem.yaml'
+    NewUserStats:
+      $ref: './components/schemas/NewUserStats.yaml'
 
   securitySchemes:
     BearerAuth:
