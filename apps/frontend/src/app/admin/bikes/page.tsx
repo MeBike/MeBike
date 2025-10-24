@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { Bike, BikeStatus } from "@custom-types";
 import { Plus, Download, Edit2, Trash2, Eye } from "lucide-react";
 import { useBikeActions } from "@/hooks/useBikeAction";
+import { Spinner } from "@/components/ui/spinner";
 const mockBikes: Bike[] = [
   {
     _id: "bike_001",
@@ -66,7 +67,15 @@ const getStatusColor = (status: BikeStatus) => {
 };
 
 export default function BikesPage() {
-  const { getBikes, data } = useBikeActions(true);
+  const {
+    getBikes,
+    data,
+    getStatisticsBike,
+    statisticData,
+    isLoadingStatistics,
+    isFetchingBike,
+    paginationOfBikes,
+  } = useBikeActions(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -115,10 +124,18 @@ export default function BikesPage() {
   };
   useEffect(() => {
     getBikes();
+    getStatisticsBike();
   }, []);
   useEffect(() => {
     console.log("Bike data:", data);
   }, [data]);
+  if (isFetchingBike) {
+    return (
+      <div>
+        <Spinner />
+      </div>
+    );
+  }
   return (
     <div>
       <div className="space-y-6">
@@ -133,10 +150,10 @@ export default function BikesPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline">
+            {/* <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Xuất Excel
-            </Button>
+            </Button> */}
             <Button onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Thêm xe mới
@@ -149,33 +166,33 @@ export default function BikesPage() {
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Tổng số xe</p>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {stats.total}
+              {paginationOfBikes?.totalRecords || ""}
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Có sẵn</p>
             <p className="text-2xl font-bold text-green-500 mt-1">
-              {stats.available}
+              {statisticData?.result["CÓ SẴN"] || ""}
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Đang thuê</p>
             <p className="text-2xl font-bold text-blue-500 mt-1">
-              {stats.rented}
+              {statisticData?.result["ĐANG ĐƯỢC THUÊ"] || ""}
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Bị hỏng</p>
             <p className="text-2xl font-bold text-red-500 mt-1">
-              {stats.broken}
+              {statisticData?.result["BỊ HỎNG"] || "0"}
             </p>
           </div>
-          <div className="bg-card border border-border rounded-lg p-4">
+          {/* <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Bảo trì</p>
             <p className="text-2xl font-bold text-orange-500 mt-1">
               {stats.maintenance}
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* Filters */}

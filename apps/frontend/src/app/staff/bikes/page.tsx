@@ -116,16 +116,9 @@ export default function BikesPage() {
     broken: mockBikes.filter((b) => b.status === "BỊ HỎNG").length,
     maintenance: mockBikes.filter((b) => b.status === "ĐANG BẢO TRÌ").length,
   };
-  // useEffect(() => {
-  //   getBikes();
-  // }, []);
-  // useEffect(() => {
-  //   console.log("Bike data:", data);
-  // }, [data]);
   return (
     <div>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
@@ -146,42 +139,6 @@ export default function BikesPage() {
             </Button>
           </div>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Tổng số xe</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              {stats.total}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Có sẵn</p>
-            <p className="text-2xl font-bold text-green-500 mt-1">
-              {stats.available}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Đang thuê</p>
-            <p className="text-2xl font-bold text-blue-500 mt-1">
-              {stats.rented}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Bị hỏng</p>
-            <p className="text-2xl font-bold text-red-500 mt-1">
-              {stats.broken}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Bảo trì</p>
-            <p className="text-2xl font-bold text-orange-500 mt-1">
-              {stats.maintenance}
-            </p>
-          </div>
-        </div>
-
-        {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center gap-4">
             <input
@@ -247,7 +204,7 @@ export default function BikesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {mockBikes.map((bike) => (
+              {data?.data.map((bike) => (
                 <tr
                   key={bike._id}
                   className="hover:bg-muted/50 transition-colors"

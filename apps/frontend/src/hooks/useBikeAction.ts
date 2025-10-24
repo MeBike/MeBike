@@ -3,12 +3,15 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { useGetAllBikeQuery } from "./query/Bike/useGetAllBikeCus";
 import { useCreateBikeMutation } from "./mutations/Bike/useCreateBike";
-import type  { BikeSchemaFormData, UpdateBikeSchemaFormData } from "@/schemas/bikeSchema";
+import type {
+  BikeSchemaFormData,
+  UpdateBikeSchemaFormData,
+} from "@/schemas/bikeSchema";
 import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
 import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 import { useReportBike } from "./mutations/Bike/useReportBike";
 import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
-import { useGetStatusBikeQuery } from "./query/Bike/useGetStatusBike";
+import { useGetStatisticsBikeQuery } from "./query/Bike/useGetStatusBike";
 import { useRouter } from "next/navigation";
 import { useGetStatusBikeIDQuery } from "./query/Bike/useGetStatusBikeByID";
 interface ErrorResponse {
@@ -38,117 +41,117 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   if (simpleError?.message) {
     return simpleError.message;
   }
-
   return defaultMessage;
 };
 export const useBikeActions = (
-  hasToken : boolean, 
+  hasToken: boolean,
   bikeId?: string,
   station_id?: string,
   supplier_id?: string,
   status?: string
 ) => {
-    const router = useRouter();
-    const { refetch : useGetAllRefetch , data , isFetching : isLoading } = useGetAllBikeQuery(
-      1,
-      10,
-      station_id,
-      supplier_id,
-      status
-    );
-    const useCreateBike = useCreateBikeMutation();
-    const updateBikeMutation = useUpdateBike();
-    const deleteBikeMutation = useSoftDeleteBikeMutation();
-    const reportBikeMutation = useReportBike();
-    const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || '');
-    const queryClient = useQueryClient();
-    const getBikes = useCallback(() => {
+  const router = useRouter();
+  const {
+    refetch: useGetAllRefetch,
+    data,
+    isFetching: isLoading,
+  } = useGetAllBikeQuery(1, 10, station_id, supplier_id, status);
+  const useCreateBike = useCreateBikeMutation();
+  const updateBikeMutation = useUpdateBike();
+  const {data : statisticData , refetch: refetchStatistics , isFetching: isLoadingStatistics} = useGetStatisticsBikeQuery();
+  const deleteBikeMutation = useSoftDeleteBikeMutation();
+  const reportBikeMutation = useReportBike();
+  const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || "");
+  const queryClient = useQueryClient();
+  const getBikes = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    useGetAllRefetch();
+  }, [useGetAllRefetch, hasToken, router]);
+  const getStatisticsBike = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchStatistics();
+  }, [refetchStatistics, hasToken, router]);
+  const createBike = useCallback(
+    (data: BikeSchemaFormData) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
-      useGetAllRefetch();
-    }, [useGetAllRefetch, hasToken, router]);
-    const createBike = useCallback(
-      (data: BikeSchemaFormData) => {
-        if (!hasToken) {
-          router.push("/login");
-          return;
-        }
-        useCreateBike.mutate(data, {
-          onSuccess: (result) => {
-            if (result.status === 201) {
-              toast.success("Bike created successfully");
-            } else {
-              const errorMessage =
-                result.data?.message || "Error creating bikes";
-              toast.error(errorMessage);
-            }
-          },
-          onError: (error) => {
-            const errorMessage = getErrorMessage(error, "Error creating bikes");
+      useCreateBike.mutate(data, {
+        onSuccess: (result) => {
+          if (result.status === 201) {
+            toast.success("Bike created successfully");
+          } else {
+            const errorMessage = result.data?.message || "Error creating bikes";
             toast.error(errorMessage);
-          },
-        });
-      },
-      [useCreateBike, hasToken, router]
-    );
-    const updateBike = useCallback(
-      (data: UpdateBikeSchemaFormData, id: string) => {
-        if (!hasToken) {
-          router.push("/login");
-          return;
-        }
-        updateBikeMutation.mutate(
-          { id, data },
-          {
-            onSuccess: (result) => {
-              if (result.status === 200) {
-                toast.success("Bike updated successfully");
-              } else {
-                const errorMessage =
-                  result.data?.message || "Error updating bikes";
-                toast.error(errorMessage);
-              }
-            },
-            onError: (error) => {
-              const errorMessage = getErrorMessage(
-                error,
-                "Error updating bikes"
-              );
-              toast.error(errorMessage);
-            },
           }
-        );
-      },
-      [updateBikeMutation, hasToken, router]
-    );
-    const deleteBike = useCallback(
-      (id: string) => {
-        if (!hasToken) {
-          router.push("/login");
-          return;
-        }
-        deleteBikeMutation.mutate(id, {
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(error, "Error creating bikes");
+          toast.error(errorMessage);
+        },
+      });
+    },
+    [useCreateBike, hasToken, router]
+  );
+  const updateBike = useCallback(
+    (data: UpdateBikeSchemaFormData, id: string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      updateBikeMutation.mutate(
+        { id, data },
+        {
           onSuccess: (result) => {
             if (result.status === 200) {
-              toast.success("Bike deleted successfully");
-              queryClient.invalidateQueries({ queryKey: ["bikes"] });
+              toast.success("Bike updated successfully");
             } else {
               const errorMessage =
-                result.data?.message || "Error deleting bikes";
+                result.data?.message || "Error updating bikes";
               toast.error(errorMessage);
             }
           },
           onError: (error) => {
-            const errorMessage = getErrorMessage(error, "Error deleting bikes");
+            const errorMessage = getErrorMessage(error, "Error updating bikes");
             toast.error(errorMessage);
           },
-        });
-      },
-      [deleteBikeMutation, hasToken, router, queryClient]
-    );
-    const reportBike = useCallback(
+        }
+      );
+    },
+    [updateBikeMutation, hasToken, router]
+  );
+  const deleteBike = useCallback(
+    (id: string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      deleteBikeMutation.mutate(id, {
+        onSuccess: (result) => {
+          if (result.status === 200) {
+            toast.success("Bike deleted successfully");
+            queryClient.invalidateQueries({ queryKey: ["bikes"] });
+          } else {
+            const errorMessage = result.data?.message || "Error deleting bikes";
+            toast.error(errorMessage);
+          }
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(error, "Error deleting bikes");
+          toast.error(errorMessage);
+        },
+      });
+    },
+    [deleteBikeMutation, hasToken, router, queryClient]
+  );
+  const reportBike = useCallback(
     (id: string) => {
       if (!hasToken) {
         router.push("/login");
@@ -170,33 +173,28 @@ export const useBikeActions = (
       });
     },
     [reportBikeMutation, hasToken, router]
-    );
-    const getBikeByID = useCallback(() => {
-      useGetDetailBike.refetch();
-    }, [useGetDetailBike]);
-    // const getStatusBike = useCallback(() => {
-    //   useGetStatusBike.refetch();
-    // }, [useGetStatusBike]);
-    // const getStatusBikeByID = useCallback(() => {
-    //   useGetStatusBikeByID.refetch();
-    // } , [useGetStatusBikeByID]);
-    return {
-      getBikes,
-      createBike,
-      updateBike,
-      deleteBike,
-      reportBike,
-      getBikeByID,
-      // getStatusBike,
-      // isFetchingStatusBikeByID: useGetStatusBikeByID.isFetching,
-      // isFetchingStatusBike: useGetStatusBike.isFetching,
-      isFetchingBikeDetail: isLoading,
-      isFetchingBike: useGetDetailBike.isFetching,
-      isReportingBike: reportBikeMutation.isPending,
-      isDeletingBike: deleteBikeMutation.isPending,
-      isUpdatingBike: updateBikeMutation.isPending,
-      isCreatingBike: useCreateBike.isPending,
-      useGetAllBikeQuery,
-      data : data,
-    };
-}
+  );
+  const getBikeByID = useCallback(() => {
+    useGetDetailBike.refetch();
+  }, [useGetDetailBike]);
+  return {
+    getBikes,
+    createBike,
+    updateBike,
+    deleteBike,
+    reportBike,
+    getBikeByID,
+    isFetchingBikeDetail: isLoading,
+    isFetchingBike: useGetDetailBike.isFetching,
+    isReportingBike: reportBikeMutation.isPending,
+    isDeletingBike: deleteBikeMutation.isPending,
+    isUpdatingBike: updateBikeMutation.isPending,
+    isCreatingBike: useCreateBike.isPending,
+    useGetAllBikeQuery,
+    data: data,
+    getStatisticsBike,
+    isLoadingStatistics,
+    statisticData,
+    paginationOfBikes: data?.pagination ,
+  };
+};

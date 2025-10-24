@@ -19,6 +19,13 @@ interface DetailApiResponse<T> {
   result: T;
   message: string;
 }
+interface BikeStatistics {
+  "ĐÃ ĐẶT TRƯỚC": number;
+  "CÓ SẴN": number;
+  "ĐANG ĐƯỢC THUÊ": number;
+  "KHÔNG CÓ SẴN": number;
+  "BỊ HỎNG": number;
+}
 const BIKE_BASE = "/bikes";
 const BIKE_ENDPOINTS = {
   BASE: BIKE_BASE,
@@ -41,8 +48,8 @@ export const bikeService = {
     const response = await fetchHttpClient.post<ApiResponse<Bike>>(BIKE_ENDPOINTS.BASE, data);
     return response;
   },
-  getStatusBikeAdmin: async (): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(BIKE_ENDPOINTS.STATS);
+  getStatisticsBikeAdmin: async (): Promise<AxiosResponse<DetailApiResponse<BikeStatistics>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<BikeStatistics>>(BIKE_ENDPOINTS.STATS);
     return response;
   },
   getStatusBikeByIdAdmin: async (id: string): Promise<AxiosResponse> => {
