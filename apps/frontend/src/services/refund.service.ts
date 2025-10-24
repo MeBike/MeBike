@@ -19,6 +19,7 @@ const REFUND_BASE = "/refunds";
 const REFUND_ENDPOINTS = {
   BASE: REFUND_BASE,
   MANAGE_REFUND_REQUEST: () => `${REFUND_BASE}/manage-refunds`,
+  ID : (id: string) => `${REFUND_BASE}/${id}`,
 } as const;
 export const refundService = {
     getAllRefundRequests: async ({
@@ -37,6 +38,12 @@ export const refundService = {
         limit: limit,
         status: status,
         }
+    );
+    return response;
+  },
+  getRefundRequestById: async (id: string): Promise<AxiosResponse<DetailApiResponse<RefundRequest>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<RefundRequest>>(
+      REFUND_ENDPOINTS.ID(id)
     );
     return response;
   }

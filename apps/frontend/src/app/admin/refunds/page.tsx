@@ -11,16 +11,16 @@ import { refundColumn } from "@/columns/refund-column";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { DataTable } from "@/components/TableCustom";
 import { set } from "zod";
-const getStatusColor = (status: RefundStatus) => {
+export const getStatusColor = (status: RefundStatus) => {
   switch (status) {
     case "ĐANG CHỜ XỬ LÝ":
       return "bg-yellow-100 text-yellow-800";
     case "ĐÃ DUYỆT":
       return "bg-blue-100 text-blue-800";
-    case "ĐÃ HOÀN TIỀN":
-      return "bg-green-100 text-green-800";
     case "TỪ CHỐI":
       return "bg-red-100 text-red-800";
+    case "ĐÃ HOÀN TIỀN":
+      return "bg-green-100 text-green-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -62,42 +62,43 @@ export default function RefundPage() {
   const [selectedRequest, setSelectedRequest] = useState<RefundRequest | null>(
     null
   );
+  const [selectedID, setSelectedID] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const { response, isLoading, isError, refetch, pagination } = useRefundAction(
-    {
-      hasToken: true,
-      page: page,
-      limit: limit,
-    }
-  );
+  const {
+    response,
+    isLoading,
+    isError,
+    refetch,
+    pagination,
+    getAllRefundRequest,
+    detailResponse,
+    isDetailLoading,
+    getDetailRefundRequest,
+  } = useRefundAction({
+    hasToken: true,
+    page: page,
+    limit: limit,
+    id: selectedID || "",
+  });
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<RefundStatus>("ĐANG CHỜ XỬ LÝ");
   const [adminNote, setAdminNote] = useState("");
-  // const filteredRequests = mockRefundRequests.filter((request) => {
-  //   const matchesSearch =
-  //     request.user_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //     request.user_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //     request.rental_id.toLowerCase().includes(searchQuery.toLowerCase());
-  //   const matchesStatus =
-  //     statusFilter === "all" || request.status === statusFilter;
-  //   return matchesSearch && matchesStatus;
-  // });
   useEffect(() => {
-    refetch();
+    getAllRefundRequest();
   }, [page, limit, statusFilter, searchQuery, refetch]);
   const handleViewDetails = (request: RefundRequest) => {
     setSelectedRequest(request);
     setIsDetailModalOpen(true);
   };
 
-  const handleUpdateStatus = (request: RefundRequest) => {
-    setSelectedRequest(request);
-    setNewStatus(request.status);
-    // setAdminNote(request.admin_note || "");
-    setIsUpdateModalOpen(true);
-  };
+  // const handleUpdateStatus = (request: RefundRequest) => {
+  //   setSelectedRequest(request);
+  //   setNewStatus(request.status);
+  //   // setAdminNote(request.admin_note || "");
+  //   setIsUpdateModalOpen(true);
+  // };
 
   const handleSaveStatus = () => {
     console.log(
@@ -117,7 +118,13 @@ export default function RefundPage() {
   // const pendingAmount = mockRefundRequests
   //   .filter((req) => req.status === "ĐANG CHỜ XỬ LÝ")
   //   .reduce((sum, req) => sum + req.amount, 0);
-
+  useEffect(() => {
+    getAllRefundRequest();
+    console.log(detailResponse)
+  }, [selectedID]);
+  useEffect(() => {
+    console.log(detailResponse);
+  }, [detailResponse]);
   return (
     <div>
       <div className="space-y-6">
@@ -197,9 +204,16 @@ export default function RefundPage() {
           </div>
         </div>
 
-        {/* Table */}
         <div className="w-full rounded-lg space-y-4  flex flex-col">
-          <DataTable columns={refundColumn({})} data={response || []} />
+          <DataTable
+            columns={refundColumn({
+              onView: ({ id }) => {
+                setSelectedID(id);
+                setIsDetailModalOpen(true);
+              },
+            })}
+            data={response || []}
+          />
           <PaginationDemo
             totalPages={pagination?.totalPages ?? 1}
             onPageChange={setPage}
@@ -213,73 +227,82 @@ export default function RefundPage() {
         </p>
       </div>
 
-      {/* {isDetailModalOpen && selectedRequest && (
+      {isDetailModalOpen && selectedID && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              Chi tiết yêu cầu hoàn tiền
-            </h2>
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-muted-foreground">Người dùng</p>
-                <p className="text-foreground font-medium">
-                  {selectedRequest._id}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="text-foreground font-medium">
-                  {selectedRequest.user_email}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Mã đơn thuê</p>
-                <p className="text-foreground font-mono">
-                  {selectedRequest.rental_id}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Số tiền</p>
-                <p className="text-foreground font-bold text-lg">
-                  {selectedRequest.amount.toLocaleString("vi-VN")} đ
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Lý do</p>
-                <p className="text-foreground font-medium">
-                  {selectedRequest.reason}
-                </p>
-              </div>
-              {selectedRequest.admin_note && (
+          {isDetailLoading ? (
+            <div className="flex items-center justify-center h-40">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Chi tiết yêu cầu hoàn tiền
+              </h2>
+              <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-muted-foreground">Ghi chú admin</p>
+                  <p className="text-sm text-muted-foreground">Người dùng</p>
                   <p className="text-foreground font-medium">
-                    {selectedRequest.admin_note}
+                    {detailResponse?._id}
                   </p>
                 </div>
-              )}
-              <div>
-                <p className="text-sm text-muted-foreground">Trạng thái</p>
-                <span
-                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium mt-1 ${getStatusColor(selectedRequest.status)}`}
-                >
-                  {getStatusIcon(selectedRequest.status)}
-                  {getStatusLabel(selectedRequest.status)}
-                </span>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDetailModalOpen(false)}
-                  className="flex-1"
-                >
-                  Đóng
-                </Button>
+                {/* <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="text-foreground font-medium">
+                    {detailResponse?.user_email}
+                  </p>
+                </div> */}
+                <div>
+                  <p className="text-sm text-muted-foreground">Mã đơn thuê</p>
+                  <p className="text-foreground font-mono">
+                    {detailResponse?._id}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Số tiền</p>
+                  <p className="text-foreground font-bold text-lg">
+                    {detailResponse?.amount.$numberDecimal.toLocaleString(
+                      "vi-VN"
+                    )}{" "}
+                    đ
+                  </p>
+                </div>
+                {/* <div>
+                  <p className="text-sm text-muted-foreground">Lý do</p>
+                  <p className="text-foreground font-medium">
+                    {detailResponse?.reason}
+                  </p>
+                </div> */}
+                {/* {selectedRequest?.admin_note && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Ghi chú admin</p>
+                    <p className="text-foreground font-medium">
+                      {selectedRequest.admin_note}
+                    </p>
+                  </div>
+                )} */}
+                <div>
+                  <p className="text-sm text-muted-foreground">Trạng thái</p>
+                  <span
+                    className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium mt-1 ${getStatusColor(detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ")}`}
+                  >
+                    {getStatusIcon(detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ")}
+                    {getStatusLabel(detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ")}
+                  </span>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDetailModalOpen(false)}
+                    className="flex-1"
+                  >
+                    Đóng
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      )} */}
+      )}
 
       {/* {isUpdateModalOpen && selectedRequest && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

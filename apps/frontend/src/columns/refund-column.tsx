@@ -21,27 +21,25 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 };
 export const refundColumn = ({
   onView,
-  setIsDetailModalOpen,
   onEdit,
   onDelete,
 }: {
-  onView?: (supplier: RefundRequest) => void;
-  setIsDetailModalOpen?: (isOpen: boolean) => void;
-  onEdit?: (supplier: RefundRequest) => void;
-  onDelete?: (supplier: RefundRequest) => void;
+  onView?: ({ id }: { id: string }) => void;
+  onEdit?: ({ id }: { id: string }) => void;
+  onDelete?: ({ id }: { id: string }) => void;
 }): ColumnDef<RefundRequest>[] => [
   {
     accessorKey: "_id",
     header: "Mã hoàn tiền",
     cell: ({ row }) => {
-        return shortenId(row.original._id);
+      return shortenId(row.original._id);
     },
   },
   {
     accessorKey: "transaction_id",
     header: "Mã giao dịch",
     cell: ({ row }) => {
-        return shortenId(row.original.transaction_id);
+      return shortenId(row.original.transaction_id);
     },
   },
   {
@@ -73,25 +71,22 @@ export const refundColumn = ({
         <button
           className="p-2 hover:bg-muted rounded-lg transition-colors"
           title="Xem chi tiết"
-        //   onClick={() => {
-        //     if (onView) {
-        //       onView(row.original);
-        //     }
-        //     if (setIsDetailModalOpen) {
-        //       setIsDetailModalOpen(true);
-        //     }
-        //   }}
+            onClick={() => {
+              if (onView) {
+                onView({ id: row.original._id });
+              }
+            }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
         </button>
         <button
           className="p-2 hover:bg-muted rounded-lg transition-colors"
           title="Xóa"
-        //   onClick={() => {
-        //     if (onDelete) {
-        //       onDelete(row.original);
-        //     }
-        //   }}
+          //   onClick={() => {
+          //     if (onDelete) {
+          //       onDelete(row.original);
+          //     }
+          //   }}
         >
           <Trash2 className="w-4 h-4 text-red-500" />
         </button>
