@@ -7,8 +7,6 @@ import {
   Bike,
   FileText,
   Users,
-  BarChart3,
-  Settings,
   User,
   LogOut,
   History,

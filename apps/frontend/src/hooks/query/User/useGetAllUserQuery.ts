@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "@/services/user.service";
-import { DetailUser } from "@/services/auth.service";
 import { VerifyStatus } from "@/types";
-import { refundService } from "@/services/refund.service";
 const fetchAllUserRequests = async ({
   page,
   limit,
@@ -15,7 +13,7 @@ const fetchAllUserRequests = async ({
   role?: "ADMIN" | "USER" | "STAFF" | "";
 }) => {
   try {
-    const query: any = {
+    const query: Record<string, number | string> = {
       page: page ?? 1,
       limit: limit ?? 10,
     };

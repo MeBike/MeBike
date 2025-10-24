@@ -1,17 +1,15 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { CustomerCard } from "@/components/customers/customer-card";
 import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userProfileSchema, UserProfile } from "@schemas/userSchema";
-import * as z from "zod";
-import type {  VerifyStatus, UserRole } from "@custom-types";
-import { Plus, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import type { VerifyStatus, UserRole, DetailUser } from "@custom-types";
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUserActions } from "@/hooks/useUserAction";
 
 export default function CustomersPage() {
@@ -24,12 +22,11 @@ export default function CustomersPage() {
     resolver: zodResolver(userProfileSchema),
   });
 
-
   const [searchQuery, setSearchQuery] = useState("");
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit, setLimit] = useState<number>(5);
+  const [limit,] = useState<number>(5);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const {
     users,
@@ -39,7 +36,6 @@ export default function CustomersPage() {
     isLoadingStatistics,
     statistics,
     getSearchUsers,
-    isLoadingSearch,
     createUser,
     paginationUser,
   } = useUserActions({
@@ -51,12 +47,11 @@ export default function CustomersPage() {
     searchQuery: searchQuery,
   });
 
-
   const totalPages = paginationUser?.totalPages ?? 1;
   useEffect(() => {
     getAllUsers();
     getAllStatistics();
-  }, [searchQuery, verifyFilter, roleFilter]);
+  }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getAllStatistics, currentPage]);
   const handleReset = () => {
     setSearchQuery("");
     setVerifyFilter("all");
@@ -67,20 +62,14 @@ export default function CustomersPage() {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
   const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, paginationUser?.totalPages ?? 1));
+    setCurrentPage((prev) =>
+      Math.min(prev + 1, paginationUser?.totalPages ?? 1)
+    );
   };
-  const [newUser, setNewUser] = useState({
-    fullname: "",
-    email: "",
-    phone_number: "",
-    password: "",
-    role: "USER" as UserRole,
-  });
-useEffect(() => {
-  if (!searchQuery) getAllUsers();
-  else getSearchUsers();
-  console.log(users);
-}, [searchQuery, verifyFilter, roleFilter, users]);
+  useEffect(() => {
+    if (!searchQuery) getAllUsers();
+    else getSearchUsers();
+  }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getSearchUsers]);
   if (isFetching && isLoadingStatistics) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -210,7 +199,7 @@ useEffect(() => {
             {users?.map((user) => (
               <CustomerCard
                 key={user._id}
-                customer={user as any}
+                customer={user as DetailUser}
                 onView={(user) => console.log("[v0] View user:", user._id)}
                 onEdit={(user) => console.log("[v0] Edit user:", user._id)}
                 onBlock={(user) => console.log("[v0] Block user:", user._id)}
@@ -371,7 +360,7 @@ useEffect(() => {
                     >
                       <option value="VERIFIED">Đã xác thực</option>
                       <option value="UNVERIFIED">Chưa xác thực</option>
-                      <option value="BANNED">Bị cấm</option>
+                      <option value="BANNED">Bị cấm\</option>
                     </select>
                     {errors.role && (
                       <p className="text-red-500 text-sm mt-1">

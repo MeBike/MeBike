@@ -77,21 +77,21 @@ export const useUserActions = ({
       return;
     }
     refetch();
-  }, [hasToken, queryClient, router]);
+  }, [hasToken, router, refetch]);
   const getAllStatistics = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
     refetchStatistics();
-  }, [hasToken, queryClient, router]);
+  }, [hasToken, router, refetchStatistics]);
   const getSearchUsers = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
       return;
-    } 
+    }
     refetchSearch();
-  }, [hasToken, queryClient, router]);
+  }, [hasToken, router, refetchSearch]);
   const users = searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
   const createUser = useCallback(
       async (userData: UserProfile) => {
@@ -100,7 +100,7 @@ export const useUserActions = ({
           return;
         }
         useCreateUser.mutate(userData, {
-          onSuccess: (result: any) => {
+          onSuccess: (result: { status: number; data?: { message?: string } }) => {
             if (result?.status === 200) {
               toast.success("Tạo người dùng thành công");
               // Sửa queryKey cho đúng thứ tự và giá trị như useGetAllUserQuery
@@ -132,7 +132,7 @@ export const useUserActions = ({
           },
         });
       },
-      [hasToken, router, queryClient, useCreateUser, searchQuery, refetch, refetchSearch]
+      [hasToken, router, queryClient, useCreateUser, searchQuery, refetch, refetchSearch, limit, page, role, verify]
     );
   return {
     users: users,

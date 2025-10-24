@@ -16,31 +16,31 @@ interface CustomerCardProps {
   onBlock?: (customer: Customer) => void;
 }
 
-const statusConfig = {
-  active: {
-    label: "Hoạt động",
-    className: "bg-green-500/10 text-green-500 border-green-500/20",
-  },
-  inactive: {
-    label: "Không hoạt động",
-    className: "bg-gray-500/10 text-gray-500 border-gray-500/20",
-  },
-  blocked: {
-    label: "Đã chặn",
-    className: "bg-red-500/10 text-red-500 border-red-500/20",
-  },
-};
+// const statusConfig = {
+//   active: {
+//     label: "Hoạt động",
+//     className: "bg-green-500/10 text-green-500 border-green-500/20",
+//   },
+//   inactive: {
+//     label: "Không hoạt động",
+//     className: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+//   },
+//   blocked: {
+//     label: "Đã chặn",
+//     className: "bg-red-500/10 text-red-500 border-red-500/20",
+//   },
+// };
 
-const typeConfig = {
-  individual: {
-    label: "Cá nhân",
-    className: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  },
-  corporate: {
-    label: "Doanh nghiệp",
-    className: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  },
-};
+// const typeConfig = {
+//   individual: {
+//     label: "Cá nhân",
+//     className: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+//   },
+//   corporate: {
+//     label: "Doanh nghiệp",
+//     className: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+//   },
+// };
 
 export function CustomerCard({
   customer,

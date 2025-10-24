@@ -2,7 +2,6 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
 import { UserProfile } from "@/schemas/userSchema";
-import { create } from "domain";
 interface ApiReponse<T> {
   data: T;
   pagination?: {
