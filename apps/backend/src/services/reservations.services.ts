@@ -28,16 +28,15 @@ class ReservationsService {
   }) {
     const now = getLocalTime()
     const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '0')
+    const reservationId = new ObjectId()
+    const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
+
+    await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
 
     const session = databaseService.getClient().startSession()
     try {
       let reservation
       await session.withTransaction(async () => {
-        const reservationId = new ObjectId()
-        const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
-
-        await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
-
         reservation = new Reservation({
           _id: reservationId,
           user_id,
@@ -48,28 +47,25 @@ class ReservationsService {
           status: ReservationStatus.Pending,
           prepaid
         })
-        await databaseService.reservations.insertOne(reservation, { session })
-
-        const { end_time, status, station_id: start_station, prepaid: pre, ...restReservation } = reservation
 
         const rental = new Rental({
-          ...restReservation,
-          start_station,
+          _id: reservationId,
+          user_id,
+          bike_id,
+          start_station: station_id,
+          start_time: reservation.start_time,
           status: RentalStatus.Reserved
         })
 
-        await databaseService.rentals.insertOne(rental, { session })
-
-        await databaseService.bikes.updateOne(
-          { _id: bike_id },
-          {
-            $set: {
-              status: BikeStatus.Reserved,
-              updated_at: now
-            }
-          },
-          { session }
-        )
+        await Promise.all([
+          databaseService.reservations.insertOne(reservation, { session }),
+          databaseService.rentals.insertOne(rental, { session }),
+          databaseService.bikes.updateOne(
+            { _id: bike_id },
+            { $set: { status: BikeStatus.Reserved, updated_at: now } },
+            { session }
+          )
+        ])
       })
       return {
         ...(reservation as any),
@@ -98,8 +94,13 @@ class ReservationsService {
         const now = getLocalTime()
         const updatedData: any = {}
         if (reservation.created_at && this.isRefundable(reservation.created_at)) {
-          const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace("%s", reservation.bike_id.toString())
-          await walletService.refundReservation(reservation.user_id.toString(), reservation.prepaid, description, reservation._id!)
+          const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace('%s', reservation.bike_id.toString())
+          await walletService.refundReservation(
+            reservation.user_id.toString(),
+            reservation.prepaid,
+            description,
+            reservation._id!
+          )
         }
         updatedData.status = ReservationStatus.Cancelled
         result = await databaseService.reservations.findOneAndUpdate(
@@ -603,7 +604,7 @@ class ReservationsService {
 
   isRefundable(createdTime: Date) {
     const now = getLocalTime()
-    const cancellableMs =  fromHoursToMs(Number(process.env.CANCELLABLE_HOURS || '1'))
+    const cancellableMs = fromHoursToMs(Number(process.env.CANCELLABLE_HOURS || '1'))
     return new Date(createdTime.getTime() + cancellableMs) > now
   }
 
@@ -658,9 +659,11 @@ class ReservationsService {
       station,
       total_count: reservations.length,
       status_counts: statusCounts,
-      reserving_bikes: reservations.filter((r) => r.status === ReservationStatus.Pending).map((r) => ({
-        ...bikeMap.get(r.bike_id.toString())
-      }))
+      reserving_bikes: reservations
+        .filter((r) => r.status === ReservationStatus.Pending)
+        .map((r) => ({
+          ...bikeMap.get(r.bike_id.toString())
+        }))
     }
   }
 }

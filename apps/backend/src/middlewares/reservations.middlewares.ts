@@ -43,34 +43,42 @@ export const reserveBikeValidator = validate(
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }
-            const station = await databaseService.stations.findOne({ _id: stationId })
-            if (!station) {
+
+            const [stationExists, aggResult] = await Promise.all([
+              databaseService.stations.findOne(
+                { _id: stationId },
+                { projection: { _id: 1 } }
+              ),
+              databaseService.bikes
+                .aggregate([
+                  {
+                    $match: {
+                      station_id: stationId,
+                      status: { $in: [BikeStatus.Available, BikeStatus.Reserved] }
+                    }
+                  },
+                  {
+                    $group: {
+                      _id: null,
+                      totalAvailableBikes: { $sum: 1 },
+                      currentlyReservedBikes: {
+                        $sum: { $cond: [{ $eq: ['$status', BikeStatus.Reserved] }, 1, 0] }
+                      }
+                    }
+                  }
+                ])
+                .toArray()
+            ])
+
+            if (!stationExists) {
               throw new ErrorWithStatus({
                 message: RESERVATIONS_MESSAGE.STATION_NOT_FOUND.replace('%s', stationId.toString()),
                 status: HTTP_STATUS.NOT_FOUND
               })
             }
 
-            const preReservingThreshold = process.env.RESERVE_QUOTA_PERCENT || '0.50'
-            const RESERVE_QUOTA_PERCENT = Number.parseFloat(preReservingThreshold)
-
-            const aggResult = await databaseService.bikes
-              .aggregate([
-                { $match: { station_id: stationId, status: { $in: [BikeStatus.Available, BikeStatus.Reserved] } } },
-                {
-                  $group: {
-                    _id: null,
-                    totalAvailableBikes: { $sum: 1 },
-                    currentlyReservedBikes: {
-                      $sum: { $cond: [{ $eq: ['$status', BikeStatus.Reserved] }, 1, 0] }
-                    }
-                  }
-                }
-              ])
-              .toArray()
-
             const { totalAvailableBikes = 0, currentlyReservedBikes = 0 } = aggResult[0] || {}
-
+            const RESERVE_QUOTA_PERCENT = parseFloat(process.env.RESERVE_QUOTA_PERCENT || '0.50')
             const maxAllowedReserved = Math.floor(totalAvailableBikes * RESERVE_QUOTA_PERCENT)
 
             if (currentlyReservedBikes >= maxAllowedReserved) {
@@ -79,6 +87,7 @@ export const reserveBikeValidator = validate(
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }
+
             req.bike = bike
             return true
           }
