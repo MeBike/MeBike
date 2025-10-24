@@ -1,60 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import type { RefundRequest, RefundStatus } from "@custom-types";
-import type { DetailUser } from "@/services/auth.service";
-import { Download, Eye, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Download } from "lucide-react";
 import { useRefundAction } from "@/hooks/useRefundAction";
 import { refundColumn } from "@/columns/refund-column";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { DataTable } from "@/components/TableCustom";
-import { set } from "zod";
-export const getStatusColor = (status: RefundStatus) => {
-  switch (status) {
-    case "ĐANG CHỜ XỬ LÝ":
-      return "bg-yellow-100 text-yellow-800";
-    case "ĐÃ DUYỆT":
-      return "bg-blue-100 text-blue-800";
-    case "TỪ CHỐI":
-      return "bg-red-100 text-red-800";
-    case "ĐÃ HOÀN THÀNH":
-      return "bg-green-100 text-green-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
-
-const getStatusIcon = (status: RefundStatus) => {
-  switch (status) {
-    case "ĐANG CHỜ XỬ LÝ":
-      return <Clock className="w-4 h-4" />;
-    case "ĐÃ DUYỆT":
-      return <CheckCircle className="w-4 h-4" />;
-    case "ĐÃ HOÀN THÀNH":
-      return <CheckCircle className="w-4 h-4" />;
-    case "TỪ CHỐI":
-      return <XCircle className="w-4 h-4" />;
-    default:
-      return null;
-  }
-};
-
-const getStatusLabel = (status: RefundStatus) => {
-  switch (status) {
-    case "ĐANG CHỜ XỬ LÝ":
-      return "Chờ xử lý";
-    case "ĐÃ DUYỆT":
-      return "Đã duyệt";
-    case "ĐÃ HOÀN THÀNH":
-      return "Hoàn thành";
-    case "TỪ CHỐI":
-      return "Từ chối";
-    default:
-      return status;
-  }
-};
+import { getStatusColor, getStatusIcon, getStatusLabel } from "@/utils/refund-status";
 function InfoRow({
   label,
   value,
@@ -88,17 +42,14 @@ export default function RefundPage() {
   );
   const [selectedID, setSelectedID] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit,] = useState(10);
   const {
     response,
-    isLoading,
-    isError,
     refetch,
     pagination,
     getAllRefundRequest,
     detailResponse,
     isDetailLoading,
-    getDetailRefundRequest,
     updateRefundRequest,
   } = useRefundAction({
     hasToken: true,
@@ -110,21 +61,17 @@ export default function RefundPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState<RefundStatus>("ĐANG CHỜ XỬ LÝ");
-  const [adminNote, setAdminNote] = useState("");
   useEffect(() => {
     getAllRefundRequest();
-  }, [page, limit, statusFilter, searchQuery, refetch]);
-  const handleViewDetails = (request: RefundRequest) => {
-    setSelectedRequest(request);
-    setIsDetailModalOpen(true);
-  };
-const refundTransitions: Record<RefundStatus, RefundStatus[]> = {
-  "": ["ĐANG CHỜ XỬ LÝ"],
-  "ĐANG CHỜ XỬ LÝ": ["ĐÃ DUYỆT", "TỪ CHỐI"],
-  "ĐÃ DUYỆT": ["ĐÃ HOÀN THÀNH"],
-  "TỪ CHỐI": [],
-  "ĐÃ HOÀN THÀNH": [],
-};
+  }, [page, limit, statusFilter, searchQuery, refetch , getAllRefundRequest]);
+
+  const refundTransitions = useMemo((): Record<RefundStatus, RefundStatus[]> => ({
+    "": ["ĐANG CHỜ XỬ LÝ"],
+    "ĐANG CHỜ XỬ LÝ": ["ĐÃ DUYỆT", "TỪ CHỐI"],
+    "ĐÃ DUYỆT": ["ĐÃ HOÀN THÀNH"],
+    "TỪ CHỐI": [],
+    "ĐÃ HOÀN THÀNH": [],
+  }), []);
 const handleSaveStatus = async () => {
   if (!selectedRequest?._id) return;
   await updateRefundRequest({
@@ -132,41 +79,16 @@ const handleSaveStatus = async () => {
   });
   setIsUpdateModalOpen(false);
 };
-  // const handleUpdateStatus = (request: RefundRequest) => {
-  //   setSelectedRequest(request);
-  //   setNewStatus(request.status);
-  //   // setAdminNote(request.admin_note || "");
-  //   setIsUpdateModalOpen(true);
-  // };
-
-  // const handleSaveStatus = () => {
-  //   console.log(
-  //     "[v0] Updating refund status:",
-  //     selectedRequest?._id,
-  //     newStatus,
-  //     adminNote
-  //   );
-  //   setIsUpdateModalOpen(false);
-  //   setSelectedRequest(null);
-  // };
-
-  // const totalAmount = mockRefundRequests.reduce(
-  //   (sum, req) => sum + req.amount,
-  //   0
-  // );
-  // const pendingAmount = mockRefundRequests
-  //   .filter((req) => req.status === "ĐANG CHỜ XỬ LÝ")
-  //   .reduce((sum, req) => sum + req.amount, 0);
   useEffect(() => {
     getAllRefundRequest();
     console.log(detailResponse)
-  }, [selectedID]);
+  }, [selectedID , detailResponse, getAllRefundRequest]);
   useEffect(() => {
     console.log(detailResponse);
   }, [detailResponse]);
-  function getNextStatuses(current: RefundStatus): RefundStatus[] {
+  const getNextStatuses = useCallback((current: RefundStatus): RefundStatus[] => {
     return (refundTransitions[current] ?? []).filter((s) => s !== current);
-  }
+  }, [refundTransitions]);
   const nextStatuses = getNextStatuses(detailResponse?.status as RefundStatus);
   useEffect(() => {
     console.log("Next statuses:", newStatus);
@@ -179,7 +101,7 @@ const handleSaveStatus = async () => {
   useEffect(() => {
     const next = getNextStatuses(detailResponse?.status as RefundStatus);
     if (next.length > 0) setNewStatus(next[0]);
-  }, [detailResponse]);
+  }, [detailResponse , getNextStatuses]);
   return (
     <div>
       <div className="space-y-6">
@@ -209,31 +131,12 @@ const handleSaveStatus = async () => {
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Chờ xử lý</p>
-            {/* <p className="text-2xl font-bold text-yellow-500 mt-1">
-              {
-                mockRefundRequests.filter((r) => r.status === "ĐANG CHỜ XỬ LÝ")
-                  .length
-              }
-            </p> */}
           </div>
-          {/* <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Tổng tiền chờ xử lý</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              {pendingAmount.toLocaleString("vi-VN")} đ
-            </p>
-          </div> */}
         </div>
 
         {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center gap-4">
-            {/* <input
-              type="text"
-              placeholder="Tìm kiếm theo tên, email hoặc mã đơn..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground"
-            /> */}
             <select
               value={statusFilter}
               onChange={(e) =>

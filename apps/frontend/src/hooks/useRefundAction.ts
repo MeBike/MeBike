@@ -1,4 +1,4 @@
-import { use, useCallback } from "react";
+import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetAllRefundRequestQuery } from "./query/Refund/useGetAllRefundRequestQuery";
 import { useGetDetailRefundRequestQuery } from "./query/Refund/useGetDetailRefundRequestQuery";
@@ -63,7 +63,7 @@ export const useRefundAction = ({
         },
       });
     },
-    [hasToken, router, useUpdateRefundRequest, queryClient, id]
+    [hasToken, router, useUpdateRefundRequest, queryClient, id, limit , page ,status]
   );
   return {
     response: data?.data,

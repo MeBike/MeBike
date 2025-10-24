@@ -17,7 +17,6 @@ import {
   Wallet,
   Truck,
   Download,
-  Recycle,
   RotateCcw,
   MapIcon
 } from "lucide-react";
