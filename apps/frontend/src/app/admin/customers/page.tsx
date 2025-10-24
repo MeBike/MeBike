@@ -350,7 +350,7 @@ export default function CustomersPage() {
                       </p>
                     )}
                   </div>
-                  <div>
+                  {/* <div>
                     <label className="text-sm font-medium text-foreground">
                       Vai trò
                     </label>
@@ -367,7 +367,7 @@ export default function CustomersPage() {
                         {errors.role.message}
                       </p>
                     )}
-                  </div>
+                  </div> */}
                 </form>
 
                 <div className="flex gap-3 mt-6">

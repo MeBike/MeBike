@@ -103,17 +103,7 @@ export const useUserActions = ({
           onSuccess: (result: { status: number; data?: { message?: string } }) => {
             if (result?.status === 200) {
               toast.success("Tạo người dùng thành công");
-              // Sửa queryKey cho đúng thứ tự và giá trị như useGetAllUserQuery
-              queryClient.invalidateQueries({
-                queryKey: [
-                  "all",
-                  "user",
-                  page,
-                  limit,
-                  verify,
-                  role 
-                ],
-              });
+              queryClient.invalidateQueries({ queryKey: ["all", "user", page, limit, verify || "all", role || "all"] });
               queryClient.invalidateQueries({ queryKey: ["user-stats"] });
               if (searchQuery && searchQuery.length > 0) {
                 refetchSearch();
