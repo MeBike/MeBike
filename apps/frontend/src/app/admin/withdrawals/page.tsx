@@ -44,6 +44,7 @@ export default function RefundPage() {
   const [selectedRequest, setSelectedRequest] = useState<WithdrawRequest | null>(
     null
   );
+  const [reason, setReason] = useState<string>("");
   const [selectedID, setSelectedID] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -83,6 +84,7 @@ export default function RefundPage() {
     if (!selectedRequest?._id) return;
     await updateWithdrawRequest({
       newStatus: newStatus,
+      reason: reason,
     });
     setIsUpdateModalOpen(false);
   };
@@ -227,8 +229,37 @@ export default function RefundPage() {
                   value={`${Number(detailResponse?.amount?.$numberDecimal ?? 0).toLocaleString()} đ`}
                   highlight
                 />
+                <InfoRow
+                  label="Lý do hoàn tiền"
+                  value={
+                    detailResponse?.reason &&
+                    detailResponse?.reason.trim() !== ""
+                      ? detailResponse.reason
+                      : "Không có"
+                  }
+                  highlight
+                />
+                <InfoRow
+                  label="Ngân hàng"
+                  value={detailResponse?.bank ?? "Không có thông tin ngân hàng"}
+                  highlight
+                />
+                <InfoRow
+                  label="STK"
+                  value={
+                    detailResponse?.account ?? "Không có thông tin ngân hàng"
+                  }
+                  highlight
+                />
+                <InfoRow
+                  label="Chủ tài khoản"
+                  value={
+                    detailResponse?.account_owner ?? "Không có thông tin ngân hàng"
+                  }
+                  highlight
+                />
                 <div>
-                  <p className="text-xs text-muted-foreground">Trạng thái</p>
+                  <p className="text-xs text-muted-foreground">Trạng thái </p>
                   <span
                     className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium mt-2 ${getStatusColor(
                       detailResponse?.status ?? "ĐANG CHỜ XỬ LÝ"
@@ -298,6 +329,18 @@ export default function RefundPage() {
                       <option value="">Không có trạng thái khả dụng</option>
                     )}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Ghi chú
+                  </label>
+                  <textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                    placeholder="Nhập ghi chú..."
+                    rows={3}
+                  />
                 </div>
                 <div className="flex gap-3 pt-4">
                   <Button
