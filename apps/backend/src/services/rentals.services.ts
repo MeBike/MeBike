@@ -35,9 +35,6 @@ class RentalsService {
     const session = databaseService.getClient().startSession()
 
     try {
-      const chip = await IotServiceSdk.getV1DevicesDeviceId(bike.chip_id)
-      console.log(chip)
-
       let rental: Rental | null = null
       const now = getLocalTime()
 

@@ -314,8 +314,13 @@ export const RESERVATIONS_MESSAGE = {
   STAFF_CONFIRM_SUCCESS: 'Nhân viên hỗ trợ xác nhận phiên đặt trước thành công',
   STAFF_CANCEL_SUCCESS: 'Nhân viên hỗ trợ huỷ phiên đặt trước thành công',
   GET_STATION_RESERVATIONS_SUCCESS: 'Xem chi tiết thống kê các phiên đặt trước tại trạm thành công',
+  MARK_EXPIRED_RESERVATIONS_SUCCESS: 'Cập nhật trạng thái cho các phiên đã hết hạn thành công',
   // Fail action
   PARTIAL_UPDATE_FAILURE: 'Lỗi hệ thống: Chỉ %s/%s xe được cập nhật. Hành động bị hủy',
+  RESERVATION_UPDATE_FAILED: 'Cập nhật phiên đặt trước không thành công',
+  BIKE_UPDATE_FAILED: 'Cập nhật xe không thành công',
+  RESERVATION_NOT_UPDATED: 'Không thể cập nhật trạng thái phiên đặt trước %s.',
+  BIKE_NOT_RELEASED: 'Không thể giải phóng xe %s.',
   // Required data
   REQUIRED_ID: 'Vui lòng nhập Id phiên đặt trước',
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
@@ -380,12 +385,12 @@ export const RESERVATIONS_MESSAGE = {
   // Console Messages
   SKIPPING_USER_NOT_FOUND: (userId: string) => `Skipping notification: User ${userId} not found or missing email.`,
   ERROR_SENDING_EMAIL: (userId: string) => `Error preparing/sending email for user ${userId}:`,
-  CANCELLED_SUCCESS: (reservationId: string, userId: string) =>
-    `[CANCELLED] Reservation ${reservationId} for user ${userId} expired and was cancelled.`,
-  CANCELLED_FAILURE: (reservationId: string, error: string) =>
-    `Failed to fully cancel reservation ${reservationId}: ${error}`,
-  SCHEDULING_CANCEL_TASK: (reservationId: string, delayMinutes: number) => 
-        `Scheduling cancellation task for reservation ${reservationId} in ${delayMinutes} minutes.`,
+  EXPIRE_SUCCESS: (reservationId: string, userId: string) =>
+    `[EXPIRED] Reservation ${reservationId} for user ${userId} expired.`,
+  EXPIRE_FAILURE: (reservationId: string, error: string) =>
+    `Failed to fully expire reservation ${reservationId}: ${error}`,
+  SCHEDULING_EXPIRE_TASK: (reservationId: string, delayMinutes: number) => 
+        `Scheduling expiration task for reservation ${reservationId} in ${delayMinutes} minutes.`,
   // Email Messages
   EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn',
   // Status
