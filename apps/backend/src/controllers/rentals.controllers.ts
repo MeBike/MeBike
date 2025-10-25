@@ -34,7 +34,7 @@ export async function createRentalSessionController(
   const result = await rentalsService.createRentalSession({
     user_id,
     start_station: station._id as ObjectId,
-    bike_id: bike._id as ObjectId
+    bike
   })
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,

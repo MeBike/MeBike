@@ -229,8 +229,9 @@ export const RENTALS_MESSAGE = {
   CANCEL_RENTAL_SUCCESS: 'Huỷ phiên thuê thành công',
   TRACKING_RENTAL_IN_STATION_SUCCESS: 'Xem danh sách các phiên thuê tại trạm thành công',
   // Fail action
-  CREATE_SESSION_FAIL: 'Tạo phiên thuê xe không thành công',
+  CREATE_SESSION_FAILED: 'Tạo phiên thuê xe không thành công',
   RENTAL_UPDATE_FAILED: 'Cập nhật phiên thuê không thành công',
+  BIKE_UPDATE_FAILED: 'Cập nhật xe không thành công',
   // Required data
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
   REQUIRED_BIKE_ID: 'Vui lòng nhập Id xe đạp',

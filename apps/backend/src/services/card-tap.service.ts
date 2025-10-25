@@ -12,6 +12,7 @@ import Reservation from '~/models/schemas/reservation.schema'
 import { getLocalTime } from '~/utils/date-time'
 import { toObjectId } from '~/utils/string'
 import walletService from './wallets.services'
+import Bike from '~/models/schemas/bike.schema'
 
 export type CardTapRequest = { chip_id: string; card_uid: string }
 export type CardTapMode = 'started' | 'ended' | 'reservation_started'
@@ -132,7 +133,7 @@ export const cardTapService = {
     const rentalSession = await createRentalSessionForCard({
       user_id: user._id as ObjectId,
       start_station: startStationId,
-      bike_id: bike._id as ObjectId
+      bike
     })
 
     console.log('[cardTap] Rental created without reservation', {
@@ -146,7 +147,7 @@ export const cardTapService = {
 type CreateRentalParams = {
   user_id: ObjectId
   start_station: ObjectId
-  bike_id: ObjectId
+  bike: Bike
 }
 
 async function createRentalSessionForCard(params: CreateRentalParams) {
@@ -156,7 +157,7 @@ async function createRentalSessionForCard(params: CreateRentalParams) {
     if (isTransactionNotSupportedError(error)) {
       console.warn('[cardTap] falling back to non-transactional rental creation', {
         user_id: params.user_id.toString(),
-        bike_id: params.bike_id.toString()
+        bike_id: params.bike._id?.toString()
       })
       return await createRentalSessionWithoutTransaction(params)
     }
@@ -164,8 +165,9 @@ async function createRentalSessionForCard(params: CreateRentalParams) {
   }
 }
 
-async function createRentalSessionWithoutTransaction({ user_id, start_station, bike_id }: CreateRentalParams) {
+async function createRentalSessionWithoutTransaction({ user_id, start_station, bike }: CreateRentalParams) {
   const now = getLocalTime()
+  const bike_id = bike._id as ObjectId
   const rental = new Rental({
     user_id: toObjectId(user_id),
     start_station,
