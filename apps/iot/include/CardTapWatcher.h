@@ -22,6 +22,8 @@ private:
   const unsigned long pollInterval;
   const unsigned long debounceInterval;
   const uint16_t scanTimeout;
+  unsigned long lastRecoverTick = 0;
+  unsigned long lastHealthCheckAt = 0;
 
   unsigned long lastPollTime = 0;
   unsigned long lastPublishTime = 0;
@@ -29,6 +31,10 @@ private:
   bool cardPresent = false;
   uint8_t consecutiveMisses = 0;
   static constexpr uint8_t MAX_MISSES_BEFORE_RESET = 3;
+  uint16_t consecutiveFailedScans = 0;
+  static constexpr uint16_t FAILED_SCAN_THRESHOLD_FOR_HEALTH_CHECK = 5;
+  static constexpr unsigned long HEALTH_CHECK_INTERVAL_MS = 1000;
+  static constexpr unsigned long RECOVER_TICK_INTERVAL_MS = 5;
 
   static std::string convertUidToDecimal(const uint8_t* uidBytes, uint8_t length);
 };
