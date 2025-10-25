@@ -51,13 +51,13 @@ void LEDStatusManager::setColor(LEDColor color, uint8_t brightness)
 
     case LED_COLOR_GREEN:
 
-        ledcWrite(HardwareConfig::LED_GREEN_CHANNEL, 255 - brightness);
+        ledcWrite(HardwareConfig::LED_GREEN_CHANNEL, HardwareConfig::LED_FULL_BRIGHTNESS - brightness);
         break;
 
     case LED_COLOR_OFF:
     default:
 
-        break;
+        break;                  
     }
 }
 
