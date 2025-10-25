@@ -43,7 +43,7 @@ void setup()
   {
     Log.error("PN532 not detected; continuing without NFC support\n");
     Global::logInfoLocal("PN532 not detected; continuing without NFC support");
-    nfcManager.reset();
+    nfcManager->markUnhealthy();
   }
   Serial.println("Hello from ESP32!");
   deviceChipId = getMacAddress();
