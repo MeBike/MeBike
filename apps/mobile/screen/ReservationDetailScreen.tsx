@@ -1,7 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useGetStationLookupQuery } from "@hooks/query/Reservation/useGetStationLookupQuery";
-import { useReservationActions } from "@hooks/useReservationActions";
-import { useAuth } from "@providers/auth-providers";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo } from "react";
@@ -15,6 +12,10 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { useGetStationLookupQuery } from "@hooks/query/Reservation/useGetStationLookupQuery";
+import { useReservationActions } from "@hooks/useReservationActions";
+import { useAuth } from "@providers/auth-providers";
 
 import type {
   ReservationDetailNavigationProp,
@@ -40,21 +41,24 @@ function formatDateTime(value?: string | null) {
 }
 
 function formatCurrency(
-  value?: number | string | { $numberDecimal?: string }
+  value?: number | string | { $numberDecimal?: string },
 ) {
   if (value === null || value === undefined)
     return "0 đ";
   let amount = 0;
   if (typeof value === "number") {
     amount = value;
-  } else if (typeof value === "string") {
+  }
+  else if (typeof value === "string") {
     const parsed = Number(value);
     amount = Number.isFinite(parsed) ? parsed : 0;
-  } else if (typeof value === "object" && "$numberDecimal" in value) {
+  }
+  else if (typeof value === "object" && "$numberDecimal" in value) {
     const parsed = Number(value.$numberDecimal);
     amount = Number.isFinite(parsed) ? parsed : 0;
   }
-  if (!Number.isFinite(amount)) amount = 0;
+  if (!Number.isFinite(amount))
+    amount = 0;
   return `${amount.toLocaleString("vi-VN")} đ`;
 }
 
@@ -214,7 +218,8 @@ function ReservationDetailScreen() {
             <View style={styles.headerContent}>
               <View style={styles.headerTopRow}>
                 <Text style={styles.cardTitle}>
-                  Xe #{String(reservation.bike_id ?? "").slice(-4) || reservation.bike_id}
+                  Xe #
+                  {String(reservation.bike_id ?? "").slice(-4) || reservation.bike_id}
                 </Text>
                 <View
                   style={[
@@ -225,7 +230,10 @@ function ReservationDetailScreen() {
                   <Text style={styles.statusText}>{reservation.status}</Text>
                 </View>
               </View>
-              <Text style={styles.cardSubtitle}>Mã đặt: {reservation._id}</Text>
+              <Text style={styles.cardSubtitle}>
+                Mã đặt:
+                {reservation._id}
+              </Text>
             </View>
           </View>
 

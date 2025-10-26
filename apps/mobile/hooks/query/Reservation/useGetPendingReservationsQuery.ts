@@ -1,11 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { reservationService } from "@services/reservationService";
 
-export const useGetPendingReservationsQuery = (
-  page: number = 1,
-  limit: number = 10,
-  enabled: boolean = true
-) => {
+export function useGetPendingReservationsQuery(page: number = 1, limit: number = 10, enabled: boolean = true) {
   return useQuery({
     queryKey: ["reservations", "pending", page, limit],
     enabled,
@@ -17,4 +14,4 @@ export const useGetPendingReservationsQuery = (
       });
     },
   });
-};
+}

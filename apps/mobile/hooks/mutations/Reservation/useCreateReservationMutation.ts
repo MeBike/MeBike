@@ -1,13 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
-import {
+
+import type {
   CreateReservationPayload,
+} from "@services/reservationService";
+
+import {
   reservationService,
 } from "@services/reservationService";
 
-export const useCreateReservationMutation = () => {
+export function useCreateReservationMutation() {
   return useMutation({
     mutationFn: (payload: CreateReservationPayload) =>
       reservationService.createReservation(payload),
   });
-};
-
+}

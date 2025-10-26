@@ -1,10 +1,10 @@
-export type ReservationStatus =
-  | "ĐANG CHỜ XỬ LÍ"
-  | "ĐANG HOẠT ĐỘNG"
-  | "ĐÃ HUỶ"
-  | "ĐÃ HẾT HẠN";
+export type ReservationStatus
+  = | "ĐANG CHỜ XỬ LÍ"
+    | "ĐANG HOẠT ĐỘNG"
+    | "ĐÃ HUỶ"
+    | "ĐÃ HẾT HẠN";
 
-export interface Reservation {
+export type Reservation = {
   _id: string;
   user_id: string;
   bike_id: string;
@@ -20,9 +20,9 @@ export interface Reservation {
   status: ReservationStatus;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface PaginatedReservations {
+export type PaginatedReservations = {
   data: Reservation[];
   pagination: {
     limit: number;
@@ -30,4 +30,4 @@ export interface PaginatedReservations {
     totalPages: number;
     totalRecords: number;
   };
-}
+};

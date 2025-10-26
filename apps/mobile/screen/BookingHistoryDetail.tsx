@@ -1,51 +1,59 @@
-import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  StatusBar,
-  ActivityIndicator,
-  ScrollView,
-  Alert,
-} from "react-native";
-import { Picker } from "@react-native-picker/picker";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useRentalsActions } from "@hooks/useRentalAction";
-import type { RentingHistory } from "../types/RentalTypes";
-import type { RentalDetail } from "../types/RentalTypes";
-import { useState } from "react";
-interface RouteParams {
-  bookingId: string;
-}
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { useRatingActions } from "@hooks/useRatingActions";
+import { useRentalsActions } from "@hooks/useRentalAction";
 import { useStationActions } from "@hooks/useStationAction";
-import { StationType } from "../types/StationType";
 import { useWalletActions } from "@hooks/useWalletAction";
 
-const BookingHistoryDetail = () => {
+import type { RentalDetail } from "../types/RentalTypes";
+import type { StationType } from "../types/StationType";
+
+type RouteParams = {
+  bookingId: string;
+};
+
+function BookingHistoryDetail() {
   const navigation = useNavigation();
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
   const insets = useSafeAreaInsets();
-  const {myWallet,isLoadingGetMyWallet , getMyWallet} = useWalletActions(true);
-  const { stations: data, isLoadingGetAllStations , refetch} = useStationActions(true);
+  const { myWallet, isLoadingGetMyWallet, getMyWallet } = useWalletActions(true);
+  const { stations: data, isLoadingGetAllStations, refetch } = useStationActions(true);
   const [stations, setStations] = useState<StationType[]>(data || []);
   const [selectedStation, setSelectedStation] = useState<string>("");
   const [showEndRentalConfirm, setShowEndRentalConfirm] = useState<boolean>(false);
+  const [showRatingForm, setShowRatingForm] = useState(false);
+  const [ratingValue, setRatingValue] = useState<number>(0);
+  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
+  const [ratingComment, setRatingComment] = useState("");
+  const [hasRated, setHasRated] = useState(false);
+  const [ratingError, setRatingError] = useState<string | null>(null);
+  const [showAllReasons, setShowAllReasons] = useState(false);
   const {
     useGetDetailRental,
     rentalDetailData,
     isGetDetailRentalFetching,
     isGetDetailRentalError,
     endCurrentRental,
-    isEndCurrentRentalLoading
+    isEndCurrentRentalLoading,
   } = useRentalsActions(true, bookingId);
-  const handleEndRental = (rentalId: string ) => {
-    endCurrentRental({id: rentalId});
+  const handleEndRental = (rentalId: string) => {
+    endCurrentRental({ id: rentalId });
   };
   useEffect(() => {
     useGetDetailRental();
@@ -58,9 +66,145 @@ const BookingHistoryDetail = () => {
 
   useEffect(() => {
     if (rentalDetailData?.data?.result) {
-      console.log('Rental Detail:', JSON.stringify(rentalDetailData.data.result, null, 2));
+      console.log("Rental Detail:", JSON.stringify(rentalDetailData.data.result, null, 2));
     }
   }, [rentalDetailData]);
+  const rentalResult = rentalDetailData?.data?.result as RentalDetail | undefined;
+  const endTimeDate = useMemo(() => {
+    if (!rentalResult?.end_time)
+      return null;
+    const parsed = new Date(rentalResult.end_time);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }, [rentalResult?.end_time]);
+  const RATING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+  const isWithinRatingWindow = useMemo(() => {
+    if (!endTimeDate)
+      return false;
+    const nowTime = Date.now();
+    const endTime = endTimeDate.getTime();
+    if (Number.isNaN(endTime) || nowTime < endTime)
+      return false;
+    return nowTime - endTime <= RATING_WINDOW_MS;
+  }, [endTimeDate]);
+  const ratingWindowExpired = useMemo(() => {
+    if (!endTimeDate)
+      return false;
+    const nowTime = Date.now();
+    const endTime = endTimeDate.getTime();
+    if (Number.isNaN(endTime))
+      return false;
+    return nowTime > endTime + RATING_WINDOW_MS;
+  }, [endTimeDate]);
+  const canOpenRatingForm = Boolean(rentalResult)
+    && rentalResult!.status === "HOÀN THÀNH"
+    && !hasRated
+    && !ratingWindowExpired;
+
+  const {
+    ratingReasons,
+    isRatingReasonsLoading,
+    submitRating,
+    isSubmittingRating,
+    refetchRatingReasons,
+  } = useRatingActions({
+    enabled: showRatingForm && Boolean(rentalResult),
+  });
+
+  const filteredReasons = useMemo(() => {
+    if (!ratingReasons || ratingReasons.length === 0)
+      return [];
+    if (!ratingValue)
+      return ratingReasons;
+    const positive = ratingValue >= 4;
+    const desiredType = positive ? "Khen ngợi" : "Vấn đề";
+    const matching = ratingReasons.filter(reason => reason.type === desiredType);
+    return matching.length > 0 ? matching : ratingReasons;
+  }, [ratingReasons, ratingValue]);
+
+  useEffect(() => {
+    setShowAllReasons(false);
+  }, [ratingValue]);
+
+  const displayReasons = useMemo(() => {
+    if (showAllReasons)
+      return filteredReasons;
+    return filteredReasons.slice(0, 6);
+  }, [filteredReasons, showAllReasons]);
+
+  const resetRatingState = useCallback(() => {
+    setRatingValue(0);
+    setSelectedReasons([]);
+    setRatingComment("");
+    setRatingError(null);
+  }, []);
+
+  useEffect(() => {
+    setShowRatingForm(false);
+    setHasRated(false);
+    resetRatingState();
+  }, [bookingId, resetRatingState]);
+
+  const handleToggleReason = useCallback((reasonId: string) => {
+    setSelectedReasons(prev =>
+      prev.includes(reasonId)
+        ? prev.filter(id => id !== reasonId)
+        : [...prev, reasonId],
+    );
+  }, []);
+
+  const handleOpenRatingForm = useCallback(() => {
+    if (!canOpenRatingForm)
+      return;
+    setRatingError(null);
+    setShowRatingForm(true);
+    refetchRatingReasons();
+  }, [canOpenRatingForm, refetchRatingReasons]);
+
+  const handleCancelRating = useCallback(() => {
+    resetRatingState();
+    setShowRatingForm(false);
+  }, [resetRatingState]);
+
+  const handleSubmitRating = useCallback(() => {
+    if (!rentalResult?._id) {
+      setRatingError("Không tìm thấy mã thuê xe để đánh giá.");
+      return;
+    }
+    if (!ratingValue) {
+      setRatingError("Vui lòng chọn số sao.");
+      return;
+    }
+    submitRating(
+      rentalResult._id,
+      {
+        rating: ratingValue,
+        reason_ids: selectedReasons,
+        comment: ratingComment.trim() ? ratingComment.trim() : undefined,
+      },
+      {
+        onSuccess: () => {
+          setHasRated(true);
+          setShowRatingForm(false);
+          resetRatingState();
+        },
+        onAlreadyRated: () => {
+          setHasRated(true);
+          setShowRatingForm(false);
+          resetRatingState();
+        },
+        onError: (message) => {
+          setRatingError(message);
+        },
+      },
+    );
+  }, [
+    submitRating,
+    rentalResult?._id,
+    ratingValue,
+    selectedReasons,
+    ratingComment,
+    resetRatingState,
+  ]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "HOÀN THÀNH":
@@ -185,7 +329,7 @@ const BookingHistoryDetail = () => {
       </SafeAreaView>
     );
   }
-  if (isGetDetailRentalError || !rentalDetailData?.data.result) {
+  if (isGetDetailRentalError || !rentalResult) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
@@ -218,7 +362,7 @@ const BookingHistoryDetail = () => {
     );
   }
 
-  const booking: RentalDetail = rentalDetailData.data.result;
+  const booking = rentalResult as RentalDetail;
 
   return (
     <View style={styles.container}>
@@ -283,35 +427,39 @@ const BookingHistoryDetail = () => {
                 : booking.start_station || "Không có dữ liệu"}
             </Text>
           </View>
-          {booking.end_station === null ? (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
-              <Text style={styles.infoValue}>Xe chưa được trả</Text>
-            </View>
-          ) : typeof booking.end_station === "object" &&
-            booking.end_station.name ? (
-            <>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
-                <Text style={styles.infoValue}>{booking.end_station.name}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Địa chỉ kết thúc:</Text>
-                <Text style={styles.infoValue}>
-                  {booking.end_station.address}
-                </Text>
-              </View>
-            </>
-          ) : (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
-              <Text style={styles.infoValue}>
-                {typeof booking.end_station === "string"
-                  ? booking.end_station
-                  : "Không có dữ liệu"}
-              </Text>
-            </View>
-          )}
+          {booking.end_station === null
+            ? (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
+                  <Text style={styles.infoValue}>Xe chưa được trả</Text>
+                </View>
+              )
+            : typeof booking.end_station === "object"
+              && booking.end_station.name
+              ? (
+                  <>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
+                      <Text style={styles.infoValue}>{booking.end_station.name}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>Địa chỉ kết thúc:</Text>
+                      <Text style={styles.infoValue}>
+                        {booking.end_station.address}
+                      </Text>
+                    </View>
+                  </>
+                )
+              : (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
+                    <Text style={styles.infoValue}>
+                      {typeof booking.end_station === "string"
+                        ? booking.end_station
+                        : "Không có dữ liệu"}
+                    </Text>
+                  </View>
+                )}
         </View>
 
         {/* Time Info Card */}
@@ -356,7 +504,9 @@ const BookingHistoryDetail = () => {
             <View style={styles.durationContainer}>
               <Ionicons name="hourglass" size={16} color="#666" />
               <Text style={styles.durationText}>
-                Thời gian thuê: {formatDuration(booking.duration, Boolean(booking.end_time))}
+                Thời gian thuê:
+                {" "}
+                {formatDuration(booking.duration, Boolean(booking.end_time))}
               </Text>
             </View>
           </View>
@@ -371,12 +521,13 @@ const BookingHistoryDetail = () => {
           <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Tổng tiền:</Text>
             <Text style={styles.paymentAmount}>
-              {typeof booking.total_price === "object" &&
-              booking.total_price !== null
-                ? parseFloat(booking.total_price.$numberDecimal).toLocaleString(
-                    "vi-VN"
+              {typeof booking.total_price === "object"
+                && booking.total_price !== null
+                ? Number.parseFloat(booking.total_price.$numberDecimal).toLocaleString(
+                    "vi-VN",
                   )
-                : Number(booking.total_price).toLocaleString("vi-VN")}{" "}
+                : Number(booking.total_price).toLocaleString("vi-VN")}
+              {" "}
               đ
             </Text>
           </View>
@@ -451,6 +602,168 @@ const BookingHistoryDetail = () => {
             </Text>
           </View>
         </View>
+
+        {booking.status === "HOÀN THÀNH" && (
+          <View style={styles.ratingSection}>
+            <Text style={styles.ratingSectionTitle}>Đánh giá chuyến đi</Text>
+            {hasRated
+              ? (
+                  <Text style={styles.ratingSectionDescription}>
+                    Bạn đã đánh giá chuyến đi này. Cảm ơn bạn đã chia sẻ trải nghiệm!
+                  </Text>
+                )
+              : ratingWindowExpired
+                ? (
+                    <Text style={styles.ratingSectionDescription}>
+                      Đã quá thời hạn 7 ngày để đánh giá chuyến đi này.
+                    </Text>
+                  )
+                : showRatingForm && canOpenRatingForm
+                  ? (
+                      <View style={styles.ratingForm}>
+                        <Text style={styles.ratingPrompt}>Chọn số sao</Text>
+                        <View style={styles.ratingStarsRow}>
+                          {[1, 2, 3, 4, 5].map(value => (
+                            <TouchableOpacity
+                              key={value}
+                              style={styles.ratingStarButton}
+                              onPress={() => {
+                                setRatingValue(value);
+                                setRatingError(null);
+                              }}
+                            >
+                              <Ionicons
+                                name={value <= ratingValue ? "star" : "star-outline"}
+                                size={30}
+                                color="#FFD700"
+                              />
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                        {ratingError
+                          ? (
+                              <Text style={styles.ratingErrorText}>{ratingError}</Text>
+                            )
+                          : null}
+
+                        <Text style={[styles.ratingPrompt, { marginTop: 12 }]}>Lý do</Text>
+                        {isRatingReasonsLoading
+                          ? (
+                              <ActivityIndicator size="small" color="#0066FF" />
+                            )
+                          : filteredReasons.length === 0
+                            ? (
+                                <Text style={styles.ratingSectionDescription}>
+                                  Chưa có lý do gợi ý.
+                                </Text>
+                              )
+                            : (
+                                <>
+                                  {ratingValue === 0 && (
+                                    <Text style={styles.ratingHintText}>
+                                      Chọn số sao để xem các gợi ý phù hợp.
+                                    </Text>
+                                  )}
+                                  <View style={styles.ratingReasonChips}>
+                                    {displayReasons.map((reason) => {
+                                      const isSelected = selectedReasons.includes(reason._id);
+                                      return (
+                                        <TouchableOpacity
+                                          key={reason._id}
+                                          style={[
+                                            styles.ratingReasonChip,
+                                            isSelected && styles.ratingReasonChipSelected,
+                                          ]}
+                                          onPress={() => handleToggleReason(reason._id)}
+                                        >
+                                          <Text
+                                            style={[
+                                              styles.ratingReasonChipText,
+                                              isSelected && styles.ratingReasonChipTextSelected,
+                                            ]}
+                                          >
+                                            {reason.messages}
+                                          </Text>
+                                        </TouchableOpacity>
+                                      );
+                                    })}
+                                  </View>
+                                  {filteredReasons.length > 6 && (
+                                    <TouchableOpacity
+                                      style={styles.ratingToggleButton}
+                                      onPress={() => setShowAllReasons(prev => !prev)}
+                                    >
+                                      <Text style={styles.ratingToggleText}>
+                                        {showAllReasons ? "Thu gọn" : "Xem thêm"}
+                                      </Text>
+                                    </TouchableOpacity>
+                                  )}
+                                </>
+                              )}
+
+                        <Text style={[styles.ratingPrompt, { marginTop: 12 }]}>Nhận xét (không bắt buộc)</Text>
+                        <TextInput
+                          style={styles.ratingCommentInput}
+                          placeholder="Chia sẻ cảm nghĩ của bạn"
+                          multiline
+                          value={ratingComment}
+                          onChangeText={setRatingComment}
+                          maxLength={500}
+                        />
+
+                        <View style={styles.ratingFormActions}>
+                          <TouchableOpacity
+                            style={[styles.ratingCancelButton, isSubmittingRating && { opacity: 0.6 }]}
+                            onPress={handleCancelRating}
+                            disabled={isSubmittingRating}
+                          >
+                            <Text style={styles.ratingCancelText}>Hủy</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={[styles.ratingSubmitButton, isSubmittingRating && { opacity: 0.8 }]}
+                            onPress={handleSubmitRating}
+                            disabled={isSubmittingRating}
+                          >
+                            {isSubmittingRating
+                              ? (
+                                  <ActivityIndicator size="small" color="#fff" />
+                                )
+                              : (
+                                  <>
+                                    <Ionicons name="send" size={16} color="#fff" />
+                                    <Text style={styles.ratingSubmitText}>Gửi đánh giá</Text>
+                                  </>
+                                )}
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )
+                  : canOpenRatingForm
+                    ? (
+                        <>
+                          <Text style={styles.ratingSectionDescription}>
+                            Hãy chia sẻ trải nghiệm của bạn sau chuyến đi.
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.ratingActionButton}
+                            onPress={handleOpenRatingForm}
+                          >
+                            <Ionicons name="star" size={18} color="#fff" />
+                            <Text style={styles.ratingActionButtonText}>Đánh giá chuyến đi</Text>
+                          </TouchableOpacity>
+                          <Text style={styles.ratingWindowHint}>
+                            Bạn có tối đa 7 ngày kể từ khi kết thúc chuyến đi để gửi đánh giá.
+                          </Text>
+                        </>
+                      )
+                    : (
+                        <Text style={styles.ratingSectionDescription}>
+                          Chuyến đi vẫn đang diễn ra hoặc chưa đủ điều kiện để đánh giá.
+                        </Text>
+                      )}
+          </View>
+        )}
+
         {booking.status === "ĐANG THUÊ" && (
           <>
             <TouchableOpacity
@@ -475,7 +788,7 @@ const BookingHistoryDetail = () => {
       </ScrollView>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -668,6 +981,154 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#0066FF",
     marginLeft: 8,
+  },
+  ratingSection: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  ratingSectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  ratingSectionDescription: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#555",
+  },
+  ratingForm: {
+    marginTop: 12,
+    gap: 12,
+  },
+  ratingPrompt: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+  },
+  ratingStarsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  ratingStarButton: {
+    padding: 4,
+  },
+  ratingErrorText: {
+    color: "#F44336",
+    fontSize: 12,
+  },
+  ratingReasonChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  ratingHintText: {
+    fontSize: 12,
+    color: "#777",
+  },
+  ratingReasonChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    backgroundColor: "#fff",
+  },
+  ratingReasonChipSelected: {
+    backgroundColor: "#0066FF",
+    borderColor: "#0066FF",
+  },
+  ratingReasonChipText: {
+    fontSize: 13,
+    color: "#333",
+  },
+  ratingReasonChipTextSelected: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  ratingToggleButton: {
+    alignSelf: "flex-start",
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#EEF3FF",
+  },
+  ratingToggleText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#246BFD",
+  },
+  ratingCommentInput: {
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    borderRadius: 12,
+    padding: 12,
+    minHeight: 80,
+    textAlignVertical: "top",
+    fontSize: 14,
+    color: "#333",
+  },
+  ratingFormActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+  ratingCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    alignItems: "center",
+  },
+  ratingCancelText: {
+    fontSize: 14,
+    color: "#555",
+    fontWeight: "600",
+  },
+  ratingSubmitButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#0066FF",
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  ratingSubmitText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  ratingActionButton: {
+    marginTop: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#0066FF",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  ratingActionButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  ratingWindowHint: {
+    marginTop: 8,
+    fontSize: 12,
+    color: "#777",
   },
   loadingContainer: {
     flex: 1,

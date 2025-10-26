@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { reservationService } from "@services/reservationService";
 
-export const useGetReservationDetailQuery = (id: string, enabled = false) => {
+export function useGetReservationDetailQuery(id: string, enabled = false) {
   return useQuery({
     queryKey: ["reservations", "detail", id],
     enabled: enabled && Boolean(id),
@@ -11,4 +12,4 @@ export const useGetReservationDetailQuery = (id: string, enabled = false) => {
       return payload?.data ?? payload?.result ?? payload;
     },
   });
-};
+}

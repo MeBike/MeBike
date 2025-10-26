@@ -1,30 +1,34 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
-import type { RootStackParamList } from './types/navigation';
-import { Ionicons } from '@expo/vector-icons';
-import Providers from '@providers/providers';
-import { AuthProvider } from '@providers/auth-providers';
-import HomeScreen from './screen/Home';
-import LoginScreen from './screen/Login';
-import IntroScreen from './screen/Intro';
-import RegisterScreen from './screen/Register';
-import StationDetailScreen from './screen/StationDetail';
-import StationSelectScreen from './styles/StationSelect';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import BookingHistoryScreen from './screen/BookingHistoryScreen';
-import ProfileScreen from './screen/ProfileScreen';
-import BookingHistoryDetail from './screen/BookingHistoryDetail';
-import ChangePasswordScreen from './screen/ChangePasswordScreen';
-import ForgotPasswordScreen from './screen/ForgotPassword';
-import UpdateProfileScreen from './screen/UpdateProfileScreen';
-import MyWalletScreen from './screen/MyWalletScreen';
-import ReservationScreen from './screen/ReservationScreen';
-import ReservationDetailScreen from './screen/ReservationDetailScreen';
+import { Ionicons } from "@expo/vector-icons";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+
+import { AuthProvider } from "@providers/auth-providers";
+import Providers from "@providers/providers";
+
+import type { RootStackParamList } from "./types/navigation";
+
+import BookingHistoryDetail from "./screen/BookingHistoryDetail";
+import BookingHistoryScreen from "./screen/BookingHistoryScreen";
+import ChangePasswordScreen from "./screen/ChangePasswordScreen";
+import ForgotPasswordScreen from "./screen/ForgotPassword";
+import HomeScreen from "./screen/Home";
+import IntroScreen from "./screen/Intro";
+import LoginScreen from "./screen/Login";
+import MyWalletScreen from "./screen/MyWalletScreen";
+import ProfileScreen from "./screen/ProfileScreen";
+import RegisterScreen from "./screen/Register";
+import ReservationDetailScreen from "./screen/ReservationDetailScreen";
+import ReservationScreen from "./screen/ReservationScreen";
+import StationDetailScreen from "./screen/StationDetail";
+import UpdateProfileScreen from "./screen/UpdateProfileScreen";
+import StationSelectScreen from "./styles/StationSelect";
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
-const BottomTab = () => {
+function BottomTab() {
   return (
     <Tab.Navigator>
       <Tab.Screen

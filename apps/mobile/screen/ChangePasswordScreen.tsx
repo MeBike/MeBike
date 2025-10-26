@@ -1,27 +1,30 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { BikeColors } from "../constants/BikeColors";
-import { useAuth } from "@providers/auth-providers";
-import { IconSymbol } from "../components/IconSymbol";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-import { StatusBar } from "expo-status-bar";
+
+import { useAuth } from "@providers/auth-providers";
+
 import type { ChangePasswordNavigationProp } from "../types/navigation";
-import { Ionicons } from "@expo/vector-icons";
-const ChangePasswordScreen = () => {
-	const insets = useSafeAreaInsets();
+
+import { IconSymbol } from "../components/IconSymbol";
+import { BikeColors } from "../constants/BikeColors";
+
+function ChangePasswordScreen() {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<ChangePasswordNavigationProp>();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -59,8 +62,8 @@ const ChangePasswordScreen = () => {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
-            paddingTop: insets.top + 32, 
-            paddingBottom: 38, 
+            paddingTop: insets.top + 32,
+            paddingBottom: 38,
             paddingHorizontal: 24,
             borderBottomLeftRadius: 32,
             borderBottomRightRadius: 32,
@@ -201,7 +204,7 @@ const ChangePasswordScreen = () => {
       </ScrollView>
     </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

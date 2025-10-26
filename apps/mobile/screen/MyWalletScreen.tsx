@@ -1,25 +1,26 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
   ActivityIndicator,
-  Modal,
-  Image,
   Alert,
+  Image,
+  Modal,
+  ScrollView,
   Share,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import { useWalletActions } from "@hooks/useWalletAction";
-import { useNavigation } from "@react-navigation/native";
-const MyWalletScreen = () => {
-   const navigation = useNavigation();
+
+function MyWalletScreen() {
+  const navigation = useNavigation();
   const {
     getMyWallet,
     myWallet,
@@ -36,13 +37,13 @@ const MyWalletScreen = () => {
 
   useEffect(() => {
     if (myWallet) {
-      console.log('Wallet Data (/wallets):', JSON.stringify(myWallet, null, 2));
+      console.log("Wallet Data (/wallets):", JSON.stringify(myWallet, null, 2));
     }
   }, [myWallet]);
 
   useEffect(() => {
     if (transactions) {
-      console.log('Wallet Transactions (/wallets/transaction):', JSON.stringify(transactions, null, 2));
+      console.log("Wallet Transactions (/wallets/transaction):", JSON.stringify(transactions, null, 2));
     }
   }, [transactions]);
 
@@ -58,12 +59,14 @@ const MyWalletScreen = () => {
   };
 
   const handleShareUserId = async () => {
-    if (!myWallet?.user_id) return;
+    if (!myWallet?.user_id)
+      return;
     try {
       await Share.share({
         message: `user_id của tôi: ${myWallet.user_id}`,
       });
-    } catch (error) {
+    }
+    catch (error) {
       Alert.alert("Lỗi", "Không thể chia sẻ user_id");
     }
   };
@@ -94,9 +97,9 @@ const MyWalletScreen = () => {
     }
   };
 
- const formatBalance = (balance: string) => {
-   return Number.parseInt(balance).toLocaleString("vi-VN");
- };
+  const formatBalance = (balance: string) => {
+    return Number.parseInt(balance).toLocaleString("vi-VN");
+  };
 
   if (isLoadingGetMyWallet) {
     return (
@@ -214,7 +217,9 @@ const MyWalletScreen = () => {
                   marginBottom: 12,
                 }}
               >
-                {formatBalance(myWallet.balance?.$numberDecimal)} đ
+                {formatBalance(myWallet.balance?.$numberDecimal)}
+                {" "}
+                đ
               </Text>
               <View
                 style={{
@@ -299,7 +304,7 @@ const MyWalletScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {transactions.map((transaction) => (
+          {transactions.map(transaction => (
             <View key={transaction._id} style={styles.transactionItem}>
               <View style={styles.transactionLeft}>
                 <View
@@ -307,7 +312,7 @@ const MyWalletScreen = () => {
                     styles.transactionIcon,
                     {
                       backgroundColor:
-                        getTransactionColor(transaction.type) + "20",
+                        `${getTransactionColor(transaction.type)}20`,
                     },
                   ]}
                 >
@@ -322,7 +327,10 @@ const MyWalletScreen = () => {
                     {transaction.description}
                   </Text>
                   <Text style={styles.transactionDate}>
-                    {transaction.created_at} • {transaction.status}
+                    {transaction.created_at}
+                    {" "}
+                    •
+                    {transaction.status}
                   </Text>
                 </View>
               </View>
@@ -339,7 +347,9 @@ const MyWalletScreen = () => {
                   },
                 ]}
               >
-                {formatBalance(transaction.amount.toString())} đ
+                {formatBalance(transaction.amount.toString())}
+                {" "}
+                đ
               </Text>
             </View>
           ))}
@@ -362,7 +372,9 @@ const MyWalletScreen = () => {
             />
             <Text>VUI LÒNG COPY ID VÀO TIN NHẮN CHUYỂN KHOẢN</Text>
             <Text selectable style={styles.userId}>
-              user_id: {myWallet.user_id}
+              user_id:
+              {" "}
+              {myWallet.user_id}
             </Text>
 
             <TouchableOpacity
@@ -383,7 +395,7 @@ const MyWalletScreen = () => {
       </Modal>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
