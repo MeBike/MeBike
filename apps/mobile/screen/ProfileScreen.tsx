@@ -75,6 +75,9 @@ const ProfileScreen = () => {
   const handleWallet = () => {
     navigation.navigate("MyWallet" as never);
   };
+  const handleReservations = () => {
+    navigation.navigate("Reservations" as never);
+  };
 
   const renderMenuOption = (
     icon: string,
@@ -253,6 +256,12 @@ const ProfileScreen = () => {
               "Ví điện tử",
               "Quản lý ví điện tử của bạn",
               handleWallet
+            )}
+            {renderMenuOption(
+              "calendar",
+              "Đặt trước của tôi",
+              "Theo dõi các lượt đặt trước",
+              handleReservations
             )}
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

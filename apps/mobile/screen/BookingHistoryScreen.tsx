@@ -65,12 +65,18 @@ const BookingHistoryScreen = () => {
     });
   };
 
-  const formatDuration = (duration: number) => {
-    if (duration === 0) return "Chưa kết thúc";
-    const hours = Math.floor(duration / 3600);
-    const minutes = Math.floor((duration % 3600) / 60);
+  const formatDuration = (duration: number, hasEnded: boolean) => {
+    if (!duration || duration <= 0) {
+      return hasEnded ? "0 phút" : "Chưa kết thúc";
+    }
+    const totalMinutes = Math.floor(duration);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0 && minutes > 0) {
+      return `${hours} giờ ${minutes} phút`;
+    }
     if (hours > 0) {
-      return `${hours} giờ ${minutes > 0 ? minutes + ' phút' : ''}`;
+      return `${hours} giờ`;
     }
     return `${minutes} phút`;
   };
@@ -104,7 +110,9 @@ const BookingHistoryScreen = () => {
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="time" size={16} color="#666" />
-          <Text style={styles.detailText}>{formatDuration(item.duration)}</Text>
+          <Text style={styles.detailText}>
+            {formatDuration(item.duration, Boolean(item.end_time))}
+          </Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="pricetag" size={16} color="#0066FF" />

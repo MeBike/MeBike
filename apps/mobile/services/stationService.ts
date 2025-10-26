@@ -1,6 +1,5 @@
 import fetchHttpClient from "@lib/httpClient";
 import type { AxiosResponse } from "axios";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 import type { StationType } from "../types/StationType";
 const STATION_BASE = "/stations";
 const STATION_ENDPOINTS = {

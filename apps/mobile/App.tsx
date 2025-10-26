@@ -20,6 +20,8 @@ import ChangePasswordScreen from './screen/ChangePasswordScreen';
 import ForgotPasswordScreen from './screen/ForgotPassword';
 import UpdateProfileScreen from './screen/UpdateProfileScreen';
 import MyWalletScreen from './screen/MyWalletScreen';
+import ReservationScreen from './screen/ReservationScreen';
+import ReservationDetailScreen from './screen/ReservationDetailScreen';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
 const BottomTab = () => {
@@ -159,6 +161,16 @@ export default function App() {
             <Stack.Screen
               name="MyWallet"
               component={MyWalletScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="Reservations"
+              component={ReservationScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="ReservationDetail"
+              component={ReservationDetailScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
           </Stack.Navigator>

@@ -62,6 +62,12 @@ export const useRentalsActions = (
                   queryClient.invalidateQueries({
                     queryKey: ["rentals", "all", 1, 10],
                   });
+                  queryClient.invalidateQueries({
+                    queryKey: ["all-stations"],
+                  });
+                  queryClient.invalidateQueries({
+                    queryKey: ["station"],
+                  });
                 } else {
                   Alert.alert("Error", "Failed to end the rental.");
                 }
@@ -98,6 +104,12 @@ export const useRentalsActions = (
               });
               queryClient.invalidateQueries({
                 queryKey: ["rentals", "all", 1, 10],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["all-stations"],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["station"],
               });
             } else {
               Alert.alert("Error", "Failed to end the rental.");

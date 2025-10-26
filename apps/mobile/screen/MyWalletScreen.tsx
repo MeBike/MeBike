@@ -34,6 +34,18 @@ const MyWalletScreen = () => {
     getMyWallet();
   }, [getMyWallet]);
 
+  useEffect(() => {
+    if (myWallet) {
+      console.log('Wallet Data (/wallets):', JSON.stringify(myWallet, null, 2));
+    }
+  }, [myWallet]);
+
+  useEffect(() => {
+    if (transactions) {
+      console.log('Wallet Transactions (/wallets/transaction):', JSON.stringify(transactions, null, 2));
+    }
+  }, [transactions]);
+
   const handleTopUp = () => {
     setShowQR(true);
   };
