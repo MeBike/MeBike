@@ -27,6 +27,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRentalsActions } from "@hooks/useRentalAction";
 import { useAuth } from "@providers/auth-providers";
+import { useReservationActions } from "@hooks/useReservationActions";
 const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
@@ -55,6 +56,11 @@ export default function StationDetailScreen() {
     station_id: stationId,
   });
   const { postRent, isPostRentLoading } = useRentalsActions(true , selectedBike?._id);
+  const [pendingBikeId, setPendingBikeId] = useState<string | null>(null);
+  const { createReservation } = useReservationActions({
+    hasToken: Boolean(user?._id),
+    autoFetch: false,
+  });
   useEffect(() => {
     if (stationId) {
       getStationByID();
@@ -127,6 +133,34 @@ export default function StationDetailScreen() {
         [{ text: "OK", onPress: () => setSelectedBike(null) }]
       );
     }
+  };
+
+  const handleReservePress = (bike: Bike) => {
+    if (bike.status !== "CÓ SẴN") {
+      Alert.alert("Không thể đặt trước", "Xe này hiện không khả dụng để đặt trước.");
+      return;
+    }
+    if (!user?._id) {
+      navigation.navigate("Login" as never);
+      return;
+    }
+    if (user?.verify === "UNVERIFIED") {
+      Alert.alert(
+        "Tài khoản chưa xác thực",
+        "Vui lòng xác thực tài khoản để sử dụng tính năng đặt trước."
+      );
+      return;
+    }
+
+    setPendingBikeId(bike._id);
+    createReservation(bike._id, undefined, {
+      onSuccess: () => {
+        getBikes();
+        getStationByID();
+        setPendingBikeId(null);
+      },
+      onError: () => setPendingBikeId(null),
+    });
   };
 
   const renderBikeOnMap = (bike: any) => {
@@ -320,6 +354,25 @@ export default function StationDetailScreen() {
                   >
                     {isAvailable ? "Có sẵn" : "Đang thuê"}
                   </Text>
+                  {isAvailable && (
+                    <TouchableOpacity
+                      style={[
+                        styles.reserveButton,
+                        pendingBikeId === bike._id && styles.reserveButtonDisabled,
+                      ]}
+                      onPress={() => handleReservePress(bike)}
+                      disabled={pendingBikeId === bike._id}
+                    >
+                      {pendingBikeId === bike._id ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <>
+                          <Ionicons name="timer-outline" size={16} color="#fff" />
+                          <Text style={styles.reserveButtonText}>Đặt trước</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  )}
                 </View>
               </Pressable>
             );
@@ -566,7 +619,25 @@ const styles = StyleSheet.create({
   },
   bikeItemRight: {
     alignItems: "flex-end",
-    gap: 4,
+    gap: 8,
+  },
+  reserveButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: BikeColors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: "flex-end",
+  },
+  reserveButtonDisabled: {
+    opacity: 0.6,
+  },
+  reserveButtonText: {
+    color: BikeColors.onPrimary,
+    fontWeight: "600",
+    fontSize: 13,
   },
   batteryContainer: {
     flexDirection: "row",

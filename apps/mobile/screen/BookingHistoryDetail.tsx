@@ -55,6 +55,12 @@ const BookingHistoryDetail = () => {
     refetch();
     setStations(data);
   }, [data]);
+
+  useEffect(() => {
+    if (rentalDetailData?.data?.result) {
+      console.log('Rental Detail:', JSON.stringify(rentalDetailData.data.result, null, 2));
+    }
+  }, [rentalDetailData]);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "HOÀN THÀNH":
@@ -112,12 +118,18 @@ const BookingHistoryDetail = () => {
     });
   };
 
-  const formatDuration = (duration: number) => {
-    if (duration === 0) return "Chưa kết thúc";
-    const hours = Math.floor(duration / 3600);
-    const minutes = Math.floor((duration % 3600) / 60);
+  const formatDuration = (duration: number, hasEnded: boolean) => {
+    if (!duration || duration <= 0) {
+      return hasEnded ? "0 phút" : "Chưa kết thúc";
+    }
+    const totalMinutes = Math.floor(duration);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0 && minutes > 0) {
+      return `${hours} giờ ${minutes} phút`;
+    }
     if (hours > 0) {
-      return `${hours} giờ ${minutes > 0 ? minutes + " phút" : ""}`;
+      return `${hours} giờ`;
     }
     return `${minutes} phút`;
   };
@@ -344,7 +356,7 @@ const BookingHistoryDetail = () => {
             <View style={styles.durationContainer}>
               <Ionicons name="hourglass" size={16} color="#666" />
               <Text style={styles.durationText}>
-                Thời gian thuê: {formatDuration(booking.duration)}
+                Thời gian thuê: {formatDuration(booking.duration, Boolean(booking.end_time))}
               </Text>
             </View>
           </View>
@@ -439,7 +451,7 @@ const BookingHistoryDetail = () => {
             </Text>
           </View>
         </View>
-        {booking.status !== "HOÀN THÀNH" && (
+        {booking.status === "ĐANG THUÊ" && (
           <>
             <TouchableOpacity
               style={[

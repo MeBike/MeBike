@@ -335,7 +335,8 @@ async processRentalEndTransaction(
       bike: restBike,
       start_station: startStation,
       end_station: endStation,
-      ...restRental
+      ...restRental,
+      total_price: parseFloat(rental.total_price?.toString() || '0')
     }
   }
 

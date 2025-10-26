@@ -1,4 +1,6 @@
 // Navigation Types for React Navigation
+import type { Reservation } from "./ReservationTypes";
+
 export type RootStackParamList = {
   Booking: undefined;
   Tôi: undefined;
@@ -13,12 +15,17 @@ export type RootStackParamList = {
   FormSheet: undefined;
   TransparentModal: undefined;
   Wallet: undefined;
-  BookingHistoryDetail: undefined;
+  BookingHistoryDetail: { bookingId: string };
   ChangePassword: undefined;
   ForgotPassword: undefined;
   UpdateProfile: undefined;
   MyWallet: undefined;
   Xe: undefined;
+  Reservations: undefined;
+  ReservationDetail: {
+    reservationId: string;
+    reservation?: Reservation;
+  };
 };
 
 // Common navigation hook types
@@ -59,3 +66,15 @@ export type MyWalletNavigationProp = NativeStackNavigationProp<
   "MyWallet"
 >;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, 'StationDetail'>;
+export type ReservationsScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Reservations"
+>;
+export type ReservationDetailNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ReservationDetail"
+>;
+export type ReservationDetailRouteProp = RouteProp<
+  RootStackParamList,
+  "ReservationDetail"
+>;

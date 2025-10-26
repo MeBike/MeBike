@@ -194,18 +194,22 @@ export class FetchHttpClient {
   }
 }
 
-const fetchHttpClient = new FetchHttpClient(
-  (() => {
-    const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-    const defaultUrl =
-      process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:4000";
-    console.log("Environment EXPO_PUBLIC_API_BASE_URL:", envUrl);
-    console.log("Using API Base URL:", envUrl || defaultUrl);
-    const computerIP =
-      process.env.EXPO_COMPUTER_PUBLIC_API_BASE_URL_TANCHO ||
-      "http://192.168.12.102:4000";
-    console.log("Using computer IP for device testing:", computerIP);
-    return computerIP;
-  })()
-);
+const getBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_BASE_URL) {
+    console.log(`Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`);
+    return process.env.EXPO_PUBLIC_API_BASE_URL;
+  }
+
+  if (Platform.OS === 'android') {
+    const androidUrl = 'http://10.0.2.2:4000';
+    console.log(`Development on Android, using: ${androidUrl}`);
+    return androidUrl;
+  } else {
+    const iosUrl = 'http://localhost:4000';
+    console.log(`Development on iOS/Web, using: ${iosUrl}`);
+    return iosUrl;
+  }
+};
+
+const fetchHttpClient = new FetchHttpClient(getBaseUrl());
 export default fetchHttpClient;
