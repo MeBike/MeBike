@@ -3,6 +3,7 @@
 
 #include <WiFiClient.h>
 #include <string>
+#include <string_view>
 #include "network.h"
 
 class NetworkManager
@@ -11,7 +12,7 @@ public:
     NetworkManager();
     ~NetworkManager();
 
-    void setCredentials(const std::string &ssid, const std::string &password);
+    void setCredentials(std::string_view ssid, std::string_view password);
     bool initialize();
     const NetworkTopics &getTopics() const;
     WiFiClient &getWiFiClient();

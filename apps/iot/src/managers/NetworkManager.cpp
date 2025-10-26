@@ -5,10 +5,10 @@ NetworkManager::NetworkManager() {} // constructor
 
 NetworkManager::~NetworkManager() {} // teardown // destructor
 
-void NetworkManager::setCredentials(const std::string &ssid, const std::string &password)
+void NetworkManager::setCredentials(std::string_view ssid, std::string_view password)
 {
-    ssid_ = ssid;
-    password_ = password;
+    ssid_.assign(ssid.data(), ssid.size());
+    password_.assign(password.data(), password.size());
 }
 
 bool NetworkManager::initialize()
