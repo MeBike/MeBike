@@ -49,7 +49,7 @@ void CardTapService::publishCardTap(const std::string& cardUid) {
     Log.error("Failed to serialize card tap payload\n");
     return;
   }
-  if (Global::mqttManager->publish(topicRef.c_str(), payload, false)) {
+  if (Global::mqttManager->publish(topicRef, payload, false)) {
     Global::logInfoBoth("Card tap published: chip_id=%s card_uid=%s", deviceChipId.c_str(), cardUid.c_str());
   } else {
     Log.error("Failed to publish card tap payload\n");

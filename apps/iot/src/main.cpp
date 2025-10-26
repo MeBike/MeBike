@@ -14,6 +14,7 @@
 #include <memory>
 #include "HardwareConfig.h"
 #include "DeviceUtils.h"
+#include "StateStorage.h"
 
 static std::unique_ptr<NFCManager> nfcManager;
 static std::unique_ptr<CardTapService> cardTapService;
@@ -60,6 +61,8 @@ void setup()
   Serial.println("\nWaiting for an NFC Card...");
   currentState = STATE_INIT;
   Global::ledStatusManager->setStatus(currentState);
+  StateStorage::begin();
+  DeviceState persistedState = StateStorage::load(STATE_CONNECTED);
 
   AppConfig config = loadConfig();
   Global::networkManager.reset(new NetworkManager());
@@ -78,6 +81,14 @@ void setup()
   }
   currentState = STATE_CONNECTED;
   Global::ledStatusManager->setStatus(currentState);
+
+  if (persistedState != STATE_CONNECTED)
+  {
+    currentState = persistedState;
+    resetStateEntryFlags();
+    Global::ledStatusManager->setStatus(currentState);
+    Global::logInfoBoth("Restored persisted state -> %s", getStateName(currentState));
+  }
 }
 
 void loop()
@@ -147,6 +158,7 @@ void loop()
       Global::ledStatusManager->setStatus(currentState);
     }
 
+    StateStorage::save(currentState);
     lastLoggedState = currentState;
   }
 }

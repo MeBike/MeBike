@@ -128,12 +128,12 @@ bool ensureMqttConnected()
 
         const auto &topics = Global::getTopics(); // get topics from global which gets from network manager also the auto is for infering type from the return type of getTopics() which is const NetworkTopics& which is a struct
         // same as const NetworkTopics &topics = Global::getTopics(); no casting needed like lava
-        Global::mqttManager->subscribe(topics.commandStateTopic.c_str()); // c_string is dfue to the lib
-        Global::mqttManager->subscribe(topics.commandBookingTopic.c_str());
-        Global::mqttManager->subscribe(topics.commandReservationTopic.c_str());
-        Global::mqttManager->subscribe(topics.commandMaintenanceTopic.c_str());
-        Global::mqttManager->subscribe(topics.commandStatusTopic.c_str());
-        Global::mqttManager->subscribe(topics.commandRootTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandStateTopic);
+        Global::mqttManager->subscribe(topics.commandBookingTopic);
+        Global::mqttManager->subscribe(topics.commandReservationTopic);
+        Global::mqttManager->subscribe(topics.commandMaintenanceTopic);
+        Global::mqttManager->subscribe(topics.commandStatusTopic);
+        Global::mqttManager->subscribe(topics.commandRootTopic);
 
         mqttReconnectRetries = 0;
         Global::logInfoBoth("MQTT reconnected and resubscribed to topics");
