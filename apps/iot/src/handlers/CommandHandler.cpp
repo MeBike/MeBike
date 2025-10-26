@@ -23,25 +23,43 @@
 
 #include "CommandHandler.h"
 #include <ArduinoLog.h>
-#include <string>
-#include <unordered_map>
+#include <string_view>
+#include <utility>
 #include "globals.h"
 #include "LEDStatusManager.h"
 #include "StateMachine.h"
 
-static bool matchesTopic(const char *incoming, const char *baseTopic, const std::string &deviceTopic)
+namespace
 {
-    if (!incoming)
+    bool matchesTopic(std::string_view incoming,
+                      std::string_view baseTopic,
+                      std::string_view deviceTopic)
     {
-        return false;
+        if (incoming.empty())
+        {
+            return false;
+        }
+
+        if (incoming == baseTopic)
+        {
+            return true;
+        }
+        return !deviceTopic.empty() && incoming == deviceTopic;
+    }
+}
+
+namespace
+{
+    constexpr int toPrintfLength(std::string_view value)
+    {
+        return static_cast<int>(value.size()); // length from string_view is a size_t, need to cast to int for printf
+        // printf is from C arduinoLog lib so it exist before cpp size_t stuff so cast it to int 
     }
 
-    const std::string incomingStr(incoming);
-    if (incomingStr == baseTopic)
+    const char *toPrintfData(std::string_view value)
     {
-        return true;
+        return value.empty() ? "" : value.data(); // if empty return empty string to avoid nullptr issues in printf since data of a string_view can be nullptr if empty or not null-terminated
     }
-    return !deviceTopic.empty() && incomingStr == deviceTopic;
 }
 
 static const char *statusTopic()
@@ -51,7 +69,16 @@ static const char *statusTopic()
 
 void CommandHandler::processCommand(const char *topic, const char *message)
 {
-    Log.info("Processing command from topic %s: %s\n", topic, message);
+    const std::string_view topicView = topic ? std::string_view(topic) : std::string_view();
+    const std::string_view messageView = message ? std::string_view(message) : std::string_view();
+    processCommand(topicView, messageView);
+}
+
+void CommandHandler::processCommand(std::string_view topic, std::string_view message)
+{
+    Log.info("Processing command from topic %.*s: %.*s\n",
+             toPrintfLength(topic), toPrintfData(topic),
+             toPrintfLength(message), toPrintfData(message));
 
     if (matchesTopic(topic, "esp/commands/state", Global::getTopics().commandStateTopic) ||
         matchesTopic(topic, "esp/commands", Global::getTopics().commandRootTopic))
@@ -76,38 +103,46 @@ void CommandHandler::processCommand(const char *topic, const char *message)
     }
     else
     {
-        Log.warning("Unknown command topic: %s\n", topic);
+        Log.warning("Unknown command topic: %.*s\n", toPrintfLength(topic), toPrintfData(topic));
     }
 }
 
-void CommandHandler::handleStateCommand(const char *command)
+void CommandHandler::handleStateCommand(std::string_view command)
 {
-    if (!command)
+    if (command.empty())
     {
         Log.error("State command is null\n");
         return;
     }
 
-    const std::string commandStr(command);
-    Log.info("Handling state command: %s\n", commandStr.c_str());
+    Log.info("Handling state command: %.*s\n", toPrintfLength(command), toPrintfData(command));
 
-    static const std::unordered_map<std::string, DeviceState> stateMap = {
+    static constexpr std::pair<std::string_view, DeviceState> stateMap[] = {
         {"available", STATE_AVAILABLE},
         {"reserved", STATE_RESERVED},
         {"booked", STATE_BOOKED},
         {"broken", STATE_BROKEN},
         {"maintained", STATE_MAINTAINED},
-        {"unavailable", STATE_UNAVAILABLE}
+        {"unavailable", STATE_UNAVAILABLE},
     };
 
-    const auto targetIt = stateMap.find(commandStr);
-    if (targetIt == stateMap.end())
+    DeviceState targetState = STATE_AVAILABLE;
+    bool found = false;
+    for (const auto &[name, state] : stateMap)
     {
-        Log.error("Unknown state command: %s\n", commandStr.c_str());
-        return;
+        if (command == name)
+        {   
+            targetState = state;
+            found = true;
+            break;
+        }
     }
 
-    const DeviceState targetState = targetIt->second;
+    if (!found)
+    {
+        Log.error("Unknown state command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+        return;
+    }
 
     if (canTransitionTo(targetState))
     {
@@ -128,18 +163,17 @@ void CommandHandler::handleStateCommand(const char *command)
     }
 }
 
-void CommandHandler::handleBookingCommand(const char *command)
+void CommandHandler::handleBookingCommand(std::string_view command)
 {
-    if (!command)
+    if (command.empty())
     {
         Log.error("Booking command is null\n");
         return;
     }
 
-    const std::string commandStr(command);
-    Log.info("Handling booking command: %s\n", commandStr.c_str());
+    Log.info("Handling booking command: %.*s\n", toPrintfLength(command), toPrintfData(command));
 
-    if (commandStr == "book")
+    if (command == "book")
     {
         if (currentState == STATE_AVAILABLE || currentState == STATE_RESERVED) // nếu có hoặc người dùng muốn giữ chỗ
         {
@@ -148,7 +182,7 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "booked", false);
+            Global::mqttManager->publish(Global::getTopics().commandBookingTopic, "booked", false);
             }
             Global::logInfoMQTT("Booking command: book");
         }
@@ -157,7 +191,7 @@ void CommandHandler::handleBookingCommand(const char *command)
             Log.warning("Cannot book device in current state: %s\n", getStateName(currentState));
         }
     }
-    else if (commandStr == "claim" || commandStr == "claimed")
+    else if (command == "claim" || command == "claimed")
     {
         if (currentState == STATE_RESERVED)
         {
@@ -166,7 +200,7 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "claimed", false); 
+                Global::mqttManager->publish(Global::getTopics().commandBookingTopic, "claimed", false); 
             }
             Global::logInfoMQTT("Booking command: claim");
         }
@@ -175,7 +209,7 @@ void CommandHandler::handleBookingCommand(const char *command)
             Log.warning("Cannot claim device in current state: %s\n", getStateName(currentState));
         }
     }
-    else if (commandStr == "release")
+    else if (command == "release")
     {
         if (currentState == STATE_BOOKED)
         {
@@ -184,7 +218,7 @@ void CommandHandler::handleBookingCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "available", false);
+                Global::mqttManager->publish(Global::getTopics().commandBookingTopic, "available", false);
             }
             Global::logInfoMQTT("Booking command: release");
         }
@@ -195,22 +229,21 @@ void CommandHandler::handleBookingCommand(const char *command)
     }
     else
     {
-        Log.error("Unknown booking command: %s\n", commandStr.c_str());
+        Log.error("Unknown booking command: %.*s\n", toPrintfLength(command), toPrintfData(command));
     }
 }
 
-void CommandHandler::handleReservationCommand(const char *command)
+void CommandHandler::handleReservationCommand(std::string_view command)
 {
-    if (!command)
+    if (command.empty())
     {
         Log.error("Reservation command is null\n");
         return;
     }
 
-    const std::string commandStr(command);
-    Log.info("Handling reservation command: %s\n", commandStr.c_str());
+    Log.info("Handling reservation command: %.*s\n", toPrintfLength(command), toPrintfData(command));
 
-    if (commandStr == "reserve")
+    if (command == "reserve")
     {
         if (currentState == STATE_AVAILABLE)
         {
@@ -219,7 +252,7 @@ void CommandHandler::handleReservationCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandReservationTopic.c_str(), "reserved", false);
+                Global::mqttManager->publish(Global::getTopics().commandReservationTopic, "reserved", false);
             }
             Global::logInfoMQTT("Reservation command: reserve");
         }
@@ -228,7 +261,7 @@ void CommandHandler::handleReservationCommand(const char *command)
             Log.warning("Cannot reserve device in current state: %s\n", getStateName(currentState));
         }
     }
-    else if (commandStr == "cancel")
+    else if (command == "cancel")
     {
         if (currentState == STATE_RESERVED)
         {
@@ -237,7 +270,7 @@ void CommandHandler::handleReservationCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandReservationTopic.c_str(), "available", false);
+                Global::mqttManager->publish(Global::getTopics().commandReservationTopic, "available", false);
             }
             Global::logInfoMQTT("Reservation command: cancel");
         }
@@ -248,22 +281,21 @@ void CommandHandler::handleReservationCommand(const char *command)
     }
     else
     {
-        Log.error("Unknown reservation command: %s\n", commandStr.c_str());
+        Log.error("Unknown reservation command: %.*s\n", toPrintfLength(command), toPrintfData(command));
     }
 }
 
-void CommandHandler::handleMaintenanceCommand(const char *command)
+void CommandHandler::handleMaintenanceCommand(std::string_view command)
 {
-    if (!command)
+    if (command.empty())
     {
         Log.error("Maintenance command is null\n");
         return;
     }
 
-    const std::string commandStr(command);
-    Log.info("Handling maintenance command: %s\n", commandStr.c_str());
+    Log.info("Handling maintenance command: %.*s\n", toPrintfLength(command), toPrintfData(command));
 
-    if (commandStr == "start")
+    if (command == "start")
     {
         if (currentState == STATE_AVAILABLE ||
             currentState == STATE_UNAVAILABLE ||
@@ -275,7 +307,7 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic.c_str(), "in_progress", false);
+                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic, "in_progress", false);
             }
             Global::logInfoMQTT("Maintenance command: start");
         }
@@ -284,7 +316,7 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
             Log.warning("Cannot start maintenance in current state: %s\n", getStateName(currentState));
         }
     }
-    else if (commandStr == "complete")
+    else if (command == "complete")
     {
         if (currentState == STATE_MAINTAINED)
         {
@@ -293,7 +325,7 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic.c_str(), "completed", false);
+                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic, "completed", false);
             }
             Global::logInfoMQTT("Maintenance command: complete");
         }
@@ -304,22 +336,21 @@ void CommandHandler::handleMaintenanceCommand(const char *command)
     }
     else
     {
-        Log.error("Unknown maintenance command: %s\n", commandStr.c_str());
+        Log.error("Unknown maintenance command: %.*s\n", toPrintfLength(command), toPrintfData(command));
     }
 }
 
-void CommandHandler::handleStatusCommand(const char *command)
+void CommandHandler::handleStatusCommand(std::string_view command)
 {
-    if (!command)
+    if (command.empty())
     {
         Log.error("Status command is null\n");
         return;
     }
 
-    const std::string commandStr(command);
-    Log.info("Handling status command: %s\n", commandStr.c_str());
+    Log.info("Handling status command: %.*s\n", toPrintfLength(command), toPrintfData(command));
 
-    if (commandStr == "request")
+    if (command == "request")
     {
         if (Global::mqttManager)
         {
@@ -331,7 +362,7 @@ void CommandHandler::handleStatusCommand(const char *command)
     }
     else
     {
-        Log.error("Unknown status command: %s\n", commandStr.c_str());
+        Log.error("Unknown status command: %.*s\n", toPrintfLength(command), toPrintfData(command));
     }
 }
 

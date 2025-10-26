@@ -16,7 +16,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     }
     Log.info("Message: %s\n", message.c_str());
 
-    CommandHandler::processCommand(topic, message.c_str());
+    CommandHandler::processCommand(topic, message);
 }
 
 bool setupMQTT(const char *brokerIP, int port, const char *username, const char *pass, const std::string &logTopic)
@@ -31,15 +31,14 @@ bool setupMQTT(const char *brokerIP, int port, const char *username, const char 
     if (Global::mqttManager->connect())
     {
         const auto &topics = Global::getTopics();
-        Global::mqttManager->subscribe(topics.commandStateTopic.c_str());
-        Global::mqttManager->subscribe(topics.commandBookingTopic.c_str());
-        Global::mqttManager->subscribe(topics.commandReservationTopic.c_str());
-        Global::mqttManager->subscribe(topics.commandMaintenanceTopic.c_str());
-        Global::mqttManager->subscribe(topics.commandStatusTopic.c_str());
-        Global::mqttManager->subscribe(topics.commandRootTopic.c_str());
+        Global::mqttManager->subscribe(topics.commandStateTopic);
+        Global::mqttManager->subscribe(topics.commandBookingTopic);
+        Global::mqttManager->subscribe(topics.commandReservationTopic);
+        Global::mqttManager->subscribe(topics.commandMaintenanceTopic);
+        Global::mqttManager->subscribe(topics.commandStatusTopic);
+        Global::mqttManager->subscribe(topics.commandRootTopic);
 
-        const char *topic = Global::getTopics().statusTopic.c_str();
-        Global::mqttManager->publish(topic, "ESP32 online", true);
+        Global::mqttManager->publish(topics.statusTopic, "ESP32 online", true);
         if (Global::bufferedLogger)
         {
             Global::bufferedLogger->log(LogSeverity::Info, LogDestination::Both, "MQTT connected and status published");
