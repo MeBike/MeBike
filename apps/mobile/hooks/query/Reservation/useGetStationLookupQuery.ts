@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { stationService } from "@services/stationService";
 
-export const useGetStationLookupQuery = (stationId?: string, enabled = false) => {
+export function useGetStationLookupQuery(stationId?: string, enabled = false) {
   return useQuery({
     queryKey: ["stations", stationId],
     enabled: enabled && Boolean(stationId),
@@ -10,4 +11,4 @@ export const useGetStationLookupQuery = (stationId?: string, enabled = false) =>
       return response.data.result;
     },
   });
-};
+}

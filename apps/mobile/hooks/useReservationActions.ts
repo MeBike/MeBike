@@ -1,37 +1,41 @@
-import { useCallback } from "react";
-import { Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import { useGetPendingReservationsQuery } from "./query/Reservation/useGetPendingReservationsQuery";
-import { useGetReservationHistoryQuery } from "./query/Reservation/useGetReservationHistoryQuery";
-import { useGetReservationDetailQuery } from "./query/Reservation/useGetReservationDetailQuery";
-import { useCreateReservationMutation } from "./mutations/Reservation/useCreateReservationMutation";
-import { useCancelReservationMutation } from "./mutations/Reservation/useCancelReservationMutation";
-import { useConfirmReservationMutation } from "./mutations/Reservation/useConfirmReservationMutation";
+import { useCallback } from "react";
+import { Alert } from "react-native";
+
 import type { Reservation } from "../types/ReservationTypes";
 
-interface ErrorResponse {
+import { useCancelReservationMutation } from "./mutations/Reservation/useCancelReservationMutation";
+import { useConfirmReservationMutation } from "./mutations/Reservation/useConfirmReservationMutation";
+import { useCreateReservationMutation } from "./mutations/Reservation/useCreateReservationMutation";
+import { useGetPendingReservationsQuery } from "./query/Reservation/useGetPendingReservationsQuery";
+import { useGetReservationDetailQuery } from "./query/Reservation/useGetReservationDetailQuery";
+import { useGetReservationHistoryQuery } from "./query/Reservation/useGetReservationHistoryQuery";
+
+type ErrorResponse = {
   response?: {
     data?: {
       errors?: Record<string, { msg?: string }>;
       message?: string;
     };
   };
-}
+};
 
-interface ErrorWithMessage {
+type ErrorWithMessage = {
   message: string;
-}
+};
 
-const getErrorMessage = (error: unknown, fallback: string): string => {
+function getErrorMessage(error: unknown, fallback: string): string {
   const axiosError = error as ErrorResponse;
   if (axiosError?.response?.data) {
     const { errors, message } = axiosError.response.data;
     if (errors) {
       const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
+      if (firstError?.msg)
+        return firstError.msg;
     }
-    if (message) return message;
+    if (message)
+      return message;
   }
 
   const simpleError = error as ErrorWithMessage;
@@ -40,7 +44,7 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
   }
 
   return fallback;
-};
+}
 
 type UseReservationActionsParams = {
   hasToken: boolean;
@@ -53,15 +57,14 @@ type UseReservationActionsParams = {
   autoFetch?: boolean;
 };
 
-type RawReservation = Reservation & {
+type RawReservation = Omit<Reservation, "prepaid"> & {
   prepaid?: number | string | { $numberDecimal?: string };
   station?: Reservation["station"];
 };
 
-const normalizePrepaid = (
-  value: RawReservation["prepaid"]
-): number => {
-  if (typeof value === "number") return value;
+function normalizePrepaid(value: RawReservation["prepaid"]): number {
+  if (typeof value === "number")
+    return value;
   if (typeof value === "string") {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -71,14 +74,16 @@ const normalizePrepaid = (
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
-};
+}
 
-const normalizeReservation = (reservation: RawReservation): Reservation => ({
-  ...reservation,
-  prepaid: normalizePrepaid(reservation.prepaid),
-});
+function normalizeReservation(reservation: RawReservation): Reservation {
+  return {
+    ...reservation,
+    prepaid: normalizePrepaid(reservation.prepaid),
+  };
+}
 
-export const useReservationActions = ({
+export function useReservationActions({
   hasToken,
   pendingPage = 1,
   pendingLimit = 10,
@@ -87,7 +92,7 @@ export const useReservationActions = ({
   reservationId,
   enableDetailQuery = false,
   autoFetch = true,
-}: UseReservationActionsParams) => {
+}: UseReservationActionsParams) {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
 
@@ -133,28 +138,32 @@ export const useReservationActions = ({
   }, [hasToken, navigation]);
 
   const fetchPendingReservations = useCallback(async () => {
-    if (!ensureAuthenticated()) return;
+    if (!ensureAuthenticated())
+      return;
     await refetchPendingReservations();
   }, [ensureAuthenticated, refetchPendingReservations]);
 
   const fetchReservationHistory = useCallback(async () => {
-    if (!ensureAuthenticated()) return;
+    if (!ensureAuthenticated())
+      return;
     await refetchReservationHistory();
   }, [ensureAuthenticated, refetchReservationHistory]);
 
   const fetchReservationDetail = useCallback(async () => {
-    if (!ensureAuthenticated() || !reservationId) return;
+    if (!ensureAuthenticated() || !reservationId)
+      return;
     await refetchReservationDetail();
   }, [ensureAuthenticated, refetchReservationDetail, reservationId]);
 
   const createReservation = useCallback(
     (bikeId: string, startTime?: string, callbacks?: MutationCallbacks) => {
-      if (!ensureAuthenticated()) return;
+      if (!ensureAuthenticated())
+        return;
       const payload = {
         bike_id: bikeId,
         start_time:
-          startTime ??
-          new Date(Date.now() + SERVER_TIME_OFFSET_MS + RESERVATION_BUFFER_MS).toISOString(),
+          startTime
+          ?? new Date(Date.now() + SERVER_TIME_OFFSET_MS + RESERVATION_BUFFER_MS).toISOString(),
       };
 
       createReservationMutation.mutate(payload, {
@@ -171,23 +180,24 @@ export const useReservationActions = ({
         onError: (error) => {
           const message = getErrorMessage(
             error,
-            "Không thể đặt xe, vui lòng thử lại sau."
+            "Không thể đặt xe, vui lòng thử lại sau.",
           );
           Alert.alert("Lỗi đặt xe", message);
           callbacks?.onError?.(message);
         },
       });
     },
-    [createReservationMutation, ensureAuthenticated, queryClient]
+    [createReservationMutation, ensureAuthenticated, queryClient],
   );
 
   const cancelReservation = useCallback(
     (
       id: string,
       reason: string = "Huỷ đặt trước trên ứng dụng",
-      callbacks?: MutationCallbacks
+      callbacks?: MutationCallbacks,
     ) => {
-      if (!ensureAuthenticated()) return;
+      if (!ensureAuthenticated())
+        return;
       cancelReservationMutation.mutate(
         { id, payload: { reason } },
         {
@@ -204,20 +214,21 @@ export const useReservationActions = ({
           onError: (error) => {
             const message = getErrorMessage(
               error,
-              "Không thể huỷ đặt trước, vui lòng thử lại."
+              "Không thể huỷ đặt trước, vui lòng thử lại.",
             );
             Alert.alert("Lỗi huỷ đặt trước", message);
             callbacks?.onError?.(message);
           },
-        }
+        },
       );
     },
-    [cancelReservationMutation, ensureAuthenticated, queryClient]
+    [cancelReservationMutation, ensureAuthenticated, queryClient],
   );
 
   const confirmReservation = useCallback(
     (id: string, callbacks?: MutationCallbacks) => {
-      if (!ensureAuthenticated()) return;
+      if (!ensureAuthenticated())
+        return;
       confirmReservationMutation.mutate(id, {
         onSuccess: () => {
           Alert.alert("Thành công", "Bắt đầu hành trình của bạn ngay thôi!");
@@ -232,14 +243,14 @@ export const useReservationActions = ({
         onError: (error) => {
           const message = getErrorMessage(
             error,
-            "Không thể xác nhận đặt trước, vui lòng thử lại."
+            "Không thể xác nhận đặt trước, vui lòng thử lại.",
           );
           Alert.alert("Lỗi xác nhận", message);
           callbacks?.onError?.(message);
         },
       });
     },
-    [confirmReservationMutation, ensureAuthenticated, queryClient]
+    [confirmReservationMutation, ensureAuthenticated, queryClient],
   );
 
   const pendingResponse = pendingReservationsResponse?.data;
@@ -280,4 +291,4 @@ export const useReservationActions = ({
     cancelReservation,
     confirmReservation,
   };
-};
+}

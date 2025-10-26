@@ -1,9 +1,9 @@
 import * as z from "zod";
 
 // Helper function to validate MongoDB ObjectId
-const isValidObjectId = (id: string): boolean => {
-  return /^[0-9a-fA-F]{24}$/.test(id);
-};
+function isValidObjectId(id: string): boolean {
+  return /^[0-9a-f]{24}$/i.test(id);
+}
 export const bikeSchema = z.object({
   station_id: z
     .string()

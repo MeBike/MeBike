@@ -1,40 +1,47 @@
+import React from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { IconSymbol } from './IconSymbol';
-import { BikeColors } from '@/constants/BikeColors';
-import { Bike } from '@/types/BikeTypes';
+import type { Bike } from "@/types/BikeTypes";
 
-interface BikeCardProps {
+import { BikeColors } from "@/constants/BikeColors";
+
+import { IconSymbol } from "./IconSymbol";
+
+type BikeCardProps = {
   bike: Bike;
   onPress: () => void;
-}
+};
 
 export function BikeCard({ bike, onPress }: BikeCardProps) {
   const getBatteryColor = (level: number) => {
-    if (level > 60) return BikeColors.success;
-    if (level > 30) return BikeColors.warning;
+    if (level > 60)
+      return BikeColors.success;
+    if (level > 30)
+      return BikeColors.warning;
     return BikeColors.error;
   };
 
   const formatPrice = (price: number) => {
-    return `${price.toLocaleString('vi-VN')}đ/phút`;
+    return `${price.toLocaleString("vi-VN")}đ/phút`;
   };
 
   return (
     <Pressable style={styles.container} onPress={onPress}>
       <View style={styles.header}>
         <View style={styles.bikeInfo}>
-          <IconSymbol 
-            name={bike.type === 'electric' ? 'bolt.fill' : 'bicycle'} 
-            size={24} 
-            color={bike.type === 'electric' ? BikeColors.accent : BikeColors.primary} 
+          <IconSymbol
+            name={bike.type === "electric" ? "bolt.fill" : "bicycle"}
+            size={24}
+            color={bike.type === "electric" ? BikeColors.accent : BikeColors.primary}
           />
-          <Text style={styles.bikeId}>#{bike.id.slice(-3)}</Text>
+          <Text style={styles.bikeId}>
+            #
+            {bike.id.slice(-3)}
+          </Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: bike.isAvailable ? BikeColors.success : BikeColors.disabled }]}>
           <Text style={styles.statusText}>
-            {bike.isAvailable ? 'Có sẵn' : 'Đang sử dụng'}
+            {bike.isAvailable ? "Có sẵn" : "Đang sử dụng"}
           </Text>
         </View>
       </View>
@@ -47,11 +54,12 @@ export function BikeCard({ bike, onPress }: BikeCardProps) {
           </Text>
         </View>
 
-        {bike.type === 'electric' && (
+        {bike.type === "electric" && (
           <View style={styles.batteryContainer}>
             <IconSymbol name="battery.100" size={16} color={getBatteryColor(bike.batteryLevel)} />
             <Text style={[styles.batteryText, { color: getBatteryColor(bike.batteryLevel) }]}>
-              {bike.batteryLevel}%
+              {bike.batteryLevel}
+              %
             </Text>
           </View>
         )}
@@ -78,19 +86,19 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   bikeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   bikeId: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: BikeColors.onSurface,
   },
   statusBadge: {
@@ -100,15 +108,15 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
     color: BikeColors.onPrimary,
   },
   details: {
     gap: 8,
   },
   locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   locationText: {
@@ -117,20 +125,20 @@ const styles = StyleSheet.create({
     color: BikeColors.onSurfaceVariant,
   },
   batteryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   batteryText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   priceContainer: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   priceText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: BikeColors.primary,
   },
 });

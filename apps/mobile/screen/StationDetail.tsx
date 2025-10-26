@@ -1,33 +1,37 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
+  ActivityIndicator,
   Alert,
   Dimensions,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import StationMap2D from "@components/StationMap2D";
+import { useBikeActions } from "@hooks/useBikeAction";
+import { useRentalsActions } from "@hooks/useRentalAction";
+import { useReservationActions } from "@hooks/useReservationActions";
+import { useStationActions } from "@hooks/useStationAction";
+import { useAuth } from "@providers/auth-providers";
+
+import type { Bike } from "../types/BikeTypes";
 import type {
-  StationDetailScreenNavigationProp,
   StationDetailRouteProp,
+  StationDetailScreenNavigationProp,
 } from "../types/navigation";
+import type { StationType } from "../types/StationType";
+
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
-import { useBikeActions } from "@hooks/useBikeAction";
-import { useStationActions } from "@hooks/useStationAction";
-import { ActivityIndicator } from "react-native";
-import StationMap2D from "@components/StationMap2D";
-import { StationType } from "../types/StationType";
-import { Bike } from "../types/BikeTypes";
-import { TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRentalsActions } from "@hooks/useRentalAction";
-import { useAuth } from "@providers/auth-providers";
-import { useReservationActions } from "@hooks/useReservationActions";
+
 const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
@@ -55,7 +59,7 @@ export default function StationDetailScreen() {
     hasToken: true,
     station_id: stationId,
   });
-  const { postRent, isPostRentLoading } = useRentalsActions(true , selectedBike?._id);
+  const { postRent, isPostRentLoading } = useRentalsActions(true, selectedBike?._id);
   const [pendingBikeId, setPendingBikeId] = useState<string | null>(null);
   const { createReservation } = useReservationActions({
     hasToken: Boolean(user?._id),
@@ -70,7 +74,7 @@ export default function StationDetailScreen() {
   useEffect(() => {
     console.log("Station Detail Bikes:", allBikes);
   }, [allBikes]);
-  let station = responseStationDetail as StationType | null;
+  const station = responseStationDetail as StationType | null;
 
   const isLoading = isLoadingGetStationByID && isFetchingAllBikes;
 
@@ -112,7 +116,7 @@ export default function StationDetailScreen() {
             text: "Thuê ngay",
             onPress: () => {
               console.log("Renting bike:", bike.id);
-              if(user?.verify === "UNVERIFIED"){
+              if (user?.verify === "UNVERIFIED") {
                 Alert.alert(
                   "Tài khoản chưa xác thực",
                   "Vui lòng xác thực tài khoản để thuê xe.",
@@ -124,13 +128,14 @@ export default function StationDetailScreen() {
               setSelectedBike(null);
             },
           },
-        ]
+        ],
       );
-    } else {
+    }
+    else {
       Alert.alert(
         "Xe đang được sử dụng",
-      `Xe #${bike._id.slice(-3)} hiện đang được thuê bởi người khác.`,
-        [{ text: "OK", onPress: () => setSelectedBike(null) }]
+        `Xe #${bike._id.slice(-3)} hiện đang được thuê bởi người khác.`,
+        [{ text: "OK", onPress: () => setSelectedBike(null) }],
       );
     }
   };
@@ -147,7 +152,7 @@ export default function StationDetailScreen() {
     if (user?.verify === "UNVERIFIED") {
       Alert.alert(
         "Tài khoản chưa xác thực",
-        "Vui lòng xác thực tài khoản để sử dụng tính năng đặt trước."
+        "Vui lòng xác thực tài khoản để sử dụng tính năng đặt trước.",
       );
       return;
     }
@@ -164,16 +169,20 @@ export default function StationDetailScreen() {
   };
 
   const renderBikeOnMap = (bike: any) => {
-    if (!bike.positionInStation) return null;
+    if (!bike.positionInStation)
+      return null;
 
     const x = (bike.positionInStation.x / 100) * MAP_WIDTH;
     const y = (bike.positionInStation.y / 100) * MAP_HEIGHT;
 
     const getBikeColor = () => {
-      if (!bike.isAvailable) return BikeColors.error;
+      if (!bike.isAvailable)
+        return BikeColors.error;
       if (bike.type === "electric") {
-        if (bike.batteryLevel > 60) return BikeColors.success;
-        if (bike.batteryLevel > 30) return BikeColors.warning;
+        if (bike.batteryLevel > 60)
+          return BikeColors.success;
+        if (bike.batteryLevel > 30)
+          return BikeColors.warning;
         return BikeColors.error;
       }
       return BikeColors.primary;
@@ -298,7 +307,6 @@ export default function StationDetailScreen() {
         </View>
       </View>
 
-
       <StationMap2D
         station={station}
         bikes={allBikes}
@@ -306,83 +314,90 @@ export default function StationDetailScreen() {
         onBikePress={handleBikePress}
       />
 
-      {allBikes && allBikes.length > 0 ? (
-        <View style={styles.bikeListSection}>
-          <Text style={styles.sectionTitle}>
-            Danh sách xe ({allBikes.length})
-          </Text>
-          {allBikes.map((bike: Bike) => {
-            const isAvailable = bike.status === "CÓ SẴN";
-            return (
-              <Pressable
-                key={bike._id}
-                style={[
-                  styles.bikeItem,
-                  selectedBike?._id === bike._id && styles.selectedBikeItem,
-                ]}
-                onPress={() => handleBikePress(bike)}
-              >
-                <View style={styles.bikeItemLeft}>
-                  <View
+      {allBikes && allBikes.length > 0
+        ? (
+            <View style={styles.bikeListSection}>
+              <Text style={styles.sectionTitle}>
+                Danh sách xe (
+                {allBikes.length}
+                )
+              </Text>
+              {allBikes.map((bike: Bike) => {
+                const isAvailable = bike.status === "CÓ SẴN";
+                return (
+                  <Pressable
+                    key={bike._id}
                     style={[
-                      styles.bikeStatusIndicator,
-                      {
-                        backgroundColor: isAvailable
-                          ? BikeColors.success
-                          : BikeColors.error,
-                      },
+                      styles.bikeItem,
+                      selectedBike?._id === bike._id && styles.selectedBikeItem,
                     ]}
-                  />
-                  <View>
-                    <Text style={styles.bikeId}>
-                      ChipID: #{bike.chip_id || bike._id.slice(-4)}
-                    </Text>
-                    <Text style={styles.bikeType}>Xe thường</Text>
-                  </View>
-                </View>
-
-                <View style={styles.bikeItemRight}>
-                  <Text
-                    style={[
-                      styles.bikeStatus,
-                      {
-                        color: isAvailable
-                          ? BikeColors.success
-                          : BikeColors.error,
-                      },
-                    ]}
+                    onPress={() => handleBikePress(bike)}
                   >
-                    {isAvailable ? "Có sẵn" : "Đang thuê"}
-                  </Text>
-                  {isAvailable && (
-                    <TouchableOpacity
-                      style={[
-                        styles.reserveButton,
-                        pendingBikeId === bike._id && styles.reserveButtonDisabled,
-                      ]}
-                      onPress={() => handleReservePress(bike)}
-                      disabled={pendingBikeId === bike._id}
-                    >
-                      {pendingBikeId === bike._id ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <>
-                          <Ionicons name="timer-outline" size={16} color="#fff" />
-                          <Text style={styles.reserveButtonText}>Đặt trước</Text>
-                        </>
+                    <View style={styles.bikeItemLeft}>
+                      <View
+                        style={[
+                          styles.bikeStatusIndicator,
+                          {
+                            backgroundColor: isAvailable
+                              ? BikeColors.success
+                              : BikeColors.error,
+                          },
+                        ]}
+                      />
+                      <View>
+                        <Text style={styles.bikeId}>
+                          ChipID: #
+                          {bike.chip_id || bike._id.slice(-4)}
+                        </Text>
+                        <Text style={styles.bikeType}>Xe thường</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.bikeItemRight}>
+                      <Text
+                        style={[
+                          styles.bikeStatus,
+                          {
+                            color: isAvailable
+                              ? BikeColors.success
+                              : BikeColors.error,
+                          },
+                        ]}
+                      >
+                        {isAvailable ? "Có sẵn" : "Đang thuê"}
+                      </Text>
+                      {isAvailable && (
+                        <TouchableOpacity
+                          style={[
+                            styles.reserveButton,
+                            pendingBikeId === bike._id && styles.reserveButtonDisabled,
+                          ]}
+                          onPress={() => handleReservePress(bike)}
+                          disabled={pendingBikeId === bike._id}
+                        >
+                          {pendingBikeId === bike._id
+                            ? (
+                                <ActivityIndicator size="small" color="#fff" />
+                              )
+                            : (
+                                <>
+                                  <Ionicons name="timer-outline" size={16} color="#fff" />
+                                  <Text style={styles.reserveButtonText}>Đặt trước</Text>
+                                </>
+                              )}
+                        </TouchableOpacity>
                       )}
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Xe đang được thuê hết</Text>
-        </View>
-      )}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )
+        : (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Xe đang được thuê hết</Text>
+            </View>
+          )}
     </ScrollView>
   );
 }

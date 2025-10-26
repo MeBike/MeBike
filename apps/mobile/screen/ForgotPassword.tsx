@@ -1,23 +1,26 @@
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { BikeColors } from "../constants/BikeColors";
+
 import { useAuth } from "@providers/auth-providers";
+
+import type { ForgotPasswordNavigationProp } from "../types/navigation";
+
 import { IconSymbol } from "../components/IconSymbol";
-import { useNavigation } from "@react-navigation/native";
-import type { ChangePasswordNavigationProp, ForgotPasswordNavigationProp } from "../types/navigation";
-const ForgotPasswordScreen = () => {
+import { BikeColors } from "../constants/BikeColors";
+
+function ForgotPasswordScreen() {
   const navigation = useNavigation<ForgotPasswordNavigationProp>();
   const [email, setEmail] = useState<string>("");
   const { forgotPassword, isLoadingForgottingPassword } = useAuth();
@@ -27,10 +30,10 @@ const ForgotPasswordScreen = () => {
       return;
     }
     forgotPassword({ email });
-    if(isLoadingForgottingPassword){
-        setTimeout(() => {
+    if (isLoadingForgottingPassword) {
+      setTimeout(() => {
         navigation.navigate("Login");
-        }, 1000);
+      }, 1000);
     }
   };
 
@@ -71,14 +74,14 @@ const ForgotPasswordScreen = () => {
               autoCorrect={false}
             />
           </View>
-          <Pressable style={styles.button} onPress={()=> handleForgotPassword()}>
+          <Pressable style={styles.button} onPress={() => handleForgotPassword()}>
             <Text style={styles.buttonText}>Xác nhận</Text>
           </Pressable>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

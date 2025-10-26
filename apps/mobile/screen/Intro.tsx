@@ -1,42 +1,45 @@
-import React, { useState } from 'react';
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   Dimensions,
   Pressable,
   ScrollView,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { IntroScreenNavigationProp } from '../types/navigation';
-import { BikeColors } from '../constants/BikeColors';
-import { IconSymbol } from '../components/IconSymbol';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '@providers/auth-providers';
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
+import { useAuth } from "@providers/auth-providers";
+
+import type { IntroScreenNavigationProp } from "../types/navigation";
+
+import { IconSymbol } from "../components/IconSymbol";
+import { BikeColors } from "../constants/BikeColors";
 // import { useAuth } from '../contexts/AuthContext';
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 const introSlides = [
   {
     id: 1,
-    title: 'Chào mừng đến với BikeShare',
-    description: 'Thuê xe đạp dễ dàng tại các trạm metro. Di chuyển nhanh chóng và thân thiện với môi trường.',
-    icon: 'bicycle',
+    title: "Chào mừng đến với BikeShare",
+    description: "Thuê xe đạp dễ dàng tại các trạm metro. Di chuyển nhanh chóng và thân thiện với môi trường.",
+    icon: "bicycle",
     color: BikeColors.primary,
   },
   {
     id: 2,
-    title: 'Quét mã QR để mở khóa',
-    description: 'Chỉ cần quét mã QR trên xe để mở khóa và bắt đầu hành trình của bạn.',
-    icon: 'qrcode.viewfinder',
+    title: "Quét mã QR để mở khóa",
+    description: "Chỉ cần quét mã QR trên xe để mở khóa và bắt đầu hành trình của bạn.",
+    icon: "qrcode.viewfinder",
     color: BikeColors.secondary,
   },
   {
     id: 3,
-    title: 'Theo dõi xe đạp thời gian thực',
-    description: 'Xem vị trí xe đạp có sẵn tại các trạm metro và tình trạng pin của từng xe.',
-    icon: 'map',
+    title: "Theo dõi xe đạp thời gian thực",
+    description: "Xem vị trí xe đạp có sẵn tại các trạm metro và tình trạng pin của từng xe.",
+    icon: "map",
     color: BikeColors.accent,
   },
 ];
@@ -50,13 +53,13 @@ export default function IntroScreen() {
   const nextSlide = async () => {
     if (currentSlide < introSlides.length - 1) {
       setCurrentSlide(currentSlide + 1);
-    } else {
-      if(isAuthenticated) {
-        navigation.navigate('Main');
-        return;
+    }
+    else {
+      if (isAuthenticated) {
+        navigation.navigate("Main");
       }
       else {
-        navigation.navigate('Login');
+        navigation.navigate("Login");
       }
     }
   };
@@ -64,8 +67,8 @@ export default function IntroScreen() {
   const skipIntro = async () => {
     if (isAuthenticated) {
       navigation.navigate("Main");
-      return;
-    } else {
+    }
+    else {
       // await markIntroAsSeen();
       navigation.navigate("Login");
     }
@@ -78,7 +81,7 @@ export default function IntroScreen() {
   const renderSlide = (slide: typeof introSlides[0], index: number) => (
     <View key={slide.id} style={styles.slide}>
       <LinearGradient
-        colors={[slide.color + '20', slide.color + '10']}
+        colors={[`${slide.color}20`, `${slide.color}10`]}
         style={styles.iconContainer}
       >
         <IconSymbol
@@ -87,7 +90,7 @@ export default function IntroScreen() {
           color={slide.color}
         />
       </LinearGradient>
-      
+
       <Text style={styles.title}>{slide.title}</Text>
       <Text style={styles.description}>{slide.description}</Text>
     </View>
@@ -117,7 +120,7 @@ export default function IntroScreen() {
         <Pressable style={styles.backButton} onPress={goBack}>
           <IconSymbol name="arrow.left" size={24} color={BikeColors.textPrimary} />
         </Pressable>
-        
+
         <Pressable style={styles.skipButton} onPress={skipIntro}>
           <Text style={styles.skipText}>Bỏ qua</Text>
         </Pressable>
@@ -141,7 +144,7 @@ export default function IntroScreen() {
       <View style={styles.buttonContainer}>
         <Pressable style={styles.nextButton} onPress={nextSlide}>
           <Text style={styles.nextButtonText}>
-            {currentSlide === introSlides.length - 1 ? 'Bắt đầu' : 'Tiếp theo'}
+            {currentSlide === introSlides.length - 1 ? "Bắt đầu" : "Tiếp theo"}
           </Text>
           <IconSymbol
             name="arrow.right"
@@ -157,12 +160,12 @@ export default function IntroScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -177,7 +180,7 @@ const styles = StyleSheet.create({
   skipText: {
     color: BikeColors.textSecondary,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   scrollView: {
     flex: 1,
@@ -185,35 +188,35 @@ const styles = StyleSheet.create({
   slide: {
     width,
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 40,
   },
   iconContainer: {
     width: 160,
     height: 160,
     borderRadius: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 40,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: BikeColors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
   },
   description: {
     fontSize: 16,
     color: BikeColors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
   },
   dotsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 20,
   },
   dot: {
@@ -227,16 +230,16 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     backgroundColor: BikeColors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
   },
   nextButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

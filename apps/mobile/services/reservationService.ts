@@ -1,5 +1,7 @@
-import fetchHttpClient from "@lib/httpClient";
 import type { AxiosResponse } from "axios";
+
+import fetchHttpClient from "@lib/httpClient";
+
 import type {
   PaginatedReservations,
   Reservation,
@@ -31,38 +33,38 @@ export type CancelReservationPayload = {
 
 export const reservationService = {
   createReservation: async (
-    payload: CreateReservationPayload
+    payload: CreateReservationPayload,
   ): Promise<AxiosResponse<{ message: string; result: Reservation }>> => {
     return fetchHttpClient.post(RESERVATION_ENDPOINTS.BASE, payload);
   },
 
   getMyReservations: async (
-    params: PaginatedParams = {}
+    params: PaginatedParams = {},
   ): Promise<AxiosResponse<PaginatedReservations>> => {
     return fetchHttpClient.get(RESERVATION_ENDPOINTS.BASE, params);
   },
 
   getReservationHistory: async (
-    params: PaginatedParams = {}
+    params: PaginatedParams = {},
   ): Promise<AxiosResponse<PaginatedReservations>> => {
     return fetchHttpClient.get(RESERVATION_ENDPOINTS.HISTORY, params);
   },
 
   getReservationDetails: async (
-    id: string
+    id: string,
   ): Promise<AxiosResponse<any>> => {
     return fetchHttpClient.get(RESERVATION_ENDPOINTS.DETAIL(id));
   },
 
   cancelReservation: async (
     id: string,
-    payload: CancelReservationPayload
+    payload: CancelReservationPayload,
   ): Promise<AxiosResponse<{ message: string }>> => {
     return fetchHttpClient.post(RESERVATION_ENDPOINTS.CANCEL(id), payload);
   },
 
   confirmReservation: async (
-    id: string
+    id: string,
   ): Promise<AxiosResponse<{ message: string }>> => {
     return fetchHttpClient.post(RESERVATION_ENDPOINTS.CONFIRM(id));
   },

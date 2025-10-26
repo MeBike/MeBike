@@ -1,23 +1,23 @@
-
-
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  SafeAreaView,
-  TouchableOpacity,
-  StatusBar,
   ActivityIndicator,
+  FlatList,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-import type { RentingHistory } from "../types/RentalTypes";
-import { useRentalsActions } from "@hooks/useRentalAction";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-const BookingHistoryScreen = () => {
+
+import { useRentalsActions } from "@hooks/useRentalAction";
+
+import type { RentingHistory } from "../types/RentalTypes";
+
+function BookingHistoryScreen() {
   const navigator = useNavigation();
   const insets = useSafeAreaInsets();
   const { rentalsData, isGetAllRentalsFetching, getAllRentals } = useRentalsActions(true);
@@ -30,7 +30,7 @@ const BookingHistoryScreen = () => {
     }
   }, [rentalsData, isGetAllRentalsFetching]);
   useEffect(() => {
-    console.log('bookings state:', bookings);
+    console.log("bookings state:", bookings);
   }, [bookings]);
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -59,10 +59,10 @@ const BookingHistoryScreen = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN") + " - " + date.toLocaleTimeString("vi-VN", {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return `${date.toLocaleDateString("vi-VN")} - ${date.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
   };
 
   const formatDuration = (duration: number, hasEnded: boolean) => {
@@ -88,7 +88,10 @@ const BookingHistoryScreen = () => {
           <Ionicons name="bicycle" size={24} color="#0066FF" />
           <View style={styles.bikeDetails}>
             <Text style={styles.bikeType}>Xe đạp</Text>
-            <Text style={styles.location}>ID: {item.start_station}</Text>
+            <Text style={styles.location}>
+              ID:
+              {item.start_station}
+            </Text>
           </View>
         </View>
         <View
@@ -117,13 +120,15 @@ const BookingHistoryScreen = () => {
         <View style={styles.detailRow}>
           <Ionicons name="pricetag" size={16} color="#0066FF" />
           <Text style={[styles.detailText, styles.priceText]}>
-            {item.total_price.toLocaleString("vi-VN")} đ
+            {item.total_price.toLocaleString("vi-VN")}
+            {" "}
+            đ
           </Text>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.detailButton} onPress={() => {(navigator as any).navigate("BookingHistoryDetail", { bookingId: item._id })} }>
-        <Text style={styles.detailButtonText} >Xem chi tiết</Text>
+      <TouchableOpacity style={styles.detailButton} onPress={() => { (navigator as any).navigate("BookingHistoryDetail", { bookingId: item._id }); }}>
+        <Text style={styles.detailButtonText}>Xem chi tiết</Text>
         <Ionicons name="chevron-forward" size={16} color="#0066FF" />
       </TouchableOpacity>
     </View>
@@ -145,31 +150,35 @@ const BookingHistoryScreen = () => {
         </Text>
       </LinearGradient>
 
-      {isGetAllRentalsFetching ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0066FF" />
-          <Text style={styles.loadingText}>Đang tải...</Text>
-        </View>
-      ) : bookings.length > 0 ? (
-        <FlatList
-          data={bookings}
-          renderItem={renderBookingCard}
-          keyExtractor={(item) => item._id}
-          contentContainerStyle={styles.listContent}
-          scrollEnabled={true}
-        />
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="document-text-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyText}>Chưa có lịch sử thuê xe</Text>
-          <Text style={styles.emptySubtext}>
-            Khi bạn thuê xe, lịch sử sẽ hiển thị ở đây
-          </Text>
-        </View>
-      )}
+      {isGetAllRentalsFetching
+        ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#0066FF" />
+              <Text style={styles.loadingText}>Đang tải...</Text>
+            </View>
+          )
+        : bookings.length > 0
+          ? (
+              <FlatList
+                data={bookings}
+                renderItem={renderBookingCard}
+                keyExtractor={item => item._id}
+                contentContainerStyle={styles.listContent}
+                scrollEnabled={true}
+              />
+            )
+          : (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="document-text-outline" size={64} color="#ccc" />
+                <Text style={styles.emptyText}>Chưa có lịch sử thuê xe</Text>
+                <Text style={styles.emptySubtext}>
+                  Khi bạn thuê xe, lịch sử sẽ hiển thị ở đây
+                </Text>
+              </View>
+            )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

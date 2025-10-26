@@ -1,23 +1,21 @@
-import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Pressable,
-  StatusBar,
-  TouchableOpacity,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-import { useGetAllStation } from "@hooks/query/Station/useGetAllStationQuery";
-import type { StationType } from "../types/StationType";
-import { StationCard } from "../components/StationCard";
-import type { StationDetailScreenNavigationProp } from "../types/navigation";
-import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import React from "react";
+import {
+  FlatList,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 import { useStationActions } from "@hooks/useStationAction";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+
+import type { StationDetailScreenNavigationProp } from "../types/navigation";
+
+import { StationCard } from "../components/StationCard";
+
 export default function StationSelectScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   // const { data: response, isLoading } = useGetAllStation();
@@ -25,7 +23,7 @@ export default function StationSelectScreen() {
     getStationByID,
     isLoadingGetStationByID,
     getAllStations,
-    stations : data,
+    stations: data,
   } = useStationActions(true);
   const handleSelectStation = (stationId: string) => {
     navigation.navigate("StationDetail", { stationId });
@@ -46,43 +44,47 @@ export default function StationSelectScreen() {
           Xem tất cả các lần thuê xe của bạn
         </Text>
       </LinearGradient>
-      {isLoadingGetStationByID ? (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>
-          Đang tải dữ liệu...
-        </Text>
-      ) : stations.length === 0 ? (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>
-          Không có trạm nào!
-        </Text>
-      ) : (
-        <FlatList
-          data={stations}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => {
-            const stationCardData = {
-              id: item._id,
-              name: item.name,
-              location: {
-                latitude: Number(item.latitude),
-                longitude: Number(item.longitude),
-                address: item.address,
-              },
-              availableBikes: Number(item.availableBikes),
-              totalSlots: Number(item.capacity),
-              isActive: true,
-              bikes: [],
-              layout: { width: 0, height: 0, entrances: [] },
-            };
-            return (
-              <StationCard
-                station={stationCardData}
-                onPress={() => handleSelectStation(item._id)}
+      {isLoadingGetStationByID
+        ? (
+            <Text style={{ textAlign: "center", marginTop: 20 }}>
+              Đang tải dữ liệu...
+            </Text>
+          )
+        : stations.length === 0
+          ? (
+              <Text style={{ textAlign: "center", marginTop: 20 }}>
+                Không có trạm nào!
+              </Text>
+            )
+          : (
+              <FlatList
+                data={stations}
+                keyExtractor={item => item._id}
+                renderItem={({ item }) => {
+                  const stationCardData = {
+                    id: item._id,
+                    name: item.name,
+                    location: {
+                      latitude: Number(item.latitude),
+                      longitude: Number(item.longitude),
+                      address: item.address,
+                    },
+                    availableBikes: Number(item.availableBikes),
+                    totalSlots: Number(item.capacity),
+                    isActive: true,
+                    bikes: [],
+                    layout: { width: 0, height: 0, entrances: [] },
+                  };
+                  return (
+                    <StationCard
+                      station={stationCardData}
+                      onPress={() => handleSelectStation(item._id)}
+                    />
+                  );
+                }}
+                contentContainerStyle={styles.list}
               />
-            );
-          }}
-          contentContainerStyle={styles.list}
-        />
-      )}
+            )}
     </View>
   );
 }

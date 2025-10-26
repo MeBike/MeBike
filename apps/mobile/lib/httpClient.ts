@@ -1,11 +1,15 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+
+import axios from "axios";
+import { Platform } from "react-native";
+
 import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
   setTokens,
 } from "@utils/tokenManager";
-import { Platform } from "react-native";
+
 export const HTTP_STATUS = {
   OK: 200,
   UNAUTHORIZED: 401,
@@ -51,14 +55,14 @@ export class FetchHttpClient {
           "API Error:",
           error.response?.status,
           error.config?.url,
-          error.response?.data
+          error.response?.data,
         );
         const originalRequest = error.config;
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
           // Inspect response data for a token expiration error
-          const isTokenExpired =
-            error.response?.data?.error === "token_expired" ||
-            error.response?.data?.message === "Jwt expired"; // Adjust according to your backend
+          const isTokenExpired
+            = error.response?.data?.error === "token_expired"
+              || error.response?.data?.message === "Jwt expired"; // Adjust according to your backend
 
           if (isTokenExpired) {
             if (this.isRefreshing) {
@@ -84,13 +88,16 @@ export class FetchHttpClient {
                 originalRequest.headers.Authorization = `Bearer ${newToken}`;
               }
               return this.axiosInstance(originalRequest);
-            } catch (refreshError) {
+            }
+            catch (refreshError) {
               this.processQueue(refreshError, null);
               return Promise.reject(refreshError);
-            } finally {
+            }
+            finally {
               this.isRefreshing = false;
             }
-          } else {
+          }
+          else {
             return Promise.reject(error);
           }
         }
@@ -113,7 +120,7 @@ export class FetchHttpClient {
         }
 
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -126,7 +133,7 @@ export class FetchHttpClient {
     const response = await axios.post(
       `${this.baseURL}/users/refresh-token`,
       { refresh_token: refreshToken },
-      { headers: { "Content-Type": "application/json" } }
+      { headers: { "Content-Type": "application/json" } },
     );
     console.log("Refresh token response:", response.status, response.data);
     if (response.status !== HTTP_STATUS.OK) {
@@ -144,7 +151,8 @@ export class FetchHttpClient {
     this.failedQueue.forEach(({ resolve, reject }) => {
       if (error) {
         reject(error);
-      } else {
+      }
+      else {
         resolve(token);
       }
     });
@@ -153,7 +161,7 @@ export class FetchHttpClient {
 
   async get<T>(
     url: string,
-    params?: AxiosRequestConfig["params"]
+    params?: AxiosRequestConfig["params"],
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.get(url, {
       params: params ?? {},
@@ -163,30 +171,33 @@ export class FetchHttpClient {
   async post<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown> | undefined
+    config?: AxiosRequestConfig<unknown> | undefined,
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.post(url, data, config);
   }
-  //axios.put(url[, data[, config]])
+
+  // axios.put(url[, data[, config]])
   async put<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown> | undefined
+    config?: AxiosRequestConfig<unknown> | undefined,
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.put(url, data, config);
   }
-  //axios.patch(url[, data[, config]])
+
+  // axios.patch(url[, data[, config]])
   async patch<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown> | undefined
+    config?: AxiosRequestConfig<unknown> | undefined,
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.patch(url, data, config);
   }
-  //axios.delete(url[, config])
+
+  // axios.delete(url[, config])
   async delete<T>(
     url: string,
-    params?: AxiosRequestConfig["params"]
+    params?: AxiosRequestConfig["params"],
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.delete(url, {
       params,
@@ -194,22 +205,23 @@ export class FetchHttpClient {
   }
 }
 
-const getBaseUrl = () => {
+function getBaseUrl() {
   if (process.env.EXPO_PUBLIC_API_BASE_URL) {
     console.log(`Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`);
     return process.env.EXPO_PUBLIC_API_BASE_URL;
   }
 
-  if (Platform.OS === 'android') {
-    const androidUrl = 'http://10.0.2.2:4000';
+  if (Platform.OS === "android") {
+    const androidUrl = "http://10.0.2.2:4000";
     console.log(`Development on Android, using: ${androidUrl}`);
     return androidUrl;
-  } else {
-    const iosUrl = 'http://localhost:4000';
+  }
+  else {
+    const iosUrl = "http://localhost:4000";
     console.log(`Development on iOS/Web, using: ${iosUrl}`);
     return iosUrl;
   }
-};
+}
 
 const fetchHttpClient = new FetchHttpClient(getBaseUrl());
 export default fetchHttpClient;

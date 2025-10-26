@@ -1,18 +1,20 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import { StationType } from "../types/StationType";
-import { Bike } from "../types/BikeTypes";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+
+import type { Bike } from "../types/BikeTypes";
+import type { StationType } from "../types/StationType";
+
 import { BikeColors } from "../constants/BikeColors";
 
 const MAP_WIDTH = 400;
 const MAP_HEIGHT = 100;
 
-interface StationMap2DProps {
+type StationMap2DProps = {
   station: StationType;
   bikes: Bike[];
   selectedBike?: Bike | null;
   onBikePress: (bike: Bike) => void;
-}
+};
 
 const StationMap2D: React.FC<StationMap2DProps> = ({
   station,
@@ -20,7 +22,7 @@ const StationMap2D: React.FC<StationMap2DProps> = ({
   selectedBike,
   onBikePress,
 }) => {
-  const capacity = parseInt(station.capacity, 10) || 0;
+  const capacity = Number.parseInt(station.capacity, 10) || 0;
 
   // lấy danh sách slot = capacity, map bike vào slot
   const slots = Array.from({ length: capacity }, (_, i) => {
@@ -30,7 +32,8 @@ const StationMap2D: React.FC<StationMap2DProps> = ({
 
   // màu marker dựa vào xe trong slot
   const getSlotColor = (bike: Bike | null) => {
-    if (!bike) return BikeColors.error; // slot trống = đỏ
+    if (!bike)
+      return BikeColors.error; // slot trống = đỏ
     return bike.status === "CÓ SẴN" ? BikeColors.success : BikeColors.error;
   };
 

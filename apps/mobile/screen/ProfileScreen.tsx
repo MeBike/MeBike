@@ -1,23 +1,25 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  Image,
-  Alert,
-} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@providers/auth-providers";
-import type { DetailUser } from "@services/authService";
-import { getRefreshToken } from "@utils/tokenManager";
+import { useState } from "react";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const ProfileScreen = () => {
+import type { DetailUser } from "@services/authService";
+
+import { useAuth } from "@providers/auth-providers";
+import { getRefreshToken } from "@utils/tokenManager";
+
+function ProfileScreen() {
   const navigation = useNavigation();
   const { user, logOut } = useAuth();
   const insets = useSafeAreaInsets();
@@ -36,14 +38,16 @@ const ProfileScreen = () => {
   }));
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "";
+    if (!dateString)
+      return "";
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString("vi-VN", {
         year: "numeric",
         month: "long",
       });
-    } catch {
+    }
+    catch {
       return dateString;
     }
   };
@@ -55,7 +59,8 @@ const ProfileScreen = () => {
         text: "Đăng xuất",
         onPress: async () => {
           const refreshToken = await getRefreshToken();
-          if (!refreshToken) return;
+          if (!refreshToken)
+            return;
           logOut(String(refreshToken));
           navigation.navigate("Login" as never);
         },
@@ -83,7 +88,7 @@ const ProfileScreen = () => {
     icon: string,
     title: string,
     subtitle: string,
-    onPress: () => void
+    onPress: () => void,
   ) => (
     <TouchableOpacity style={styles.menuOption} onPress={onPress}>
       <View style={styles.menuIconContainer}>
@@ -117,7 +122,7 @@ const ProfileScreen = () => {
             borderBottomLeftRadius: 32,
             borderBottomRightRadius: 32,
             marginBottom: 8,
-            alignItems: "center", 
+            alignItems: "center",
             elevation: 8,
           }}
         >
@@ -150,7 +155,7 @@ const ProfileScreen = () => {
               shadowColor: "#000",
               shadowOpacity: 0.14,
               shadowRadius: 10,
-             
+
             }}
           />
 
@@ -175,7 +180,9 @@ const ProfileScreen = () => {
             }}
             numberOfLines={1}
           >
-            Thành viên từ {formatDate(profile.created_at)}
+            Thành viên từ
+            {" "}
+            {formatDate(profile.created_at)}
           </Text>
           <View
             style={{
@@ -237,31 +244,31 @@ const ProfileScreen = () => {
               "person-outline",
               "Thông tin cá nhân",
               "Quản lý thông tin cá nhân của bạn",
-              handleUpdateProfile
+              handleUpdateProfile,
             )}
             {renderMenuOption(
               "lock-closed",
               "Đổi mật khẩu",
               "Cập nhật mật khẩu của bạn",
-              handleChangePassword
+              handleChangePassword,
             )}
             {renderMenuOption(
               "help-circle",
               "Hỗ trợ & Trợ giúp",
               "Liên hệ với đội hỗ trợ",
-              handleSupport
+              handleSupport,
             )}
             {renderMenuOption(
               "wallet",
               "Ví điện tử",
               "Quản lý ví điện tử của bạn",
-              handleWallet
+              handleWallet,
             )}
             {renderMenuOption(
               "calendar",
               "Đặt trước của tôi",
               "Theo dõi các lượt đặt trước",
-              handleReservations
+              handleReservations,
             )}
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -273,7 +280,7 @@ const ProfileScreen = () => {
       </ScrollView>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

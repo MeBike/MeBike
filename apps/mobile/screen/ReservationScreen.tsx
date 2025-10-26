@@ -1,22 +1,24 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { useAuth } from "@providers/auth-providers";
+
 import { useReservationActions } from "@hooks/useReservationActions";
 import { useStationActions } from "@hooks/useStationAction";
-import type { Reservation } from "../types/ReservationTypes";
+import { useAuth } from "@providers/auth-providers";
+
 import type { ReservationsScreenNavigationProp } from "../types/navigation";
+import type { Reservation } from "../types/ReservationTypes";
 
 const statusColorMap: Record<Reservation["status"], string> = {
   "ĐANG CHỜ XỬ LÍ": "#FFB020",
@@ -25,34 +27,37 @@ const statusColorMap: Record<Reservation["status"], string> = {
   "ĐÃ HẾT HẠN": "#9E9E9E",
 };
 
-const formatDateTime = (value?: string | null) => {
-  if (!value) return "Không có dữ liệu";
+function formatDateTime(value?: string | null) {
+  if (!value)
+    return "Không có dữ liệu";
   const date = new Date(value);
   return `${date.toLocaleDateString("vi-VN")}, ${date.toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit",
   })}`;
-};
+}
 
-const formatCurrency = (
-  value?: number | string | { $numberDecimal?: string }
-) => {
-  if (value === null || value === undefined) return "0 đ";
+function formatCurrency(value?: number | string | { $numberDecimal?: string }) {
+  if (value === null || value === undefined)
+    return "0 đ";
   let amount = 0;
   if (typeof value === "number") {
     amount = value;
-  } else if (typeof value === "string") {
+  }
+  else if (typeof value === "string") {
     const parsed = Number(value);
     amount = Number.isFinite(parsed) ? parsed : 0;
-  } else if (typeof value === "object" && "$numberDecimal" in value) {
+  }
+  else if (typeof value === "object" && "$numberDecimal" in value) {
     const parsed = Number(value.$numberDecimal);
     amount = Number.isFinite(parsed) ? parsed : 0;
   }
-  if (!Number.isFinite(amount)) amount = 0;
+  if (!Number.isFinite(amount))
+    amount = 0;
   return `${amount.toLocaleString("vi-VN")} đ`;
-};
+}
 
-const ReservationScreen = () => {
+function ReservationScreen() {
   const navigation = useNavigation<ReservationsScreenNavigationProp>();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
@@ -87,10 +92,10 @@ const ReservationScreen = () => {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  const isLoading =
-    isPendingReservationsLoading || isReservationHistoryLoading;
-  const isFetching =
-    isPendingReservationsFetching || isReservationHistoryFetching;
+  const isLoading
+    = isPendingReservationsLoading || isReservationHistoryLoading;
+  const isFetching
+    = isPendingReservationsFetching || isReservationHistoryFetching;
 
   const hasLoadedOnce = useRef(false);
 
@@ -108,7 +113,7 @@ const ReservationScreen = () => {
       fetchPendingReservations();
       fetchReservationHistory();
       getAllStations();
-    }, [hasToken, fetchPendingReservations, fetchReservationHistory, getAllStations])
+    }, [hasToken, fetchPendingReservations, fetchReservationHistory, getAllStations]),
   );
 
   const onRefresh = useCallback(async () => {
@@ -136,20 +141,20 @@ const ReservationScreen = () => {
         emptyText: "Chưa có lịch sử đặt trước.",
       },
     ],
-    [pendingReservations, reservationHistory]
+    [pendingReservations, reservationHistory],
   );
 
   const handleNavigateToDetail = (reservation: Reservation) => {
     const stationEntry = stationMap.get(reservation.station_id);
-    const stationInfo =
-      reservation.station ??
-      (stationEntry
-        ? {
-            _id: reservation.station_id,
-            name: stationEntry.name,
-            address: stationEntry.address ?? "",
-          }
-        : undefined);
+    const stationInfo
+      = reservation.station
+        ?? (stationEntry
+          ? {
+              _id: reservation.station_id,
+              name: stationEntry.name,
+              address: stationEntry.address ?? "",
+            }
+          : undefined);
 
     navigation.navigate("ReservationDetail", {
       reservationId: reservation._id,
@@ -172,10 +177,13 @@ const ReservationScreen = () => {
           <Ionicons name="bicycle" size={22} color="#0066FF" />
           <View style={styles.cardTitleContent}>
             <Text style={styles.cardTitle}>
-              Xe #{String(reservation.bike_id ?? "").slice(-4) || reservation.bike_id}
+              Xe #
+              {String(reservation.bike_id ?? "").slice(-4) || reservation.bike_id}
             </Text>
             <Text style={styles.cardSubtitle}>
-              Bắt đầu: {formatDateTime(reservation.start_time)}
+              Bắt đầu:
+              {" "}
+              {formatDateTime(reservation.start_time)}
             </Text>
           </View>
         </View>
@@ -193,19 +201,25 @@ const ReservationScreen = () => {
         <View style={styles.detailRow}>
           <Ionicons name="navigate" size={18} color="#666" />
           <Text style={styles.detailText}>
-            Trạm: {stationMap.get(reservation.station_id)?.name ?? reservation.station?.name ?? `Mã ${String(reservation.station_id ?? "").slice(-6)}`}
+            Trạm:
+            {" "}
+            {stationMap.get(reservation.station_id)?.name ?? reservation.station?.name ?? `Mã ${String(reservation.station_id ?? "").slice(-6)}`}
           </Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="time" size={18} color="#666" />
           <Text style={styles.detailText}>
-            Giữ chỗ đến: {formatDateTime(reservation.end_time)}
+            Giữ chỗ đến:
+            {" "}
+            {formatDateTime(reservation.end_time)}
           </Text>
         </View>
         <View style={styles.detailRow}>
           <Ionicons name="wallet" size={18} color="#0066FF" />
           <Text style={[styles.detailText, styles.detailHighlight]}>
-            Đã thanh toán: {formatCurrency(reservation.prepaid)}
+            Đã thanh toán:
+            {" "}
+            {formatCurrency(reservation.prepaid)}
           </Text>
         </View>
       </View>
@@ -231,45 +245,49 @@ const ReservationScreen = () => {
         </Text>
       </LinearGradient>
 
-      {isLoading && !refreshing ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0066FF" />
-          <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
-        </View>
-      ) : (
-        <ScrollView
-          style={styles.content}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#0066FF"]} />
-          }
-        >
-          {isFetching && (
-            <View style={styles.inlineLoader}>
-              <ActivityIndicator size="small" color="#0066FF" />
-              <Text style={styles.inlineLoaderText}>Đang cập nhật...</Text>
+      {isLoading && !refreshing
+        ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#0066FF" />
+              <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
             </View>
-          )}
-          {sections.map((section) => (
-            <View key={section.title} style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-                <Text style={styles.sectionSubtitle}>{section.description}</Text>
-              </View>
-              {section.data.length > 0 ? (
-                section.data.map(renderReservationCard)
-              ) : (
-                <View style={styles.emptyState}>
-                  <Ionicons name="document-text-outline" size={40} color="#B0BEC5" />
-                  <Text style={styles.emptyText}>{section.emptyText}</Text>
+          )
+        : (
+            <ScrollView
+              style={styles.content}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#0066FF"]} />
+              }
+            >
+              {isFetching && (
+                <View style={styles.inlineLoader}>
+                  <ActivityIndicator size="small" color="#0066FF" />
+                  <Text style={styles.inlineLoaderText}>Đang cập nhật...</Text>
                 </View>
               )}
-            </View>
-          ))}
-        </ScrollView>
-      )}
+              {sections.map(section => (
+                <View key={section.title} style={styles.section}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>{section.title}</Text>
+                    <Text style={styles.sectionSubtitle}>{section.description}</Text>
+                  </View>
+                  {section.data.length > 0
+                    ? (
+                        section.data.map(renderReservationCard)
+                      )
+                    : (
+                        <View style={styles.emptyState}>
+                          <Ionicons name="document-text-outline" size={40} color="#B0BEC5" />
+                          <Text style={styles.emptyText}>{section.emptyText}</Text>
+                        </View>
+                      )}
+                </View>
+              ))}
+            </ScrollView>
+          )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

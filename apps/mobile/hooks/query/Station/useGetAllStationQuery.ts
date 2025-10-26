@@ -1,19 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { stationService } from "@services/stationService";
-import type { StationType } from "../../../types/StationType";
-const fetchAllStations = async () => {
+
+async function fetchAllStations() {
   try {
     const response = await stationService.getAllStations();
-    if(response.status === 200 ) {
+    if (response.status === 200) {
       return response.data.data;
     }
-  } catch (error) {
+  }
+  catch (error) {
     throw new Error("Failed to fetch stations");
   }
 }
-export const useGetAllStation = () => {
-    return useQuery({
-      queryKey: ["all-stations"],
-      queryFn: () => fetchAllStations(),
-    });
+export function useGetAllStation() {
+  return useQuery({
+    queryKey: ["all-stations"],
+    queryFn: () => fetchAllStations(),
+  });
 }
