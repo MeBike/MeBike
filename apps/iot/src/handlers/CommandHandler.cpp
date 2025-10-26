@@ -24,6 +24,7 @@
 #include "CommandHandler.h"
 #include <ArduinoLog.h>
 #include <string_view>
+#include <utility>
 #include "globals.h"
 #include "LEDStatusManager.h"
 #include "StateMachine.h"
@@ -116,33 +117,28 @@ void CommandHandler::handleStateCommand(std::string_view command)
 
     Log.info("Handling state command: %.*s\n", toPrintfLength(command), toPrintfData(command));
 
-    DeviceState targetState;
+    static constexpr std::pair<std::string_view, DeviceState> stateMap[] = {
+        {"available", STATE_AVAILABLE},
+        {"reserved", STATE_RESERVED},
+        {"booked", STATE_BOOKED},
+        {"broken", STATE_BROKEN},
+        {"maintained", STATE_MAINTAINED},
+        {"unavailable", STATE_UNAVAILABLE},
+    };
 
-    if (command == "available")
+    DeviceState targetState = STATE_AVAILABLE;
+    bool found = false;
+    for (const auto &[name, state] : stateMap)
     {
-        targetState = STATE_AVAILABLE;
+        if (command == name)
+        {   
+            targetState = state;
+            found = true;
+            break;
+        }
     }
-    else if (command == "reserved")
-    {
-        targetState = STATE_RESERVED;
-    }
-    else if (command == "booked")
-    {
-        targetState = STATE_BOOKED;
-    }
-    else if (command == "broken")
-    {
-        targetState = STATE_BROKEN;
-    }
-    else if (command == "maintained")
-    {
-        targetState = STATE_MAINTAINED;
-    }
-    else if (command == "unavailable")
-    {
-        targetState = STATE_UNAVAILABLE;
-    }
-    else
+
+    if (!found)
     {
         Log.error("Unknown state command: %.*s\n", toPrintfLength(command), toPrintfData(command));
         return;
@@ -186,7 +182,7 @@ void CommandHandler::handleBookingCommand(std::string_view command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "booked", false);
+            Global::mqttManager->publish(Global::getTopics().commandBookingTopic, "booked", false);
             }
             Global::logInfoMQTT("Booking command: book");
         }
@@ -204,7 +200,7 @@ void CommandHandler::handleBookingCommand(std::string_view command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "claimed", false); 
+                Global::mqttManager->publish(Global::getTopics().commandBookingTopic, "claimed", false); 
             }
             Global::logInfoMQTT("Booking command: claim");
         }
@@ -222,7 +218,7 @@ void CommandHandler::handleBookingCommand(std::string_view command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandBookingTopic.c_str(), "available", false);
+                Global::mqttManager->publish(Global::getTopics().commandBookingTopic, "available", false);
             }
             Global::logInfoMQTT("Booking command: release");
         }
@@ -256,7 +252,7 @@ void CommandHandler::handleReservationCommand(std::string_view command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandReservationTopic.c_str(), "reserved", false);
+                Global::mqttManager->publish(Global::getTopics().commandReservationTopic, "reserved", false);
             }
             Global::logInfoMQTT("Reservation command: reserve");
         }
@@ -274,7 +270,7 @@ void CommandHandler::handleReservationCommand(std::string_view command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().commandReservationTopic.c_str(), "available", false);
+                Global::mqttManager->publish(Global::getTopics().commandReservationTopic, "available", false);
             }
             Global::logInfoMQTT("Reservation command: cancel");
         }
@@ -311,7 +307,7 @@ void CommandHandler::handleMaintenanceCommand(std::string_view command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic.c_str(), "in_progress", false);
+                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic, "in_progress", false);
             }
             Global::logInfoMQTT("Maintenance command: start");
         }
@@ -329,7 +325,7 @@ void CommandHandler::handleMaintenanceCommand(std::string_view command)
 
             if (Global::mqttManager)
             {
-                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic.c_str(), "completed", false);
+                Global::mqttManager->publish(Global::getTopics().maintenanceStatusTopic, "completed", false);
             }
             Global::logInfoMQTT("Maintenance command: complete");
         }

@@ -129,7 +129,7 @@ void BufferedLogger::flush()
 
         std::string payload = std::string(timestampBuffer) + " " + severityLabel(entry.severity) + ": " + entry.message;
 
-        if (!_mqttManager->publish(_topic.c_str(), payload.c_str(), false))
+        if (!_mqttManager->publish(_topic, payload, false))
         {
             Log.warning("BufferedLogger failed to publish to %s\n", _topic.c_str());
             pending.insert(pending.end(), _buffer.begin() + i, _buffer.end());
