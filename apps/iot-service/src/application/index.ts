@@ -72,6 +72,7 @@ export class IotApplication {
     const results = await Promise.allSettled([
       this.deps.connection.disconnect(),
       this.closeHttpServer(),
+      this.deps.deviceManager.destroy(),
     ]);
 
     for (const result of results) {
