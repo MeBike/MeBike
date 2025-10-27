@@ -23,6 +23,7 @@
 
 #include "CommandHandler.h"
 #include <ArduinoLog.h>
+#include <string>
 #include <string_view>
 #include <utility>
 #include "globals.h"
@@ -48,20 +49,6 @@ namespace
     }
 }
 
-namespace
-{
-    constexpr int toPrintfLength(std::string_view value)
-    {
-        return static_cast<int>(value.size()); // length from string_view is a size_t, need to cast to int for printf
-        // printf is from C arduinoLog lib so it exist before cpp size_t stuff so cast it to int 
-    }
-
-    const char *toPrintfData(std::string_view value)
-    {
-        return value.empty() ? "" : value.data(); // if empty return empty string to avoid nullptr issues in printf since data of a string_view can be nullptr if empty or not null-terminated
-    }
-}
-
 static const char *statusTopic()
 {
     return Global::getTopics().statusTopic.c_str();
@@ -76,9 +63,10 @@ void CommandHandler::processCommand(const char *topic, const char *message)
 
 void CommandHandler::processCommand(std::string_view topic, std::string_view message)
 {
-    Log.info("Processing command from topic %.*s: %.*s\n",
-             toPrintfLength(topic), toPrintfData(topic),
-             toPrintfLength(message), toPrintfData(message));
+    const std::string topicLog(topic);
+    const std::string messageLog(message);
+    Log.info("Processing command from topic %s: %s\n",
+             topicLog.c_str(), messageLog.c_str());
 
     if (matchesTopic(topic, "esp/commands/state", Global::getTopics().commandStateTopic) ||
         matchesTopic(topic, "esp/commands", Global::getTopics().commandRootTopic))
@@ -103,7 +91,7 @@ void CommandHandler::processCommand(std::string_view topic, std::string_view mes
     }
     else
     {
-        Log.warning("Unknown command topic: %.*s\n", toPrintfLength(topic), toPrintfData(topic));
+        Log.warning("Unknown command topic: %s\n", topicLog.c_str());
     }
 }
 
@@ -115,7 +103,8 @@ void CommandHandler::handleStateCommand(std::string_view command)
         return;
     }
 
-    Log.info("Handling state command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+    const std::string commandLog(command);
+    Log.info("Handling state command: %s\n", commandLog.c_str());
 
     static constexpr std::pair<std::string_view, DeviceState> stateMap[] = {
         {"available", STATE_AVAILABLE},
@@ -140,7 +129,7 @@ void CommandHandler::handleStateCommand(std::string_view command)
 
     if (!found)
     {
-        Log.error("Unknown state command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+        Log.error("Unknown state command: %s\n", commandLog.c_str());
         return;
     }
 
@@ -171,7 +160,8 @@ void CommandHandler::handleBookingCommand(std::string_view command)
         return;
     }
 
-    Log.info("Handling booking command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+    const std::string commandLog(command);
+    Log.info("Handling booking command: %s\n", commandLog.c_str());
 
     if (command == "book")
     {
@@ -229,7 +219,7 @@ void CommandHandler::handleBookingCommand(std::string_view command)
     }
     else
     {
-        Log.error("Unknown booking command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+        Log.error("Unknown booking command: %s\n", commandLog.c_str());
     }
 }
 
@@ -241,7 +231,8 @@ void CommandHandler::handleReservationCommand(std::string_view command)
         return;
     }
 
-    Log.info("Handling reservation command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+    const std::string commandLog(command);
+    Log.info("Handling reservation command: %s\n", commandLog.c_str());
 
     if (command == "reserve")
     {
@@ -281,7 +272,7 @@ void CommandHandler::handleReservationCommand(std::string_view command)
     }
     else
     {
-        Log.error("Unknown reservation command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+        Log.error("Unknown reservation command: %s\n", commandLog.c_str());
     }
 }
 
@@ -293,7 +284,8 @@ void CommandHandler::handleMaintenanceCommand(std::string_view command)
         return;
     }
 
-    Log.info("Handling maintenance command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+    const std::string commandLog(command);
+    Log.info("Handling maintenance command: %s\n", commandLog.c_str());
 
     if (command == "start")
     {
@@ -336,7 +328,7 @@ void CommandHandler::handleMaintenanceCommand(std::string_view command)
     }
     else
     {
-        Log.error("Unknown maintenance command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+        Log.error("Unknown maintenance command: %s\n", commandLog.c_str());
     }
 }
 
@@ -348,7 +340,8 @@ void CommandHandler::handleStatusCommand(std::string_view command)
         return;
     }
 
-    Log.info("Handling status command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+    const std::string commandLog(command);
+    Log.info("Handling status command: %s\n", commandLog.c_str());
 
     if (command == "request")
     {
@@ -362,7 +355,7 @@ void CommandHandler::handleStatusCommand(std::string_view command)
     }
     else
     {
-        Log.error("Unknown status command: %.*s\n", toPrintfLength(command), toPrintfData(command));
+        Log.error("Unknown status command: %s\n", commandLog.c_str());
     }
 }
 
