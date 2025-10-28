@@ -101,7 +101,7 @@ export const useUserActions = ({
         }
         useCreateUser.mutate(userData, {
           onSuccess: (result: { status: number; data?: { message?: string } }) => {
-            if (result?.status === 200) {
+            if (result?.status === 201) {
               toast.success("Tạo người dùng thành công");
               queryClient.invalidateQueries({ queryKey: ["all", "user", page, limit, verify || "all", role || "all"] });
               queryClient.invalidateQueries({ queryKey: ["user-stats"] });
