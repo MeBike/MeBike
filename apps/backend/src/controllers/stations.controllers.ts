@@ -84,3 +84,17 @@ export const getNearbyStationsController = wrapAsync(
     await stationsService.getNearbyStations(res, next, req.query);
   }
 );
+
+export const getStationStatsController = wrapAsync(
+  async (req: Request<{ id: string }>, res: Response) => {
+    const { from, to } = req.query;
+    const result = await stationsService.getStationStats(req.params.id, {
+      from: from as string,
+      to: to as string
+    });
+    return res.json({
+      message: STATIONS_MESSAGE.GET_STATION_STATS_SUCCESSFULLY,
+      result,
+    });
+  }
+);
