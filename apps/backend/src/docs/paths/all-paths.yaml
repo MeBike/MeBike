@@ -2775,6 +2775,68 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/stations/{id}/stats:
+  get:
+    tags: [Stations]
+    summary: Get detailed statistics for a specific station (Admin only)
+    description: |
+      Retrieves detailed statistics for a specific station within a given time period (defaults to 2025-01-01 to now if unspecified).
+      Includes rental activity originating from the station, return activity, current bike status, reports, and utilization rate.
+      **Requires Admin privileges.**
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: "The ID of the station to get statistics for."
+        schema:
+          type: string
+          format: mongoId
+      - name: from
+        in: query
+        required: false
+        description: "Start date for the statistics period (YYYY-MM-DD). Defaults to '2025-01-01'."
+        schema:
+          type: string
+          format: date
+          example: "2025-10-01"
+      - name: to
+        in: query
+        required: false
+        description: "End date for the statistics period (YYYY-MM-DD). Defaults to the current date."
+        schema:
+          type: string
+          format: date
+          example: "2025-10-29"
+    responses:
+      '200':
+        description: "Station statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê trạm thành công"
+                result:
+                  $ref: '../components/schemas/StationStats.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Station not found or Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Ratings API
 # ===================================================================
