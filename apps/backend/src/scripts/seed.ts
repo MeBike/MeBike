@@ -1,8 +1,9 @@
 import { Decimal128, ObjectId } from 'mongodb'
 
-import { BikeStatus, RentalStatus, ReservationStatus, Role, UserVerifyStatus, WalletStatus } from '~/constants/enums'
+import { BikeStatus, RentalStatus, ReservationStatus, Role, SupplierStatus, UserVerifyStatus, WalletStatus } from '~/constants/enums'
 import databaseService from '~/services/database.services'
 import Bike from '~/models/schemas/bike.schema'
+import Supplier from '~/models/schemas/supplier.schema'
 import Station from '~/models/schemas/station.schema'
 import User from '~/models/schemas/user.schema'
 import Reservation from '~/models/schemas/reservation.schema'
@@ -18,6 +19,7 @@ const STATION_ID = new ObjectId('60d5f1b3e7b3c9a4b4f4b39f')
 const BIKE_ID = new ObjectId('60d5f1b3e7b3c9a4b4f4b3a1')
 const BIKE_CHIP_ID = 'C82E188DF058'
 const USER_EMAILS = ['user1@test.com', 'user2@test.com'] as const
+const SUPPLIER_ID = new ObjectId('60d5f1b3e7b3c9a4b4f4b3a2')
 
 async function seedDatabase() {
   try {
@@ -74,6 +76,26 @@ async function seedDatabase() {
       await databaseService.stations.deleteOne({ _id: STATION_ID })
       console.log(`Deleted ${existingStationCount} existing stations`)
     }
+
+    const existingSupplierCount = await databaseService.suppliers.countDocuments({ name: 'Công ty TNHH YADEA Việt Nam' })
+    if (existingSupplierCount > 0) {
+      await databaseService.suppliers.deleteMany({ name: 'Công ty TNHH YADEA Việt Nam' })
+      console.log(`Deleted ${existingSupplierCount} existing suppliers`)
+    }
+
+    console.log('Creating prototype supplier...')
+    const supplier = new Supplier({
+      _id: SUPPLIER_ID,
+      name: 'Công ty TNHH YADEA Việt Nam',
+      contact_info: {
+        address: '123 Nguyễn Văn Linh, Quận 7, TP.HCM',
+        phone_number: '0987654321'
+      },
+      contract_fee: Decimal128.fromString('250000.50'),
+      status: SupplierStatus.ACTIVE,
+      created_at: new Date('2025-10-05T19:12:21.230Z')
+    })
+    await databaseService.suppliers.insertOne(supplier)
 
     console.log('Creating prototype station...')
     const station = new Station({
@@ -145,7 +167,8 @@ async function seedDatabase() {
       _id: BIKE_ID,
       chip_id: BIKE_CHIP_ID,
       station_id: station._id,
-      status: initialBikeStatus
+      status: initialBikeStatus,
+      supplier_id: supplier._id
     })
     await databaseService.bikes.insertOne(bike)
     console.log(`Bike created successfully with status ${initialBikeStatus}.`)
