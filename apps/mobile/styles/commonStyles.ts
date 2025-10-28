@@ -1,6 +1,6 @@
+import { StyleSheet } from "react-native";
 
-import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { BikeColors } from '@/constants/BikeColors';
+import { BikeColors } from "@/constants/BikeColors";
 
 export const colors = {
   primary: BikeColors.primary,
@@ -38,32 +38,32 @@ export const borderRadius = {
 export const typography = {
   h1: {
     fontSize: 32,
-    fontWeight: '700' as const,
+    fontWeight: "700" as const,
     lineHeight: 40,
   },
   h2: {
     fontSize: 24,
-    fontWeight: '600' as const,
+    fontWeight: "600" as const,
     lineHeight: 32,
   },
   h3: {
     fontSize: 20,
-    fontWeight: '600' as const,
+    fontWeight: "600" as const,
     lineHeight: 28,
   },
   body: {
     fontSize: 16,
-    fontWeight: '400' as const,
+    fontWeight: "400" as const,
     lineHeight: 24,
   },
   bodySmall: {
     fontSize: 14,
-    fontWeight: '400' as const,
+    fontWeight: "400" as const,
     lineHeight: 20,
   },
   caption: {
     fontSize: 12,
-    fontWeight: '400' as const,
+    fontWeight: "400" as const,
     lineHeight: 16,
   },
 };
@@ -103,15 +103,15 @@ export const commonStyles = StyleSheet.create({
     ...shadows.medium,
   },
   centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   spaceBetween: {
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   textPrimary: {
     color: colors.text,

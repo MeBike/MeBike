@@ -1,67 +1,68 @@
-import React, { useState } from 'react';
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { RegisterScreenNavigationProp } from '../types/navigation';
-import { BikeColors } from '../constants/BikeColors';
-import { IconSymbol } from '../components/IconSymbol';
-import { useAuth } from '@providers/auth-providers';
-import { LinearGradient } from 'expo-linear-gradient';
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
+import { useAuth } from "@providers/auth-providers";
+
+import type { RegisterScreenNavigationProp } from "../types/navigation";
+
+import { IconSymbol } from "../components/IconSymbol";
+import { BikeColors } from "../constants/BikeColors";
 
 export default function RegisterScreen() {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [phone, setPhone] = useState('');
-  const {register,isRegistering , logIn ,} = useAuth();
+  const [phone, setPhone] = useState("");
+  const { register, isRegistering, logIn } = useAuth();
   const isLoading = isRegistering;
 
   const clearForm = () => {
-    setName('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setPhone('');
+    setName("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setPhone("");
   };
   const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword || !phone  ) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+    if (!name || !email || !password || !confirmPassword || !phone) {
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
       return;
     }
     register({
       fullname: name,
-      email: email,
-      password: password,
+      email,
+      password,
       confirm_password: confirmPassword,
       phone_number: phone,
     });
     clearForm();
     setTimeout(() => {
       navigation.navigate("Main");
-    }, 1000); 
+    }, 1000);
     if (password !== confirmPassword) {
-      Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
+      Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
-      return;
+      Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự");
     }
   };
-
 
   const goToLogin = () => {
     navigation.goBack();
@@ -74,7 +75,7 @@ export default function RegisterScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <LinearGradient
-          colors={[BikeColors.secondary + "10", "white"]}
+          colors={[`${BikeColors.secondary}10`, "white"]}
           style={styles.header}
         >
           <View style={styles.logoContainer}>
@@ -217,7 +218,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   scrollContent: {
     flexGrow: 1,
@@ -225,14 +226,14 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 40,
     paddingBottom: 40,
-    alignItems: 'center',
+    alignItems: "center",
   },
   logoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   logoText: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: BikeColors.secondary,
     marginTop: 16,
   },
@@ -247,15 +248,15 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderColor: BikeColors.lightGray,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
     marginBottom: 16,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   input: {
     flex: 1,
@@ -270,21 +271,21 @@ const styles = StyleSheet.create({
     backgroundColor: BikeColors.secondary,
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
     marginBottom: 24,
   },
   registerButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   disabledButton: {
     opacity: 0.6,
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 24,
   },
   dividerLine: {
@@ -298,9 +299,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: BikeColors.secondary,
     paddingVertical: 16,
@@ -311,12 +312,12 @@ const styles = StyleSheet.create({
   googleButtonText: {
     color: BikeColors.secondary,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   loginText: {
     color: BikeColors.textSecondary,
@@ -325,6 +326,6 @@ const styles = StyleSheet.create({
   loginLink: {
     color: BikeColors.secondary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

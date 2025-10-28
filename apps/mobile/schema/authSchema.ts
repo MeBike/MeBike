@@ -1,5 +1,6 @@
 import * as z from "zod";
-const vietnamesePhoneNumberRegex = /^(0[3|5|7|8|9])+([0-9]{8})\b/;
+
+const vietnamesePhoneNumberRegex = /^(0[3|5789])+(\d{8})\b/;
 export const loginSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
   password: z.string().min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
@@ -31,7 +32,7 @@ export const registerSchema = z
       .string()
       .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
   })
-  .refine((data) => data.password === data.confirm_password, {
+  .refine(data => data.password === data.confirm_password, {
     message: "Mật khẩu xác nhận không khớp",
     path: ["confirm_password"],
   });
@@ -53,7 +54,7 @@ export const changePasswordSchema = z
       .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" })
       .max(30, { message: "Mật khẩu không được vượt quá 30 ký tự" }),
   })
-  .refine((data) => data.password === data.confirm_password, {
+  .refine(data => data.password === data.confirm_password, {
     message: "Mật khẩu xác nhận không khớp",
     path: ["confirm_password"],
   });
@@ -70,8 +71,8 @@ export const profileUpdateSchema = z.object({
     .min(3, "Username must be at least 3 characters.")
     .max(30, "Username cannot exceed 30 characters.")
     .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores."
+      /^\w+$/,
+      "Username can only contain letters, numbers, and underscores.",
     )
     .or(z.literal("")),
   phone_number: z

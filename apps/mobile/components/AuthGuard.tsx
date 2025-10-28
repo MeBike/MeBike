@@ -1,12 +1,13 @@
+import { router } from "expo-router";
+import React, { useEffect } from "react";
 
-import React, { useEffect } from 'react';
-import { router } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
-import { LoadingScreen } from './LoadingScreen';
+import { useAuth } from "@/contexts/AuthContext";
 
-interface AuthGuardProps {
+import { LoadingScreen } from "./LoadingScreen";
+
+type AuthGuardProps = {
   children: React.ReactNode;
-}
+};
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const { isAuthenticated, isLoading, hasSeenIntro } = useAuth();
@@ -15,9 +16,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     if (!isLoading) {
       if (!isAuthenticated) {
         if (!hasSeenIntro) {
-          router.replace('/intro');
-        } else {
-          router.replace('/login');
+          router.replace("/intro");
+        }
+        else {
+          router.replace("/login");
         }
       }
     }
@@ -33,5 +35,3 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   return <>{children}</>;
 };
-
-

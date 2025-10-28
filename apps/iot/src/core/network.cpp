@@ -22,7 +22,7 @@ bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &to
         }
     }
 
-    if (WiFi.status() == WL_CONNECTED)
+    if (WiFi.status() == WL_CONNECTED) // if wifi then populate the struct with topics
     {
         Log.info("Connected to WiFi! IP: %s\n", WiFi.localIP().toString().c_str());
         topics.statusTopic = makeTopicWithMac("esp/status");

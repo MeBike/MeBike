@@ -1,7 +1,9 @@
-import fetchHttpClient from "@lib/httpClient";
 import type { AxiosResponse } from "axios";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+
+import fetchHttpClient from "@lib/httpClient";
+
 import type { StationType } from "../types/StationType";
+
 const STATION_BASE = "/stations";
 const STATION_ENDPOINTS = {
   BASE: STATION_BASE,
@@ -15,7 +17,7 @@ const STATION_ENDPOINTS = {
 //   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
 //   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
 } as const;
-interface ApiResponse<T> {
+type ApiResponse<T> = {
   data: T;
   pagination?: {
     limit: number;
@@ -23,25 +25,24 @@ interface ApiResponse<T> {
     totalPages: number;
     totalRecords: number;
   };
-}
-interface ApiDetailResponse<T> {
+};
+type ApiDetailResponse<T> = {
   result: T;
   message: string;
-}
-
+};
 
 export const stationService = {
   getAllStations: async (): Promise<AxiosResponse<ApiResponse<StationType[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<StationType[]>>(
-      STATION_ENDPOINTS.ALL
+      STATION_ENDPOINTS.ALL,
     );
     return response;
   },
   getStationById: async (
-    stationId: string
+    stationId: string,
   ): Promise<AxiosResponse<ApiDetailResponse<StationType>>> => {
     const response = await fetchHttpClient.get<ApiDetailResponse<StationType>>(
-      STATION_ENDPOINTS.DETAIL(stationId)
+      STATION_ENDPOINTS.DETAIL(stationId),
     );
     return response;
   },

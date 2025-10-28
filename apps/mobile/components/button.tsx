@@ -1,19 +1,23 @@
+import type {
+  TextStyle,
+  ViewStyle,
+} from "react-native";
+
 import React from "react";
 import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
-  TextStyle,
   useColorScheme,
-  ViewStyle,
 } from "react-native";
+
 import { appleBlue, zincColors } from "../constants/Colors";
 
 type ButtonVariant = "filled" | "outline" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";
 
-interface ButtonProps {
+type ButtonProps = {
   onPress?: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -22,7 +26,7 @@ interface ButtonProps {
   children: React.ReactNode;
   style?: ViewStyle;
   textStyle?: TextStyle;
-}
+};
 
 export const Button: React.FC<ButtonProps> = ({
   onPress,
@@ -103,24 +107,26 @@ export const Button: React.FC<ButtonProps> = ({
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={getTextColor()} />
-      ) : (
-        <Text
-          style={StyleSheet.flatten([
-            {
-              fontSize: sizeStyles[size].fontSize,
-              color: getTextColor(),
-              textAlign: "center",
-              marginBottom: 0,
-              fontWeight: "700",
-            },
-            textStyle,
-          ])}
-        >
-          {children}
-        </Text>
-      )}
+      {loading
+        ? (
+            <ActivityIndicator color={getTextColor()} />
+          )
+        : (
+            <Text
+              style={StyleSheet.flatten([
+                {
+                  fontSize: sizeStyles[size].fontSize,
+                  color: getTextColor(),
+                  textAlign: "center",
+                  marginBottom: 0,
+                  fontWeight: "700",
+                },
+                textStyle,
+              ])}
+            >
+              {children}
+            </Text>
+          )}
     </Pressable>
   );
 };
