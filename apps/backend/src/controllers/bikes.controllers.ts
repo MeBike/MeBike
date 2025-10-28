@@ -190,3 +190,13 @@ export const getBikeRentalHistoryController = async (req: Request, res: Response
     result
   })
 }
+
+export const getBikeActivityStatsController = async (req: Request, res: Response) => {
+  const { _id } = req.params
+
+  const result = await bikesService.getBikeActivityStats(_id)
+  res.json({
+    message: BIKES_MESSAGES.GET_BIKE_ACTIVITY_STATS_SUCCESS,
+    result
+  })
+}

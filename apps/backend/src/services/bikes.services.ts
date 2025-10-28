@@ -4,9 +4,10 @@ import { ObjectId } from "mongodb";
 
 import type { CreateBikeReqBody, GetBikesReqQuery, UpdateBikeReqBody } from "~/models/requests/bikes.request";
 
-import { BikeStatus, RentalStatus, ReservationStatus } from "~/constants/enums";
+import { BikeStatus, RentalStatus, ReservationStatus, ReportTypeEnum } from "~/constants/enums";
 import Bike from "~/models/schemas/bike.schema";
 import { sendPaginatedResponse } from "~/utils/pagination.helper";
+import { getLocalTime } from "~/utils/date-time";
 
 import databaseService from "./database.services";
 import { BIKES_MESSAGES } from "~/constants/messages";
@@ -331,6 +332,99 @@ class BikesService {
         total_pages,
         total_records
       }
+    }
+  }
+
+  async getBikeActivityStats(bikeId: string) {
+    const objBikeId = new ObjectId(bikeId)
+
+    //Tính tổng số phút hoạt động (từ các rental đã hoàn thành)
+    const totalMinutesPipeline = [
+      {
+        $match: {
+          bike_id: objBikeId,
+          status: RentalStatus.Completed
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          total_duration_minutes: { $sum: "$duration" }
+        }
+      }
+    ]
+
+    const totalMinutesResult = await databaseService.rentals.aggregate(totalMinutesPipeline).toArray()
+    const total_duration_minutes = totalMinutesResult[0]?.total_duration_minutes || 0
+
+    //tính số lần báo hỏng (từ reports collection)
+    const totalReports = await databaseService.reports.countDocuments({
+      bike_id: objBikeId,
+      type: { $in: [ReportTypeEnum.BikeDamage, ReportTypeEnum.BikeDirty] } // Chỉ đếm report về hỏng xe
+    })
+
+    //tính số lần bảo trì (từ maintenance logs nếu có, hoặc từ status changes)
+    //Hiện tại chưa có maintenance_logs collection, tạm thời set = 0
+    // const maintenanceCount = 0
+
+    // Tính tỷ lệ uptime (thời gian available / tổng thời gian)
+    // Hiện tại chưa có dữ liệu tracking thời gian available thực tế
+    // Tạm thời tính dựa trên giả định xe có thể hoạt động 24/7
+    const bike = await databaseService.bikes.findOne({ _id: objBikeId })
+    const created_date = bike?.created_at
+    const now = getLocalTime()
+
+    let uptime_percentage = 0
+    if (created_date) {
+      const total_days = Math.ceil((now.getTime() - created_date.getTime()) / (1000 * 60 * 60 * 24))
+      //xe có thể hoạt động 24 giờ/ngày = 1440 phút/ngày
+      const estimated_available_minutes = total_days * 1440
+      const actual_used_minutes = total_duration_minutes
+      uptime_percentage = Math.min(100, (actual_used_minutes / estimated_available_minutes) * 100)
+    }
+
+    //Thống kê theo tháng (có thể dùng cho chart)
+    const monthlyStatsPipeline = [
+      {
+        $match: {
+          bike_id: objBikeId,
+          status: RentalStatus.Completed
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$end_time" },
+            month: { $month: "$end_time" }
+          },
+          rentals_count: { $sum: 1 },
+          total_duration: { $sum: "$duration" },
+          total_revenue: { $sum: { $toDouble: "$total_price" } }
+        }
+      },
+      {
+        $sort: { "_id.year": -1, "_id.month": -1 }
+      },
+      {
+        $limit: 12 // 12 tháng gần nhất
+      }
+    ]
+
+    const monthly_stats = await databaseService.rentals.aggregate(monthlyStatsPipeline).toArray()
+
+    return {
+      bike_id: bikeId,
+      total_minutes_active: total_duration_minutes,
+      total_reports: totalReports,
+      // total_maintenance: maintenanceCount,
+      uptime_percentage: Math.round(uptime_percentage * 100) / 100,
+      monthly_stats: monthly_stats.map(stat => ({
+        year: stat._id.year,
+        month: stat._id.month,
+        rentals_count: stat.rentals_count,
+        minutes_active: stat.total_duration,
+        revenue: stat.total_revenue
+      }))
     }
   }
 }
