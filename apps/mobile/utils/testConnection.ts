@@ -1,34 +1,37 @@
-import fetchHttpClient from '../lib/httpClient';
+import fetchHttpClient from "../lib/httpClient";
 
-export const testBackendConnection = async () => {
+export async function testBackendConnection() {
   try {
-    console.log('Testing backend connection...');
-    const response = await fetchHttpClient.get('/');
-    console.log('Backend connection successful:', response.data);
+    console.log("Testing backend connection...");
+    const response = await fetchHttpClient.get("/");
+    console.log("Backend connection successful:", response.data);
     return true;
-  } catch (error) {
-    console.error('Backend connection failed:', error);
+  }
+  catch (error) {
+    console.error("Backend connection failed:", error);
     return false;
   }
-};
+}
 
-export const testLoginEndpoint = async () => {
+export async function testLoginEndpoint() {
   try {
-    console.log('Testing login endpoint...');
+    console.log("Testing login endpoint...");
     // Test with dummy data to see if endpoint responds
-    const response = await fetchHttpClient.post('/users/login', {
-      email: 'test@test.com',
-      password: 'test123'
+    const response = await fetchHttpClient.post("/users/login", {
+      email: "test@test.com",
+      password: "test123",
     });
-    console.log('Login endpoint response:', response.status);
+    console.log("Login endpoint response:", response.status);
     return true;
-  } catch (error: any) {
+  }
+  catch (error: any) {
     if (error.response) {
-      console.log('Login endpoint exists but returned error:', error.response.status, error.response.data);
+      console.log("Login endpoint exists but returned error:", error.response.status, error.response.data);
       return true; // Endpoint exists
-    } else {
-      console.error('Login endpoint connection failed:', error.message);
+    }
+    else {
+      console.error("Login endpoint connection failed:", error.message);
       return false; // Network error
     }
   }
-};
+}

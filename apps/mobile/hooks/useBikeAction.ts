@@ -1,39 +1,44 @@
+import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { useGetAllBikeQuery } from "./query/Bike/useGetAllBikeCus";
-import { useCreateBikeMutation } from "./mutations/Bike/useCreateBike";
+
 import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "@schemas/bikeSchema";
-import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
-import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
+
+import { useCreateBikeMutation } from "./mutations/Bike/useCreateBike";
 import { useReportBike } from "./mutations/Bike/useReportBike";
+import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
+import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
+import { useGetAllBikeQuery } from "./query/Bike/useGetAllBikeCus";
 import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
-import { useNavigation } from "@react-navigation/native";
-interface ErrorResponse {
+
+type ErrorResponse = {
   response?: {
     data?: {
       errors?: Record<string, { msg?: string }>;
       message?: string;
     };
   };
-}
+};
 
-interface ErrorWithMessage {
+type ErrorWithMessage = {
   message: string;
-}
+};
 
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
+function getErrorMessage(error: unknown, defaultMessage: string): string {
   const axiosError = error as ErrorResponse;
   if (axiosError?.response?.data) {
     const { errors, message } = axiosError.response.data;
     if (errors) {
       const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
+      if (firstError?.msg)
+        return firstError.msg;
     }
-    if (message) return message;
+    if (message)
+      return message;
   }
   const simpleError = error as ErrorWithMessage;
   if (simpleError?.message) {
@@ -41,13 +46,13 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   }
 
   return defaultMessage;
-};
-interface BikeActionsProps {
+}
+type BikeActionsProps = {
   hasToken: boolean;
   bikeId?: string;
   station_id?: string;
-}
-export const useBikeActions = (props: BikeActionsProps) => {
+};
+export function useBikeActions(props: BikeActionsProps) {
   const navigation = useNavigation();
   const {
     refetch: useGetBikes,
@@ -66,7 +71,7 @@ export const useBikeActions = (props: BikeActionsProps) => {
       return;
     }
     useGetBikes();
-  }, [useGetBikes, props.hasToken, navigation , props.station_id]);
+  }, [useGetBikes, props.hasToken, navigation, props.station_id]);
   const createBike = useCallback(
     (data: BikeSchemaFormData) => {
       if (!props.hasToken) {
@@ -77,7 +82,8 @@ export const useBikeActions = (props: BikeActionsProps) => {
         onSuccess: (result) => {
           if (result.status === 201) {
             toast.success("Bike created successfully");
-          } else {
+          }
+          else {
             const errorMessage = result.data?.message || "Error creating bikes";
             toast.error(errorMessage);
           }
@@ -88,7 +94,7 @@ export const useBikeActions = (props: BikeActionsProps) => {
         },
       });
     },
-    [useCreateBike, props.hasToken, navigation]
+    [useCreateBike, props.hasToken, navigation],
   );
   const updateBike = useCallback(
     (data: UpdateBikeSchemaFormData, id: string) => {
@@ -102,9 +108,10 @@ export const useBikeActions = (props: BikeActionsProps) => {
           onSuccess: (result) => {
             if (result.status === 200) {
               toast.success("Bike updated successfully");
-            } else {
-              const errorMessage =
-                result.data?.message || "Error updating bikes";
+            }
+            else {
+              const errorMessage
+                = result.data?.message || "Error updating bikes";
               toast.error(errorMessage);
             }
           },
@@ -112,10 +119,10 @@ export const useBikeActions = (props: BikeActionsProps) => {
             const errorMessage = getErrorMessage(error, "Error updating bikes");
             toast.error(errorMessage);
           },
-        }
+        },
       );
     },
-    [updateBikeMutation, props.hasToken, navigation]
+    [updateBikeMutation, props.hasToken, navigation],
   );
   const deleteBike = useCallback(
     (id: string) => {
@@ -128,7 +135,8 @@ export const useBikeActions = (props: BikeActionsProps) => {
           if (result.status === 200) {
             toast.success("Bike deleted successfully");
             queryClient.invalidateQueries({ queryKey: ["bikes"] });
-          } else {
+          }
+          else {
             const errorMessage = result.data?.message || "Error deleting bikes";
             toast.error(errorMessage);
           }
@@ -139,7 +147,7 @@ export const useBikeActions = (props: BikeActionsProps) => {
         },
       });
     },
-    [deleteBikeMutation, props.hasToken, navigation, queryClient]
+    [deleteBikeMutation, props.hasToken, navigation, queryClient],
   );
   const reportBike = useCallback(
     (id: string) => {
@@ -151,7 +159,8 @@ export const useBikeActions = (props: BikeActionsProps) => {
         onSuccess: (result) => {
           if (result.status === 200) {
             toast.success("Bike reported successfully");
-          } else {
+          }
+          else {
             const errorMessage = result.data?.message || "Error reporting bike";
             toast.error(errorMessage);
           }
@@ -162,7 +171,7 @@ export const useBikeActions = (props: BikeActionsProps) => {
         },
       });
     },
-    [reportBikeMutation, props.hasToken, navigation]
+    [reportBikeMutation, props.hasToken, navigation],
   );
   const getBikeByID = useCallback(() => {
     useGetDetailBike.refetch();
@@ -180,9 +189,9 @@ export const useBikeActions = (props: BikeActionsProps) => {
     isDeletingBike: deleteBikeMutation.isPending,
     useGetBikes,
     useGetAllBikeQuery,
-    isFetchingAllBikes: isFetchingAllBikes,
+    isFetchingAllBikes,
     allBikes: Array.isArray(allBikes) ? allBikes : [],
     isUpdatingBike: updateBikeMutation.isPending,
     isCreatingBike: useCreateBike.isPending,
   };
-};
+}

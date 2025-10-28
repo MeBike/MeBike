@@ -1,16 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
+import { useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Bike,
   FileText,
   Users,
-  BarChart3,
-  Settings,
   User,
   LogOut,
   History,
@@ -18,20 +14,22 @@ import {
   Truck,
   Download,
   RotateCcw,
-  MapIcon
+  MapIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { getRefreshToken } from "@/utils/tokenManager";
+import NProgress from "nprogress";
+import "nprogress/nprogress.css";
 
+// Define menu items (giữ nguyên hàm này theo code bạn)
 const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
   const baseUrl =
     userRole === "ADMIN"
       ? "/admin"
       : userRole === "STAFF"
-      ? "/staff"
-      : "/customer";
-  
+        ? "/staff"
+        : "/customer";
   return [
     {
       title: "Tổng quan",
@@ -39,12 +37,6 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       href: baseUrl,
       roles: ["STAFF", "ADMIN"],
     },
-    // {
-    //   title: "Đơn thuê xe",
-    //   icon: FileText,
-    //   href: `${baseUrl}/rentals`,
-    //   roles: ["STAFF", "ADMIN"],
-    // },
     {
       title: "Quản lý người dùng",
       icon: Users,
@@ -64,23 +56,17 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       roles: ["STAFF", "ADMIN"],
     },
     // {
-    //   title: "Khách hàng",
-    //   icon: Users,
-    //   href: `${baseUrl}/customers`,
-    //   roles: ["STAFF", "ADMIN"],
+    //   title: "Báo cáo & Thống kê",
+    //   icon: BarChart3,
+    //   href: "/admin/reports",
+    //   roles: ["ADMIN"],
     // },
-    {
-      title: "Báo cáo & Thống kê",
-      icon: BarChart3,
-      href: "/admin/reports",
-      roles: ["ADMIN"],
-    },
-    {
-      title: "Cài đặt",
-      icon: Settings,
-      href: "/admin/settings",
-      roles: ["ADMIN"],
-    },
+    // {
+    //   title: "Cài đặt",
+    //   icon: Settings,
+    //   href: "/admin/settings",
+    //   roles: ["ADMIN"],
+    // },
     {
       title: "Hồ sơ cá nhân",
       icon: Users,
@@ -134,19 +120,34 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
 
 export function Sidebar() {
   const [collapsed] = useState(false);
-  const {user,logOut , isAuthenticated} = useAuth();
+  const { user, logOut, isAuthenticated } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   const handleLogout = () => {
     const refreshToken = getRefreshToken();
     if (refreshToken) {
       logOut(refreshToken);
-      console.log(user?.email + " đã đăng xuất" + isAuthenticated);
+      console.log(user?.email + " đã đăng xuất " + isAuthenticated);
     }
-  }
+  };
+
   const menuItems = getMenuItems(user?.role as "STAFF" | "ADMIN" | "USER");
   const filteredMenuItems = menuItems.filter((item) =>
     item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER")
   );
+
+  // Navigation handler with progress
+  const handleNav = (href: string) => {
+    if (pathname === href) return;
+    NProgress.start();
+    startTransition(() => {
+      router.push(href);
+      // Đảm bảo nProgress dừng đúng lúc (nếu Nextjs load nhanh, bạn có thể cần custom lại cho đúng page transition):
+      setTimeout(() => NProgress.done(), 600);
+    });
+  };
 
   return (
     <aside
@@ -154,6 +155,7 @@ export function Sidebar() {
         "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
+      style={{ opacity: isPending ? 0.65 : 1, transition: "opacity .2s" }}
     >
       <div className="flex h-full flex-col">
         {/* Logo Section */}
@@ -174,23 +176,24 @@ export function Sidebar() {
             </div>
           )}
         </div>
-
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-2">
             {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
-
               return (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
+                  <button
+                    type="button"
+                    onClick={() => handleNav(item.href)}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group",
+                      "flex items-center gap-3 px-3 py-2.5 w-full rounded-lg transition-colors group",
                       isActive
                         ? "bg-sidebar-primary text-sidebar-primary-foreground"
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
+                    disabled={isPending || isActive}
+                    style={{ cursor: isPending ? "wait" : "pointer" }}
                   >
                     <Icon
                       className={cn(
@@ -201,7 +204,7 @@ export function Sidebar() {
                     {!collapsed && (
                       <span className="text-sm font-medium">{item.title}</span>
                     )}
-                  </Link>
+                  </button>
                 </li>
               );
             })}
@@ -209,17 +212,23 @@ export function Sidebar() {
         </nav>
 
         <div className="border-t border-sidebar-border p-2">
-          <Link
-            href={`${user?.role === "ADMIN" ? "/admin" : "/staff"}/profile`}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+          <button
+            type="button"
+            onClick={() =>
+              handleNav(
+                `${user?.role === "ADMIN" ? "/admin" : "/staff"}/profile`
+              )
+            }
+            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+            disabled={isPending}
           >
             <User className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">Hồ sơ</span>}
-          </Link>
+          </button>
           <button
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors
-          cursor-pointer"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer"
             onClick={() => handleLogout()}
+            disabled={isPending}
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
             {!collapsed && (

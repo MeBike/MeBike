@@ -1,16 +1,20 @@
-import React from "react";
+import type {
+  SharedValue,
+} from "react-native-reanimated";
+
 import * as Haptics from "expo-haptics";
-import { Pressable, StyleSheet, useColorScheme, View, Text } from "react-native";
+import React from "react";
+import { Pressable, StyleSheet, Text, useColorScheme, View } from "react-native";
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
   configureReanimatedLogger,
   FadeIn,
-  SharedValue,
   useAnimatedStyle,
 } from "react-native-reanimated";
 import Reanimated from "react-native-reanimated";
+
 import { appleRed, borderColor } from "@/constants/Colors";
-import { IconCircle } from "./IconCircle";
+
 import { IconSymbol } from "./IconSymbol";
 
 configureReanimatedLogger({ strict: false });
@@ -21,7 +25,7 @@ export default function ListItem({ listId }: { listId: string }) {
 
   const RightAction = (
     prog: SharedValue<number>,
-    drag: SharedValue<number>
+    drag: SharedValue<number>,
   ) => {
     const styleAnimation = useAnimatedStyle(() => ({
       transform: [{ translateX: drag.value + 200 }],
@@ -63,7 +67,7 @@ export default function ListItem({ listId }: { listId: string }) {
   );
 }
 
-export const NicknameCircle = ({
+export function NicknameCircle({
   nickname,
   color,
   index = 0,
@@ -73,7 +77,7 @@ export const NicknameCircle = ({
   color: string;
   index?: number;
   isEllipsis?: boolean;
-}) => {
+}) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
 
@@ -92,7 +96,7 @@ export const NicknameCircle = ({
       {isEllipsis ? "..." : nickname[0].toUpperCase()}
     </Text>
   );
-};
+}
 
 const styles = StyleSheet.create({
   listItemContainer: {

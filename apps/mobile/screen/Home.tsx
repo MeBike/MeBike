@@ -1,50 +1,53 @@
-
-import React from 'react';
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import { User } from "lucide-react-native";
+import React from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   Dimensions,
   Pressable,
   ScrollView,
   StatusBar,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { HomeScreenNavigationProp } from '../types/navigation';
-import { BikeColors } from '../constants/BikeColors';
-import { IconSymbol } from '../components/IconSymbol';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '@providers/auth-providers';
-import { User } from "lucide-react-native";
-const { width, height } = Dimensions.get('window');
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+
+import { useAuth } from "@providers/auth-providers";
+
+import type { HomeScreenNavigationProp } from "../types/navigation";
+
+import { IconSymbol } from "../components/IconSymbol";
+import { BikeColors } from "../constants/BikeColors";
+
+const { width, height } = Dimensions.get("window");
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { user , isAuthenticated} = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigateToLogin = () => {
-    navigation.navigate('Login');
+    navigation.navigate("Login");
   };
 
   const navigateToIntro = () => {
-    navigation.navigate('Intro');
+    navigation.navigate("Intro");
   };
 
   const features = [
     {
-      icon: 'bicycle',
-      title: 'Thuê xe đạp dễ dàng',
-      description: 'Tìm và thuê xe đạp tại các trạm metro gần bạn',
+      icon: "bicycle",
+      title: "Thuê xe đạp dễ dàng",
+      description: "Tìm và thuê xe đạp tại các trạm metro gần bạn",
       color: BikeColors.primary,
     },
     {
-      icon: 'qrcode.viewfinder',
-      title: 'Quét QR để mở khóa',
-      description: 'Mở khóa xe đạp chỉ bằng một lần quét mã QR',
+      icon: "qrcode.viewfinder",
+      title: "Quét QR để mở khóa",
+      description: "Mở khóa xe đạp chỉ bằng một lần quét mã QR",
       color: BikeColors.secondary,
     },
     {
-      icon: 'map',
-      title: 'Theo dõi thời gian thực',
-      description: 'Xem vị trí và tình trạng xe đạp trực tiếp',
+      icon: "map",
+      title: "Theo dõi thời gian thực",
+      description: "Xem vị trí và tình trạng xe đạp trực tiếp",
       color: BikeColors.accent,
     },
   ];
@@ -71,56 +74,62 @@ export default function HomeScreen() {
                 <Text style={styles.navButtonText}>Giới thiệu</Text>
               </Pressable>
 
-              {isAuthenticated ? (
-                <Pressable
-                  style={styles.navButton}
-                  onPress={() => navigation.navigate("Tôi")}
-                >
-                  <User size={24} color="white" />
-                </Pressable>
-              ) : (
-                <Pressable style={styles.loginButton} onPress={navigateToLogin}>
-                  <Text style={styles.loginButtonText}>Đăng nhập</Text>
-                </Pressable>
-              )}
+              {isAuthenticated
+                ? (
+                    <Pressable
+                      style={styles.navButton}
+                      onPress={() => navigation.navigate("Tôi")}
+                    >
+                      <User size={24} color="white" />
+                    </Pressable>
+                  )
+                : (
+                    <Pressable style={styles.loginButton} onPress={navigateToLogin}>
+                      <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                    </Pressable>
+                  )}
             </View>
           </View>
 
           {/* Hero Section */}
           <View style={styles.heroSection}>
             <Text style={styles.heroTitle}>
-              Khám phá thành phố{"\n"}với BikeShare
+              Khám phá thành phố
+              {"\n"}
+              với BikeShare
             </Text>
             <Text style={styles.heroSubtitle}>
               Giải pháp di chuyển thông minh và thân thiện với môi trường
             </Text>
 
             <View style={styles.heroButtons}>
-              {isAuthenticated ? (
-                <Pressable
-                  style={styles.primaryButton}
-                  onPress={() => navigation.navigate("Trạm")}
-                >
-                  <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
-                  <IconSymbol
-                    name="arrow.right"
-                    size={20}
-                    color={BikeColors.primary}
-                  />
-                </Pressable>
-              ) : (
-                <Pressable
-                  style={styles.primaryButton}
-                  onPress={navigateToLogin}
-                >
-                  <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
-                  <IconSymbol
-                    name="arrow.right"
-                    size={20}
-                    color={BikeColors.primary}
-                  />
-                </Pressable>
-              )}
+              {isAuthenticated
+                ? (
+                    <Pressable
+                      style={styles.primaryButton}
+                      onPress={() => navigation.navigate("Trạm")}
+                    >
+                      <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
+                      <IconSymbol
+                        name="arrow.right"
+                        size={20}
+                        color={BikeColors.primary}
+                      />
+                    </Pressable>
+                  )
+                : (
+                    <Pressable
+                      style={styles.primaryButton}
+                      onPress={navigateToLogin}
+                    >
+                      <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
+                      <IconSymbol
+                        name="arrow.right"
+                        size={20}
+                        color={BikeColors.primary}
+                      />
+                    </Pressable>
+                  )}
 
               <Pressable
                 style={styles.secondaryButton}
@@ -139,7 +148,7 @@ export default function HomeScreen() {
           {features.map((feature, index) => (
             <View key={index} style={styles.featureCard}>
               <LinearGradient
-                colors={[feature.color + "20", feature.color + "10"]}
+                colors={[`${feature.color}20`, `${feature.color}10`]}
                 style={styles.featureIcon}
               >
                 <IconSymbol
@@ -189,7 +198,7 @@ export default function HomeScreen() {
         {/* CTA Section */}
         <View style={styles.ctaSection}>
           <LinearGradient
-            colors={[BikeColors.primary + "20", BikeColors.secondary + "20"]}
+            colors={[`${BikeColors.primary}20`, `${BikeColors.secondary}20`]}
             style={styles.ctaCard}
           >
             <IconSymbol name="bicycle" size={48} color={BikeColors.primary} />
@@ -219,32 +228,32 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   header: {
     paddingTop: StatusBar.currentHeight || 44,
     paddingBottom: 40,
   },
   navigationBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
   logo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   logoText: {
-    color: 'white',
+    color: "white",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   navButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   navButton: {
@@ -252,53 +261,53 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   navButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   loginButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   loginButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   heroSection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 20,
   },
   heroTitle: {
     fontSize: 32,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "white",
+    textAlign: "center",
     marginBottom: 12,
     lineHeight: 40,
   },
   heroSubtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.9)",
+    textAlign: "center",
     marginBottom: 32,
     lineHeight: 24,
   },
   heroButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    flexWrap: "wrap",
+    justifyContent: "center",
   },
   primaryButton: {
-    backgroundColor: 'white',
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: "white",
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
@@ -307,39 +316,39 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: BikeColors.primary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   secondaryButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: "white",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
   },
   secondaryButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   featuresSection: {
     padding: 20,
   },
   sectionTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: BikeColors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 24,
   },
   featureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
     padding: 20,
     marginBottom: 16,
     borderRadius: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -352,8 +361,8 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 16,
   },
   featureContent: {
@@ -361,7 +370,7 @@ const styles = StyleSheet.create({
   },
   featureTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: BikeColors.textPrimary,
     marginBottom: 4,
   },
@@ -372,21 +381,21 @@ const styles = StyleSheet.create({
   },
   statsSection: {
     padding: 20,
-    backgroundColor: BikeColors.lightGray + '40',
+    backgroundColor: `${BikeColors.lightGray}40`,
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   statCard: {
     width: (width - 60) / 2,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 20,
     borderRadius: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -397,26 +406,26 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: BikeColors.primary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 14,
     color: BikeColors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   ctaSection: {
     padding: 20,
   },
   ctaCard: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 32,
     borderRadius: 20,
   },
   ctaTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: BikeColors.textPrimary,
     marginTop: 16,
     marginBottom: 8,
@@ -424,27 +433,27 @@ const styles = StyleSheet.create({
   ctaDescription: {
     fontSize: 16,
     color: BikeColors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 24,
     lineHeight: 24,
   },
   ctaButton: {
     backgroundColor: BikeColors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 25,
     gap: 8,
   },
   ctaButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   footer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
     borderTopWidth: 1,
     borderTopColor: BikeColors.divider,
   },

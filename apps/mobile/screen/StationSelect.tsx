@@ -1,27 +1,30 @@
-import React, { use, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, StatusBar, SafeAreaView, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import { mockStations } from '../data/mockData';
-import { StationCard } from '../components/StationCard';
-import type { StationDetailScreenNavigationProp } from '../types/navigation';
-import { useStationActions } from '@hooks/useStationAction';
-import type { StationType } from '../types/StationType';
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useState } from "react";
+import { FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { useStationActions } from "@hooks/useStationAction";
+
+import type { StationDetailScreenNavigationProp } from "../types/navigation";
+import type { StationType } from "../types/StationType";
+
+import { StationCard } from "../components/StationCard";
+
 export default function StationSelectScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   const { getAllStations, isLoadingGetAllStations } = useStationActions(true);
   const [data, setData] = useState<StationType[]>([]);
   const insets = useSafeAreaInsets();
   const handleSelectStation = (stationId: string) => {
-    navigation.navigate('StationDetail', { stationId });
+    navigation.navigate("StationDetail", { stationId });
   };
   React.useEffect(() => {
     const fetchStations = async () => {
       await getAllStations();
       // @ts-ignore
-      const stationsQuery = require('@hooks/query/Station/useGetAllStationQuery').useGetAllStation();
+      const stationsQuery = require("@hooks/query/Station/useGetAllStationQuery").useGetAllStation();
       const response = stationsQuery.data;
       if (response) {
         setData(response as StationType[]);
@@ -47,32 +50,34 @@ export default function StationSelectScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chọn trạm xe</Text>
       </LinearGradient>
-      {isLoadingGetAllStations ? (
-        <Text style={{ textAlign: 'center', marginTop: 20 }}>Đang tải dữ liệu...</Text>
-      ) : (
-        <FlatList
-          data={data}
-          keyExtractor={item => item._id}
-          renderItem={({ item }) => {
-            const stationCardData = {
-              id: item._id,
-              name: item.name,
-              location: {
-                latitude: Number(item.latitude),
-                longitude: Number(item.longitude),
-                address: item.address,
-              },
-              availableBikes: 0,
-              totalSlots: Number(item.capacity),
-              isActive: true,
-              bikes: [],
-              layout: { width: 0, height: 0, entrances: [] },
-            };
-            return <StationCard station={stationCardData} onPress={() => handleSelectStation(item._id)} />;
-          }}
-          contentContainerStyle={styles.list}
-        />
-      )}
+      {isLoadingGetAllStations
+        ? (
+            <Text style={{ textAlign: "center", marginTop: 20 }}>Đang tải dữ liệu...</Text>
+          )
+        : (
+            <FlatList
+              data={data}
+              keyExtractor={item => item._id}
+              renderItem={({ item }) => {
+                const stationCardData = {
+                  id: item._id,
+                  name: item.name,
+                  location: {
+                    latitude: Number(item.latitude),
+                    longitude: Number(item.longitude),
+                    address: item.address,
+                  },
+                  availableBikes: 0,
+                  totalSlots: Number(item.capacity),
+                  isActive: true,
+                  bikes: [],
+                  layout: { width: 0, height: 0, entrances: [] },
+                };
+                return <StationCard station={stationCardData} onPress={() => handleSelectStation(item._id)} />;
+              }}
+              contentContainerStyle={styles.list}
+            />
+          )}
     </SafeAreaView>
   );
 }
@@ -80,12 +85,12 @@ export default function StationSelectScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
     padding: 0,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 16,
     paddingHorizontal: 16,
     paddingTop: 16,
@@ -93,7 +98,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 24,
     marginBottom: 12,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -104,9 +109,9 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#fff",
+    textAlign: "center",
     letterSpacing: 1,
   },
   list: {

@@ -1,23 +1,26 @@
+import React from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { IconSymbol } from './IconSymbol';
-import { BikeColors } from '../constants/BikeColors';
-import { Station } from '../types/BikeTypes';
-import type { StationType } from '../types/StationType';
-interface StationCardProps {
+import type { Station } from "../types/BikeTypes";
+
+import { BikeColors } from "../constants/BikeColors";
+import { IconSymbol } from "./IconSymbol";
+
+type StationCardProps = {
   station: Station;
   onPress: () => void;
-}
+};
 
 export function StationCard({ station, onPress }: StationCardProps) {
   const availabilityPercentage = (station.availableBikes / station.totalSlots) * 100;
-  const manualBikes = station.bikes?.filter(bike => bike.type === 'manual').length || 0;
-  const availableManual = station.bikes?.filter(bike => bike.type === 'manual' && bike.isAvailable).length || 0;
-  
+  const manualBikes = station.bikes?.filter(bike => bike.type === "manual").length || 0;
+  const availableManual = station.bikes?.filter(bike => bike.type === "manual" && bike.isAvailable).length || 0;
+
   const getAvailabilityColor = (percentage: number) => {
-    if (percentage > 60) return BikeColors.success;
-    if (percentage > 30) return BikeColors.warning;
+    if (percentage > 60)
+      return BikeColors.success;
+    if (percentage > 30)
+      return BikeColors.warning;
     return BikeColors.error;
   };
 
@@ -48,19 +51,21 @@ export function StationCard({ station, onPress }: StationCardProps) {
           <View style={styles.availabilityInfo}>
             <Text style={styles.availabilityLabel}>Tổng xe có sẵn:</Text>
             <Text style={[styles.availabilityCount, { color: getAvailabilityColor(availabilityPercentage) }]}>
-              {station.availableBikes}/{station.totalSlots}
+              {station.availableBikes}
+              /
+              {station.totalSlots}
             </Text>
           </View>
-          
+
           <View style={styles.progressBar}>
-            <View 
+            <View
               style={[
-                styles.progressFill, 
-                { 
+                styles.progressFill,
+                {
                   width: `${availabilityPercentage}%`,
-                  backgroundColor: getAvailabilityColor(availabilityPercentage)
-                }
-              ]} 
+                  backgroundColor: getAvailabilityColor(availabilityPercentage),
+                },
+              ]}
             />
           </View>
         </View>
@@ -68,7 +73,12 @@ export function StationCard({ station, onPress }: StationCardProps) {
         <View style={styles.bikeTypesContainer}>
           <View style={styles.bikeTypeItem}>
             <IconSymbol name="gear" size={16} color={BikeColors.primary} />
-            <Text style={styles.bikeTypeText}>Xe thường: {availableManual}/{manualBikes}</Text>
+            <Text style={styles.bikeTypeText}>
+              Xe thường:
+              {availableManual}
+              /
+              {manualBikes}
+            </Text>
           </View>
         </View>
 
@@ -95,26 +105,26 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   stationInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     flex: 1,
   },
   stationName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: BikeColors.onSurface,
     flex: 1,
   },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   statusIndicator: {
@@ -126,8 +136,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 6,
   },
   locationText: {
@@ -140,9 +150,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   availabilityInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   availabilityLabel: {
     fontSize: 14,
@@ -150,25 +160,25 @@ const styles = StyleSheet.create({
   },
   availabilityCount: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   progressBar: {
     height: 6,
     backgroundColor: BikeColors.divider,
     borderRadius: 3,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressFill: {
-    height: '100%',
+    height: "100%",
     borderRadius: 3,
   },
   bikeTypesContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
   },
   bikeTypeItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     flex: 1,
   },
@@ -178,8 +188,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   actionHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingTop: 8,
     borderTopWidth: 1,
@@ -188,6 +198,6 @@ const styles = StyleSheet.create({
   actionHintText: {
     fontSize: 12,
     color: BikeColors.accent,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 });
