@@ -8,6 +8,7 @@ import {
   endRentalByAdminOrStaffController,
   endRentalSessionController,
   getAllRentalsController,
+  getDashboardSummaryController,
   getDetailRentalController,
   getMyCurrentRentalsController,
   getMyDetailRentalController,
@@ -31,6 +32,8 @@ import { filterMiddleware } from '~/middlewares/common.middlewares'
 import { CancelRentalReqBody, CreateRentalReqBody, EndRentalByAdminOrStaffReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
 
 const rentalsRouter = Router()
+
+rentalsRouter.route('/dashboard-summary').get(accessTokenValidator, isAdminValidator, wrapAsync(getDashboardSummaryController))
 
 rentalsRouter.route('/stats/revenue').get(accessTokenValidator, isAdminValidator, wrapAsync(getRentalRevenueController))
 

@@ -2,7 +2,7 @@ import type { ClientSession, Document, ObjectId } from 'mongodb'
 
 import { Decimal128, Int32 } from 'mongodb'
 
-import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
+import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role, TrendValue } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { AUTH_MESSAGE, RENTALS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -930,6 +930,110 @@ class RentalsService {
     ]
 
     return pipeline
+  }
+
+  async getTodayRevenueSummary() {
+    const now = getLocalTime()
+
+    const startOfToday = new Date(now)
+    startOfToday.setUTCHours(0, 0, 0, 0)
+    const endOfToday = new Date(now)
+    endOfToday.setUTCHours(23, 59, 59, 999)
+
+    const startOfYesterday = new Date(startOfToday)
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1)
+    const endOfYesterday = new Date(startOfToday)
+    endOfYesterday.setMilliseconds(-1)
+
+
+    const pipeline = (start: Date, end: Date) => [
+      {
+        $match: {
+          status: RentalStatus.Completed,
+          end_time: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: { $toDouble: '$total_price' } },
+          totalRentals: { $sum: 1 }
+        }
+      }
+    ]
+
+    const [todayAgg, yesterdayAgg] = await Promise.all([
+      databaseService.rentals.aggregate(pipeline(startOfToday, endOfToday)).toArray(),
+      databaseService.rentals.aggregate(pipeline(startOfYesterday, endOfYesterday)).toArray()
+    ])
+
+    const today = todayAgg[0] || { totalRevenue: 0, totalRentals: 0 }
+    const yesterday = yesterdayAgg[0] || { totalRevenue: 0, totalRentals: 0 }
+
+    const compare = (todayVal: number, yesterdayVal: number) => {
+      if (yesterdayVal === 0) return todayVal > 0 ? 100 : 0
+      return ((todayVal - yesterdayVal) / yesterdayVal) * 100
+    }
+
+    const revenueChange = compare(today.totalRevenue, yesterday.totalRevenue)
+    const rentalChange = compare(today.totalRentals, yesterday.totalRentals)
+
+    return {
+      today: {
+        totalRevenue: today.totalRevenue,
+        totalRentals: today.totalRentals
+      },
+      yesterday: {
+        totalRevenue: yesterday.totalRevenue,
+        totalRentals: yesterday.totalRentals
+      },
+      revenueChange,
+      revenueTrend: revenueChange > 0 ? TrendValue.Up : revenueChange < 0 ? TrendValue.Down : TrendValue.NoChange,
+      rentalChange,
+      rentalTrend: rentalChange > 0 ? TrendValue.Up : rentalChange < 0 ? TrendValue.Down : TrendValue.NoChange
+    }
+  }
+
+  async getTodayRentalPerHour() {
+    const now = getLocalTime()
+
+    const startOfToday = new Date(now)
+    startOfToday.setUTCHours(0, 0, 0, 0)
+
+    const endOfToday = new Date(now)
+    endOfToday.setUTCHours(23, 59, 59, 999)
+
+    const pipeline = [
+      {
+        $match: {
+          status: RentalStatus.Completed,
+          end_time: { $gte: startOfToday, $lte: endOfToday }
+        }
+      },
+      {
+        $group: {
+          _id: { $hour: '$end_time' },
+          totalRentals: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          hour: '$_id',
+          totalRentals: 1
+        }
+      }
+    ]
+
+    const result = await databaseService.rentals.aggregate(pipeline).toArray()
+
+    const fullDay = Array.from({ length: 24 }, (_, hour) => {
+      const found = result.find(r => r.hour === hour)
+      return { hour, totalRentals: found ? found.totalRentals : 0 }
+    })
+
+    return fullDay
   }
 
   generateDuration(start: Date, end: Date) {

@@ -227,3 +227,17 @@ export async function getRentalsByStationIdController(req: Request, res: Respons
   })
   return sendPaginatedAggregationResponse(res, next, databaseService.rentals, req.query, pipeline)
 }
+
+export async function getDashboardSummaryController(req: Request, res: Response) {
+  const [revenueSummary, hourlyRentalStats] = await Promise.all([
+    rentalsService.getTodayRevenueSummary(),
+    rentalsService.getTodayRentalPerHour()
+  ])
+  res.json({
+    message: RENTALS_MESSAGE.GET_DASHBOARD_SUMMARY_SUCCESS,
+    result: {
+      revenueSummary,
+      hourlyRentalStats
+    }
+  })
+}
