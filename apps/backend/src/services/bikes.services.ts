@@ -61,6 +61,32 @@ class BikesService {
       updatePayload.status = payload.status
     }
     if (payload.station_id) {
+      const currentBike = await databaseService.bikes.findOne({ _id: new ObjectId(bikeId) });
+      if (!currentBike) {
+        throw new ErrorWithStatus({
+          message: BIKES_MESSAGES.BIKE_NOT_FOUND || "Bike not found",
+          status: HTTP_STATUS.NOT_FOUND
+        });
+      }
+      //Xe đang được thuê (Booked)
+      if (currentBike.status === BikeStatus.Booked) {
+        throw new ErrorWithStatus({
+          message: BIKES_MESSAGES.CANNOT_UPDATE_STATION_WHILE_RENTED,
+          status: HTTP_STATUS.BAD_REQUEST
+        });
+      }
+
+      //Xe đang có reservation pending
+      const activeReservation = await databaseService.reservations.findOne({
+        bike_id: new ObjectId(bikeId),
+        status: ReservationStatus.Pending
+      });
+      if (activeReservation) {
+        throw new ErrorWithStatus({
+          message: BIKES_MESSAGES.CANNOT_UPDATE_STATION_WHILE_RESERVED,
+          status: HTTP_STATUS.BAD_REQUEST
+        });
+      }
       updatePayload.station_id = new ObjectId(payload.station_id)
     }
     if (payload.supplier_id) {
