@@ -31,12 +31,13 @@ export default function CustomersPage() {
   const {
     users,
     getAllUsers,
-    isFetching,
+    isLoading,
     getAllStatistics,
     isLoadingStatistics,
     statistics,
     getSearchUsers,
     createUser,
+    isFetching,
     paginationUser,
   } = useUserActions({
     hasToken: true,
@@ -70,7 +71,7 @@ export default function CustomersPage() {
     if (!searchQuery) getAllUsers();
     else getSearchUsers();
   }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getSearchUsers]);
-  if (isFetching && isLoadingStatistics) {
+  if (isLoading && isLoadingStatistics && isFetching) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
         <Loader2 className="animate-spin w-16 h-16 text-primary" />

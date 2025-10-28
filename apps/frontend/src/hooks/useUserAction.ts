@@ -55,7 +55,7 @@ export const useUserActions = ({
   const router = useRouter();
   const useCreateUser = useCreateUserMutation();  
   const queryClient = useQueryClient();
-  const { data, refetch, isFetching } = useGetAllUserQuery({
+  const { data, refetch, isLoading , isFetching} = useGetAllUserQuery({
     page,
     limit,
     role: role || "",
@@ -127,6 +127,7 @@ export const useUserActions = ({
   return {
     users: users,
     refetch,
+    isLoading,
     isFetching,
     getAllUsers,
     statistics: statisticsData,
@@ -135,7 +136,7 @@ export const useUserActions = ({
     isLoadingStatistics,
     getSearchUsers,
     createUser,
-    paginationUser : data?.pagination,
+    paginationUser: data?.pagination,
     isLoadingSearch,
   };
 };

@@ -6,6 +6,7 @@ import type { Bike, BikeStatus } from "@custom-types";
 import { Plus, Download, Edit2, Trash2, Eye } from "lucide-react";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { Spinner } from "@/components/ui/spinner";
+import { Loader2 } from "lucide-react";
 const mockBikes: Bike[] = [
   {
     _id: "bike_001",
@@ -129,13 +130,14 @@ export default function BikesPage() {
   useEffect(() => {
     console.log("Bike data:", data);
   }, [data]);
-  if (isFetchingBike) {
+  if (isFetchingBike && isLoadingStatistics) {
     return (
-      <div>
-        <Spinner />
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+        <Loader2 className="animate-spin w-16 h-16 text-primary" />
       </div>
     );
   }
+
   return (
     <div>
       <div className="space-y-6">
