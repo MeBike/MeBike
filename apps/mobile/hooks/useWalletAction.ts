@@ -1,28 +1,32 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { useGetMyWalletQuery } from "./query/Wallet/useGetMyWalletQuery";
+
 import { useGetMyTransactionsQuery } from "./query/Wallet/useGetMyTransactionQuery";
-interface ErrorResponse {
+import { useGetMyWalletQuery } from "./query/Wallet/useGetMyWalletQuery";
+
+type ErrorResponse = {
   response?: {
     data?: {
       errors?: Record<string, { msg?: string }>;
       message?: string;
     };
   };
-}
+};
 
-interface ErrorWithMessage {
+type ErrorWithMessage = {
   message: string;
-}
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
+};
+function getErrorMessage(error: unknown, defaultMessage: string): string {
   const axiosError = error as ErrorResponse;
   if (axiosError?.response?.data) {
     const { errors, message } = axiosError.response.data;
     if (errors) {
       const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
+      if (firstError?.msg)
+        return firstError.msg;
     }
-    if (message) return message;
+    if (message)
+      return message;
   }
   const simpleError = error as ErrorWithMessage;
   if (simpleError?.message) {
@@ -30,8 +34,8 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   }
 
   return defaultMessage;
-};
-export const useWalletActions = (hasToken: boolean) => {
+}
+export function useWalletActions(hasToken: boolean) {
   const queryClient = useQueryClient();
   const useGetMyWallet = useGetMyWalletQuery();
   const useGetMyTransaction = useGetMyTransactionsQuery();
@@ -56,4 +60,4 @@ export const useWalletActions = (hasToken: boolean) => {
     myTransactions: useGetMyTransaction.data ?? [],
     isLoadingGetMyTransaction: useGetMyTransaction.isLoading,
   };
-};
+}

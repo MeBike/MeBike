@@ -1,7 +1,7 @@
 #include "MQTTManager.h"
 #include <ArduinoLog.h>
 
-MQTTManager::MQTTManager(WiFiClient &wifiClient, const char *brokerIP, int port, const char *username, const char *password)
+MQTTManager::MQTTManager(WiFiClient &wifiClient, std::string_view brokerIP, int port, std::string_view username, std::string_view password)
     : _client(wifiClient), _brokerIP(brokerIP), _port(port), _username(username), _password(password)
 {
     _client.setServer(_brokerIP.c_str(), _port);
@@ -40,6 +40,13 @@ bool MQTTManager::publish(const char *topic, const char *message, bool retained)
     }
 }
 
+bool MQTTManager::publish(std::string_view topic, std::string_view message, bool retained)
+{
+    std::string topicBuffer(topic);
+    std::string messageBuffer(message);
+    return publish(topicBuffer.c_str(), messageBuffer.c_str(), retained);
+}
+
 bool MQTTManager::subscribe(const char *topic)
 {
     if (_client.subscribe(topic))
@@ -52,6 +59,12 @@ bool MQTTManager::subscribe(const char *topic)
         Log.error("Failed to subscribe to %s\n", topic);
         return false;
     }
+}
+
+bool MQTTManager::subscribe(std::string_view topic)
+{
+    std::string topicBuffer(topic);
+    return subscribe(topicBuffer.c_str());
 }
 
 void MQTTManager::setCallback(void (*callback)(char *, byte *, unsigned int))

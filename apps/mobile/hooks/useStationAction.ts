@@ -1,19 +1,20 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+
 import { useGetAllStation } from "./query/Station/useGetAllStationQuery";
 import { useGetStationById } from "./query/Station/useGetStationByIDQuery";
-interface ErrorResponse {
+
+type ErrorResponse = {
   response?: {
     data?: {
       errors?: Record<string, { msg?: string }>;
       message?: string;
     };
   };
-}
+};
 
-interface ErrorWithMessage {
+type ErrorWithMessage = {
   message: string;
-}
+};
 
 // const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 //   const axiosError = error as ErrorResponse;
@@ -32,7 +33,7 @@ interface ErrorWithMessage {
 
 //   return defaultMessage;
 // };
-export const useStationActions = (hasToken: boolean, stationId?: string) => {
+export function useStationActions(hasToken: boolean, stationId?: string) {
   // const queryClient = useQueryClient();
   const { refetch, data: response, isLoading } = useGetAllStation();
   const {
@@ -59,7 +60,7 @@ export const useStationActions = (hasToken: boolean, stationId?: string) => {
     stations: response ?? [],
     isLoadingGetAllStations: isLoading,
     fetchingStationID,
-  responseStationDetail,
+    responseStationDetail,
     isLoadingGetStationByID: isLoadingStationID,
   };
-};
+}

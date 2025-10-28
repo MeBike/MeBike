@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import {rentalService} from "@services/rentalService";
-export const useGetAllRentalsQuery = (page: number = 1, limit: number = 10) => {
+
+import { rentalService } from "@services/rentalService";
+
+export function useGetAllRentalsQuery(page: number = 1, limit: number = 10) {
   return useQuery({
     queryKey: ["rentals", "all", page, limit],
     queryFn: ({ queryKey }) => {
@@ -8,4 +10,4 @@ export const useGetAllRentalsQuery = (page: number = 1, limit: number = 10) => {
       return rentalService.userGetAllRentals(pageParam as number, limitParam as number);
     },
   });
-};
+}
