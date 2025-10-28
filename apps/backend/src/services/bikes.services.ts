@@ -215,6 +215,124 @@ class BikesService {
       total_reports: reportCount
     };
   }
+
+  async getBikeRentalHistory(bikeId: string, page: number, limit: number) {
+    const objBikeId = new ObjectId(bikeId)
+    const skip = (page - 1) * limit
+
+    const pipeline = [
+      {
+        //Lọc các chuyến đi ĐÃ HOÀN THÀNH của xe này
+        $match: {
+          bike_id: objBikeId,
+          status: RentalStatus.Completed
+        }
+      },
+      {
+        //Sắp xếp mới nhất lên đầu
+        $sort: {
+          end_time: -1 //Sắp xếp theo thời gian trả xe
+        }
+      },
+      {
+        //Phân trang
+        $skip: skip
+      },
+      {
+        $limit: limit
+      },
+      {
+        //Join với users
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        //Join với stations (trạm bắt đầu)
+        $lookup: {
+          from: 'stations',
+          localField: 'start_station',
+          foreignField: '_id',
+          as: 'start_station_info'
+        }
+      },
+      {
+        //Join với stations (trạm kết thúc)
+        $lookup: {
+          from: 'stations',
+          localField: 'end_station',
+          foreignField: '_id',
+          as: 'end_station_info'
+        }
+      },
+      {
+        //$unwind user
+        $unwind: { path: '$user', preserveNullAndEmptyArrays: true }
+      },
+      {
+        //$unwind trạm bắt đầu
+        $unwind: { path: '$start_station_info', preserveNullAndEmptyArrays: true }
+      },
+      {
+        //$unwind trạm kết thúc
+        $unwind: { path: '$end_station_info', preserveNullAndEmptyArrays: true }
+      },
+      {
+        //Định dạng lại output
+        $project: {
+          _id: 1,
+          start_time: 1,
+          end_time: 1,
+          duration: 1,
+          total_price: 1,
+          user: {
+            _id: '$user._id',
+            fullname: '$user.fullname'
+          },
+          start_station: {
+            _id: '$start_station_info._id',
+            name: '$start_station_info.name'
+          },
+          end_station: {
+            _id: '$end_station_info._id',
+            name: '$end_station_info.name'
+          }
+        }
+      }
+    ]
+
+    //Pipeline để đếm tổng số (cho phân trang)
+    const countPipeline = [
+      {
+        $match: {
+          bike_id: objBikeId,
+          status: RentalStatus.Completed
+        }
+      },
+      { $count: 'total_records' }
+    ]
+
+    const [rentals, countResult] = await Promise.all([
+      databaseService.rentals.aggregate(pipeline).toArray(),
+      databaseService.rentals.aggregate(countPipeline).toArray()
+    ])
+
+    const total_records = countResult[0]?.total_records || 0
+    const total_pages = Math.ceil(total_records / limit)
+
+    return {
+      data: rentals,
+      pagination: {
+        page,
+        limit,
+        total_pages,
+        total_records
+      }
+    }
+  }
 }
 
 const bikesService = new BikesService();

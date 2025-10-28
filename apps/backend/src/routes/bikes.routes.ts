@@ -1,9 +1,9 @@
 import { Router } from "express";
 
-import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeByIdController, getBikesController, getBikesStatsController, getBikeStatsByIdController, getRentalsByBikeIdController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
+import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeByIdController, getBikeRentalHistoryController, getBikesController, getBikesStatsController, getBikeStatsByIdController, getRentalsByBikeIdController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { bikeIdValidator, createBikeValidator, updateBikeValidator } from "~/middlewares/bikes.middlewares";
-import { accessTokenValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, statsPaginationValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
 const bikesRouter = Router();
@@ -79,6 +79,24 @@ bikesRouter.patch(
   updateBikeValidator,
   wrapAsync(adminUpdateBikeController)
 );
+
+/**
+ * Description: (Admin/Staff) Get rental history of a specific bike
+ * Path: /bikes/:_id/rental-history
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Params: { _id: string } (bikeId)
+ * Query: { page?: number, limit?: number }
+ * Roles: ADMIN, STAFF
+ */
+bikesRouter.get(
+  '/:_id/rental-history',
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  bikeIdValidator,
+  statsPaginationValidator,
+  wrapAsync(getBikeRentalHistoryController)
+)
 
 // Admin deletes a bike (soft delete)
 bikesRouter.delete(

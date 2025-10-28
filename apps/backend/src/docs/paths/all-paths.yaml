@@ -1035,6 +1035,53 @@
       '403':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/bikes/{_id}/rental-history:
+  get:
+    tags: [Bikes]
+    summary: Get bike rental history (Admin/Staff only)
+    description: |
+      Retrieves a paginated history of **completed** rental sessions for a specific bike.
+      Requires Admin or Staff privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        description: "The ID of the bike to get history for."
+        schema:
+          type: string
+          format: mongoId
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: "Bike's rental history retrieved successfully."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetBikeRentalHistoryResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User does not have Admin or Staff rights."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Bike not found or Admin/Staff user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: "Validation error (e.g., invalid page or limit)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
 # ===================================================================
 # Suppliers API (ADMIN ONLY)
 # ===================================================================

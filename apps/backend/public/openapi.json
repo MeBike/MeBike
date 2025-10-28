@@ -1761,6 +1761,83 @@
         }
       }
     },
+    "/bikes/{_id}/rental-history": {
+      "get": {
+        "tags": [
+          "Bikes"
+        ],
+        "summary": "Get bike rental history (Admin/Staff only)",
+        "description": "Retrieves a paginated history of **completed** rental sessions for a specific bike.\nRequires Admin or Staff privileges.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the bike to get history for.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bike's rental history retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetBikeRentalHistoryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User does not have Admin or Staff rights.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike not found or Admin/Staff user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., invalid page or limit).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/suppliers": {
       "get": {
         "tags": [
@@ -5829,6 +5906,29 @@
           }
         }
       },
+      "GetBikeRentalHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Lấy lịch sử thuê xe của xe thành công"
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BikeRentalHistoryItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginatedResponse/properties/pagination"
+              }
+            }
+          }
+        }
+      },
       "User": {
         "type": "object",
         "description": "Represents a user object.",
@@ -6647,6 +6747,77 @@
             "format": "float",
             "description": "Phần trăm thay đổi (tăng/giảm) so với tháng trước.",
             "example": 50
+          }
+        }
+      },
+      "BikeRentalHistoryItem": {
+        "type": "object",
+        "description": "Một bản ghi lịch sử thuê xe (đã hoàn thành) của một chiếc xe cụ thể.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID của lượt thuê (Rental ID)"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Thời lượng thuê (phút)",
+            "example": 30
+          },
+          "total_price": {
+            "type": "number",
+            "format": "double",
+            "example": 5000
+          },
+          "user": {
+            "type": "object",
+            "description": "Thông tin cơ bản của người thuê.",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "mongoId"
+              },
+              "fullname": {
+                "type": "string",
+                "example": "Nguyen Van A"
+              }
+            }
+          },
+          "start_station": {
+            "type": "object",
+            "description": "Thông tin trạm bắt đầu.",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "mongoId"
+              },
+              "name": {
+                "type": "string",
+                "example": "Trạm Đại học FPT"
+              }
+            }
+          },
+          "end_station": {
+            "type": "object",
+            "description": "Thông tin trạm kết thúc.",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "mongoId"
+              },
+              "name": {
+                "type": "string",
+                "example": "Trạm Vincom"
+              }
+            }
           }
         }
       }

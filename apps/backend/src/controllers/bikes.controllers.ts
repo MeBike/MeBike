@@ -177,3 +177,16 @@ export async function getBikeStatsByIdController(req: Request, res: Response) {
     result,
   });
 }
+
+export const getBikeRentalHistoryController = async (req: Request, res: Response) => {
+  const { _id } = req.params
+  const page = parseInt(req.query.page as string) || 1
+  const limit = parseInt(req.query.limit as string) || 10
+
+  const result = await bikesService.getBikeRentalHistory(_id, page, limit)
+
+  res.json({
+    message: BIKES_MESSAGES.GET_BIKE_RENTAL_HISTORY_SUCCESS,
+    result
+  })
+}

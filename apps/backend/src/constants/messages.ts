@@ -217,7 +217,9 @@ export const BIKES_MESSAGES = {
   CHIP_ID_IS_REQUIRED: 'Chip ID là bắt buộc',
   CHIP_ID_MUST_BE_A_STRING: 'Chip ID phải là chuỗi',
   CHIP_ID_ALREADY_EXISTS: 'Chip ID đã tồn tại',
-  CHIP_ID_ALREADY_EXISTS_ON_ANOTHER_BIKE: 'Chip ID đã tồn tại trên một xe đạp khác'
+  CHIP_ID_ALREADY_EXISTS_ON_ANOTHER_BIKE: 'Chip ID đã tồn tại trên một xe đạp khác',
+  //lịch sử thuê xe thành công
+  GET_BIKE_RENTAL_HISTORY_SUCCESS: 'Lấy lịch sử thuê xe thành công'
 } as const
 
 export const RENTALS_MESSAGE = {
