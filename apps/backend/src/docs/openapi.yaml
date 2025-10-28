@@ -218,6 +218,10 @@ components:
       $ref: './components/schemas/NewUserStats.yaml'
     BikeRentalHistoryItem:
       $ref: './components/schemas/BikeRentalHistoryItem.yaml'
+    BikeActivityStatsMonthlyItem:
+      $ref: './components/schemas/BikeActivityStatsMonthlyItem.yaml'
+    BikeActivityStats:
+      $ref: './components/schemas/BikeActivityStats.yaml'
 
   securitySchemes:
     BearerAuth:

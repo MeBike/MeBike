@@ -1082,6 +1082,51 @@
             schema:
               $ref: '../components/schemas/ErrorValidationResponse.yaml'
 
+/bikes/{_id}/activity-stats:
+  get:
+    tags: [Bikes]
+    summary: Get bike activity statistics (Admin/Staff only)
+    description: |
+      Retrieves detailed activity statistics for a specific bike, including total usage, reports, estimated uptime, and monthly performance.
+      Requires Admin or Staff privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        description: "The ID of the bike to get statistics for."
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: "Bike activity statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê hoạt động của xe thành công"
+                result:
+                  $ref: '../components/schemas/BikeActivityStats.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User does not have Admin or Staff rights."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Bike not found or Admin/Staff user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Suppliers API (ADMIN ONLY)
 # ===================================================================
