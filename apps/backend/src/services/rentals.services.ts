@@ -34,22 +34,20 @@ class RentalsService {
     start_station: ObjectId
     bike: Bike
   }) {
+    const now = getLocalTime()
     const session = databaseService.getClient().startSession()
 
     try {
-      let rental: Rental | null = null
-      const now = getLocalTime()
+      const bike_id = bike._id as ObjectId
+      const rental = new Rental({
+        user_id: toObjectId(user_id),
+        start_station,
+        bike_id,
+        start_time: now,
+        status: RentalStatus.Rented
+      })
 
       await session.withTransaction(async () => {
-        const bike_id = bike._id as ObjectId
-        rental = new Rental({
-          user_id: toObjectId(user_id),
-          start_station,
-          bike_id,
-          start_time: now,
-          status: RentalStatus.Rented
-        })
-
         await Promise.all([
           databaseService.rentals.insertOne(rental, { session }),
           databaseService.bikes.updateOne(
@@ -65,21 +63,12 @@ class RentalsService {
           )
         ])
       })
-      if (!rental) {
-        throw new ErrorWithStatus({
-          message: RENTALS_MESSAGE.CREATE_SESSION_FAILED,
-          status: HTTP_STATUS.BAD_REQUEST
-        })
-      }
 
-      try {
-        await IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
-          command: IotBookingCommand.book
-        })
-        console.log(`[IoT] Sent booking command for bike ${bike.chip_id}`)
-      } catch (error) {
-        console.warn(`[IoT] Failed to send booking command for bike ${bike.chip_id}:`, error)
-      }
+      void IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
+        command: IotBookingCommand.book
+      })
+        .then(() => console.log(`[IoT] Sent booking command for bike ${bike.chip_id}`))
+        .catch((err) => console.warn(`[IoT] Failed to send booking command for bike ${bike.chip_id}:`, err))
 
       return {
         ...(rental as any),
@@ -288,21 +277,21 @@ class RentalsService {
       tasks.push(databaseService.rentalLogs.insertOne(log))
     }
 
-    tasks.push(
-      (async () => {
+    const bike = await databaseService.bikes.findOne({ _id: endedRental.bike_id })
+
+    if (bike?.chip_id) {
+      const iotTask = (async () => {
         try {
-          const bike = await databaseService.bikes.findOne({ _id: endedRental.bike_id })
-          if (bike?.chip_id) {
-            await IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
-              command: IotBookingCommand.release
-            })
-            console.log(`[IoT] Released bike ${bike.chip_id}`)
-          }
+          await IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
+            command: IotBookingCommand.release
+          })
+          console.log(`[IoT] Released bike ${bike.chip_id}`)
         } catch (error) {
           console.warn(`[IoT] Failed to release bike for rental ${endedRental._id}:`, error)
         }
       })()
-    )
+      tasks.push(iotTask)
+    }
 
     await Promise.allSettled(tasks)
   }
@@ -945,7 +934,6 @@ class RentalsService {
     const endOfYesterday = new Date(startOfToday)
     endOfYesterday.setMilliseconds(-1)
 
-
     const pipeline = (start: Date, end: Date) => [
       {
         $match: {
@@ -1029,7 +1017,7 @@ class RentalsService {
     const result = await databaseService.rentals.aggregate(pipeline).toArray()
 
     const fullDay = Array.from({ length: 24 }, (_, hour) => {
-      const found = result.find(r => r.hour === hour)
+      const found = result.find((r) => r.hour === hour)
       return { hour, totalRentals: found ? found.totalRentals : 0 }
     })
 

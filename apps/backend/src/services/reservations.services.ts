@@ -32,34 +32,32 @@ class ReservationsService {
     const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '2000')
     const reservationId = new ObjectId()
     const bike_id = bike._id as ObjectId
-    const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
 
-    await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
+    const startTime = new Date(start_time)
+    const endTime = this.generateEndTime(start_time)
 
     const session = databaseService.getClient().startSession()
     try {
-      let reservation
+      const reservation = new Reservation({
+        _id: reservationId,
+        user_id,
+        bike_id,
+        station_id,
+        start_time: startTime,
+        end_time: endTime,
+        status: ReservationStatus.Pending,
+        prepaid
+      })
+
+      const rental = new Rental({
+        _id: reservationId,
+        user_id,
+        bike_id,
+        start_station: station_id,
+        start_time: reservation.start_time,
+        status: RentalStatus.Reserved
+      })
       await session.withTransaction(async () => {
-        reservation = new Reservation({
-          _id: reservationId,
-          user_id,
-          bike_id,
-          station_id,
-          start_time: new Date(start_time),
-          end_time: this.generateEndTime(start_time),
-          status: ReservationStatus.Pending,
-          prepaid
-        })
-
-        const rental = new Rental({
-          _id: reservationId,
-          user_id,
-          bike_id,
-          start_station: station_id,
-          start_time: reservation.start_time,
-          status: RentalStatus.Reserved
-        })
-
         await Promise.all([
           databaseService.reservations.insertOne(reservation, { session }),
           databaseService.rentals.insertOne(rental, { session }),
@@ -70,16 +68,18 @@ class ReservationsService {
           )
         ])
       })
-      try {
-        await IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
-          command: IotReservationCommand.reserve
-        })
-        console.log(`[IoT] Sent reservation command for bike ${bike.chip_id}`)
-      } catch (error) {
-        console.warn(`[IoT] Failed to send reservation command for bike ${bike.chip_id}:`, error)
-      }
+
+      const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
+      await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
+
+      void IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
+        command: IotReservationCommand.reserve
+      })
+        .then(() => console.log(`[IoT] Sent reservation command for bike ${bike.chip_id}`))
+        .catch((err) => console.warn(`[IoT] Failed to send reservation command for bike ${bike.chip_id}:`, err))
+
       return {
-        ...(reservation as any),
+        ...reservation,
         prepaid: Number.parseFloat(prepaid.toString())
       }
     } catch (error) {
@@ -98,12 +98,13 @@ class ReservationsService {
     reservation: Reservation
     reason: string
   }) {
+    const now = getLocalTime()
     const session = databaseService.getClient().startSession()
     try {
-      let result: Reservation | null = null
-      const now = getLocalTime()
+      const bike_id = reservation.bike_id
+      const bike = await databaseService.bikes.findOne({ _id: bike_id })
 
-      const bike = await databaseService.bikes.findOne({ _id: reservation.bike_id })
+      let result: Reservation | null = null
 
       await session.withTransaction(async () => {
         const updatedData: Partial<Reservation> = {
@@ -111,12 +112,9 @@ class ReservationsService {
         }
         if (reservation.created_at && this.isRefundable(reservation.created_at)) {
           const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace('%s', reservation.bike_id.toString())
-          walletService.refundReservation(
-            reservation.user_id.toString(),
-            reservation.prepaid,
-            description,
-            reservation._id!
-          )
+          void walletService
+            .refundReservation(reservation.user_id.toString(), reservation.prepaid, description, reservation._id!)
+            .catch((err) => console.warn(`[Wallet] Refund failed for reservation ${reservation._id}:`, err))
         }
 
         const log = new RentalLog({
@@ -169,16 +167,15 @@ class ReservationsService {
 
         result = reservationResult
       })
+
       if (bike?.chip_id) {
-        try {
-          await IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
-            command: IotReservationCommand.cancel
-          })
-          console.log(`[IoT] Sent cancellation command for bike ${bike.chip_id}`)
-        } catch (error) {
-          console.warn(`[IoT] Failed to send cancellation command for bike ${bike.chip_id}:`, error)
-        }
+        void IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
+          command: IotReservationCommand.cancel
+        })
+          .then(() => console.log(`[IoT] Sent cancellation command for bike ${bike.chip_id}`))
+          .catch((err) => console.warn(`[IoT] Failed to cancel reservation for bike ${bike.chip_id}:`, err))
       }
+
       return result
     } catch (error) {
       throw error
@@ -196,22 +193,17 @@ class ReservationsService {
     reservation: Reservation
     reason?: string
   }) {
+    const now = getLocalTime()
     const session = databaseService.getClient().startSession()
     try {
-      let result: Rental | null = null
-      const now = getLocalTime()
+      const bike_id = reservation.bike_id
 
       const [user, bike] = await Promise.all([
         databaseService.users.findOne({ _id: user_id }),
-        databaseService.bikes.findOne({ _id: reservation.bike_id })
+        databaseService.bikes.findOne({ _id: bike_id })
       ])
 
-      if (!user) {
-        throw new ErrorWithStatus({
-          message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
-          status: HTTP_STATUS.BAD_REQUEST
-        })
-      }
+      let result: Rental | null = null
 
       await session.withTransaction(async () => {
         const rental = await databaseService.rentals.findOne(
@@ -225,13 +217,6 @@ class ReservationsService {
           throw new ErrorWithStatus({
             message: RENTALS_MESSAGE.NOT_FOUND_RESERVED_RENTAL.replace('%s', reservation._id!.toString()),
             status: HTTP_STATUS.NOT_FOUND
-          })
-        }
-
-        if (user.role === Role.User && !rental.user_id.equals(user_id)) {
-          throw new ErrorWithStatus({
-            message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_OTHER_RESERVATION,
-            status: HTTP_STATUS.BAD_REQUEST
           })
         }
 
@@ -261,7 +246,7 @@ class ReservationsService {
             { $set: { station_id: null, status: BikeStatus.Booked, updated_at: now } },
             { session }
           ),
-          ...(user.role === Role.Staff && rental._id
+          ...(user && user.role === Role.Staff && rental._id
             ? [
                 databaseService.rentalLogs.insertOne(
                   new RentalLog({
@@ -285,16 +270,15 @@ class ReservationsService {
 
         result = rentalUpdateResult
       })
+
       if (bike?.chip_id) {
-        try {
-          await IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
-            command: IotBookingCommand.claim
-          })
-          console.log(`[IoT] Sent confirmation command for bike ${bike.chip_id}`)
-        } catch (error) {
-          console.warn(`[IoT] Failed to send confirmation command for bike ${bike.chip_id}:`, error)
-        }
+        void IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
+          command: IotBookingCommand.claim
+        })
+          .then(() => console.log(`[IoT] Sent confirmation command for bike ${bike.chip_id}`))
+          .catch((err) => console.warn(`[IoT] Failed to confirm reservation for bike ${bike.chip_id}:`, err))
       }
+
       return result
     } catch (error) {
       throw error
@@ -304,6 +288,12 @@ class ReservationsService {
   }
 
   async confirmReservation({ user_id, reservation }: { user_id: ObjectId; reservation: Reservation }) {
+    if (!reservation.user_id.equals(user_id)) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_OTHER_RESERVATION,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
     return await this.confirmReservationCore({ user_id, reservation })
   }
 
