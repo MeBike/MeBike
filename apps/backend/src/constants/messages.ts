@@ -198,6 +198,8 @@ export const BIKES_MESSAGES = {
   INVALID_BIKE_ID: 'ID của xe đạp không hợp lệ',
   // delete bike
   DELETE_BIKE_SUCCESS: 'Xóa xe đạp thành công',
+  CANNOT_DELETE_BIKE_WHILE_RENTED: 'Không thể xóa xe đạp đang được thuê',
+  CANNOT_DELETE_BIKE_WHILE_RESERVED: 'Không thể xóa xe đạp đang được đặt trước',
   // history rental of bike
   GET_BIKE_RENTALS_SUCCESS: 'Lấy lịch sử thuê xe thành công',
   // stats of bikes

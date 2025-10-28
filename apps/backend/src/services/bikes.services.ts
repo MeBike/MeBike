@@ -4,11 +4,14 @@ import { ObjectId } from "mongodb";
 
 import type { CreateBikeReqBody, GetBikesReqQuery, UpdateBikeReqBody } from "~/models/requests/bikes.request";
 
-import { BikeStatus } from "~/constants/enums";
+import { BikeStatus, RentalStatus, ReservationStatus } from "~/constants/enums";
 import Bike from "~/models/schemas/bike.schema";
 import { sendPaginatedResponse } from "~/utils/pagination.helper";
 
 import databaseService from "./database.services";
+import { BIKES_MESSAGES } from "~/constants/messages";
+import { ErrorWithStatus } from "~/models/errors";
+import HTTP_STATUS from "~/constants/http-status";
 
 class BikesService {
   async createBike(payload: CreateBikeReqBody) {
@@ -82,6 +85,30 @@ class BikesService {
 
   async deleteBike(bikeId: string) {
     // Luôn thực hiện xóa mềm: cập nhật status thành UNAVAILABLE
+    const objBikeId = new ObjectId(bikeId);
+
+    const activeRental = await databaseService.rentals.findOne({
+      bike_id: objBikeId,
+      status: RentalStatus.Rented
+    })
+    if (activeRental) {
+      throw new ErrorWithStatus({
+        message: BIKES_MESSAGES.CANNOT_DELETE_BIKE_WHILE_RENTED,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    const activeReservation = await databaseService.reservations.findOne({
+      bike_id: objBikeId,
+      status: ReservationStatus.Pending
+    })
+    if (activeReservation) {
+      throw new ErrorWithStatus({
+        message: BIKES_MESSAGES.CANNOT_DELETE_BIKE_WHILE_RESERVED,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
     const result = await this.updateBike(bikeId, { status: BikeStatus.Unavailable });
     return { softDelete: true, result };
   }
