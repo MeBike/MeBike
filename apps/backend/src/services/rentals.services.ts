@@ -22,6 +22,8 @@ import Bike from '~/models/schemas/bike.schema'
 import { IotServiceSdk } from '@mebike/shared'
 import { IotBookingCommand } from '@mebike/shared/sdk/iot-service'
 
+const PENALTY_HOURS = parseInt(process.env.RENTAL_PENALTY_HOURS || '24', 10)
+const PENALTY_AMOUNT = parseInt(process.env.RENTAL_PENALTY_AMOUNT || '50000', 10)
 class RentalsService {
   async createRentalSession({
     user_id,
@@ -94,21 +96,25 @@ class RentalsService {
     const end_station = rental.start_station
     const now = getLocalTime()
 
+    if (!user_id.equals(rental.user_id)) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.CANNOT_END_OTHER_RENTAL,
+        status: HTTP_STATUS.FORBIDDEN
+      })
+    }
+
     const session = databaseService.getClient().startSession()
     try {
       let endedRental: Rental = rental
+      let logData: any = null
 
       await session.withTransaction(async () => {
-        const user = await databaseService.users.findOne({ _id: user_id }, { session })
-        if (!user) {
-          throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
-            status: HTTP_STATUS.NOT_FOUND
-          })
-        }
-
-        endedRental = await this.processRentalEndTransaction(rental, user_id, end_station, now, session)
+        const result = await this.processRentalEndCore(rental, user_id, end_station, now, session)
+        endedRental = result.rental
+        logData = result.logData
       })
+
+      await this.afterRentalEnd(endedRental, logData)
 
       return {
         ...endedRental,
@@ -151,18 +157,15 @@ class RentalsService {
     const session = databaseService.getClient().startSession()
     try {
       let endedRental: Rental = rental
+      let logData: any = null
 
       await session.withTransaction(async () => {
-        const user = await databaseService.users.findOne({ _id: user_id }, { session })
-        if (!user) {
-          throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
-            status: HTTP_STATUS.NOT_FOUND
-          })
-        }
-
-        endedRental = await this.processRentalEndTransaction(rental, user_id, objStationId, endTime, session, reason)
+        const result = await this.processRentalEndCore(rental, user_id, objStationId, endTime, session, reason)
+        endedRental = result.rental
+        logData = result.logData
       })
+
+      await this.afterRentalEnd(endedRental, logData)
 
       return {
         ...endedRental,
@@ -175,22 +178,16 @@ class RentalsService {
     }
   }
 
-  async processRentalEndTransaction(
+  async processRentalEndCore(
     rental: Rental,
     user_id: ObjectId,
     end_station_id: ObjectId,
     effective_end_time: Date,
     session: ClientSession,
     reason?: string
-  ): Promise<Rental> {
+  ): Promise<{ rental: Rental; logData?: any }> {
     const now = getLocalTime()
-
-    if (!reason && !rental.user_id.equals(user_id)) {
-      throw new ErrorWithStatus({
-        message: RENTALS_MESSAGE.CANNOT_END_OTHER_RENTAL,
-        status: HTTP_STATUS.FORBIDDEN
-      })
-    }
+    const result: any = {}
 
     const duration = this.generateDuration(rental.start_time, effective_end_time)
     let totalPrice = this.generateTotalPrice(duration)
@@ -208,66 +205,106 @@ class RentalsService {
 
     if (reservation) {
       totalPrice = Math.max(0, totalPrice - parseFloat(reservation.prepaid.toString()))
+      result.is_reservation = true
+      result.prepaid = parseFloat(reservation.prepaid.toString())
+    }
+
+    const hours = duration / 60
+    if (hours > PENALTY_HOURS) {
+      result.origin_price = totalPrice
+      result.penalty_amount = PENALTY_AMOUNT
+      totalPrice += PENALTY_AMOUNT
+      console.log(
+        `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${hours.toFixed(2)}h)`
+      )
     }
 
     const decimalTotalPrice = Decimal128.fromString(totalPrice.toString())
-    const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', rental.bike_id.toString())
 
     const updatedData: any = {
       end_station: end_station_id,
       end_time: effective_end_time,
       duration: new Int32(duration),
       total_price: decimalTotalPrice,
-      status: RentalStatus.Completed
+      status: RentalStatus.Completed,
+      updated_at: now
     }
 
     const [rentalResult, bike] = await Promise.all([
-      await databaseService.rentals.findOneAndUpdate(
+      databaseService.rentals.findOneAndUpdate(
         { _id: rental._id },
-        { $set: { ...updatedData, updated_at: now } },
+        { $set: updatedData },
         { returnDocument: 'after', session }
       ),
-      await databaseService.bikes.findOneAndUpdate(
+      databaseService.bikes.findOneAndUpdate(
         { _id: rental.bike_id },
-        { $set: { station_id: end_station_id, status: BikeStatus.Available, updated_at: now } },
+        {
+          $set: {
+            station_id: end_station_id,
+            status: BikeStatus.Available,
+            updated_at: now
+          }
+        },
         { returnDocument: 'after', session }
-      ),
-      walletService.paymentRental(rental.user_id.toString(), decimalTotalPrice, description, rental._id as ObjectId)
+      )
     ])
 
-    if (!rentalResult) {
+    if (!rentalResult || !bike) {
       throw new ErrorWithStatus({
-        message: RENTALS_MESSAGE.RENTAL_UPDATE_FAILED,
+        message: !rentalResult ? RENTALS_MESSAGE.RENTAL_UPDATE_FAILED : RENTALS_MESSAGE.BIKE_UPDATE_FAILED,
         status: HTTP_STATUS.INTERNAL_SERVER_ERROR
       })
     }
 
-    if (!bike) {
-      throw new ErrorWithStatus({
-        message: RENTALS_MESSAGE.BIKE_UPDATE_FAILED,
-        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
-      })
+    const logData = reason
+      ? {
+          rental_id: rental._id!,
+          user_id,
+          changes: updatedData,
+          reason
+        }
+      : null
+
+    return { rental: { ...rentalResult, ...result }, logData }
+  }
+
+  async afterRentalEnd(endedRental: Rental, logData?: any) {
+    const tasks: Promise<any>[] = []
+    const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', endedRental.bike_id.toString())
+
+    if (endedRental.total_price && Number(endedRental.total_price) > 0) {
+      tasks.push(
+        walletService.paymentRental(
+          endedRental.user_id.toString(),
+          Decimal128.fromString(endedRental.total_price.toString()),
+          description,
+          endedRental._id as ObjectId
+        )
+      )
     }
 
-    if (reason) {
-      const log = new RentalLog({
-        rental_id: rental._id!,
-        user_id,
-        changes: updatedData,
-        reason
-      })
-      await databaseService.rentalLogs.insertOne({ ...log }, { session })
+    if (logData) {
+      const log = new RentalLog(logData)
+      tasks.push(databaseService.rentalLogs.insertOne(log))
     }
 
-    try {
-      await IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
-        command: IotBookingCommand.release
-      })
-      console.log(`[IoT] Sent releasing command for bike ${bike.chip_id}`)
-    } catch (error) {
-      console.warn(`[IoT] Failed to send releasing command for bike ${bike.chip_id}:`, error)
-    }
-    return rentalResult
+    tasks.push(
+      (async () => {
+        try {
+          const bike = await databaseService.bikes.findOne({ _id: endedRental.bike_id })
+          if (bike?.chip_id) {
+            await IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
+              command: IotBookingCommand.release
+            })
+            console.log(`[IoT] Released bike ${bike.chip_id}`)
+          }
+        } catch (error) {
+          console.warn(`[IoT] Failed to release bike for rental ${endedRental._id}:`, error)
+        }
+      })()
+    )
+
+    await Promise.allSettled(tasks)
   }
 
   // for staff/admin
@@ -491,7 +528,7 @@ class RentalsService {
 
         if (!rental) {
           throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.NOT_FOUND.replace("%s",rental_id),
+            message: RENTALS_MESSAGE.NOT_FOUND.replace('%s', rental_id),
             status: HTTP_STATUS.NOT_FOUND
           })
         }
@@ -534,7 +571,7 @@ class RentalsService {
           databaseService.rentalLogs.insertOne({ ...log }, { session })
         ])
 
-        if(!rentalResult){
+        if (!rentalResult) {
           throw new ErrorWithStatus({
             message: RENTALS_MESSAGE.RENTAL_UPDATE_FAILED,
             status: HTTP_STATUS.NOT_FOUND
@@ -899,10 +936,11 @@ class RentalsService {
     return Math.ceil((end.getTime() - start.getTime()) / 60000)
   }
 
-  generateTotalPrice(duration: number) {
+  generateTotalPrice(minutes: number) {
     // eslint-disable-next-line node/prefer-global/process
-    const pricePerMin = Number(process.env.PRICE_PER_MIN || '1')
-    return pricePerMin * duration
+    const halfHourUnit = Math.max(1, Math.ceil(minutes / 30))
+    const pricePer30Min = Number(process.env.PRICE_PER_30_MINS || '2000')
+    return pricePer30Min * halfHourUnit
   }
 }
 

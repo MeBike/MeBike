@@ -3,7 +3,7 @@ import { Decimal128, ObjectId } from 'mongodb'
 import { BikeStatus, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
-import { fromHoursToMs, getLocalTime } from '~/utils/date-time'
+import { fromHoursToMs, fromMinutesToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import { ErrorWithStatus } from '~/models/errors'
 import { COMMON_MESSAGE, RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
@@ -29,7 +29,7 @@ class ReservationsService {
     start_time: string
   }) {
     const now = getLocalTime()
-    const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '0')
+    const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '2000')
     const reservationId = new ObjectId()
     const bike_id = bike._id as ObjectId
     const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
@@ -295,7 +295,6 @@ class ReservationsService {
           console.warn(`[IoT] Failed to send confirmation command for bike ${bike.chip_id}:`, error)
         }
       }
-
       return result
     } catch (error) {
       throw error
@@ -681,14 +680,14 @@ class ReservationsService {
   }
 
   generateEndTime(startTime: string) {
-    const holdTimeMs = fromHoursToMs(Number(process.env.HOLD_HOURS_RESERVATION || '1'))
+    const holdTimeMs = fromMinutesToMs(Number(process.env.HOLD_MINUTES_RESERVATION || '30'))
     return new Date(new Date(startTime).getTime() + holdTimeMs)
   }
 
   isRefundable(createdTime: Date) {
     const now = getLocalTime()
-    const cancellableMs = fromHoursToMs(Number(process.env.CANCELLABLE_HOURS || '1'))
-    return new Date(createdTime.getTime() + cancellableMs) > now
+    const refundPeriodMs = fromHoursToMs(Number(process.env.REFUND_PERIOD_HOURS || '1'))
+    return new Date(createdTime.getTime() + refundPeriodMs) > now
   }
 
   async getStationReservations({ stationId }: { stationId: ObjectId }) {

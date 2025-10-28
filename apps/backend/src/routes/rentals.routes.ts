@@ -48,31 +48,31 @@ rentalsRouter.route('/me').get(accessTokenValidator, wrapAsync(getMyRentalsContr
 
 rentalsRouter.route('/me/current').get(accessTokenValidator, wrapAsync(getMyCurrentRentalsController))
 
+rentalsRouter
+.route('/me/:id/end')
+.put(accessTokenValidator, endRentalSessionValidator, wrapAsync(endRentalSessionController))
+
 rentalsRouter.route('/me/:id').get(accessTokenValidator, wrapAsync(getMyDetailRentalController))
 
 rentalsRouter
-  .route('/me/:id/end')
-  .put(accessTokenValidator, endRentalSessionValidator, wrapAsync(endRentalSessionController))
+.route('/:id/end')
+.put(
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  filterMiddleware<EndRentalByAdminOrStaffReqBody>(["end_station", "end_time", "reason"]),
+  endRentalByAdminOrStaffValidator,
+  wrapAsync(endRentalByAdminOrStaffController)
+)
 
 rentalsRouter
-  .route('/:id/end')
-  .put(
-    accessTokenValidator,
-    isAdminAndStaffValidator,
-    filterMiddleware<EndRentalByAdminOrStaffReqBody>(["end_station", "end_time", "reason"]),
-    endRentalByAdminOrStaffValidator,
-    wrapAsync(endRentalByAdminOrStaffController)
-  )
-
-rentalsRouter
-  .route('/:id/cancel')
-  .post(
-    accessTokenValidator,
-    isAdminAndStaffValidator,
-    filterMiddleware<CancelRentalReqBody>(['bikeStatus', 'reason']),
-    cancelRentalValidator,
-    wrapAsync(cancelRentalController)
-  )
+.route('/:id/cancel')
+.post(
+  accessTokenValidator,
+  isAdminAndStaffValidator,
+  filterMiddleware<CancelRentalReqBody>(['bikeStatus', 'reason']),
+  cancelRentalValidator,
+  wrapAsync(cancelRentalController)
+)
 
 // staff/admin
 rentalsRouter
