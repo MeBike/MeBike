@@ -55,6 +55,7 @@ export default function SuppliersPage() {
     bikeStats,
     allStatsSupplier,
     isLoadingBikeStatsSupplier,
+    changeStatusSupplier,
     isLoadingAllStatsSupplier,
     getAllStatsSupplier,
   } = useSupplierActions(true, selectedSupplier?._id);
@@ -217,6 +218,7 @@ export default function SuppliersPage() {
               columns={columns({
                 onView: handleViewSupplier,
                 setIsDetailModalOpen,
+                onChangeStatus: changeStatusSupplier,
               })}
               data={supplierData?.data ?? []}
             />

@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Edit2, Trash2 } from "lucide-react";
+import { Eye, Edit2, Trash2, Recycle } from "lucide-react";
 import type { Supplier } from "@/types";
 const getStatusColor = (status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
   return status === "HOẠT ĐỘNG"
@@ -12,11 +12,13 @@ export const columns = ({
   setIsDetailModalOpen,
   onEdit,
   onDelete,
+  onChangeStatus,
 }: {
   onView?: (supplier: Supplier) => void;
   setIsDetailModalOpen?: (isOpen: boolean) => void;
   onEdit?: (supplierId: string) => void;
   onDelete?: (supplier: Supplier) => void;
+  onChangeStatus?: (id: string, status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => void;
 }): ColumnDef<Supplier>[] => [
   {
     accessorKey: "name",
@@ -80,14 +82,14 @@ export const columns = ({
         </button>
         <button
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xóa"
+          title={row.original.status === "HOẠT ĐỘNG" ? "Ngưng hoạt động" : "Kích hoạt"}
           onClick={() => {
-            if (onDelete) {
-              onDelete(row.original);
+            if (onChangeStatus) {
+              onChangeStatus(row.original._id, row.original.status === "HOẠT ĐỘNG" ? "NGƯNG HOẠT ĐỘNG" : "HOẠT ĐỘNG");
             }
           }}
         >
-          <Trash2 className="w-4 h-4 text-red-500" />
+          <Recycle className="w-4 h-4 text-blue-500" />
         </button>
       </div>
     ),
