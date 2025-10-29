@@ -2,25 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { useForm } from "react-hook-form";
 import { CustomerCard } from "@/components/customers/customer-card";
 import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { userProfileSchema, UserProfile } from "@schemas/userSchema";
 import type { VerifyStatus, UserRole, DetailUser } from "@custom-types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useUserActions } from "@/hooks/useUserAction";
 
 export default function CustomersPage() {
-  // const {
-  //   register,
-  //   handleSubmit,
-  //   formState: { errors },
-  //   reset,
-  // } = useForm<UserProfile>({
-  //   resolver: zodResolver(userProfileSchema),
-  // });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");

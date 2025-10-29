@@ -15,7 +15,7 @@ export const columns = ({
 }: {
   onView?: (supplier: Supplier) => void;
   setIsDetailModalOpen?: (isOpen: boolean) => void;
-  onEdit?: (supplier: Supplier) => void;
+  onEdit?: (supplierId: string) => void;
   onDelete?: (supplier: Supplier) => void;
 }): ColumnDef<Supplier>[] => [
   {
@@ -72,7 +72,7 @@ export const columns = ({
           title="Chỉnh sửa"
           onClick={() => {
             if (onEdit) {
-              onEdit(row.original);
+              onEdit(row.original._id);
             }
           }}
         >

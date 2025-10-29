@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Edit, Ban, Mail, Phone, MapPin } from "lucide-react";
+import { Eye, Edit, Mail, Phone, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -13,7 +13,6 @@ interface CustomerCardProps {
   customer: Customer;
   onView?: (customer: Customer) => void;
   onEdit?: (customer: Customer) => void;
-  onBlock?: (customer: Customer) => void;
 }
 
 // const statusConfig = {
@@ -46,7 +45,6 @@ export function CustomerCard({
   customer,
   onView,
   onEdit,
-  onBlock,
 }: CustomerCardProps) {
   const initials = customer.fullname
     .split(" ")
@@ -151,15 +149,6 @@ export function CustomerCard({
             <Edit className="w-4 h-4 mr-1" />
             Sửa
           </Button>
-          {/* {customer.verify !== "BANNED" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onBlock?.(customer)}
-            >
-              <Ban className="w-4 h-4 text-destructive" />
-            </Button>
-          )} */}
         </div>
       </div>
     </Card>

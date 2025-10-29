@@ -112,7 +112,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     getBikeStatsSupplier,
     bikeStats,
     isLoadingBikeStatsSupplier,
-    isLoadingGetAllStatsSupplier: isLoadingAllStatsSupplier,
+    isLoadingAllStatsSupplier,
     getAllStatsSupplier,
     allStatsSupplier,
   };

@@ -20,7 +20,7 @@ interface DetailApiResponse<T> {
   result: T;
   message: string;
 }
-interface BikeStatistics {
+export interface BikeStatistics {
   "ĐÃ ĐẶT TRƯỚC": number;
   "CÓ SẴN": number;
   "ĐANG ĐƯỢC THUÊ": number;

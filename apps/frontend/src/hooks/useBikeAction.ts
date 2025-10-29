@@ -14,7 +14,6 @@ import { useReportBike } from "./mutations/Bike/useReportBike";
 import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
 import { useGetStatisticsBikeQuery } from "./query/Bike/useGetStatusBike";
 import { useRouter } from "next/navigation";
-import { useGetStatusBikeIDQuery } from "./query/Bike/useGetStatusBikeByID";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -53,7 +52,7 @@ export const useBikeActions = (
 ) => {
   const router = useRouter();
   const {
-    refetch: useGetAllRefetch,
+    refetch: fetchBike,
     data,
     isFetching: isLoading,
   } = useGetAllBikeQuery({
@@ -83,8 +82,8 @@ export const useBikeActions = (
       router.push("/login");
       return;
     }
-    useGetAllRefetch();
-  }, [useGetAllRefetch, hasToken, router]);
+    fetchBike();
+  }, [hasToken, router, fetchBike]);
   const getStatisticsBike = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -124,7 +123,7 @@ export const useBikeActions = (
         },
       });
     },
-    [useCreateBike, hasToken, router]
+    [useCreateBike, hasToken, router, page, limit, station_id, supplier_id, status, queryClient]
   );
   const updateBike = useCallback(
     (data: UpdateBikeSchemaFormData, id: string) => {
@@ -162,7 +161,7 @@ export const useBikeActions = (
         }
       );
     },
-    [updateBikeMutation, hasToken, router]
+    [updateBikeMutation, hasToken, router, page, limit, station_id, supplier_id, status, queryClient]
   );
   const deleteBike = useCallback(
     (id: string) => {
@@ -212,8 +211,10 @@ export const useBikeActions = (
     [reportBikeMutation, hasToken, router]
   );
   const getBikeByID = useCallback(() => {
-    getDetailBike();
-  }, [getDetailBike]);
+    if (bikeId) {
+      getDetailBike();
+    }
+  }, [getDetailBike, bikeId]);
   return {
     getBikes,
     createBike,

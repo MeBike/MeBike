@@ -203,7 +203,6 @@ export default function CustomersPage() {
                 customer={user as DetailUser}
                 onView={(user) => console.log("[v0] View user:", user._id)}
                 onEdit={(user) => console.log("[v0] Edit user:", user._id)}
-                onBlock={(user) => console.log("[v0] Block user:", user._id)}
               />
             ))}
           </div>

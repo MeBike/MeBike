@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Bike, BikeStatus } from "@custom-types";
-import { Plus, Pencil } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { Loader2 } from "lucide-react";
 import { bikeColumn } from "@/columns/bike-colums";
@@ -11,67 +11,7 @@ import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useStationActions } from "@/hooks/useStationAction";
 import { useSupplierActions } from "@/hooks/useSupplierAction";
-const mockBikes: Bike[] = [
-  {
-    _id: "bike_001",
-    station_id: "station_001",
-    status: "CÓ SẴN",
-    supplier_id: "supplier_001",
-    created_at: "2024-01-15T00:00:00Z",
-    updated_at: "2024-01-15T00:00:00Z",
-    chip_id: "CHIP_001",
-  },
-  {
-    _id: "bike_002",
-    station_id: "station_001",
-    status: "ĐANG ĐƯỢC THUÊ",
-    supplier_id: "supplier_001",
-    created_at: "2024-01-16T00:00:00Z",
-    updated_at: "2024-01-16T00:00:00Z",
-    chip_id: "CHIP_002",
-  },
-  {
-    _id: "bike_003",
-    station_id: "station_002",
-    status: "BỊ HỎNG",
-    supplier_id: "supplier_002",
-    created_at: "2024-01-17T00:00:00Z",
-    updated_at: "2024-01-17T00:00:00Z",
-    chip_id: "CHIP_003",
-  },
-  {
-    _id: "bike_004",
-    station_id: "station_002",
-    status: "ĐANG BẢO TRÌ",
-    supplier_id: "supplier_001",
-    created_at: "2024-01-18T00:00:00Z",
-    updated_at: "2024-01-18T00:00:00Z",
-    chip_id: "CHIP_004",
-  },
-  {
-    _id: "bike_005",
-    station_id: "station_003",
-    status: "CÓ SẴN",
-    supplier_id: "supplier_002",
-    created_at: "2024-01-19T00:00:00Z",
-    updated_at: "2024-01-19T00:00:00Z",
-    chip_id: "CHIP_005",
-  },
-];
-export const getStatusColor = (status: BikeStatus) => {
-  switch (status) {
-    case "ĐANG ĐƯỢC THUÊ":
-      return "bg-yellow-100 text-yellow-800";
-    case "ĐANG BẢO TRÌ":
-      return "bg-blue-100 text-blue-800";
-    case "BỊ HỎNG":
-      return "bg-red-100 text-red-800";
-    case "CÓ SẴN":
-      return "bg-green-100 text-green-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
+import { getStatusColor } from "@utils/bike-status";
 
 export default function BikesPage() {
   const [id, setId] = useState<string>("");
@@ -111,16 +51,6 @@ export default function BikesPage() {
     limit,
     page
   );
-
-  const filteredBikes = mockBikes.filter((bike) => {
-    const matchesSearch =
-      bike._id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      bike.chip_id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || bike.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const handleViewDetails = (bikeId: string) => {
     setId(bikeId);
@@ -171,10 +101,12 @@ export default function BikesPage() {
   };
   useEffect(() => {
     getStatisticsBike();
-  }, []);
+  }, [getStatisticsBike]);
   useEffect(() => {
-    getBikeByID();
-  } , [id]);
+    if (id) {
+      getBikeByID();
+    }
+  } , [id , getBikeByID]);
   if (isLoadingStatistics) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -295,6 +227,8 @@ export default function BikesPage() {
                 onEdit: ({ id }: { id: string }) => {
                   handleEditBike(id);
                 },
+                stations: stations,
+                suppliers: allSupplier?.data || [],
               })}
               data={data?.data || []}
             />

@@ -1,8 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw, Pencil } from "lucide-react";
-import type { Bike, BikeStatus } from "@/types";
-import { useStationActions } from "@/hooks/useStationAction";
-import { useSupplierActions } from "@/hooks/useSupplierAction";
+import type { Bike, BikeStatus, Station, Supplier } from "@/types";
 export const getStatusColor = (status: BikeStatus) => {
   switch (status) {
     case "ĐANG ĐƯỢC THUÊ":
@@ -25,10 +23,14 @@ export const bikeColumn = (
   {
     onView,
     onEdit,
+    stations = [],
+    suppliers = [],
    //  onUpdateStatus,
   }: {
     onView?: ({ id }: { id: string }) => void;
     onEdit?: ({ id }: { id: string }) => void;
+    stations?: Station[];
+    suppliers?: Supplier[];
    //  onUpdateStatus?: ((data: ) => void) | undefined;
   }
 ): ColumnDef<Bike>[] => [
@@ -50,7 +52,6 @@ export const bikeColumn = (
     accessorKey: "station_id",
     header: "Mã trạm",
     cell: ({ row }) => {
-      const { stations } = useStationActions({ hasToken: true });
       const station = stations.find((s) => s._id === row.original.station_id);
       return station ? station.name : "Không có";
     },
@@ -59,8 +60,7 @@ export const bikeColumn = (
     accessorKey: "supplier_id",
     header: "Mã nhà cung cấp",
     cell: ({ row }) => {
-      const { allSupplier } = useSupplierActions(true);
-      const supplier = allSupplier?.data.find(
+      const supplier = suppliers.find(
         (s) => s._id === row.original.supplier_id
       );
       return supplier ? supplier.name : "Không có";
