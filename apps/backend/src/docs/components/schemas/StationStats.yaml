@@ -1,0 +1,126 @@
+type: object
+description: "Thống kê chi tiết cho một trạm trong một khoảng thời gian."
+properties:
+  station:
+    type: object
+    properties:
+      _id:
+        type: string
+        format: mongoId
+      name:
+        type: string
+      address:
+        type: string
+      capacity:
+        type: integer
+  period:
+    type: object
+    properties:
+      from:
+        type: string
+        format: date-time
+        description: "Ngày bắt đầu của kỳ thống kê."
+      to:
+        type: string
+        format: date-time
+        description: "Ngày kết thúc của kỳ thống kê."
+  rentals:
+    type: object
+    properties:
+      totalRentals:
+        type: integer
+        description: "Tổng số lượt thuê bắt đầu từ trạm này (đã hoàn thành)."
+        example: 150
+      totalRevenue:
+        type: number
+        format: double
+        description: "Tổng doanh thu từ các lượt thuê đó."
+        example: 750000
+      totalDuration:
+        type: integer
+        description: "Tổng thời lượng (phút) của các lượt thuê đó."
+        example: 4500
+      avgDuration:
+        type: number
+        format: double
+        description: "Thời lượng thuê trung bình (phút)."
+        example: 30.5
+  returns:
+    type: object
+    properties:
+      totalReturns:
+        type: integer
+        description: "Tổng số lượt xe được trả về trạm này."
+        example: 145
+  currentBikes:
+    type: object
+    description: "Thông tin về số lượng xe hiện tại ở trạm theo trạng thái."
+    properties:
+      totalBikes:
+        type: integer
+        description: "Tổng số xe đang có mặt tại trạm."
+        example: 18
+      available:
+        type: integer
+        description: "Số xe có trạng thái 'CÓ SẴN'."
+        example: 12
+      booked:
+        type: integer
+        description: "Số xe có trạng thái 'ĐANG ĐƯỢC THUÊ' (thường là 0 nếu đang ở trạm)."
+        example: 0
+      broken:
+        type: integer
+        description: "Số xe có trạng thái 'BỊ HỎNG'."
+        example: 2
+      reserved:
+        type: integer
+        description: "Số xe có trạng thái 'ĐÃ ĐẶT TRƯỚC'."
+        example: 1
+      maintained:
+        type: integer
+        description: "Số xe có trạng thái 'ĐANG BẢO TRÌ'."
+        example: 1
+      unavailable:
+        type: integer
+        description: "Số xe có trạng thái 'KHÔNG CÓ SẴN'."
+        example: 2
+      emptySlots:
+        type: integer
+        description: "Số chỗ trống còn lại tại trạm."
+        example: 7 # Ví dụ capacity là 25
+  reports:
+    type: object
+    description: "Thống kê báo cáo liên quan đến trạm."
+    properties:
+      totalReports:
+        type: integer
+        description: "Tổng số báo cáo liên quan đến trạm trong kỳ."
+        example: 5
+      byType:
+        type: object
+        description: "Số lượng báo cáo theo từng loại."
+        additionalProperties:
+          type: integer
+        example:
+          "TRẠM ĐẦY": 2
+          "TRẠM KHÔNG NHẬN XE": 1
+          "KHÁC": 2
+  utilization:
+    type: object
+    description: "Tỷ lệ sử dụng trạm (dựa trên thời gian hoạt động của xe)."
+    properties:
+      rate:
+        type: number
+        format: float
+        description: "Tỷ lệ sử dụng (%) = (Tổng phút xe hoạt động / Tổng phút xe có thể hoạt động) * 100."
+        example: 85.25
+      availableMinutes:
+        type: number
+        format: double
+        description: "Tổng số phút xe có thể hoạt động trong kỳ (Số xe * Số phút trong kỳ)."
+        example: 518400 # Ví dụ: 18 xe * 20 ngày * 1440 phút/ngày
+      usedMinutes:
+        type: number
+        format: double
+        description: "Tổng số phút xe thực tế hoạt động (từ rentals.totalDuration)."
+        example: 442000
