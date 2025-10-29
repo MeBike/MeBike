@@ -46,12 +46,11 @@ export async function getReservationListController(req: Request, res: Response, 
 export async function reserveBikeController(req: Request<ParamsDictionary, any, ReserveBikeReqBody>, res: Response) {
   const { user_id } = req.decoded_authorization as TokenPayLoad
   const objUserId = toObjectId(user_id)
-  const objBikeId = toObjectId(req.bike?._id as ObjectId)
   const objStationId = toObjectId(req.bike?.station_id as ObjectId)
 
   const result = await reservationsService.reserveBike({
     user_id: objUserId,
-    bike_id: objBikeId,
+    bike: req.bike!,
     station_id: objStationId,
     start_time: req.body.start_time
   })
@@ -150,11 +149,9 @@ export async function getReservationHistoryController(req: Request, res: Respons
 }
 
 export async function dispatchSameStationController(req: Request<ParamsDictionary, any, DispatchBikeReqBody>, res: Response) {
-  const { user_id } = (req as any).decoded_authorization as TokenPayLoad
   const { source_station_id, destination_station_id } = req.body
 
   const result = await reservationsService.dispatchSameStation({
-    user_id: toObjectId(user_id),
     source_id: toObjectId(source_station_id),
     destination_id: toObjectId(destination_station_id),
     bike_ids: req.dispatch_bike_ids!,
@@ -197,7 +194,6 @@ export async function getReservationReportController(req: Request, res: Response
 }
 
 export async function getStationReservationsController(req: Request<StationParam>, res: Response) {
-
   const result = await reservationsService.getStationReservations({stationId: toObjectId(req.params.stationId)})
 
   res.json({
@@ -205,3 +201,14 @@ export async function getStationReservationsController(req: Request<StationParam
     result
   })
 }
+
+export async function expireReservationsController(req: Request, res: Response) {
+  const result = await reservationsService.expireReservations()
+
+  res.json({
+    message: RESERVATIONS_MESSAGE.MARK_EXPIRED_RESERVATIONS_SUCCESS,
+    result
+  })
+}
+
+

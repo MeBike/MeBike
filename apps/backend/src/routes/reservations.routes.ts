@@ -4,6 +4,7 @@ import {
   cancelReservationController,
   confirmReservationController,
   dispatchSameStationController,
+  expireReservationsController,
   getReservationHistoryController,
   getReservationListController,
   getReservationReportController,
@@ -37,6 +38,10 @@ reserveRouter
 reserveRouter
   .route('/dispatch')
   .post(accessTokenValidator, isAdminValidator, batchDispatchSameStationValidator, wrapAsync(dispatchSameStationController))
+
+reserveRouter
+  .route('/mark-expired')
+  .post(accessTokenValidator, isAdminValidator, wrapAsync(expireReservationsController))
 
 reserveRouter
   .route('/stats')
