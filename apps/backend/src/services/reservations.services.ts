@@ -100,17 +100,18 @@ class ReservationsService {
       const bike_id = reservation.bike_id
       const bike = await databaseService.bikes.findOne({ _id: bike_id })
 
-      let result: Reservation | null = null
+      let reservationResult: Reservation | null = null
+      let isRefund = false
+      let refundAmount = 0
+      let refundPromise: Promise<any> | null = null
 
       await session.withTransaction(async () => {
         const updatedData: Partial<Reservation> = {
           status: ReservationStatus.Cancelled
         }
         if (reservation.created_at && this.isRefundable(reservation.created_at)) {
-          const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace('%s', reservation.bike_id.toString())
-          void walletService
-            .refundReservation(reservation.user_id.toString(), reservation.prepaid, description, reservation._id!)
-            .catch((err) => console.warn(`[Wallet] Refund failed for reservation ${reservation._id}:`, err))
+          isRefund = true
+          refundAmount = parseFloat(reservation.prepaid.toString())
         }
 
         const log = new RentalLog({
@@ -120,7 +121,7 @@ class ReservationsService {
           reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
         })
 
-        const [reservationResult] = await Promise.all([
+        const [updatedResult] = await Promise.all([
           databaseService.reservations.findOneAndUpdate(
             { _id: reservation._id },
             {
@@ -154,21 +155,34 @@ class ReservationsService {
           databaseService.rentalLogs.insertOne({ ...log }, { session })
         ])
 
-        if (!reservationResult) {
+        if (!updatedResult) {
           throw new ErrorWithStatus({
             message: RESERVATIONS_MESSAGE.RESERVATION_UPDATE_FAILED,
             status: HTTP_STATUS.BAD_REQUEST
           })
         }
 
-        result = reservationResult
+        reservationResult = updatedResult
       })
+
+      if (isRefund) {
+        const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace('%s', reservation.bike_id.toString())
+        void walletService
+          .refundReservation(reservation.user_id.toString(), reservation.prepaid, description, reservation._id!)
+          .catch((err) => console.warn(`[Wallet] Refund failed for reservation ${reservation._id}:`, err))
+      }
 
       if (bike?.chip_id) {
         void iotService.sendReservationCommand(bike.chip_id, IotReservationCommand.cancel)
       }
 
-      return result
+      if (reservationResult) {
+        return {
+          ...(reservationResult as any),
+          is_refund: isRefund,
+          refund_amount: refundAmount
+        }
+      }
     } catch (error) {
       throw error
     } finally {
@@ -591,10 +605,7 @@ class ReservationsService {
 
       if (result.success) {
         console.log(
-          RESERVATIONS_MESSAGE.EXPIRE_SUCCESS(
-            currentReservation._id.toString(),
-            currentReservation.user_id.toString()
-          )
+          RESERVATIONS_MESSAGE.EXPIRE_SUCCESS(currentReservation._id.toString(), currentReservation.user_id.toString())
         )
       } else {
         console.error(
@@ -657,7 +668,7 @@ class ReservationsService {
 
   isRefundable(createdTime: Date) {
     const now = getLocalTime()
-    const refundPeriodMs = fromHoursToMs(Number(process.env.REFUND_PERIOD_HOURS || '1'))
+    const refundPeriodMs = fromHoursToMs(Number(process.env.REFUND_PERIOD_HOURS || '24'))
     return new Date(createdTime.getTime() + refundPeriodMs) > now
   }
 

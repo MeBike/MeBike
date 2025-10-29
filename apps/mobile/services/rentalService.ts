@@ -27,18 +27,33 @@ type RentalResponse = {
   data: RentingHistory[];
   pagination: Pagination;
 };
-
+interface ApiResponse<T> {
+  data: T;
+  pagination: {
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+    totalRecords: number;
+  };
+  message: string;
+}
+interface DetailApiResponse<T> {
+  result: T;
+  message: string;
+}
 export const rentalService = {
-  userPostRent: async (data: RentalSchemaFormData): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.post(
+  userPostRent: async (
+    data: RentalSchemaFormData
+  ): Promise<AxiosResponse<DetailApiResponse<RentingHistory>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<RentingHistory>>(
       RENTAL_ENDPOINTS.USER_RENT(),
-      data,
+      data
     );
     return response;
   },
   userGetAllRentals: async (
     page: number,
-    limit: number,
+    limit: number
   ): Promise<AxiosResponse<RentalResponse>> => {
     const response = await fetchHttpClient.get<RentalResponse>(
       RENTAL_ENDPOINTS.USER_RENTAL_ME(),
@@ -47,63 +62,61 @@ export const rentalService = {
           page,
           limit,
         },
-      },
+      }
     );
     return response;
   },
   userGetCurrentRentals: async (): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.USER_CURRENT_RENTAL(),
+      RENTAL_ENDPOINTS.USER_CURRENT_RENTAL()
     );
     return response;
   },
-  userPutEndCurrentRental: async (
-    id: string,
-  ): Promise<AxiosResponse> => {
+  userPutEndCurrentRental: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.put<AxiosResponse>(
-      RENTAL_ENDPOINTS.END_USER_CURRENT_RENTAL(id),
+      RENTAL_ENDPOINTS.END_USER_CURRENT_RENTAL(id)
     );
     return response;
   },
   userGetRentalById: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.USER_RENTAL_DETAIL(id),
+      RENTAL_ENDPOINTS.USER_RENTAL_DETAIL(id)
     );
     return response;
   },
   adminGetRentalRevenue: async (): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.ADMIN_RENTAL_REVENUE(),
+      RENTAL_ENDPOINTS.ADMIN_RENTAL_REVENUE()
     );
     return response;
   },
   adminGetStationActivity: async (): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.ADMIN_STATS_STATION_ACTIVITY(),
+      RENTAL_ENDPOINTS.ADMIN_STATS_STATION_ACTIVITY()
     );
     return response;
   },
   adminGetStatisticReservations: async (): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.ADMIN_STATS_RESERVATIONS(),
+      RENTAL_ENDPOINTS.ADMIN_STATS_RESERVATIONS()
     );
     return response;
   },
   adminPostCancelRental: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.post(
-      RENTAL_ENDPOINTS.ADMIN_CANCEL_RENTAL(id),
+      RENTAL_ENDPOINTS.ADMIN_CANCEL_RENTAL(id)
     );
     return response;
   },
   staffAdminGetAllRentals: async (): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.STAFF_ADMIN_GET_ALL_RENTALS(),
+      RENTAL_ENDPOINTS.STAFF_ADMIN_GET_ALL_RENTALS()
     );
     return response;
   },
   staffAdminGetDetailRental: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.STAFF_ADMIN_GET_DETAIL_RENTAL(id),
+      RENTAL_ENDPOINTS.STAFF_ADMIN_GET_DETAIL_RENTAL(id)
     );
     return response;
   },

@@ -6,8 +6,8 @@ import { bikeService } from "@services/bikeService";
 
 async function fetchAllBikes(data: Partial<GetAllBikesQueryParams>) {
   const response = await bikeService.getAllBikes(data as GetAllBikesQueryParams);
-  console.log("Query Response:", response.data.data);
-  return response.data.data;
+  console.log("Query Response:", response.data);
+  return response.data;
 }
 export function useGetAllBikeQuery(data: Partial<GetAllBikesQueryParams>) {
   console.log("Query Params:", data);
