@@ -43,11 +43,11 @@ export const supplierService = {
     );
     return response;
   },
-  getSupplierById: async (id: string): Promise<DetailApiResponse<Supplier>> => {
+  getSupplierById: async (id: string): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.get<DetailApiResponse<Supplier>>(
       SUPPLIER_ENDPOINTS.WITH_ID(id)
     );
-    return response.data;
+    return response;
   },
   createSupplier: async (
     supplierData: CreateSupplierSchema
@@ -69,13 +69,13 @@ export const supplierService = {
   //   return response.data;
   // },
   updateSupplier: async (
-    supplierData: CreateSupplierSchema
-  ): Promise<DetailApiResponse<Supplier>> => {
+    {id,data} : {id: string, data: Partial<CreateSupplierSchema>}
+  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.put<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.BASE,
-      supplierData
+      SUPPLIER_ENDPOINTS.WITH_ID(id),
+      data
     );
-    return response.data;
+    return response;
   },
   statsSupplierBike: async (
     id: string

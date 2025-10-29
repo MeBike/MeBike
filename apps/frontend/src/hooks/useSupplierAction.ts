@@ -8,7 +8,8 @@ import { CreateSupplierSchema } from "@/schemas/supplier.schema";
 import { toast } from "sonner";
 import { useGetBikeStatsSupplierQuery } from "./query/Supplier/useGetBikeStatsSupplierQuery";
 import { useChangeStatusSupplierMutation } from "./mutations/Supplier/useChangeStatusSupplierMutation";
-
+import { useUpdateSupplierMutation } from "./mutations/Supplier/useUpdateSupplierMutation";
+import { useGetSupplierByIDQuery } from "./query/Supplier/useGetSupplierByIDQuery";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -49,6 +50,8 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
   const { data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier , refetch : fetchAllStatsSupplier } =
     useGetAllStatsSupplierQuery();
   const useCreateSupplier = useCreateSupplierMutation();
+  const useUpdateSupplier = useUpdateSupplierMutation();
+  const {data : detailSupplier , isLoading: isLoadingDetailSupplier , refetch : fetchDetailSupplier} = useGetSupplierByIDQuery(supplier_id || "");
   const useChangeStatusSupplier = useChangeStatusSupplierMutation();
   const { data: bikeStats, refetch: fetchBikeStatsSupplier , isLoading: isLoadingBikeStatsSupplier } =
     useGetBikeStatsSupplierQuery(supplier_id);
@@ -128,6 +131,31 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     },
     [hasToken, router, queryClient, useChangeStatusSupplier]
   );
+  const getUpdateSupplier = useCallback(async ({data , id } : {data: Partial<CreateSupplierSchema>, id: string }) => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    useUpdateSupplier.mutate({ id: id, data }, {
+      onSuccess: (result) => {
+        if (result.status === 200) {
+          toast.success("Supplier updated successfully");
+          queryClient.invalidateQueries({
+            queryKey: ["suppliers", "all", 1, 10],
+          });
+          queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
+        } else {
+          const errorMessage =
+            result.data?.message || "Error updating supplier";
+          toast.error(errorMessage);
+        }
+      },
+      onError: (error) => {
+        const errorMessage = getErrorMessage(error, "Error updating supplier");
+        toast.error(errorMessage);
+      },
+    });
+  }, [hasToken, router, queryClient, useUpdateSupplier]);
   const getBikeStatsSupplier = useCallback(async () => {
     if (!hasToken) {
       router.push("/login");
@@ -152,5 +180,9 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     getAllStatsSupplier,
     allStatsSupplier,
     changeStatusSupplier,
+    getUpdateSupplier,
+    fetchDetailSupplier,
+    detailSupplier : detailSupplier?.result,
+    isLoadingDetailSupplier,
   };
 };

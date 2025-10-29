@@ -16,9 +16,9 @@ export const columns = ({
 }: {
   onView?: (supplier: Supplier) => void;
   setIsDetailModalOpen?: (isOpen: boolean) => void;
-  onEdit?: (supplierId: string) => void;
+  onEdit?: (data: Supplier) => void;
   onDelete?: (supplier: Supplier) => void;
-  onChangeStatus?: (id: string, status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => void;
+  onChangeStatus?: (id: string, newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => void;
 }): ColumnDef<Supplier>[] => [
   {
     accessorKey: "name",
@@ -74,7 +74,7 @@ export const columns = ({
           title="Chỉnh sửa"
           onClick={() => {
             if (onEdit) {
-              onEdit(row.original._id);
+              onEdit(row.original);
             }
           }}
         >
