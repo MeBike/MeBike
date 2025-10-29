@@ -1,0 +1,16 @@
+type: object
+description: "Thống kê so sánh lượng người dùng (Role: User) đăng ký mới trong tháng này so với cùng kỳ tháng trước."
+properties:
+  newUsersThisMonth:
+    type: integer
+    description: "Số lượng người dùng mới đăng ký từ đầu tháng này đến hôm nay."
+    example: 45
+  newUsersLastMonth:
+    type: integer
+    description: "Số lượng người dùng mới đăng ký từ đầu tháng trước đến ngày tương ứng của tháng trước."
+    example: 30
+  percentageChange:
+    type: number
+    format: float
+    description: "Phần trăm thay đổi (tăng/giảm) so với tháng trước."
+    example: 50.00

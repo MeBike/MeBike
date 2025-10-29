@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getRentalsByStationIdController } from "~/controllers/rentals.controllers";
-import { createStationController, deleteStationController, getNearbyStationsController, getStationByIdController, getStationsController, updateStationController } from "~/controllers/stations.controllers";
+import { createStationController, deleteStationController, getNearbyStationsController, getStationAlertsController, getStationByIdController, getStationsController, getStationStatsController, updateStationController } from "~/controllers/stations.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { createStationValidator, getNearbyStationsValidator, stationIdValidator, updateStationValidator } from "~/middlewares/stations.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
@@ -11,6 +11,26 @@ const stationRouter = Router()
 // staff: view rental in a station, near-expired reservation
 stationRouter.route("/:id/rentals")
 .get(accessTokenValidator, isAdminAndStaffValidator, wrapAsync(getRentalsByStationIdController))
+
+/**
+ * Description: Get detailed statistics for a specific station
+ * Path: /stations/:id/stats
+ * Method: GET
+ * Query: { from?: string, to?: string }
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN
+ */
+stationRouter.get("/:id/stats", accessTokenValidator, isAdminValidator, wrapAsync(getStationStatsController))
+
+/**
+ * Description: Get station alerts (overloaded/underloaded stations)
+ * Path: /stations/alerts
+ * Method: GET
+ * Query: { threshold?: number }
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN, STAFF
+ */
+stationRouter.get("/alerts", accessTokenValidator, isAdminAndStaffValidator, wrapAsync(getStationAlertsController))
 
 /**
  * Description: Create a new bike station
