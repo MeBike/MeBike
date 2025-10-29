@@ -18,6 +18,8 @@ import {
 } from '~/models/requests/rentals.requests'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import walletService from './wallets.services'
+import iotService from './iot.services'
+import { IotBookingCommand } from '@mebike/shared/sdk/iot-service'
 
 class RentalsService {
   async createRentalSession({
@@ -34,6 +36,7 @@ class RentalsService {
     try {
       let rental: Rental | null = null
       const now = getLocalTime()
+      console.log('Creating rental session with start time:', now.toISOString(), 'user_id:', user_id.toString(), 'bike_id:', bike_id.toString())
 
       await session.withTransaction(async () => {
         rental = new Rental({
@@ -57,6 +60,9 @@ class RentalsService {
           },
           { session }
         )
+
+        // IoT Integration: Send 'book' command to bike (start using bike)
+        await iotService.sendBookingCommand(bike_id.toString(), IotBookingCommand.book)
       })
       if (!rental) {
         throw new ErrorWithStatus({
@@ -79,7 +85,8 @@ class RentalsService {
   async endRentalSession({ user_id, rental }: { user_id: ObjectId; rental: Rental }) {
     const end_station = rental.start_station;
     const now = getLocalTime();
-    
+    console.log('Ending rental session with end time:', now.toISOString(), 'rental_id:', rental._id?.toString(), 'user_id:', user_id.toString());
+
     const session = databaseService.getClient().startSession();
     try {
         let endedRental: Rental = rental;
@@ -92,12 +99,12 @@ class RentalsService {
                     status: HTTP_STATUS.NOT_FOUND
                 });
             }
-            
+
             endedRental = await this.processRentalEndTransaction(
                 rental,
                 user_id,
                 end_station,
-                now, 
+                now,
                 session
             );
         });
@@ -232,10 +239,12 @@ async processRentalEndTransaction(
     }
 
     await databaseService.bikes.updateOne(
-        { _id: result.bike_id },
-        { $set: { station_id: end_station_id, status: BikeStatus.Available, updated_at: now } },
-        { session }
+      { _id: result.bike_id },
+      { $set: { station_id: end_station_id, status: BikeStatus.Available, updated_at: now } },
+      { session }
     );
+
+    await iotService.sendBookingCommand(result.bike_id.toString(), IotBookingCommand.release)
 
     if (reason) {
         const log = new RentalLog({

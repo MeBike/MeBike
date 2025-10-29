@@ -13,6 +13,8 @@ import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
 import { readEmailTemplate } from '~/utils/email-templates'
 import { sleep } from '~/utils/timeout'
+import iotService from './iot.services'
+import { IotReservationCommand } from '@mebike/shared/sdk/iot-service'
 
 class ReservationsService {
   async reserveBike({
@@ -66,6 +68,8 @@ class ReservationsService {
             { session }
           )
         ])
+
+        await iotService.sendReservationCommand(bike_id.toString(), IotReservationCommand.reserve)
       })
       return {
         ...(reservation as any),
@@ -134,6 +138,9 @@ class ReservationsService {
             }
           }
         )
+
+        await iotService.sendReservationCommand(reservation.bike_id.toString(), IotReservationCommand.cancel)
+        await iotService.sendReservationCommand(reservation.bike_id.toString(), IotReservationCommand.cancel)
 
         const log = new RentalLog({
           rental_id: reservation._id!,
@@ -233,6 +240,8 @@ class ReservationsService {
           },
           { session }
         )
+
+        await iotService.sendBookingCommand(reservation.bike_id.toString(), 'claim')
 
         if (user.role === Role.Staff && rental._id) {
           const rentalLog = new RentalLog({

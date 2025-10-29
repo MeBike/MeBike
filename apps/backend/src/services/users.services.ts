@@ -1,6 +1,7 @@
 import { Filter, ObjectId } from "mongodb";
 import process from "node:process";
 import nodemailer from "nodemailer";
+import logger from "~/lib/logger";
 
 import type { AdminCreateUserReqBody, AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
