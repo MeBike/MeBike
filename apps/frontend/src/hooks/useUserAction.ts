@@ -55,7 +55,7 @@ export const useUserActions = ({
   const router = useRouter();
   const useCreateUser = useCreateUserMutation();  
   const queryClient = useQueryClient();
-  const { data, refetch, isFetching } = useGetAllUserQuery({
+  const { data, refetch, isLoading , isFetching} = useGetAllUserQuery({
     page,
     limit,
     role: role || "",
@@ -101,7 +101,7 @@ export const useUserActions = ({
         }
         useCreateUser.mutate(userData, {
           onSuccess: (result: { status: number; data?: { message?: string } }) => {
-            if (result?.status === 200) {
+            if (result?.status === 201) {
               toast.success("Tạo người dùng thành công");
               queryClient.invalidateQueries({ queryKey: ["all", "user", page, limit, verify || "all", role || "all"] });
               queryClient.invalidateQueries({ queryKey: ["user-stats"] });
@@ -127,6 +127,7 @@ export const useUserActions = ({
   return {
     users: users,
     refetch,
+    isLoading,
     isFetching,
     getAllUsers,
     statistics: statisticsData,
@@ -135,7 +136,7 @@ export const useUserActions = ({
     isLoadingStatistics,
     getSearchUsers,
     createUser,
-    paginationUser : data?.pagination,
+    paginationUser: data?.pagination,
     isLoadingSearch,
   };
 };

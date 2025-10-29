@@ -43,11 +43,11 @@ export const supplierService = {
     );
     return response;
   },
-  getSupplierById: async (id: string): Promise<DetailApiResponse<Supplier>> => {
+  getSupplierById: async (id: string): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.get<DetailApiResponse<Supplier>>(
       SUPPLIER_ENDPOINTS.WITH_ID(id)
     );
-    return response.data;
+    return response;
   },
   createSupplier: async (
     supplierData: CreateSupplierSchema
@@ -58,25 +58,24 @@ export const supplierService = {
     );
     return response;
   },
-  changeSupplierStatus: async (
-    id: string,
-    status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘ"
-  ): Promise<ApiResponse<Supplier>> => {
-    const response = await fetchHttpClient.patch<ApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.WITH_ID(id),
-      { status }
-    );
-    return response.data;
-  },
-
+  // changeSupplierStatus: async (
+  //   id: string,
+  //   status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘ"
+  // ): Promise<ApiResponse<Supplier>> => {
+  //   const response = await fetchHttpClient.patch<ApiResponse<Supplier>>(
+  //     SUPPLIER_ENDPOINTS.WITH_ID(id),
+  //     { status }
+  //   );
+  //   return response.data;
+  // },
   updateSupplier: async (
-    supplierData: CreateSupplierSchema
-  ): Promise<DetailApiResponse<Supplier>> => {
+    {id,data} : {id: string, data: Partial<CreateSupplierSchema>}
+  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.put<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.BASE,
-      supplierData
+      SUPPLIER_ENDPOINTS.WITH_ID(id),
+      data
     );
-    return response.data;
+    return response;
   },
   statsSupplierBike: async (
     id: string
@@ -92,6 +91,16 @@ export const supplierService = {
     const response = await fetchHttpClient.get<
       DetailApiResponse<StatsSupplierBike[]>
     >(SUPPLIER_ENDPOINTS.STATS);
+    return response;
+  },
+  changeStatusSupplier: async (
+    id: string,
+    newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG"
+  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
+    const response = await fetchHttpClient.patch<DetailApiResponse<Supplier>>(
+      SUPPLIER_ENDPOINTS.WITH_ID(id),
+      { newStatus }
+    );
     return response;
   },
 };
