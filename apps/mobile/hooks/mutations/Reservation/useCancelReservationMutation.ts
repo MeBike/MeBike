@@ -2,11 +2,11 @@ import { useMutation } from "@tanstack/react-query";
 
 import type {
   CancelReservationPayload,
-} from "@services/reservationService";
+} from "@services/reservation.service";
 
 import {
   reservationService,
-} from "@services/reservationService";
+} from "@services/reservation.service";
 
 type CancelVariables = {
   id: string;

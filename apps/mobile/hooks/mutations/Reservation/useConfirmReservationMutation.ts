@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { reservationService } from "@services/reservationService";
+import { reservationService } from "@services/reservation.service";
 
 export function useConfirmReservationMutation() {
   return useMutation({

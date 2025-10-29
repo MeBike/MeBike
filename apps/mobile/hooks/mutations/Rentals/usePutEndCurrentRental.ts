@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { rentalService } from "@services/rentalService";
+import { rentalService } from "@services/rental.service";
 
 export type EndRentalVariables = {
   id: string;

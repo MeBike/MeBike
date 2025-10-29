@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import type { ChangePasswordSchemaFormData } from "@schemas/authSchema";
 
-import { authService } from "@services/authService";
+import { authService } from "@services/auth.service";
 
 export function useChangePasswordMutation() {
   return useMutation({

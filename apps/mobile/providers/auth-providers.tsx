@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { AppState } from "react-native";
 
-import type { DetailUser } from "@services/authService";
+import type { DetailUser } from "@services/auth.service";
 
 import { useUserProfileQuery } from "@hooks/query/useUserProfileQuery";
 import { useAuthActions } from "@hooks/useAuthAction";

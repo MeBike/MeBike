@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { ratingService } from "@services/ratingService";
+import { ratingService } from "@services/rating.service";
 
 export function useGetRatingReasonsQuery(enabled: boolean = true, params?: Partial<{ type: string; applies_to: string }>) {
   return useQuery({
