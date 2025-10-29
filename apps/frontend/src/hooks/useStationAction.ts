@@ -39,10 +39,10 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   return defaultMessage;
 };
 interface StationActionProps {
-  hasToken: boolean;
+  hasToken?: boolean;
   stationId?: string;
-  page: number;
-  limit: number;
+  page?: number;
+  limit?: number;
 }
 export const useStationActions = ({
   hasToken,

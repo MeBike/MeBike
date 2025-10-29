@@ -7,7 +7,9 @@ import { useCreateSupplierMutation } from "./mutations/Supplier/useCreateSupplie
 import { CreateSupplierSchema } from "@/schemas/supplier.schema";
 import { toast } from "sonner";
 import { useGetBikeStatsSupplierQuery } from "./query/Supplier/useGetBikeStatsSupplierQuery";
-
+import { useChangeStatusSupplierMutation } from "./mutations/Supplier/useChangeStatusSupplierMutation";
+import { useUpdateSupplierMutation } from "./mutations/Supplier/useUpdateSupplierMutation";
+import { useGetSupplierByIDQuery } from "./query/Supplier/useGetSupplierByIDQuery";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -48,6 +50,9 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
   const { data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier , refetch : fetchAllStatsSupplier } =
     useGetAllStatsSupplierQuery();
   const useCreateSupplier = useCreateSupplierMutation();
+  const useUpdateSupplier = useUpdateSupplierMutation();
+  const {data : detailSupplier , isLoading: isLoadingDetailSupplier , refetch : fetchDetailSupplier} = useGetSupplierByIDQuery(supplier_id || "");
+  const useChangeStatusSupplier = useChangeStatusSupplierMutation();
   const { data: bikeStats, refetch: fetchBikeStatsSupplier , isLoading: isLoadingBikeStatsSupplier } =
     useGetBikeStatsSupplierQuery(supplier_id);
   const getAllSuppliers = useCallback(() => {
@@ -92,6 +97,65 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     },
     [hasToken, router, queryClient, useCreateSupplier]
   );
+  const changeStatusSupplier = useCallback(
+    async (id: string, newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useChangeStatusSupplier.mutate(
+        { id, newStatus },
+        {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Supplier status changed successfully");
+              queryClient.invalidateQueries({
+                queryKey: ["suppliers", "all", 1, 10],
+              });
+              queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
+            } else {
+              const errorMessage =
+                result.data?.message || "Error changing supplier status";
+              toast.error(errorMessage);
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Error changing supplier status"
+            );
+            toast.error(errorMessage);
+          },
+        }
+      );
+    },
+    [hasToken, router, queryClient, useChangeStatusSupplier]
+  );
+  const getUpdateSupplier = useCallback(({ data, id }: { data: Partial<CreateSupplierSchema>; id: string }) => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    useUpdateSupplier.mutate({ id: id, data }, {
+      onSuccess: (result) => {
+        if (result.status === 200) {
+          toast.success("Supplier updated successfully");
+          queryClient.invalidateQueries({
+            queryKey: ["suppliers", "all", 1, 10],
+          });
+          queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
+        } else {
+          const errorMessage =
+            result.data?.message || "Error updating supplier";
+          toast.error(errorMessage);
+        }
+      },
+      onError: (error) => {
+        const errorMessage = getErrorMessage(error, "Error updating supplier");
+        toast.error(errorMessage);
+      },
+    });
+  }, [hasToken, router, queryClient, useUpdateSupplier]);
   const getBikeStatsSupplier = useCallback(async () => {
     if (!hasToken) {
       router.push("/login");
@@ -112,8 +176,13 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     getBikeStatsSupplier,
     bikeStats,
     isLoadingBikeStatsSupplier,
-    isLoadingGetAllStatsSupplier: isLoadingAllStatsSupplier,
+    isLoadingAllStatsSupplier,
     getAllStatsSupplier,
     allStatsSupplier,
+    changeStatusSupplier,
+    getUpdateSupplier,
+    fetchDetailSupplier,
+    detailSupplier : detailSupplier?.result,
+    isLoadingDetailSupplier,
   };
 };
