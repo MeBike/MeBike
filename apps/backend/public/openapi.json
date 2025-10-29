@@ -1761,6 +1761,211 @@
         }
       }
     },
+    "/bikes/{_id}/rental-history": {
+      "get": {
+        "tags": [
+          "Bikes"
+        ],
+        "summary": "Get bike rental history (Admin/Staff only)",
+        "description": "Retrieves a paginated history of **completed** rental sessions for a specific bike.\nRequires Admin or Staff privileges.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the bike to get history for.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/PageQuery"
+          },
+          {
+            "$ref": "#/components/parameters/LimitQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bike's rental history retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetBikeRentalHistoryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User does not have Admin or Staff rights.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike not found or Admin/Staff user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., invalid page or limit).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bikes/{_id}/activity-stats": {
+      "get": {
+        "tags": [
+          "Bikes"
+        ],
+        "summary": "Get bike activity statistics (Admin/Staff only)",
+        "description": "Retrieves detailed activity statistics for a specific bike, including total usage, reports, estimated uptime, and monthly performance.\nRequires Admin or Staff privileges.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the bike to get statistics for.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bike activity statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê hoạt động của xe thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/BikeActivityStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User does not have Admin or Staff rights.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Bike not found or Admin/Staff user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bikes/stats/rental-overview": {
+      "get": {
+        "tags": [
+          "Bikes"
+        ],
+        "summary": "Get rental overview statistics (Admin only)",
+        "description": "Retrieves the total number of active bikes (excluding unavailable ones), the number of currently rented bikes, and the percentage of rented bikes.\n**Requires Admin privileges (not Staff).**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rental overview statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê tổng quan thuê xe thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/BikeRentalOverviewStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/suppliers": {
       "get": {
         "tags": [
@@ -4514,6 +4719,98 @@
         }
       }
     },
+    "/stations/{id}/stats": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get detailed statistics for a specific station (Admin only)",
+        "description": "Retrieves detailed statistics for a specific station within a given time period (defaults to 2025-01-01 to now if unspecified).\nIncludes rental activity originating from the station, return activity, current bike status, reports, and utilization rate.\n**Requires Admin privileges.**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the station to get statistics for.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Start date for the statistics period (YYYY-MM-DD). Defaults to '2025-01-01'.",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-10-01"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "End date for the statistics period (YYYY-MM-DD). Defaults to the current date.",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-10-29"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê trạm thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/StationStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Station not found or Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ratings": {
       "get": {
         "tags": [
@@ -5829,6 +6126,29 @@
           }
         }
       },
+      "GetBikeRentalHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Lấy lịch sử thuê xe của xe thành công"
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/BikeRentalHistoryItem"
+                }
+              },
+              "pagination": {
+                "$ref": "#/components/schemas/PaginatedResponse/properties/pagination"
+              }
+            }
+          }
+        }
+      },
       "User": {
         "type": "object",
         "description": "Represents a user object.",
@@ -6647,6 +6967,331 @@
             "format": "float",
             "description": "Phần trăm thay đổi (tăng/giảm) so với tháng trước.",
             "example": 50
+          }
+        }
+      },
+      "BikeRentalHistoryItem": {
+        "type": "object",
+        "description": "Một bản ghi lịch sử thuê xe (đã hoàn thành) của một chiếc xe cụ thể.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID của lượt thuê (Rental ID)"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Thời lượng thuê (phút)",
+            "example": 30
+          },
+          "total_price": {
+            "type": "number",
+            "format": "double",
+            "example": 5000
+          },
+          "user": {
+            "type": "object",
+            "description": "Thông tin cơ bản của người thuê.",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "mongoId"
+              },
+              "fullname": {
+                "type": "string",
+                "example": "Nguyen Van A"
+              }
+            }
+          },
+          "start_station": {
+            "type": "object",
+            "description": "Thông tin trạm bắt đầu.",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "mongoId"
+              },
+              "name": {
+                "type": "string",
+                "example": "Trạm Đại học FPT"
+              }
+            }
+          },
+          "end_station": {
+            "type": "object",
+            "description": "Thông tin trạm kết thúc.",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "mongoId"
+              },
+              "name": {
+                "type": "string",
+                "example": "Trạm Vincom"
+              }
+            }
+          }
+        }
+      },
+      "BikeActivityStatsMonthlyItem": {
+        "type": "object",
+        "description": "Thống kê hoạt động của xe trong một tháng cụ thể.",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "example": 2025
+          },
+          "month": {
+            "type": "integer",
+            "example": 10
+          },
+          "rentals_count": {
+            "type": "integer",
+            "description": "Số lượt thuê đã hoàn thành trong tháng.",
+            "example": 15
+          },
+          "minutes_active": {
+            "type": "integer",
+            "description": "Tổng số phút hoạt động (từ các lượt thuê hoàn thành) trong tháng.",
+            "example": 450
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu từ các lượt thuê hoàn thành trong tháng.",
+            "example": 75000
+          }
+        }
+      },
+      "BikeActivityStats": {
+        "type": "object",
+        "description": "Thống kê hoạt động tổng hợp của một chiếc xe.",
+        "properties": {
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "total_minutes_active": {
+            "type": "integer",
+            "description": "Tổng số phút hoạt động từ tất cả các lượt thuê đã hoàn thành.",
+            "example": 12500
+          },
+          "total_reports": {
+            "type": "integer",
+            "description": "Tổng số lần xe được báo cáo là Hư Hỏng hoặc Bẩn.",
+            "example": 3
+          },
+          "uptime_percentage": {
+            "type": "number",
+            "format": "float",
+            "description": "Tỷ lệ phần trăm thời gian hoạt động ước tính (tỷ lệ giữa tổng phút hoạt động thực tế và tổng thời gian có thể hoạt động kể từ khi tạo).",
+            "example": 95.75
+          },
+          "monthly_stats": {
+            "type": "array",
+            "description": "Thống kê hoạt động theo tháng (tối đa 12 tháng gần nhất).",
+            "items": {
+              "$ref": "#/components/schemas/BikeActivityStatsMonthlyItem"
+            }
+          }
+        }
+      },
+      "StationStats": {
+        "type": "object",
+        "description": "Thống kê chi tiết cho một trạm trong một khoảng thời gian.",
+        "properties": {
+          "station": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "mongoId"
+              },
+              "name": {
+                "type": "string"
+              },
+              "address": {
+                "type": "string"
+              },
+              "capacity": {
+                "type": "integer"
+              }
+            }
+          },
+          "period": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày bắt đầu của kỳ thống kê."
+              },
+              "to": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày kết thúc của kỳ thống kê."
+              }
+            }
+          },
+          "rentals": {
+            "type": "object",
+            "properties": {
+              "totalRentals": {
+                "type": "integer",
+                "description": "Tổng số lượt thuê bắt đầu từ trạm này (đã hoàn thành).",
+                "example": 150
+              },
+              "totalRevenue": {
+                "type": "number",
+                "format": "double",
+                "description": "Tổng doanh thu từ các lượt thuê đó.",
+                "example": 750000
+              },
+              "totalDuration": {
+                "type": "integer",
+                "description": "Tổng thời lượng (phút) của các lượt thuê đó.",
+                "example": 4500
+              },
+              "avgDuration": {
+                "type": "number",
+                "format": "double",
+                "description": "Thời lượng thuê trung bình (phút).",
+                "example": 30.5
+              }
+            }
+          },
+          "returns": {
+            "type": "object",
+            "properties": {
+              "totalReturns": {
+                "type": "integer",
+                "description": "Tổng số lượt xe được trả về trạm này.",
+                "example": 145
+              }
+            }
+          },
+          "currentBikes": {
+            "type": "object",
+            "description": "Thông tin về số lượng xe hiện tại ở trạm theo trạng thái.",
+            "properties": {
+              "totalBikes": {
+                "type": "integer",
+                "description": "Tổng số xe đang có mặt tại trạm.",
+                "example": 18
+              },
+              "available": {
+                "type": "integer",
+                "description": "Số xe có trạng thái 'CÓ SẴN'.",
+                "example": 12
+              },
+              "booked": {
+                "type": "integer",
+                "description": "Số xe có trạng thái 'ĐANG ĐƯỢC THUÊ' (thường là 0 nếu đang ở trạm).",
+                "example": 0
+              },
+              "broken": {
+                "type": "integer",
+                "description": "Số xe có trạng thái 'BỊ HỎNG'.",
+                "example": 2
+              },
+              "reserved": {
+                "type": "integer",
+                "description": "Số xe có trạng thái 'ĐÃ ĐẶT TRƯỚC'.",
+                "example": 1
+              },
+              "maintained": {
+                "type": "integer",
+                "description": "Số xe có trạng thái 'ĐANG BẢO TRÌ'.",
+                "example": 1
+              },
+              "unavailable": {
+                "type": "integer",
+                "description": "Số xe có trạng thái 'KHÔNG CÓ SẴN'.",
+                "example": 2
+              },
+              "emptySlots": {
+                "type": "integer",
+                "description": "Số chỗ trống còn lại tại trạm.",
+                "example": 7
+              }
+            }
+          },
+          "reports": {
+            "type": "object",
+            "description": "Thống kê báo cáo liên quan đến trạm.",
+            "properties": {
+              "totalReports": {
+                "type": "integer",
+                "description": "Tổng số báo cáo liên quan đến trạm trong kỳ.",
+                "example": 5
+              },
+              "byType": {
+                "type": "object",
+                "description": "Số lượng báo cáo theo từng loại.",
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "example": {
+                  "TRẠM ĐẦY": 2,
+                  "TRẠM KHÔNG NHẬN XE": 1,
+                  "KHÁC": 2
+                }
+              }
+            }
+          },
+          "utilization": {
+            "type": "object",
+            "description": "Tỷ lệ sử dụng trạm (dựa trên thời gian hoạt động của xe).",
+            "properties": {
+              "rate": {
+                "type": "number",
+                "format": "float",
+                "description": "Tỷ lệ sử dụng (%) = (Tổng phút xe hoạt động / Tổng phút xe có thể hoạt động) * 100.",
+                "example": 85.25
+              },
+              "availableMinutes": {
+                "type": "number",
+                "format": "double",
+                "description": "Tổng số phút xe có thể hoạt động trong kỳ (Số xe * Số phút trong kỳ).",
+                "example": 518400
+              },
+              "usedMinutes": {
+                "type": "number",
+                "format": "double",
+                "description": "Tổng số phút xe thực tế hoạt động (từ rentals.totalDuration).",
+                "example": 442000
+              }
+            }
+          }
+        }
+      },
+      "BikeRentalOverviewStats": {
+        "type": "object",
+        "description": "Thống kê tổng quan về số lượng xe đang hoạt động và đang được thuê.",
+        "properties": {
+          "total_active_bikes": {
+            "type": "integer",
+            "description": "Tổng số xe đang hoạt động (không bao gồm xe có trạng thái 'KHÔNG CÓ SẴN').",
+            "example": 148
+          },
+          "rented_bikes": {
+            "type": "integer",
+            "description": "Số lượng xe đang có trạng thái 'ĐANG ĐƯỢC THUÊ'.",
+            "example": 25
+          },
+          "percentage": {
+            "type": "number",
+            "format": "float",
+            "description": "Tỷ lệ phần trăm xe đang được thuê so với tổng số xe đang hoạt động.",
+            "example": 16.89
           }
         }
       }

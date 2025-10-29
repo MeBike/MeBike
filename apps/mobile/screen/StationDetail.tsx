@@ -14,21 +14,19 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import StationMap2D from "@components/StationMap2D";
 import { useBikeActions } from "@hooks/useBikeAction";
 import { useRentalsActions } from "@hooks/useRentalAction";
 import { useReservationActions } from "@hooks/useReservationActions";
 import { useStationActions } from "@hooks/useStationAction";
 import { useAuth } from "@providers/auth-providers";
-
 import type { Bike } from "../types/BikeTypes";
 import type {
   StationDetailRouteProp,
   StationDetailScreenNavigationProp,
 } from "../types/navigation";
 import type { StationType } from "../types/StationType";
-
+import { LoadingScreen } from "@components/LoadingScreen";
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
 
@@ -76,17 +74,15 @@ export default function StationDetailScreen() {
   }, [allBikes]);
   const station = responseStationDetail as StationType | null;
 
-  const isLoading = isLoadingGetStationByID && isFetchingAllBikes;
-
+  const isLoading = isLoadingGetStationByID || isFetchingAllBikes;
+  
   if (isLoading) {
+    return <LoadingScreen />;
+  }
+  if (!responseStationDetail) {
     return (
-      <View
-        style={[
-          styles.errorContainer,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <ActivityIndicator size="large" color={BikeColors.primary} />
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Không tìm thấy trạm</Text>
       </View>
     );
   }

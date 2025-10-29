@@ -12,6 +12,7 @@ import Reservation from '~/models/schemas/reservation.schema'
 import { getLocalTime } from '~/utils/date-time'
 import { toObjectId } from '~/utils/string'
 import walletService from './wallets.services'
+import Bike from '~/models/schemas/bike.schema'
 import logger from '~/lib/logger'
 
 export type CardTapRequest = { chip_id: string; card_uid: string }
@@ -37,12 +38,15 @@ export const cardTapService = {
         status: HTTP_STATUS.NOT_FOUND
       })
     }
-    logger.info({
-      chip_id,
-      bike_id: bike._id?.toString(),
-      status: bike.status,
-      station_id: bike.station_id?.toString() ?? null
-    }, 'Matched bike for chip')
+    logger.info(
+      {
+        chip_id,
+        bike_id: bike._id?.toString(),
+        status: bike.status,
+        station_id: bike.station_id?.toString() ?? null
+      },
+      'Matched bike for chip'
+    )
 
     const activeRental = await databaseService.rentals.findOne({
       user_id: user._id as ObjectId,
@@ -51,10 +55,13 @@ export const cardTapService = {
     })
 
     if (activeRental) {
-      logger.info({
-        rental_id: activeRental._id?.toString(),
-        user_id: user._id?.toString()
-      }, 'Detected active rental – ending session')
+      logger.info(
+        {
+          rental_id: activeRental._id?.toString(),
+          user_id: user._id?.toString()
+        },
+        'Detected active rental – ending session'
+      )
       const endedRental = await endRentalSessionForCard({ user_id: user._id as ObjectId, rental: activeRental })
 
       const reservationFacade = getReservationFacade()
@@ -70,11 +77,14 @@ export const cardTapService = {
     })
 
     if (reservation) {
-      logger.info({
-        reservation_id: reservation._id.toString(),
-        user_id: user._id?.toString(),
-        bike_id: bike._id?.toString()
-      }, 'Found reservation for user/bike; activating')
+      logger.info(
+        {
+          reservation_id: reservation._id.toString(),
+          user_id: user._id?.toString(),
+          bike_id: bike._id?.toString()
+        },
+        'Found reservation for user/bike; activating'
+      )
 
       const reservationDocument = await databaseService.reservations.findOne({
         _id: reservation._id,
@@ -96,10 +106,13 @@ export const cardTapService = {
         bike_id: bike._id as ObjectId
       })
 
-      logger.info({
-        rental_id: (rentalSession as any)?._id?.toString?.(),
-        mode: 'reservation_started'
-      }, 'Rental promoted from reservation')
+      logger.info(
+        {
+          rental_id: (rentalSession as any)?._id?.toString?.(),
+          mode: 'reservation_started'
+        },
+        'Rental promoted from reservation'
+      )
       return { mode: 'reservation_started', rental: rentalSession }
     }
 
@@ -112,11 +125,14 @@ export const cardTapService = {
     }
 
     if (bike.status !== BikeStatus.Available) {
-      logger.warn({
-        chip_id,
-        bike_id: bike._id?.toString(),
-        status: bike.status
-      }, 'Bike not available for rental')
+      logger.warn(
+        {
+          chip_id,
+          bike_id: bike._id?.toString(),
+          status: bike.status
+        },
+        'Bike not available for rental'
+      )
       throw new ErrorWithStatus({
         message: 'Bike is not available for rental',
         status: HTTP_STATUS.BAD_REQUEST
@@ -125,21 +141,27 @@ export const cardTapService = {
 
     const startStationId = bike.station_id as ObjectId
 
-    logger.info({
-      user_id: user._id?.toString(),
-      bike_id: bike._id?.toString(),
-      start_station: startStationId.toString()
-    }, 'Creating rental without reservation')
+    logger.info(
+      {
+        user_id: user._id?.toString(),
+        bike_id: bike._id?.toString(),
+        start_station: startStationId.toString()
+      },
+      'Creating rental without reservation'
+    )
     const rentalSession = await createRentalSessionForCard({
       user_id: user._id as ObjectId,
       start_station: startStationId,
-      bike_id: bike._id as ObjectId
+      bike
     })
 
-    logger.info({
-      rental_id: (rentalSession as any)?._id?.toString?.(),
-      mode: 'started'
-    }, 'Rental created without reservation')
+    logger.info(
+      {
+        rental_id: (rentalSession as any)?._id?.toString?.(),
+        mode: 'started'
+      },
+      'Rental created without reservation'
+    )
     return { mode: 'started', rental: rentalSession }
   }
 }
@@ -147,7 +169,7 @@ export const cardTapService = {
 type CreateRentalParams = {
   user_id: ObjectId
   start_station: ObjectId
-  bike_id: ObjectId
+  bike: Bike
 }
 
 async function createRentalSessionForCard(params: CreateRentalParams) {
@@ -155,18 +177,22 @@ async function createRentalSessionForCard(params: CreateRentalParams) {
     return await rentalsService.createRentalSession(params)
   } catch (error) {
     if (isTransactionNotSupportedError(error)) {
-      logger.warn({
-        user_id: params.user_id.toString(),
-        bike_id: params.bike_id.toString()
-      }, 'falling back to non-transactional rental creation')
+      logger.warn(
+        {
+          user_id: params.user_id.toString(),
+          bike_id: params.bike._id?.toString()
+        },
+        'falling back to non-transactional rental creation'
+      )
       return await createRentalSessionWithoutTransaction(params)
     }
     throw error
   }
 }
 
-async function createRentalSessionWithoutTransaction({ user_id, start_station, bike_id }: CreateRentalParams) {
+async function createRentalSessionWithoutTransaction({ user_id, start_station, bike }: CreateRentalParams) {
   const now = getLocalTime()
+  const bike_id = bike._id as ObjectId
   const rental = new Rental({
     user_id: toObjectId(user_id),
     start_station,
@@ -195,9 +221,6 @@ async function createRentalSessionWithoutTransaction({ user_id, start_station, b
         status: HTTP_STATUS.NOT_FOUND
       })
     }
-
-    // Skip IoT command for card-tap initiated rentals to avoid double actions
-    // IoT device should have already sent the command when card was tapped
   } catch (error) {
     await databaseService.rentals.deleteOne({ _id: rental._id })
     throw error
@@ -278,9 +301,6 @@ async function startRentalFromReservationForCard({ reservation, bike_id }: Start
       options
     )
 
-    // Skip IoT command for card-tap initiated reservation activation to avoid double actions
-    // IoT device should have already sent the command when card was tapped
-
     return promotedRental
   }
 
@@ -293,9 +313,12 @@ async function startRentalFromReservationForCard({ reservation, bike_id }: Start
       })
     } catch (error) {
       if (isTransactionNotSupportedError(error)) {
-        logger.warn({
-          reservation_id: reservation._id?.toString()
-        }, 'falling back to non-transactional reservation promotion')
+        logger.warn(
+          {
+            reservation_id: reservation._id?.toString()
+          },
+          'falling back to non-transactional reservation promotion'
+        )
         promotedRental = await executePromotion()
       } else {
         throw error
@@ -335,10 +358,13 @@ async function endRentalSessionForCard({ user_id, rental }: EndRentalParams) {
     return result
   } catch (error) {
     if (isTransactionNotSupportedError(error) || isRentalUpdateFailed(error)) {
-      logger.warn({
-        rental_id: rental._id?.toString(),
-        user_id: user_id.toString()
-      }, 'falling back to non-transactional rental ending')
+      logger.warn(
+        {
+          rental_id: rental._id?.toString(),
+          user_id: user_id.toString()
+        },
+        'falling back to non-transactional rental ending'
+      )
       const endedRental = await endRentalSessionWithoutTransaction({ user_id, rental })
       const totalPriceNumber = Number.parseFloat(endedRental.total_price.toString())
       await chargeWalletAfterEnd({
@@ -374,8 +400,6 @@ async function endRentalSessionWithoutTransaction({ user_id, rental }: EndRental
     end_station_id,
     effective_end_time
   })
-
-
 
   return persistedRental
 }
@@ -476,28 +500,37 @@ async function chargeWalletAfterEnd({
   const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
 
   const walletBefore = await databaseService.wallets.findOne({ user_id })
-  logger.debug({
-    wallet_id: walletBefore?._id?.toString() ?? null,
-    balance: walletBefore ? Number.parseFloat(walletBefore.balance.toString()) : null
-  }, 'wallet state before charge')
+  logger.debug(
+    {
+      wallet_id: walletBefore?._id?.toString() ?? null,
+      balance: walletBefore ? Number.parseFloat(walletBefore.balance.toString()) : null
+    },
+    'wallet state before charge'
+  )
 
   await walletService.paymentRental(user_id.toString(), decimalTotalPrice, description, rental_id)
 
   const walletAfter = await databaseService.wallets.findOne({ user_id })
-  logger.debug({
-    wallet_id: walletAfter?._id?.toString() ?? null,
-    balance: walletAfter ? Number.parseFloat(walletAfter.balance.toString()) : null
-  }, 'wallet state after charge')
+  logger.debug(
+    {
+      wallet_id: walletAfter?._id?.toString() ?? null,
+      balance: walletAfter ? Number.parseFloat(walletAfter.balance.toString()) : null
+    },
+    'wallet state after charge'
+  )
 
   const latestTransaction = await databaseService.transactions.findOne(
     { rental_id },
     { sort: { created_at: -1 } }
   )
-  logger.debug({
-    transaction_id: latestTransaction?._id?.toString() ?? null,
-    amount: latestTransaction ? Number.parseFloat(latestTransaction.amount.toString()) : null,
-    type: latestTransaction?.type ?? null
-  }, 'latest transaction snapshot')
+  logger.debug(
+    {
+      transaction_id: latestTransaction?._id?.toString() ?? null,
+      amount: latestTransaction ? Number.parseFloat(latestTransaction.amount.toString()) : null,
+      type: latestTransaction?.type ?? null
+    },
+    'latest transaction snapshot'
+  )
 }
 
 function isTransactionNotSupportedError(error: unknown): boolean {

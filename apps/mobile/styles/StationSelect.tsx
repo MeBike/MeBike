@@ -1,24 +1,27 @@
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
+import React, { useState } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useStationActions } from "@hooks/useStationAction";
 import {
+  ActivityIndicator,
   FlatList,
+  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { useStationActions } from "@hooks/useStationAction";
-
 import type { StationDetailScreenNavigationProp } from "../types/navigation";
 
 import { StationCard } from "../components/StationCard";
+import { LoadingScreen } from "@components/LoadingScreen";
 
 export default function StationSelectScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   // const { data: response, isLoading } = useGetAllStation();
+   const [showLoading, setShowLoading] = useState(false);
   const {
     getStationByID,
     isLoadingGetStationByID,
@@ -30,6 +33,9 @@ export default function StationSelectScreen() {
   };
   const stations = data;
   const insets = useSafeAreaInsets();
+  if (!Array.isArray(stations) || stations.length === 0) {
+    return <LoadingScreen />;
+  }
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
@@ -44,47 +50,33 @@ export default function StationSelectScreen() {
           Xem tất cả các lần thuê xe của bạn
         </Text>
       </LinearGradient>
-      {isLoadingGetStationByID
-        ? (
-            <Text style={{ textAlign: "center", marginTop: 20 }}>
-              Đang tải dữ liệu...
-            </Text>
-          )
-        : stations.length === 0
-          ? (
-              <Text style={{ textAlign: "center", marginTop: 20 }}>
-                Không có trạm nào!
-              </Text>
-            )
-          : (
-              <FlatList
-                data={stations}
-                keyExtractor={item => item._id}
-                renderItem={({ item }) => {
-                  const stationCardData = {
-                    id: item._id,
-                    name: item.name,
-                    location: {
-                      latitude: Number(item.latitude),
-                      longitude: Number(item.longitude),
-                      address: item.address,
-                    },
-                    availableBikes: Number(item.availableBikes),
-                    totalSlots: Number(item.capacity),
-                    isActive: true,
-                    bikes: [],
-                    layout: { width: 0, height: 0, entrances: [] },
-                  };
-                  return (
-                    <StationCard
-                      station={stationCardData}
-                      onPress={() => handleSelectStation(item._id)}
-                    />
-                  );
-                }}
-                contentContainerStyle={styles.list}
+        <FlatList
+          data={stations}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => {
+            const stationCardData = {
+              id: item._id,
+              name: item.name,
+              location: {
+                latitude: Number(item.latitude),
+                longitude: Number(item.longitude),
+                address: item.address,
+              },
+              availableBikes: Number(item.availableBikes),
+              totalSlots: Number(item.capacity),
+              isActive: true,
+              bikes: [],
+              layout: { width: 0, height: 0, entrances: [] },
+            };
+            return (
+              <StationCard
+                station={stationCardData}
+                onPress={() => handleSelectStation(item._id)}
               />
-            )}
+            );
+          }}
+          contentContainerStyle={styles.list}
+        />
     </View>
   );
 }

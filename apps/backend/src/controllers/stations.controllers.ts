@@ -84,3 +84,28 @@ export const getNearbyStationsController = wrapAsync(
     await stationsService.getNearbyStations(res, next, req.query);
   }
 );
+
+export const getStationStatsController = wrapAsync(
+  async (req: Request<{ id: string }>, res: Response) => {
+    const { from, to } = req.query;
+    const result = await stationsService.getStationStats(req.params.id, {
+      from: from as string,
+      to: to as string
+    });
+    return res.json({
+      message: STATIONS_MESSAGE.GET_STATION_STATS_SUCCESSFULLY,
+      result,
+    });
+  }
+);
+
+export const getStationAlertsController = wrapAsync(
+  async (req: Request, res: Response) => {
+    const threshold = req.query.threshold ? parseFloat(req.query.threshold as string) : 20; // default 20%
+    const result = await stationsService.getStationAlerts(threshold);
+    return res.json({
+      message: STATIONS_MESSAGE.GET_STATION_ALERTS_SUCCESSFULLY,
+      result,
+    });
+  }
+);

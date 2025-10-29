@@ -1035,6 +1035,135 @@
       '403':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/bikes/{_id}/rental-history:
+  get:
+    tags: [Bikes]
+    summary: Get bike rental history (Admin/Staff only)
+    description: |
+      Retrieves a paginated history of **completed** rental sessions for a specific bike.
+      Requires Admin or Staff privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        description: "The ID of the bike to get history for."
+        schema:
+          type: string
+          format: mongoId
+      - $ref: '../parameters/all-parameters.yaml#/PageQuery'
+      - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+    responses:
+      '200':
+        description: "Bike's rental history retrieved successfully."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetBikeRentalHistoryResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User does not have Admin or Staff rights."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Bike not found or Admin/Staff user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '422':
+        description: "Validation error (e.g., invalid page or limit)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+
+/bikes/{_id}/activity-stats:
+  get:
+    tags: [Bikes]
+    summary: Get bike activity statistics (Admin/Staff only)
+    description: |
+      Retrieves detailed activity statistics for a specific bike, including total usage, reports, estimated uptime, and monthly performance.
+      Requires Admin or Staff privileges.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: _id
+        in: path
+        required: true
+        description: "The ID of the bike to get statistics for."
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: "Bike activity statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê hoạt động của xe thành công"
+                result:
+                  $ref: '../components/schemas/BikeActivityStats.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User does not have Admin or Staff rights."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Bike not found or Admin/Staff user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/bikes/stats/rental-overview:
+  get:
+    tags: [Bikes]
+    summary: Get rental overview statistics (Admin only)
+    description: |
+      Retrieves the total number of active bikes (excluding unavailable ones), the number of currently rented bikes, and the percentage of rented bikes.
+      **Requires Admin privileges (not Staff).**
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: "Rental overview statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê tổng quan thuê xe thành công"
+                result:
+                  $ref: '../components/schemas/BikeRentalOverviewStats.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Suppliers API (ADMIN ONLY)
 # ===================================================================
@@ -2678,6 +2807,68 @@
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '404':
         description: Station not found.
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/stations/{id}/stats:
+  get:
+    tags: [Stations]
+    summary: Get detailed statistics for a specific station (Admin only)
+    description: |
+      Retrieves detailed statistics for a specific station within a given time period (defaults to 2025-01-01 to now if unspecified).
+      Includes rental activity originating from the station, return activity, current bike status, reports, and utilization rate.
+      **Requires Admin privileges.**
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: "The ID of the station to get statistics for."
+        schema:
+          type: string
+          format: mongoId
+      - name: from
+        in: query
+        required: false
+        description: "Start date for the statistics period (YYYY-MM-DD). Defaults to '2025-01-01'."
+        schema:
+          type: string
+          format: date
+          example: "2025-10-01"
+      - name: to
+        in: query
+        required: false
+        description: "End date for the statistics period (YYYY-MM-DD). Defaults to the current date."
+        schema:
+          type: string
+          format: date
+          example: "2025-10-29"
+    responses:
+      '200':
+        description: "Station statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê trạm thành công"
+                result:
+                  $ref: '../components/schemas/StationStats.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Station not found or Admin user not found."
         content:
           application/json:
             schema:

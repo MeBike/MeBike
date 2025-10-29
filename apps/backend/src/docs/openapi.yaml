@@ -154,6 +154,8 @@ components:
       $ref: './components/schemas/ErrorServerResponse.yaml'
     GetTopRentersStatsResponse:
       $ref: './components/schemas/GetTopRentersStatsResponse.yaml'
+    GetBikeRentalHistoryResponse:
+      $ref: './components/schemas/GetBikeRentalHistoryResponse.yaml'
 
     # --- Model Schemas ---
     User:
@@ -214,6 +216,16 @@ components:
       $ref: './components/schemas/TopRenterStatItem.yaml'
     NewUserStats:
       $ref: './components/schemas/NewUserStats.yaml'
+    BikeRentalHistoryItem:
+      $ref: './components/schemas/BikeRentalHistoryItem.yaml'
+    BikeActivityStatsMonthlyItem:
+      $ref: './components/schemas/BikeActivityStatsMonthlyItem.yaml'
+    BikeActivityStats:
+      $ref: './components/schemas/BikeActivityStats.yaml'
+    StationStats:
+      $ref: './components/schemas/StationStats.yaml'
+    BikeRentalOverviewStats:
+      $ref: './components/schemas/BikeRentalOverviewStats.yaml'
 
   securitySchemes:
     BearerAuth:

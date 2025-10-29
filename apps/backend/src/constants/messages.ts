@@ -198,6 +198,8 @@ export const BIKES_MESSAGES = {
   INVALID_BIKE_ID: 'ID của xe đạp không hợp lệ',
   // delete bike
   DELETE_BIKE_SUCCESS: 'Xóa xe đạp thành công',
+  CANNOT_DELETE_BIKE_WHILE_RENTED: 'Không thể xóa xe đạp đang được thuê',
+  CANNOT_DELETE_BIKE_WHILE_RESERVED: 'Không thể xóa xe đạp đang được đặt trước',
   // history rental of bike
   GET_BIKE_RENTALS_SUCCESS: 'Lấy lịch sử thuê xe thành công',
   // stats of bikes
@@ -209,11 +211,18 @@ export const BIKES_MESSAGES = {
   AT_LEAST_ONE_FIELD_IS_REQUIRED: 'Cần ít nhất một trường để cập nhật',
   CANNOT_REPORT_BIKE_NOT_RENTING: 'Bạn chỉ có thể báo hỏng chiếc xe bạn đang thuê',
   REPORT_BROKEN_BIKE_SUCCESS: 'Báo hỏng xe thành công',
+  CANNOT_UPDATE_STATION_WHILE_RENTED: 'Không thể cập nhật trạm khi xe đang được thuê',
+  CANNOT_UPDATE_STATION_WHILE_RESERVED: 'Không thể cập nhật trạm khi xe đang được đặt trước',
   // thêm chip_id messages cho create and update bike
   CHIP_ID_IS_REQUIRED: 'Chip ID là bắt buộc',
   CHIP_ID_MUST_BE_A_STRING: 'Chip ID phải là chuỗi',
   CHIP_ID_ALREADY_EXISTS: 'Chip ID đã tồn tại',
-  CHIP_ID_ALREADY_EXISTS_ON_ANOTHER_BIKE: 'Chip ID đã tồn tại trên một xe đạp khác'
+  CHIP_ID_ALREADY_EXISTS_ON_ANOTHER_BIKE: 'Chip ID đã tồn tại trên một xe đạp khác',
+  //lịch sử thuê xe thành công
+  GET_BIKE_RENTAL_HISTORY_SUCCESS: 'Lấy lịch sử thuê xe thành công',
+  //thống kê hoạt động xe
+  GET_BIKE_ACTIVITY_STATS_SUCCESS: 'Lấy thống kê hoạt động xe thành công',
+  GET_BIKE_RENTAL_STATS_SUCCESS: 'Lấy thống kê thuê xe thành công'
 } as const
 
 export const RENTALS_MESSAGE = {
@@ -230,9 +239,11 @@ export const RENTALS_MESSAGE = {
   UPDATE_DETAIL_SUCCESS: 'Cập nhật phiên thuê thành công',
   CANCEL_RENTAL_SUCCESS: 'Huỷ phiên thuê thành công',
   TRACKING_RENTAL_IN_STATION_SUCCESS: 'Xem danh sách các phiên thuê tại trạm thành công',
+  GET_DASHBOARD_SUMMARY_SUCCESS: 'Lấy dữ liệu thống kê cho các phiên thuê hôm nay thành công',
   // Fail action
-  CREATE_SESSION_FAIL: 'Tạo phiên thuê xe không thành công',
+  CREATE_SESSION_FAILED: 'Tạo phiên thuê xe không thành công',
   RENTAL_UPDATE_FAILED: 'Cập nhật phiên thuê không thành công',
+  BIKE_UPDATE_FAILED: 'Cập nhật xe không thành công',
   // Required data
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
   REQUIRED_BIKE_ID: 'Vui lòng nhập Id xe đạp',
@@ -315,8 +326,13 @@ export const RESERVATIONS_MESSAGE = {
   STAFF_CONFIRM_SUCCESS: 'Nhân viên hỗ trợ xác nhận phiên đặt trước thành công',
   STAFF_CANCEL_SUCCESS: 'Nhân viên hỗ trợ huỷ phiên đặt trước thành công',
   GET_STATION_RESERVATIONS_SUCCESS: 'Xem chi tiết thống kê các phiên đặt trước tại trạm thành công',
+  MARK_EXPIRED_RESERVATIONS_SUCCESS: 'Cập nhật trạng thái cho các phiên đã hết hạn thành công',
   // Fail action
   PARTIAL_UPDATE_FAILURE: 'Lỗi hệ thống: Chỉ %s/%s xe được cập nhật. Hành động bị hủy',
+  RESERVATION_UPDATE_FAILED: 'Cập nhật phiên đặt trước không thành công',
+  BIKE_UPDATE_FAILED: 'Cập nhật xe không thành công',
+  RESERVATION_NOT_UPDATED: 'Không thể cập nhật trạng thái phiên đặt trước %s.',
+  BIKE_NOT_RELEASED: 'Không thể giải phóng xe %s.',
   // Required data
   REQUIRED_ID: 'Vui lòng nhập Id phiên đặt trước',
   REQUIRED_USER_ID: 'Vui lòng nhập Id người dùng',
@@ -381,12 +397,12 @@ export const RESERVATIONS_MESSAGE = {
   // Console Messages
   SKIPPING_USER_NOT_FOUND: (userId: string) => `Skipping notification: User ${userId} not found or missing email.`,
   ERROR_SENDING_EMAIL: (userId: string) => `Error preparing/sending email for user ${userId}:`,
-  CANCELLED_SUCCESS: (reservationId: string, userId: string) =>
-    `[CANCELLED] Reservation ${reservationId} for user ${userId} expired and was cancelled.`,
-  CANCELLED_FAILURE: (reservationId: string, error: string) =>
-    `Failed to fully cancel reservation ${reservationId}: ${error}`,
-  SCHEDULING_CANCEL_TASK: (reservationId: string, delayMinutes: number) => 
-        `Scheduling cancellation task for reservation ${reservationId} in ${delayMinutes} minutes.`,
+  EXPIRE_SUCCESS: (reservationId: string, userId: string) =>
+    `[EXPIRED] Reservation ${reservationId} for user ${userId} expired.`,
+  EXPIRE_FAILURE: (reservationId: string, error: string) =>
+    `Failed to fully expire reservation ${reservationId}: ${error}`,
+  SCHEDULING_EXPIRE_TASK: (reservationId: string, delayMinutes: number) => 
+        `Scheduling expiration task for reservation ${reservationId} in ${delayMinutes} minutes.`,
   // Email Messages
   EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn',
   // Status
@@ -485,7 +501,11 @@ export const STATIONS_MESSAGE = {
   STATION_UPDATED_SUCCESSFULLY: 'Cập nhật trạm thành công',
   // delete station messages
   STATION_DELETED_SUCCESSFULLY: 'Xóa trạm thành công',
-  CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.'
+  CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.',
+  // get station stats messages
+  GET_STATION_STATS_SUCCESSFULLY: 'Lấy thống kê trạm thành công',
+  // get station alerts messages
+  GET_STATION_ALERTS_SUCCESSFULLY: 'Lấy cảnh báo trạm thành công'
 }
 
 export const RATING_MESSAGE = {
