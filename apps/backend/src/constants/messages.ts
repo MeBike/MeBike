@@ -495,7 +495,9 @@ export const STATIONS_MESSAGE = {
   STATION_DELETED_SUCCESSFULLY: 'Xóa trạm thành công',
   CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.',
   // get station stats messages
-  GET_STATION_STATS_SUCCESSFULLY: 'Lấy thống kê trạm thành công'
+  GET_STATION_STATS_SUCCESSFULLY: 'Lấy thống kê trạm thành công',
+  // get station alerts messages
+  GET_STATION_ALERTS_SUCCESSFULLY: 'Lấy cảnh báo trạm thành công'
 }
 
 export const RATING_MESSAGE = {

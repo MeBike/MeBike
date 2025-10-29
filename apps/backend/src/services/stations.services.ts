@@ -574,6 +574,166 @@ class StationsService {
       }
     };
   }
+
+  async getStationAlerts(threshold: number = 20) {
+    // Lấy tất cả trạm với thông tin xe
+    const pipeline: Document[] = [
+      {
+        $lookup: {
+          from: "bikes",
+          localField: "_id",
+          foreignField: "station_id",
+          as: "bikesData",
+        },
+      },
+      {
+        $addFields: {
+          totalBikes: { $size: "$bikesData" },
+          availableBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData",
+                as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Available] },
+              },
+            },
+          },
+          brokenBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData",
+                as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Broken] },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          capacity: { $toInt: "$capacity" },
+          availableBikes: "$availableBikesCount",
+          brokenBikes: "$brokenBikesCount",
+          utilizationRate: {
+            $cond: [
+              { $or: [{ $eq: ["$capacity", 0] }, { $eq: [{ $toDouble: "$capacity" }, 0] }, { $eq: ["$capacity", null] }] },
+              0,
+              {
+                $multiply: [
+                  { $divide: ["$totalBikes", { $toDouble: "$capacity" }] },
+                  100
+                ]
+              }
+            ]
+          },
+          emptySlots: {
+            $max: [
+              0,
+              { $subtract: [{ $toDouble: "$capacity" }, "$totalBikes"] }
+            ]
+          }
+        },
+      },
+      {
+        $project: {
+          bikesData: 0,
+          availableBikesCount: 0,
+          brokenBikesCount: 0,
+        },
+      },
+    ];
+
+    const stations = await databaseService.stations.aggregate(pipeline).toArray();
+
+    const alerts = {
+      overloaded: [] as any[], // Trạm quá tải (> 90% capacity)
+      underloaded: [] as any[], // Trạm thiếu xe (< threshold% available bikes)
+      broken: [] as any[], // Trạm có xe hỏng (> 10% broken bikes)
+      empty: [] as any[], // Trạm trống (> 50% empty slots)
+    };
+
+    for (const station of stations) {
+      const capacity = station.capacity;
+      const totalBikes = station.totalBikes;
+      const availableBikes = station.availableBikes;
+      const brokenBikes = station.brokenBikes;
+      const emptySlots = station.emptySlots;
+      const utilizationRate = station.utilizationRate;
+
+      // Trạm quá tải: > 90% capacity
+      if (utilizationRate > 90) {
+        alerts.overloaded.push({
+          _id: station._id,
+          name: station.name,
+          address: station.address,
+          capacity,
+          totalBikes,
+          utilizationRate: Math.round(utilizationRate * 100) / 100,
+          availableBikes,
+          emptySlots,
+          severity: utilizationRate > 95 ? 'critical' : 'warning'
+        });
+      }
+
+      // Trạm thiếu xe: < threshold% available bikes
+      const availableRate = capacity > 0 ? (availableBikes / capacity) * 100 : 0;
+      if (availableRate < threshold) {
+        alerts.underloaded.push({
+          _id: station._id,
+          name: station.name,
+          address: station.address,
+          capacity,
+          totalBikes,
+          availableBikes,
+          availableRate: Math.round(availableRate * 100) / 100,
+          emptySlots,
+          severity: availableRate < (threshold / 2) ? 'critical' : 'warning'
+        });
+      }
+
+      // Trạm có nhiều xe hỏng: > 10% broken bikes
+      const brokenRate = totalBikes > 0 ? (brokenBikes / totalBikes) * 100 : 0;
+      if (brokenRate > 10) {
+        alerts.broken.push({
+          _id: station._id,
+          name: station.name,
+          address: station.address,
+          totalBikes,
+          brokenBikes,
+          brokenRate: Math.round(brokenRate * 100) / 100,
+          severity: brokenRate > 20 ? 'critical' : 'warning'
+        });
+      }
+
+      // Trạm trống: > 50% empty slots
+      const emptyRate = capacity > 0 ? (emptySlots / capacity) * 100 : 0;
+      if (emptyRate > 50) {
+        alerts.empty.push({
+          _id: station._id,
+          name: station.name,
+          address: station.address,
+          capacity,
+          totalBikes,
+          emptySlots,
+          emptyRate: Math.round(emptyRate * 100) / 100,
+          severity: emptyRate > 70 ? 'critical' : 'warning'
+        });
+      }
+    }
+
+    return {
+      threshold,
+      totalStations: stations.length,
+      alertsCount: {
+        overloaded: alerts.overloaded.length,
+        underloaded: alerts.underloaded.length,
+        broken: alerts.broken.length,
+        empty: alerts.empty.length,
+        total: alerts.overloaded.length + alerts.underloaded.length + alerts.broken.length + alerts.empty.length
+      },
+      alerts
+    };
+  }
 }
 
 const stationsService = new StationsService();
