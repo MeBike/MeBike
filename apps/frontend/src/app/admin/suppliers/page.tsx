@@ -713,26 +713,7 @@ export default function SuppliersPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Trạng thái
-                    </label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          status: e.target.value as
-                            | "HOẠT ĐỘNG"
-                            | "NGƯNG HOẠT ĐỘNG",
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                    >
-                      <option value="HOẠT ĐỘNG">Hoạt động</option>
-                      <option value="NGƯNG HOẠT ĐỘNG">Ngưng hoạt động</option>
-                    </select>
-                  </div>
+
 
                   <div className="flex gap-3 pt-4">
                     <Button
