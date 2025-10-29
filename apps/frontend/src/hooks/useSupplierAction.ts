@@ -131,7 +131,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     },
     [hasToken, router, queryClient, useChangeStatusSupplier]
   );
-  const getUpdateSupplier = useCallback(async ({data , id } : {data: Partial<CreateSupplierSchema>, id: string }) => {
+  const getUpdateSupplier = useCallback(({ data, id }: { data: Partial<CreateSupplierSchema>; id: string }) => {
     if (!hasToken) {
       router.push("/login");
       return;

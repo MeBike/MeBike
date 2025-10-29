@@ -41,6 +41,13 @@ export default function SuppliersPage() {
   const [statusFilter, setStatusFilter] = useState<
     "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
   >("");
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    phone_number: "",
+    contract_fee: "",
+    status: "HOẠT ĐỘNG" as "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG",
+  });
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
   const { useGetAllBikeQuery } = useBikeActions(true);
@@ -58,7 +65,9 @@ export default function SuppliersPage() {
     changeStatusSupplier,
     isLoadingAllStatsSupplier,
     getAllStatsSupplier,
+    getUpdateSupplier,
   } = useSupplierActions(true, selectedSupplier?._id);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: supplierData, isLoading: isLoadingGetAllSuppliers } =
     useGetAllSupplierQuery(page, limit, statusFilter);
@@ -94,22 +103,26 @@ export default function SuppliersPage() {
     getAllStatsSupplier();
   }, [getAllStatsSupplier]);
   const handleViewSupplier = (supplier: Supplier) => {
-    if (supplier === null) return;
-    if (selectedSupplier === supplier) {
+    if (!supplier) return;
+    if (selectedSupplier?._id === supplier._id && !isDetailModalOpen) {
       setIsDetailModalOpen(true);
-    } else {
-      setIsDetailModalOpen(false);
+      return;
     }
     setSelectedSupplier(supplier);
     setIsLoadingDetail(true);
+    setIsDetailModalOpen(false);
   };
+
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  // Khi supplier thay đổi, bắt đầu fetch
   useEffect(() => {
     if (!selectedSupplier) return;
     setIsLoadingDetail(true);
     getBikeStatsSupplier();
     getAllStatsSupplier();
-    setIsDetailModalOpen(false);
   }, [selectedSupplier]);
+
+  // Khi dữ liệu đủ (không loading nữa), mở modal
   useEffect(() => {
     if (
       selectedSupplier &&
@@ -129,12 +142,35 @@ export default function SuppliersPage() {
     allStatsSupplier,
   ]);
 
+  const handleUpdateSupplier = () => {
+    if (!editingSupplier) return;
+    getUpdateSupplier({
+      id: editingSupplier._id,
+      data: {
+        name: formData.name,
+        address: formData.address,
+        phone_number: formData.phone_number,
+        contract_fee: formData.contract_fee,
+      },
+    });
+    setFormData({
+      name: "",
+      address: "",
+      phone_number: "",
+      contract_fee: "",
+      status: "HOẠT ĐỘNG",
+    });
+    setIsEditModalOpen(false);
+    setEditingSupplier(null);
+  };
   return (
     <div>
       {isLoadingGetAllSuppliers &&
       isLoadingBike &&
       isLoadingBikeStatsSupplier ? (
-        <div>Loading suppliers...</div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+          <Loader2 className="animate-spin w-16 h-16 text-primary" />
+        </div>
       ) : (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -219,6 +255,17 @@ export default function SuppliersPage() {
                 onView: handleViewSupplier,
                 setIsDetailModalOpen,
                 onChangeStatus: changeStatusSupplier,
+                onEdit: (supplier: Supplier) => {
+                  setEditingSupplier(supplier);
+                  setFormData({
+                    name: supplier.name,
+                    address: supplier.contact_info.address,
+                    phone_number: supplier.contact_info.phone_number,
+                    contract_fee: supplier.contract_fee,
+                    status: supplier.status,
+                  });
+                  setIsEditModalOpen(true);
+                },
               })}
               data={supplierData?.data ?? []}
             />
@@ -581,6 +628,125 @@ export default function SuppliersPage() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+          {isEditModalOpen && editingSupplier && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-foreground">
+                    Chỉnh sửa nhà cung cấp
+                  </h2>
+                  <button
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="p-1 hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-muted-foreground" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      Tên nhà cung cấp
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                      placeholder="Nhập tên nhà cung cấp"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      Địa chỉ
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.address}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                      placeholder="Nhập địa chỉ"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.phone_number}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          phone_number: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                      placeholder="Nhập số điện thoại"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      Phí hợp đồng
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.contract_fee}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          contract_fee: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                      placeholder="Nhập phí hợp đồng"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-1">
+                      Trạng thái
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          status: e.target.value as
+                            | "HOẠT ĐỘNG"
+                            | "NGƯNG HOẠT ĐỘNG",
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                    >
+                      <option value="HOẠT ĐỘNG">Hoạt động</option>
+                      <option value="NGƯNG HOẠT ĐỘNG">Ngưng hoạt động</option>
+                    </select>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditModalOpen(false)}
+                      className="flex-1"
+                    >
+                      Hủy
+                    </Button>
+                    <Button onClick={handleUpdateSupplier} className="flex-1">
+                      Cập nhật
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           )}
