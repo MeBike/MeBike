@@ -1,7 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw } from "lucide-react";
 import type { Bike, BikeStatus } from "@/types";
-// import { getStatusColor } from "@/utils/refund-status";
 export const getStatusColor = (status: BikeStatus) => {
   switch (status) {
     case "ĐANG ĐƯỢC THUÊ":
@@ -20,7 +19,15 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
-export const bikeColumn = (): ColumnDef<Bike>[] => [
+export const bikeColumn = (
+ {
+   onView,
+  //  onUpdateStatus,
+ }: {
+   onView?: ({ id }: { id: string }) => void;
+  //  onUpdateStatus?: ((data: ) => void) | undefined;
+ }
+): ColumnDef<Bike>[] => [
   {
     accessorKey: "_id",
     header: "Mã xe",
@@ -65,9 +72,9 @@ export const bikeColumn = (): ColumnDef<Bike>[] => [
           className="p-2 hover:bg-muted rounded-lg transition-colors"
           title="Xem chi tiết"
           onClick={() => {
-            // if (onView) {
-            //   onView({ id: row.original._id });
-            // }
+            if (onView) {
+              onView({ id: row.original._id });
+            }
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />

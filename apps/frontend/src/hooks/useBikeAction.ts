@@ -23,11 +23,9 @@ interface ErrorResponse {
     };
   };
 }
-
 interface ErrorWithMessage {
   message: string;
 }
-
 const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   const axiosError = error as ErrorResponse;
   if (axiosError?.response?.data) {
@@ -74,7 +72,11 @@ export const useBikeActions = (
   } = useGetStatisticsBikeQuery();
   const deleteBikeMutation = useSoftDeleteBikeMutation();
   const reportBikeMutation = useReportBike();
-  const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || "");
+  const {
+    data: detailBike,
+    refetch: getDetailBike,
+    isFetching: isLoadingDetail,
+  } = useGetBikeByIDAllQuery(bikeId || "");
   const queryClient = useQueryClient();
   const getBikes = useCallback(() => {
     if (!hasToken) {
@@ -188,8 +190,8 @@ export const useBikeActions = (
     [reportBikeMutation, hasToken, router]
   );
   const getBikeByID = useCallback(() => {
-    useGetDetailBike.refetch();
-  }, [useGetDetailBike]);
+    getDetailBike();
+  }, [getDetailBike]);
   return {
     getBikes,
     createBike,
@@ -199,7 +201,8 @@ export const useBikeActions = (
     getBikeByID,
     paginationBikes: data?.pagination,
     isFetchingBikeDetail: isLoading,
-    isFetchingBike: useGetDetailBike.isFetching,
+    isLoadingDetail,
+    detailBike: detailBike?.result,
     isReportingBike: reportBikeMutation.isPending,
     isDeletingBike: deleteBikeMutation.isPending,
     isUpdatingBike: updateBikeMutation.isPending,

@@ -56,9 +56,23 @@ const mockBikes: Bike[] = [
     chip_id: "CHIP_005",
   },
 ];
-
+export const getStatusColor = (status: BikeStatus) => {
+  switch (status) {
+    case "ĐANG ĐƯỢC THUÊ":
+      return "bg-yellow-100 text-yellow-800";
+    case "ĐANG BẢO TRÌ":
+      return "bg-blue-100 text-blue-800";
+    case "BỊ HỎNG":
+      return "bg-red-100 text-red-800";
+    case "CÓ SẴN":
+      return "bg-green-100 text-green-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};
 
 export default function BikesPage() {
+  const [id, setId] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [limit,] = useState<number>(10);
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,15 +87,15 @@ export default function BikesPage() {
 
   const {
     data,
+    detailBike,
     getStatisticsBike,
     statisticData,
     isLoadingStatistics,
-    isFetchingBike,
     paginationOfBikes,
     paginationBikes,
   } = useBikeActions(
     true,
-    undefined,
+    id,
     undefined,
     undefined,
     statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
@@ -98,17 +112,16 @@ export default function BikesPage() {
 
     return matchesSearch && matchesStatus;
   });
-
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const handleViewDetails = (bikeId: string) => {
+    setId(bikeId);
+    setIsDetailModalOpen(true);
+  }
   const handleCreateBike = () => {
     if (!newBike.station_id || !newBike.chip_id) {
       alert("Vui lòng điền đầy đủ thông tin");
       return;
     }
-    // createBike({
-    //   station_id: newBike.station_id,
-    //   supplier_id: newBike.supplier_id,
-    //   status: newBike.status === "CÓ SẴN",
-    // });
     setIsCreateModalOpen(false);
     setNewBike({
       station_id: "",
@@ -121,9 +134,9 @@ export default function BikesPage() {
     getStatisticsBike();
   }, []);
   useEffect(() => {
-    console.log("Bike data:", data);
+    console.log("Bike data:", data)
   }, [data]);
-  if (isFetchingBike && isLoadingStatistics) {
+  if (isLoadingStatistics) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
         <Loader2 className="animate-spin w-16 h-16 text-primary" />
@@ -228,7 +241,14 @@ export default function BikesPage() {
 
         {/* Table */}
         <div className="w-full rounded-lg space-y-4  flex flex-col">
-          <DataTable columns={bikeColumn()} data={data?.data || []} />
+          <DataTable
+            columns={bikeColumn({
+              onView: ({ id }: { id: string }) => {
+                handleViewDetails(id);
+              },
+            })}
+            data={data?.data || []}
+          />
           <PaginationDemo
             currentPage={paginationBikes?.currentPage ?? 1}
             onPageChange={setPage}
@@ -337,6 +357,67 @@ export default function BikesPage() {
                 Thêm xe đạp
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+      {isDetailModalOpen && detailBike && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-foreground mb-4">
+              Chi tiết xe đạp
+            </h2>
+
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-muted-foreground">ID Xe</p>
+                <p className="text-foreground font-medium">{detailBike._id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Chip ID</p>
+                <p className="text-foreground font-medium">
+                  {detailBike.chip_id}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Trạm</p>
+                <p className="text-foreground font-medium">
+                  {detailBike.station_id}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Nhà cung cấp</p>
+                <p className="text-foreground font-medium">
+                  {detailBike.supplier_id || "-"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Trạng thái</p>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(detailBike.status)}`}
+                >
+                  {detailBike.status}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Ngày tạo</p>
+                <p className="text-foreground font-medium">
+                  {new Date(detailBike.created_at).toLocaleString("vi-VN")}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Ngày cập nhật</p>
+                <p className="text-foreground font-medium">
+                  {new Date(detailBike.updated_at).toLocaleString("vi-VN")}
+                </p>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setIsDetailModalOpen(false)}
+              className="w-full mt-6"
+            >
+              Đóng
+            </Button>
           </div>
         </div>
       )}

@@ -96,8 +96,8 @@ export const bikeService = {
     return response;
   },
   //all
-  getBikeByIdForAll: async (id: string): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(
+  getBikeByIdForAll: async (id: string): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<Bike>>(
       BIKE_ENDPOINTS.BY_ID_FOR_ALL(id)
     );
     return response;
