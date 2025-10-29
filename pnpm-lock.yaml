@@ -71,6 +71,12 @@ importers:
       p-limit:
         specifier: ^7.1.1
         version: 7.1.1
+      pino:
+        specifier: ^8.20.0
+        version: 8.21.0
+      pino-pretty:
+        specifier: ^9.3.0
+        version: 9.4.1
       swagger-jsdoc:
         specifier: ^6.2.8
         version: 6.2.8(openapi-types@12.1.3)
