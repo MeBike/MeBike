@@ -2,7 +2,7 @@ import type { ClientSession, Document, ObjectId } from 'mongodb'
 
 import { Decimal128, Int32 } from 'mongodb'
 
-import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
+import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role, TrendValue } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { AUTH_MESSAGE, RENTALS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -18,52 +18,57 @@ import {
 } from '~/models/requests/rentals.requests'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import walletService from './wallets.services'
+import Bike from '~/models/schemas/bike.schema'
+import { IotServiceSdk } from '@mebike/shared'
+import { IotBookingCommand } from '@mebike/shared/sdk/iot-service'
 
+const PENALTY_HOURS = parseInt(process.env.RENTAL_PENALTY_HOURS || '24', 10)
+const PENALTY_AMOUNT = parseInt(process.env.RENTAL_PENALTY_AMOUNT || '50000', 10)
 class RentalsService {
   async createRentalSession({
     user_id,
     start_station,
-    bike_id
+    bike
   }: {
     user_id: ObjectId | string
     start_station: ObjectId
-    bike_id: ObjectId
+    bike: Bike
   }) {
+    const now = getLocalTime()
     const session = databaseService.getClient().startSession()
 
     try {
-      let rental: Rental | null = null
-      const now = getLocalTime()
+      const bike_id = bike._id as ObjectId
+      const rental = new Rental({
+        user_id: toObjectId(user_id),
+        start_station,
+        bike_id,
+        start_time: now,
+        status: RentalStatus.Rented
+      })
 
       await session.withTransaction(async () => {
-        rental = new Rental({
-          user_id: toObjectId(user_id),
-          start_station,
-          bike_id,
-          start_time: now,
-          status: RentalStatus.Rented
-        })
-
-        await databaseService.rentals.insertOne(rental, { session })
-
-        await databaseService.bikes.updateOne(
-          { _id: bike_id },
-          {
-            $set: {
-              station_id: null,
-              status: BikeStatus.Booked,
-              updated_at: now
-            }
-          },
-          { session }
-        )
+        await Promise.all([
+          databaseService.rentals.insertOne(rental, { session }),
+          databaseService.bikes.updateOne(
+            { _id: bike_id },
+            {
+              $set: {
+                station_id: null,
+                status: BikeStatus.Booked,
+                updated_at: now
+              }
+            },
+            { session }
+          )
+        ])
       })
-      if (!rental) {
-        throw new ErrorWithStatus({
-          message: RENTALS_MESSAGE.CREATE_SESSION_FAIL,
-          status: HTTP_STATUS.BAD_REQUEST
-        })
-      }
+
+      void IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
+        command: IotBookingCommand.book
+      })
+        .then(() => console.log(`[IoT] Sent booking command for bike ${bike.chip_id}`))
+        .catch((err) => console.warn(`[IoT] Failed to send booking command for bike ${bike.chip_id}:`, err))
 
       return {
         ...(rental as any),
@@ -77,178 +82,219 @@ class RentalsService {
   }
 
   async endRentalSession({ user_id, rental }: { user_id: ObjectId; rental: Rental }) {
-    const end_station = rental.start_station;
-    const now = getLocalTime();
-    
-    const session = databaseService.getClient().startSession();
-    try {
-        let endedRental: Rental = rental;
+    const end_station = rental.start_station
+    const now = getLocalTime()
 
-        await session.withTransaction(async () => {
-            const user = await databaseService.users.findOne({ _id: user_id }, { session });
-            if (!user) {
-                throw new ErrorWithStatus({
-                    message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
-                    status: HTTP_STATUS.NOT_FOUND
-                });
-            }
-            
-            endedRental = await this.processRentalEndTransaction(
-                rental,
-                user_id,
-                end_station,
-                now, 
-                session
-            );
-        });
-
-        return {
-            ...endedRental,
-            total_price: Number.parseFloat(endedRental.total_price.toString())
-        };
-    } catch (error) {
-        throw error;
-    } finally {
-        await session.endSession();
+    if (!user_id.equals(rental.user_id)) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.CANNOT_END_OTHER_RENTAL,
+        status: HTTP_STATUS.FORBIDDEN
+      })
     }
-}
+
+    const session = databaseService.getClient().startSession()
+    try {
+      let endedRental: Rental = rental
+      let logData: any = null
+
+      await session.withTransaction(async () => {
+        const result = await this.processRentalEndCore(rental, user_id, end_station, now, session)
+        endedRental = result.rental
+        logData = result.logData
+      })
+
+      await this.afterRentalEnd(endedRental, logData)
+
+      return {
+        ...endedRental,
+        total_price: Number.parseFloat(endedRental.total_price.toString())
+      }
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
+  }
 
   async endRentalByAdminOrStaff({
     user_id,
     rental,
     payload
-}: {
+  }: {
     user_id: ObjectId
     rental: Rental
     payload: EndRentalByAdminOrStaffReqBody
-}) {
-    const { end_station, end_time, reason } = payload;
-    const objStationId = toObjectId(end_station);
-    const now = getLocalTime();
-    const endTime = end_time ? new Date(end_time) : now;
+  }) {
+    const { end_station, end_time, reason } = payload
+    const objStationId = toObjectId(end_station)
+    const now = getLocalTime()
+    const endTime = end_time ? new Date(end_time) : now
 
     if (endTime > now) {
-        throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.END_DATE_CANNOT_BE_IN_FUTURE,
-            status: HTTP_STATUS.BAD_REQUEST
-        });
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.END_DATE_CANNOT_BE_IN_FUTURE,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
     }
     if (endTime < rental.start_time) {
-        throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.END_TIME_MUST_GREATER_THAN_START_TIME,
-            status: HTTP_STATUS.BAD_REQUEST
-        });
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.END_TIME_MUST_GREATER_THAN_START_TIME,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
     }
 
-    const session = databaseService.getClient().startSession();
+    const session = databaseService.getClient().startSession()
     try {
-        let endedRental: Rental = rental;
-        
-        await session.withTransaction(async () => {
-            const user = await databaseService.users.findOne({ _id: user_id }, { session });
-            if (!user) {
-                throw new ErrorWithStatus({
-                    message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id.toString()),
-                    status: HTTP_STATUS.NOT_FOUND
-                });
-            }
-            
-            endedRental = await this.processRentalEndTransaction(
-                rental,
-                user_id,
-                objStationId,
-                endTime,
-                session,
-                reason 
-            );
-        });
+      let endedRental: Rental = rental
+      let logData: any = null
 
-        return {
-            ...endedRental,
-            total_price: Number.parseFloat(endedRental.total_price.toString())
-        };
+      await session.withTransaction(async () => {
+        const result = await this.processRentalEndCore(rental, user_id, objStationId, endTime, session, reason)
+        endedRental = result.rental
+        logData = result.logData
+      })
+
+      await this.afterRentalEnd(endedRental, logData)
+
+      return {
+        ...endedRental,
+        total_price: Number.parseFloat(endedRental.total_price.toString())
+      }
     } catch (error) {
-        throw error;
+      throw error
     } finally {
-        await session.endSession();
+      await session.endSession()
     }
-}
+  }
 
-async processRentalEndTransaction(
+  async processRentalEndCore(
     rental: Rental,
     user_id: ObjectId,
     end_station_id: ObjectId,
     effective_end_time: Date,
     session: ClientSession,
-    reason?: string 
-): Promise<Rental> {
-    
-    const now = getLocalTime();
-    
-    if (!reason && rental.user_id.toString().localeCompare(user_id.toString()) !== 0) {
-        throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.CANNOT_END_OTHER_RENTAL,
-            status: HTTP_STATUS.FORBIDDEN
-        });
-    }
+    reason?: string
+  ): Promise<{ rental: Rental; logData?: any }> {
+    const now = getLocalTime()
+    const result: any = {}
 
-    const duration = this.generateDuration(rental.start_time, effective_end_time);
-    let totalPrice = this.generateTotalPrice(duration);
+    const duration = this.generateDuration(rental.start_time, effective_end_time)
+    let totalPrice = this.generateTotalPrice(duration)
 
-    const reservation = await databaseService.reservations.findOne({ _id: rental._id }, { session });
+    const reservation = await databaseService.reservations.findOneAndUpdate(
+      { _id: rental._id },
+      {
+        $set: {
+          status: ReservationStatus.Expired,
+          updated_at: now
+        }
+      },
+      { returnDocument: 'before', session }
+    )
+
     if (reservation) {
-        totalPrice = Math.max(0, totalPrice - Number.parseFloat(reservation.prepaid.toString()));
-        await databaseService.reservations.updateOne(
-            { _id: rental._id },
-            { $set: { status: ReservationStatus.Expired, updated_at: now } },
-            { session }
-        );
+      totalPrice = Math.max(0, totalPrice - parseFloat(reservation.prepaid.toString()))
+      result.is_reservation = true
+      result.prepaid = parseFloat(reservation.prepaid.toString())
     }
 
-    const decimalTotalPrice = Decimal128.fromString(totalPrice.toString());
-    const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', rental.bike_id.toString());
-    
-    await walletService.paymentRental(rental.user_id.toString(), decimalTotalPrice, description, rental._id as ObjectId);
+    const hours = duration / 60
+    if (hours > PENALTY_HOURS) {
+      result.origin_price = totalPrice
+      result.penalty_amount = PENALTY_AMOUNT
+      totalPrice += PENALTY_AMOUNT
+      console.log(
+        `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${hours.toFixed(2)}h)`
+      )
+    }
+
+    const decimalTotalPrice = Decimal128.fromString(totalPrice.toString())
 
     const updatedData: any = {
-        end_station: end_station_id,
-        end_time: effective_end_time,
-        duration: new Int32(duration),
-        total_price: decimalTotalPrice,
-        status: RentalStatus.Completed,
-    };
+      end_station: end_station_id,
+      end_time: effective_end_time,
+      duration: new Int32(duration),
+      total_price: decimalTotalPrice,
+      status: RentalStatus.Completed,
+      updated_at: now
+    }
 
-    const result = await databaseService.rentals.findOneAndUpdate(
+    const [rentalResult, bike] = await Promise.all([
+      databaseService.rentals.findOneAndUpdate(
         { _id: rental._id },
-        { $set: { ...updatedData, updated_at: now } },
+        { $set: updatedData },
         { returnDocument: 'after', session }
-    );
+      ),
+      databaseService.bikes.findOneAndUpdate(
+        { _id: rental.bike_id },
+        {
+          $set: {
+            station_id: end_station_id,
+            status: BikeStatus.Available,
+            updated_at: now
+          }
+        },
+        { returnDocument: 'after', session }
+      )
+    ])
 
-    if (!result) {
-        throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.RENTAL_UPDATE_FAILED.replace('%s', rental._id!.toString()),
-            status: HTTP_STATUS.INTERNAL_SERVER_ERROR
-        });
+    if (!rentalResult || !bike) {
+      throw new ErrorWithStatus({
+        message: !rentalResult ? RENTALS_MESSAGE.RENTAL_UPDATE_FAILED : RENTALS_MESSAGE.BIKE_UPDATE_FAILED,
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+      })
     }
 
-    await databaseService.bikes.updateOne(
-        { _id: result.bike_id },
-        { $set: { station_id: end_station_id, status: BikeStatus.Available, updated_at: now } },
-        { session }
-    );
+    const logData = reason
+      ? {
+          rental_id: rental._id!,
+          user_id,
+          changes: updatedData,
+          reason
+        }
+      : null
 
-    if (reason) {
-        const log = new RentalLog({
-            rental_id: rental._id!,
-            user_id,
-            changes: updatedData,
-            reason
-        });
-        await databaseService.rentalLogs.insertOne({ ...log }, { session });
+    return { rental: { ...rentalResult, ...result }, logData }
+  }
+
+  async afterRentalEnd(endedRental: Rental, logData?: any) {
+    const tasks: Promise<any>[] = []
+    const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', endedRental.bike_id.toString())
+
+    if (endedRental.total_price && Number(endedRental.total_price) > 0) {
+      tasks.push(
+        walletService.paymentRental(
+          endedRental.user_id.toString(),
+          Decimal128.fromString(endedRental.total_price.toString()),
+          description,
+          endedRental._id as ObjectId
+        )
+      )
     }
-    
-    return result;
-}
+
+    if (logData) {
+      const log = new RentalLog(logData)
+      tasks.push(databaseService.rentalLogs.insertOne(log))
+    }
+
+    const bike = await databaseService.bikes.findOne({ _id: endedRental.bike_id })
+
+    if (bike?.chip_id) {
+      const iotTask = (async () => {
+        try {
+          await IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
+            command: IotBookingCommand.release
+          })
+          console.log(`[IoT] Released bike ${bike.chip_id}`)
+        } catch (error) {
+          console.warn(`[IoT] Failed to release bike for rental ${endedRental._id}:`, error)
+        }
+      })()
+      tasks.push(iotTask)
+    }
+
+    await Promise.allSettled(tasks)
+  }
 
   // for staff/admin
   async getDetailRental({ rental_id }: { rental_id: string | ObjectId }) {
@@ -472,11 +518,10 @@ async processRentalEndTransaction(
 
         if (!rental) {
           throw new ErrorWithStatus({
-            message: RENTALS_MESSAGE.NOT_FOUND,
+            message: RENTALS_MESSAGE.NOT_FOUND.replace('%s', rental_id),
             status: HTTP_STATUS.NOT_FOUND
           })
         }
-        total_price = Number(rental.total_price.toString() || '0')
 
         const updateData: any = {
           end_time: now,
@@ -485,25 +530,7 @@ async processRentalEndTransaction(
           updated_at: now
         }
 
-        result = await databaseService.rentals.findOneAndUpdate(
-          { _id: objRentalId },
-          { $set: updateData },
-          { returnDocument: 'after', session }
-        )
-
         const updatedBikeStatus = bikeStatus ? bikeStatus : BikeStatus.Available
-
-        await databaseService.bikes.updateOne(
-          { _id: rental.bike_id },
-          {
-            $set: {
-              station_id: rental.start_station,
-              status: updatedBikeStatus,
-              updated_at: now
-            }
-          },
-          { session }
-        )
 
         const { updated_at, ...changedFields } = updateData
 
@@ -514,7 +541,35 @@ async processRentalEndTransaction(
           changes: changedFields
         })
 
-        await databaseService.rentalLogs.insertOne({ ...log }, { session })
+        const [rentalResult] = await Promise.all([
+          databaseService.rentals.findOneAndUpdate(
+            { _id: objRentalId },
+            { $set: updateData },
+            { returnDocument: 'after', session }
+          ),
+          databaseService.bikes.updateOne(
+            { _id: rental.bike_id },
+            {
+              $set: {
+                station_id: rental.start_station,
+                status: updatedBikeStatus,
+                updated_at: now
+              }
+            },
+            { session }
+          ),
+          databaseService.rentalLogs.insertOne({ ...log }, { session })
+        ])
+
+        if (!rentalResult) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.RENTAL_UPDATE_FAILED,
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
+
+        result = rentalResult
+        total_price = Number(rentalResult.total_price.toString() || '0')
       })
       return {
         ...(result as any),
@@ -867,14 +922,118 @@ async processRentalEndTransaction(
     return pipeline
   }
 
+  async getTodayRevenueSummary() {
+    const now = getLocalTime()
+
+    const startOfToday = new Date(now)
+    startOfToday.setUTCHours(0, 0, 0, 0)
+    const endOfToday = new Date(now)
+    endOfToday.setUTCHours(23, 59, 59, 999)
+
+    const startOfYesterday = new Date(startOfToday)
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1)
+    const endOfYesterday = new Date(startOfToday)
+    endOfYesterday.setMilliseconds(-1)
+
+    const pipeline = (start: Date, end: Date) => [
+      {
+        $match: {
+          status: RentalStatus.Completed,
+          end_time: { $gte: start, $lte: end }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: { $toDouble: '$total_price' } },
+          totalRentals: { $sum: 1 }
+        }
+      }
+    ]
+
+    const [todayAgg, yesterdayAgg] = await Promise.all([
+      databaseService.rentals.aggregate(pipeline(startOfToday, endOfToday)).toArray(),
+      databaseService.rentals.aggregate(pipeline(startOfYesterday, endOfYesterday)).toArray()
+    ])
+
+    const today = todayAgg[0] || { totalRevenue: 0, totalRentals: 0 }
+    const yesterday = yesterdayAgg[0] || { totalRevenue: 0, totalRentals: 0 }
+
+    const compare = (todayVal: number, yesterdayVal: number) => {
+      if (yesterdayVal === 0) return todayVal > 0 ? 100 : 0
+      return ((todayVal - yesterdayVal) / yesterdayVal) * 100
+    }
+
+    const revenueChange = compare(today.totalRevenue, yesterday.totalRevenue)
+    const rentalChange = compare(today.totalRentals, yesterday.totalRentals)
+
+    return {
+      today: {
+        totalRevenue: today.totalRevenue,
+        totalRentals: today.totalRentals
+      },
+      yesterday: {
+        totalRevenue: yesterday.totalRevenue,
+        totalRentals: yesterday.totalRentals
+      },
+      revenueChange,
+      revenueTrend: revenueChange > 0 ? TrendValue.Up : revenueChange < 0 ? TrendValue.Down : TrendValue.NoChange,
+      rentalChange,
+      rentalTrend: rentalChange > 0 ? TrendValue.Up : rentalChange < 0 ? TrendValue.Down : TrendValue.NoChange
+    }
+  }
+
+  async getTodayRentalPerHour() {
+    const now = getLocalTime()
+
+    const startOfToday = new Date(now)
+    startOfToday.setUTCHours(0, 0, 0, 0)
+
+    const endOfToday = new Date(now)
+    endOfToday.setUTCHours(23, 59, 59, 999)
+
+    const pipeline = [
+      {
+        $match: {
+          status: RentalStatus.Completed,
+          end_time: { $gte: startOfToday, $lte: endOfToday }
+        }
+      },
+      {
+        $group: {
+          _id: { $hour: '$end_time' },
+          totalRentals: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          hour: '$_id',
+          totalRentals: 1
+        }
+      }
+    ]
+
+    const result = await databaseService.rentals.aggregate(pipeline).toArray()
+
+    const fullDay = Array.from({ length: 24 }, (_, hour) => {
+      const found = result.find((r) => r.hour === hour)
+      return { hour, totalRentals: found ? found.totalRentals : 0 }
+    })
+
+    return fullDay
+  }
+
   generateDuration(start: Date, end: Date) {
     return Math.ceil((end.getTime() - start.getTime()) / 60000)
   }
 
-  generateTotalPrice(duration: number) {
+  generateTotalPrice(minutes: number) {
     // eslint-disable-next-line node/prefer-global/process
-    const pricePerMin = Number(process.env.PRICE_PER_MIN || '1')
-    return pricePerMin * duration
+    const halfHourUnit = Math.max(1, Math.ceil(minutes / 30))
+    const pricePer30Min = Number(process.env.PRICE_PER_30_MINS || '2000')
+    return pricePer30Min * halfHourUnit
   }
 }
 

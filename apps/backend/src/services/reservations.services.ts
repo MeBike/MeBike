@@ -3,7 +3,7 @@ import { Decimal128, ObjectId } from 'mongodb'
 import { BikeStatus, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
-import { fromHoursToMs, getLocalTime } from '~/utils/date-time'
+import { fromHoursToMs, fromMinutesToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import { ErrorWithStatus } from '~/models/errors'
 import { COMMON_MESSAGE, RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
@@ -13,50 +13,51 @@ import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
 import { readEmailTemplate } from '~/utils/email-templates'
 import { sleep } from '~/utils/timeout'
+import { IotServiceSdk } from '@mebike/shared'
+import { IotBookingCommand, IotReservationCommand } from '@mebike/shared/sdk/iot-service'
 
 class ReservationsService {
   async reserveBike({
     user_id,
-    bike_id,
+    bike,
     station_id,
     start_time
   }: {
     user_id: ObjectId
-    bike_id: ObjectId
+    bike: Bike
     station_id: ObjectId
     start_time: string
   }) {
     const now = getLocalTime()
-    const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '0')
+    const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '2000')
     const reservationId = new ObjectId()
-    const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
+    const bike_id = bike._id as ObjectId
 
-    await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
+    const startTime = new Date(start_time)
+    const endTime = this.generateEndTime(start_time)
 
     const session = databaseService.getClient().startSession()
     try {
-      let reservation
+      const reservation = new Reservation({
+        _id: reservationId,
+        user_id,
+        bike_id,
+        station_id,
+        start_time: startTime,
+        end_time: endTime,
+        status: ReservationStatus.Pending,
+        prepaid
+      })
+
+      const rental = new Rental({
+        _id: reservationId,
+        user_id,
+        bike_id,
+        start_station: station_id,
+        start_time: reservation.start_time,
+        status: RentalStatus.Reserved
+      })
       await session.withTransaction(async () => {
-        reservation = new Reservation({
-          _id: reservationId,
-          user_id,
-          bike_id,
-          station_id,
-          start_time: new Date(start_time),
-          end_time: this.generateEndTime(start_time),
-          status: ReservationStatus.Pending,
-          prepaid
-        })
-
-        const rental = new Rental({
-          _id: reservationId,
-          user_id,
-          bike_id,
-          start_station: station_id,
-          start_time: reservation.start_time,
-          status: RentalStatus.Reserved
-        })
-
         await Promise.all([
           databaseService.reservations.insertOne(reservation, { session }),
           databaseService.rentals.insertOne(rental, { session }),
@@ -67,8 +68,18 @@ class ReservationsService {
           )
         ])
       })
+
+      const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
+      await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
+
+      void IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
+        command: IotReservationCommand.reserve
+      })
+        .then(() => console.log(`[IoT] Sent reservation command for bike ${bike.chip_id}`))
+        .catch((err) => console.warn(`[IoT] Failed to send reservation command for bike ${bike.chip_id}:`, err))
+
       return {
-        ...(reservation as any),
+        ...reservation,
         prepaid: Number.parseFloat(prepaid.toString())
       }
     } catch (error) {
@@ -87,53 +98,24 @@ class ReservationsService {
     reservation: Reservation
     reason: string
   }) {
+    const now = getLocalTime()
     const session = databaseService.getClient().startSession()
     try {
-      let result
+      const bike_id = reservation.bike_id
+      const bike = await databaseService.bikes.findOne({ _id: bike_id })
+
+      let result: Reservation | null = null
+
       await session.withTransaction(async () => {
-        const now = getLocalTime()
-        const updatedData: any = {}
+        const updatedData: Partial<Reservation> = {
+          status: ReservationStatus.Cancelled
+        }
         if (reservation.created_at && this.isRefundable(reservation.created_at)) {
           const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace('%s', reservation.bike_id.toString())
-          await walletService.refundReservation(
-            reservation.user_id.toString(),
-            reservation.prepaid,
-            description,
-            reservation._id!
-          )
+          void walletService
+            .refundReservation(reservation.user_id.toString(), reservation.prepaid, description, reservation._id!)
+            .catch((err) => console.warn(`[Wallet] Refund failed for reservation ${reservation._id}:`, err))
         }
-        updatedData.status = ReservationStatus.Cancelled
-        result = await databaseService.reservations.findOneAndUpdate(
-          { _id: reservation._id },
-          {
-            $set: {
-              ...updatedData,
-              updated_at: now
-            }
-          },
-          { returnDocument: 'after', session }
-        )
-
-        await databaseService.rentals.updateOne(
-          { _id: reservation._id },
-          {
-            $set: {
-              status: RentalStatus.Cancelled,
-              updated_at: now
-            }
-          },
-          { session }
-        )
-
-        await databaseService.bikes.updateOne(
-          { _id: reservation.bike_id },
-          {
-            $set: {
-              status: BikeStatus.Available,
-              updated_at: now
-            }
-          }
-        )
 
         const log = new RentalLog({
           rental_id: reservation._id!,
@@ -141,8 +123,59 @@ class ReservationsService {
           changes: updatedData,
           reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
         })
-        await databaseService.rentalLogs.insertOne({ ...log }, { session })
+
+        const [reservationResult] = await Promise.all([
+          databaseService.reservations.findOneAndUpdate(
+            { _id: reservation._id },
+            {
+              $set: {
+                ...updatedData,
+                updated_at: now
+              }
+            },
+            { returnDocument: 'after', session }
+          ),
+          databaseService.rentals.updateOne(
+            { _id: reservation._id },
+            {
+              $set: {
+                status: RentalStatus.Cancelled,
+                updated_at: now
+              }
+            },
+            { session }
+          ),
+          databaseService.bikes.updateOne(
+            { _id: reservation.bike_id },
+            {
+              $set: {
+                status: BikeStatus.Available,
+                updated_at: now
+              }
+            },
+            { session }
+          ),
+          databaseService.rentalLogs.insertOne({ ...log }, { session })
+        ])
+
+        if (!reservationResult) {
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.RESERVATION_UPDATE_FAILED,
+            status: HTTP_STATUS.BAD_REQUEST
+          })
+        }
+
+        result = reservationResult
       })
+
+      if (bike?.chip_id) {
+        void IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
+          command: IotReservationCommand.cancel
+        })
+          .then(() => console.log(`[IoT] Sent cancellation command for bike ${bike.chip_id}`))
+          .catch((err) => console.warn(`[IoT] Failed to cancel reservation for bike ${bike.chip_id}:`, err))
+      }
+
       return result
     } catch (error) {
       throw error
@@ -160,12 +193,19 @@ class ReservationsService {
     reservation: Reservation
     reason?: string
   }) {
+    const now = getLocalTime()
     const session = databaseService.getClient().startSession()
     try {
-      let result
-      await session.withTransaction(async () => {
-        const now = getLocalTime()
+      const bike_id = reservation.bike_id
 
+      const [user, bike] = await Promise.all([
+        databaseService.users.findOne({ _id: user_id }),
+        databaseService.bikes.findOne({ _id: bike_id })
+      ])
+
+      let result: Rental | null = null
+
+      await session.withTransaction(async () => {
         const rental = await databaseService.rentals.findOne(
           {
             _id: reservation._id,
@@ -173,7 +213,6 @@ class ReservationsService {
           },
           { session }
         )
-
         if (!rental) {
           throw new ErrorWithStatus({
             message: RENTALS_MESSAGE.NOT_FOUND_RESERVED_RENTAL.replace('%s', reservation._id!.toString()),
@@ -181,71 +220,65 @@ class ReservationsService {
           })
         }
 
-        const user = await databaseService.users.findOne({ _id: user_id })
-        if (!user) {
-          throw new ErrorWithStatus({
-            message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', rental.user_id.toString()),
-            status: HTTP_STATUS.BAD_REQUEST
-          })
-        }
-
-        if (user.role === Role.User && !rental.user_id.equals(user_id)) {
-          throw new ErrorWithStatus({
-            message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_OTHER_RESERVATION,
-            status: HTTP_STATUS.BAD_REQUEST
-          })
-        }
-
         const updatedData: any = {
           start_time: now,
           status: RentalStatus.Rented
         }
-        const updatedRental = await databaseService.rentals.findOneAndUpdate(
-          { _id: reservation._id },
-          {
-            $set: {
-              ...updatedData,
-              updated_at: now
-            }
-          },
-          { returnDocument: 'after', session }
-        )
 
-        await databaseService.reservations.updateOne(
-          { _id: reservation._id },
-          {
-            $set: {
-              status: ReservationStatus.Active,
-              updated_at: now
-            }
-          },
-          { session }
-        )
+        const [rentalUpdateResult] = await Promise.all([
+          databaseService.rentals.findOneAndUpdate(
+            { _id: reservation._id },
+            {
+              $set: {
+                ...updatedData,
+                updated_at: now
+              }
+            },
+            { returnDocument: 'after', session }
+          ),
+          databaseService.reservations.updateOne(
+            { _id: reservation._id },
+            { $set: { status: ReservationStatus.Active, updated_at: now } },
+            { session }
+          ),
+          databaseService.bikes.updateOne(
+            { _id: reservation.bike_id },
+            { $set: { station_id: null, status: BikeStatus.Booked, updated_at: now } },
+            { session }
+          ),
+          ...(user && user.role === Role.Staff && rental._id
+            ? [
+                databaseService.rentalLogs.insertOne(
+                  new RentalLog({
+                    rental_id: rental._id,
+                    user_id,
+                    changes: updatedData,
+                    reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
+                  }),
+                  { session }
+                )
+              ]
+            : [])
+        ])
 
-        await databaseService.bikes.updateOne(
-          { _id: reservation.bike_id },
-          {
-            $set: {
-              station_id: null,
-              status: BikeStatus.Booked,
-              updated_at: now
-            }
-          },
-          { session }
-        )
-
-        if (user.role === Role.Staff && rental._id) {
-          const rentalLog = new RentalLog({
-            rental_id: rental._id,
-            user_id,
-            changes: updatedData,
-            reason: reason || RESERVATIONS_MESSAGE.NO_REASON_PROVIDED
+        if (!rentalUpdateResult) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.RENTAL_UPDATE_FAILED.replace('%s', reservation._id!.toString()),
+            status: HTTP_STATUS.INTERNAL_SERVER_ERROR
           })
-          await databaseService.rentalLogs.insertOne(rentalLog, { session })
         }
 
-        result = updatedRental
+        result = rentalUpdateResult
       })
+
+      if (bike?.chip_id) {
+        void IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
+          command: IotBookingCommand.claim
+        })
+          .then(() => console.log(`[IoT] Sent confirmation command for bike ${bike.chip_id}`))
+          .catch((err) => console.warn(`[IoT] Failed to confirm reservation for bike ${bike.chip_id}:`, err))
+      }
+
       return result
     } catch (error) {
       throw error
@@ -255,6 +288,12 @@ class ReservationsService {
   }
 
   async confirmReservation({ user_id, reservation }: { user_id: ObjectId; reservation: Reservation }) {
+    if (!reservation.user_id.equals(user_id)) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_OTHER_RESERVATION,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
     return await this.confirmReservationCore({ user_id, reservation })
   }
 
@@ -330,7 +369,7 @@ class ReservationsService {
         const timeUntilExpiryMs = r.end_time?.getTime()! - now.getTime()
         const totalDelayMs = timeUntilExpiryMs + bufferMs
 
-        this.scheduleDelayedCancellation(r, totalDelayMs)
+        this.scheduleDelayedExpiration(r, totalDelayMs)
         return true
       } catch (error) {
         console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
@@ -343,13 +382,11 @@ class ReservationsService {
   }
 
   async dispatchSameStation({
-    user_id,
     source_id,
     destination_id,
     bike_ids,
     bikes
   }: {
-    user_id: ObjectId
     source_id: ObjectId
     destination_id: ObjectId
     bike_ids: ObjectId[]
@@ -364,43 +401,31 @@ class ReservationsService {
     const sourceStation = stations.find((s) => s._id.equals(source_id))
     const destinationStation = stations.find((s) => s._id.equals(destination_id))
 
-    const session = databaseService.getClient().startSession()
-    try {
-      await session.withTransaction(async () => {
-        const updateResult = await databaseService.bikes.updateMany(
-          { _id: { $in: bike_ids }, station_id: source_id },
-          {
-            $set: {
-              station_id: destination_id,
-              updated_at: now
-            }
-          },
-          { session }
-        )
-
-        if (updateResult.modifiedCount !== bike_ids.length) {
-          throw new ErrorWithStatus({
-            message: RESERVATIONS_MESSAGE.PARTIAL_UPDATE_FAILURE.replace(
-              '%s',
-              updateResult.modifiedCount.toString()
-            ).replace('%s', bike_ids.length.toString()),
-            status: HTTP_STATUS.INTERNAL_SERVER_ERROR
-          })
+    const updateResult = await databaseService.bikes.updateMany(
+      { _id: { $in: bike_ids }, station_id: source_id },
+      {
+        $set: {
+          station_id: destination_id,
+          updated_at: now
         }
-
-        // TODO: Log the dispatch action for each bike
-      })
-
-      return {
-        dispatched_count: bike_ids.length,
-        from_station: sourceStation,
-        to_station: destinationStation,
-        dispatched_bikes: bikes
       }
-    } catch (error) {
-      throw error
-    } finally {
-      await session.endSession()
+    )
+
+    if (updateResult.modifiedCount !== bike_ids.length) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.PARTIAL_UPDATE_FAILURE.replace(
+          '%s',
+          updateResult.modifiedCount.toString()
+        ).replace('%s', bike_ids.length.toString()),
+        status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+      })
+    }
+
+    return {
+      dispatched_count: bike_ids.length,
+      from_station: sourceStation,
+      to_station: destinationStation,
+      dispatched_bikes: bikes
     }
   }
 
@@ -501,42 +526,62 @@ class ReservationsService {
     return finalReport
   }
 
-  async cancelExpiredReservations() {
+  async expireReservations() {
     const now = getLocalTime()
 
-    const expired = await databaseService.reservations
+    const expiredReservations = await databaseService.reservations
       .find({
         status: ReservationStatus.Pending,
         end_time: { $lt: now }
       })
       .toArray()
 
-    if (expired.length === 0) {
-      return { cancelled_count: 0 }
+    if (expiredReservations.length === 0) {
+      return { expired_count: 0 }
     }
 
-    let cancelledCount = 0
+    const releasedBikeIds = expiredReservations.map((r) => r.bike_id)
+    const releasedBikes = await databaseService.bikes.find({ _id: { $in: releasedBikeIds } }).toArray()
+    const bikeMap = new Map(releasedBikes.map((b) => [b._id.toString(), b]))
 
-    for (const r of expired) {
-      const result = await this.cancelReservationAndReleaseBike(r)
+    let expiredCount = 0
 
-      if (result.success) {
-        cancelledCount++
-        console.log(RESERVATIONS_MESSAGE.CANCELLED_SUCCESS(r._id.toString(), r.user_id.toString()))
-      } else {
-        console.error(
-          RESERVATIONS_MESSAGE.CANCELLED_FAILURE(r._id.toString(), result.error || COMMON_MESSAGE.UNKNOWN_ERROR)
-        )
-      }
+    const concurrencyLimit = 5
+    const batches = []
+
+    for (let i = 0; i < expiredReservations.length; i += concurrencyLimit) {
+      const batch = expiredReservations.slice(i, i + concurrencyLimit)
+
+      const results = await Promise.allSettled(
+        batch.map(async (r) => {
+          const bike = bikeMap.get(r.bike_id.toString())
+          if (!bike) {
+            console.warn(RESERVATIONS_MESSAGE.BIKE_NOT_FOUND.replace('%s', r.bike_id.toString()))
+            return
+          }
+
+          const result = await this.expireReservationAndReleaseBike(r, bike)
+
+          if (result.success) {
+            expiredCount++
+            console.log(RESERVATIONS_MESSAGE.EXPIRE_SUCCESS(r._id.toString(), r.user_id.toString()))
+          } else {
+            console.error(
+              RESERVATIONS_MESSAGE.EXPIRE_FAILURE(r._id.toString(), result.error || COMMON_MESSAGE.UNKNOWN_ERROR)
+            )
+          }
+        })
+      )
+
+      batches.push(results)
     }
-
-    return { cancelled_count: cancelledCount }
+    return { expired_count: expiredCount }
   }
 
-  async scheduleDelayedCancellation(reservation: Reservation, delayMs: number) {
+  async scheduleDelayedExpiration(reservation: Reservation, delayMs: number) {
     const effectiveDelayMs = Math.max(1000, delayMs)
     console.log(
-      RESERVATIONS_MESSAGE.SCHEDULING_CANCEL_TASK(reservation._id!.toString(), Math.round(effectiveDelayMs / 60000))
+      RESERVATIONS_MESSAGE.SCHEDULING_EXPIRE_TASK(reservation._id!.toString(), Math.round(effectiveDelayMs / 60000))
     )
 
     await sleep(effectiveDelayMs)
@@ -547,18 +592,25 @@ class ReservationsService {
     })
 
     if (currentReservation) {
-      const result = await this.cancelReservationAndReleaseBike(currentReservation)
+      const bike = await databaseService.bikes.findOne({ _id: currentReservation.bike_id })
+      if (!bike) {
+        throw new ErrorWithStatus({
+          message: RESERVATIONS_MESSAGE.BIKE_NOT_FOUND.replace('%s', currentReservation.bike_id.toString()),
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+      const result = await this.expireReservationAndReleaseBike(currentReservation, bike)
 
       if (result.success) {
         console.log(
-          RESERVATIONS_MESSAGE.CANCELLED_SUCCESS(
+          RESERVATIONS_MESSAGE.EXPIRE_SUCCESS(
             currentReservation._id.toString(),
             currentReservation.user_id.toString()
           )
         )
       } else {
         console.error(
-          RESERVATIONS_MESSAGE.CANCELLED_FAILURE(
+          RESERVATIONS_MESSAGE.EXPIRE_FAILURE(
             currentReservation._id.toString(),
             result.error || COMMON_MESSAGE.UNKNOWN_ERROR
           )
@@ -567,27 +619,47 @@ class ReservationsService {
     }
   }
 
-  private async cancelReservationAndReleaseBike(reservation: Reservation) {
+  private async expireReservationAndReleaseBike(reservation: Reservation, bike: Bike) {
     const session = databaseService.getClient().startSession()
 
     try {
       await session.withTransaction(async () => {
         const now = getLocalTime()
 
-        await databaseService.reservations.updateOne(
-          { _id: reservation._id, status: ReservationStatus.Pending },
-          { $set: { status: ReservationStatus.Cancelled, updated_at: now } },
-          { session }
-        )
+        const [resUpdate, bikeUpdate] = await Promise.all([
+          databaseService.reservations.updateOne(
+            { _id: reservation._id, status: ReservationStatus.Pending },
+            { $set: { status: ReservationStatus.Expired, updated_at: now } },
+            { session }
+          ),
+          databaseService.bikes.updateOne(
+            { _id: reservation.bike_id, status: BikeStatus.Reserved },
+            { $set: { status: BikeStatus.Available, updated_at: now } },
+            { session }
+          )
+        ])
 
-        await databaseService.bikes.updateOne(
-          { _id: reservation.bike_id, status: BikeStatus.Reserved },
-          { $set: { status: BikeStatus.Available, updated_at: now } },
-          { session }
-        )
-
-        // IoT Integration: Send 'cancel' command to bike
+        if (resUpdate.modifiedCount === 0) {
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.RESERVATION_NOT_UPDATED.replace('%s', reservation._id!.toString()),
+            status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+          })
+        }
+        if (bikeUpdate.modifiedCount === 0) {
+          throw new ErrorWithStatus({
+            message: RESERVATIONS_MESSAGE.BIKE_NOT_RELEASED.replace('%s', reservation.bike_id.toString()),
+            status: HTTP_STATUS.INTERNAL_SERVER_ERROR
+          })
+        }
       })
+      try {
+        await IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
+          command: IotReservationCommand.cancel
+        })
+        console.log(`[IoT] Sent cancellation command for bike ${bike.chip_id}`)
+      } catch (error) {
+        console.warn(`[IoT] Failed to send cancellation command for bike ${bike.chip_id}:`, error)
+      }
 
       return { success: true }
     } catch (error) {
@@ -598,14 +670,14 @@ class ReservationsService {
   }
 
   generateEndTime(startTime: string) {
-    const holdTimeMs = fromHoursToMs(Number(process.env.HOLD_HOURS_RESERVATION || '1'))
+    const holdTimeMs = fromMinutesToMs(Number(process.env.HOLD_MINUTES_RESERVATION || '30'))
     return new Date(new Date(startTime).getTime() + holdTimeMs)
   }
 
   isRefundable(createdTime: Date) {
     const now = getLocalTime()
-    const cancellableMs = fromHoursToMs(Number(process.env.CANCELLABLE_HOURS || '1'))
-    return new Date(createdTime.getTime() + cancellableMs) > now
+    const refundPeriodMs = fromHoursToMs(Number(process.env.REFUND_PERIOD_HOURS || '1'))
+    return new Date(createdTime.getTime() + refundPeriodMs) > now
   }
 
   async getStationReservations({ stationId }: { stationId: ObjectId }) {

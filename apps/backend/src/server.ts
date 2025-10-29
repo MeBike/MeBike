@@ -38,7 +38,7 @@ databaseService.connect().then(async () => {
   databaseService.indexSuppliers()
 
   // cron-job
-  warningExpiryReservation.start()
+  // warningExpiryReservation.start()
 })
 
 app.get('/', (req, res) => {
