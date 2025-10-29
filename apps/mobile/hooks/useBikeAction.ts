@@ -49,12 +49,12 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
 }
 type BikeActionsProps = {
   hasToken: boolean;
-  bikeId?: string;
+  bike_id?: string;
   station_id?: string;
-  page ?: number;
-  limit ?: number;
+  page?: number;
+  limit?: number;
 };
-export function useBikeActions({hasToken , bikeId , station_id , page , limit} : BikeActionsProps) {
+export function useBikeActions({hasToken , bike_id , station_id , page , limit} : BikeActionsProps) {
   const navigation = useNavigation();
   const {
     refetch: useGetBikes,
@@ -69,7 +69,11 @@ export function useBikeActions({hasToken , bikeId , station_id , page , limit} :
   const updateBikeMutation = useUpdateBike();
   const deleteBikeMutation = useSoftDeleteBikeMutation();
   const reportBikeMutation = useReportBike();
-  const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || "");
+  const {
+    refetch: useGetDetailBike,
+    data: detailBike,
+    isFetching: isFetchingBikeDetail,
+  } = useGetBikeByIDAllQuery(bike_id || "");
   const queryClient = useQueryClient();
   const getBikes = useCallback(() => {
     if (!hasToken) {
@@ -180,7 +184,11 @@ export function useBikeActions({hasToken , bikeId , station_id , page , limit} :
     [reportBikeMutation, hasToken, navigation],
   );
   const getBikeByID = useCallback(() => {
-    useGetDetailBike.refetch();
+    if (!hasToken) {
+      navigation.navigate("Login" as never);
+      return;
+    }
+    useGetDetailBike();
   }, [useGetDetailBike]);
   return {
     getBikes,
@@ -189,8 +197,8 @@ export function useBikeActions({hasToken , bikeId , station_id , page , limit} :
     deleteBike,
     reportBike,
     getBikeByID,
-    // isFetchingBikeDetail: is,
-    isFetchingBike: useGetDetailBike.isFetching,
+    isFetchingBikeDetail,
+    isFetchingBike: isFetchingBikeDetail,
     isReportingBike: reportBikeMutation.isPending,
     isDeletingBike: deleteBikeMutation.isPending,
     useGetBikes,
@@ -198,6 +206,7 @@ export function useBikeActions({hasToken , bikeId , station_id , page , limit} :
     isFetchingAllBikes,
     allBikes: Array.isArray(allBikes) ? allBikes : [],
     totalRecords,
+    detailBike: detailBike?.result,
     isUpdatingBike: updateBikeMutation.isPending,
     isCreatingBike: useCreateBike.isPending,
   };

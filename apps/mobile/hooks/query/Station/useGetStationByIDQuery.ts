@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { stationService } from "@services/stationService";
+import { stationService } from "@services/station.service";
 
 async function fetchStationByID(id: string) {
   try {

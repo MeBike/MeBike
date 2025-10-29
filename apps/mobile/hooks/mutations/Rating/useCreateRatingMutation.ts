@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import { ratingService } from "@services/ratingService";
+import { ratingService } from "@services/rating.service";
 
 import type { CreateRatingPayload } from "../../../types/RatingTypes";
 

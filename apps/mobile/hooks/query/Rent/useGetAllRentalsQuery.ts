@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { rentalService } from "@services/rentalService";
+import { rentalService } from "@services/rental.service";
 
 export function useGetAllRentalsQuery(page: number = 1, limit: number = 10) {
   return useQuery({

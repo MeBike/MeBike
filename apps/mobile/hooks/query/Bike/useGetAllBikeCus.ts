@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { GetAllBikesQueryParams } from "@services/bikeService";
+import type { GetAllBikesQueryParams } from "@services/bike.service";
 
-import { bikeService } from "@services/bikeService";
+import { bikeService } from "@services/bike.service";
 
 async function fetchAllBikes(data: Partial<GetAllBikesQueryParams>) {
   const response = await bikeService.getAllBikes(data as GetAllBikesQueryParams);

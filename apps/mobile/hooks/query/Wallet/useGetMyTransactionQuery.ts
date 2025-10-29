@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { Transaction } from "@services/walletService";
+import type { Transaction } from "@services/wallet.service";
 
-import { walletService } from "@services/walletService";
+import { walletService } from "@services/wallet.service";
 
 export async function fetchMyTransactions(): Promise<Transaction[]> {
   const response = await walletService.transactions();
