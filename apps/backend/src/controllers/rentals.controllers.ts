@@ -34,7 +34,7 @@ export async function createRentalSessionController(
   const result = await rentalsService.createRentalSession({
     user_id,
     start_station: station._id as ObjectId,
-    bike_id: bike._id as ObjectId
+    bike
   })
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,
@@ -226,4 +226,18 @@ export async function getRentalsByStationIdController(req: Request, res: Respons
     expired_within: (expired_within as string) ?? '60'
   })
   return sendPaginatedAggregationResponse(res, next, databaseService.rentals, req.query, pipeline)
+}
+
+export async function getDashboardSummaryController(req: Request, res: Response) {
+  const [revenueSummary, hourlyRentalStats] = await Promise.all([
+    rentalsService.getTodayRevenueSummary(),
+    rentalsService.getTodayRentalPerHour()
+  ])
+  res.json({
+    message: RENTALS_MESSAGE.GET_DASHBOARD_SUMMARY_SUCCESS,
+    result: {
+      revenueSummary,
+      hourlyRentalStats
+    }
+  })
 }

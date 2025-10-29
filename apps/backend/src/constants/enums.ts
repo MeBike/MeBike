@@ -143,3 +143,9 @@ export enum TimeType {
   Minute = 'PHÚT',
   Second = 'GIÂY'
 }
+
+export enum TrendValue {
+  Up = 'Tăng',
+  Down = 'Giảm',
+  NoChange = 'Không đổi'
+}
