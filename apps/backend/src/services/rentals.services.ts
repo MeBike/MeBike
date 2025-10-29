@@ -19,7 +19,7 @@ import {
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
-import { IotServiceSdk } from '@mebike/shared'
+import iotService from './iot.services'
 import { IotBookingCommand } from '@mebike/shared/sdk/iot-service'
 
 const PENALTY_HOURS = parseInt(process.env.RENTAL_PENALTY_HOURS || '24', 10)
@@ -64,11 +64,7 @@ class RentalsService {
         ])
       })
 
-      void IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
-        command: IotBookingCommand.book
-      })
-        .then(() => console.log(`[IoT] Sent booking command for bike ${bike.chip_id}`))
-        .catch((err) => console.warn(`[IoT] Failed to send booking command for bike ${bike.chip_id}:`, err))
+      void iotService.sendBookingCommand(bike.chip_id ?? bike_id.toString(), IotBookingCommand.book)
 
       return {
         ...(rental as any),
@@ -280,17 +276,7 @@ class RentalsService {
     const bike = await databaseService.bikes.findOne({ _id: endedRental.bike_id })
 
     if (bike?.chip_id) {
-      const iotTask = (async () => {
-        try {
-          await IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
-            command: IotBookingCommand.release
-          })
-          console.log(`[IoT] Released bike ${bike.chip_id}`)
-        } catch (error) {
-          console.warn(`[IoT] Failed to release bike for rental ${endedRental._id}:`, error)
-        }
-      })()
-      tasks.push(iotTask)
+      tasks.push(iotService.sendBookingCommand(bike.chip_id, IotBookingCommand.release))
     }
 
     await Promise.allSettled(tasks)
