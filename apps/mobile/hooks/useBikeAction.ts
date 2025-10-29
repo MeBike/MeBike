@@ -51,30 +51,36 @@ type BikeActionsProps = {
   hasToken: boolean;
   bikeId?: string;
   station_id?: string;
+  page ?: number;
+  limit ?: number;
 };
-export function useBikeActions(props: BikeActionsProps) {
+export function useBikeActions({hasToken , bikeId , station_id , page , limit} : BikeActionsProps) {
   const navigation = useNavigation();
   const {
     refetch: useGetBikes,
-    data: allBikes,
+    data: allBikesResponse,
     isFetching: isFetchingAllBikes,
-  } = useGetAllBikeQuery({ page: 1, limit: 10, station_id: props.station_id });
+  } = useGetAllBikeQuery({ page : page || 1, limit : limit || 20, station_id });
+
+  // Extract data and pagination from the response
+  const allBikes = allBikesResponse?.data || [];
+  const totalRecords = allBikesResponse?.pagination?.totalRecords || 0;
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
   const deleteBikeMutation = useSoftDeleteBikeMutation();
   const reportBikeMutation = useReportBike();
-  const useGetDetailBike = useGetBikeByIDAllQuery(props.bikeId || "");
+  const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || "");
   const queryClient = useQueryClient();
   const getBikes = useCallback(() => {
-    if (!props.hasToken) {
+    if (!hasToken) {
       navigation.navigate("Login" as never);
       return;
     }
     useGetBikes();
-  }, [useGetBikes, props.hasToken, navigation, props.station_id]);
+  }, [useGetBikes, hasToken, navigation, station_id]);
   const createBike = useCallback(
     (data: BikeSchemaFormData) => {
-      if (!props.hasToken) {
+      if (!hasToken) {
         navigation.navigate("Login" as never);
         return;
       }
@@ -94,11 +100,11 @@ export function useBikeActions(props: BikeActionsProps) {
         },
       });
     },
-    [useCreateBike, props.hasToken, navigation],
+    [useCreateBike, hasToken, navigation],
   );
   const updateBike = useCallback(
     (data: UpdateBikeSchemaFormData, id: string) => {
-      if (!props.hasToken) {
+      if (!hasToken) {
         navigation.navigate("Login" as never);
         return;
       }
@@ -122,11 +128,11 @@ export function useBikeActions(props: BikeActionsProps) {
         },
       );
     },
-    [updateBikeMutation, props.hasToken, navigation],
+    [updateBikeMutation, hasToken, navigation],
   );
   const deleteBike = useCallback(
     (id: string) => {
-      if (!props.hasToken) {
+      if (!hasToken) {
         navigation.navigate("Login" as never);
         return;
       }
@@ -147,11 +153,11 @@ export function useBikeActions(props: BikeActionsProps) {
         },
       });
     },
-    [deleteBikeMutation, props.hasToken, navigation, queryClient],
+    [deleteBikeMutation,hasToken, navigation, queryClient],
   );
   const reportBike = useCallback(
     (id: string) => {
-      if (!props.hasToken) {
+      if (!hasToken) {
         navigation.navigate("Login" as never);
         return;
       }
@@ -171,7 +177,7 @@ export function useBikeActions(props: BikeActionsProps) {
         },
       });
     },
-    [reportBikeMutation, props.hasToken, navigation],
+    [reportBikeMutation, hasToken, navigation],
   );
   const getBikeByID = useCallback(() => {
     useGetDetailBike.refetch();
@@ -191,6 +197,7 @@ export function useBikeActions(props: BikeActionsProps) {
     useGetAllBikeQuery,
     isFetchingAllBikes,
     allBikes: Array.isArray(allBikes) ? allBikes : [],
+    totalRecords,
     isUpdatingBike: updateBikeMutation.isPending,
     isCreatingBike: useCreateBike.isPending,
   };

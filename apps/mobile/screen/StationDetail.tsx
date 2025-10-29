@@ -29,18 +29,21 @@ import type { StationType } from "../types/StationType";
 import { LoadingScreen } from "@components/LoadingScreen";
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
-
 const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
 const MAP_HEIGHT = 300;
-
 export default function StationDetailScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   const route = useRoute<StationDetailRouteProp>();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { stationId } = route.params;
+  const [page , setPage] = useState<number>(1);
+  const [limit , setLimit] = useState<number>(5);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadedBikes, setLoadedBikes] = useState<Bike[]>([]);
+  const [hasMore, setHasMore] = useState(true);
   console.log("Giá trị stationId TRUYỀN VÀO:", stationId);
   const [selectedBike, setSelectedBike] = useState<any | null>(null);
   useEffect(() => {
@@ -53,10 +56,24 @@ export default function StationDetailScreen() {
     fetchingStationID,
     isLoadingGetStationByID,
   } = useStationActions(true, stationId);
-  const { allBikes, isFetchingAllBikes, getBikes } = useBikeActions({
+  const { allBikes, isFetchingAllBikes, getBikes, totalRecords } = useBikeActions({
     hasToken: true,
     station_id: stationId,
+    page : currentPage,
+    limit : limit,
   });
+  useEffect(() => {
+    if (allBikes && allBikes.length > 0) {
+      if (currentPage === 1) {
+        setLoadedBikes(allBikes);
+      } else {
+        setLoadedBikes(prev => [...prev, ...allBikes]);
+      }
+      setHasMore(allBikes.length === limit);
+    } else if (currentPage > 1) {
+      setHasMore(false);
+    }
+  }, [allBikes, currentPage, limit]);
   const { postRent, isPostRentLoading } = useRentalsActions(
     true,
     selectedBike?._id,
@@ -70,6 +87,9 @@ export default function StationDetailScreen() {
   useEffect(() => {
     if (stationId) {
       getStationByID();
+      setCurrentPage(1);
+      setLoadedBikes([]);
+      setHasMore(true);
       getBikes();
     }
   }, [stationId]);
@@ -77,9 +97,7 @@ export default function StationDetailScreen() {
     console.log("Station Detail Bikes:", allBikes);
   }, [allBikes]);
   const station = responseStationDetail as StationType | null;
-
   const isLoading = isLoadingGetStationByID || isFetchingAllBikes;
-
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -168,6 +186,12 @@ export default function StationDetailScreen() {
       },
       onError: () => setPendingBikeId(null),
     });
+  };
+
+  const handleLoadMore = () => {
+    if (hasMore && !isFetchingAllBikes) {
+      setCurrentPage(prev => prev + 1);
+    }
   };
 
   const renderBikeOnMap = (bike: any) => {
@@ -312,16 +336,16 @@ export default function StationDetailScreen() {
         onBikePress={handleBikePress}
       />
 
-      {allBikes && allBikes.length > 0 ? (
+      {loadedBikes && loadedBikes.length > 0 ? (
         <View style={styles.bikeListSection}>
           <Text style={styles.sectionTitle}>
-            Danh sách xe ({allBikes.length})
+            Danh sách xe ({loadedBikes.length})
           </Text>
-          {allBikes.map((bike: Bike) => {
+          {loadedBikes.map((bike: Bike, index: number) => {
             const isAvailable = bike.status === "CÓ SẴN";
             return (
               <View
-                key={bike._id}
+                key={`${bike._id}-${index}`}
                 style={[
                   styles.bikeItem,
                   selectedBike?._id === bike._id && styles.selectedBikeItem,
@@ -419,6 +443,19 @@ export default function StationDetailScreen() {
               </View>
             );
           })}
+          {hasMore && loadedBikes.length <= totalRecords && (
+            <TouchableOpacity
+              style={styles.loadMoreButton}
+              onPress={handleLoadMore}
+              disabled={isFetchingAllBikes}
+            >
+              {isFetchingAllBikes ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.loadMoreButtonText}>Tải thêm xe</Text>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       ) : (
         <View style={styles.errorContainer}>
@@ -719,5 +756,19 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
     marginLeft: 8,
+  },
+  loadMoreButton: {
+    backgroundColor: BikeColors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 16,
+    marginHorizontal: 16,
+  },
+  loadMoreButtonText: {
+    color: BikeColors.onPrimary,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
