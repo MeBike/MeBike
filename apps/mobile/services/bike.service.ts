@@ -17,6 +17,10 @@ type ApiReponse<T> = {
     currentPage: number;
   };
 };
+interface DetailApiResponse<T> {
+  result: T;
+  message: string;
+}
 const BIKE_BASE = "/bikes";
 const BIKE_ENDPOINTS = {
   BASE: BIKE_BASE,
@@ -54,7 +58,7 @@ export const bikeService = {
   },
   getStatusBikeByIdAdmin: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
-      BIKE_ENDPOINTS.BY_ID_ADMIN_STATS(id),
+      BIKE_ENDPOINTS.BY_ID_ADMIN_STATS(id)
     );
     return response;
   },
@@ -70,34 +74,36 @@ export const bikeService = {
   },
   updateBike: async (
     id: string,
-    data: Partial<UpdateBikeSchemaFormData>,
+    data: Partial<UpdateBikeSchemaFormData>
   ): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.patch(
       BIKE_ENDPOINTS.UPDATE(id),
-      data,
+      data
     );
     return response;
   },
   // for user
   reportBrokenBike: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.patch(
-      BIKE_ENDPOINTS.REPORT_BROKEN(id),
+      BIKE_ENDPOINTS.REPORT_BROKEN(id)
     );
     return response;
   },
   // all
-  getBikeByIdForAll: async (id: string): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(
-      BIKE_ENDPOINTS.BY_ID_FOR_ALL(id),
+  getBikeByIdForAll: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<Bike>>(
+      BIKE_ENDPOINTS.BY_ID_FOR_ALL(id)
     );
     return response;
   },
-  getAllBikes: async (data: Partial<GetAllBikesQueryParams>): Promise<
-    AxiosResponse<ApiReponse<Bike[]>>
-  > => {
+  getAllBikes: async (
+    data: Partial<GetAllBikesQueryParams>
+  ): Promise<AxiosResponse<ApiReponse<Bike[]>>> => {
     const response = await fetchHttpClient.get<ApiReponse<Bike[]>>(
       BIKE_ENDPOINTS.BASE,
-      { ...data },
+      { ...data }
     );
     return response;
   },

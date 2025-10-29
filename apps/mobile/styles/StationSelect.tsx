@@ -33,16 +33,16 @@ export default function StationSelectScreen() {
   };
   const stations = data;
   const insets = useSafeAreaInsets();
-  if (!Array.isArray(stations)) {
+  if (!Array.isArray(stations) || stations.length === 0) {
     return <LoadingScreen />;
   }
-  if(stations.length === 0){
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <Text>Không có trạm nào khả dụng</Text>
-      </View>
-    )
-  }
+  // if(stations.length === 0){
+  //   return (
+  //     <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+  //       <Text>Không có trạm nào khả dụng</Text>
+  //     </View>
+  //   )
+  // }
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
