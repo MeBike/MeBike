@@ -120,7 +120,7 @@ export default function SuppliersPage() {
     setIsLoadingDetail(true);
     getBikeStatsSupplier();
     getAllStatsSupplier();
-  }, [selectedSupplier]);
+  }, [selectedSupplier , getAllStatsSupplier, getBikeStatsSupplier]);
 
   // Khi dữ liệu đủ (không loading nữa), mở modal
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Edit2, Trash2, Recycle } from "lucide-react";
+import { Eye, Edit2,  Recycle } from "lucide-react";
 import type { Supplier } from "@/types";
 const getStatusColor = (status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
   return status === "HOẠT ĐỘNG"
@@ -11,13 +11,11 @@ export const columns = ({
   onView,
   setIsDetailModalOpen,
   onEdit,
-  onDelete,
   onChangeStatus,
 }: {
   onView?: (supplier: Supplier) => void;
   setIsDetailModalOpen?: (isOpen: boolean) => void;
   onEdit?: (data: Supplier) => void;
-  onDelete?: (supplier: Supplier) => void;
   onChangeStatus?: (id: string, newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => void;
 }): ColumnDef<Supplier>[] => [
   {
