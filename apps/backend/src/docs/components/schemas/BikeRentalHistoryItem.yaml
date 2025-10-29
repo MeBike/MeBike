@@ -1,0 +1,51 @@
+type: object
+description: "Một bản ghi lịch sử thuê xe (đã hoàn thành) của một chiếc xe cụ thể."
+properties:
+  _id:
+    type: string
+    format: mongoId
+    description: "ID của lượt thuê (Rental ID)"
+  start_time:
+    type: string
+    format: date-time
+  end_time:
+    type: string
+    format: date-time
+  duration:
+    type: integer
+    description: "Thời lượng thuê (phút)"
+    example: 30
+  total_price:
+    type: number
+    format: double
+    example: 5000
+  user:
+    type: object
+    description: "Thông tin cơ bản của người thuê."
+    properties:
+      _id:
+        type: string
+        format: mongoId
+      fullname:
+        type: string
+        example: "Nguyen Van A"
+  start_station:
+    type: object
+    description: "Thông tin trạm bắt đầu."
+    properties:
+      _id:
+        type: string
+        format: mongoId
+      name:
+        type: string
+        example: "Trạm Đại học FPT"
+  end_station:
+    type: object
+    description: "Thông tin trạm kết thúc."
+    properties:
+      _id:
+        type: string
+        format: mongoId
+      name:
+        type: string
+        example: "Trạm Vincom"

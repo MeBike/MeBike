@@ -288,3 +288,11 @@ export const adminCreateUserController = async (
     result
   })
 }
+
+export const getNewUserStatsController = async (req: Request, res: Response) => {
+  const stats = await usersService.getNewUserStats()
+  res.json({
+    message: USERS_MESSAGES.GET_NEW_USER_STATS_SUCCESS,
+    result: stats
+  })
+}

@@ -1,0 +1,22 @@
+type: object
+description: "Thống kê hoạt động của xe trong một tháng cụ thể."
+properties:
+  year:
+    type: integer
+    example: 2025
+  month:
+    type: integer
+    example: 10
+  rentals_count:
+    type: integer
+    description: "Số lượt thuê đã hoàn thành trong tháng."
+    example: 15
+  minutes_active:
+    type: integer
+    description: "Tổng số phút hoạt động (từ các lượt thuê hoàn thành) trong tháng."
+    example: 450
+  revenue:
+    type: number
+    format: double
+    description: "Tổng doanh thu từ các lượt thuê hoàn thành trong tháng."
+    example: 75000

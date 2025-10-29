@@ -1,0 +1,15 @@
+type: object
+properties:
+  message:
+    type: string
+    example: "Lấy lịch sử thuê xe của xe thành công"
+  result:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: './BikeRentalHistoryItem.yaml'
+      pagination:
+        # Tái sử dụng đối tượng pagination từ schema PaginatedResponse đã có
+        $ref: './PaginatedResponse.yaml#/properties/pagination'
