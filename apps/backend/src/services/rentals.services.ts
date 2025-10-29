@@ -192,6 +192,7 @@ class RentalsService {
       { returnDocument: 'before', session }
     )
 
+    result.origin_price = totalPrice
     if (reservation) {
       totalPrice = Math.max(0, totalPrice - parseFloat(reservation.prepaid.toString()))
       result.is_reservation = true
@@ -200,7 +201,6 @@ class RentalsService {
 
     const hours = duration / 60
     if (hours > PENALTY_HOURS) {
-      result.origin_price = totalPrice
       result.penalty_amount = PENALTY_AMOUNT
       totalPrice += PENALTY_AMOUNT
       console.log(
