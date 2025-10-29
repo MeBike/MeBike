@@ -114,7 +114,7 @@ export default function BikesPage() {
       </div>
     );
   } 
-  if (isLoadingDetail && detailBike){
+  if (isLoadingDetail){
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
         <Loader2 className="animate-spin w-16 h-16 text-primary" />
