@@ -9,6 +9,8 @@ import { Loader2 } from "lucide-react";
 import { bikeColumn } from "@/columns/bike-colums";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
+import { useStationActions } from "@/hooks/useStationAction";
+import { useSupplierActions } from "@/hooks/useSupplierAction";
 const mockBikes: Bike[] = [
   {
     _id: "bike_001",
@@ -84,7 +86,8 @@ export default function BikesPage() {
     chip_id: "",
     status: "CÓ SẴN" as BikeStatus,
   });
-
+  const { stations } = useStationActions({ hasToken: true });
+  const { allSupplier } = useSupplierActions(true);
   const {
     data,
     detailBike,
@@ -93,6 +96,7 @@ export default function BikesPage() {
     isLoadingStatistics,
     paginationOfBikes,
     paginationBikes,
+    createBike,
   } = useBikeActions(
     true,
     id,
@@ -122,6 +126,12 @@ export default function BikesPage() {
       alert("Vui lòng điền đầy đủ thông tin");
       return;
     }
+    createBike({
+      station_id: newBike.station_id,
+      supplier_id: newBike.supplier_id,
+      status: newBike.status,
+      chip_id: newBike.chip_id,
+    });
     setIsCreateModalOpen(false);
     setNewBike({
       station_id: "",
@@ -282,12 +292,13 @@ export default function BikesPage() {
                   className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                 >
                   <option value="">Chọn trạm xe</option>
-                  <option value="station_001">Ga Bến Thành</option>
-                  <option value="station_002">Ga Bình Thái</option>
-                  <option value="station_003">Ga Thảo Điền</option>
+                  {stations.map((station) => (
+                    <option key={station._id} value={station._id}>
+                      {station.name}
+                    </option>
+                  ))}
                 </select>
               </div>
-
               <div>
                 <label className="text-sm font-medium text-foreground">
                   Nhà cung cấp
@@ -300,10 +311,11 @@ export default function BikesPage() {
                   className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                 >
                   <option value="">Chọn nhà cung cấp</option>
-                  <option value="supplier_001">
-                    Công ty TNHH YADEA Việt Nam
-                  </option>
-                  <option value="supplier_002">Công ty TNHH Xe Đạp Việt</option>
+                  {allSupplier?.data.map((supplier) => (
+                    <option key={supplier._id} value={supplier._id}>
+                      {supplier.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
