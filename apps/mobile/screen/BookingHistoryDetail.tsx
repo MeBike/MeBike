@@ -244,22 +244,32 @@ function BookingHistoryDetail() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+const formatDate = (dateString : string) => {
+  // Bỏ 'Z' nếu chuỗi đã là giờ Việt Nam, tránh lệch ngày
+  let input = dateString.replace("Z", "+07:00");
+  let date = new Date(input);
+
+  // Hiện đầy đủ ngày/tháng/năm và giờ/phút/giây
+  const datePart = date.toLocaleDateString("vi-VN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+  const timePart = date.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+  return `${datePart} ${timePart}`;
+};
+
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return date.toLocaleTimeString("vi-VN");
   };
 
   const formatDuration = (duration: number, hasEnded: boolean) => {
@@ -427,39 +437,35 @@ function BookingHistoryDetail() {
                 : booking.start_station || "Không có dữ liệu"}
             </Text>
           </View>
-          {booking.end_station === null
-            ? (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
-                  <Text style={styles.infoValue}>Xe chưa được trả</Text>
-                </View>
-              )
-            : typeof booking.end_station === "object"
-              && booking.end_station.name
-              ? (
-                  <>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
-                      <Text style={styles.infoValue}>{booking.end_station.name}</Text>
-                    </View>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>Địa chỉ kết thúc:</Text>
-                      <Text style={styles.infoValue}>
-                        {booking.end_station.address}
-                      </Text>
-                    </View>
-                  </>
-                )
-              : (
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
-                    <Text style={styles.infoValue}>
-                      {typeof booking.end_station === "string"
-                        ? booking.end_station
-                        : "Không có dữ liệu"}
-                    </Text>
-                  </View>
-                )}
+          {booking.end_station === null ? (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
+              <Text style={styles.infoValue}>Xe chưa được trả</Text>
+            </View>
+          ) : typeof booking.end_station === "object" &&
+            booking.end_station.name ? (
+            <>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
+                <Text style={styles.infoValue}>{booking.end_station.name}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Địa chỉ kết thúc:</Text>
+                <Text style={styles.infoValue}>
+                  {booking.end_station.address}
+                </Text>
+              </View>
+            </>
+          ) : (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Trạm kết thúc:</Text>
+              <Text style={styles.infoValue}>
+                {typeof booking.end_station === "string"
+                  ? booking.end_station
+                  : "Không có dữ liệu"}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Time Info Card */}
@@ -478,9 +484,7 @@ function BookingHistoryDetail() {
                 <Text style={styles.timeDate}>
                   {formatDate(booking.start_time)}
                 </Text>
-                <Text style={styles.timeValue}>
-                  {formatTime(booking.start_time)}
-                </Text>
+                <Text style={styles.timeValue}>{formatDate(booking.start_time)}</Text>
               </View>
             </View>
 
@@ -491,24 +495,18 @@ function BookingHistoryDetail() {
                 </View>
                 <View style={styles.timeInfo}>
                   <Text style={styles.timeLabel}>Kết thúc</Text>
-                  <Text style={styles.timeDate}>
-                    {formatDate(booking.end_time)}
-                  </Text>
-                  <Text style={styles.timeValue}>
-                    {formatTime(booking.end_time)}
-                  </Text>
+                  <Text style={styles.timeDate}>{formatDate(booking.end_time)}</Text>
+                  <Text style={styles.timeValue}>{formatDate(booking.end_time)}</Text>
                 </View>
               </View>
             )}
 
-            <View style={styles.durationContainer}>
+            {/* <View style={styles.durationContainer}>
               <Ionicons name="hourglass" size={16} color="#666" />
               <Text style={styles.durationText}>
-                Thời gian thuê:
-                {" "}
-                {formatDuration(booking.duration, Boolean(booking.end_time))}
+                Thời gian thuê: {(booking.duration, Boolean(booking.end_time))}
               </Text>
-            </View>
+            </View> */}
           </View>
         </View>
 
@@ -521,13 +519,12 @@ function BookingHistoryDetail() {
           <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Tổng tiền:</Text>
             <Text style={styles.paymentAmount}>
-              {typeof booking.total_price === "object"
-                && booking.total_price !== null
-                ? Number.parseFloat(booking.total_price.$numberDecimal).toLocaleString(
-                    "vi-VN",
-                  )
-                : Number(booking.total_price).toLocaleString("vi-VN")}
-              {" "}
+              {typeof booking.total_price === "object" &&
+              booking.total_price !== null
+                ? Number.parseFloat(
+                    booking.total_price.$numberDecimal
+                  ).toLocaleString("vi-VN")
+                : Number(booking.total_price).toLocaleString("vi-VN")}{" "}
               đ
             </Text>
           </View>
@@ -606,161 +603,162 @@ function BookingHistoryDetail() {
         {booking.status === "HOÀN THÀNH" && (
           <View style={styles.ratingSection}>
             <Text style={styles.ratingSectionTitle}>Đánh giá chuyến đi</Text>
-            {hasRated
-              ? (
+            {hasRated ? (
+              <Text style={styles.ratingSectionDescription}>
+                Bạn đã đánh giá chuyến đi này. Cảm ơn bạn đã chia sẻ trải
+                nghiệm!
+              </Text>
+            ) : ratingWindowExpired ? (
+              <Text style={styles.ratingSectionDescription}>
+                Đã quá thời hạn 7 ngày để đánh giá chuyến đi này.
+              </Text>
+            ) : showRatingForm && canOpenRatingForm ? (
+              <View style={styles.ratingForm}>
+                <Text style={styles.ratingPrompt}>Chọn số sao</Text>
+                <View style={styles.ratingStarsRow}>
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <TouchableOpacity
+                      key={value}
+                      style={styles.ratingStarButton}
+                      onPress={() => {
+                        setRatingValue(value);
+                        setRatingError(null);
+                      }}
+                    >
+                      <Ionicons
+                        name={value <= ratingValue ? "star" : "star-outline"}
+                        size={30}
+                        color="#FFD700"
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {ratingError ? (
+                  <Text style={styles.ratingErrorText}>{ratingError}</Text>
+                ) : null}
+
+                <Text style={[styles.ratingPrompt, { marginTop: 12 }]}>
+                  Lý do
+                </Text>
+                {isRatingReasonsLoading ? (
+                  <ActivityIndicator size="small" color="#0066FF" />
+                ) : filteredReasons.length === 0 ? (
                   <Text style={styles.ratingSectionDescription}>
-                    Bạn đã đánh giá chuyến đi này. Cảm ơn bạn đã chia sẻ trải nghiệm!
+                    Chưa có lý do gợi ý.
                   </Text>
-                )
-              : ratingWindowExpired
-                ? (
-                    <Text style={styles.ratingSectionDescription}>
-                      Đã quá thời hạn 7 ngày để đánh giá chuyến đi này.
-                    </Text>
-                  )
-                : showRatingForm && canOpenRatingForm
-                  ? (
-                      <View style={styles.ratingForm}>
-                        <Text style={styles.ratingPrompt}>Chọn số sao</Text>
-                        <View style={styles.ratingStarsRow}>
-                          {[1, 2, 3, 4, 5].map(value => (
-                            <TouchableOpacity
-                              key={value}
-                              style={styles.ratingStarButton}
-                              onPress={() => {
-                                setRatingValue(value);
-                                setRatingError(null);
-                              }}
+                ) : (
+                  <>
+                    {ratingValue === 0 && (
+                      <Text style={styles.ratingHintText}>
+                        Chọn số sao để xem các gợi ý phù hợp.
+                      </Text>
+                    )}
+                    <View style={styles.ratingReasonChips}>
+                      {displayReasons.map((reason) => {
+                        const isSelected = selectedReasons.includes(reason._id);
+                        return (
+                          <TouchableOpacity
+                            key={reason._id}
+                            style={[
+                              styles.ratingReasonChip,
+                              isSelected && styles.ratingReasonChipSelected,
+                            ]}
+                            onPress={() => handleToggleReason(reason._id)}
+                          >
+                            <Text
+                              style={[
+                                styles.ratingReasonChipText,
+                                isSelected &&
+                                  styles.ratingReasonChipTextSelected,
+                              ]}
                             >
-                              <Ionicons
-                                name={value <= ratingValue ? "star" : "star-outline"}
-                                size={30}
-                                color="#FFD700"
-                              />
-                            </TouchableOpacity>
-                          ))}
-                        </View>
-                        {ratingError
-                          ? (
-                              <Text style={styles.ratingErrorText}>{ratingError}</Text>
-                            )
-                          : null}
-
-                        <Text style={[styles.ratingPrompt, { marginTop: 12 }]}>Lý do</Text>
-                        {isRatingReasonsLoading
-                          ? (
-                              <ActivityIndicator size="small" color="#0066FF" />
-                            )
-                          : filteredReasons.length === 0
-                            ? (
-                                <Text style={styles.ratingSectionDescription}>
-                                  Chưa có lý do gợi ý.
-                                </Text>
-                              )
-                            : (
-                                <>
-                                  {ratingValue === 0 && (
-                                    <Text style={styles.ratingHintText}>
-                                      Chọn số sao để xem các gợi ý phù hợp.
-                                    </Text>
-                                  )}
-                                  <View style={styles.ratingReasonChips}>
-                                    {displayReasons.map((reason) => {
-                                      const isSelected = selectedReasons.includes(reason._id);
-                                      return (
-                                        <TouchableOpacity
-                                          key={reason._id}
-                                          style={[
-                                            styles.ratingReasonChip,
-                                            isSelected && styles.ratingReasonChipSelected,
-                                          ]}
-                                          onPress={() => handleToggleReason(reason._id)}
-                                        >
-                                          <Text
-                                            style={[
-                                              styles.ratingReasonChipText,
-                                              isSelected && styles.ratingReasonChipTextSelected,
-                                            ]}
-                                          >
-                                            {reason.messages}
-                                          </Text>
-                                        </TouchableOpacity>
-                                      );
-                                    })}
-                                  </View>
-                                  {filteredReasons.length > 6 && (
-                                    <TouchableOpacity
-                                      style={styles.ratingToggleButton}
-                                      onPress={() => setShowAllReasons(prev => !prev)}
-                                    >
-                                      <Text style={styles.ratingToggleText}>
-                                        {showAllReasons ? "Thu gọn" : "Xem thêm"}
-                                      </Text>
-                                    </TouchableOpacity>
-                                  )}
-                                </>
-                              )}
-
-                        <Text style={[styles.ratingPrompt, { marginTop: 12 }]}>Nhận xét (không bắt buộc)</Text>
-                        <TextInput
-                          style={styles.ratingCommentInput}
-                          placeholder="Chia sẻ cảm nghĩ của bạn"
-                          multiline
-                          value={ratingComment}
-                          onChangeText={setRatingComment}
-                          maxLength={500}
-                        />
-
-                        <View style={styles.ratingFormActions}>
-                          <TouchableOpacity
-                            style={[styles.ratingCancelButton, isSubmittingRating && { opacity: 0.6 }]}
-                            onPress={handleCancelRating}
-                            disabled={isSubmittingRating}
-                          >
-                            <Text style={styles.ratingCancelText}>Hủy</Text>
+                              {reason.messages}
+                            </Text>
                           </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.ratingSubmitButton, isSubmittingRating && { opacity: 0.8 }]}
-                            onPress={handleSubmitRating}
-                            disabled={isSubmittingRating}
-                          >
-                            {isSubmittingRating
-                              ? (
-                                  <ActivityIndicator size="small" color="#fff" />
-                                )
-                              : (
-                                  <>
-                                    <Ionicons name="send" size={16} color="#fff" />
-                                    <Text style={styles.ratingSubmitText}>Gửi đánh giá</Text>
-                                  </>
-                                )}
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    )
-                  : canOpenRatingForm
-                    ? (
-                        <>
-                          <Text style={styles.ratingSectionDescription}>
-                            Hãy chia sẻ trải nghiệm của bạn sau chuyến đi.
-                          </Text>
-                          <TouchableOpacity
-                            style={styles.ratingActionButton}
-                            onPress={handleOpenRatingForm}
-                          >
-                            <Ionicons name="star" size={18} color="#fff" />
-                            <Text style={styles.ratingActionButtonText}>Đánh giá chuyến đi</Text>
-                          </TouchableOpacity>
-                          <Text style={styles.ratingWindowHint}>
-                            Bạn có tối đa 7 ngày kể từ khi kết thúc chuyến đi để gửi đánh giá.
-                          </Text>
-                        </>
-                      )
-                    : (
-                        <Text style={styles.ratingSectionDescription}>
-                          Chuyến đi vẫn đang diễn ra hoặc chưa đủ điều kiện để đánh giá.
+                        );
+                      })}
+                    </View>
+                    {filteredReasons.length > 6 && (
+                      <TouchableOpacity
+                        style={styles.ratingToggleButton}
+                        onPress={() => setShowAllReasons((prev) => !prev)}
+                      >
+                        <Text style={styles.ratingToggleText}>
+                          {showAllReasons ? "Thu gọn" : "Xem thêm"}
                         </Text>
-                      )}
+                      </TouchableOpacity>
+                    )}
+                  </>
+                )}
+
+                <Text style={[styles.ratingPrompt, { marginTop: 12 }]}>
+                  Nhận xét (không bắt buộc)
+                </Text>
+                <TextInput
+                  style={styles.ratingCommentInput}
+                  placeholder="Chia sẻ cảm nghĩ của bạn"
+                  multiline
+                  value={ratingComment}
+                  onChangeText={setRatingComment}
+                  maxLength={500}
+                />
+
+                <View style={styles.ratingFormActions}>
+                  <TouchableOpacity
+                    style={[
+                      styles.ratingCancelButton,
+                      isSubmittingRating && { opacity: 0.6 },
+                    ]}
+                    onPress={handleCancelRating}
+                    disabled={isSubmittingRating}
+                  >
+                    <Text style={styles.ratingCancelText}>Hủy</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.ratingSubmitButton,
+                      isSubmittingRating && { opacity: 0.8 },
+                    ]}
+                    onPress={handleSubmitRating}
+                    disabled={isSubmittingRating}
+                  >
+                    {isSubmittingRating ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <>
+                        <Ionicons name="send" size={16} color="#fff" />
+                        <Text style={styles.ratingSubmitText}>
+                          Gửi đánh giá
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : canOpenRatingForm ? (
+              <>
+                <Text style={styles.ratingSectionDescription}>
+                  Hãy chia sẻ trải nghiệm của bạn sau chuyến đi.
+                </Text>
+                <TouchableOpacity
+                  style={styles.ratingActionButton}
+                  onPress={handleOpenRatingForm}
+                >
+                  <Ionicons name="star" size={18} color="#fff" />
+                  <Text style={styles.ratingActionButtonText}>
+                    Đánh giá chuyến đi
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.ratingWindowHint}>
+                  Bạn có tối đa 7 ngày kể từ khi kết thúc chuyến đi để gửi đánh
+                  giá.
+                </Text>
+              </>
+            ) : (
+              <Text style={styles.ratingSectionDescription}>
+                Chuyến đi vẫn đang diễn ra hoặc chưa đủ điều kiện để đánh giá.
+              </Text>
+            )}
           </View>
         )}
 
