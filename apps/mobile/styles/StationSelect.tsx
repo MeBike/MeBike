@@ -33,7 +33,7 @@ export default function StationSelectScreen() {
   };
   const stations = data;
   const insets = useSafeAreaInsets();
-  if (!Array.isArray(stations) || stations.length === 0) {
+  if (!Array.isArray(stations)) {
     return <LoadingScreen />;
   }
   // if(stations.length === 0){

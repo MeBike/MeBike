@@ -59,6 +59,7 @@ export function useBikeActions({hasToken , bike_id , station_id , page , limit} 
   const {
     refetch: useGetBikes,
     data: allBikesResponse,
+    data: allBikesResponse,
     isFetching: isFetchingAllBikes,
   } = useGetAllBikeQuery({ page : page || 1, limit : limit || 20, station_id });
 
