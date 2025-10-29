@@ -1,7 +1,7 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
-import { BikeColors } from "@/constants/BikeColors";
+import { BikeColors } from "../constants/BikeColors";
 
 import { IconSymbol } from "./IconSymbol";
 

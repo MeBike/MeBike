@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
-import { FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { ActivityIndicator, FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useStationActions } from "@hooks/useStationAction";
@@ -14,27 +14,27 @@ import { StationCard } from "../components/StationCard";
 
 export default function StationSelectScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
-  const { getAllStations, isLoadingGetAllStations } = useStationActions(true);
+  const { getAllStations, isLoadingGetAllStations, stations } =
+    useStationActions(true);
   const [data, setData] = useState<StationType[]>([]);
   const insets = useSafeAreaInsets();
   const handleSelectStation = (stationId: string) => {
     navigation.navigate("StationDetail", { stationId });
   };
-  React.useEffect(() => {
-    const fetchStations = async () => {
-      await getAllStations();
-      // @ts-ignore
-      const stationsQuery = require("@hooks/query/Station/useGetAllStationQuery").useGetAllStation();
-      const response = stationsQuery.data;
-      if (response) {
-        setData(response as StationType[]);
-      }
-    };
-    fetchStations();
-  }, [getAllStations]);
+  // React.useEffect(() => {
+  //   const fetchStations = async () => {
+  //     await getAllStations();
+  //     const stationsQuery = require("@hooks/query/Station/useGetAllStationQuery").useGetAllStation();
+  //     const response = stationsQuery.data;
+  //     if (response) {
+  //       setData(response as StationType[]);
+  //     }
+  //   };
+  //   fetchStations();
+  // }, [getAllStations]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
       <LinearGradient
         colors={["#0066FF", "#00B4D8"]}
@@ -50,35 +50,41 @@ export default function StationSelectScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Chọn trạm xe</Text>
       </LinearGradient>
-      {isLoadingGetAllStations
-        ? (
-            <Text style={{ textAlign: "center", marginTop: 20 }}>Đang tải dữ liệu...</Text>
-          )
-        : (
-            <FlatList
-              data={data}
-              keyExtractor={item => item._id}
-              renderItem={({ item }) => {
-                const stationCardData = {
-                  id: item._id,
-                  name: item.name,
-                  location: {
-                    latitude: Number(item.latitude),
-                    longitude: Number(item.longitude),
-                    address: item.address,
-                  },
-                  availableBikes: 0,
-                  totalSlots: Number(item.capacity),
-                  isActive: true,
-                  bikes: [],
-                  layout: { width: 0, height: 0, entrances: [] },
-                };
-                return <StationCard station={stationCardData} onPress={() => handleSelectStation(item._id)} />;
-              }}
-              contentContainerStyle={styles.list}
-            />
-          )}
-    </SafeAreaView>
+      {isLoadingGetAllStations ? (
+        <View style={{ alignItems: "center", marginTop: 20 }}>
+          <ActivityIndicator size="large" color="#0066FF" />
+          {/* <Text style={{ marginTop: 10 }}>Đang tải dữ liệu...</Text> */}
+        </View>
+      ) : (
+        <FlatList
+          data={stations}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => {
+            const stationCardData = {
+              id: item._id,
+              name: item.name,
+              location: {
+                latitude: Number(item.latitude),
+                longitude: Number(item.longitude),
+                address: item.address,
+              },
+              availableBikes: 0,
+              totalSlots: Number(item.capacity),
+              isActive: true,
+              bikes: [],
+              layout: { width: 0, height: 0, entrances: [] },
+            };
+            return (
+              <StationCard
+                station={stationCardData}
+                onPress={() => handleSelectStation(item._id)}
+              />
+            );
+          }}
+          contentContainerStyle={styles.list}
+        />
+      )}
+    </View>
   );
 }
 

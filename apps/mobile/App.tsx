@@ -5,8 +5,10 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
 
-import { AuthProvider } from "@providers/auth-providers";
+import { AuthProvider, useAuth } from "@providers/auth-providers";
 import Providers from "@providers/providers";
+
+import { LoadingScreen } from "./components/LoadingScreen";
 
 import type { RootStackParamList } from "./types/navigation";
 
@@ -29,6 +31,7 @@ import StationSelectScreen from "./styles/StationSelect";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
 function BottomTab() {
+  const { isAuthenticated } = useAuth();
   return (
     <Tab.Navigator>
       <Tab.Screen
@@ -59,35 +62,39 @@ function BottomTab() {
           ),
         }}
       />
-      <Tab.Screen
-        name="Booking"
-        component={BookingHistoryScreen}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="calendar-outline"
-              size={size ?? 24}
-              color={color ?? "#222"}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Tôi"
-        component={ProfileScreen}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="person-outline"
-              size={size ?? 24}
-              color={color ?? "#222"}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
+      {isAuthenticated && (
+        <Tab.Screen
+          name="Booking"
+          component={BookingHistoryScreen}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons
+                name="calendar-outline"
+                size={size ?? 24}
+                color={color ?? "#222"}
+              />
+            ),
+          }}
+        />
+      )}
+      {isAuthenticated && (
+        <Tab.Screen
+          name="Tôi"
+          component={ProfileScreen}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons
+                name="person-outline"
+                size={size ?? 24}
+                color={color ?? "#222"}
+              />
+            ),
+          }}
+        />
+      )}
+      {/* <Tab.Screen
         name="Xe"
         component={ProfileScreen}
         options={{
@@ -100,7 +107,7 @@ function BottomTab() {
             />
           ),
         }}
-      />
+      /> */}
     </Tab.Navigator>
   );
 }
