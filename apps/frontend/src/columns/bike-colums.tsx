@@ -1,6 +1,8 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, RefreshCw } from "lucide-react";
+import { Eye, RefreshCw, Pencil } from "lucide-react";
 import type { Bike, BikeStatus } from "@/types";
+import { useStationActions } from "@/hooks/useStationAction";
+import { useSupplierActions } from "@/hooks/useSupplierAction";
 export const getStatusColor = (status: BikeStatus) => {
   switch (status) {
     case "ĐANG ĐƯỢC THUÊ":
@@ -20,13 +22,15 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
 export const bikeColumn = (
- {
-   onView,
-  //  onUpdateStatus,
- }: {
-   onView?: ({ id }: { id: string }) => void;
-  //  onUpdateStatus?: ((data: ) => void) | undefined;
- }
+  {
+    onView,
+    onEdit,
+   //  onUpdateStatus,
+  }: {
+    onView?: ({ id }: { id: string }) => void;
+    onEdit?: ({ id }: { id: string }) => void;
+   //  onUpdateStatus?: ((data: ) => void) | undefined;
+  }
 ): ColumnDef<Bike>[] => [
   {
     accessorKey: "_id",
@@ -45,12 +49,22 @@ export const bikeColumn = (
   {
     accessorKey: "station_id",
     header: "Mã trạm",
-    cell: ({ row }) => row.original.station_id || "Không có",
+    cell: ({ row }) => {
+      const { stations } = useStationActions({ hasToken: true });
+      const station = stations.find((s) => s._id === row.original.station_id);
+      return station ? station.name : "Không có";
+    },
   },
   {
     accessorKey: "supplier_id",
     header: "Mã nhà cung cấp",
-    cell: ({ row }) => row.original.supplier_id || "Không có",
+    cell: ({ row }) => {
+      const { allSupplier } = useSupplierActions(true);
+      const supplier = allSupplier?.data.find(
+        (s) => s._id === row.original.supplier_id
+      );
+      return supplier ? supplier.name : "Không có";
+    },
   },
   {
     accessorKey: "status",
@@ -78,6 +92,17 @@ export const bikeColumn = (
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
+        </button>
+        <button
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          title="Chỉnh sửa"
+          onClick={() => {
+            if (onEdit) {
+              onEdit({ id: row.original._id });
+            }
+          }}
+        >
+          <Pencil className="w-4 h-4 text-blue-500" />
         </button>
         <button
           title="Cập nhật trạng thái"

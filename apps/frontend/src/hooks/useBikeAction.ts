@@ -135,9 +135,20 @@ export const useBikeActions = (
       updateBikeMutation.mutate(
         { id, data },
         {
-          onSuccess: (result) => {
+          onSuccess: (result : { status: number; data?: { message?: string } }) => {
             if (result.status === 200) {
               toast.success("Bike updated successfully");
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "bikes",
+                  "all",
+                  page,
+                  limit,
+                  station_id || "",
+                  supplier_id || "",
+                  status || "",
+                ],
+              });
             } else {
               const errorMessage =
                 result.data?.message || "Error updating bikes";
