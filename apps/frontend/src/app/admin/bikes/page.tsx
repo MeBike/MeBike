@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Bike, BikeStatus } from "@custom-types";
-import { Plus, Download, Edit2, Trash2, Eye } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useBikeActions } from "@/hooks/useBikeAction";
-import { Spinner } from "@/components/ui/spinner";
 import { Loader2 } from "lucide-react";
 import { bikeColumn } from "@/columns/bike-colums";
 import { DataTable } from "@/components/TableCustom";
@@ -58,17 +57,6 @@ const mockBikes: Bike[] = [
   },
 ];
 
-const getStatusColor = (status: BikeStatus) => {
-  const colors: Record<BikeStatus, string> = {
-    "CÓ SẴN": "bg-green-100 text-green-800",
-    "ĐANG ĐƯỢC THUÊ": "bg-blue-100 text-blue-800",
-    "BỊ HỎNG": "bg-red-100 text-red-800",
-    "ĐÃ ĐẶT TRƯỚC": "bg-purple-100 text-purple-800",
-    "ĐANG BẢO TRÌ": "bg-orange-100 text-orange-800",
-    "KHÔNG CÓ SẴN": "bg-gray-100 text-gray-800",
-  };
-  return colors[status];
-};
 
 export default function BikesPage() {
   const [page, setPage] = useState<number>(1);
@@ -84,7 +72,6 @@ export default function BikesPage() {
   });
 
   const {
-    getBikes,
     data,
     getStatisticsBike,
     statisticData,
@@ -130,16 +117,7 @@ export default function BikesPage() {
       status: "CÓ SẴN",
     });
   };
-
-  const stats = {
-    total: mockBikes.length,
-    available: mockBikes.filter((b) => b.status === "CÓ SẴN").length,
-    rented: mockBikes.filter((b) => b.status === "ĐANG ĐƯỢC THUÊ").length,
-    broken: mockBikes.filter((b) => b.status === "BỊ HỎNG").length,
-    maintenance: mockBikes.filter((b) => b.status === "ĐANG BẢO TRÌ").length,
-  };
   useEffect(() => {
-    // getBikes();
     getStatisticsBike();
   }, []);
   useEffect(() => {
