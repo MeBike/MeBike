@@ -25,25 +25,25 @@ export const bikeColumn = (): ColumnDef<Bike>[] => [
     accessorKey: "_id",
     header: "Mã xe",
     cell: ({ row }) => {
-      return shortenId(row.original._id);
+      return shortenId(row.original._id) || "Không có";
     },
   },
   {
     accessorKey: "chip_id",
     header: "Mã chip",
     cell: ({ row }) => {
-      return shortenId(row.original.chip_id);
+      return shortenId(row.original.chip_id) || "Không có";
     },
   },
   {
     accessorKey: "station_id",
     header: "Mã trạm",
-    cell: ({ row }) => row.original.station_id,
+    cell: ({ row }) => row.original.station_id || "Không có",
   },
   {
     accessorKey: "supplier_id",
     header: "Mã nhà cung cấp",
-    cell: ({ row }) => row.original.supplier_id || "N/A",
+    cell: ({ row }) => row.original.supplier_id || "Không có",
   },
   {
     accessorKey: "status",
@@ -75,9 +75,7 @@ export const bikeColumn = (): ColumnDef<Bike>[] => [
         <button
           title="Cập nhật trạng thái"
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          onClick={() => {
-
-          }}
+          onClick={() => {}}
         >
           <RefreshCw className="w-4 h-4 text-blue-500" />
         </button>

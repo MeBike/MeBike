@@ -7,6 +7,7 @@ import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "@/schemas/bikeSchema";
+import type { BikeStatus } from "@/types";
 import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
 import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
 import { useReportBike } from "./mutations/Bike/useReportBike";
@@ -48,17 +49,29 @@ export const useBikeActions = (
   bikeId?: string,
   station_id?: string,
   supplier_id?: string,
-  status?: string
+  status?: BikeStatus,
+  limit?: number,
+  page?: number
 ) => {
   const router = useRouter();
   const {
     refetch: useGetAllRefetch,
     data,
     isFetching: isLoading,
-  } = useGetAllBikeQuery(1, 10, station_id, supplier_id, status);
+  } = useGetAllBikeQuery({
+    page: page,
+    limit: limit,
+    station_id: station_id || "",
+    supplier_id: supplier_id || "",
+    status: status,
+  });
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
-  const {data : statisticData , refetch: refetchStatistics , isFetching: isLoadingStatistics} = useGetStatisticsBikeQuery();
+  const {
+    data: statisticData,
+    refetch: refetchStatistics,
+    isFetching: isLoadingStatistics,
+  } = useGetStatisticsBikeQuery();
   const deleteBikeMutation = useSoftDeleteBikeMutation();
   const reportBikeMutation = useReportBike();
   const useGetDetailBike = useGetBikeByIDAllQuery(bikeId || "");
@@ -184,6 +197,7 @@ export const useBikeActions = (
     deleteBike,
     reportBike,
     getBikeByID,
+    paginationBikes: data?.pagination,
     isFetchingBikeDetail: isLoading,
     isFetchingBike: useGetDetailBike.isFetching,
     isReportingBike: reportBikeMutation.isPending,
@@ -195,6 +209,6 @@ export const useBikeActions = (
     getStatisticsBike,
     isLoadingStatistics,
     statisticData,
-    paginationOfBikes: data?.pagination ,
+    paginationOfBikes: data?.pagination,
   };
 };

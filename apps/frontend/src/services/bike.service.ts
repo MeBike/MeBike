@@ -5,6 +5,7 @@ import type {
   UpdateBikeSchemaFormData,
 } from "@schemas/bikeSchema";
 import { Bike } from "@custom-types";
+import { BikeStatus } from "@custom-types";
 interface ApiResponse<T> {
   data: T;
   pagination: {
@@ -44,12 +45,21 @@ const BIKE_ENDPOINTS = {
 export const bikeService = {
   //for admin
 
-  createBikeAdmin: async (data: BikeSchemaFormData): Promise<AxiosResponse<ApiResponse<Bike>>> => {
-    const response = await fetchHttpClient.post<ApiResponse<Bike>>(BIKE_ENDPOINTS.BASE, data);
+  createBikeAdmin: async (
+    data: BikeSchemaFormData
+  ): Promise<AxiosResponse<ApiResponse<Bike>>> => {
+    const response = await fetchHttpClient.post<ApiResponse<Bike>>(
+      BIKE_ENDPOINTS.BASE,
+      data
+    );
     return response;
   },
-  getStatisticsBikeAdmin: async (): Promise<AxiosResponse<DetailApiResponse<BikeStatistics>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<BikeStatistics>>(BIKE_ENDPOINTS.STATS);
+  getStatisticsBikeAdmin: async (): Promise<
+    AxiosResponse<DetailApiResponse<BikeStatistics>>
+  > => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<BikeStatistics>
+    >(BIKE_ENDPOINTS.STATS);
     return response;
   },
   getStatusBikeByIdAdmin: async (id: string): Promise<AxiosResponse> => {
@@ -63,7 +73,7 @@ export const bikeService = {
     return response;
   },
 
-  //for both admin and staff
+  //for both admin and staf
   getHistoryBikeById: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BY_ID(id));
     return response;
@@ -92,16 +102,29 @@ export const bikeService = {
     );
     return response;
   },
-  getAllBikes: async (
-    page?: number,
-    limit?: number,
-    station_id?: string,
-    supplier_id?: string,
-    status ?: string
-  ): Promise<AxiosResponse<ApiResponse<Bike[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Bike[]>>(BIKE_ENDPOINTS.BASE, {
-      params: { page, limit, station_id, supplier_id, status },
-    });
+  getAllBikes: async ({
+    page,
+    limit,
+    station_id,
+    supplier_id,
+    status,
+  }: {
+    page?: number;
+    limit?: number;
+    station_id?: string;
+    supplier_id?: string;
+    status?: BikeStatus;
+  }): Promise<AxiosResponse<ApiResponse<Bike[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Bike[]>>(
+      BIKE_ENDPOINTS.BASE,
+      {
+        page,
+        limit,
+        station_id,
+        supplier_id,
+        status,
+      }
+    );
     return response;
   },
 };

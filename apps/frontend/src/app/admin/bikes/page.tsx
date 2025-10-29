@@ -7,6 +7,9 @@ import { Plus, Download, Edit2, Trash2, Eye } from "lucide-react";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { Spinner } from "@/components/ui/spinner";
 import { Loader2 } from "lucide-react";
+import { bikeColumn } from "@/columns/bike-colums";
+import { DataTable } from "@/components/TableCustom";
+import { PaginationDemo } from "@/components/PaginationCustomer";
 const mockBikes: Bike[] = [
   {
     _id: "bike_001",
@@ -68,15 +71,8 @@ const getStatusColor = (status: BikeStatus) => {
 };
 
 export default function BikesPage() {
-  const {
-    getBikes,
-    data,
-    getStatisticsBike,
-    statisticData,
-    isLoadingStatistics,
-    isFetchingBike,
-    paginationOfBikes,
-  } = useBikeActions(true);
+  const [page, setPage] = useState<number>(1);
+  const [limit,] = useState<number>(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -86,6 +82,25 @@ export default function BikesPage() {
     chip_id: "",
     status: "CÓ SẴN" as BikeStatus,
   });
+
+  const {
+    getBikes,
+    data,
+    getStatisticsBike,
+    statisticData,
+    isLoadingStatistics,
+    isFetchingBike,
+    paginationOfBikes,
+    paginationBikes,
+  } = useBikeActions(
+    true,
+    undefined,
+    undefined,
+    undefined,
+    statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
+    limit,
+    page
+  );
 
   const filteredBikes = mockBikes.filter((bike) => {
     const matchesSearch =
@@ -124,7 +139,7 @@ export default function BikesPage() {
     maintenance: mockBikes.filter((b) => b.status === "ĐANG BẢO TRÌ").length,
   };
   useEffect(() => {
-    getBikes();
+    // getBikes();
     getStatisticsBike();
   }, []);
   useEffect(() => {
@@ -137,7 +152,6 @@ export default function BikesPage() {
       </div>
     );
   }
-
   return (
     <div>
       <div className="space-y-6">
@@ -235,87 +249,13 @@ export default function BikesPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted border-b border-border">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  ID Xe
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Chip ID
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Trạm
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Nhà cung cấp
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Ngày tạo
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                  Hành động
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {data?.data.map((bike) => (
-                <tr
-                  key={bike._id}
-                  className="hover:bg-muted/50 transition-colors"
-                >
-                  <td className="px-6 py-4 text-sm text-foreground font-medium">
-                    {bike._id}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">
-                    {bike.chip_id}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">
-                    {bike.station_id}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-foreground">
-                    {bike.supplier_id || "-"}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(bike.status)}`}
-                    >
-                      {bike.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">
-                    {new Date(bike.created_at).toLocaleDateString("vi-VN")}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
-                        title="Xem chi tiết"
-                      >
-                        <Eye className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                      <button
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
-                        title="Chỉnh sửa"
-                      >
-                        <Edit2 className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                      <button
-                        className="p-2 hover:bg-muted rounded-lg transition-colors"
-                        title="Xóa"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="w-full rounded-lg space-y-4  flex flex-col">
+          <DataTable columns={bikeColumn()} data={data?.data || []} />
+          <PaginationDemo
+            currentPage={paginationBikes?.currentPage ?? 1}
+            onPageChange={setPage}
+            totalPages={paginationBikes?.totalPages ?? 1}
+          />
         </div>
 
         {/* Results info */}

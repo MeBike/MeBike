@@ -14,6 +14,7 @@ export type BikeStatus =
   | "BỊ HỎNG"
   | "ĐÃ ĐẶT TRƯỚC"
   | "ĐANG BẢO TRÌ"
-  | "KHÔNG CÓ SẴN";
+  | "KHÔNG CÓ SẴN"
+  | "";
 
 
