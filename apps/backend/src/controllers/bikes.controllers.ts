@@ -200,3 +200,11 @@ export const getBikeActivityStatsController = async (req: Request, res: Response
     result
   })
 }
+
+export const getBikeRentalStatsController = async (req: Request, res: Response) => {
+  const result = await bikesService.getBikeRentalStats()
+  return res.json({
+    message: BIKES_MESSAGES.GET_BIKE_RENTAL_STATS_SUCCESS,
+    result,
+  });
+}

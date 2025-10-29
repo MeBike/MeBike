@@ -1127,6 +1127,43 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/bikes/stats/rental-overview:
+  get:
+    tags: [Bikes]
+    summary: Get rental overview statistics (Admin only)
+    description: |
+      Retrieves the total number of active bikes (excluding unavailable ones), the number of currently rented bikes, and the percentage of rented bikes.
+      **Requires Admin privileges (not Staff).**
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: "Rental overview statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê tổng quan thuê xe thành công"
+                result:
+                  $ref: '../components/schemas/BikeRentalOverviewStats.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Suppliers API (ADMIN ONLY)
 # ===================================================================

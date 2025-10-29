@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeActivityStatsController, getBikeByIdController, getBikeRentalHistoryController, getBikesController, getBikesStatsController, getBikeStatsByIdController, getRentalsByBikeIdController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
+import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeActivityStatsController, getBikeByIdController, getBikeRentalHistoryController, getBikeRentalStatsController, getBikesController, getBikesStatsController, getBikeStatsByIdController, getRentalsByBikeIdController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { bikeIdValidator, createBikeValidator, updateBikeValidator } from "~/middlewares/bikes.middlewares";
 import { accessTokenValidator, statsPaginationValidator } from "~/middlewares/users.middlewares";
@@ -24,6 +24,20 @@ bikesRouter.post(
 bikesRouter.get("/", 
   // accessTokenValidator,
    wrapAsync(getBikesController));
+
+/**
+ * Description: (Admin/Staff) Get overview rental stats (total vs rented)
+ * Path: /bikes/stats/rental-overview
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN, STAFF
+ */
+bikesRouter.get(
+  '/stats/rental-overview',
+  accessTokenValidator,
+  isAdminValidator,
+  wrapAsync(getBikeRentalStatsController)
+)
 
 // Admin Only Get overall statistics for all bikes
 bikesRouter.get(

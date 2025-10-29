@@ -1908,6 +1908,64 @@
         }
       }
     },
+    "/bikes/stats/rental-overview": {
+      "get": {
+        "tags": [
+          "Bikes"
+        ],
+        "summary": "Get rental overview statistics (Admin only)",
+        "description": "Retrieves the total number of active bikes (excluding unavailable ones), the number of currently rented bikes, and the percentage of rented bikes.\n**Requires Admin privileges (not Staff).**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rental overview statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê tổng quan thuê xe thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/BikeRentalOverviewStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/suppliers": {
       "get": {
         "tags": [
@@ -7212,6 +7270,28 @@
                 "example": 442000
               }
             }
+          }
+        }
+      },
+      "BikeRentalOverviewStats": {
+        "type": "object",
+        "description": "Thống kê tổng quan về số lượng xe đang hoạt động và đang được thuê.",
+        "properties": {
+          "total_active_bikes": {
+            "type": "integer",
+            "description": "Tổng số xe đang hoạt động (không bao gồm xe có trạng thái 'KHÔNG CÓ SẴN').",
+            "example": 148
+          },
+          "rented_bikes": {
+            "type": "integer",
+            "description": "Số lượng xe đang có trạng thái 'ĐANG ĐƯỢC THUÊ'.",
+            "example": 25
+          },
+          "percentage": {
+            "type": "number",
+            "format": "float",
+            "description": "Tỷ lệ phần trăm xe đang được thuê so với tổng số xe đang hoạt động.",
+            "example": 16.89
           }
         }
       }

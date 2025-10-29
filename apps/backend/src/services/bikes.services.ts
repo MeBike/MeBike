@@ -427,6 +427,55 @@ class BikesService {
       }))
     }
   }
+
+  async getBikeRentalStats() {
+    //Sử dụng $facet để đếm song song
+    const statsPipeline = [
+      {
+        $facet: {
+          //Đếm tổng số xe đang hoạt động (không tính xe đã ngừng)
+          "total_active_bikes": [
+            { 
+              $match: { 
+                //BikeStatus.Unavailable là trạng thái soft-delete
+                status: { $ne: BikeStatus.Unavailable } 
+              } 
+            },
+            { $count: "count" }
+          ],
+          //Đếm số xe đang được thuê
+          "rented_bikes": [
+            { $match: { status: BikeStatus.Booked } },
+            { $count: "count" }
+          ]
+        }
+      },
+      {
+        // Định dạng lại output
+        $project: {
+          "total_active_bikes": { $ifNull: [{ $arrayElemAt: ["$total_active_bikes.count", 0] }, 0] },
+          "rented_bikes": { $ifNull: [{ $arrayElemAt: ["$rented_bikes.count", 0] }, 0] }
+        }
+      }
+    ]
+
+    const result = await databaseService.bikes.aggregate(statsPipeline).toArray()
+    const counts = result[0] || { total_active_bikes: 0, rented_bikes: 0 }
+
+    const { total_active_bikes, rented_bikes } = counts
+    let percentage: number = 0.0
+
+    //Tính toán phần trăm (tránh chia cho 0)
+    if (total_active_bikes > 0) {
+      percentage = (rented_bikes / total_active_bikes) * 100
+    }
+
+    return {
+      total_active_bikes: total_active_bikes,
+      rented_bikes: rented_bikes,
+      percentage: parseFloat(percentage.toFixed(2))
+    }
+  }
 }
 
 const bikesService = new BikesService();

@@ -224,6 +224,8 @@ components:
       $ref: './components/schemas/BikeActivityStats.yaml'
     StationStats:
       $ref: './components/schemas/StationStats.yaml'
+    BikeRentalOverviewStats:
+      $ref: './components/schemas/BikeRentalOverviewStats.yaml'
 
   securitySchemes:
     BearerAuth:
