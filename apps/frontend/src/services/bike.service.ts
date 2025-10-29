@@ -47,8 +47,8 @@ export const bikeService = {
 
   createBikeAdmin: async (
     data: BikeSchemaFormData
-  ): Promise<AxiosResponse<ApiResponse<Bike>>> => {
-    const response = await fetchHttpClient.post<ApiResponse<Bike>>(
+  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<Bike>>(
       BIKE_ENDPOINTS.BASE,
       data
     );

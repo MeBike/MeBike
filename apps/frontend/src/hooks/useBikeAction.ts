@@ -61,7 +61,7 @@ export const useBikeActions = (
     limit: limit,
     station_id: station_id || "",
     supplier_id: supplier_id || "",
-    status: status,
+    status: status || "",
   });
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
@@ -99,9 +99,20 @@ export const useBikeActions = (
         return;
       }
       useCreateBike.mutate(data, {
-        onSuccess: (result) => {
+        onSuccess: (result : { status: number; data?: { message?: string } }) => {
           if (result.status === 201) {
             toast.success("Bike created successfully");
+            queryClient.invalidateQueries({
+              queryKey: [
+                "bikes",
+                "all",
+                page,
+                limit,
+                station_id || "",
+                supplier_id || "",
+                status || "",
+              ],
+            });
           } else {
             const errorMessage = result.data?.message || "Error creating bikes";
             toast.error(errorMessage);
