@@ -44,7 +44,7 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
 
   return defaultMessage;
 }
-export function useRentalsActions(hasToken: boolean, bikeId?: string) {
+export function useRentalsActions(hasToken: boolean, bikeId?: string , station_id?: string) {
   const queryClient = useQueryClient();
   const navigation = useNavigation();
   const useGetAllRentals = useGetAllRentalsQuery();
@@ -62,6 +62,9 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string) {
       onSuccess: (result) => {
         if (result.status === 200) {
           Alert.alert("Success", "Rental ended successfully.");
+          queryClient.invalidateQueries({
+            queryKey: ["bikes", "all", undefined , undefined],
+          });
           queryClient.invalidateQueries({
             queryKey: ["rentals", "all", 1, 10],
           });
@@ -102,9 +105,23 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string) {
   const postRent = useCallback(
     async (data: RentalSchemaFormData) => {
       usePostRent.mutate(data, {
-        onSuccess: (result) => {
+        onSuccess: (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
           if (result.status === 200) {
             Alert.alert("Success", "Thuê xe thành công.");
+            queryClient.invalidateQueries({
+              queryKey: [
+                "bikes",
+                "all",
+                1,
+                10,
+                station_id,
+                undefined,
+                undefined,
+              ],
+            });
             queryClient.invalidateQueries({
               queryKey: ["rentals", data.bike_id],
             });
@@ -117,15 +134,14 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string) {
             queryClient.invalidateQueries({
               queryKey: ["station"],
             });
-          }
-          else {
+          } else {
             Alert.alert("Error", "Failed to end the rental.");
           }
         },
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            "An error occurred while ending the rental.",
+            "An error occurred while ending the rental."
           );
           console.log(errorMessage);
         },

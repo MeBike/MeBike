@@ -59,7 +59,8 @@ export default function StationDetailScreen() {
   });
   const { postRent, isPostRentLoading } = useRentalsActions(
     true,
-    selectedBike?._id
+    selectedBike?._id,
+    stationId,
   );
   const [pendingBikeId, setPendingBikeId] = useState<string | null>(null);
   const { createReservation } = useReservationActions({
@@ -319,14 +320,14 @@ export default function StationDetailScreen() {
           {allBikes.map((bike: Bike) => {
             const isAvailable = bike.status === "CÓ SẴN";
             return (
-              <Pressable
+              <View
                 key={bike._id}
                 style={[
                   styles.bikeItem,
                   selectedBike?._id === bike._id && styles.selectedBikeItem,
                 ]}
-                onPress={() => handleBikePress(bike)}
               >
+                {/* Trái: Hiển thị thông tin xe */}
                 <View style={styles.bikeItemLeft}>
                   <View
                     style={[
@@ -346,6 +347,7 @@ export default function StationDetailScreen() {
                   </View>
                 </View>
 
+                {/* Phải: Các nút thao tác */}
                 <View style={styles.bikeItemRight}>
                   <Text
                     style={[
@@ -359,45 +361,62 @@ export default function StationDetailScreen() {
                   >
                     {isAvailable ? "Có sẵn" : "Đang thuê"}
                   </Text>
+
                   {isAvailable && (
-                    <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
+                    <TouchableOpacity
+                      style={[
+                        styles.reserveButton,
+                        pendingBikeId === bike._id &&
+                          styles.reserveButtonDisabled,
+                      ]}
+                      onPress={() => handleReservePress(bike)}
+                      disabled={pendingBikeId === bike._id}
+                      activeOpacity={0.8}
                     >
-                      <TouchableOpacity
-                        style={[
-                          styles.reserveButton,
-                          pendingBikeId === bike._id &&
-                            styles.reserveButtonDisabled,
-                        ]}
-                        onPress={() => handleReservePress(bike)}
-                        disabled={pendingBikeId === bike._id}
-                        activeOpacity={0.8}
-                      >
-                        {pendingBikeId === bike._id ? (
-                          <ActivityIndicator size="small" color="#fff" />
-                        ) : (
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                            }}
-                          >
-                            <Ionicons
-                              name="timer-outline"
-                              size={16}
-                              color="#fff"
-                              style={{ marginRight: 6 }}
-                            />
-                            <Text style={styles.reserveButtonText}>
-                              Đặt trước
-                            </Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    </View>
+                      {pendingBikeId === bike._id ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <View
+                          style={{ flexDirection: "row", alignItems: "center" }}
+                        >
+                          <Ionicons
+                            name="timer-outline"
+                            size={16}
+                            color="#fff"
+                            style={{ marginRight: 6 }}
+                          />
+                          <Text style={styles.reserveButtonText}>
+                            Đặt trước
+                          </Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  )}
+
+                  {/* Nút Thuê ngay */}
+                  {isAvailable && (
+                    <TouchableOpacity
+                      style={[
+                        styles.reserveButton,
+                        {
+                          backgroundColor: BikeColors.success,
+                          marginLeft: 8, // thêm khoảng cách với nút đặt trước
+                        },
+                      ]}
+                      onPress={() => handleBikePress(bike)}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons
+                        name="bicycle-outline"
+                        size={16}
+                        color="#fff"
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text style={styles.reserveButtonText}>Thuê ngay</Text>
+                    </TouchableOpacity>
                   )}
                 </View>
-              </Pressable>
+              </View>
             );
           })}
         </View>
@@ -690,5 +709,15 @@ const styles = StyleSheet.create({
   bikeStatus: {
     fontSize: 12,
     fontWeight: "500",
+  },
+  // Trong styles:
+  rentButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: BikeColors.success,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginLeft: 8,
   },
 });
