@@ -59,7 +59,6 @@ export class FetchHttpClient {
         );
         const originalRequest = error.config;
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
-          window.dispatchEvent(new Event("auth:session_expired"));
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
@@ -79,7 +78,6 @@ export class FetchHttpClient {
           try {
             const newToken = await this.refreshAccessToken();
             this.processQueue(null, newToken);
-            window.dispatchEvent(new Event("auth:token_refreshed"));
             if (originalRequest.headers) {
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
