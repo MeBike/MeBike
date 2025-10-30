@@ -99,3 +99,15 @@ export interface Rental {
   created_at: string;
   updated_at: string;
 }
+export interface StatwithRevenue {
+  period: {
+    from: string;
+    to: string;
+  };
+  groupBy: string;
+  data: Array<{
+    totalRevenue: number;
+    totalRentals: number;
+    date: string;
+  }>;
+}

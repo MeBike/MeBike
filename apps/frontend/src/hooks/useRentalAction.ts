@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useGetAllRentalsAdminStaffQuery } from "./query/Rent/useGetAllRentalsAdminStaffQuery";
 import { useRouter } from "next/navigation";
+import { useGetRevenueQuery } from "./query/Rent/useGetRevenueQuery";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -75,10 +76,21 @@ export function useRentalsActions({
     }
     refetchAllRentals();
   }, [hasToken, refetchAllRentals]);
+  const { data: revenueData , refetch : refetchRevenue , isLoading : isLoadingRevenue } = useGetRevenueQuery();
+  const getRevenue = useCallback(() => {
+    if(!hasToken){
+      return;
+    }
+    refetchRevenue();
+  }, [hasToken, refetchRevenue]);
   return {
     allRentalsData: allRentalsData?.data,
     getRentals,
     pagination: allRentalsData?.pagination,
     isAllRentalsLoading,
+    revenueData,
+    getRevenue,
+    refetchRevenue,
+    isLoadingRevenue
   };
 }

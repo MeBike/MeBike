@@ -80,7 +80,7 @@ export function RentalFilters({
           </Select>
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="payment">Thanh toán</Label>
           <Select value={paymentFilter} onValueChange={onPaymentChange}>
             <SelectTrigger id="payment">
@@ -93,9 +93,9 @@ export function RentalFilters({
               <SelectItem value="refunded">Đã hoàn tiền</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="dateFrom">Từ ngày</Label>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -121,7 +121,7 @@ export function RentalFilters({
               className="pl-9"
             />
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

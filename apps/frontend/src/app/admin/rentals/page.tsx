@@ -30,11 +30,26 @@ export default function RentalsPage() {
     rental_type: "hours" as "hours" | "days",
     payment_method: "card" as "card" | "cash" | "momo" | "zalopay" | "transfer",
   });
-  const { allRentalsData, getRentals, isAllRentalsLoading, pagination } = useRentalsActions({
+  const {
+    allRentalsData,
+    getRentals,
+    isAllRentalsLoading,
+    pagination,
+    revenueData,
+  } = useRentalsActions({
     hasToken: true,
     limit,
     page,
-    status: statusFilter !== "all" ? (statusFilter === "active" ? "ĐANG THUÊ" : statusFilter === "completed" ? "HOÀN THÀNH" : statusFilter === "cancelled" ? "ĐÃ HỦY" : undefined) : undefined
+    status:
+      statusFilter !== "all"
+        ? statusFilter === "active"
+          ? "ĐANG THUÊ"
+          : statusFilter === "completed"
+            ? "HOÀN THÀNH"
+            : statusFilter === "cancelled"
+              ? "ĐÃ HỦY"
+              : undefined
+        : undefined,
   });
   const rentals = allRentalsData || [];
   const filteredRentals = rentals.filter((rental) => {
@@ -191,7 +206,7 @@ export default function RentalsPage() {
           đơn thuê
         </p>
 
-        {isCreateModalOpen && (
+        {/* {isCreateModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-foreground mb-4">
@@ -326,7 +341,7 @@ export default function RentalsPage() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

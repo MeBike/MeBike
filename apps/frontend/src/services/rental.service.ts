@@ -2,6 +2,7 @@ import type { AxiosResponse } from "axios";
 import type { RentalSchemaFormData } from "@schemas/rentalSchema";
 import fetchHttpClient from "@lib/httpClient";
 import type { RentingHistory } from "@custom-types";
+import { StatwithRevenue } from "@custom-types";
 export type Pagination = {
   limit: number;
   currentPage: number;
@@ -30,6 +31,7 @@ const RENTAL_ENDPOINTS = {
   STAFF_ADMIN_GET_ALL_RENTALS: () => `${RENTAL_BASE}`,
   STAFF_ADMIN_GET_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
   STAFF_ADMIN_UPDATE_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
+  GET_REVENUE: () => `${RENTAL_BASE}/stats/revenue`,
 };
 type RentalResponse = {
   data: RentingHistory[];
@@ -133,7 +135,9 @@ export const rentalService = {
     start_station,
     end_station,
     status,
-  }: GetAllRentalsForStaffAdminProps): Promise<AxiosResponse<ApiResponse<RentingHistory[]>>> => {
+  }: GetAllRentalsForStaffAdminProps): Promise<
+    AxiosResponse<ApiResponse<RentingHistory[]>>
+  > => {
     const response = await fetchHttpClient.get<ApiResponse<RentingHistory[]>>(
       RENTAL_ENDPOINTS.STAFF_ADMIN_GET_ALL_RENTALS(),
       {
@@ -144,6 +148,14 @@ export const rentalService = {
         status,
       }
     );
+    return response;
+  },
+  getRevenue: async (): Promise<
+    AxiosResponse<DetailApiResponse<StatwithRevenue>>
+  > => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<StatwithRevenue>
+    >(RENTAL_ENDPOINTS.GET_REVENUE());
     return response;
   },
   // staffAdminUpdateDetailRental: async (
