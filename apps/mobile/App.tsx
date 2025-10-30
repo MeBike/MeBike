@@ -28,6 +28,7 @@ import StationDetailScreen from "./screen/StationDetail";
 import UpdateProfileScreen from "./screen/UpdateProfileScreen";
 import StationSelectScreen from "./styles/StationSelect";
 import SupportScreen from "./screen/SupportScreen";
+import ReportScreen from "./screen/ReportScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
@@ -188,6 +189,11 @@ export default function App() {
             <Stack.Screen
               name="Support"
               component={SupportScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="Report"
+              component={ReportScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
           </Stack.Navigator>
