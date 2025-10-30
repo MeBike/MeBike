@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RentalTable } from "@/components/rentals/rental-table";
 import { RentalFilters } from "@/components/rentals/rental-filters";
 import { RentalStats } from "@/components/rentals/rental-stats";
@@ -22,6 +22,8 @@ export default function RentalsPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedRentalId, setSelectedRentalId] = useState<string>("");
   const [newRental, setNewRental] = useState({
     customer_id: "",
     bike_id: "",
@@ -41,11 +43,12 @@ export default function RentalsPage() {
     getRevenue,
     refetchRevenue,
     isLoadingRevenue,
-  
+
   } = useRentalsActions({
     hasToken: true,
     limit,
     page,
+    bike_id: selectedRentalId,
     status:
       statusFilter !== "all"
         ? statusFilter === "active"
@@ -57,6 +60,10 @@ export default function RentalsPage() {
               : undefined
         : undefined,
   });
+  useEffect(() => {
+    getRevenue();
+  }, [getRevenue]);
+
   const rentals = allRentalsData || [];
   const filteredRentals = rentals.filter((rental) => {
     const matchesSearch =
@@ -134,14 +141,8 @@ export default function RentalsPage() {
     completed: rentals.filter((r) => r.status === "HOÀN THÀNH").length,
     cancelled: rentals.filter((r) => r.status === "ĐÃ HỦY").length,
     overdue: 0, // No overdue in RentingHistory
-    todayRevenue: rentals
-      .filter(
-        (r) =>
-          new Date(r.created_at).toDateString() === new Date().toDateString()
-      )
-      .reduce((sum, r) => sum + r.total_price, 0),
-    totalRevenue: rentals
-      .reduce((sum, r) => sum + r.total_price, 0),
+    todayRevenue: revenueData?.result?.data?.reduce((sum: number, item: any) => sum + item.totalRevenue, 0) || 0,
+    totalRevenue: revenueData?.result?.data?.reduce((sum: number, item: any) => sum + item.totalRevenue, 0) || 0,
   };
 
   return (
@@ -200,7 +201,13 @@ export default function RentalsPage() {
               console.log("[v0] Cancel rental:", rental._id)
             }
           /> */}
-          <DataTable columns={rentalColumn({})} data={rentals} />
+          <DataTable columns={rentalColumn({
+            onView: ({ id }) => {
+              setSelectedRentalId(id);
+              getDetailRental();
+              setIsDetailModalOpen(true);
+            }
+          })} data={rentals} />
           <PaginationDemo
             currentPage={pagination?.currentPage ?? 1}
             onPageChange={setPage}
@@ -347,7 +354,109 @@ export default function RentalsPage() {
               </div>
             </div>
           </div>
-        )} */}
+        )}
+
+
+        {/* Detail Modal */}
+        {isDetailModalOpen && detailData && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Chi tiết đơn thuê
+              </h2>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Mã đơn thuê
+                    </label>
+                    <p className="text-foreground">{detailData.result?._id}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạng thái
+                    </label>
+                    <p className="text-foreground">{detailData.result?.status}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Người dùng
+                    </label>
+                    <p className="text-foreground">{detailData.result?.user?.fullname}</p>
+                    <p className="text-sm text-muted-foreground">{detailData.result?.user?.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Xe đạp
+                    </label>
+                    <p className="text-foreground">{detailData.result?.bike?._id}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạm bắt đầu
+                    </label>
+                    <p className="text-foreground">{detailData.result?.start_station?.name}</p>
+                    <p className="text-sm text-muted-foreground">{detailData.result?.start_station?.address}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạm kết thúc
+                    </label>
+                    <p className="text-foreground">{detailData.result?.end_station?.name || "Chưa trả"}</p>
+                    <p className="text-sm text-muted-foreground">{detailData.result?.end_station?.address || ""}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Thời gian bắt đầu
+                    </label>
+                    <p className="text-foreground">{new Date(detailData.result?.start_time).toLocaleString("vi-VN")}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Thời gian kết thúc
+                    </label>
+                    <p className="text-foreground">{detailData.result?.end_time ? new Date(detailData.result.end_time).toLocaleString("vi-VN") : "Chưa trả"}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Thời lượng (phút)
+                    </label>
+                    <p className="text-foreground">{detailData.result?.duration}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Tổng tiền
+                    </label>
+                    <p className="text-foreground">{detailData.result?.total_price.toLocaleString("vi-VN")} VND</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="flex-1"
+                >
+                  Đóng
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
