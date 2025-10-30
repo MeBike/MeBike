@@ -55,72 +55,64 @@ export class FetchHttpClient {
           "API Error:",
           error.response?.status,
           error.config?.url,
-          error.response?.data,
+          error.response?.data
         );
         const originalRequest = error.config;
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
-          // Inspect response data for a token expiration error
-          const isTokenExpired
-            = error.response?.data?.error === "token_expired"
-              || error.response?.data?.message === "Jwt expired"; // Adjust according to your backend
-
-          if (isTokenExpired) {
-            if (this.isRefreshing) {
-              return new Promise((resolve, reject) => {
-                this.failedQueue.push({ resolve, reject });
+          window.dispatchEvent(new Event("auth:session_expired"));
+          if (this.isRefreshing) {
+            return new Promise((resolve, reject) => {
+              this.failedQueue.push({ resolve, reject });
+            })
+              .then((token) => {
+                if (token && originalRequest.headers) {
+                  originalRequest.headers.Authorization = `Bearer ${token}`;
+                }
+                return this.axiosInstance(originalRequest);
               })
-                .then((token) => {
-                  if (token && originalRequest.headers) {
-                    originalRequest.headers.Authorization = `Bearer ${token}`;
-                  }
-                  return this.axiosInstance(originalRequest);
-                })
-                .catch((err) => {
-                  return Promise.reject(err);
-                });
-            }
+              .catch((err) => {
+                return Promise.reject(err);
+              });
+          }
 
-            this.isRefreshing = true;
-            try {
-              const newToken = await this.refreshAccessToken();
-              this.processQueue(null, newToken);
-              if (originalRequest.headers) {
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
-              }
-              return this.axiosInstance(originalRequest);
+          this.isRefreshing = true;
+          try {
+            const newToken = await this.refreshAccessToken();
+            this.processQueue(null, newToken);
+            window.dispatchEvent(new Event("auth:token_refreshed"));
+            if (originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
-            catch (refreshError) {
-              this.processQueue(refreshError, null);
-              return Promise.reject(refreshError);
-            }
-            finally {
-              this.isRefreshing = false;
-            }
-          }
-          else {
-            return Promise.reject(error);
+            return this.axiosInstance(originalRequest);
+          } catch (refreshError) {
+            this.processQueue(refreshError, null);
+            return Promise.reject(refreshError);
+          } finally {
+            this.isRefreshing = false;
           }
         }
-        // Error handling for React Native
-        // Use React Navigation or other navigation methods instead of window.locatio n
-        switch (error.response?.status) {
-          case HTTP_STATUS.FORBIDDEN:
-            console.log("API: 403 Forbidden");
-            // Handle navigation using React Navigation
-            break;
-          case HTTP_STATUS.NOT_FOUND:
-            console.log("API: 404 Not Found");
-            break;
-          case HTTP_STATUS.SERVICE_UNAVAILABLE:
-            console.log("API: 503 Service Unavailable");
-            // Handle navigation using React Navigation
-            break;
-          default:
-            console.log(`API Error: ${error.response?.status}`);
-        }
+        // switch (error.response?.status) {
+        //   case HTTP_STATUS.FORBIDDEN:
+        //     console.log("API: 403 Forbidden");
+        //     window.location.href = `/error/${HTTP_STATUS.FORBIDDEN}`;
+        //     break;
+        //   case HTTP_STATUS.NOT_FOUND:
+        //     console.log("API: 404 Not Found");
+        //     break;
+        //   // case HTTP_STATUS.INTERNAL_SERVER_ERROR:
+        //   //   console.log("API: 500 Internal Server Error");
+        //   //   window.location.href = `/error/${HTTP_STATUS.INTERNAL_SERVER_ERROR}`;
+        //   //   break;
+        //   case HTTP_STATUS.SERVICE_UNAVAILABLE:
+        //     console.log("API: 503 Service Unavailable");
+        //     window.location.href = `/error/${HTTP_STATUS.SERVICE_UNAVAILABLE}`;
+        //     break;
+        //   default:
+        //     console.error(`API Error: ${error.response?.status}`);
+        // }
 
         return Promise.reject(error);
-      },
+      }
     );
   }
 

@@ -90,17 +90,18 @@ export function useAuthActions(navigation?: { navigate: (route: string) => void 
           console.log("Login successful:", { access_token, refresh_token });
           await setTokens(access_token, refresh_token);
           console.log("access_token", String(getAccessToken()));
-          Alert.alert("Success", "Logged in successfully");
           onTokenUpdate?.();
+           Alert.alert("Login Successful", "Welcome back!");
           queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+          navigation?.navigate("Main");
         },
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(error, "Error logging in");
-          Alert.alert("Error", errorMessage);
+          Alert.alert("Lỗi đăng nhập",errorMessage);
         },
       });
     },
-    [useLogin, queryClient, onTokenUpdate],
+    [useLogin, queryClient, onTokenUpdate]
   );
   const register = useCallback((
     data: RegisterSchemaFormData) => {
