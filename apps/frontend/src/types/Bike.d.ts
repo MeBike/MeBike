@@ -21,13 +21,18 @@ export interface BikeActivityStats {
   total_minutes_active: number;
   total_reports: number;
   uptime_percentage: number;
-  monthly_stats: [
-    {
-      year: number;
-      month: number;
-      rentals_count: number;
-      minutes_active: number;
-      revenue: number;
-    },
-  ];
+  monthly_stats: Array<{
+    year: number;
+    month: number;
+    rentals_count: number;
+    minutes_active: number;
+    revenue: number;
+  }>;
+}
+export interface BikeStats {
+  _id: string;
+  total_rentals: number;
+  total_revenue: number;
+  total_duration_minutes: number;
+  total_reports: number;
 }

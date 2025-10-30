@@ -7,7 +7,7 @@ import type {
 import { Bike } from "@custom-types";
 import { BikeStatus } from "@custom-types";
 import { BikeActivityStats } from "@custom-types";
-import { get } from "http";
+import { BikeStats } from "@custom-types";
 interface ApiResponse<T> {
   data: T;
   pagination: {
@@ -40,6 +40,7 @@ const BIKE_ENDPOINTS = {
   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
   ACTIVIY_STATS: (id: string) => `${BIKE_BASE}/${id}/activity-stats`,
+  STATS_BIKE: (id: string) => `${BIKE_BASE}/${id}/stats`,
 } as const;
 // interface ApiResponse<T> {
 //   data: T;
@@ -98,7 +99,9 @@ export const bikeService = {
     return response;
   },
   //all
-  getBikeByIdForAll: async (id: string): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
+  getBikeByIdForAll: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
     const response = await fetchHttpClient.get<DetailApiResponse<Bike>>(
       BIKE_ENDPOINTS.BY_ID_FOR_ALL(id)
     );
@@ -129,10 +132,18 @@ export const bikeService = {
     );
     return response;
   },
-  getBikeActivityStats: async (id: string): Promise<AxiosResponse<DetailApiResponse<BikeActivityStats>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<BikeActivityStats>>(
-      BIKE_ENDPOINTS.ACTIVIY_STATS(id)
-    );
+  getBikeActivityStats: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<BikeActivityStats>>> => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<BikeActivityStats>
+    >(BIKE_ENDPOINTS.ACTIVIY_STATS(id));
     return response;
-  }
+  },
+  getStatisticsBike: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<BikeStats>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<BikeStats>>(BIKE_ENDPOINTS.STATS_BIKE(id));
+    return response;
+  },
 };

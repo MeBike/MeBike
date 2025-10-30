@@ -14,6 +14,8 @@ import { useReportBike } from "./mutations/Bike/useReportBike";
 import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
 import { useGetStatisticsBikeQuery } from "./query/Bike/useGetStatusBike";
 import { useRouter } from "next/navigation";
+import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
+import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -52,6 +54,27 @@ export const useBikeActions = (
   page?: number
 ) => {
   const router = useRouter();
+  const { data: bikeActivityStats, refetch: useGetBikeActivityStats , isFetching: isFetchingBikeActivityStats } =
+    useGetBikeActivityStatsQuery(bike_detail_id || "");
+  const { data: bikeStats, refetch: useGetStatisticsBike, isFetching: isFetchingBikeStats } = useGetBikeStatsQuery(bike_detail_id || "");
+  const getBikeActivityStats = useCallback(() => {
+    if(!hasToken){
+      router.push("/login");
+      return;
+    }
+    if (bike_detail_id) {
+      useGetBikeActivityStats();
+    }
+  }, [useGetBikeActivityStats, bike_detail_id]);
+  const getBikeStats = useCallback(() => {
+    if(!hasToken){
+      router.push("/login");
+      return;
+    }
+    if (bike_detail_id) {
+      useGetStatisticsBike();
+    }
+  }, [useGetStatisticsBike, bike_detail_id]);
   const {
     refetch: fetchBike,
     data,
@@ -237,5 +260,11 @@ export const useBikeActions = (
     isLoadingStatistics,
     statisticData,
     paginationOfBikes: data?.pagination,
+    bikeActivityStats: bikeActivityStats?.result,
+    getBikeActivityStats,
+    isFetchingBikeActivityStats,
+    getBikeStats,
+    bikeStats: bikeStats?.result,
+    isFetchingBikeStats,
   };
 };
