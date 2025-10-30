@@ -88,6 +88,10 @@ class WalletService {
       { returnDocument: 'after' }
     )
 
+    const currentDate = new Date()
+    const vietnamTimezoneOffset = 7 * 60
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
+
     const transactionID = new ObjectId()
     const transactionData: TransactionType = {
       _id: transactionID,
@@ -97,7 +101,8 @@ class WalletService {
       description: payload.description,
       transaction_hash: payload.transaction_hash || '',
       type: TransactionTypeEnum.Deposit,
-      status: TransactionStaus.Success
+      status: TransactionStaus.Success,
+      created_at: localTime
     }
 
     await databaseService.transactions.insertOne(transactionData)
@@ -724,6 +729,10 @@ class WalletService {
       { $inc: { balance: Decimal128.fromString((-amountNumber).toString()) } },
       { returnDocument: 'after' }
     )
+    const currentDate = new Date()
+    const vietnamTimezoneOffset = 7 * 60
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
+
     const transactionID = new ObjectId()
     const transactionData: TransactionType = {
       _id: transactionID,
@@ -734,7 +743,8 @@ class WalletService {
       description: description,
       transaction_hash: '',
       type: TransactionTypeEnum.PAYMENT,
-      status: TransactionStaus.Success
+      status: TransactionStaus.Success,
+      created_at: localTime
     }
 
     await databaseService.transactions.insertOne(transactionData)
@@ -764,6 +774,11 @@ class WalletService {
       { $inc: { balance: Decimal128.fromString((-amountNumber).toString()) } },
       { returnDocument: 'after' }
     )
+
+    const currentDate = new Date()
+    const vietnamTimezoneOffset = 7 * 60
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
+
     const transactionID = new ObjectId()
     const transactionData: TransactionType = {
       _id: transactionID,
@@ -774,7 +789,8 @@ class WalletService {
       description: description,
       transaction_hash: '',
       type: TransactionTypeEnum.RESERVATION,
-      status: TransactionStaus.Success
+      status: TransactionStaus.Success,
+      created_at: localTime
     }
 
     await databaseService.transactions.insertOne(transactionData)
@@ -796,6 +812,10 @@ class WalletService {
       { returnDocument: 'after' }
     )
 
+    const currentDate = new Date()
+    const vietnamTimezoneOffset = 7 * 60
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
+
     const transactionID = new ObjectId()
     const transactionData: TransactionType = {
       _id: transactionID,
@@ -806,7 +826,8 @@ class WalletService {
       description: description,
       transaction_hash: '',
       type: TransactionTypeEnum.Refund,
-      status: TransactionStaus.Success
+      status: TransactionStaus.Success,
+      created_at: localTime
     }
 
     await databaseService.transactions.insertOne(transactionData)
