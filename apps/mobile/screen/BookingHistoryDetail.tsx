@@ -779,9 +779,18 @@ const formatDate = (dateString : string) => {
             </TouchableOpacity>
           </>
         )}
-        <TouchableOpacity style={styles.supportButton}>
-          <Ionicons name="headset" size={20} color="#0066FF" />
-          <Text style={styles.supportButtonText}>Liên hệ hỗ trợ</Text>
+        <TouchableOpacity
+          style={styles.supportButton}
+          onPress={() => {
+            (navigation as any).navigate("Report", {
+              bike_id: booking.bike?._id || booking.bike,
+              station_id: booking.start_station?._id || booking.start_station,
+              rental_id: booking._id,
+            });
+          }}
+        >
+          <Ionicons name="warning" size={20} color="#0066FF" />
+          <Text style={styles.supportButtonText}>Báo cáo sự cố</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
