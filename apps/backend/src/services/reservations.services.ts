@@ -15,6 +15,8 @@ import { readEmailTemplate } from '~/utils/email-templates'
 import { sleep } from '~/utils/timeout'
 import { IotServiceSdk } from '@mebike/shared'
 import { IotBookingCommand, IotReservationCommand } from '@mebike/shared/sdk/iot-service'
+import { reservationExpireQueue, reservationNotifyQueue } from '~/lib/queue/reservation.queue'
+import User from '~/models/schemas/user.schema'
 
 class ReservationsService {
   async reserveBike({
@@ -69,6 +71,31 @@ class ReservationsService {
         ])
       })
 
+      const beforeExpirationMin = Number(process.env.EXPIRY_NOTIFY_MINUTES || '15')
+      const beforeExpirationMs = fromMinutesToMs(beforeExpirationMin)
+
+      const delayToExpiry = Math.max(0, endTime.getTime() - now.getTime())
+      const delayToNotify = Math.max(0, delayToExpiry - beforeExpirationMs)
+
+      await Promise.all([
+        reservationNotifyQueue.add(
+          'reservation-notify',
+          { reservationId: reservation._id, userId: user_id },
+          { delay: delayToNotify, removeOnComplete: true, removeOnFail: false }
+        ),
+        reservationExpireQueue.add(
+          'reservation-expire',
+          { reservationId: reservation._id, bikeId: bike._id },
+          { delay: delayToExpiry, removeOnComplete: true, removeOnFail: false }
+        )
+      ])
+
+      console.log(
+        `[Scheduler] Jobs added: notify in ${Math.round(delayToNotify / 60000)}m, expire in ${Math.round(
+          delayToExpiry / 60000
+        )}m`
+      )
+
       const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
       await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
 
@@ -107,7 +134,6 @@ class ReservationsService {
       let reservationResult: Reservation | null = null
       let isRefund = false
       let refundAmount = 0
-      let refundPromise: Promise<any> | null = null
 
       await session.withTransaction(async () => {
         const updatedData: Partial<Reservation> = {
@@ -630,13 +656,12 @@ class ReservationsService {
     }
   }
 
-  private async expireReservationAndReleaseBike(reservation: Reservation, bike: Bike) {
+  async expireReservationAndReleaseBike(reservation: Reservation, bike: Bike) {
+    const now = getLocalTime()
     const session = databaseService.getClient().startSession()
 
     try {
       await session.withTransaction(async () => {
-        const now = getLocalTime()
-
         const [resUpdate, bikeUpdate] = await Promise.all([
           databaseService.reservations.updateOne(
             { _id: reservation._id, status: ReservationStatus.Pending },
@@ -663,14 +688,12 @@ class ReservationsService {
           })
         }
       })
-      try {
-        await IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
-          command: IotReservationCommand.cancel
-        })
-        console.log(`[IoT] Sent cancellation command for bike ${bike.chip_id}`)
-      } catch (error) {
-        console.warn(`[IoT] Failed to send cancellation command for bike ${bike.chip_id}:`, error)
-      }
+
+      void IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
+        command: IotReservationCommand.cancel
+      })
+        .then(() => console.log(`[IoT] Sent cancellation command for bike ${bike.chip_id}`))
+        .catch((err) => console.warn(`[IoT] Failed to send cancellation command for bike ${bike.chip_id}:`, err))
 
       return { success: true }
     } catch (error) {
@@ -747,6 +770,41 @@ class ReservationsService {
         .map((r) => ({
           ...bikeMap.get(r.bike_id.toString())
         }))
+    }
+  }
+
+  async sendExpiringNotification(expiringReservation: Reservation, toUser: User) {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_APP,
+        pass: process.env.EMAIL_PASSWORD_APP
+      }
+    })
+
+    const userIdString = expiringReservation.user_id.toString()
+
+    if (!toUser || !toUser.email) {
+      console.error(RESERVATIONS_MESSAGE.SKIPPING_USER_NOT_FOUND(userIdString))
+      return { success: false }
+    }
+
+    try {
+      const htmlContent = readEmailTemplate('neer-expiry-reservation.html', {
+        fullname: toUser.fullname
+      })
+
+      const mailOptions = {
+        from: `"MeBike" <${process.env.EMAIL_APP}>`,
+        to: toUser.email,
+        subject: RESERVATIONS_MESSAGE.EMAIL_SUBJECT_NEAR_EXPIRY,
+        html: htmlContent
+      }
+      await transporter.sendMail(mailOptions)
+      return { success: true }
+    } catch (error) {
+      console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
+      return { success: false }
     }
   }
 }
