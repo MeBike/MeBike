@@ -32,6 +32,11 @@ const RENTAL_ENDPOINTS = {
   STAFF_ADMIN_GET_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
   STAFF_ADMIN_UPDATE_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
   GET_REVENUE: () => `${RENTAL_BASE}/stats/revenue`,
+  GET_STATS_STATION_ACTIVITY: () => `${RENTAL_BASE}/stats/station-activity`,
+  GET_RESERVATION_STATS: () => `${RENTAL_BASE}/stats/reservations`,
+  UPDATE_RENTAL_DETAIL : (id: string) => `${RENTAL_BASE}/${id}`,
+  END_RENTAL : (id: string) => `${RENTAL_BASE}/${id}/end`,
+  CANCEL_RENTAL : (id: string) => `${RENTAL_BASE}/${id}/cancel`,
 };
 type RentalResponse = {
   data: RentingHistory[];
