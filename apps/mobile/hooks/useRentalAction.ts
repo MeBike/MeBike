@@ -116,7 +116,7 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string , station_i
                 "bikes",
                 "all",
                 1,
-                10,
+                20,
                 station_id,
                 undefined,
                 undefined,
