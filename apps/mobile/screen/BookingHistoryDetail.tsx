@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   timeValue: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: "600",
     color: "#0066FF",
   },

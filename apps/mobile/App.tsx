@@ -27,6 +27,7 @@ import ReservationScreen from "./screen/ReservationScreen";
 import StationDetailScreen from "./screen/StationDetail";
 import UpdateProfileScreen from "./screen/UpdateProfileScreen";
 import StationSelectScreen from "./styles/StationSelect";
+import SupportScreen from "./screen/SupportScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
@@ -182,6 +183,11 @@ export default function App() {
             <Stack.Screen
               name="ReservationDetail"
               component={ReservationDetailScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="Support"
+              component={SupportScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
           </Stack.Navigator>
