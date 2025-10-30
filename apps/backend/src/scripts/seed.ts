@@ -94,9 +94,11 @@ async function seedDatabase() {
 
     console.log('Finding or creating prototype station...')
     // Try to find existing "Ga Bến Thành" station
-    let station = await databaseService.stations.findOne({ name: 'Ga Bến Thành' })
+    const existingStation = await databaseService.stations.findOne({ name: 'Ga Bến Thành' })
 
-    if (!station) {
+    let station: Station;
+
+    if (!existingStation) {
       // Create prototype station if "Ga Bến Thành" doesn't exist
       station = new Station({
         _id: STATION_ID,
@@ -109,6 +111,7 @@ async function seedDatabase() {
       await databaseService.stations.insertOne(station)
       console.log('Created new prototype station')
     } else {
+      station = existingStation
       console.log('Using existing "Ga Bến Thành" station')
     }
 
@@ -227,7 +230,7 @@ async function seedDatabase() {
     const bike = new Bike({
       _id: BIKE_ID,
       chip_id: BIKE_CHIP_ID,
-      station_id: station._id,
+      station_id: station._id || STATION_ID,
       status: initialBikeStatus,
       supplier_id: supplier._id
     })
@@ -239,7 +242,7 @@ async function seedDatabase() {
       const reservation = new Reservation({
         user_id: user2._id!,
         bike_id: BIKE_ID,
-        station_id: station._id!,
+        station_id: station._id || STATION_ID,
         start_time: getLocalTime(),
         end_time: new Date(getLocalTime().getTime() + 120 * 60 * 1000), // 2 hours from now
         prepaid: Decimal128.fromString('0'),
