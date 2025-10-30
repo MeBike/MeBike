@@ -45,8 +45,9 @@ export async function getRatingController(
 
 export async function getRatingByIdController(req: Request<ParamsDictionary, any, any>, res: Response) {
   const { rental_id } = req.params
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
-  const result = await ratingService.getRatingById(rental_id)
+  const result = await ratingService.getRatingById(rental_id, user_id)
   res.json({
     message: RATING_MESSAGE.GET_RATING_SUCCESS.replace('%s', rental_id),
     result
