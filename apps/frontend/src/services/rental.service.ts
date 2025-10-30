@@ -8,7 +8,13 @@ export type Pagination = {
   totalPages: number;
   totalRecords: number;
 };
-
+export interface GetAllRentalsForStaffAdminProps {
+  page?: number;
+  limit?: number;
+  start_station?: string;
+  end_station?: string;
+  status?: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
+}
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
   BASE: RENTAL_BASE,
@@ -52,7 +58,7 @@ export const rentalService = {
     >(RENTAL_ENDPOINTS.USER_RENT(), data);
     return response;
   },
-  userGetAllRentals: async (
+  userGetAllRentalsForUser: async (
     page: number,
     limit: number
   ): Promise<AxiosResponse<RentalResponse>> => {
@@ -118,6 +124,25 @@ export const rentalService = {
   staffAdminGetDetailRental: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
       RENTAL_ENDPOINTS.STAFF_ADMIN_GET_DETAIL_RENTAL(id)
+    );
+    return response;
+  },
+  getAllRentalsForStaffAdmin: async ({
+    page,
+    limit,
+    start_station,
+    end_station,
+    status,
+  }: GetAllRentalsForStaffAdminProps): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.get(
+      RENTAL_ENDPOINTS.STAFF_ADMIN_GET_ALL_RENTALS(),
+      {
+        page,
+        limit,
+        start_station,
+        end_station,
+        status,
+      }
     );
     return response;
   },
