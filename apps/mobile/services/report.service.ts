@@ -59,7 +59,10 @@ export const reportService = {
     // Add text fields
     if (data.type) formData.append('type', data.type);
     if (data.message) formData.append('message', data.message);
-    if (data.bike_id) formData.append('bike_id', data.bike_id);
+    const typesRequireBikeId = ["XE HƯ HỎNG", "XE BẨN"];
+    if (typesRequireBikeId.includes(data.type) && data.bike_id) {
+      formData.append("bike_id", data.bike_id);
+    }
     if (data.station_id) formData.append('station_id', data.station_id);
     if (data.rental_id) formData.append('rental_id', data.rental_id);
     if (data.location) formData.append('location', data.location);
