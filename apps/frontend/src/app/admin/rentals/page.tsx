@@ -10,7 +10,7 @@ import { Plus, Download } from "lucide-react";
 import { useRentalsActions } from "@/hooks/useRentalAction";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-
+import { rentalColumn } from "@/columns/rental-columns";
 export default function RentalsPage() {
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
@@ -183,7 +183,7 @@ export default function RentalsPage() {
 
         {/* Results */}
         <div className="w-full rounded-lg space-y-4  flex flex-col">
-          <RentalTable
+          {/* <RentalTable
             rentals={filteredRentals}
             onView={(rental) => console.log("[v0] View rental:", rental._id)}
             onEdit={(rental) => console.log("[v0] Edit rental:", rental._id)}
@@ -193,7 +193,8 @@ export default function RentalsPage() {
             onCancel={(rental) =>
               console.log("[v0] Cancel rental:", rental._id)
             }
-          />
+          /> */}
+          <DataTable columns={rentalColumn({})} data={rentals} />
           <PaginationDemo
             currentPage={pagination?.currentPage ?? 1}
             onPageChange={setPage}
@@ -202,8 +203,7 @@ export default function RentalsPage() {
         </div>
 
         <p className="text-sm text-muted-foreground">
-          Trang {pagination?.currentPage} / {pagination?.totalPages}{" "}
-          đơn thuê
+          Trang {pagination?.currentPage} / {pagination?.totalPages} đơn thuê
         </p>
 
         {/* {isCreateModalOpen && (
