@@ -16,6 +16,7 @@ import { useGetStatisticsBikeQuery } from "./query/Bike/useGetStatusBike";
 import { useRouter } from "next/navigation";
 import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
+import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -57,6 +58,16 @@ export const useBikeActions = (
   const { data: bikeActivityStats, refetch: useGetBikeActivityStats , isFetching: isFetchingBikeActivityStats } =
     useGetBikeActivityStatsQuery(bike_detail_id || "");
   const { data: bikeStats, refetch: useGetStatisticsBike, isFetching: isFetchingBikeStats } = useGetBikeStatsQuery(bike_detail_id || "");
+  const { data : bikeRentals , refetch : useGetRentalBike , isFetching : isFetchingRentalBikes} = useGetRentalBikeQuery(bike_detail_id || "");
+  const getRentalBikes = useCallback(() => {
+    if(!hasToken){
+      router.push("/login");
+      return;
+    }
+    if (bike_detail_id) {
+      useGetRentalBike();
+    }
+  }, [useGetRentalBike, bike_detail_id]);
   const getBikeActivityStats = useCallback(() => {
     if(!hasToken){
       router.push("/login");
@@ -266,5 +277,8 @@ export const useBikeActions = (
     getBikeStats,
     bikeStats: bikeStats?.result,
     isFetchingBikeStats,
+    bikeRentals: bikeRentals?.result,
+    getRentalBikes,
+    isFetchingRentalBikes,
   };
 };

@@ -36,3 +36,24 @@ export interface BikeStats {
   total_duration_minutes: number;
   total_reports: number;
 }
+export interface BikeRentalHistory {
+  _id: string;
+  start_station: {
+    _id: string;
+    name: string;
+  };
+  end_station: {
+    _id: string;
+    name: string;
+  };
+  start_time: string;
+  end_time: string;
+  duration: number;
+  total_price: {
+    $numberDecimal: string;
+  };
+  user: {
+    _id: string;
+    fullname: string;
+  };
+}

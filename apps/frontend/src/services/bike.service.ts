@@ -4,10 +4,11 @@ import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "@schemas/bikeSchema";
-import { Bike } from "@custom-types";
+import { Bike, BikeRentalHistory } from "@custom-types";
 import { BikeStatus } from "@custom-types";
 import { BikeActivityStats } from "@custom-types";
 import { BikeStats } from "@custom-types";
+import { get } from "http";
 interface ApiResponse<T> {
   data: T;
   pagination: {
@@ -41,6 +42,7 @@ const BIKE_ENDPOINTS = {
   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
   ACTIVIY_STATS: (id: string) => `${BIKE_BASE}/${id}/activity-stats`,
   STATS_BIKE: (id: string) => `${BIKE_BASE}/${id}/stats`,
+  RENTAL_HISTORY_BIKE: (id: string) => `${BIKE_BASE}/${id}/rental-history`,
 } as const;
 // interface ApiResponse<T> {
 //   data: T;
@@ -144,6 +146,12 @@ export const bikeService = {
     id: string
   ): Promise<AxiosResponse<DetailApiResponse<BikeStats>>> => {
     const response = await fetchHttpClient.get<DetailApiResponse<BikeStats>>(BIKE_ENDPOINTS.STATS_BIKE(id));
+    return response;
+  },
+  getRentalHistoryBike: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<BikeRentalHistory>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<BikeRentalHistory>>(BIKE_ENDPOINTS.RENTAL_HISTORY_BIKE(id));
     return response;
   },
 };
