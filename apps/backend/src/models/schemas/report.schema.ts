@@ -14,7 +14,8 @@ export type ReportType = {
   rental_id?: ObjectId;
   assignee_id?: ObjectId;
   media_urls?: string[];
-  location?: GeoLocation;
+  latitude?: number;
+  longitude?: number;
   priority: ReportPriority;
   type: ReportTypeEnum;
   message: string;
@@ -31,7 +32,8 @@ export default class Report {
   rental_id?: ObjectId;
   assignee_id?: ObjectId;
   media_urls?: string[];
-  location?: GeoLocation;
+  latitude?: number;
+  longitude?: number;
   priority: ReportPriority;
   type: ReportTypeEnum;
   message: string;
@@ -51,7 +53,8 @@ export default class Report {
     this.rental_id = report.rental_id;
     this.assignee_id = report.assignee_id;
     this.media_urls = report.media_urls || [];
-    this.location = report.location ?? undefined;
+    this.longitude = report.longitude;
+    this.latitude = report.latitude;
     this.priority = report.priority || "";
     this.type = report.type;
     this.message = report.message || "";
