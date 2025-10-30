@@ -1,5 +1,4 @@
 import type { AxiosError } from "axios";
-import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useGetAllRentalsAdminStaffQuery } from "./query/Rent/useGetAllRentalsAdminStaffQuery";
@@ -56,7 +55,6 @@ export function useRentalsActions({
   status,
 } : UseRentalsActionsProps) {
   const queryClient = useQueryClient();
-  const navigation = useNavigation();
   const router = useRouter();
   const {
     data: allRentalsData,
@@ -80,6 +78,7 @@ export function useRentalsActions({
   return {
     allRentalsData: allRentalsData?.data,
     getRentals,
+    pagination: allRentalsData?.pagination,
     isAllRentalsLoading,
   };
 }

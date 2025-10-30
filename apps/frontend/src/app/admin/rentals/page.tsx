@@ -8,8 +8,12 @@ import { Button } from "@/components/ui/button";
 import type { Rental, RentalStatus, PaymentStatus, RentingHistory } from "@custom-types";
 import { Plus, Download } from "lucide-react";
 import { useRentalsActions } from "@/hooks/useRentalAction";
+import { DataTable } from "@/components/TableCustom";
+import { PaginationDemo } from "@/components/PaginationCustomer";
 
 export default function RentalsPage() {
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RentalStatus | "all">("all");
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | "all">(
@@ -26,7 +30,12 @@ export default function RentalsPage() {
     rental_type: "hours" as "hours" | "days",
     payment_method: "card" as "card" | "cash" | "momo" | "zalopay" | "transfer",
   });
-  const { allRentalsData, getRentals, isAllRentalsLoading } = useRentalsActions({ hasToken: true });
+  const { allRentalsData, getRentals, isAllRentalsLoading, pagination } = useRentalsActions({
+    hasToken: true,
+    limit,
+    page,
+    status: statusFilter !== "all" ? (statusFilter === "active" ? "ĐANG THUÊ" : statusFilter === "completed" ? "HOÀN THÀNH" : statusFilter === "cancelled" ? "ĐÃ HỦY" : undefined) : undefined
+  });
   const rentals = allRentalsData || [];
   const filteredRentals = rentals.filter((rental) => {
     const matchesSearch =
@@ -158,10 +167,7 @@ export default function RentalsPage() {
         />
 
         {/* Results */}
-        <div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Hiển thị {filteredRentals.length} / {rentals.length} đơn thuê
-          </p>
+        <div className="w-full rounded-lg space-y-4  flex flex-col">
           <RentalTable
             rentals={filteredRentals}
             onView={(rental) => console.log("[v0] View rental:", rental._id)}
@@ -173,7 +179,17 @@ export default function RentalsPage() {
               console.log("[v0] Cancel rental:", rental._id)
             }
           />
+          <PaginationDemo
+            currentPage={pagination?.currentPage ?? 1}
+            onPageChange={setPage}
+            totalPages={pagination?.totalPages ?? 1}
+          />
         </div>
+
+        <p className="text-sm text-muted-foreground">
+          Trang {pagination?.currentPage} / {pagination?.totalPages}{" "}
+          đơn thuê
+        </p>
 
         {isCreateModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

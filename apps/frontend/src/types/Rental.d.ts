@@ -64,7 +64,10 @@ export type RentalStatus =
   | "active"
   | "completed"
   | "cancelled"
-  | "overdue";
+  | "overdue"
+  | "ĐANG THUÊ"
+  | "HOÀN THÀNH"
+  | "ĐÃ HỦY";
 export type PaymentStatus = "pending" | "paid" | "refunded";
 export type PaymentMethod = "cash" | "card" | "transfer" | "momo" | "zalopay";
 

@@ -73,11 +73,9 @@ export function RentalFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả</SelectItem>
-              <SelectItem value="pending">Chờ xử lý</SelectItem>
               <SelectItem value="active">Đang thuê</SelectItem>
               <SelectItem value="completed">Hoàn thành</SelectItem>
               <SelectItem value="cancelled">Đã hủy</SelectItem>
-              <SelectItem value="overdue">Quá hạn</SelectItem>
             </SelectContent>
           </Select>
         </div>
