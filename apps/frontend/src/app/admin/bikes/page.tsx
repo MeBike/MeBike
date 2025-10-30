@@ -51,6 +51,9 @@ export default function BikesPage() {
     isFetchingBikeActivityStats,
     bikeStats,
     isFetchingBikeStats,
+    bikeRentals,
+    isFetchingRentalBikes,
+    getRentalBikes,
     getBikeStats
   } = useBikeActions(
     true,
@@ -118,8 +121,9 @@ export default function BikesPage() {
       getBikeByID();
       getBikeActivityStats();
       getBikeStats();
+      getRentalBikes();
     }
-  } , [detailId , getBikeByID, getBikeActivityStats]);
+  } , [detailId , getBikeByID, getBikeActivityStats, getBikeStats, getRentalBikes]);
 
   useEffect(() => {
     if (editId) {
@@ -469,37 +473,52 @@ export default function BikesPage() {
 
               {detailTab === "rentals" && (
                 <div className="space-y-3">
-                  <div className="bg-muted rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      API: /bikes/{detailBike._id}/rentals
-                    </p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-foreground">
-                          Đơn thuê #001
-                        </span>
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                          Hoàn thành
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-foreground">
-                          Đơn thuê #002
-                        </span>
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          Đang thuê
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-foreground">
-                          Đơn thuê #003
-                        </span>
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                          Hoàn thành
-                        </span>
+                  {isFetchingRentalBikes ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="animate-spin w-6 h-6 text-primary" />
+                      <span className="ml-2 text-sm text-muted-foreground">Đang tải dữ liệu...</span>
+                    </div>
+                  ) : Array.isArray(bikeRentals) && bikeRentals.length > 0 ? (
+                    <div className="bg-muted rounded-lg p-4">
+                      {/* <p className="text-sm text-muted-foreground mb-2">
+                        API: /bikes/{detailBike._id}/rental-history
+                      </p> */}
+                      <div className="space-y-2">
+                        {bikeRentals.map((rental: any, index: number) => (
+                          <div key={rental._id} className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-foreground font-medium">
+                                  Đơn thuê #{(index + 1).toString().padStart(3, '0')}
+                                </span>
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                  {rental.user.fullname || "Người dùng ẩn danh"}
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Từ {rental.start_station.name} → {rental.end_station.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {new Date(rental.start_time).toLocaleString("vi-VN")} - {new Date(rental.end_time).toLocaleString("vi-VN")}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-foreground">
+                                {parseFloat(rental.total_price.$numberDecimal).toLocaleString()} VND
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {Math.round(rental.duration / 60)} phút
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="bg-muted rounded-lg p-4 text-center">
+                      <p className="text-sm text-muted-foreground">Không có lịch sử thuê</p>
+                    </div>
+                  )}
                 </div>
               )}
 

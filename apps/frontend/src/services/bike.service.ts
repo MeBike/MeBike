@@ -23,6 +23,12 @@ interface DetailApiResponse<T> {
   result: T;
   message: string;
 }
+interface DetailApiResponseCuaNguyen<T> {
+  result: {
+    data: T;
+  };
+  message: string;
+}
 export interface BikeStatistics {
   "ĐÃ ĐẶT TRƯỚC": number;
   "CÓ SẴN": number;
@@ -145,13 +151,17 @@ export const bikeService = {
   getStatisticsBike: async (
     id: string
   ): Promise<AxiosResponse<DetailApiResponse<BikeStats>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<BikeStats>>(BIKE_ENDPOINTS.STATS_BIKE(id));
+    const response = await fetchHttpClient.get<DetailApiResponse<BikeStats>>(
+      BIKE_ENDPOINTS.STATS_BIKE(id)
+    );
     return response;
   },
   getRentalHistoryBike: async (
     id: string
-  ): Promise<AxiosResponse<DetailApiResponse<BikeRentalHistory>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<BikeRentalHistory>>(BIKE_ENDPOINTS.RENTAL_HISTORY_BIKE(id));
+  ): Promise<AxiosResponse<DetailApiResponseCuaNguyen<BikeRentalHistory>>> => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponseCuaNguyen<BikeRentalHistory>
+    >(BIKE_ENDPOINTS.RENTAL_HISTORY_BIKE(id));
     return response;
   },
 };

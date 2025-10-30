@@ -277,7 +277,7 @@ export const useBikeActions = (
     getBikeStats,
     bikeStats: bikeStats?.result,
     isFetchingBikeStats,
-    bikeRentals: bikeRentals?.result,
+    bikeRentals: bikeRentals?.result.data,
     getRentalBikes,
     isFetchingRentalBikes,
   };

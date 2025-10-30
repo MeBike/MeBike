@@ -13,7 +13,7 @@ const fetchBikeRentalHistory = async (bikeId: string) => {
 };
 export const useGetRentalBikeQuery = (bikeId: string) => {
   return useQuery({
-    queryKey: ["bike-activity-stats", bikeId],
+    queryKey: ["bike-rentals-history", bikeId],
     queryFn: () => fetchBikeRentalHistory(bikeId),
     enabled: !!bikeId,
   });
