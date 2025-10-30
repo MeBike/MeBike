@@ -36,6 +36,12 @@ export default function RentalsPage() {
     isAllRentalsLoading,
     pagination,
     revenueData,
+    detailData,
+    getDetailRental,
+    getRevenue,
+    refetchRevenue,
+    isLoadingRevenue,
+  
   } = useRentalsActions({
     hasToken: true,
     limit,

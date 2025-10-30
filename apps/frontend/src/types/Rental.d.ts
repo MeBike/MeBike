@@ -1,3 +1,7 @@
+import { Bike } from "./Bike";
+import { DetailUser } from "./Customer";
+import { Station } from "./Station";
+
 export type RentingHistory = {
   _id: string;
   user_id: string;
@@ -110,4 +114,18 @@ export interface StatwithRevenue {
     totalRentals: number;
     date: string;
   }>;
+}
+export interface DetailRentalReponse {
+  _id : string;
+  user : DetailUser;
+  bike : Bike,
+  start_station : Station;
+  end_station : Station | null;
+  start_time : string;
+  end_time : string | null;
+  duration:number,
+  total_price:number,
+  status : RentalStatus;
+  created_at : string;
+  updated_at : string;
 }

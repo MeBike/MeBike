@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useGetAllRentalsAdminStaffQuery } from "./query/Rent/useGetAllRentalsAdminStaffQuery";
 import { useRouter } from "next/navigation";
 import { useGetRevenueQuery } from "./query/Rent/useGetRevenueQuery";
+import { useGetDetailRentalAdminQuery } from "./query/Rent/useGetDetailRentalAdminQuery";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -57,6 +58,15 @@ export function useRentalsActions({
 } : UseRentalsActionsProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { data: detailData, isLoading: isDetailLoading ,
+    refetch : refetchDetail
+  } = useGetDetailRentalAdminQuery(bike_id || "");
+  const getDetailRental = useCallback(() => {
+    if(!hasToken || !bike_id){
+      return;
+    } 
+    refetchDetail();
+  }, [hasToken, bike_id, refetchDetail]);
   const {
     data: allRentalsData,
     refetch: refetchAllRentals,
@@ -91,6 +101,9 @@ export function useRentalsActions({
     revenueData,
     getRevenue,
     refetchRevenue,
-    isLoadingRevenue
+    isLoadingRevenue,
+    getDetailRental,
+    detailData,
+    isDetailLoading,
   };
 }

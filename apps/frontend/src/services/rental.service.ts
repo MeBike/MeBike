@@ -3,6 +3,7 @@ import type { RentalSchemaFormData } from "@schemas/rentalSchema";
 import fetchHttpClient from "@lib/httpClient";
 import type { RentingHistory } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
+import { DetailRentalReponse } from "@custom-types";
 export type Pagination = {
   limit: number;
   currentPage: number;
@@ -37,6 +38,7 @@ const RENTAL_ENDPOINTS = {
   UPDATE_RENTAL_DETAIL : (id: string) => `${RENTAL_BASE}/${id}`,
   END_RENTAL : (id: string) => `${RENTAL_BASE}/${id}/end`,
   CANCEL_RENTAL : (id: string) => `${RENTAL_BASE}/${id}/cancel`,
+  DETAIL_RENTAL : (id: string) => `${RENTAL_BASE}/${id}`,
 };
 type RentalResponse = {
   data: RentingHistory[];
@@ -161,6 +163,14 @@ export const rentalService = {
     const response = await fetchHttpClient.get<
       DetailApiResponse<StatwithRevenue>
     >(RENTAL_ENDPOINTS.GET_REVENUE());
+    return response;
+  },
+  getDetailRental: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<DetailRentalReponse>>> => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<DetailRentalReponse>
+    >(RENTAL_ENDPOINTS.DETAIL_RENTAL(id));
     return response;
   },
   // staffAdminUpdateDetailRental: async (
