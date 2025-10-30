@@ -12,7 +12,7 @@ export type RentingHistory = {
   end_time: string | null;
   duration: number;
   total_price: number;
-  status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY";
+  status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
   created_at: string;
   updated_at: string;
 };
@@ -59,7 +59,7 @@ export type RentalDetail = {
   total_price: {
     $numberDecimal: string;
   };
-  status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY";
+  status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
   created_at: string;
   updated_at: string;
 };
@@ -69,9 +69,11 @@ export type RentalStatus =
   | "completed"
   | "cancelled"
   | "overdue"
+  | "reserved"
   | "ĐANG THUÊ"
   | "HOÀN THÀNH"
-  | "ĐÃ HỦY";
+  | "ĐÃ HỦY"
+  | "ĐÃ ĐẶT TRƯỚC";
 export type PaymentStatus = "pending" | "paid" | "refunded";
 export type PaymentMethod = "cash" | "card" | "transfer" | "momo" | "zalopay";
 

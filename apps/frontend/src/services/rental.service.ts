@@ -1,5 +1,5 @@
 import type { AxiosResponse } from "axios";
-import type { RentalSchemaFormData } from "@schemas/rentalSchema";
+import type { RentalSchemaFormData, UpdateRentalSchema } from "@schemas/rentalSchema";
 import fetchHttpClient from "@lib/httpClient";
 import type { RentingHistory } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
@@ -173,6 +173,16 @@ export const rentalService = {
     >(RENTAL_ENDPOINTS.DETAIL_RENTAL(id));
     return response;
   },
+  updateDetailRental: async (
+    id: string,
+    data: UpdateRentalSchema
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.put(
+      RENTAL_ENDPOINTS.UPDATE_RENTAL_DETAIL(id),
+      data
+    );
+    return response;
+  }
   // staffAdminUpdateDetailRental: async (
   //   id: string,
   //   data: any

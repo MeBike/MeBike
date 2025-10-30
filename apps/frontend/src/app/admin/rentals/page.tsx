@@ -1,16 +1,24 @@
 "use client";
-
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
-import { RentalTable } from "@/components/rentals/rental-table";
 import { RentalFilters } from "@/components/rentals/rental-filters";
 import { RentalStats } from "@/components/rentals/rental-stats";
 import { Button } from "@/components/ui/button";
-import type { Rental, RentalStatus, PaymentStatus, RentingHistory } from "@custom-types";
+import type {
+  RentalStatus,
+  PaymentStatus,
+} from "@custom-types";
 import { Plus, Download } from "lucide-react";
 import { useRentalsActions } from "@/hooks/useRentalAction";
+import { useStationActions } from "@/hooks/useStationAction";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { rentalColumn } from "@/columns/rental-columns";
+import {
+  updateRentalSchema,
+  type UpdateRentalSchema,
+} from "@schemas/rentalSchema";
 export default function RentalsPage() {
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
@@ -23,6 +31,7 @@ export default function RentalsPage() {
   const [dateTo, setDateTo] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedRentalId, setSelectedRentalId] = useState<string>("");
   const [newRental, setNewRental] = useState({
     customer_id: "",
@@ -31,6 +40,21 @@ export default function RentalsPage() {
     end_date: "",
     rental_type: "hours" as "hours" | "days",
     payment_method: "card" as "card" | "cash" | "momo" | "zalopay" | "transfer",
+  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<UpdateRentalSchema>({
+    resolver: zodResolver(updateRentalSchema),
+    defaultValues: {
+      status: "ĐANG THUÊ",
+      end_station: "",
+      end_time: "",
+      reason: "",
+      total_price: 0,
+    },
   });
   const {
     allRentalsData,
@@ -43,7 +67,7 @@ export default function RentalsPage() {
     getRevenue,
     refetchRevenue,
     isLoadingRevenue,
-
+    updateRental,
   } = useRentalsActions({
     hasToken: true,
     limit,
@@ -57,12 +81,21 @@ export default function RentalsPage() {
             ? "HOÀN THÀNH"
             : statusFilter === "cancelled"
               ? "ĐÃ HỦY"
-              : undefined
+              : statusFilter === "reserved"
+                ? "ĐÃ ĐẶT TRƯỚC"
+                : undefined
         : undefined,
+  });
+
+  const { stations, getAllStations } = useStationActions({
+    hasToken: true,
+    page: 1,
+    limit: 100,
   });
   useEffect(() => {
     getRevenue();
-  }, [getRevenue]);
+    getAllStations();
+  }, [getRevenue, getAllStations]);
 
   const rentals = allRentalsData || [];
   const filteredRentals = rentals.filter((rental) => {
@@ -77,12 +110,12 @@ export default function RentalsPage() {
       "ĐÃ HỦY": "cancelled",
     };
 
-    const mappedStatus = statusMap[rental.status as keyof typeof statusMap] || "pending";
+    const mappedStatus =
+      statusMap[rental.status as keyof typeof statusMap] || "pending";
 
     const matchesStatus =
       statusFilter === "all" || mappedStatus === statusFilter;
-    const matchesPayment =
-      paymentFilter === "all";
+    const matchesPayment = paymentFilter === "all";
 
     const matchesDateFrom =
       !dateFrom || new Date(rental.start_time) >= new Date(dateFrom);
@@ -128,6 +161,11 @@ export default function RentalsPage() {
     });
   };
 
+  const handleUpdateRental = (data: UpdateRentalSchema) => {
+    updateRental(data, selectedRentalId);
+    setIsUpdateModalOpen(false);
+  };
+
   const stats = {
     pending: rentals.filter((r) => {
       const statusMap = {
@@ -135,14 +173,25 @@ export default function RentalsPage() {
         "HOÀN THÀNH": "completed",
         "ĐÃ HỦY": "cancelled",
       };
-      return (statusMap[r.status as keyof typeof statusMap] || "pending") === "pending";
+      return (
+        (statusMap[r.status as keyof typeof statusMap] || "pending") ===
+        "pending"
+      );
     }).length,
     active: rentals.filter((r) => r.status === "ĐANG THUÊ").length,
     completed: rentals.filter((r) => r.status === "HOÀN THÀNH").length,
     cancelled: rentals.filter((r) => r.status === "ĐÃ HỦY").length,
     overdue: 0, // No overdue in RentingHistory
-    todayRevenue: revenueData?.result?.data?.reduce((sum: number, item: any) => sum + item.totalRevenue, 0) || 0,
-    totalRevenue: revenueData?.result?.data?.reduce((sum: number, item: any) => sum + item.totalRevenue, 0) || 0,
+    todayRevenue:
+      revenueData?.result?.data?.reduce(
+        (sum: number, item: any) => sum + item.totalRevenue,
+        0
+      ) || 0,
+    totalRevenue:
+      revenueData?.result?.data?.reduce(
+        (sum: number, item: any) => sum + item.totalRevenue,
+        0
+      ) || 0,
   };
 
   return (
@@ -201,13 +250,30 @@ export default function RentalsPage() {
               console.log("[v0] Cancel rental:", rental._id)
             }
           /> */}
-          <DataTable columns={rentalColumn({
-            onView: ({ id }) => {
-              setSelectedRentalId(id);
-              getDetailRental();
-              setIsDetailModalOpen(true);
-            }
-          })} data={rentals} />
+          <DataTable
+            columns={rentalColumn({
+              onView: ({ id }) => {
+                setSelectedRentalId(id);
+                getDetailRental();
+                setIsDetailModalOpen(true);
+              },
+              onEdit: ({ data }) => {
+                setSelectedRentalId(data._id);
+                getDetailRental();
+                reset({
+                  status: data.status as any,
+                  end_station: data.end_station || "",
+                  end_time: data.end_time
+                    ? new Date(data.end_time).toISOString().slice(0, 16)
+                    : "",
+                  reason: "",
+                  total_price: data.total_price,
+                });
+                setIsUpdateModalOpen(true);
+              },
+            })}
+            data={rentals}
+          />
           <PaginationDemo
             currentPage={pagination?.currentPage ?? 1}
             onPageChange={setPage}
@@ -377,7 +443,9 @@ export default function RentalsPage() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Trạng thái
                     </label>
-                    <p className="text-foreground">{detailData.result?.status}</p>
+                    <p className="text-foreground">
+                      {detailData.result?.status}
+                    </p>
                   </div>
                 </div>
 
@@ -386,14 +454,20 @@ export default function RentalsPage() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Người dùng
                     </label>
-                    <p className="text-foreground">{detailData.result?.user?.fullname}</p>
-                    <p className="text-sm text-muted-foreground">{detailData.result?.user?.email}</p>
+                    <p className="text-foreground">
+                      {detailData.result?.user?.fullname}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {detailData.result?.user?.email}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Xe đạp
                     </label>
-                    <p className="text-foreground">{detailData.result?.bike?._id}</p>
+                    <p className="text-foreground">
+                      {detailData.result?.bike?._id}
+                    </p>
                   </div>
                 </div>
 
@@ -402,15 +476,23 @@ export default function RentalsPage() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Trạm bắt đầu
                     </label>
-                    <p className="text-foreground">{detailData.result?.start_station?.name}</p>
-                    <p className="text-sm text-muted-foreground">{detailData.result?.start_station?.address}</p>
+                    <p className="text-foreground">
+                      {detailData.result?.start_station?.name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {detailData.result?.start_station?.address}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Trạm kết thúc
                     </label>
-                    <p className="text-foreground">{detailData.result?.end_station?.name || "Chưa trả"}</p>
-                    <p className="text-sm text-muted-foreground">{detailData.result?.end_station?.address || ""}</p>
+                    <p className="text-foreground">
+                      {detailData.result?.end_station?.name || "Chưa trả"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {detailData.result?.end_station?.address || ""}
+                    </p>
                   </div>
                 </div>
 
@@ -419,13 +501,23 @@ export default function RentalsPage() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Thời gian bắt đầu
                     </label>
-                    <p className="text-foreground">{new Date(detailData.result?.start_time).toLocaleString("vi-VN")}</p>
+                    <p className="text-foreground">
+                      {new Date(detailData.result?.start_time).toLocaleString(
+                        "vi-VN"
+                      )}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Thời gian kết thúc
                     </label>
-                    <p className="text-foreground">{detailData.result?.end_time ? new Date(detailData.result.end_time).toLocaleString("vi-VN") : "Chưa trả"}</p>
+                    <p className="text-foreground">
+                      {detailData.result?.end_time
+                        ? new Date(detailData.result.end_time).toLocaleString(
+                            "vi-VN"
+                          )
+                        : "Chưa trả"}
+                    </p>
                   </div>
                 </div>
 
@@ -434,13 +526,18 @@ export default function RentalsPage() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Thời lượng (phút)
                     </label>
-                    <p className="text-foreground">{detailData.result?.duration}</p>
+                    <p className="text-foreground">
+                      {detailData.result?.duration}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Tổng tiền
                     </label>
-                    <p className="text-foreground">{detailData.result?.total_price.toLocaleString("vi-VN")} VND</p>
+                    <p className="text-foreground">
+                      {detailData.result?.total_price.toLocaleString("vi-VN")}{" "}
+                      VND
+                    </p>
                   </div>
                 </div>
               </div>
@@ -454,6 +551,143 @@ export default function RentalsPage() {
                   Đóng
                 </Button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Update Modal */}
+        {isUpdateModalOpen && detailData && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Cập nhật đơn thuê
+              </h2>
+
+              <form
+                onSubmit={handleSubmit(handleUpdateRental)}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạng thái
+                    </label>
+                    <select
+                      {...register("status")}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    >
+                      {detailData.result?.status === "ĐANG THUÊ" && (
+                        <option value="HOÀN THÀNH">HOÀN THÀNH</option>
+                      )}
+                      {detailData.result?.status === "ĐÃ ĐẶT TRƯỚC" && (
+                        <option value="ĐANG THUÊ">ĐANG THUÊ</option>
+                      )}
+                      {detailData.result?.status === "HOÀN THÀNH" && (
+                        <>
+                          <option value="HOÀN THÀNH">HOÀN THÀNH</option>
+                          <option value="ĐÃ HỦY">ĐÃ HỦY</option>
+                        </>
+                      )}
+                      {detailData.result?.status === "ĐÃ HỦY" && (
+                        <option value="ĐÃ HỦY">ĐÃ HỦY</option>
+                      )}
+                    </select>
+                    {errors.status && (
+                      <p className="text-red-500 text-sm">
+                        {errors.status.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạm kết thúc
+                    </label>
+                    <select
+                      {...register("end_station")}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    >
+                      <option value="">Chọn trạm</option>
+                      {stations.map((station) => (
+                        <option key={station._id} value={station._id}>
+                          {station.name} - {station.address}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.end_station && (
+                      <p className="text-red-500 text-sm">
+                        {errors.end_station.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Thời gian kết thúc
+                    </label>
+                    <input
+                      type="datetime-local"
+                      {...register("end_time")}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errors.end_time && (
+                      <p className="text-red-500 text-sm">
+                        {errors.end_time.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Tổng tiền
+                    </label>
+                    <input
+                      type="number"
+                      {...register("total_price", { valueAsNumber: true })}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errors.total_price && (
+                      <p className="text-red-500 text-sm">
+                        {errors.total_price.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Lý do
+                  </label>
+                  <textarea
+                    {...register("reason")}
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    rows={3}
+                  />
+                  {errors.reason && (
+                    <p className="text-red-500 text-sm">
+                      {errors.reason.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsUpdateModalOpen(false)}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    {isSubmitting ? "Đang cập nhật..." : "Cập nhật"}
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
         )}

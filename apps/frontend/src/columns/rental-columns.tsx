@@ -1,31 +1,23 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, RefreshCw } from "lucide-react";
+import { Edit2, Eye, RefreshCw } from "lucide-react";
 import type { RentingHistory } from "@/types/Rental";
-import { getStatusColor } from "@/utils/refund-status";
-// export const getStatusColor = (status: RefundStatus) => {
-//   switch (status) {
-//     case "ĐANG CHỜ XỬ LÝ":
-//       return "bg-yellow-100 text-yellow-800";
-//     case "ĐÃ DUYỆT":
-//       return "bg-blue-100 text-blue-800";
-//     case "TỪ CHỐI":
-//       return "bg-red-100 text-red-800";
-//     case "ĐÃ HOÀN THÀNH":
-//       return "bg-green-100 text-green-800";
-//     default:
-//       return "bg-gray-100 text-gray-800";
-//   }
-// };
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
+const statusColors = {
+  "ĐANG THUÊ": "bg-blue-100 text-blue-800",
+  "HOÀN THÀNH": "bg-green-100 text-green-800",
+  "ĐÃ ĐẶT TRƯỚC": "bg-yellow-100 text-yellow-800",
+};
 export const rentalColumn = ({
   onView,
   onUpdateStatus,
+  onEdit,
 }: {
   onView?: ({ id }: { id: string }) => void;
   onUpdateStatus?: ((data: RentingHistory) => void) | undefined;
+  onEdit?: ({ data }: { data: RentingHistory }) => void;
 }): ColumnDef<RentingHistory>[] => [
   {
     accessorKey: "_id",
@@ -59,8 +51,10 @@ export const rentalColumn = ({
           row.original.status === "ĐANG THUÊ"
             ? "bg-blue-100 text-blue-800"
             : row.original.status === "HOÀN THÀNH"
-            ? "bg-green-100 text-green-800"
-            : "bg-red-100 text-red-800"
+              ? "bg-green-100 text-green-800"
+              : row.original.status === "ĐÃ ĐẶT TRƯỚC"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
         }`}
       >
         {row.original.status}
@@ -83,6 +77,19 @@ export const rentalColumn = ({
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
         </button>
+        {row.original.status !== "HOÀN THÀNH" && row.original.status !== "ĐÃ HỦY" && row.original.status !== "ĐÃ ĐẶT TRƯỚC" && onEdit ? (
+          <button
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            title="Xem chi tiết"
+            onClick={() => {
+              if (onEdit) {
+                onEdit({ data: row.original });
+              }
+            }}
+          >
+            <Edit2 className="w-4 h-4 text-muted-foreground" />
+          </button>
+        ) : null}
         <button
           title="Cập nhật trạng thái"
           className="p-2 hover:bg-muted rounded-lg transition-colors"

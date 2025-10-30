@@ -5,6 +5,9 @@ import { useGetAllRentalsAdminStaffQuery } from "./query/Rent/useGetAllRentalsAd
 import { useRouter } from "next/navigation";
 import { useGetRevenueQuery } from "./query/Rent/useGetRevenueQuery";
 import { useGetDetailRentalAdminQuery } from "./query/Rent/useGetDetailRentalAdminQuery";
+import { usePutUpdateRentalMutation } from "./mutations/Rentals/usePutUpdateRentalMutation";
+import { UpdateRentalSchema } from "@/schemas/rentalSchema";
+import { toast } from "sonner";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -61,6 +64,7 @@ export function useRentalsActions({
   const { data: detailData, isLoading: isDetailLoading ,
     refetch : refetchDetail
   } = useGetDetailRentalAdminQuery(bike_id || "");
+  const usePutUpdateRental = usePutUpdateRentalMutation(bike_id || "");
   const getDetailRental = useCallback(() => {
     if(!hasToken || !bike_id){
       return;
@@ -93,12 +97,59 @@ export function useRentalsActions({
     }
     refetchRevenue();
   }, [hasToken, refetchRevenue]);
+  const updateRental = useCallback(
+    (data: UpdateRentalSchema, id: string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      usePutUpdateRental.mutate(
+        data,
+        {
+          onSuccess: (result: {
+            status: number;
+            data?: { message?: string };
+          }) => {
+            if (result.status === 200) {
+              toast.success("Rental updated successfully");
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "rentals",
+                  "all-admin-staff",
+                  page,
+                  limit,
+                  start_station,
+                  end_station,
+                  status,
+                ],
+              });
+            } else {
+              const errorMessage =
+                result.data?.message || "Error updating rental";
+              toast.error(errorMessage);
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(error, "Error updating rental");
+            toast.error(errorMessage);
+          },
+        }
+      );
+    },
+    [
+      usePutUpdateRental,
+      hasToken,
+      router,
+      queryClient,
+    ]
+  );
   return {
     allRentalsData: allRentalsData?.data,
     getRentals,
     pagination: allRentalsData?.pagination,
     isAllRentalsLoading,
     revenueData,
+    updateRental,
     getRevenue,
     refetchRevenue,
     isLoadingRevenue,

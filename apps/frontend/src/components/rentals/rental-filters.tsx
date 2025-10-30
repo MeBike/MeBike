@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, X, Calendar } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 interface RentalFiltersProps {
   searchQuery: string;
@@ -76,6 +76,7 @@ export function RentalFilters({
               <SelectItem value="active">Đang thuê</SelectItem>
               <SelectItem value="completed">Hoàn thành</SelectItem>
               <SelectItem value="cancelled">Đã hủy</SelectItem>
+              <SelectItem value="reserved">Đã đặt trước</SelectItem>
             </SelectContent>
           </Select>
         </div>
