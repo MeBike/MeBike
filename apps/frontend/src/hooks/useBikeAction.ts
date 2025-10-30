@@ -43,7 +43,8 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 };
 export const useBikeActions = (
   hasToken: boolean,
-  bikeId?: string,
+  bike_detail_id?: string,
+  bike_edit_id?: string,
   station_id?: string,
   supplier_id?: string,
   status?: BikeStatus,
@@ -75,7 +76,7 @@ export const useBikeActions = (
     data: detailBike,
     refetch: getDetailBike,
     isFetching: isLoadingDetail,
-  } = useGetBikeByIDAllQuery(bikeId || "");
+  } = useGetBikeByIDAllQuery(bike_detail_id || "");
   const queryClient = useQueryClient();
   const getBikes = useCallback(() => {
     if (!hasToken) {
@@ -211,10 +212,10 @@ export const useBikeActions = (
     [reportBikeMutation, hasToken, router]
   );
   const getBikeByID = useCallback(() => {
-    if (bikeId) {
+    if (bike_detail_id) {
       getDetailBike();
     }
-  }, [getDetailBike, bikeId]);
+  }, [getDetailBike, bike_detail_id]);
   return {
     getBikes,
     createBike,

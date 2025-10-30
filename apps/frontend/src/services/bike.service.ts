@@ -6,6 +6,8 @@ import type {
 } from "@schemas/bikeSchema";
 import { Bike } from "@custom-types";
 import { BikeStatus } from "@custom-types";
+import { BikeActivityStats } from "@custom-types";
+import { get } from "http";
 interface ApiResponse<T> {
   data: T;
   pagination: {
@@ -37,6 +39,7 @@ const BIKE_ENDPOINTS = {
   REPORT_BROKEN: (id: string) => `${BIKE_BASE}/report-broken/${id}`,
   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
+  ACTIVIY_STATS: (id: string) => `${BIKE_BASE}/${id}/activity-stats`,
 } as const;
 // interface ApiResponse<T> {
 //   data: T;
@@ -72,7 +75,6 @@ export const bikeService = {
     const response = await fetchHttpClient.delete(BIKE_ENDPOINTS.DELETE(id));
     return response;
   },
-
   //for both admin and staf
   getHistoryBikeById: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BY_ID(id));
@@ -127,4 +129,10 @@ export const bikeService = {
     );
     return response;
   },
+  getBikeActivityStats: async (id: string): Promise<AxiosResponse<DetailApiResponse<BikeActivityStats>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<BikeActivityStats>>(
+      BIKE_ENDPOINTS.ACTIVIY_STATS(id)
+    );
+    return response;
+  }
 };

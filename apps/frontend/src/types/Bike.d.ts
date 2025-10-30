@@ -16,5 +16,18 @@ export type BikeStatus =
   | "ĐANG BẢO TRÌ"
   | "KHÔNG CÓ SẴN"
   | "";
-
-
+export interface BikeActivityStats {
+  bike_id: string;
+  total_minutes_active: number;
+  total_reports: number;
+  uptime_percentage: number;
+  monthly_stats: [
+    {
+      year: number;
+      month: number;
+      rentals_count: number;
+      minutes_active: number;
+      revenue: number;
+    },
+  ];
+}
