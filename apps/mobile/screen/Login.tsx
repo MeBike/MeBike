@@ -43,23 +43,23 @@ export default function LoginScreen() {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
       return;
     }
-    if (backendStatus === "offline") {
-      Alert.alert("Lỗi kết nối", "Không thể kết nối đến server. Vui lòng kiểm tra:\n\n1. Server backend có đang chạy?\n2. URL API có đúng không?\n3. Kết nối mạng", [
-        {
-          text: "Thử lại",
-          onPress: async () => {
-            setBackendStatus("checking");
-            const isOnline = await testBackendConnection();
-            setBackendStatus(isOnline ? "online" : "offline");
-          },
-        },
-        {
-          text: "Demo Mode",
-          onPress: () => navigation.navigate("StationSelect"),
-        },
-      ]);
-      return;
-    }
+    // if (backendStatus === "offline") {
+    //   Alert.alert("Lỗi kết nối", "Không thể kết nối đến server. Vui lòng kiểm tra:\n\n1. Server backend có đang chạy?\n2. URL API có đúng không?\n3. Kết nối mạng", [
+    //     {
+    //       text: "Thử lại",
+    //       onPress: async () => {
+    //         setBackendStatus("checking");
+    //         const isOnline = await testBackendConnection();
+    //         setBackendStatus(isOnline ? "online" : "offline");
+    //       },
+    //     },
+    //     {
+    //       text: "Demo Mode",
+    //       onPress: () => navigation.navigate("StationSelect"),
+    //     },
+    //   ]);
+    //   return;
+    // }
     try {
       Animated.loop(
         Animated.timing(rotateAnim, {
@@ -70,11 +70,11 @@ export default function LoginScreen() {
       ).start();
 
       logIn({ email, password });
-      setTimeout(() => {
-        rotateAnim.stopAnimation();
-        rotateAnim.setValue(0);
-        navigation.navigate("Main");
-      }, 500);
+      // setTimeout(() => {
+      //   rotateAnim.stopAnimation();
+      //   rotateAnim.setValue(0);
+      //   navigation.navigate("Main");
+      // }, 500);
     }
     catch (error) {
       rotateAnim.stopAnimation();

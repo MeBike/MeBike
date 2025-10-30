@@ -76,7 +76,9 @@ function ProfileScreen() {
     navigation.navigate("UpdateProfile" as never);
   };
 
-  const handleSupport = () => {};
+  const handleSupport = () => {
+    navigation.navigate("Support" as never);
+  };
   const handleWallet = () => {
     navigation.navigate("MyWallet" as never);
   };
@@ -199,11 +201,8 @@ function ProfileScreen() {
                 Chuyến đi
               </Text>
             </View>
-            {/* Thêm thống kê khác nếu có */}
           </View>
         </LinearGradient>
-
-        {/* ----- NỘI DUNG PHÍA DƯỚI ----- */}
         <View style={styles.content}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Thông tin liên hệ</Text>
@@ -254,7 +253,7 @@ function ProfileScreen() {
             )}
             {renderMenuOption(
               "help-circle",
-              "Hỗ trợ & Trợ giúp",
+              "Báo cáo sự cố & Hỗ trợ",
               "Liên hệ với đội hỗ trợ",
               handleSupport,
             )}

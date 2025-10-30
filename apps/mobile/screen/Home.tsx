@@ -208,7 +208,12 @@ export default function HomeScreen() {
             </Text>
 
             <Pressable style={styles.ctaButton} onPress={navigateToLogin}>
-              <Text style={styles.ctaButtonText}>Đăng ký ngay</Text>
+              {
+                isAuthenticated
+                  ? <Text style={styles.ctaButtonText}
+                  onPress={() => navigation.navigate("Tôi")}>Đi đến hồ sơ</Text>
+                  : <Text style={styles.ctaButtonText}>Đăng ký ngay</Text>
+              }
               <IconSymbol name="arrow.right" size={18} color="white" />
             </Pressable>
           </LinearGradient>

@@ -14,7 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useRentalsActions } from "@hooks/useRentalAction";
-
+import { LoadingScreen } from "@components/LoadingScreen";
 import type { RentingHistory } from "../types/RentalTypes";
 
 function BookingHistoryScreen() {
@@ -133,7 +133,9 @@ function BookingHistoryScreen() {
       </TouchableOpacity>
     </View>
   );
-
+  if(bookings === null ||  isGetAllRentalsFetching || bookings.length === 0){
+    return <LoadingScreen />;
+  }
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />

@@ -30,6 +30,7 @@ export type RootStackParamList = {
     reservationId: string;
     reservation?: Reservation;
   };
+  Support: undefined; 
 };
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Nhà">;
 export type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
@@ -77,4 +78,8 @@ export type ReservationDetailNavigationProp = NativeStackNavigationProp<
 export type ReservationDetailRouteProp = RouteProp<
   RootStackParamList,
   "ReservationDetail"
+>;
+export type SupportScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Support"
 >;
