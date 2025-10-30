@@ -133,8 +133,8 @@ export const rentalService = {
     start_station,
     end_station,
     status,
-  }: GetAllRentalsForStaffAdminProps): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(
+  }: GetAllRentalsForStaffAdminProps): Promise<AxiosResponse<ApiResponse<RentingHistory[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<RentingHistory[]>>(
       RENTAL_ENDPOINTS.STAFF_ADMIN_GET_ALL_RENTALS(),
       {
         page,

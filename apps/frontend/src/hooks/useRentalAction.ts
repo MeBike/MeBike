@@ -1,16 +1,9 @@
 import type { AxiosError } from "axios";
-
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { Alert } from "react-native";
-
-import type { RentalSchemaFormData } from "@schemas/rentalSchema";
-import { usePostRentQuery } from "./mutations/Rentals/usePostRentQuery";
-import usePutEndCurrentRental from "./mutations/Rentals/usePutEndCurrentRental";
-import { useGetAllRentalsQuery } from "./query/Rent/useGetAllRentalsQuery";
-import { useGetDetailRentalQuery } from "./query/Rent/useGetDetailRentalQuery";
-
+import { useGetAllRentalsAdminStaffQuery } from "./query/Rent/useGetAllRentalsAdminStaffQuery";
+import { useRouter } from "next/navigation";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -42,127 +35,51 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
 
   return defaultMessage;
 }
-export function useRentalsActions(
-  hasToken: boolean,
-  bikeId?: string,
-  station_id?: string
-) {
+interface UseRentalsActionsProps {
+  hasToken: boolean;
+  bike_id?: string;
+  station_id?: string;
+  limit ?: number;
+  page ?: number;
+  start_station?: string;
+  end_station?: string;
+  status?: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
+}
+export function useRentalsActions({
+  hasToken,
+  bike_id,
+  station_id,
+  limit,
+  page,
+  start_station,
+  end_station,
+  status,
+} : UseRentalsActionsProps) {
   const queryClient = useQueryClient();
   const navigation = useNavigation();
-  const useGetAllRentals = useGetAllRentalsQuery();
-  const useGetDetailRentals = useGetDetailRentalQuery(bikeId || "");
-  const usePutEndRental = usePutEndCurrentRental();
-  const usePostRent = usePostRentQuery();
-  const getAllRentals = useCallback(() => {
-    useGetAllRentals.refetch();
-  }, [hasToken, navigation, useGetAllRentals]);
-  const useGetDetailRental = useCallback(() => {
-    useGetDetailRentals.refetch();
-  }, [hasToken, navigation, useGetDetailRentals]);
-  const endCurrentRental = useCallback(
-    async (data: EndRentalVariables) => {
-      usePutEndRental.mutate(data, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            Alert.alert("Success", "Rental ended successfully.");
-            queryClient.invalidateQueries({
-              queryKey: ["bikes", "all", undefined, undefined],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["rentals", "all", 1, 10],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["all-stations"],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["station"],
-            });
-          } else {
-            Alert.alert("Error", "Failed to end the rental.");
-          }
-          queryClient.invalidateQueries({
-            queryKey: ["rentals", "detail", data.id],
-          });
-        },
-        onError: (error) => {
-          const axiosError = error as AxiosError<any>;
-          const status = axiosError.response?.status;
-          const message =
-            axiosError.response?.data?.message ||
-            "An error occurred while ending the rental.";
-          if (status === 400) {
-            Alert.alert("Invalid Request", message);
-          } else if (status === 401) {
-            Alert.alert("Unauthorized", "Your session has expired.");
-          } else {
-            Alert.alert("Error", message);
-          }
-
-          console.log("Error detail:", axiosError.response?.data);
-        },
-      });
-    },
-    [hasToken, navigation, usePutEndRental]
+  const router = useRouter();
+  const {
+    data: allRentalsData,
+    refetch: refetchAllRentals,
+    isLoading: isAllRentalsLoading,
+  } = useGetAllRentalsAdminStaffQuery(
+    {
+      page: page,
+      limit: limit,
+      start_station: start_station,
+      end_station: end_station,
+      status: status,
+    }
   );
-  const postRent = useCallback(
-    async (data: RentalSchemaFormData) => {
-      usePostRent.mutate(data, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result.status === 200) {
-            Alert.alert("Success", "Thuê xe thành công.");
-            queryClient.invalidateQueries({
-              queryKey: [
-                "bikes",
-                "all",
-                1,
-                10,
-                station_id,
-                undefined,
-                undefined,
-              ],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["rentals", data.bike_id],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["rentals", "all", 1, 10],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["all-stations"],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["station"],
-            });
-          } else {
-            Alert.alert("Error", "Failed to end the rental.");
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(
-            error,
-            "An error occurred while ending the rental."
-          );
-          console.log(errorMessage);
-        },
-      });
-    },
-    [hasToken, navigation, usePostRent, queryClient]
-  );
+  const getRentals = useCallback(() => {
+    if(!hasToken){
+      return;
+    }
+    refetchAllRentals();
+  }, [hasToken, refetchAllRentals]);
   return {
-    getAllRentals,
-    rentalsData: useGetAllRentals.data,
-    isGetAllRentalsFetching: useGetAllRentals.isLoading,
-    isGetAllRentalsError: useGetAllRentals.isError,
-    useGetDetailRental,
-    rentalDetailData: useGetDetailRentals.data,
-    isGetDetailRentalFetching: useGetDetailRentals.isLoading,
-    isGetDetailRentalError: useGetDetailRentals.isError,
-    endCurrentRental,
-    isEndCurrentRentalLoading: usePutEndRental.isPending,
-    postRent,
-    isPostRentLoading: usePostRent.isPending,
+    allRentalsData: allRentalsData?.data,
+    getRentals,
+    isAllRentalsLoading,
   };
 }

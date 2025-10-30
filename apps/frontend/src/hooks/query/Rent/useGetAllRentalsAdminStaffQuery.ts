@@ -2,8 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { rentalService } from "@services/rental.service";
 import { GetAllRentalsForStaffAdminProps } from "@services/rental.service";
 
-
-
 const getAllRentalsForStaffAdmin = async ({
   page,
   limit,
@@ -35,7 +33,15 @@ export function useGetAllRentalsAdminStaffQuery({
   status,
 }: GetAllRentalsForStaffAdminProps) {
   return useQuery({
-    queryKey: ["rentals", "all-admin-staff", page, limit, start_station, end_station, status],
+    queryKey: [
+      "rentals",
+      "all-admin-staff",
+      page,
+      limit,
+      start_station,
+      end_station,
+      status,
+    ],
     queryFn: () =>
       getAllRentalsForStaffAdmin({
         page,
@@ -44,5 +50,5 @@ export function useGetAllRentalsAdminStaffQuery({
         end_station,
         status,
       }),
-  }); 
+  });
 }
