@@ -2,6 +2,7 @@ import { Decimal128, ObjectId } from 'mongodb'
 
 import { BikeStatus, RentalStatus, ReservationStatus, Role, SupplierStatus, UserVerifyStatus, WalletStatus } from '~/constants/enums'
 import databaseService from '~/services/database.services'
+import { getLocalTime } from '~/utils/date-time'
 import Bike from '~/models/schemas/bike.schema'
 import Supplier from '~/models/schemas/supplier.schema'
 import Station from '~/models/schemas/station.schema'
@@ -71,12 +72,6 @@ async function seedDatabase() {
       console.log(`Deleted ${existingRentalsCount} existing rentals`)
     }
 
-    const existingStationCount = await databaseService.stations.countDocuments({ _id: STATION_ID })
-    if (existingStationCount > 0) {
-      await databaseService.stations.deleteOne({ _id: STATION_ID })
-      console.log(`Deleted ${existingStationCount} existing stations`)
-    }
-
     const existingSupplierCount = await databaseService.suppliers.countDocuments({ name: 'Công ty TNHH YADEA Việt Nam' })
     if (existingSupplierCount > 0) {
       await databaseService.suppliers.deleteMany({ name: 'Công ty TNHH YADEA Việt Nam' })
@@ -97,16 +92,25 @@ async function seedDatabase() {
     })
     await databaseService.suppliers.insertOne(supplier)
 
-    console.log('Creating prototype station...')
-    const station = new Station({
-      _id: STATION_ID,
-      name: 'Prototype Station',
-      address: '123 Test Street',
-      latitude: '10.123',
-      longitude: '106.456',
-      capacity: '10'
-    })
-    await databaseService.stations.insertOne(station)
+    console.log('Finding or creating prototype station...')
+    // Try to find existing "Ga Bến Thành" station
+    let station = await databaseService.stations.findOne({ name: 'Ga Bến Thành' })
+
+    if (!station) {
+      // Create prototype station if "Ga Bến Thành" doesn't exist
+      station = new Station({
+        _id: STATION_ID,
+        name: 'Prototype Station',
+        address: '123 Test Street',
+        latitude: '10.123',
+        longitude: '106.456',
+        capacity: '10'
+      })
+      await databaseService.stations.insertOne(station)
+      console.log('Created new prototype station')
+    } else {
+      console.log('Using existing "Ga Bến Thành" station')
+    }
 
     console.log('Creating prototype users...')
     const user1 = new User({
@@ -160,6 +164,63 @@ async function seedDatabase() {
     await databaseService.wallets.insertMany(wallets)
     console.log('Wallets created successfully.')
 
+    console.log('Cleaning up related prototype data...')
+    const testUserIds = [user1._id!, user2._id!]
+    const testRentalIds = [] 
+
+    const existingTransactionsCount = await databaseService.transactions.countDocuments({
+      wallet_id: { $in: testUserIds }
+    })
+    if (existingTransactionsCount > 0) {
+      await databaseService.transactions.deleteMany({
+        wallet_id: { $in: testUserIds }
+      })
+      console.log(`Deleted ${existingTransactionsCount} existing transactions`)
+    }
+
+    const existingPaymentsCount = await databaseService.payments.countDocuments({
+      $or: [
+        { user_id: { $in: testUserIds } }
+      ]
+    })
+    if (existingPaymentsCount > 0) {
+      await databaseService.payments.deleteMany({
+        $or: [
+          { user_id: { $in: testUserIds } }
+        ]
+      })
+      console.log(`Deleted ${existingPaymentsCount} existing payments`)
+    }
+
+    const existingRefundsCount = await databaseService.refunds.countDocuments({
+      user_id: { $in: testUserIds }
+    })
+    if (existingRefundsCount > 0) {
+      await databaseService.refunds.deleteMany({
+        user_id: { $in: testUserIds }
+      })
+      console.log(`Deleted ${existingRefundsCount} existing refunds`)
+    }
+
+    const existingRentalLogsCount = await databaseService.rentalLogs.countDocuments({
+      user_id: { $in: testUserIds }
+    })
+    if (existingRentalLogsCount > 0) {
+      await databaseService.rentalLogs.deleteMany({
+        user_id: { $in: testUserIds }
+      })
+      console.log(`Deleted ${existingRentalLogsCount} existing rental logs`)
+    }
+    const existingRatingsCount = await databaseService.ratings.countDocuments({
+      user_id: { $in: testUserIds }
+    })
+    if (existingRatingsCount > 0) {
+      await databaseService.ratings.deleteMany({
+        user_id: { $in: testUserIds }
+      })
+      console.log(`Deleted ${existingRatingsCount} existing ratings`)
+    }
+
     console.log('Creating prototype bike...')
     const initialBikeStatus = SHOULD_SEED_RESERVATION ? BikeStatus.Reserved : BikeStatus.Available
 
@@ -179,8 +240,8 @@ async function seedDatabase() {
         user_id: user2._id!,
         bike_id: BIKE_ID,
         station_id: station._id!,
-        start_time: new Date(),
-        end_time: new Date(Date.now() + 30 * 60 * 1000),
+        start_time: getLocalTime(),
+        end_time: new Date(getLocalTime().getTime() + 120 * 60 * 1000), // 2 hours from now
         prepaid: Decimal128.fromString('0'),
         status: ReservationStatus.Pending
       })
