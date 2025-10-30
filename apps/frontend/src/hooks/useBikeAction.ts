@@ -47,7 +47,6 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 export const useBikeActions = (
   hasToken: boolean,
   bike_detail_id?: string,
-  bike_edit_id?: string,
   station_id?: string,
   supplier_id?: string,
   status?: BikeStatus,
@@ -55,37 +54,37 @@ export const useBikeActions = (
   page?: number
 ) => {
   const router = useRouter();
-  const { data: bikeActivityStats, refetch: useGetBikeActivityStats , isFetching: isFetchingBikeActivityStats } =
+  const { data: bikeActivityStats, refetch: refetchGetBikeActivityStats , isFetching: isFetchingBikeActivityStats } =
     useGetBikeActivityStatsQuery(bike_detail_id || "");
-  const { data: bikeStats, refetch: useGetStatisticsBike, isFetching: isFetchingBikeStats } = useGetBikeStatsQuery(bike_detail_id || "");
-  const { data : bikeRentals , refetch : useGetRentalBike , isFetching : isFetchingRentalBikes} = useGetRentalBikeQuery(bike_detail_id || "");
+  const { data: bikeStats, refetch: refetchStatisticsBike, isFetching: isFetchingBikeStats } = useGetBikeStatsQuery(bike_detail_id || "");
+  const { data : bikeRentals , refetch : refetchRentalBike , isFetching : isFetchingRentalBikes} = useGetRentalBikeQuery(bike_detail_id || "");
   const getRentalBikes = useCallback(() => {
-    if(!hasToken){
+    if (!hasToken) {
       router.push("/login");
       return;
     }
     if (bike_detail_id) {
-      useGetRentalBike();
+      refetchRentalBike();
     }
-  }, [useGetRentalBike, bike_detail_id]);
+  }, [refetchRentalBike, bike_detail_id, hasToken, router]);
   const getBikeActivityStats = useCallback(() => {
-    if(!hasToken){
+    if (!hasToken) {
       router.push("/login");
       return;
     }
     if (bike_detail_id) {
-      useGetBikeActivityStats();
+      refetchGetBikeActivityStats();
     }
-  }, [useGetBikeActivityStats, bike_detail_id]);
+  }, [refetchGetBikeActivityStats, bike_detail_id, hasToken, router]);
   const getBikeStats = useCallback(() => {
-    if(!hasToken){
+    if (!hasToken) {
       router.push("/login");
       return;
     }
     if (bike_detail_id) {
-      useGetStatisticsBike();
+      refetchStatisticsBike();
     }
-  }, [useGetStatisticsBike, bike_detail_id]);
+  }, [refetchStatisticsBike, bike_detail_id, hasToken, router]);
   const {
     refetch: fetchBike,
     data,

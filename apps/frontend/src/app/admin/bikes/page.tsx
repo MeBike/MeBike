@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { Bike, BikeStatus } from "@custom-types";
+import type { Bike, BikeRentalHistory, BikeStatus } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { Loader2 } from "lucide-react";
@@ -48,7 +48,6 @@ export default function BikesPage() {
     isLoadingDetail,
     bikeActivityStats,
     getBikeActivityStats,
-    isFetchingBikeActivityStats,
     bikeStats,
     isFetchingBikeStats,
     bikeRentals,
@@ -58,7 +57,6 @@ export default function BikesPage() {
   } = useBikeActions(
     true,
     detailId,
-    editId,
     undefined,
     undefined,
     statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
@@ -129,7 +127,7 @@ export default function BikesPage() {
     if (editId) {
       getBikeByID();
     }
-  }, [editId]);
+  }, [editId , getBikeByID]);
   if (isLoadingStatistics) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -484,7 +482,7 @@ export default function BikesPage() {
                         API: /bikes/{detailBike._id}/rental-history
                       </p> */}
                       <div className="space-y-2">
-                        {bikeRentals.map((rental: any, index: number) => (
+                        {bikeRentals.map((rental: BikeRentalHistory, index: number) => (
                           <div key={rental._id} className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
