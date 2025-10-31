@@ -490,7 +490,7 @@ function MyWalletScreen() {
               <Text style={styles.actionButtonText}>Rút tiền</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleRefund}>
+          {/* <TouchableOpacity style={styles.actionButton} onPress={handleRefund}>
             <LinearGradient
               colors={["#8B5CF6", "#7C3AED"]}
               start={{ x: 0, y: 0 }}
@@ -500,7 +500,7 @@ function MyWalletScreen() {
               <Ionicons name="swap-horizontal" size={24} color="#fff" />
               <Text style={styles.actionButtonText}>Hoàn tiền</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <View style={styles.content}>
