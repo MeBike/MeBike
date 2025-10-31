@@ -7,7 +7,6 @@ import { RentalStats } from "@/components/rentals/rental-stats";
 import { Button } from "@/components/ui/button";
 import type {
   RentalStatus,
-  PaymentStatus,
 } from "@custom-types";
 import { Plus, Download } from "lucide-react";
 import { useRentalsActions } from "@/hooks/useRentalAction";
@@ -24,23 +23,9 @@ export default function RentalsPage() {
   const [limit] = useState<number>(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RentalStatus | "all">("all");
-  const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | "all">(
-    "all"
-  );
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedRentalId, setSelectedRentalId] = useState<string>("");
-  const [newRental, setNewRental] = useState({
-    customer_id: "",
-    bike_id: "",
-    start_date: "",
-    end_date: "",
-    rental_type: "hours" as "hours" | "days",
-    payment_method: "card" as "card" | "cash" | "momo" | "zalopay" | "transfer",
-  });
   const {
     register,
     handleSubmit,
@@ -58,15 +43,11 @@ export default function RentalsPage() {
   });
   const {
     allRentalsData,
-    getRentals,
-    isAllRentalsLoading,
     pagination,
     revenueData,
     detailData,
     getDetailRental,
     getRevenue,
-    refetchRevenue,
-    isLoadingRevenue,
     updateRental,
   } = useRentalsActions({
     hasToken: true,
@@ -98,71 +79,15 @@ export default function RentalsPage() {
   }, [getRevenue, getAllStations]);
 
   const rentals = allRentalsData || [];
-  const filteredRentals = rentals.filter((rental) => {
-    const matchesSearch =
-      rental._id.includes(searchQuery) ||
-      rental.user_id.includes(searchQuery) ||
-      rental.bike_id.includes(searchQuery);
-
-    const statusMap = {
-      "ĐANG THUÊ": "active",
-      "HOÀN THÀNH": "completed",
-      "ĐÃ HỦY": "cancelled",
-    };
-
-    const mappedStatus =
-      statusMap[rental.status as keyof typeof statusMap] || "pending";
-
-    const matchesStatus =
-      statusFilter === "all" || mappedStatus === statusFilter;
-    const matchesPayment = paymentFilter === "all";
-
-    const matchesDateFrom =
-      !dateFrom || new Date(rental.start_time) >= new Date(dateFrom);
-    const matchesDateTo =
-      !dateTo || new Date(rental.start_time) <= new Date(dateTo);
-
-    return (
-      matchesSearch &&
-      matchesStatus &&
-      matchesPayment &&
-      matchesDateFrom &&
-      matchesDateTo
-    );
-  });
 
   const handleReset = () => {
     setSearchQuery("");
     setStatusFilter("all");
-    setPaymentFilter("all");
-    setDateFrom("");
-    setDateTo("");
   };
 
-  const handleCreateRental = () => {
-    if (
-      !newRental.customer_id ||
-      !newRental.bike_id ||
-      !newRental.start_date ||
-      !newRental.end_date
-    ) {
-      alert("Vui lòng điền đầy đủ thông tin");
-      return;
-    }
-    console.log("[v0] Create rental:", newRental);
-    setIsCreateModalOpen(false);
-    setNewRental({
-      customer_id: "",
-      bike_id: "",
-      start_date: "",
-      end_date: "",
-      rental_type: "hours",
-      payment_method: "card",
-    });
-  };
 
   const handleUpdateRental = (data: UpdateRentalSchema) => {
-    updateRental(data, selectedRentalId);
+    updateRental(data);
     setIsUpdateModalOpen(false);
   };
 
@@ -184,12 +109,12 @@ export default function RentalsPage() {
     overdue: 0, // No overdue in RentingHistory
     todayRevenue:
       revenueData?.result?.data?.reduce(
-        (sum: number, item: any) => sum + item.totalRevenue,
+        (sum: number, item: { totalRevenue: number }) => sum + item.totalRevenue,
         0
       ) || 0,
     totalRevenue:
       revenueData?.result?.data?.reduce(
-        (sum: number, item: any) => sum + item.totalRevenue,
+        (sum: number, item: { totalRevenue: number }) => sum + item.totalRevenue,
         0
       ) || 0,
   };
@@ -212,7 +137,7 @@ export default function RentalsPage() {
               <Download className="w-4 h-4 mr-2" />
               Xuất Excel
             </Button>
-            <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Button>
               <Plus className="w-4 h-4 mr-2" />
               Tạo đơn mới
             </Button>
@@ -228,12 +153,6 @@ export default function RentalsPage() {
           onSearchChange={setSearchQuery}
           statusFilter={statusFilter}
           onStatusChange={setStatusFilter}
-          paymentFilter={paymentFilter}
-          onPaymentChange={setPaymentFilter}
-          dateFrom={dateFrom}
-          onDateFromChange={setDateFrom}
-          dateTo={dateTo}
-          onDateToChange={setDateTo}
           onReset={handleReset}
         />
 
@@ -261,7 +180,7 @@ export default function RentalsPage() {
                 setSelectedRentalId(data._id);
                 getDetailRental();
                 reset({
-                  status: data.status as any,
+                  status: data.status as "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC",
                   end_station: data.end_station || "",
                   end_time: data.end_time
                     ? new Date(data.end_time).toISOString().slice(0, 16)

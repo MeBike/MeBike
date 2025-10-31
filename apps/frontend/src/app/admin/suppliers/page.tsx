@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { Supplier, StatsSupplierBike } from "@custom-types";
+import type { Supplier } from "@custom-types";
 import { Plus, Download, X } from "lucide-react";
 import { useSupplierActions } from "@/hooks/useSupplierAction";
 import { useBikeActions } from "@/hooks/useBikeAction";

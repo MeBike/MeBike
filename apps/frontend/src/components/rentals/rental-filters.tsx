@@ -1,6 +1,6 @@
 "use client";
 
-import type { RentalStatus, PaymentStatus } from "@custom-types";
+import type { RentalStatus} from "@custom-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,12 +18,6 @@ interface RentalFiltersProps {
   onSearchChange: (value: string) => void;
   statusFilter: RentalStatus | "all";
   onStatusChange: (value: RentalStatus | "all") => void;
-  paymentFilter: PaymentStatus | "all";
-  onPaymentChange: (value: PaymentStatus | "all") => void;
-  dateFrom: string;
-  onDateFromChange: (value: string) => void;
-  dateTo: string;
-  onDateToChange: (value: string) => void;
   onReset: () => void;
 }
 
@@ -32,12 +26,6 @@ export function RentalFilters({
   onSearchChange,
   statusFilter,
   onStatusChange,
-  paymentFilter,
-  onPaymentChange,
-  dateFrom,
-  onDateFromChange,
-  dateTo,
-  onDateToChange,
   onReset,
 }: RentalFiltersProps) {
   return (

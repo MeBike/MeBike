@@ -1,4 +1,3 @@
-import type { AxiosError } from "axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useGetAllRentalsAdminStaffQuery } from "./query/Rent/useGetAllRentalsAdminStaffQuery";
@@ -42,7 +41,6 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
 interface UseRentalsActionsProps {
   hasToken: boolean;
   bike_id?: string;
-  station_id?: string;
   limit ?: number;
   page ?: number;
   start_station?: string;
@@ -52,7 +50,6 @@ interface UseRentalsActionsProps {
 export function useRentalsActions({
   hasToken,
   bike_id,
-  station_id,
   limit,
   page,
   start_station,
@@ -98,7 +95,7 @@ export function useRentalsActions({
     refetchRevenue();
   }, [hasToken, refetchRevenue]);
   const updateRental = useCallback(
-    (data: UpdateRentalSchema, id: string) => {
+    (data: UpdateRentalSchema) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -141,6 +138,11 @@ export function useRentalsActions({
       hasToken,
       router,
       queryClient,
+      page,
+      limit,
+      start_station,
+      end_station,
+      status,
     ]
   );
   return {
@@ -158,3 +160,4 @@ export function useRentalsActions({
     isDetailLoading,
   };
 }
+
