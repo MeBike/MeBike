@@ -2,6 +2,7 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
 import { UserProfile } from "@/schemas/userSchema";
+import { get } from "http";
 interface ApiReponse<T> {
   data: T;
   pagination?: {
@@ -39,6 +40,11 @@ export interface TopRenterUser {
     location: string;
   };
 }
+interface GetNewRegistrationStats {
+  newUsersThisMonth: number;
+  newUsersLastMonth: number;
+  percentageChange: number;
+}
 const USER_BASE = "/users/manage-users";
 const USER_ENDPOINTS = {
   BASE: USER_BASE,
@@ -52,10 +58,11 @@ const USER_ENDPOINTS = {
   ACTIVE_USERS: `${USER_BASE}/active-users`,
   TOP_RENTERS: `${USER_BASE}/top-renters`,
   CREATE_USER: `${USER_BASE}/create`,
-  GET_NEW_REGISRATION_STATS : `${USER_BASE}/manage-users/stats/new-users`,
-  GET_TOP_RENTER:`${USER_BASE}/manage-users/stats/top-renters`,
-  GET_ACTIVE_USERS:`${USER_BASE}/manage-users/stats/active-users`,
-  GET_USER_STATS: `${USER_BASE}/manage-users/stats`,
+  GET_NEW_REGISRATION_STATS: `${USER_BASE}/stats/new-users`,
+  GET_TOP_RENTER: `${USER_BASE}/stats/top-renters`,
+  GET_ACTIVE_USERS: `${USER_BASE}/stats/active-users`,
+  GET_USER_STATS: `${USER_BASE}/stats`,
+  GET_ACTIVE_USER: `${USER_BASE}/stats`,
 } as const;
 export const userService = {
   getAllUsers: async ({
@@ -91,11 +98,12 @@ export const userService = {
   getSearchUser: async (
     query: string
   ): Promise<AxiosResponse<ApiReponse<DetailUser[]>>> => {
-    const response = await fetchHttpClient.get<
-      ApiReponse<DetailUser[]>
-    >(USER_ENDPOINTS.SEARCH_USER, {
-      q: query,
-    });
+    const response = await fetchHttpClient.get<ApiReponse<DetailUser[]>>(
+      USER_ENDPOINTS.SEARCH_USER,
+      {
+        q: query,
+      }
+    );
     return response;
   },
   updateUser: async (
@@ -123,20 +131,20 @@ export const userService = {
     >(USER_ENDPOINTS.RESET_USER_PASSWORD(id));
     return response;
   },
-  getActiveUserStats: async (): Promise<
-    AxiosResponse<ApiReponse<GetActiveStatisticsUser[]>>
-  > => {
-    const response = await fetchHttpClient.get<
-      ApiReponse<GetActiveStatisticsUser[]>
-    >(USER_ENDPOINTS.ACTIVE_USERS);
-    return response;
-  },
+  // getActiveUserStats: async (): Promise<
+  //   AxiosResponse<ApiReponse<GetActiveStatisticsUser[]>>
+  // > => {
+  //   const response = await fetchHttpClient.get<
+  //     ApiReponse<GetActiveStatisticsUser[]>
+  //   >(USER_ENDPOINTS.ACTIVE_USERS);
+  //   return response;
+  // },
   getTopRenter: async (): Promise<
     AxiosResponse<DetailUserResponse<ApiReponse<TopRenterUser[]>>>
   > => {
     const response = await fetchHttpClient.get<
       DetailUserResponse<ApiReponse<TopRenterUser[]>>
-    >(USER_ENDPOINTS.TOP_RENTERS);
+    >(USER_ENDPOINTS.GET_TOP_RENTER);
     return response;
   },
   createUser: async (
@@ -148,4 +156,20 @@ export const userService = {
     );
     return response;
   },
+  getNewRegistrationStats: async (): Promise<
+    AxiosResponse<DetailUserResponse<GetNewRegistrationStats>>
+  > => {
+    const response = await fetchHttpClient.get<
+      DetailUserResponse<GetNewRegistrationStats>
+    >(USER_ENDPOINTS.GET_NEW_REGISRATION_STATS);
+    return response;
+  },
+  getActiveUser : async (): Promise<
+    AxiosResponse<DetailUserResponse<GetActiveStatisticsUser[]>>
+  > => {
+    const response = await fetchHttpClient.get<
+      DetailUserResponse<GetActiveStatisticsUser[]>
+    >(USER_ENDPOINTS.GET_ACTIVE_USER);
+    return response;
+  }
 };

@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { VerifyStatus } from "@/types";
 import { useGetAllStatisticsUserQuery } from "./query/User/useGetAllStatisticsQuery";
+import { useGetActiveUserQuery } from "./query/User/useGetActiveUserQuery";
+import { useGetNewRegistrationStatsQuery } from "./query/User/useGetNewRegistrationStatsQuery";
+import { useGetTopRenterQuery } from "./query/User/useGetTopRenterQuery";
 import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
 import { UserProfile } from "@/schemas/userSchema";
@@ -67,6 +70,21 @@ export const useUserActions = ({
     isLoading: isLoadingStatistics,
   } = useGetAllStatisticsUserQuery();
   const {
+    data: activeUserData,
+    refetch: refetchActiveUser,
+    isLoading: isLoadingActiveUser,
+  } = useGetActiveUserQuery();
+  const {
+    data: newRegistrationStatsData,
+    refetch: refetchNewRegistrationStats,
+    isLoading: isLoadingNewRegistrationStats,
+  } = useGetNewRegistrationStatsQuery();
+  const {
+    data: topRenterData,
+    refetch: refetchTopRenter,
+    isLoading: isLoadingTopRenter,
+  } = useGetTopRenterQuery();
+  const {
     data: searchData,
     refetch: refetchSearch,
     isLoading: isLoadingSearch,
@@ -85,6 +103,27 @@ export const useUserActions = ({
     }
     refetchStatistics();
   }, [hasToken, router, refetchStatistics]);
+  const getActiveUser = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchActiveUser();
+  }, [hasToken, router, refetchActiveUser]);
+  const getNewRegistrationStats = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchNewRegistrationStats();
+  }, [hasToken, router, refetchNewRegistrationStats]);
+  const getTopRenter = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchTopRenter();
+  }, [hasToken, router, refetchTopRenter]);
   const getSearchUsers = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -134,6 +173,18 @@ export const useUserActions = ({
     refetchStatistics,
     getAllStatistics,
     isLoadingStatistics,
+    activeUser: activeUserData,
+    refetchActiveUser,
+    getActiveUser,
+    isLoadingActiveUser,
+    newRegistrationStats: newRegistrationStatsData,
+    refetchNewRegistrationStats,
+    getNewRegistrationStats,
+    isLoadingNewRegistrationStats,
+    topRenter: topRenterData,
+    refetchTopRenter,
+    getTopRenter,
+    isLoadingTopRenter,
     getSearchUsers,
     createUser,
     paginationUser: data?.pagination,

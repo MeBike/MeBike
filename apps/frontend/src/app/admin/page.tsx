@@ -1,13 +1,14 @@
 "use client";
-import { ProfileHeader } from "@/components/dashboard/profile-header";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { RentalChart } from "@/components/dashboard/rental-chart";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { Bike, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@/components/ui/progress";
+import { useUserActions } from "@/hooks/useUserAction";
 export default function DashboardPage() {
   const { user } = useAuth();
+  const {activeUser , getActiveUser , newRegistrationStats } = useUserActions({hasToken:true});  
   if (!user) {
     return (
       <div>
@@ -18,9 +19,6 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="space-y-8">
-        <section>
-          <ProfileHeader user={user} />
-        </section>
         <section>
           <h2 className="text-2xl font-bold text-foreground mb-4">
             Thống kê tổng quan
@@ -41,8 +39,23 @@ export default function DashboardPage() {
               icon={TrendingUp}
             />
             <StatsCard
-              title="Khách hàng mới"
-              value="23"
+              title="Khách hàng mới trong tháng"
+              value={
+                newRegistrationStats
+                  ? newRegistrationStats.result.newUsersThisMonth.toString()
+                  : "0"
+              }
+              change="+8% tuần này"
+              changeType="positive"
+              icon={Users}
+            />
+            <StatsCard
+              title="Khách hàng mới tháng trước"
+              value={
+                newRegistrationStats
+                  ? newRegistrationStats.result.newUsersLastMonth.toString()
+                  : "0"
+              }
               change="+8% tuần này"
               changeType="positive"
               icon={Users}
