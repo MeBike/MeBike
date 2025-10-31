@@ -21,7 +21,7 @@ export type Transaction = {
   fee: number;
   description: string;
   transaction_hash: string;
-  type: "NẠP TIỀN" | "RÚT TIỀN";
+  type: "NẠP TIỀN" | "RÚT TIỀN" | "THANH TOÁN";
   created_at: string;
   updated_at: string;
   status: "THÀNH CÔNG" | "THẤT BẠI" | "ĐANG XỬ LÝ";

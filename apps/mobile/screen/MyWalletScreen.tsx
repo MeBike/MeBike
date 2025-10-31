@@ -220,6 +220,53 @@ function MyWalletScreen() {
     );
   };
 
+  const handleRefund = () => {
+    // First prompt for transaction ID
+    Alert.prompt(
+      "Hoàn tiền",
+      "Nhập ID giao dịch cần hoàn tiền",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Tiếp tục",
+          onPress: (transaction_id?: string) => {
+            if (transaction_id && transaction_id.length > 0) {
+              // Second prompt for amount
+              Alert.prompt(
+                "Số tiền hoàn",
+                "Nhập số tiền cần hoàn (phải lớn hơn 0)",
+                [
+                  { text: "Hủy", style: "cancel" },
+                  {
+                    text: "Xác nhận",
+                    onPress: (amount?: string) => {
+                      if (amount && !isNaN(Number(amount)) && Number(amount) > 0) {
+                        createRefund({
+                          transaction_id,
+                          amount: Number(amount),
+                        });
+                      } else {
+                        Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ và lớn hơn 0");
+                      }
+                    },
+                  },
+                ],
+                "plain-text",
+                "",
+                "numeric"
+              );
+            } else {
+              Alert.alert("Lỗi", "Vui lòng nhập ID giao dịch");
+            }
+          },
+        },
+      ],
+      "plain-text",
+      "",
+      "default"
+    );
+  };
+
   const handleShareUserId = async () => {
     if (!myWallet?.user_id) return;
     try {
@@ -443,7 +490,7 @@ function MyWalletScreen() {
               <Text style={styles.actionButtonText}>Rút tiền</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={() => setActiveTab('refunds')}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleRefund}>
             <LinearGradient
               colors={["#8B5CF6", "#7C3AED"]}
               start={{ x: 0, y: 0 }}
@@ -498,7 +545,49 @@ function MyWalletScreen() {
               </View>
 
               {transactions.map((transaction, index) => (
-                <View key={`${transaction._id}-${index}`} style={styles.transactionItem}>
+                <TouchableOpacity
+                  key={`${transaction._id}-${index}`}
+                  style={styles.transactionItem}
+                  onPress={() => {
+                    if (transaction.type === "THANH TOÁN") {
+                      Alert.alert(
+                        "Yêu cầu hoàn tiền",
+                        `Bạn có muốn hoàn tiền cho giao dịch ${transaction._id} không?`,
+                        [
+                          { text: "Hủy", style: "cancel" },
+                          {
+                            text: "Xác nhận",
+                            onPress: () => {
+                              Alert.prompt(
+                                "Số tiền hoàn",
+                                "Nhập số tiền cần hoàn",
+                                [
+                                  { text: "Hủy", style: "cancel" },
+                                  {
+                                    text: "Xác nhận",
+                                    onPress: (amount?: string) => {
+                                      if (amount && !isNaN(Number(amount)) && Number(amount) > 0) {
+                                        createRefund({
+                                          transaction_id: transaction._id,
+                                          amount: Number(amount),
+                                        });
+                                      } else {
+                                        Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ");
+                                      }
+                                    },
+                                  },
+                                ],
+                                "plain-text",
+                                transaction.amount.toString(),
+                                "numeric"
+                              );
+                            },
+                          },
+                        ]
+                      );
+                    }
+                  }}
+                >
                   <View style={styles.transactionLeft}>
                     <View
                       style={[
@@ -523,22 +612,29 @@ function MyWalletScreen() {
                       </Text>
                     </View>
                   </View>
-                  <Text
-                    style={[
-                      styles.transactionAmount,
-                      {
-                        color:
-                          transaction.type === "NẠP TIỀN"
-                            ? "#10B981"
-                            : transaction.type === "RÚT TIỀN"
-                              ? "#F59E0B"
-                              : "#EF4444",
-                      },
-                    ]}
-                  >
-                    {formatBalance(transaction.amount.toString())} đ
-                  </Text>
-                </View>
+                  <View style={{ alignItems: "flex-end" }}>
+                    <Text
+                      style={[
+                        styles.transactionAmount,
+                        {
+                          color:
+                            transaction.type === "NẠP TIỀN"
+                              ? "#10B981"
+                              : transaction.type === "RÚT TIỀN"
+                                ? "#F59E0B"
+                                : "#EF4444",
+                        },
+                      ]}
+                    >
+                      {formatBalance(transaction.amount.toString())} đ
+                    </Text>
+                    {transaction.type === "THANH TOÁN" && (
+                      <Text style={{ fontSize: 12, color: "#8B5CF6", marginTop: 4 }}>
+                        Nhấn để hoàn tiền
+                      </Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
               ))}
             </>
           )}
