@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useWalletActions } from "@hooks/useWalletAction";
 import { useWithdrawalAction } from "@hooks/useWithdrawalAction";
+import { useRefundAction } from "@hooks/useRefundAction";
 
 function MyWalletScreen() {
   const navigation = useNavigation();
@@ -32,6 +33,7 @@ function MyWalletScreen() {
     loadMoreTransactions,
     hasNextPageTransactions,
     isFetchingNextPageTransactions,
+    totalTransactions,
   } = useWalletActions(true, limit);
   const {
     withdrawalRequests,
@@ -41,10 +43,21 @@ function MyWalletScreen() {
     loadMore,
     hasNextPage,
     isFetchingNextPage,
+    totalWithdrawals,
   } = useWithdrawalAction();
+  const {
+    refundRequests,
+    isLoadingRefunds,
+    createRefund,
+    isCreating: isCreatingRefund,
+    loadMore: loadMoreRefunds,
+    hasNextPage: hasNextPageRefunds,
+    isFetchingNextPage: isFetchingNextPageRefunds,
+    totalRefunds,
+  } = useRefundAction();
   const insets = useSafeAreaInsets();
   const [showQR, setShowQR] = useState(false);
-  const [activeTab, setActiveTab] = useState<'transactions' | 'withdrawals'>('transactions');
+  const [activeTab, setActiveTab] = useState<'transactions' | 'withdrawals' | 'refunds'>('transactions');
 
   useEffect(() => {
     getMyWallet();
@@ -430,7 +443,7 @@ function MyWalletScreen() {
               <Text style={styles.actionButtonText}>Rút tiền</Text>
             </LinearGradient>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setActiveTab('refunds')}>
             <LinearGradient
               colors={["#8B5CF6", "#7C3AED"]}
               start={{ x: 0, y: 0 }}
@@ -461,13 +474,21 @@ function MyWalletScreen() {
                 Yêu cầu rút tiền
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'refunds' && styles.activeTab]}
+              onPress={() => setActiveTab('refunds')}
+            >
+              <Text style={[styles.tabText, activeTab === 'refunds' && styles.activeTabText]}>
+                Yêu cầu hoàn tiền
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {activeTab === 'transactions' && (
             <>
               <View style={styles.historyHeader}>
                 <Text style={styles.historyTitle}>Lịch sử giao dịch</Text>
-                {hasNextPageTransactions && (
+                {transactions.length < totalTransactions && (
                   <TouchableOpacity onPress={loadMoreTransactions} disabled={isFetchingNextPageTransactions}>
                     <Text style={styles.viewAllText}>
                       {isFetchingNextPageTransactions ? "Đang tải..." : "Tải thêm"}
@@ -526,7 +547,7 @@ function MyWalletScreen() {
             <>
               <View style={styles.historyHeader}>
                 <Text style={styles.historyTitle}>Yêu cầu rút tiền</Text>
-                {hasNextPage && (
+                {withdrawalRequests.length < totalWithdrawals && (
                   <TouchableOpacity onPress={loadMore} disabled={isFetchingNextPage}>
                     <Text style={styles.viewAllText}>
                       {isFetchingNextPage ? "Đang tải..." : "Tải thêm"}
@@ -570,6 +591,62 @@ function MyWalletScreen() {
                         style={[styles.transactionAmount, { color: "#F59E0B" }]}
                       >
                         -{formatBalance(request.amount.toString())} đ
+                      </Text>
+                    </View>
+                  ))}
+                </>
+              )}
+            </>
+          )}
+
+          {activeTab === 'refunds' && (
+            <>
+              <View style={styles.historyHeader}>
+                <Text style={styles.historyTitle}>Yêu cầu hoàn tiền</Text>
+                {refundRequests.length < totalRefunds && (
+                  <TouchableOpacity onPress={loadMoreRefunds} disabled={isFetchingNextPageRefunds}>
+                    <Text style={styles.viewAllText}>
+                      {isFetchingNextPageRefunds ? "Đang tải..." : "Tải thêm"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {isLoadingRefunds ? (
+                <View style={styles.center}>
+                  <ActivityIndicator size="small" color="#0066FF" />
+                  <Text style={{ marginTop: 8, color: "#333" }}>Đang tải...</Text>
+                </View>
+              ) : (
+                <>
+                  {refundRequests.map((request) => (
+                    <View key={request._id} style={styles.transactionItem}>
+                      <View style={styles.transactionLeft}>
+                        <View
+                          style={[
+                            styles.transactionIcon,
+                            { backgroundColor: "#8B5CF620" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="swap-horizontal"
+                            size={20}
+                            color="#8B5CF6"
+                          />
+                        </View>
+                        <View style={styles.transactionInfo}>
+                          <Text style={styles.transactionDescription}>
+                            Hoàn tiền cho giao dịch {request.transaction_id}
+                          </Text>
+                          <Text style={styles.transactionDate}>
+                            {request.created_at} • {request.status}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text
+                        style={[styles.transactionAmount, { color: "#8B5CF6" }]}
+                      >
+                        +{formatBalance(request.amount.toString())} đ
                       </Text>
                     </View>
                   ))}

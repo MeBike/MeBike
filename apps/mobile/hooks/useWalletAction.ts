@@ -58,6 +58,7 @@ export function useWalletActions(hasToken: boolean, limit: number = 5) {
     }
   };
   const transactions = useGetMyTransaction.data?.pages.flatMap(page => page.data) || [];
+  const totalTransactions = useGetMyTransaction.data?.pages[0]?.pagination?.totalRecords || 0;
   return {
     getMyWallet,
     myWallet: response,
@@ -68,5 +69,6 @@ export function useWalletActions(hasToken: boolean, limit: number = 5) {
     loadMoreTransactions,
     hasNextPageTransactions: useGetMyTransaction.hasNextPage,
     isFetchingNextPageTransactions: useGetMyTransaction.isFetchingNextPage,
+    totalTransactions,
   };
 }

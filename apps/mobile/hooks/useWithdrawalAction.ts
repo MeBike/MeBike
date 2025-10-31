@@ -54,6 +54,7 @@ export function useWithdrawalAction() {
   };
 
   const withdrawalRequests = withdrawalRequestsData?.pages.flatMap(page => page.data) || [];
+  const totalWithdrawals = withdrawalRequestsData?.pages[0]?.pagination?.totalRecords || 0;
 
   return {
     withdrawalRequests,
@@ -65,5 +66,6 @@ export function useWithdrawalAction() {
     loadMore,
     hasNextPage,
     isFetchingNextPage,
+    totalWithdrawals,
   };
 }
