@@ -77,7 +77,7 @@ export const rentalColumn = ({
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
         </button>
-        {row.original.status !== "HOÀN THÀNH" && row.original.status !== "ĐÃ HỦY" && row.original.status !== "ĐÃ ĐẶT TRƯỚC" && onEdit ? (
+        {row.original.status !== "HOÀN THÀNH" && row.original.status !== "ĐÃ HỦY"  && onEdit ? (
           <button
             className="p-2 hover:bg-muted rounded-lg transition-colors"
             title="Xem chi tiết"
