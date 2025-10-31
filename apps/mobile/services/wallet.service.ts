@@ -21,7 +21,7 @@ export type Transaction = {
   fee: number;
   description: string;
   transaction_hash: string;
-  type: "NẠP TIỀN" | "RÚT TIỀN";
+  type: "NẠP TIỀN" | "RÚT TIỀN" | "THANH TOÁN";
   created_at: string;
   updated_at: string;
   status: "THÀNH CÔNG" | "THẤT BẠI" | "ĐANG XỬ LÝ";
@@ -64,9 +64,13 @@ export const walletService = {
     );
     return response;
   },
-  transactions: async (): Promise<AxiosResponse<ApiResponse<Transaction[]>>> => {
+  transactions: async ({page , limit }: {page: number, limit: number}): Promise<AxiosResponse<ApiResponse<Transaction[]>>> => {
     return await fetchHttpClient.get<ApiResponse<Transaction[]>>(
       WALLET_ENDPOINTS.TRANSACTIONS,
+      {
+        page : page,
+        limit : limit,
+      }
     );
   },
 };

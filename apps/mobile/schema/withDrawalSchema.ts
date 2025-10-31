@@ -1,8 +1,12 @@
 import * as z from "zod";
-import type { WithdrawStatus } from "@/types";
+import type { WithdrawStatus } from "../types/Withdrawal";
 export const updateWithdrawSchema = z.object({
   newStatus: z.enum([] as WithdrawStatus[]),
-  reason: z.string().min(10, "Reason must be at least 10 characters").max(500, "Reason must be at most 500 characters").optional(),
+  reason: z
+    .string()
+    .min(10, "Reason must be at least 10 characters")
+    .max(500, "Reason must be at most 500 characters")
+    .optional(),
 });
 export const createWithdrawSchema = z.object({
   amount: z

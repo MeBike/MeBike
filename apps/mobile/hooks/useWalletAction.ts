@@ -35,10 +35,10 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
 
   return defaultMessage;
 }
-export function useWalletActions(hasToken: boolean) {
+export function useWalletActions(hasToken: boolean, limit: number = 5) {
   const queryClient = useQueryClient();
   const useGetMyWallet = useGetMyWalletQuery();
-  const useGetMyTransaction = useGetMyTransactionsQuery();
+  const useGetMyTransaction = useGetMyTransactionsQuery(limit);
   const { refetch, data: response, isLoading } = useGetMyWallet;
   const getMyWallet = useCallback(async () => {
     if (!hasToken) {
@@ -52,12 +52,23 @@ export function useWalletActions(hasToken: boolean) {
     }
     return await useGetMyTransaction.refetch();
   }, [useGetMyTransaction, hasToken]);
+  const loadMoreTransactions = () => {
+    if (useGetMyTransaction.hasNextPage && !useGetMyTransaction.isFetchingNextPage) {
+      useGetMyTransaction.fetchNextPage();
+    }
+  };
+  const transactions = useGetMyTransaction.data?.pages.flatMap(page => page.data) || [];
+  const totalTransactions = useGetMyTransaction.data?.pages[0]?.pagination?.totalRecords || 0;
   return {
     getMyWallet,
     myWallet: response,
     isLoadingGetMyWallet: isLoading,
     getMyTransaction,
-    myTransactions: useGetMyTransaction.data ?? [],
+    myTransactions: transactions,
     isLoadingGetMyTransaction: useGetMyTransaction.isLoading,
+    loadMoreTransactions,
+    hasNextPageTransactions: useGetMyTransaction.hasNextPage,
+    isFetchingNextPageTransactions: useGetMyTransaction.isFetchingNextPage,
+    totalTransactions,
   };
 }
