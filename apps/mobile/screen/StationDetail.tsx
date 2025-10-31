@@ -84,7 +84,7 @@ export default function StationDetailScreen() {
   const { user } = useAuth();
   const { stationId } = route.params;
   const [page , setPage] = useState<number>(1);
-  const [limit , setLimit] = useState<number>(5);
+  const [limit , setLimit] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState(1);
   const [loadedBikes, setLoadedBikes] = useState<Bike[]>([]);
   const [hasMore, setHasMore] = useState(true);

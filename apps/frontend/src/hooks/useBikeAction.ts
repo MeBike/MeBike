@@ -14,6 +14,9 @@ import { useReportBike } from "./mutations/Bike/useReportBike";
 import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
 import { useGetStatisticsBikeQuery } from "./query/Bike/useGetStatusBike";
 import { useRouter } from "next/navigation";
+import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
+import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
+import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -43,7 +46,7 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 };
 export const useBikeActions = (
   hasToken: boolean,
-  bikeId?: string,
+  bike_detail_id?: string,
   station_id?: string,
   supplier_id?: string,
   status?: BikeStatus,
@@ -51,6 +54,37 @@ export const useBikeActions = (
   page?: number
 ) => {
   const router = useRouter();
+  const { data: bikeActivityStats, refetch: refetchGetBikeActivityStats , isFetching: isFetchingBikeActivityStats } =
+    useGetBikeActivityStatsQuery(bike_detail_id || "");
+  const { data: bikeStats, refetch: refetchStatisticsBike, isFetching: isFetchingBikeStats } = useGetBikeStatsQuery(bike_detail_id || "");
+  const { data : bikeRentals , refetch : refetchRentalBike , isFetching : isFetchingRentalBikes} = useGetRentalBikeQuery(bike_detail_id || "");
+  const getRentalBikes = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    if (bike_detail_id) {
+      refetchRentalBike();
+    }
+  }, [refetchRentalBike, bike_detail_id, hasToken, router]);
+  const getBikeActivityStats = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    if (bike_detail_id) {
+      refetchGetBikeActivityStats();
+    }
+  }, [refetchGetBikeActivityStats, bike_detail_id, hasToken, router]);
+  const getBikeStats = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    if (bike_detail_id) {
+      refetchStatisticsBike();
+    }
+  }, [refetchStatisticsBike, bike_detail_id, hasToken, router]);
   const {
     refetch: fetchBike,
     data,
@@ -75,7 +109,7 @@ export const useBikeActions = (
     data: detailBike,
     refetch: getDetailBike,
     isFetching: isLoadingDetail,
-  } = useGetBikeByIDAllQuery(bikeId || "");
+  } = useGetBikeByIDAllQuery(bike_detail_id || "");
   const queryClient = useQueryClient();
   const getBikes = useCallback(() => {
     if (!hasToken) {
@@ -211,10 +245,10 @@ export const useBikeActions = (
     [reportBikeMutation, hasToken, router]
   );
   const getBikeByID = useCallback(() => {
-    if (bikeId) {
+    if (bike_detail_id) {
       getDetailBike();
     }
-  }, [getDetailBike, bikeId]);
+  }, [getDetailBike, bike_detail_id]);
   return {
     getBikes,
     createBike,
@@ -236,5 +270,14 @@ export const useBikeActions = (
     isLoadingStatistics,
     statisticData,
     paginationOfBikes: data?.pagination,
+    bikeActivityStats: bikeActivityStats?.result,
+    getBikeActivityStats,
+    isFetchingBikeActivityStats,
+    getBikeStats,
+    bikeStats: bikeStats?.result,
+    isFetchingBikeStats,
+    bikeRentals: bikeRentals?.result.data,
+    getRentalBikes,
+    isFetchingRentalBikes,
   };
 };

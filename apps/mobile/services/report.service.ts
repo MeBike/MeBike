@@ -70,12 +70,12 @@ export const reportService = {
     // Add image files
     if (data.media_urls && data.media_urls.length > 0) {
       data.media_urls.forEach((image, index) => {
-        // formData.append('files', {
-        //   uri: image.uri,
-        //   type: image.type || 'image/jpeg',
-        //   name: image.fileName || `image-${index}.jpg`,
-        // } as any);
-        formData.append("files", image.uri); // Một số API chỉ nhận chuỗi URI và tự fetch lại file từ client
+         formData.append('files', {
+         uri: image.uri,
+          type: image.type || 'image/jpeg',
+         name: image.fileName || `image-${index}.jpg`,
+         } as any);
+        // formData.append("files", image.uri); // Một số API chỉ nhận chuỗi URI và tự fetch lại file từ client
       });
     }
     console.log(formData);
