@@ -6,9 +6,32 @@ import { Bike, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@/components/ui/progress";
 import { useUserActions } from "@/hooks/useUserAction";
+import { useBikeActions } from "@/hooks/useBikeAction";
+import { useGetRevenueQuery } from "@/hooks/query/Rent/useGetRevenueQuery";
 export default function DashboardPage() {
   const { user } = useAuth();
-  const {activeUser , getActiveUser , newRegistrationStats } = useUserActions({hasToken:true});  
+  const {activeUser , getActiveUser , newRegistrationStats } = useUserActions({hasToken:true}); 
+  const { statisticData } = useBikeActions(true);
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  const { data: monthlyRevenue } = useGetRevenueQuery({
+    from: startOfMonth.toISOString().split('T')[0],
+    to: endOfMonth.toISOString().split('T')[0],
+    groupBy: "MONTH"
+  });
+  const { data: lastMonthlyRevenue } = useGetRevenueQuery({
+    from: startOfLastMonth.toISOString().split('T')[0],
+    to: endOfLastMonth.toISOString().split('T')[0],
+    groupBy: "MONTH"
+  });
+  const monthlyRev = monthlyRevenue?.data[0]?.totalRevenue || 0;
+  const lastMonthlyRev = lastMonthlyRevenue?.data[0]?.totalRevenue || 0;
+  const changePercent = lastMonthlyRev ? Math.round((monthlyRev - lastMonthlyRev) / lastMonthlyRev * 100) : 0;
+  const changeType = changePercent > 0 ? "positive" : changePercent < 0 ? "negative" : "neutral";
+  const formattedValue = monthlyRev ? `${(monthlyRev / 1000000).toFixed(1)}M ₫` : "0 ₫";
   if (!user) {
     return (
       <div>
@@ -33,7 +56,7 @@ export default function DashboardPage() {
             />
             <StatsCard
               title="Xe đang cho thuê"
-              value="45"
+              value={statisticData ? statisticData.result["ĐANG ĐƯỢC THUÊ"].toString() : "0"}
               change="68% tổng số xe"
               changeType="neutral"
               icon={TrendingUp}
@@ -49,7 +72,7 @@ export default function DashboardPage() {
               changeType="positive"
               icon={Users}
             />
-            <StatsCard
+            {/* <StatsCard
               title="Khách hàng mới tháng trước"
               value={
                 newRegistrationStats
@@ -59,12 +82,12 @@ export default function DashboardPage() {
               change="+8% tuần này"
               changeType="positive"
               icon={Users}
-            />
+            /> */}
             <StatsCard
-              title="Doanh thu hôm nay"
-              value="12.5M ₫"
-              change="+15% so với hôm qua"
-              changeType="positive"
+              title="Doanh thu tháng này"
+              value={formattedValue}
+              change={`${changePercent > 0 ? '+' : ''}${changePercent}% so với tháng trước`}
+              changeType={changeType}
               icon={DollarSign}
             />
           </div>
