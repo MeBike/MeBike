@@ -264,12 +264,6 @@ export default function RentalsPage() {
           onSearchChange={setSearchQuery}
           statusFilter={statusFilter}
           onStatusChange={setStatusFilter}
-          paymentFilter={paymentFilter}
-          onPaymentChange={setPaymentFilter}
-          dateFrom={dateFrom}
-          onDateFromChange={setDateFrom}
-          dateTo={dateTo}
-          onDateToChange={setDateTo}
           onReset={handleReset}
         />
 
