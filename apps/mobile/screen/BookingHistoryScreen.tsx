@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  RefreshControl,
   StatusBar,
   StyleSheet,
   Text,
@@ -22,6 +23,14 @@ function BookingHistoryScreen() {
   const insets = useSafeAreaInsets();
   const { rentalsData, isGetAllRentalsFetching, getAllRentals } = useRentalsActions(true);
   const [bookings, setBookings] = useState<RentingHistory[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await getAllRentals();
+    setRefreshing(false);
+  };
+
   useEffect(() => {
     if (rentalsData && !isGetAllRentalsFetching) {
       if (rentalsData.data?.data && Array.isArray(rentalsData.data.data)) {
@@ -167,6 +176,14 @@ function BookingHistoryScreen() {
                 keyExtractor={item => item._id}
                 contentContainerStyle={styles.listContent}
                 scrollEnabled={true}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    colors={['#0066FF']}
+                    tintColor="#0066FF"
+                  />
+                }
               />
             )
           : (
