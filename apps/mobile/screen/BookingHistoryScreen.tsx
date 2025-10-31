@@ -65,14 +65,28 @@ function BookingHistoryScreen() {
         return status;
     }
   };
+const formatDate = (dateString: string) => {
+  // Bỏ 'Z' nếu chuỗi đã là giờ Việt Nam, tránh lệch ngày
+  let input = dateString.replace("Z", "+07:00");
+  let date = new Date(input);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.toLocaleDateString("vi-VN")} - ${date.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
-  };
+  // Hiện đầy đủ ngày/tháng/năm và giờ/phút/giây
+  const datePart = date.toLocaleDateString("vi-VN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+  const timePart = date.toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Ho_Chi_Minh",
+  });
+  return `${datePart} ${timePart}`;
+};
+
 
   const formatDuration = (duration: number, hasEnded: boolean) => {
     if (!duration || duration <= 0) {
