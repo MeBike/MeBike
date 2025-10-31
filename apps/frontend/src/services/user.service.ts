@@ -52,6 +52,10 @@ const USER_ENDPOINTS = {
   ACTIVE_USERS: `${USER_BASE}/active-users`,
   TOP_RENTERS: `${USER_BASE}/top-renters`,
   CREATE_USER: `${USER_BASE}/create`,
+  GET_NEW_REGISRATION_STATS : `${USER_BASE}/manage-users/stats/new-users`,
+  GET_TOP_RENTER:`${USER_BASE}/manage-users/stats/top-renters`,
+  GET_ACTIVE_USERS:`${USER_BASE}/manage-users/stats/active-users`,
+  GET_USER_STATS: `${USER_BASE}/manage-users/stats`,
 } as const;
 export const userService = {
   getAllUsers: async ({
