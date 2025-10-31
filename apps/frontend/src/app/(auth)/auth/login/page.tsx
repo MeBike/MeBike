@@ -25,33 +25,31 @@ const Login = () => {
 
   useEffect(() => {
     if (user) {
-      if(user?.role === "ADMIN"){
+      if (user?.role === "ADMIN") {
         router.push("/admin");
-      } else if(user?.role === "STAFF"){
+      } else if (user?.role === "STAFF") {
         router.push("/staff");
-      } else if (user?.role === "USER"){
+      } else if (user?.role === "USER") {
         router.push("/user");
       }
       resetFormData();
-    }
-    else if(isNavigating){
+    } else if (isNavigating) {
       return;
     }
   }, [user, isNavigating, router]);
-const resetFormData = () => {
-  setEmail("");
-  setPassword("");
-};
-const handleLogin = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (isLoggingIn || isLoading || isNavigating) return;
-  setIsNavigating(true);
-  logIn({ email, password }, (success) => {
-    if (!success) setIsNavigating(false);
-  });
-  resetFormData();
-};
-
+  const resetFormData = () => {
+    setEmail("");
+    setPassword("");
+  };
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoggingIn || isLoading || isNavigating) return;
+    setIsNavigating(true);
+    logIn({ email, password }, (success) => {
+      if (!success) setIsNavigating(false);
+    });
+    resetFormData();
+  };
 
   return (
     <div
@@ -132,8 +130,6 @@ const handleLogin = (e: React.FormEvent) => {
                   </button>
                 </div>
               </div>
-
-              {/* Forgot password */}
               <div className="text-right">
                 <Button
                   type="button"
@@ -144,8 +140,6 @@ const handleLogin = (e: React.FormEvent) => {
                   Quên mật khẩu?
                 </Button>
               </div>
-
-              {/* Login button */}
               <Button
                 type="submit"
                 disabled={isLoggingIn || isLoading || isNavigating}
@@ -164,7 +158,6 @@ const handleLogin = (e: React.FormEvent) => {
                 )}
               </Button>
             </form>
-
             <Separator className="my-6" />
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
