@@ -18,29 +18,8 @@ import Report from '~/models/schemas/report.schema'
 
 import databaseService from './database.services'
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!
-})
-
-function bufferToStream(buffer: Buffer) {
-  const readable = new Readable()
-  readable.push(buffer)
-  readable.push(null)
-  return readable
-}
-
 class ReportService {
-  async createReport({
-    userID,
-    payload,
-    files
-  }: {
-    userID: string
-    payload: CreateReportReqBody
-    files?: Express.Multer.File[]
-  }) {
+  async createReport({ userID, payload }: { userID: string; payload: CreateReportReqBody }) {
     const reportID = new ObjectId()
     const currentDate = new Date()
     const vietnamTimezoneOffset = 7 * 60
@@ -56,7 +35,7 @@ class ReportService {
       latitude: payload.latitude,
       longitude: payload.longitude,
       priority: '' as ReportPriority,
-      media_urls: []
+      media_urls: payload.files || []
     }
 
     if (payload.station_id) reportData.station_id = new ObjectId(payload.station_id)
@@ -64,44 +43,9 @@ class ReportService {
     if (userID) reportData.user_id = new ObjectId(userID)
     if (payload.bike_id) reportData.bike_id = new ObjectId(payload.bike_id)
 
-    await databaseService.reports.insertOne(new Report(reportData))
+    const result = await databaseService.reports.insertOne(new Report(reportData))
 
-    if (files && files.length > 0) {
-      ;(async () => {
-        try {
-          const limit = pLimit(3)
-          const media_urls = await Promise.all(
-            files.map((file) =>
-              limit(async () => {
-                const uploadStream = () =>
-                  new Promise<string>((resolve, reject) => {
-                    const stream = cloudinary.uploader.upload_stream(
-                      {
-                        resource_type: 'auto',
-                        folder: 'reports',
-                        chunk_size: 6_000_000
-                      },
-                      (error, result) => {
-                        if (error) return reject(error)
-                        resolve(result?.secure_url || '')
-                      }
-                    )
-                    bufferToStream(file.buffer).pipe(stream)
-                  })
-
-                return await uploadStream()
-              })
-            )
-          )
-
-          await databaseService.reports.updateOne({ _id: reportID }, { $set: { media_urls } })
-        } catch (error) {
-          console.error('Upload report image error:', error)
-        }
-      })()
-    }
-
-    return { _id: reportID }
+    return result
   }
 
   async updateReportStatus({
