@@ -22,13 +22,17 @@ import { useWithdrawalAction } from "@hooks/useWithdrawalAction";
 
 function MyWalletScreen() {
   const navigation = useNavigation();
+  const limit = 5;
   const {
     getMyWallet,
     myWallet,
     isLoadingGetMyWallet,
     myTransactions: transactions,
     isLoadingGetMyTransaction,
-  } = useWalletActions(true);
+    loadMoreTransactions,
+    hasNextPageTransactions,
+    isFetchingNextPageTransactions,
+  } = useWalletActions(true, limit);
   const {
     withdrawalRequests,
     isLoadingWithdrawals,
@@ -40,6 +44,7 @@ function MyWalletScreen() {
   } = useWithdrawalAction();
   const insets = useSafeAreaInsets();
   const [showQR, setShowQR] = useState(false);
+  const [activeTab, setActiveTab] = useState<'transactions' | 'withdrawals'>('transactions');
 
   useEffect(() => {
     getMyWallet();
@@ -53,7 +58,10 @@ function MyWalletScreen() {
 
   useEffect(() => {
     if (transactions) {
-      console.log("Wallet Transactions (/wallets/transaction):", JSON.stringify(transactions, null, 2));
+      console.log(
+        "Wallet Transactions (/wallets/transaction):",
+        JSON.stringify(transactions, null, 2)
+      );
     }
   }, [transactions]);
 
@@ -91,7 +99,11 @@ function MyWalletScreen() {
                             {
                               text: "Tiếp tục",
                               onPress: (account?: string) => {
-                                if (account && account.length >= 5 && account.length <= 30) {
+                                if (
+                                  account &&
+                                  account.length >= 5 &&
+                                  account.length <= 30
+                                ) {
                                   // Fourth prompt for account owner
                                   Alert.prompt(
                                     "Chủ tài khoản",
@@ -101,26 +113,42 @@ function MyWalletScreen() {
                                       {
                                         text: "Tiếp tục",
                                         onPress: (account_owner?: string) => {
-                                          if (account_owner && account_owner.length >= 5 && account_owner.length <= 50) {
+                                          if (
+                                            account_owner &&
+                                            account_owner.length >= 5 &&
+                                            account_owner.length <= 50
+                                          ) {
                                             // Fifth prompt for note
                                             Alert.prompt(
                                               "Ghi chú",
                                               "Nhập ghi chú (tối thiểu 10 ký tự, tối đa 500 ký tự)",
                                               [
-                                                { text: "Hủy", style: "cancel" },
+                                                {
+                                                  text: "Hủy",
+                                                  style: "cancel",
+                                                },
                                                 {
                                                   text: "Xác nhận",
                                                   onPress: (note?: string) => {
-                                                    if (!note || (note.length >= 10 && note.length <= 500)) {
+                                                    if (
+                                                      !note ||
+                                                      (note.length >= 10 &&
+                                                        note.length <= 500)
+                                                    ) {
                                                       createWithdrawal({
                                                         amount: Number(amount),
                                                         bank,
                                                         account,
                                                         account_owner,
-                                                        note: note || "Rút tiền từ ví",
+                                                        note:
+                                                          note ||
+                                                          "Rút tiền từ ví",
                                                       });
                                                     } else {
-                                                      Alert.alert("Lỗi", "Ghi chú phải từ 10-500 ký tự");
+                                                      Alert.alert(
+                                                        "Lỗi",
+                                                        "Ghi chú phải từ 10-500 ký tự"
+                                                      );
                                                     }
                                                   },
                                                 },
@@ -130,7 +158,10 @@ function MyWalletScreen() {
                                               "default"
                                             );
                                           } else {
-                                            Alert.alert("Lỗi", "Tên chủ tài khoản phải từ 5-50 ký tự");
+                                            Alert.alert(
+                                              "Lỗi",
+                                              "Tên chủ tài khoản phải từ 5-50 ký tự"
+                                            );
                                           }
                                         },
                                       },
@@ -140,7 +171,10 @@ function MyWalletScreen() {
                                     "default"
                                   );
                                 } else {
-                                  Alert.alert("Lỗi", "Số tài khoản phải từ 5-30 ký tự");
+                                  Alert.alert(
+                                    "Lỗi",
+                                    "Số tài khoản phải từ 5-30 ký tự"
+                                  );
                                 }
                               },
                             },
@@ -174,14 +208,12 @@ function MyWalletScreen() {
   };
 
   const handleShareUserId = async () => {
-    if (!myWallet?.user_id)
-      return;
+    if (!myWallet?.user_id) return;
     try {
       await Share.share({
         message: `user_id của tôi: ${myWallet.user_id}`,
       });
-    }
-    catch (error) {
+    } catch (error) {
       Alert.alert("Lỗi", "Không thể chia sẻ user_id");
     }
   };
@@ -228,7 +260,9 @@ function MyWalletScreen() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#0066FF" />
-        <Text style={{ marginTop: 12, color: "#333" }}>Đang tải giao dịch...</Text>
+        <Text style={{ marginTop: 12, color: "#333" }}>
+          Đang tải giao dịch...
+        </Text>
       </View>
     );
   }
@@ -332,9 +366,7 @@ function MyWalletScreen() {
                   marginBottom: 12,
                 }}
               >
-                {formatBalance(myWallet.balance?.$numberDecimal)}
-                {" "}
-                đ
+                {formatBalance(myWallet.balance?.$numberDecimal)} đ
               </Text>
               <View
                 style={{
@@ -412,121 +444,136 @@ function MyWalletScreen() {
         </View>
 
         <View style={styles.content}>
-          <View style={styles.historyHeader}>
-            <Text style={styles.historyTitle}>Lịch sử giao dịch</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>Xem tất cả</Text>
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'transactions' && styles.activeTab]}
+              onPress={() => setActiveTab('transactions')}
+            >
+              <Text style={[styles.tabText, activeTab === 'transactions' && styles.activeTabText]}>
+                Lịch sử giao dịch
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'withdrawals' && styles.activeTab]}
+              onPress={() => setActiveTab('withdrawals')}
+            >
+              <Text style={[styles.tabText, activeTab === 'withdrawals' && styles.activeTabText]}>
+                Yêu cầu rút tiền
+              </Text>
             </TouchableOpacity>
           </View>
 
-          {transactions.map(transaction => (
-            <View key={transaction._id} style={styles.transactionItem}>
-              <View style={styles.transactionLeft}>
-                <View
-                  style={[
-                    styles.transactionIcon,
-                    {
-                      backgroundColor:
-                        `${getTransactionColor(transaction.type)}20`,
-                    },
-                  ]}
-                >
-                  <Ionicons
-                    name={getTransactionIcon(transaction.type) as any}
-                    size={20}
-                    color={getTransactionColor(transaction.type)}
-                  />
-                </View>
-                <View style={styles.transactionInfo}>
-                  <Text style={styles.transactionDescription}>
-                    {transaction.description}
-                  </Text>
-                  <Text style={styles.transactionDate}>
-                    {transaction.created_at}
-                    {" "}
-                    •
-                    {transaction.status}
-                  </Text>
-                </View>
-              </View>
-              <Text
-                style={[
-                  styles.transactionAmount,
-                  {
-                    color:
-                      transaction.type === "NẠP TIỀN"
-                        ? "#10B981"
-                        : transaction.type === "RÚT TIỀN"
-                          ? "#F59E0B"
-                          : "#EF4444",
-                  },
-                ]}
-              >
-                {formatBalance(transaction.amount.toString())}
-                {" "}
-                đ
-              </Text>
-            </View>
-          ))}
-
-          <View style={styles.historyHeader}>
-            <Text style={styles.historyTitle}>Yêu cầu rút tiền</Text>
-          </View>
-
-          {isLoadingWithdrawals ? (
-            <View style={styles.center}>
-              <ActivityIndicator size="small" color="#0066FF" />
-              <Text style={{ marginTop: 8, color: "#333" }}>Đang tải...</Text>
-            </View>
-          ) : (
+          {activeTab === 'transactions' && (
             <>
-              {withdrawalRequests.map(request => (
-                <View key={request._id} style={styles.transactionItem}>
+              <View style={styles.historyHeader}>
+                <Text style={styles.historyTitle}>Lịch sử giao dịch</Text>
+                {hasNextPageTransactions && (
+                  <TouchableOpacity onPress={loadMoreTransactions} disabled={isFetchingNextPageTransactions}>
+                    <Text style={styles.viewAllText}>
+                      {isFetchingNextPageTransactions ? "Đang tải..." : "Tải thêm"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {transactions.map((transaction, index) => (
+                <View key={`${transaction._id}-${index}`} style={styles.transactionItem}>
                   <View style={styles.transactionLeft}>
                     <View
                       style={[
                         styles.transactionIcon,
-                        { backgroundColor: "#F59E0B20" },
+                        {
+                          backgroundColor: `${getTransactionColor(transaction.type)}20`,
+                        },
                       ]}
                     >
                       <Ionicons
-                        name="arrow-up-circle"
+                        name={getTransactionIcon(transaction.type) as any}
                         size={20}
-                        color="#F59E0B"
+                        color={getTransactionColor(transaction.type)}
                       />
                     </View>
                     <View style={styles.transactionInfo}>
                       <Text style={styles.transactionDescription}>
-                        Rút tiền về {request.bank_name}
+                        {transaction.description}
                       </Text>
                       <Text style={styles.transactionDate}>
-                        {request.created_at} • {request.status}
+                        {transaction.created_at} •{transaction.status}
                       </Text>
                     </View>
                   </View>
                   <Text
                     style={[
                       styles.transactionAmount,
-                      { color: "#F59E0B" },
+                      {
+                        color:
+                          transaction.type === "NẠP TIỀN"
+                            ? "#10B981"
+                            : transaction.type === "RÚT TIỀN"
+                              ? "#F59E0B"
+                              : "#EF4444",
+                      },
                     ]}
                   >
-                    -{formatBalance(request.amount.toString())} đ
+                    {formatBalance(transaction.amount.toString())} đ
                   </Text>
                 </View>
               ))}
+            </>
+          )}
 
-              {hasNextPage && (
-                <TouchableOpacity
-                  style={styles.loadMoreButton}
-                  onPress={loadMore}
-                  disabled={isFetchingNextPage}
-                >
-                  {isFetchingNextPage ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.loadMoreText}>Tải thêm</Text>
-                  )}
-                </TouchableOpacity>
+          {activeTab === 'withdrawals' && (
+            <>
+              <View style={styles.historyHeader}>
+                <Text style={styles.historyTitle}>Yêu cầu rút tiền</Text>
+                {hasNextPage && (
+                  <TouchableOpacity onPress={loadMore} disabled={isFetchingNextPage}>
+                    <Text style={styles.viewAllText}>
+                      {isFetchingNextPage ? "Đang tải..." : "Tải thêm"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {isLoadingWithdrawals ? (
+                <View style={styles.center}>
+                  <ActivityIndicator size="small" color="#0066FF" />
+                  <Text style={{ marginTop: 8, color: "#333" }}>Đang tải...</Text>
+                </View>
+              ) : (
+                <>
+                  {withdrawalRequests.map((request) => (
+                    <View key={request._id} style={styles.transactionItem}>
+                      <View style={styles.transactionLeft}>
+                        <View
+                          style={[
+                            styles.transactionIcon,
+                            { backgroundColor: "#F59E0B20" },
+                          ]}
+                        >
+                          <Ionicons
+                            name="arrow-up-circle"
+                            size={20}
+                            color="#F59E0B"
+                          />
+                        </View>
+                        <View style={styles.transactionInfo}>
+                          <Text style={styles.transactionDescription}>
+                            Rút tiền về {request.bank_name}
+                          </Text>
+                          <Text style={styles.transactionDate}>
+                            {request.created_at} • {request.status}
+                          </Text>
+                        </View>
+                      </View>
+                      <Text
+                        style={[styles.transactionAmount, { color: "#F59E0B" }]}
+                      >
+                        -{formatBalance(request.amount.toString())} đ
+                      </Text>
+                    </View>
+                  ))}
+                </>
               )}
             </>
           )}
@@ -549,9 +596,7 @@ function MyWalletScreen() {
             />
             <Text>VUI LÒNG COPY ID VÀO TIN NHẮN CHUYỂN KHOẢN</Text>
             <Text selectable style={styles.userId}>
-              user_id:
-              {" "}
-              {myWallet.user_id}
+              user_id: {myWallet.user_id}
             </Text>
 
             <TouchableOpacity
@@ -640,6 +685,35 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   content: { paddingHorizontal: 16, paddingBottom: 20 },
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  activeTab: {
+    backgroundColor: "#0066FF",
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+  },
+  activeTabText: {
+    color: "#fff",
+  },
   historyHeader: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -64,9 +64,13 @@ export const walletService = {
     );
     return response;
   },
-  transactions: async (): Promise<AxiosResponse<ApiResponse<Transaction[]>>> => {
+  transactions: async ({page , limit }: {page: number, limit: number}): Promise<AxiosResponse<ApiResponse<Transaction[]>>> => {
     return await fetchHttpClient.get<ApiResponse<Transaction[]>>(
       WALLET_ENDPOINTS.TRANSACTIONS,
+      {
+        page : page,
+        limit : limit,
+      }
     );
   },
 };
