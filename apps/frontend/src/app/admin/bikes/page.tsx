@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { Bike, BikeStatus } from "@custom-types";
+import type { Bike, BikeRentalHistory, BikeStatus } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { Loader2 } from "lucide-react";
@@ -14,7 +14,8 @@ import { useSupplierActions } from "@/hooks/useSupplierAction";
 import { getStatusColor } from "@utils/bike-status";
 
 export default function BikesPage() {
-  const [id, setId] = useState<string>("");
+  const [detailId, setDetailId] = useState<string>("");
+  const [editId, setEditId] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [limit,] = useState<number>(10);
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,6 +31,9 @@ export default function BikesPage() {
   const [editBike, setEditBike] = useState<Bike | null>(null);
   const { stations } = useStationActions({ hasToken: true });
   const { allSupplier } = useSupplierActions(true);
+  const [detailTab, setDetailTab] = useState<
+    "info" | "rentals" | "stats" | "activity"
+  >("info");
   const {
     data,
     detailBike,
@@ -41,10 +45,18 @@ export default function BikesPage() {
     createBike,
     updateBike,
     getBikeByID,
-    isLoadingDetail
+    isLoadingDetail,
+    bikeActivityStats,
+    getBikeActivityStats,
+    bikeStats,
+    isFetchingBikeStats,
+    bikeRentals,
+    isFetchingRentalBikes,
+    getRentalBikes,
+    getBikeStats
   } = useBikeActions(
     true,
-    id,
+    detailId,
     undefined,
     undefined,
     statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
@@ -53,23 +65,23 @@ export default function BikesPage() {
   );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const handleViewDetails = (bikeId: string) => {
-    setId(bikeId);
+    setDetailId(bikeId);
     setIsDetailModalOpen(true);
   }
   const handleEditBike = (bikeId: string) => {
-    if (id === bikeId) {
+    if (editId === bikeId) {
       getBikeByID();
       setIsEditModalOpen(true); 
     } else {
-      setId(bikeId);
+      setEditId(bikeId);
     }
   }
   useEffect(() => {
-    if (!isLoadingDetail && detailBike) {
+    if (!isLoadingDetail && detailBike && editId) {
       setEditBike(detailBike);
       setIsEditModalOpen(true);
     }
-  }, [isLoadingDetail, detailBike]);
+  }, [isLoadingDetail, detailBike, editId]);
   const handleUpdateBike = () => {
     if (!editBike) return;
     updateBike({
@@ -103,10 +115,19 @@ export default function BikesPage() {
     getStatisticsBike();
   }, [getStatisticsBike]);
   useEffect(() => {
-    if (id) {
+    if (detailId) {
+      getBikeByID();
+      getBikeActivityStats();
+      getBikeStats();
+      getRentalBikes();
+    }
+  } , [detailId , getBikeByID, getBikeActivityStats, getBikeStats, getRentalBikes]);
+
+  useEffect(() => {
+    if (editId) {
       getBikeByID();
     }
-  } , [id , getBikeByID]);
+  }, [editId , getBikeByID]);
   if (isLoadingStatistics) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -347,57 +368,310 @@ export default function BikesPage() {
         )}
         {isDetailModalOpen && detailBike && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-foreground mb-4">
                 Chi tiết xe đạp
               </h2>
-
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-muted-foreground">ID Xe</p>
-                  <p className="text-foreground font-medium">
-                    {detailBike._id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Chip ID</p>
-                  <p className="text-foreground font-medium">
-                    {detailBike.chip_id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Trạm</p>
-                  <p className="text-foreground font-medium">
-                    {detailBike.station_id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Nhà cung cấp</p>
-                  <p className="text-foreground font-medium">
-                    {detailBike.supplier_id || "-"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Trạng thái</p>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(detailBike.status)}`}
-                  >
-                    {detailBike.status}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Ngày tạo</p>
-                  <p className="text-foreground font-medium">
-                    {new Date(detailBike.created_at).toLocaleString("vi-VN")}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Ngày cập nhật</p>
-                  <p className="text-foreground font-medium">
-                    {new Date(detailBike.updated_at).toLocaleString("vi-VN")}
-                  </p>
-                </div>
+              {/* Tabs for different sections */}
+              <div className="flex gap-2 mb-6 border-b border-border">
+                <button
+                  onClick={() => setDetailTab("info")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    detailTab === "info"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Thông tin
+                </button>
+                <button
+                  onClick={() => setDetailTab("rentals")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    detailTab === "rentals"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Lịch sử thuê
+                </button>
+                <button
+                  onClick={() => setDetailTab("stats")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    detailTab === "stats"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Thống kê
+                </button>
+                <button
+                  onClick={() => setDetailTab("activity")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                    detailTab === "activity"
+                      ? "text-primary border-b-2 border-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Hoạt động
+                </button>
               </div>
+
+              {detailTab === "info" && (
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground">ID Xe</p>
+                    <p className="text-foreground font-medium">
+                      {detailBike._id}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Chip ID</p>
+                    <p className="text-foreground font-medium">
+                      {detailBike.chip_id}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Trạm</p>
+                    <p className="text-foreground font-medium">
+                      {detailBike.station_id}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Nhà cung cấp
+                    </p>
+                    <p className="text-foreground font-medium">
+                      {detailBike.supplier_id || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Trạng thái</p>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(detailBike.status)}`}
+                    >
+                      {detailBike.status}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Ngày tạo</p>
+                    <p className="text-foreground font-medium">
+                      {new Date(detailBike.created_at).toLocaleString("vi-VN")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Ngày cập nhật
+                    </p>
+                    <p className="text-foreground font-medium">
+                      {new Date(detailBike.updated_at).toLocaleString("vi-VN")}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {detailTab === "rentals" && (
+                <div className="space-y-3">
+                  {isFetchingRentalBikes ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="animate-spin w-6 h-6 text-primary" />
+                      <span className="ml-2 text-sm text-muted-foreground">Đang tải dữ liệu...</span>
+                    </div>
+                  ) : Array.isArray(bikeRentals) && bikeRentals.length > 0 ? (
+                    <div className="bg-muted rounded-lg p-4">
+                      {/* <p className="text-sm text-muted-foreground mb-2">
+                        API: /bikes/{detailBike._id}/rental-history
+                      </p> */}
+                      <div className="space-y-2">
+                        {bikeRentals.map((rental: BikeRentalHistory, index: number) => (
+                          <div key={rental._id} className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm text-foreground font-medium">
+                                  Đơn thuê #{(index + 1).toString().padStart(3, '0')}
+                                </span>
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                  {rental.user.fullname || "Người dùng ẩn danh"}
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-1">
+                                Từ {rental.start_station.name} → {rental.end_station.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {new Date(rental.start_time).toLocaleString("vi-VN")} - {new Date(rental.end_time).toLocaleString("vi-VN")}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-medium text-foreground">
+                                {parseFloat(rental.total_price.$numberDecimal).toLocaleString()} VND
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {Math.round(rental.duration / 60)} phút
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-muted rounded-lg p-4 text-center">
+                      <p className="text-sm text-muted-foreground">Không có lịch sử thuê</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {detailTab === "stats" && (
+                <div className="space-y-3">
+                  <div className="bg-muted rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* ID xe - màu primary */}
+                      <div className="bg-primary/10 border border-primary rounded p-3">
+                        <p className="text-xs text-primary">ID xe</p>
+                        <p className="text-2xl font-bold text-primary">
+                          {bikeActivityStats?.bike_id.slice(0, 8)}
+                        </p>
+                      </div>
+                      {/* Doanh thu từng tháng */}
+                      {bikeActivityStats?.monthly_stats?.map((stat, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-yellow-100 border border-yellow-300 rounded p-3 mb-2"
+                        >
+                          <p className="text-xs text-yellow-600">
+                            Doanh thu tháng {stat.month}/{stat.year}
+                          </p>
+                          <p className="text-2xl font-bold text-yellow-800">
+                            {stat.revenue.toLocaleString()} VND
+                          </p>
+                          <p className="text-xs text-yellow-600">
+                            Số lượt thuê: {stat.rentals_count}
+                          </p>
+                          <p className="text-xs text-yellow-600">
+                            Phút hoạt động: {stat.minutes_active}
+                          </p>
+                        </div>
+                      ))}
+                      {/* Thời gian sử dụng - màu blue */}
+                      <div className="bg-blue-100 border border-blue-300 rounded p-3">
+                        <p className="text-xs text-blue-600">
+                          Thời gian sử dụng
+                        </p>
+                        <p className="text-2xl font-bold text-blue-800">
+                          {bikeActivityStats?.total_minutes_active || 0} phút
+                        </p>
+                      </div>
+                      {/* Phần trăm thời gian hoạt động - màu green */}
+                      <div className="bg-green-100 border border-green-300 rounded p-3">
+                        <p className="text-xs text-green-600">
+                          Phần trăm thời gian hoạt động
+                        </p>
+                        <p className="text-2xl font-bold text-green-800">
+                          {bikeActivityStats?.uptime_percentage}%
+                        </p>
+                      </div>
+                      {/* Số lượng báo hỏng - màu red */}
+                      <div className="bg-red-100 border border-red-300 rounded p-3">
+                        <p className="text-xs text-red-600">
+                          Số lượng báo hỏng
+                        </p>
+                        <p className="text-2xl font-bold text-red-800">
+                          {bikeActivityStats?.total_reports || 0} báo hỏng
+                        </p>
+                      </div>
+                      {/* Đánh giá trung bình - màu gray nếu chưa có đánh giá */}
+                      <div className="bg-gray-100 border border-gray-300 rounded p-3">
+                        <p className="text-xs text-gray-600">
+                          Đánh giá trung bình
+                        </p>
+                        <p className="text-2xl font-bold text-gray-800">
+                          Chưa có đánh giá
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {detailTab === "activity" && (
+                <div className="space-y-3">
+                  {isFetchingBikeStats ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="animate-spin w-6 h-6 text-primary" />
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        Đang tải dữ liệu...
+                      </span>
+                    </div>
+                  ) : bikeActivityStats ? (
+                    <div className="bg-muted rounded-lg p-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center py-2 border-b border-border">
+                          <span className="text-sm text-foreground">
+                            Tổng thời gian hoạt động
+                          </span>
+                          <span className="text-sm font-medium">
+                            {bikeStats?.total_duration_minutes} phút
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-border">
+                          <span className="text-sm text-foreground">
+                            Tổng lượt thuê
+                          </span>
+                          <span className="text-sm font-medium">
+                            {bikeStats?.total_rentals}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-border">
+                          <span className="text-sm text-foreground">
+                            Tổng lợi nhuận
+                          </span>
+                          <span className="text-sm font-medium">
+                            {bikeStats?.total_revenue?.toLocaleString()} VND
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-border">
+                          <span className="text-sm text-foreground">
+                            Tổng báo cáo
+                          </span>
+                          <span className="text-sm font-medium">
+                            {bikeStats?.total_reports}
+                          </span>
+                        </div>
+                        {/* {bikeActivityStats.monthly_stats.length > 0 && (
+                          <div className="mt-4">
+                            <p className="text-sm font-medium text-foreground mb-2">
+                              Thống kê theo tháng
+                            </p>
+                            <div className="space-y-1">
+                              {bikeActivityStats.monthly_stats
+                                .slice(0, 3)
+                                .map((stat, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex justify-between items-center py-1 text-xs"
+                                  >
+                                    <span className="text-muted-foreground">
+                                      {stat.month}/{stat.year}
+                                    </span>
+                                    <span className="text-foreground">
+                                      {stat.rentals_count} lượt -{" "}
+                                      {Math.round(stat.minutes_active / 60)}h
+                                    </span>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        )} */}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-muted rounded-lg p-4 text-center">
+                      <p className="text-sm text-muted-foreground">
+                        Không có dữ liệu hoạt động
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <Button
                 onClick={() => setIsDetailModalOpen(false)}
