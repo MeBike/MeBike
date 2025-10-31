@@ -45,10 +45,11 @@ export default function RentalsPage() {
     allRentalsData,
     pagination,
     revenueData,
+    todayRevenueData,
     detailData,
     getDetailRental,
-    getRevenue,
     updateRental,
+    getTodayRevenue,
   } = useRentalsActions({
     hasToken: true,
     limit,
@@ -74,9 +75,9 @@ export default function RentalsPage() {
     limit: 100,
   });
   useEffect(() => {
-    getRevenue();
     getAllStations();
-  }, [getRevenue, getAllStations]);
+    getTodayRevenue();
+  }, [ getAllStations, getTodayRevenue]);
 
   const rentals = allRentalsData || [];
 
@@ -108,12 +109,12 @@ export default function RentalsPage() {
     cancelled: rentals.filter((r) => r.status === "ĐÃ HỦY").length,
     overdue: 0, // No overdue in RentingHistory
     todayRevenue:
-      revenueData?.result?.data?.reduce(
+      todayRevenueData?.data?.reduce(
         (sum: number, item: { totalRevenue: number }) => sum + item.totalRevenue,
         0
       ) || 0,
     totalRevenue:
-      revenueData?.result?.data?.reduce(
+      revenueData?.data?.reduce(
         (sum: number, item: { totalRevenue: number }) => sum + item.totalRevenue,
         0
       ) || 0,
