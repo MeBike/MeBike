@@ -21,7 +21,9 @@ import type { RentingHistory } from "../types/RentalTypes";
 function BookingHistoryScreen() {
   const navigator = useNavigation();
   const insets = useSafeAreaInsets();
-  const { rentalsData, isGetAllRentalsFetching, getAllRentals } = useRentalsActions(true);
+  const [page , setPage] = useState<number>(1);
+  const [limit,setLimit] = useState<number>(5);
+  const { rentalsData, isGetAllRentalsFetching, getAllRentals } = useRentalsActions(true, undefined, undefined , page , limit);
   const [bookings, setBookings] = useState<RentingHistory[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 

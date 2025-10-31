@@ -9,7 +9,7 @@ export const LoadingScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <IconSymbol name="bicycle" size={60} color={BikeColors.primary} />
-      <Text style={styles.title}>BikeShare</Text>
+      <Text style={styles.title}>MeBike</Text>
       <ActivityIndicator size="large" color={BikeColors.primary} style={styles.loader} />
       <Text style={styles.subtitle}>Đang tải...</Text>
     </View>

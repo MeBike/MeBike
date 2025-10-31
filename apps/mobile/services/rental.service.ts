@@ -58,10 +58,8 @@ export const rentalService = {
     const response = await fetchHttpClient.get<RentalResponse>(
       RENTAL_ENDPOINTS.USER_RENTAL_ME(),
       {
-        params: {
-          page,
-          limit,
-        },
+        page: page,
+        limit: limit
       }
     );
     return response;

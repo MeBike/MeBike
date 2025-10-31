@@ -44,10 +44,10 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
 
   return defaultMessage;
 }
-export function useRentalsActions(hasToken: boolean, bikeId?: string , station_id?: string) {
+export function useRentalsActions(hasToken: boolean, bikeId?: string , station_id?: string,page?: number, limit?: number) {
   const queryClient = useQueryClient();
   const navigation = useNavigation();
-  const useGetAllRentals = useGetAllRentalsQuery();
+  const useGetAllRentals = useGetAllRentalsQuery(page , limit);
   const useGetDetailRentals = useGetDetailRentalQuery(bikeId || "");
   const usePutEndRental = usePutEndCurrentRental();
   const usePostRent = usePostRentQuery();
