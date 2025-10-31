@@ -4,8 +4,10 @@ import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "@schemas/bikeSchema";
-import { Bike } from "@custom-types";
+import { Bike, BikeRentalHistory } from "@custom-types";
 import { BikeStatus } from "@custom-types";
+import { BikeActivityStats } from "@custom-types";
+import { BikeStats } from "@custom-types";
 interface ApiResponse<T> {
   data: T;
   pagination: {
@@ -18,6 +20,12 @@ interface ApiResponse<T> {
 }
 interface DetailApiResponse<T> {
   result: T;
+  message: string;
+}
+interface DetailApiResponseCuaNguyen<T> {
+  result: {
+    data: T;
+  };
   message: string;
 }
 export interface BikeStatistics {
@@ -37,6 +45,9 @@ const BIKE_ENDPOINTS = {
   REPORT_BROKEN: (id: string) => `${BIKE_BASE}/report-broken/${id}`,
   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
+  ACTIVIY_STATS: (id: string) => `${BIKE_BASE}/${id}/activity-stats`,
+  STATS_BIKE: (id: string) => `${BIKE_BASE}/${id}/stats`,
+  RENTAL_HISTORY_BIKE: (id: string) => `${BIKE_BASE}/${id}/rental-history`,
 } as const;
 // interface ApiResponse<T> {
 //   data: T;
@@ -72,7 +83,6 @@ export const bikeService = {
     const response = await fetchHttpClient.delete(BIKE_ENDPOINTS.DELETE(id));
     return response;
   },
-
   //for both admin and staf
   getHistoryBikeById: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BY_ID(id));
@@ -96,7 +106,9 @@ export const bikeService = {
     return response;
   },
   //all
-  getBikeByIdForAll: async (id: string): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
+  getBikeByIdForAll: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
     const response = await fetchHttpClient.get<DetailApiResponse<Bike>>(
       BIKE_ENDPOINTS.BY_ID_FOR_ALL(id)
     );
@@ -125,6 +137,30 @@ export const bikeService = {
         status,
       }
     );
+    return response;
+  },
+  getBikeActivityStats: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<BikeActivityStats>>> => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<BikeActivityStats>
+    >(BIKE_ENDPOINTS.ACTIVIY_STATS(id));
+    return response;
+  },
+  getStatisticsBike: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<BikeStats>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<BikeStats>>(
+      BIKE_ENDPOINTS.STATS_BIKE(id)
+    );
+    return response;
+  },
+  getRentalHistoryBike: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponseCuaNguyen<BikeRentalHistory>>> => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponseCuaNguyen<BikeRentalHistory>
+    >(BIKE_ENDPOINTS.RENTAL_HISTORY_BIKE(id));
     return response;
   },
 };

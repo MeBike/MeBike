@@ -23,6 +23,7 @@ import stationRouter from "./routes/station.routes";
 import reserveRouter from "./routes/reservations.routes";
 import { warningExpiryReservation } from "./utils/cron/email.services";
 import ratingRouter from './routes/rating.routes'
+import { initQueue } from './lib/queue'
 
 const port = process.env.PORT || 4000
 
@@ -39,6 +40,8 @@ databaseService.connect().then(async () => {
 
   // cron-job
   // warningExpiryReservation.start()
+  // bullmq
+  initQueue()
 })
 
 app.get('/', (req, res) => {

@@ -7,6 +7,7 @@ import { ObjectId } from 'mongodb'
 import { ErrorWithStatus } from '~/models/errors'
 import { RATING_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
+import { Role } from '~/constants/enums'
 
 class RatingService {
   async createRating(userID: string, rentalID: string, reqBody: CreateRatingReqBody) {
@@ -45,11 +46,22 @@ class RatingService {
     await sendPaginatedResponse(res, next, databaseService.ratings, query as unknown as Request['query'], filter)
   }
 
-  async getRatingById(id: string) {
+  async getRatingById(id: string, user_id: string) {
+    const findUser = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+    const isAdmin = findUser?.role === Role.Admin
+
+    const matchCriteria: any = {
+      rental_id: new ObjectId(id)
+    }
+
+    if (!isAdmin) {
+      matchCriteria.user_id = new ObjectId(user_id)
+    }
+
     const result = await databaseService.ratings
       .aggregate([
         {
-          $match: { rental_id: new ObjectId(id) }
+          $match: matchCriteria
         },
         {
           $lookup: {
