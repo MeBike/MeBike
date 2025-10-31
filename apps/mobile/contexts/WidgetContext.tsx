@@ -1,10 +1,10 @@
+import { ExtensionStorage } from "@bacons/apple-targets";
 import * as React from "react";
 import { createContext, useCallback, useContext } from "react";
-import { ExtensionStorage } from "@bacons/apple-targets";
 
 // Initialize storage with your group ID
 const storage = new ExtensionStorage(
-  "group.com.<user_name>.<app_name>"
+  "group.com.<user_name>.<app_name>",
 );
 
 type WidgetContextType = {
@@ -34,10 +34,10 @@ export function WidgetProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export const useWidget = () => {
+export function useWidget() {
   const context = useContext(WidgetContext);
   if (!context) {
     throw new Error("useWidget must be used within a WidgetProvider");
   }
   return context;
-};
+}

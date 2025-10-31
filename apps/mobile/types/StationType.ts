@@ -1,4 +1,4 @@
-export interface StationType {
+export type StationType = {
   _id: string;
   name: string;
   address: string;
@@ -14,4 +14,4 @@ export interface StationType {
   reservedBikes: number;
   maintainedBikes: number;
   emptySlots: number;
-}
+};

@@ -1,86 +1,89 @@
-import React, { useState, useEffect } from 'react';
+import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Pressable,
   Alert,
+  Animated,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
-  Animated,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { LoginScreenNavigationProp } from '../types/navigation';
-import { BikeColors } from '../constants/BikeColors';
-import { IconSymbol } from '../components/IconSymbol';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '@providers/auth-providers';
-import { testBackendConnection } from '../utils/testConnection';
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
+import { useAuth } from "@providers/auth-providers";
+
+import type { LoginScreenNavigationProp } from "../types/navigation";
+
+import { IconSymbol } from "../components/IconSymbol";
+import { BikeColors } from "../constants/BikeColors";
+import { testBackendConnection } from "../utils/testConnection";
 
 export default function LoginScreen() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
   const rotateAnim = new Animated.Value(0);
-  const { logIn, isLoggingIn, isLoading , forgotPassword , isLoadingForgottingPassword} = useAuth();
+  const { logIn, isLoggingIn, isLoading, forgotPassword, isLoadingForgottingPassword } = useAuth();
 
   useEffect(() => {
     const checkBackend = async () => {
       const isOnline = await testBackendConnection();
-      setBackendStatus(isOnline ? 'online' : 'offline');
+      setBackendStatus(isOnline ? "online" : "offline");
     };
     checkBackend();
   }, []);
 
   const handleEmailLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
       return;
     }
-    if (backendStatus === 'offline') {
-      Alert.alert('Lỗi kết nối', 'Không thể kết nối đến server. Vui lòng kiểm tra:\n\n1. Server backend có đang chạy?\n2. URL API có đúng không?\n3. Kết nối mạng', [
-        {
-          text: 'Thử lại',
-          onPress: async () => {
-            setBackendStatus('checking');
-            const isOnline = await testBackendConnection();
-            setBackendStatus(isOnline ? 'online' : 'offline');
-          }
-        },
-        {
-          text: 'Demo Mode',
-          onPress: () => navigation.navigate('StationSelect')
-        }
-      ]);
-      return;
-    }    
+    // if (backendStatus === "offline") {
+    //   Alert.alert("Lỗi kết nối", "Không thể kết nối đến server. Vui lòng kiểm tra:\n\n1. Server backend có đang chạy?\n2. URL API có đúng không?\n3. Kết nối mạng", [
+    //     {
+    //       text: "Thử lại",
+    //       onPress: async () => {
+    //         setBackendStatus("checking");
+    //         const isOnline = await testBackendConnection();
+    //         setBackendStatus(isOnline ? "online" : "offline");
+    //       },
+    //     },
+    //     {
+    //       text: "Demo Mode",
+    //       onPress: () => navigation.navigate("StationSelect"),
+    //     },
+    //   ]);
+    //   return;
+    // }
     try {
       Animated.loop(
         Animated.timing(rotateAnim, {
           toValue: 1,
           duration: 1000,
           useNativeDriver: true,
-        })
+        }),
       ).start();
 
       logIn({ email, password });
-      setTimeout(() => {
-        rotateAnim.stopAnimation();
-        rotateAnim.setValue(0);
-        navigation.navigate("Main");
-      }, 500);
-      
-    } catch (error) {
+      // setTimeout(() => {
+      //   rotateAnim.stopAnimation();
+      //   rotateAnim.setValue(0);
+      //   navigation.navigate("Main");
+      // }, 500);
+    }
+    catch (error) {
       rotateAnim.stopAnimation();
       rotateAnim.setValue(0);
-      console.log('Login failed:', error);
+      console.log("Login failed:", error);
     }
   };
   const goToRegister = () => {
-    navigation.navigate('Register');
+    navigation.navigate("Register");
   };
 
   const goBack = () => {
@@ -88,12 +91,12 @@ export default function LoginScreen() {
   };
   const handleForgotPassword = () => {
     navigation.navigate("ForgotPassword");
-  }
+  };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <LinearGradient
@@ -103,22 +106,26 @@ export default function LoginScreen() {
           <Pressable style={styles.backButton} onPress={goBack}>
             <IconSymbol name="arrow.left" size={24} color="white" />
           </Pressable>
-          
+
           <View style={styles.headerContent}>
             <IconSymbol name="bicycle" size={48} color="white" />
             <Text style={styles.headerTitle}>Đăng nhập</Text>
             <Text style={styles.headerSubtitle}>Chào mừng bạn trở lại!</Text>
-            
+
             {/* Backend Status Indicator */}
             <View style={styles.statusContainer}>
-              <View style={[styles.statusDot, { backgroundColor: 
-                backendStatus === 'online' ? '#4CAF50' : 
-                backendStatus === 'offline' ? '#F44336' : '#FF9800' 
-              }]} />
+              <View style={[styles.statusDot, { backgroundColor:
+                backendStatus === "online"
+                  ? "#4CAF50"
+                  : backendStatus === "offline" ? "#F44336" : "#FF9800" }]}
+              />
               <Text style={styles.statusText}>
-                Server: {
-                  backendStatus === 'online' ? 'Hoạt động' :
-                  backendStatus === 'offline' ? 'Offline' : 'Đang kiểm tra...'
+                Server:
+                {" "}
+                {
+                  backendStatus === "online"
+                    ? "Hoạt động"
+                    : backendStatus === "offline" ? "Offline" : "Đang kiểm tra..."
                 }
               </Text>
             </View>
@@ -157,8 +164,8 @@ export default function LoginScreen() {
             <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
           </Pressable>
 
-          <Pressable 
-            style={[styles.loginButton, isLoggingIn && styles.disabledButton]} 
+          <Pressable
+            style={[styles.loginButton, isLoggingIn && styles.disabledButton]}
             onPress={handleEmailLogin}
             disabled={isLoggingIn && isLoading}
           >
@@ -167,13 +174,13 @@ export default function LoginScreen() {
                 transform: [{
                   rotate: rotateAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: ['0deg', '360deg']
-                  })
-                }]
+                    outputRange: ["0deg", "360deg"],
+                  }),
+                }],
               }}
             >
               <Text style={styles.loginButtonText}>
-                {isLoggingIn ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                {isLoggingIn ? "Đang đăng nhập..." : "Đăng nhập"}
               </Text>
             </Animated.View>
           </Pressable>
@@ -192,7 +199,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   scrollContent: {
     flexGrow: 1,
@@ -203,27 +210,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   backButton: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     padding: 8,
     marginBottom: 20,
   },
   headerContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginTop: 16,
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: "rgba(255, 255, 255, 0.9)",
   },
   statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 12,
     gap: 8,
   },
@@ -234,7 +241,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: "rgba(255, 255, 255, 0.8)",
   },
   formContainer: {
     flex: 1,
@@ -245,7 +252,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: BikeColors.textPrimary,
     marginBottom: 8,
   },
@@ -257,35 +264,35 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     color: BikeColors.textPrimary,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     marginBottom: 24,
   },
   forgotPasswordText: {
     color: BikeColors.primary,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   loginButton: {
     backgroundColor: BikeColors.primary,
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   disabledButton: {
     opacity: 0.6,
   },
   loginButtonText: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 24,
   },
   dividerLine: {
@@ -299,9 +306,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: BikeColors.divider,
     paddingVertical: 16,
@@ -312,12 +319,12 @@ const styles = StyleSheet.create({
   googleButtonText: {
     color: BikeColors.textPrimary,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   registerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   registerText: {
     color: BikeColors.textSecondary,
@@ -326,6 +333,6 @@ const styles = StyleSheet.create({
   registerLink: {
     color: BikeColors.primary,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

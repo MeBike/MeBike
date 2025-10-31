@@ -1,11 +1,14 @@
-import fetchHttpClient from "../lib/httpClient";
 import type { AxiosResponse } from "axios";
+
 import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "../schema/bikeSchema";
-import { Bike } from "../types/BikeTypes";
-interface ApiReponse<T> {
+import type { Bike } from "../types/BikeTypes";
+
+import fetchHttpClient from "../lib/httpClient";
+
+type ApiReponse<T> = {
   data: T;
   pagination?: {
     totalPages: number;
@@ -13,6 +16,10 @@ interface ApiReponse<T> {
     limit: number;
     currentPage: number;
   };
+};
+interface DetailApiResponse<T> {
+  result: T;
+  message: string;
 }
 const BIKE_BASE = "/bikes";
 const BIKE_ENDPOINTS = {
@@ -25,7 +32,7 @@ const BIKE_ENDPOINTS = {
   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
 } as const;
-export interface GetAllBikesQueryParams {
+export type GetAllBikesQueryParams = {
   page: number;
   limit: number;
   station_id: string;
@@ -37,9 +44,9 @@ export interface GetAllBikesQueryParams {
     | "ĐÃ ĐẶT TRƯỚC"
     | "ĐANG BẢO TRÌ"
     | "KHÔNG CÓ SẴN";
-}
+};
 export const bikeService = {
-  //for admin
+  // for admin
 
   createBikeAdmin: async (data: BikeSchemaFormData): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.post(BIKE_ENDPOINTS.BASE, data);
@@ -60,7 +67,7 @@ export const bikeService = {
     return response;
   },
 
-  //for both admin and staff
+  // for both admin and staff
   getHistoryBikeById: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(BIKE_ENDPOINTS.BY_ID(id));
     return response;
@@ -75,23 +82,25 @@ export const bikeService = {
     );
     return response;
   },
-  //for user
+  // for user
   reportBrokenBike: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.patch(
       BIKE_ENDPOINTS.REPORT_BROKEN(id)
     );
     return response;
   },
-  //all
-  getBikeByIdForAll: async (id: string): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(
+  // all
+  getBikeByIdForAll: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<Bike>>(
       BIKE_ENDPOINTS.BY_ID_FOR_ALL(id)
     );
     return response;
   },
-  getAllBikes: async (data : Partial<GetAllBikesQueryParams>): Promise<
-    AxiosResponse<ApiReponse<Bike[]>>
-  > => {
+  getAllBikes: async (
+    data: Partial<GetAllBikesQueryParams>
+  ): Promise<AxiosResponse<ApiReponse<Bike[]>>> => {
     const response = await fetchHttpClient.get<ApiReponse<Bike[]>>(
       BIKE_ENDPOINTS.BASE,
       { ...data }

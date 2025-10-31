@@ -12,25 +12,25 @@ LEDStatusManager::LEDStatusManager()
 
 void LEDStatusManager::begin()
 {
-    ledcSetup(LED_RED_CHANNEL, LED_PWM_FREQ, LED_PWM_RESOLUTION);
-    ledcSetup(LED_YELLOW_CHANNEL, LED_PWM_FREQ, LED_PWM_RESOLUTION);
-    ledcSetup(LED_GREEN_CHANNEL, LED_PWM_FREQ, LED_PWM_RESOLUTION);
+    ledcSetup(HardwareConfig::LED_RED_CHANNEL, HardwareConfig::LED_PWM_FREQ, HardwareConfig::LED_PWM_RESOLUTION);
+    ledcSetup(HardwareConfig::LED_YELLOW_CHANNEL, HardwareConfig::LED_PWM_FREQ, HardwareConfig::LED_PWM_RESOLUTION);
+    ledcSetup(HardwareConfig::LED_GREEN_CHANNEL, HardwareConfig::LED_PWM_FREQ, HardwareConfig::LED_PWM_RESOLUTION);
 
-    ledcAttachPin(LED_RED_PIN, LED_RED_CHANNEL);
-    ledcAttachPin(LED_YELLOW_PIN, LED_YELLOW_CHANNEL);
-    ledcAttachPin(LED_GREEN_PIN, LED_GREEN_CHANNEL);
+    ledcAttachPin(HardwareConfig::LED_RED_PIN, HardwareConfig::LED_RED_CHANNEL);
+    ledcAttachPin(HardwareConfig::LED_YELLOW_PIN, HardwareConfig::LED_YELLOW_CHANNEL);
+    ledcAttachPin(HardwareConfig::LED_GREEN_PIN, HardwareConfig::LED_GREEN_CHANNEL);
 
     turnOffAll();
 
     Log.info("LED Status Manager initialized (R=%d(source), Y=%d(source), G=%d(sink))\n",
-             LED_RED_PIN, LED_YELLOW_PIN, LED_GREEN_PIN);
+             HardwareConfig::LED_RED_PIN, HardwareConfig::LED_YELLOW_PIN, HardwareConfig::LED_GREEN_PIN);
 }
 
 void LEDStatusManager::turnOffAll()
 {
-    ledcWrite(LED_RED_CHANNEL, LED_OFF);
-    ledcWrite(LED_YELLOW_CHANNEL, LED_OFF);
-    ledcWrite(LED_GREEN_CHANNEL, LED_FULL_BRIGHTNESS); // nay nguoc laij sink
+    ledcWrite(HardwareConfig::LED_RED_CHANNEL, HardwareConfig::LED_OFF);
+    ledcWrite(HardwareConfig::LED_YELLOW_CHANNEL, HardwareConfig::LED_OFF);
+    ledcWrite(HardwareConfig::LED_GREEN_CHANNEL, HardwareConfig::LED_FULL_BRIGHTNESS); // nay nguoc laij sink
 }
 
 void LEDStatusManager::setColor(LEDColor color, uint8_t brightness)
@@ -41,23 +41,23 @@ void LEDStatusManager::setColor(LEDColor color, uint8_t brightness)
     {
     case LED_COLOR_RED:
 
-        ledcWrite(LED_RED_CHANNEL, brightness);
+        ledcWrite(HardwareConfig::LED_RED_CHANNEL, brightness);
         break;
 
     case LED_COLOR_YELLOW:
 
-        ledcWrite(LED_YELLOW_CHANNEL, brightness);
+        ledcWrite(HardwareConfig::LED_YELLOW_CHANNEL, brightness);
         break;
 
     case LED_COLOR_GREEN:
 
-        ledcWrite(LED_GREEN_CHANNEL, 255 - brightness);
+        ledcWrite(HardwareConfig::LED_GREEN_CHANNEL, HardwareConfig::LED_FULL_BRIGHTNESS - brightness);
         break;
 
     case LED_COLOR_OFF:
     default:
 
-        break;
+        break;                  
     }
 }
 
@@ -137,27 +137,27 @@ void LEDStatusManager::updatePattern()
 
         if (currentColor == LED_COLOR_GREEN)
         {
-            setColor(currentColor, LED_GREEN_DUTY);
+            setColor(currentColor, HardwareConfig::LED_GREEN_DUTY);
         }
         else
         {
-            setColor(currentColor, LED_FULL_BRIGHTNESS);
+            setColor(currentColor, HardwareConfig::LED_FULL_BRIGHTNESS);
         }
         break;
 
     case LED_PATTERN_FAST_BLINK:
-        if (currentTime - lastUpdateTime >= LED_FAST_BLINK_INTERVAL)
+        if (currentTime - lastUpdateTime >= HardwareConfig::LED_FAST_BLINK_INTERVAL)
         {
             blinkState = !blinkState;
             if (blinkState)
             {
                 if (currentColor == LED_COLOR_GREEN)
                 {
-                    setColor(currentColor, LED_GREEN_DUTY);
+                    setColor(currentColor, HardwareConfig::LED_GREEN_DUTY);
                 }
                 else
                 {
-                    setColor(currentColor, LED_FULL_BRIGHTNESS);
+                    setColor(currentColor, HardwareConfig::LED_FULL_BRIGHTNESS);
                 }
             }
             else
@@ -171,7 +171,7 @@ void LEDStatusManager::updatePattern()
     case LED_PATTERN_SLOW_PULSE:
 
     {
-        float phase = (float)((currentTime % LED_SLOW_PULSE_PERIOD)) / LED_SLOW_PULSE_PERIOD;
+        float phase = (float)((currentTime % HardwareConfig::LED_SLOW_PULSE_PERIOD)) / HardwareConfig::LED_SLOW_PULSE_PERIOD;
         // Sine wave:
         float intensity = (sin(phase * 2 * PI - PI / 2) + 1.0) / 2.0;
 
@@ -179,12 +179,12 @@ void LEDStatusManager::updatePattern()
         if (currentColor == LED_COLOR_GREEN)
         {
 
-            uint8_t minBright = LED_PULSE_MIN_BRIGHTNESS * LED_GREEN_DUTY / LED_FULL_BRIGHTNESS;
-            brightness = (uint8_t)(minBright + intensity * (LED_GREEN_DUTY - minBright));
+            uint8_t minBright = HardwareConfig::LED_PULSE_MIN_BRIGHTNESS * HardwareConfig::LED_GREEN_DUTY / HardwareConfig::LED_FULL_BRIGHTNESS;
+            brightness = (uint8_t)(minBright + intensity * (HardwareConfig::LED_GREEN_DUTY - minBright));
         }
         else
         {
-            brightness = (uint8_t)(LED_PULSE_MIN_BRIGHTNESS + intensity * (LED_PULSE_MAX_BRIGHTNESS - LED_PULSE_MIN_BRIGHTNESS));
+            brightness = (uint8_t)(HardwareConfig::LED_PULSE_MIN_BRIGHTNESS + intensity * (HardwareConfig::LED_PULSE_MAX_BRIGHTNESS - HardwareConfig::LED_PULSE_MIN_BRIGHTNESS));
         }
 
         setColor(currentColor, brightness);

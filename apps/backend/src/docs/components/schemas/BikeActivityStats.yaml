@@ -1,0 +1,24 @@
+type: object
+description: "Thống kê hoạt động tổng hợp của một chiếc xe."
+properties:
+  bike_id:
+    type: string
+    format: mongoId
+  total_minutes_active:
+    type: integer
+    description: "Tổng số phút hoạt động từ tất cả các lượt thuê đã hoàn thành."
+    example: 12500
+  total_reports:
+    type: integer
+    description: "Tổng số lần xe được báo cáo là Hư Hỏng hoặc Bẩn."
+    example: 3
+  uptime_percentage:
+    type: number
+    format: float
+    description: "Tỷ lệ phần trăm thời gian hoạt động ước tính (tỷ lệ giữa tổng phút hoạt động thực tế và tổng thời gian có thể hoạt động kể từ khi tạo)."
+    example: 95.75
+  monthly_stats:
+    type: array
+    description: "Thống kê hoạt động theo tháng (tối đa 12 tháng gần nhất)."
+    items:
+      $ref: './BikeActivityStatsMonthlyItem.yaml'

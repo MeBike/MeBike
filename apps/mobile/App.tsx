@@ -1,28 +1,39 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
-import type { RootStackParamList } from './types/navigation';
-import { Ionicons } from '@expo/vector-icons';
-import Providers from '@providers/providers';
-import { AuthProvider } from '@providers/auth-providers';
-import HomeScreen from './screen/Home';
-import LoginScreen from './screen/Login';
-import IntroScreen from './screen/Intro';
-import RegisterScreen from './screen/Register';
-import StationDetailScreen from './screen/StationDetail';
-import StationSelectScreen from './styles/StationSelect';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import BookingHistoryScreen from './screen/BookingHistoryScreen';
-import ProfileScreen from './screen/ProfileScreen';
-import BookingHistoryDetail from './screen/BookingHistoryDetail';
-import ChangePasswordScreen from './screen/ChangePasswordScreen';
-import ForgotPasswordScreen from './screen/ForgotPassword';
-import UpdateProfileScreen from './screen/UpdateProfileScreen';
-import MyWalletScreen from './screen/MyWalletScreen';
+import { Ionicons } from "@expo/vector-icons";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { StatusBar } from "expo-status-bar";
+import React from "react";
+
+import { AuthProvider, useAuth } from "@providers/auth-providers";
+import Providers from "@providers/providers";
+
+import { LoadingScreen } from "./components/LoadingScreen";
+
+import type { RootStackParamList } from "./types/navigation";
+
+import BookingHistoryDetail from "./screen/BookingHistoryDetail";
+import BookingHistoryScreen from "./screen/BookingHistoryScreen";
+import ChangePasswordScreen from "./screen/ChangePasswordScreen";
+import ForgotPasswordScreen from "./screen/ForgotPassword";
+import HomeScreen from "./screen/Home";
+import IntroScreen from "./screen/Intro";
+import LoginScreen from "./screen/Login";
+import MyWalletScreen from "./screen/MyWalletScreen";
+import ProfileScreen from "./screen/ProfileScreen";
+import RegisterScreen from "./screen/Register";
+import ReservationDetailScreen from "./screen/ReservationDetailScreen";
+import ReservationScreen from "./screen/ReservationScreen";
+import StationDetailScreen from "./screen/StationDetail";
+import UpdateProfileScreen from "./screen/UpdateProfileScreen";
+import StationSelectScreen from "./styles/StationSelect";
+import SupportScreen from "./screen/SupportScreen";
+import ReportScreen from "./screen/ReportScreen";
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
-const BottomTab = () => {
+function BottomTab() {
+  const { isAuthenticated } = useAuth();
   return (
     <Tab.Navigator>
       <Tab.Screen
@@ -53,35 +64,39 @@ const BottomTab = () => {
           ),
         }}
       />
-      <Tab.Screen
-        name="Booking"
-        component={BookingHistoryScreen}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="calendar-outline"
-              size={size ?? 24}
-              color={color ?? "#222"}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Tôi"
-        component={ProfileScreen}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name="person-outline"
-              size={size ?? 24}
-              color={color ?? "#222"}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
+      {isAuthenticated && (
+        <Tab.Screen
+          name="Booking"
+          component={BookingHistoryScreen}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons
+                name="calendar-outline"
+                size={size ?? 24}
+                color={color ?? "#222"}
+              />
+            ),
+          }}
+        />
+      )}
+      {isAuthenticated && (
+        <Tab.Screen
+          name="Tôi"
+          component={ProfileScreen}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons
+                name="person-outline"
+                size={size ?? 24}
+                color={color ?? "#222"}
+              />
+            ),
+          }}
+        />
+      )}
+      {/* <Tab.Screen
         name="Xe"
         component={ProfileScreen}
         options={{
@@ -94,7 +109,7 @@ const BottomTab = () => {
             />
           ),
         }}
-      />
+      /> */}
     </Tab.Navigator>
   );
 }
@@ -159,6 +174,26 @@ export default function App() {
             <Stack.Screen
               name="MyWallet"
               component={MyWalletScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="Reservations"
+              component={ReservationScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="ReservationDetail"
+              component={ReservationDetailScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="Support"
+              component={SupportScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="Report"
+              component={ReportScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
           </Stack.Navigator>

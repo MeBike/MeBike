@@ -1,36 +1,81 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
+  ActivityIndicator,
   Alert,
   Dimensions,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import StationMap2D from "@components/StationMap2D";
+import { useBikeActions } from "@hooks/useBikeAction";
+import { useRentalsActions } from "@hooks/useRentalAction";
+import { useReservationActions } from "@hooks/useReservationActions";
+import { useStationActions } from "@hooks/useStationAction";
+import { useAuth } from "@providers/auth-providers";
+import type { Bike } from "../types/BikeTypes";
 import type {
-  StationDetailScreenNavigationProp,
   StationDetailRouteProp,
+  StationDetailScreenNavigationProp,
 } from "../types/navigation";
+import type { StationType } from "../types/StationType";
+import { LoadingScreen } from "@components/LoadingScreen";
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
-import { useBikeActions } from "@hooks/useBikeAction";
-import { useStationActions } from "@hooks/useStationAction";
-import { ActivityIndicator } from "react-native";
-import StationMap2D from "@components/StationMap2D";
-import { StationType } from "../types/StationType";
-import { Bike } from "../types/BikeTypes";
-import { TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useRentalsActions } from "@hooks/useRentalAction";
-import { useAuth } from "@providers/auth-providers";
 const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
 const MAP_HEIGHT = 300;
+function BikeDetailCard({
+  bike,
+  onClose,
+}: {
+  bike: Bike | null;
+  onClose: () => void;
+}) {
+  return (
+    <View
+      style={{
+        backgroundColor: "#fff",
+        borderRadius: 16,
+        padding: 16,
+        margin: 16,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
+      }}
+    >
+      <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}>
+        ChipID: #{bike?.chip_id || bike?._id.slice(-4)}
+      </Text>
+      <Text>Trạng thái: <Text style={{ fontWeight: "bold" }}>{bike?.status}</Text></Text>
+      <Text>Ngày tạo: <Text style={{ fontWeight: "bold" }}>{bike?.created_at ? new Date(bike.created_at).toLocaleString() : "Chưa có"}</Text></Text>
+      <Text>Nhà cung cấp: <Text style={{ fontWeight: "bold" }}>{bike?.supplier_id || "Chưa có"}</Text></Text>
+      <TouchableOpacity
+        style={{
+          marginTop: 16,
+          backgroundColor: "#0066FF",
+          padding: 10,
+          borderRadius: 8,
+          alignItems: "center",
+        }}
+        onPress={onClose}
+      >
+       <Text style={{ color: "#fff", fontWeight: "bold" }}>Đóng</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export default function StationDetailScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
@@ -38,8 +83,15 @@ export default function StationDetailScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { stationId } = route.params;
+  const [page , setPage] = useState<number>(1);
+  const [limit , setLimit] = useState<number>(20);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loadedBikes, setLoadedBikes] = useState<Bike[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [bikeId , setBikeID] = useState<string | undefined>(undefined);
   console.log("Giá trị stationId TRUYỀN VÀO:", stationId);
   const [selectedBike, setSelectedBike] = useState<any | null>(null);
+  const [selectedDetailBike, setSelectedDetailBike] = useState<Bike | null>(null);
   useEffect(() => {
     getStationByID();
     console.log("StationDetail stationId:", stationId);
@@ -50,33 +102,63 @@ export default function StationDetailScreen() {
     fetchingStationID,
     isLoadingGetStationByID,
   } = useStationActions(true, stationId);
-  const { allBikes, isFetchingAllBikes, getBikes } = useBikeActions({
+  const {
+    allBikes,
+    isFetchingAllBikes,
+    getBikes,
+    totalRecords,
+    detailBike,
+    isFetchingBikeDetail,
+  } = useBikeActions({
     hasToken: true,
+    bike_id: bikeId,
     station_id: stationId,
+    page: currentPage,
+    limit: limit,
   });
-  const { postRent, isPostRentLoading } = useRentalsActions(true , selectedBike?._id);
+  useEffect(() => {
+    if (allBikes && allBikes.length > 0) {
+      if (currentPage === 1) {
+        setLoadedBikes(allBikes);
+      } else {
+        setLoadedBikes(prev => [...prev, ...allBikes]);
+      }
+      setHasMore(allBikes.length === limit);
+    } else if (currentPage > 1) {
+      setHasMore(false);
+    }
+  }, [allBikes, currentPage, limit]);
+  const { postRent, isPostRentLoading } = useRentalsActions(
+    true,
+    selectedBike?._id,
+    stationId,
+  );
+  const [pendingBikeId, setPendingBikeId] = useState<string | null>(null);
+  const { createReservation } = useReservationActions({
+    hasToken: Boolean(user?._id),
+    autoFetch: false,
+  });
   useEffect(() => {
     if (stationId) {
       getStationByID();
+      setCurrentPage(1);
+      setLoadedBikes([]);
+      setHasMore(true);
       getBikes();
     }
   }, [stationId]);
   useEffect(() => {
     console.log("Station Detail Bikes:", allBikes);
   }, [allBikes]);
-  let station = responseStationDetail as StationType | null;
-
-  const isLoading = isLoadingGetStationByID && isFetchingAllBikes;
-
+  const station = responseStationDetail as StationType | null;
+  const isLoading = isLoadingGetStationByID || isFetchingAllBikes;
   if (isLoading) {
+    return <LoadingScreen />;
+  }
+  if (!responseStationDetail) {
     return (
-      <View
-        style={[
-          styles.errorContainer,
-          { justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <ActivityIndicator size="large" color={BikeColors.primary} />
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Không tìm thấy trạm</Text>
       </View>
     );
   }
@@ -88,8 +170,12 @@ export default function StationDetailScreen() {
       </View>
     );
   }
+  const handleViewBike = (bike: any) => {
+    console.log("Viewing bike:", bike.id);
+    setSelectedDetailBike(bike);
+  };
 
-  const handleBikePress = (bike: any) => {
+  const handleRentPress = (bike: any) => {
     console.log("Bike selected:", bike.id);
     setSelectedBike(bike);
     if (bike.status === "CÓ SẴN") {
@@ -106,10 +192,10 @@ export default function StationDetailScreen() {
             text: "Thuê ngay",
             onPress: () => {
               console.log("Renting bike:", bike.id);
-              if(user?.verify === "UNVERIFIED"){
+              if (user?.verify === "UNVERIFIED") {
                 Alert.alert(
                   "Tài khoản chưa xác thực",
-                  "Vui lòng xác thực tài khoản để thuê xe.",
+                  "Vui lòng xác thực tài khoản để thuê xe."
                 );
                 setSelectedBike(null);
                 return;
@@ -123,9 +209,46 @@ export default function StationDetailScreen() {
     } else {
       Alert.alert(
         "Xe đang được sử dụng",
-      `Xe #${bike._id.slice(-3)} hiện đang được thuê bởi người khác.`,
+        `Xe #${bike._id.slice(-3)} hiện đang được thuê bởi người khác.`,
         [{ text: "OK", onPress: () => setSelectedBike(null) }]
       );
+    }
+  };
+
+  const handleReservePress = (bike: Bike) => {
+    if (bike.status !== "CÓ SẴN") {
+      Alert.alert(
+        "Không thể đặt trước",
+        "Xe này hiện không khả dụng để đặt trước."
+      );
+      return;
+    }
+    if (!user?._id) {
+      navigation.navigate("Login" as never);
+      return;
+    }
+    if (user?.verify === "UNVERIFIED") {
+      Alert.alert(
+        "Tài khoản chưa xác thực",
+        "Vui lòng xác thực tài khoản để sử dụng tính năng đặt trước."
+      );
+      return;
+    }
+
+    setPendingBikeId(bike._id);
+    createReservation(bike._id, undefined, {
+      onSuccess: () => {
+        getBikes();
+        getStationByID();
+        setPendingBikeId(null);
+      },
+      onError: () => setPendingBikeId(null),
+    });
+  };
+
+  const handleLoadMore = () => {
+    if (hasMore && !isFetchingAllBikes) {
+      setCurrentPage(prev => prev + 1);
     }
   };
 
@@ -160,7 +283,7 @@ export default function StationDetailScreen() {
             borderWidth: isSelected ? 3 : 0,
           },
         ]}
-        onPress={() => handleBikePress(bike)}
+        onPress={() => handleViewBike(bike)}
       >
         <IconSymbol name="bicycle" size={16} color={BikeColors.onPrimary} />
         <Text style={styles.bikeSlotNumber}>
@@ -200,137 +323,223 @@ export default function StationDetailScreen() {
     );
   };
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <LinearGradient
-        colors={["#0066FF", "#00B4D8"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + 16 }]}
+    <View style={styles.container}>
+      <Modal
+        visible={!!selectedDetailBike}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setSelectedDetailBike(null)}
       >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
+        <View style={styles.modalOverlay}>
+          <BikeDetailCard
+            bike={selectedDetailBike}
+            onClose={() => setSelectedDetailBike(null)}
+          />
+        </View>
+      </Modal>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={["#0066FF", "#00B4D8"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.header, { paddingTop: insets.top + 16 }]}
         >
-          <Ionicons name="chevron-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chi tiết thuê xe</Text>
-      </LinearGradient>
-      <View style={styles.stationInfo}>
-        <View style={styles.stationHeader}>
-          <IconSymbol
-            name="building.2.fill"
-            size={32}
-            color={BikeColors.primary}
-          />
-          <View style={styles.stationDetails}>
-            <Text style={styles.stationName}>{station.name}</Text>
-            <Text style={styles.stationAddress}>{station.address}</Text>
-          </View>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: BikeColors.success },
-            ]}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
           >
-            <Text style={styles.statusText}>Hoạt động</Text>
+            <Ionicons name="chevron-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Chi tiết thuê xe</Text>
+        </LinearGradient>
+        <View style={styles.stationInfo}>
+          <View style={styles.stationHeader}>
+            <IconSymbol
+              name="building.2.fill"
+              size={32}
+              color={BikeColors.primary}
+            />
+            <View style={styles.stationDetails}>
+              <Text style={styles.stationName}>{station.name}</Text>
+              <Text style={styles.stationAddress}>{station.address}</Text>
+            </View>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: BikeColors.success },
+              ]}
+            >
+              <Text style={styles.statusText}>Hoạt động</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <IconSymbol name="bolt.fill" size={24} color={BikeColors.primary} />
-          <Text style={styles.statNumber}>{station.totalBikes}</Text>
-          <Text style={styles.statLabel}>Tổng số Xe</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <IconSymbol name="bolt.fill" size={24} color={BikeColors.primary} />
+            <Text style={styles.statNumber}>{station.totalBikes}</Text>
+            <Text style={styles.statLabel}>Tổng số Xe</Text>
+          </View>
+          <View style={styles.statCard}>
+            <IconSymbol
+              name="bicycle.circle"
+              size={24}
+              color={BikeColors.primary}
+            />
+            <Text style={styles.statNumber}>{station.availableBikes}</Text>
+            <Text style={styles.statLabel}>Xe có sẵn</Text>
+          </View>
+          <View style={styles.statCard}>
+            <IconSymbol name="person.fill" size={24} color={BikeColors.error} />
+            <Text style={styles.statNumber}>{station.bookedBikes}</Text>
+            <Text style={styles.statLabel}>Xe đang thuê</Text>
+          </View>
+          <View style={styles.statCard}>
+            <IconSymbol name="gear" size={24} color={BikeColors.primary} />
+            <Text style={styles.statNumber}>{station.reservedBikes}</Text>
+            <Text style={styles.statLabel}>Xe đã được đặt trước</Text>
+          </View>
         </View>
-        <View style={styles.statCard}>
-          <IconSymbol
-            name="bicycle.circle"
-            size={24}
-            color={BikeColors.primary}
-          />
-          <Text style={styles.statNumber}>{station.availableBikes}</Text>
-          <Text style={styles.statLabel}>Xe có sẵn</Text>
-        </View>
-        <View style={styles.statCard}>
-          <IconSymbol name="person.fill" size={24} color={BikeColors.error} />
-          <Text style={styles.statNumber}>{station.bookedBikes}</Text>
-          <Text style={styles.statLabel}>Xe đang thuê</Text>
-        </View>
-        <View style={styles.statCard}>
-          <IconSymbol name="gear" size={24} color={BikeColors.primary} />
-          <Text style={styles.statNumber}>{station.reservedBikes}</Text>
-          <Text style={styles.statLabel}>Xe đã được đặt trước</Text>
-        </View>
-      </View>
 
+        <StationMap2D
+          station={station}
+          bikes={allBikes}
+          selectedBike={selectedBike}
+          onBikePress={handleRentPress}
+        />
 
-      <StationMap2D
-        station={station}
-        bikes={allBikes}
-        selectedBike={selectedBike}
-        onBikePress={handleBikePress}
-      />
-
-      {allBikes && allBikes.length > 0 ? (
-        <View style={styles.bikeListSection}>
-          <Text style={styles.sectionTitle}>
-            Danh sách xe ({allBikes.length})
-          </Text>
-          {allBikes.map((bike: Bike) => {
-            const isAvailable = bike.status === "CÓ SẴN";
-            return (
-              <Pressable
-                key={bike._id}
-                style={[
-                  styles.bikeItem,
-                  selectedBike?._id === bike._id && styles.selectedBikeItem,
-                ]}
-                onPress={() => handleBikePress(bike)}
-              >
-                <View style={styles.bikeItemLeft}>
-                  <View
-                    style={[
-                      styles.bikeStatusIndicator,
-                      {
-                        backgroundColor: isAvailable
-                          ? BikeColors.success
-                          : BikeColors.error,
-                      },
-                    ]}
-                  />
-                  <View>
-                    <Text style={styles.bikeId}>
-                      ChipID: #{bike.chip_id || bike._id.slice(-4)}
-                    </Text>
-                    <Text style={styles.bikeType}>Xe thường</Text>
+        {loadedBikes && loadedBikes.length > 0 ? (
+          <View style={styles.bikeListSection}>
+            <Text style={styles.sectionTitle}>
+              Danh sách xe ({loadedBikes.length})
+            </Text>
+            {loadedBikes.map((bike: Bike, index: number) => {
+              const isAvailable = bike.status === "CÓ SẴN";
+              return (
+                <TouchableOpacity
+                  key={`${bike._id}-${index}`}
+                  style={[
+                    styles.bikeItem,
+                    selectedBike?._id === bike._id && styles.selectedBikeItem,
+                  ]}
+                  onPress={() => setSelectedDetailBike(bike)}
+                >
+                  {/* Trái: Hiển thị thông tin xe */}
+                  <View style={styles.bikeItemLeft}>
+                    <View
+                      style={[
+                        styles.bikeStatusIndicator,
+                        {
+                          backgroundColor: isAvailable
+                            ? BikeColors.success
+                            : BikeColors.error,
+                        },
+                      ]}
+                    />
+                    <View>
+                      <Text style={styles.bikeId}>
+                        ChipID: #{bike.chip_id || bike._id.slice(-4)}
+                      </Text>
+                      <Text style={styles.bikeType}>Xe thường</Text>
+                    </View>
                   </View>
-                </View>
 
-                <View style={styles.bikeItemRight}>
-                  <Text
-                    style={[
-                      styles.bikeStatus,
-                      {
-                        color: isAvailable
-                          ? BikeColors.success
-                          : BikeColors.error,
-                      },
-                    ]}
-                  >
-                    {isAvailable ? "Có sẵn" : "Đang thuê"}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Xe đang được thuê hết</Text>
-        </View>
-      )}
-    </ScrollView>
+                  {/* Phải: Các nút thao tác */}
+                  <View style={styles.bikeItemRight}>
+                    <Text
+                      style={[
+                        styles.bikeStatus,
+                        {
+                          color: isAvailable
+                            ? BikeColors.success
+                            : BikeColors.error,
+                        },
+                      ]}
+                    >
+                      {isAvailable ? "Có sẵn" : "Đang thuê"}
+                    </Text>
+
+                    {isAvailable && (
+                      <TouchableOpacity
+                        style={[
+                          styles.reserveButton,
+                          pendingBikeId === bike._id &&
+                            styles.reserveButtonDisabled,
+                        ]}
+                        onPress={() => handleReservePress(bike)}
+                        disabled={pendingBikeId === bike._id}
+                        activeOpacity={0.8}
+                      >
+                        {pendingBikeId === bike._id ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Ionicons
+                              name="timer-outline"
+                              size={16}
+                              color="#fff"
+                              style={{ marginRight: 6 }}
+                            />
+                            <Text style={styles.reserveButtonText}>
+                              Đặt trước
+                            </Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    )}
+
+                    {/* Nút Thuê ngay */}
+                    {isAvailable && (
+                      <TouchableOpacity
+                        style={[
+                          styles.reserveButton,
+                          {
+                            backgroundColor: BikeColors.success,
+                            marginLeft: 8, // thêm khoảng cách với nút đặt trước
+                          },
+                        ]}
+                        onPress={() => handleRentPress(bike)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons
+                          name="bicycle-outline"
+                          size={16}
+                          color="#fff"
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text style={styles.reserveButtonText}>Thuê ngay</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+            {hasMore && loadedBikes.length <= totalRecords && (
+              <TouchableOpacity
+                style={styles.loadMoreButton}
+                onPress={handleLoadMore}
+                disabled={isFetchingAllBikes}
+              >
+                {isFetchingAllBikes ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.loadMoreButtonText}>Tải thêm xe</Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Xe đang được thuê hết</Text>
+          </View>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -566,7 +775,25 @@ const styles = StyleSheet.create({
   },
   bikeItemRight: {
     alignItems: "flex-end",
-    gap: 4,
+    gap: 8,
+  },
+  reserveButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: BikeColors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: "flex-end",
+  },
+  reserveButtonDisabled: {
+    opacity: 0.6,
+  },
+  reserveButtonText: {
+    color: BikeColors.onPrimary,
+    fontWeight: "600",
+    fontSize: 13,
   },
   batteryContainer: {
     flexDirection: "row",
@@ -596,5 +823,35 @@ const styles = StyleSheet.create({
   bikeStatus: {
     fontSize: 12,
     fontWeight: "500",
+  },
+  // Trong styles:
+  rentButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: BikeColors.success,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginLeft: 8,
+  },
+  loadMoreButton: {
+    backgroundColor: BikeColors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 16,
+    marginHorizontal: 16,
+  },
+  loadMoreButtonText: {
+    color: BikeColors.onPrimary,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

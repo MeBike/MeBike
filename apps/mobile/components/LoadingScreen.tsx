@@ -1,8 +1,9 @@
+import React from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
-import React from 'react';
-import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import { BikeColors } from '@/constants/BikeColors';
-import { IconSymbol } from './IconSymbol';
+import { BikeColors } from "../constants/BikeColors";
+
+import { IconSymbol } from "./IconSymbol";
 
 export const LoadingScreen: React.FC = () => {
   return (
@@ -18,13 +19,13 @@ export const LoadingScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white",
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: BikeColors.primary,
     marginTop: 16,
     marginBottom: 32,

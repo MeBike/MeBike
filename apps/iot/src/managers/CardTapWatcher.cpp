@@ -17,6 +17,15 @@ CardTapWatcher::CardTapWatcher(
 
 bool CardTapWatcher::poll(std::string& cardUidOut) {
   const unsigned long now = millis();
+
+  if (!nfcManager.isHealthy() || nfcManager.isRecovering()) {
+    if (now - lastRecoverTick >= RECOVER_TICK_INTERVAL_MS) {
+      nfcManager.recoverTick();
+      lastRecoverTick = now;
+    }
+    return false;
+  }
+
   if (now - lastPollTime < pollInterval) {
     return false;
   }
@@ -27,6 +36,24 @@ bool CardTapWatcher::poll(std::string& cardUidOut) {
 
   const bool success = nfcManager.scanForCard(uid, &uidLength, scanTimeout);
   if (!success) {
+    consecutiveFailedScans = std::min<uint16_t>(consecutiveFailedScans + 1, UINT16_MAX);
+    const bool healthCheckDue = (now - lastHealthCheckAt) >= HEALTH_CHECK_INTERVAL_MS ||
+                                consecutiveFailedScans >= FAILED_SCAN_THRESHOLD_FOR_HEALTH_CHECK;
+
+    if (healthCheckDue) {
+      lastHealthCheckAt = now;
+      if (!nfcManager.healthCheck()) {
+        Log.error("PN532 became unresponsive, scheduling recovery\n");
+        nfcManager.recoverTick();
+        lastRecoverTick = now;
+        cardPresent = false;
+        consecutiveMisses = 0;
+        consecutiveFailedScans = 0;
+        return false;
+      }
+      consecutiveFailedScans = 0;
+    }
+
     if (cardPresent) {
       consecutiveMisses = std::min<uint8_t>(consecutiveMisses + 1, MAX_MISSES_BEFORE_RESET);
       if (consecutiveMisses >= MAX_MISSES_BEFORE_RESET) {
@@ -37,6 +64,8 @@ bool CardTapWatcher::poll(std::string& cardUidOut) {
     return false;
   }
 
+  consecutiveFailedScans = 0;
+  lastHealthCheckAt = now;
   consecutiveMisses = 0;
   std::string decimalUid = convertUidToDecimal(uid, uidLength);
 

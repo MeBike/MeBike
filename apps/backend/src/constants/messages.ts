@@ -108,7 +108,9 @@ export const USERS_MESSAGES = {
   GET_TOP_RENTERS_STATS_SUCCESS: 'Lấy thống kê top người thuê xe thành công',
   INVALID_PAGE_OR_LIMIT: 'Page hoặc limit phải là số nguyên dương.',
   // admin create user messages
-  CREATE_USER_SUCCESS: 'Tạo người dùng mới thành công'
+  CREATE_USER_SUCCESS: 'Tạo người dùng mới thành công',
+  // get new users stats
+  GET_NEW_USER_STATS_SUCCESS: 'Lấy thống kê người dùng mới thành công'
 } as const
 
 export const REPORTS_MESSAGES = {
@@ -196,6 +198,8 @@ export const BIKES_MESSAGES = {
   INVALID_BIKE_ID: 'ID của xe đạp không hợp lệ',
   // delete bike
   DELETE_BIKE_SUCCESS: 'Xóa xe đạp thành công',
+  CANNOT_DELETE_BIKE_WHILE_RENTED: 'Không thể xóa xe đạp đang được thuê',
+  CANNOT_DELETE_BIKE_WHILE_RESERVED: 'Không thể xóa xe đạp đang được đặt trước',
   // history rental of bike
   GET_BIKE_RENTALS_SUCCESS: 'Lấy lịch sử thuê xe thành công',
   // stats of bikes
@@ -207,11 +211,18 @@ export const BIKES_MESSAGES = {
   AT_LEAST_ONE_FIELD_IS_REQUIRED: 'Cần ít nhất một trường để cập nhật',
   CANNOT_REPORT_BIKE_NOT_RENTING: 'Bạn chỉ có thể báo hỏng chiếc xe bạn đang thuê',
   REPORT_BROKEN_BIKE_SUCCESS: 'Báo hỏng xe thành công',
+  CANNOT_UPDATE_STATION_WHILE_RENTED: 'Không thể cập nhật trạm khi xe đang được thuê',
+  CANNOT_UPDATE_STATION_WHILE_RESERVED: 'Không thể cập nhật trạm khi xe đang được đặt trước',
   // thêm chip_id messages cho create and update bike
   CHIP_ID_IS_REQUIRED: 'Chip ID là bắt buộc',
   CHIP_ID_MUST_BE_A_STRING: 'Chip ID phải là chuỗi',
   CHIP_ID_ALREADY_EXISTS: 'Chip ID đã tồn tại',
-  CHIP_ID_ALREADY_EXISTS_ON_ANOTHER_BIKE: 'Chip ID đã tồn tại trên một xe đạp khác'
+  CHIP_ID_ALREADY_EXISTS_ON_ANOTHER_BIKE: 'Chip ID đã tồn tại trên một xe đạp khác',
+  //lịch sử thuê xe thành công
+  GET_BIKE_RENTAL_HISTORY_SUCCESS: 'Lấy lịch sử thuê xe thành công',
+  //thống kê hoạt động xe
+  GET_BIKE_ACTIVITY_STATS_SUCCESS: 'Lấy thống kê hoạt động xe thành công',
+  GET_BIKE_RENTAL_STATS_SUCCESS: 'Lấy thống kê thuê xe thành công'
 } as const
 
 export const RENTALS_MESSAGE = {
@@ -490,7 +501,11 @@ export const STATIONS_MESSAGE = {
   STATION_UPDATED_SUCCESSFULLY: 'Cập nhật trạm thành công',
   // delete station messages
   STATION_DELETED_SUCCESSFULLY: 'Xóa trạm thành công',
-  CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.'
+  CANNOT_DELETE_STATION_WITH_BIKES: 'Không thể xóa trạm khi còn xe đạp. Vui lòng di chuyển xe đạp trước khi xóa trạm.',
+  // get station stats messages
+  GET_STATION_STATS_SUCCESSFULLY: 'Lấy thống kê trạm thành công',
+  // get station alerts messages
+  GET_STATION_ALERTS_SUCCESSFULLY: 'Lấy cảnh báo trạm thành công'
 }
 
 export const RATING_MESSAGE = {

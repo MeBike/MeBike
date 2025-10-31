@@ -17,6 +17,6 @@ struct NetworkTopics
     std::string cardTapTopic;
 };
 
-bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &topics);
+bool initializeNetwork(const char *ssid, const char *password, NetworkTopics &topics); // populate topics inside the function check the real implementation
 
 #endif // NETWORK_H

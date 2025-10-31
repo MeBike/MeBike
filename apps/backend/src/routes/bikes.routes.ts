@@ -1,9 +1,9 @@
 import { Router } from "express";
 
-import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeByIdController, getBikesController, getBikesStatsController, getBikeStatsByIdController, getRentalsByBikeIdController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
+import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeActivityStatsController, getBikeByIdController, getBikeRentalHistoryController, getBikeRentalStatsController, getBikesController, getBikesStatsController, getBikeStatsByIdController, getRentalsByBikeIdController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { bikeIdValidator, createBikeValidator, updateBikeValidator } from "~/middlewares/bikes.middlewares";
-import { accessTokenValidator } from "~/middlewares/users.middlewares";
+import { accessTokenValidator, statsPaginationValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
 
 const bikesRouter = Router();
@@ -24,6 +24,20 @@ bikesRouter.post(
 bikesRouter.get("/", 
   // accessTokenValidator,
    wrapAsync(getBikesController));
+
+/**
+ * Description: (Admin/Staff) Get overview rental stats (total vs rented)
+ * Path: /bikes/stats/rental-overview
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN, STAFF
+ */
+bikesRouter.get(
+  '/stats/rental-overview',
+  accessTokenValidator,
+  isAdminValidator,
+  wrapAsync(getBikeRentalStatsController)
+)
 
 // Admin Only Get overall statistics for all bikes
 bikesRouter.get(
@@ -79,6 +93,40 @@ bikesRouter.patch(
   updateBikeValidator,
   wrapAsync(adminUpdateBikeController)
 );
+
+/**
+  * Description: (Admin/Staff) Get rental history of a specific bike
+  * Path: /bikes/:_id/rental-history
+  * Method: GET
+  * Headers: { Authorization: Bearer <access_token> }
+  * Params: { _id: string } (bikeId)
+  * Query: { page?: number, limit?: number }
+  * Roles: ADMIN, STAFF
+  */
+ bikesRouter.get(
+   '/:_id/rental-history',
+   accessTokenValidator,
+   isAdminAndStaffValidator,
+   bikeIdValidator,
+   statsPaginationValidator,
+   wrapAsync(getBikeRentalHistoryController)
+ )
+
+ /**
+  * Description: (Admin/Staff) Get activity statistics of a specific bike
+  * Path: /bikes/:_id/activity-stats
+  * Method: GET
+  * Headers: { Authorization: Bearer <access_token> }
+  * Params: { _id: string } (bikeId)
+  * Roles: ADMIN, STAFF
+  */
+ bikesRouter.get(
+   '/:_id/activity-stats',
+   accessTokenValidator,
+   isAdminAndStaffValidator,
+   bikeIdValidator,
+   wrapAsync(getBikeActivityStatsController)
+ )
 
 // Admin deletes a bike (soft delete)
 bikesRouter.delete(

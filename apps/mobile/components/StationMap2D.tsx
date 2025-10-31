@@ -1,50 +1,42 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import { StationType } from "../types/StationType";
-import { Bike } from "../types/BikeTypes";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Bike } from "lucide-react-native";
+import type { Bike as BikeType } from "../types/BikeTypes";
+import type { StationType } from "../types/StationType";
 import { BikeColors } from "../constants/BikeColors";
 
 const MAP_WIDTH = 400;
 const MAP_HEIGHT = 100;
 
-interface StationMap2DProps {
+const BikeIcon = ({ color = "#fff", size = 16 }) => (
+  <Bike color={color} size={size} />
+);
+
+const StationMap2D = ({ station, bikes, selectedBike, onBikePress }: {
   station: StationType;
-  bikes: Bike[];
-  selectedBike?: Bike | null;
-  onBikePress: (bike: Bike) => void;
-}
-
-const StationMap2D: React.FC<StationMap2DProps> = ({
-  station,
-  bikes,
-  selectedBike,
-  onBikePress,
+  bikes: BikeType[];
+  selectedBike: BikeType | null;
+  onBikePress: (bike: BikeType) => void;
 }) => {
-  const capacity = parseInt(station.capacity, 10) || 0;
+  const capacity = Number.parseInt(station.capacity, 10) || 0;
+  const slots = Array.from({ length: capacity }, (_, i) => bikes[i] || null);
 
-  // lấy danh sách slot = capacity, map bike vào slot
-  const slots = Array.from({ length: capacity }, (_, i) => {
-    const bike = bikes[i]; // đơn giản: gán xe theo index
-    return bike || null;
-  });
-
-  // màu marker dựa vào xe trong slot
-  const getSlotColor = (bike: Bike | null) => {
-    if (!bike) return BikeColors.error; // slot trống = đỏ
+  const getSlotColor = (bike: BikeType | null) => {
+    if (!bike) return BikeColors.error;
     return bike.status === "CÓ SẴN" ? BikeColors.success : BikeColors.error;
   };
 
-  // render grid theo hàng
   const renderSlots = () => {
-    const cols = 10; // số cột (fix)
-    const size = 20; // kích thước marker
-    const gap = 18;
+    const size = 19; // dùng đúng size style
+    const gap = 20;
+    const cols = 10;
 
     return slots.map((bike, index) => {
       const row = Math.floor(index / cols);
       const col = index % cols;
       const left = col * (size + gap) + 10;
       const top = row * (size + gap) + 10;
+
       const isSelected = selectedBike?._id === bike?._id;
 
       return (
@@ -57,16 +49,22 @@ const StationMap2D: React.FC<StationMap2DProps> = ({
             {
               left,
               top,
-              backgroundColor: getSlotColor(bike),
-              borderWidth: isSelected ? 2 : 0,
-              borderColor: isSelected ? BikeColors.accent : "transparent",
+              backgroundColor: bike
+                ? getSlotColor(bike)
+                : BikeColors.surfaceVariant,
+              borderWidth: isSelected ? 3 : 1.5,
+              borderColor: isSelected ? BikeColors.accent : BikeColors.divider,
+              opacity: bike ? 1 : 0.5,
             },
           ]}
         >
-          {bike && (
-            <Text style={{ fontSize: 8, color: "white", fontWeight: "bold" }}>
-              {bike._id.slice(-3)}
-            </Text>
+          {bike ? (
+            <>
+              <BikeIcon color="#fff" size={18} />
+              <Text style={styles.bikeIdText}>{bike._id.slice(-3)}</Text>
+            </>
+          ) : (
+            <BikeIcon color={BikeColors.error} size={18} />
           )}
         </Pressable>
       );
@@ -78,25 +76,25 @@ const StationMap2D: React.FC<StationMap2DProps> = ({
       <Text style={styles.sectionTitle}>Sơ đồ trạm 2D</Text>
       <View style={styles.mapContainer}>
         <View style={styles.mapBackground}>
-          {/* Station Layout */}
           <View style={styles.stationLayout} />
-          {/* Slots */}
           {renderSlots()}
         </View>
       </View>
-
-      {/* Legend */}
       <View style={styles.legend}>
         <View style={styles.legendRow}>
           <View
             style={[styles.legendItem, { backgroundColor: BikeColors.success }]}
-          />
+          >
+            <BikeIcon color="#fff" size={12} />
+          </View>
           <Text style={styles.legendText}>Xe có sẵn</Text>
         </View>
         <View style={styles.legendRow}>
           <View
             style={[styles.legendItem, { backgroundColor: BikeColors.error }]}
-          />
+          >
+            <BikeIcon color="#fff" size={12} />
+          </View>
           <Text style={styles.legendText}>Slot trống / xe không khả dụng</Text>
         </View>
       </View>
@@ -110,44 +108,47 @@ const styles = StyleSheet.create({
   mapSection: {
     backgroundColor: BikeColors.surface,
     margin: 16,
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     shadowColor: BikeColors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 22,
+    fontWeight: "700",
     color: BikeColors.onSurface,
-    marginBottom: 16,
+    marginBottom: 12,
+    alignSelf: "center",
+    letterSpacing: 1,
   },
   mapContainer: {
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 10,
   },
   mapBackground: {
     width: MAP_WIDTH,
     height: MAP_HEIGHT,
-    backgroundColor: BikeColors.surfaceVariant,
-    borderRadius: 12,
-    position: "relative",
-    borderWidth: 2,
-    borderColor: BikeColors.divider,
+    // backgroundColor: BikeColors.surfaceVariant,
+    // borderRadius: 16,
+    // position: "relative",
+    // borderWidth: 2,
+    // borderColor: BikeColors.divider,
+    justifyContent: "center",
+    alignItems: "center",
   },
   stationLayout: {
     position: "absolute",
-    top: 10,
-    left: 10,
-    right: 10,
-    bottom: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: BikeColors.divider,
+    top: 8,
+    left: 8,
+    right: 8,
+    bottom: 8,
+
+   
     borderStyle: "dashed",
+    zIndex: 0,
   },
   bikeMarker: {
     position: "absolute",
@@ -158,25 +159,47 @@ const styles = StyleSheet.create({
     alignItems: "center",
     shadowColor: BikeColors.shadow,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 5,
+    zIndex: 1,
+    backgroundColor: BikeColors.surfaceVariant,
+  },
+  bikeIdText: {
+    fontSize: 9,
+    color: "white",
+    fontWeight: "bold",
+    lineHeight: 14,
   },
   legend: {
-    gap: 8,
+    gap: 9,
+    flexDirection: "row",
+    marginTop: 10,
+    backgroundColor: "rgba(0,0,0,0.06)",
+    borderRadius: 8,
+    padding: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   legendRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    marginHorizontal: 8,
+    gap: 6,
   },
   legendItem: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "rgba(0,0,0,0.09)",
+    marginRight: 6,
+    justifyContent: "center",
+    alignItems: "center",
   },
   legendText: {
-    fontSize: 12,
+    fontSize: 13,
     color: BikeColors.onSurfaceVariant,
+    fontWeight: "bold",
+    letterSpacing: 0.4,
   },
 });

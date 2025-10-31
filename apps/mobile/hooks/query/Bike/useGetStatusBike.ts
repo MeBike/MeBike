@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { bikeService } from "@services/bikeService";
-export const useGetStatusBikeQuery = () => {
-    return useQuery({
-        queryKey: ["bikes", "status"],
-        queryFn: () => bikeService.getStatusBikeAdmin(),
-    })
+
+import { bikeService } from "@services/bike.service";
+
+export function useGetStatusBikeQuery() {
+  return useQuery({
+    queryKey: ["bikes", "status"],
+    queryFn: () => bikeService.getStatusBikeAdmin(),
+  });
 }

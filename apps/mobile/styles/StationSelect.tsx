@@ -1,37 +1,48 @@
-import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Pressable,
-  StatusBar,
-  TouchableOpacity,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
-import { useGetAllStation } from "@hooks/query/Station/useGetAllStationQuery";
-import type { StationType } from "../types/StationType";
-import { StationCard } from "../components/StationCard";
-import type { StationDetailScreenNavigationProp } from "../types/navigation";
-import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStationActions } from "@hooks/useStationAction";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import {
+  ActivityIndicator,
+  FlatList,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import type { StationDetailScreenNavigationProp } from "../types/navigation";
+
+import { StationCard } from "../components/StationCard";
+import { LoadingScreen } from "@components/LoadingScreen";
+
 export default function StationSelectScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   // const { data: response, isLoading } = useGetAllStation();
+   const [showLoading, setShowLoading] = useState(false);
   const {
     getStationByID,
     isLoadingGetStationByID,
     getAllStations,
-    stations : data,
+    stations: data,
   } = useStationActions(true);
   const handleSelectStation = (stationId: string) => {
     navigation.navigate("StationDetail", { stationId });
   };
   const stations = data;
   const insets = useSafeAreaInsets();
+  if (!Array.isArray(stations) || stations === null || stations.length === 0 || showLoading) {
+    return <LoadingScreen />;
+  }
+  // if(stations.length === 0){
+  //   return (
+  //     <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+  //       <Text>Không có trạm nào khả dụng</Text>
+  //     </View>
+  //   )
+  // }
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
@@ -46,15 +57,6 @@ export default function StationSelectScreen() {
           Xem tất cả các lần thuê xe của bạn
         </Text>
       </LinearGradient>
-      {isLoadingGetStationByID ? (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>
-          Đang tải dữ liệu...
-        </Text>
-      ) : stations.length === 0 ? (
-        <Text style={{ textAlign: "center", marginTop: 20 }}>
-          Không có trạm nào!
-        </Text>
-      ) : (
         <FlatList
           data={stations}
           keyExtractor={(item) => item._id}
@@ -82,7 +84,6 @@ export default function StationSelectScreen() {
           }}
           contentContainerStyle={styles.list}
         />
-      )}
     </View>
   );
 }

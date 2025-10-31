@@ -13,7 +13,7 @@ import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
 import { readEmailTemplate } from '~/utils/email-templates'
 import { sleep } from '~/utils/timeout'
-import { IotServiceSdk } from '@mebike/shared'
+import iotService from './iot.services'
 import { IotBookingCommand, IotReservationCommand } from '@mebike/shared/sdk/iot-service'
 import { reservationExpireQueue, reservationNotifyQueue } from '~/lib/queue/reservation.queue'
 import User from '~/models/schemas/user.schema'
@@ -99,11 +99,7 @@ class ReservationsService {
       const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
       await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
 
-      void IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
-        command: IotReservationCommand.reserve
-      })
-        .then(() => console.log(`[IoT] Sent reservation command for bike ${bike.chip_id}`))
-        .catch((err) => console.warn(`[IoT] Failed to send reservation command for bike ${bike.chip_id}:`, err))
+      void iotService.sendReservationCommand(bike.chip_id ?? bike_id.toString(), IotReservationCommand.reserve)
 
       return {
         ...reservation,
@@ -203,11 +199,7 @@ class ReservationsService {
       }
 
       if (bike?.chip_id) {
-        void IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
-          command: IotReservationCommand.cancel
-        })
-          .then(() => console.log(`[IoT] Sent cancellation command for bike ${bike.chip_id}`))
-          .catch((err) => console.warn(`[IoT] Failed to cancel reservation for bike ${bike.chip_id}:`, err))
+        void iotService.sendReservationCommand(bike.chip_id, IotReservationCommand.cancel)
       }
 
       if (reservationResult) {
@@ -312,11 +304,7 @@ class ReservationsService {
       })
 
       if (bike?.chip_id) {
-        void IotServiceSdk.postV1DevicesDeviceIdCommandsBooking(bike.chip_id, {
-          command: IotBookingCommand.claim
-        })
-          .then(() => console.log(`[IoT] Sent confirmation command for bike ${bike.chip_id}`))
-          .catch((err) => console.warn(`[IoT] Failed to confirm reservation for bike ${bike.chip_id}:`, err))
+        void iotService.sendBookingCommand(bike.chip_id, IotBookingCommand.claim)
       }
 
       return result
@@ -688,12 +676,7 @@ class ReservationsService {
           })
         }
       })
-
-      void IotServiceSdk.postV1DevicesDeviceIdCommandsReservation(bike.chip_id, {
-        command: IotReservationCommand.cancel
-      })
-        .then(() => console.log(`[IoT] Sent cancellation command for bike ${bike.chip_id}`))
-        .catch((err) => console.warn(`[IoT] Failed to send cancellation command for bike ${bike.chip_id}:`, err))
+      await iotService.sendReservationCommand(bike.chip_id, IotReservationCommand.cancel)
 
       return { success: true }
     } catch (error) {

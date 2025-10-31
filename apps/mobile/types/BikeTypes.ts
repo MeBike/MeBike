@@ -1,5 +1,4 @@
-
-export interface Bike {
+export type Bike = {
   _id: string;
   station_id: string;
   status:
@@ -13,7 +12,4 @@ export interface Bike {
   created_at: string;
   updated_at: string;
   chip_id: string;
-}
-
-
-
+};

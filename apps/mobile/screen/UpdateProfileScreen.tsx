@@ -1,27 +1,28 @@
-import { useMemo, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  Image,
-  TextInput,
-  Alert,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import type { UpdateProfileSchemaFormData } from "@schemas/authSchema";
-import { useAuth } from "@providers/auth-providers";
-import type { DetailUser } from "@services/authService";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { profileUpdateSchema } from "@schemas/authSchema";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useMemo, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-const UpdateProfileScreen = ({ navigation }: any) => {
+
+import type { UpdateProfileSchemaFormData } from "@schemas/authSchema";
+import type { DetailUser } from "@services/auth.service";
+
+import { useAuth } from "@providers/auth-providers";
+import { profileUpdateSchema } from "@schemas/authSchema";
+
+function UpdateProfileScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const { user, updateProfile, isUpdatingProfile } = useAuth();
   const initialProfile = useMemo<UpdateProfileSchemaFormData>(
@@ -32,7 +33,7 @@ const UpdateProfileScreen = ({ navigation }: any) => {
       location: user?.location || "",
       avatar: user?.avatar || "",
     }),
-    [user]
+    [user],
   );
 
   const {
@@ -79,7 +80,8 @@ const UpdateProfileScreen = ({ navigation }: any) => {
       updateProfile(changedData);
       reset(data);
       setIsEditing(false);
-    } catch (e) {
+    }
+    catch (e) {
       Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
     }
   };
@@ -135,10 +137,10 @@ const UpdateProfileScreen = ({ navigation }: any) => {
     label: string,
     icon: string,
     editable: boolean = false,
-    keyboardType: "default" | "email-address" | "phone-pad" = "default"
+    keyboardType: "default" | "email-address" | "phone-pad" = "default",
   ) => {
     const isFormField = (
-      key: keyof DetailUser
+      key: keyof DetailUser,
     ): key is keyof UpdateProfileSchemaFormData => {
       return [
         "fullname",
@@ -184,7 +186,8 @@ const UpdateProfileScreen = ({ navigation }: any) => {
           )}
         />
       );
-    } else {
+    }
+    else {
       return (
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>{label}</Text>
@@ -242,50 +245,52 @@ const UpdateProfileScreen = ({ navigation }: any) => {
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
         {/* Form Fields */}
         <View style={styles.formSection}>
-          {detailUserFields.map((field) => (
+          {detailUserFields.map(field => (
             <React.Fragment key={field.key}>
               {renderInputField(
                 field.key,
                 field.label,
                 field.icon,
                 field.editable ?? false,
-                field.keyboardType ?? "default"
+                field.keyboardType ?? "default",
               )}
             </React.Fragment>
           ))}
         </View>
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
-          {!isEditing ? (
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={handleEditPress}
-            >
-              <Ionicons name="pencil" size={18} color="#fff" />
-              <Text style={styles.buttonText}>Chỉnh sửa thông tin</Text>
-            </TouchableOpacity>
-          ) : (
-            <>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={handleSubmit(onSubmit)}
-                disabled={isUpdatingProfile}
-              >
-                <Ionicons name="checkmark" size={18} color="#fff" />
-                <Text style={styles.buttonText}>
-                  {isUpdatingProfile ? "Đang lưu..." : "Lưu thay đổi"}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={handleCancel}
-                disabled={isUpdatingProfile}
-              >
-                <Ionicons name="close" size={18} color="#0066FF" />
-                <Text style={styles.cancelButtonText}>Hủy</Text>
-              </TouchableOpacity>
-            </>
-          )}
+          {!isEditing
+            ? (
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={handleEditPress}
+                >
+                  <Ionicons name="pencil" size={18} color="#fff" />
+                  <Text style={styles.buttonText}>Chỉnh sửa thông tin</Text>
+                </TouchableOpacity>
+              )
+            : (
+                <>
+                  <TouchableOpacity
+                    style={styles.saveButton}
+                    onPress={handleSubmit(onSubmit)}
+                    disabled={isUpdatingProfile}
+                  >
+                    <Ionicons name="checkmark" size={18} color="#fff" />
+                    <Text style={styles.buttonText}>
+                      {isUpdatingProfile ? "Đang lưu..." : "Lưu thay đổi"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={handleCancel}
+                    disabled={isUpdatingProfile}
+                  >
+                    <Ionicons name="close" size={18} color="#0066FF" />
+                    <Text style={styles.cancelButtonText}>Hủy</Text>
+                  </TouchableOpacity>
+                </>
+              )}
         </View>
         <Text style={styles.infoText}>
           Cập nhật thông tin cá nhân của bạn để có trải nghiệm tốt hơn
@@ -293,7 +298,7 @@ const UpdateProfileScreen = ({ navigation }: any) => {
       </ScrollView>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
