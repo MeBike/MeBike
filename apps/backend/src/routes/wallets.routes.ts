@@ -32,7 +32,9 @@ walletsRouter.get(
   isAdminValidator,
   wrapAsync(getUserTransactionController)
 )
+// lấy thông tin lịch sử ví cho admin
 walletsRouter.get('/manage-wallet', accessTokenValidator, isAdminValidator, wrapAsync(getUserWalletHistoryController))
+// lấy thông tin lịch sử ví của user cụ thể cho admin
 walletsRouter.get('/manage-wallet/:user_id', accessTokenValidator, isAdminValidator, wrapAsync(getUserWalletHistoryController))
 // lấy các thông tin transaction trong ví chưa có lịch sử rental của user (cộng tiền, rút tiền)
 walletsRouter.get('/transaction', accessTokenValidator, wrapAsync(getUserTransactionWalletController))
