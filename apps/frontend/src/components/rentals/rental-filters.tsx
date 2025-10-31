@@ -1,6 +1,6 @@
 "use client";
 
-import type { RentalStatus, PaymentStatus } from "@custom-types";
+import type { RentalStatus} from "@custom-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,19 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, X, Calendar } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 interface RentalFiltersProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   statusFilter: RentalStatus | "all";
   onStatusChange: (value: RentalStatus | "all") => void;
-  paymentFilter: PaymentStatus | "all";
-  onPaymentChange: (value: PaymentStatus | "all") => void;
-  dateFrom: string;
-  onDateFromChange: (value: string) => void;
-  dateTo: string;
-  onDateToChange: (value: string) => void;
   onReset: () => void;
 }
 
@@ -32,12 +26,6 @@ export function RentalFilters({
   onSearchChange,
   statusFilter,
   onStatusChange,
-  paymentFilter,
-  onPaymentChange,
-  dateFrom,
-  onDateFromChange,
-  dateTo,
-  onDateToChange,
   onReset,
 }: RentalFiltersProps) {
   return (
@@ -73,16 +61,15 @@ export function RentalFilters({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tất cả</SelectItem>
-              <SelectItem value="pending">Chờ xử lý</SelectItem>
               <SelectItem value="active">Đang thuê</SelectItem>
               <SelectItem value="completed">Hoàn thành</SelectItem>
               <SelectItem value="cancelled">Đã hủy</SelectItem>
-              <SelectItem value="overdue">Quá hạn</SelectItem>
+              <SelectItem value="reserved">Đã đặt trước</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="payment">Thanh toán</Label>
           <Select value={paymentFilter} onValueChange={onPaymentChange}>
             <SelectTrigger id="payment">
@@ -95,9 +82,9 @@ export function RentalFilters({
               <SelectItem value="refunded">Đã hoàn tiền</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="dateFrom">Từ ngày</Label>
           <div className="relative">
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -123,7 +110,7 @@ export function RentalFilters({
               className="pl-9"
             />
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
