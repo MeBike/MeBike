@@ -157,12 +157,24 @@ export const rentalService = {
     );
     return response;
   },
-  getRevenue: async (): Promise<
-    AxiosResponse<DetailApiResponse<StatwithRevenue>>
-  > => {
+  getRevenue: async ({
+    from,
+    to,
+    groupBy,
+  }: {
+    from?: string;
+    to?: string;
+    groupBy?: "MONTH" | "YEAR" | "DAY";
+  }): Promise<AxiosResponse<DetailApiResponse<StatwithRevenue>>> => {
     const response = await fetchHttpClient.get<
       DetailApiResponse<StatwithRevenue>
-    >(RENTAL_ENDPOINTS.GET_REVENUE());
+    >(RENTAL_ENDPOINTS.GET_REVENUE(), 
+     {
+        from,
+        to,
+        groupBy,
+      },
+    );
     return response;
   },
   getDetailRental: async (
@@ -182,7 +194,7 @@ export const rentalService = {
       data
     );
     return response;
-  }
+  },
   // staffAdminUpdateDetailRental: async (
   //   id: string,
   //   data: any

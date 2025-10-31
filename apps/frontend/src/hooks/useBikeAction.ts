@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
+
 interface ErrorResponse {
   response?: {
     data?: {
@@ -279,5 +280,6 @@ export const useBikeActions = (
     bikeRentals: bikeRentals?.result.data,
     getRentalBikes,
     isFetchingRentalBikes,
+    totalRecord: data?.pagination.totalRecords || 0,
   };
 };
