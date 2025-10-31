@@ -87,13 +87,24 @@ export function useRentalsActions({
     }
     refetchAllRentals();
   }, [hasToken, refetchAllRentals]);
-  const { data: revenueData , refetch : refetchRevenue , isLoading : isLoadingRevenue } = useGetRevenueQuery();
+  const { data: revenueData , refetch : refetchRevenue , isLoading : isLoadingRevenue } = useGetRevenueQuery(
+    { from: undefined, to: undefined, groupBy: "MONTH" }
+  );
   const getRevenue = useCallback(() => {
     if(!hasToken){
       return;
     }
     refetchRevenue();
   }, [hasToken, refetchRevenue]);
+  const { data: todayRevenueData , refetch : refetchTodayRevenue , isLoading : isLoadingTodayRevenue } = useGetRevenueQuery(
+    { from: new Date().toISOString().slice(0,10), to: new Date().toISOString().slice(0,10), groupBy: "DAY" }
+  );
+  const getTodayRevenue = useCallback(() => {
+    if(!hasToken){
+      return;
+    }
+    refetchTodayRevenue();
+  }, [hasToken, refetchTodayRevenue]);
   const updateRental = useCallback(
     (data: UpdateRentalSchema) => {
       if (!hasToken) {
@@ -151,10 +162,14 @@ export function useRentalsActions({
     pagination: allRentalsData?.pagination,
     isAllRentalsLoading,
     revenueData,
+    todayRevenueData,
     updateRental,
     getRevenue,
+    getTodayRevenue,
     refetchRevenue,
+    refetchTodayRevenue,
     isLoadingRevenue,
+    isLoadingTodayRevenue,
     getDetailRental,
     detailData,
     isDetailLoading,

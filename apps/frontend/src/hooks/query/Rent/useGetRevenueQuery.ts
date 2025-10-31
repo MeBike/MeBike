@@ -31,7 +31,7 @@ export const useGetRevenueQuery = (
   }
 ) => {
   return useQuery({
-    queryKey: ["revenueStats", { from, to, groupBy }],
+    queryKey: ["revenueStats",  from, to, groupBy ],
     queryFn: () => getRevenue({ from, to, groupBy }),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

@@ -11,11 +11,7 @@ import { useGetRevenueQuery } from "@/hooks/query/Rent/useGetRevenueQuery";
 export default function DashboardPage() {
   const { user } = useAuth();
   const {
-    activeUser,
-    getActiveUser,
     newRegistrationStats,
-    topRenter,
-    totalRecordUser,
   } = useUserActions({ hasToken: true }); 
   const { statisticData, totalRecord } = useBikeActions(true);
   const now = new Date();

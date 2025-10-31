@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bike, CheckCircle, Clock, XCircle, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { useUserActions } from "@/hooks/useUserAction";
 
 export function RecentActivity() {
