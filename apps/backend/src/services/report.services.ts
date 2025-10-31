@@ -53,7 +53,8 @@ class ReportService {
       type: payload.type,
       status: ReportStatus.Pending,
       created_at: localTime,
-      location: payload.location,
+      latitude: payload.latitude,
+      longitude: payload.longitude,
       priority: '' as ReportPriority,
       media_urls: []
     }
