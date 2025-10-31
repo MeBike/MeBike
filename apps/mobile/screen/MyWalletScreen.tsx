@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useWalletActions } from "@hooks/useWalletAction";
+import { useWithdrawalAction } from "@hooks/useWithdrawalAction";
 
 function MyWalletScreen() {
   const navigation = useNavigation();
@@ -28,6 +29,15 @@ function MyWalletScreen() {
     myTransactions: transactions,
     isLoadingGetMyTransaction,
   } = useWalletActions(true);
+  const {
+    withdrawalRequests,
+    isLoadingWithdrawals,
+    createWithdrawal,
+    isCreating,
+    loadMore,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useWithdrawalAction();
   const insets = useSafeAreaInsets();
   const [showQR, setShowQR] = useState(false);
 
@@ -52,10 +62,115 @@ function MyWalletScreen() {
   };
 
   const handleWithdraw = () => {
-    Alert.alert("Rút tiền", "Nhập số tiền muốn rút", [
-      { text: "Hủy", style: "cancel" },
-      { text: "Tiếp tục", onPress: () => console.log("Withdraw") },
-    ]);
+    // First prompt for amount
+    Alert.prompt(
+      "Rút tiền",
+      "Nhập số tiền muốn rút (tối thiểu 10,000 VND)",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Tiếp tục",
+          onPress: (amount?: string) => {
+            if (amount && !isNaN(Number(amount)) && Number(amount) >= 10000) {
+              // Second prompt for bank name
+              Alert.prompt(
+                "Thông tin ngân hàng",
+                "Nhập tên ngân hàng",
+                [
+                  { text: "Hủy", style: "cancel" },
+                  {
+                    text: "Tiếp tục",
+                    onPress: (bank?: string) => {
+                      if (bank && bank.length >= 5 && bank.length <= 30) {
+                        // Third prompt for account number
+                        Alert.prompt(
+                          "Số tài khoản",
+                          "Nhập số tài khoản ngân hàng",
+                          [
+                            { text: "Hủy", style: "cancel" },
+                            {
+                              text: "Tiếp tục",
+                              onPress: (account?: string) => {
+                                if (account && account.length >= 5 && account.length <= 30) {
+                                  // Fourth prompt for account owner
+                                  Alert.prompt(
+                                    "Chủ tài khoản",
+                                    "Nhập tên chủ tài khoản",
+                                    [
+                                      { text: "Hủy", style: "cancel" },
+                                      {
+                                        text: "Tiếp tục",
+                                        onPress: (account_owner?: string) => {
+                                          if (account_owner && account_owner.length >= 5 && account_owner.length <= 50) {
+                                            // Fifth prompt for note
+                                            Alert.prompt(
+                                              "Ghi chú",
+                                              "Nhập ghi chú (tối thiểu 10 ký tự, tối đa 500 ký tự)",
+                                              [
+                                                { text: "Hủy", style: "cancel" },
+                                                {
+                                                  text: "Xác nhận",
+                                                  onPress: (note?: string) => {
+                                                    if (!note || (note.length >= 10 && note.length <= 500)) {
+                                                      createWithdrawal({
+                                                        amount: Number(amount),
+                                                        bank,
+                                                        account,
+                                                        account_owner,
+                                                        note: note || "Rút tiền từ ví",
+                                                      });
+                                                    } else {
+                                                      Alert.alert("Lỗi", "Ghi chú phải từ 10-500 ký tự");
+                                                    }
+                                                  },
+                                                },
+                                              ],
+                                              "plain-text",
+                                              "Rút tiền từ ví",
+                                              "default"
+                                            );
+                                          } else {
+                                            Alert.alert("Lỗi", "Tên chủ tài khoản phải từ 5-50 ký tự");
+                                          }
+                                        },
+                                      },
+                                    ],
+                                    "plain-text",
+                                    "",
+                                    "default"
+                                  );
+                                } else {
+                                  Alert.alert("Lỗi", "Số tài khoản phải từ 5-30 ký tự");
+                                }
+                              },
+                            },
+                          ],
+                          "plain-text",
+                          "",
+                          "default"
+                        );
+                      } else {
+                        Alert.alert("Lỗi", "Tên ngân hàng phải từ 5-30 ký tự");
+                      }
+                    },
+                  },
+                ],
+                "plain-text",
+                "",
+                "default"
+              );
+            } else if (Number(amount) < 10000) {
+              Alert.alert("Lỗi", "Số tiền rút tối thiểu là 10,000 VND");
+            } else {
+              Alert.alert("Lỗi", "Vui lòng nhập số tiền hợp lệ");
+            }
+          },
+        },
+      ],
+      "plain-text",
+      "",
+      "numeric"
+    );
   };
 
   const handleShareUserId = async () => {
@@ -353,6 +468,68 @@ function MyWalletScreen() {
               </Text>
             </View>
           ))}
+
+          <View style={styles.historyHeader}>
+            <Text style={styles.historyTitle}>Yêu cầu rút tiền</Text>
+          </View>
+
+          {isLoadingWithdrawals ? (
+            <View style={styles.center}>
+              <ActivityIndicator size="small" color="#0066FF" />
+              <Text style={{ marginTop: 8, color: "#333" }}>Đang tải...</Text>
+            </View>
+          ) : (
+            <>
+              {withdrawalRequests.map(request => (
+                <View key={request._id} style={styles.transactionItem}>
+                  <View style={styles.transactionLeft}>
+                    <View
+                      style={[
+                        styles.transactionIcon,
+                        { backgroundColor: "#F59E0B20" },
+                      ]}
+                    >
+                      <Ionicons
+                        name="arrow-up-circle"
+                        size={20}
+                        color="#F59E0B"
+                      />
+                    </View>
+                    <View style={styles.transactionInfo}>
+                      <Text style={styles.transactionDescription}>
+                        Rút tiền về {request.bank_name}
+                      </Text>
+                      <Text style={styles.transactionDate}>
+                        {request.created_at} • {request.status}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text
+                    style={[
+                      styles.transactionAmount,
+                      { color: "#F59E0B" },
+                    ]}
+                  >
+                    -{formatBalance(request.amount.toString())} đ
+                  </Text>
+                </View>
+              ))}
+
+              {hasNextPage && (
+                <TouchableOpacity
+                  style={styles.loadMoreButton}
+                  onPress={loadMore}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.loadMoreText}>Tải thêm</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+            </>
+          )}
         </View>
       </ScrollView>
 
@@ -546,6 +723,19 @@ const styles = StyleSheet.create({
   transactionAmount: {
     fontSize: 14,
     fontWeight: "700",
+  },
+  loadMoreButton: {
+    backgroundColor: "#0066FF",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignSelf: "center",
+    marginTop: 16,
+  },
+  loadMoreText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
 

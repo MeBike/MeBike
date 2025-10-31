@@ -24,7 +24,7 @@ const WITHDRAW_ENDPOINTS = {
   BASE: WITHDRAW_BASE,
   MANAGE_WITHDRAW_REQUEST: () => `${WITHDRAW_BASE}/manage-withdrawal`,
   ID: (id: string) => `${WITHDRAW_BASE}/${id}`,
-  WITHDRAW_REQUESTS: () => `${WITHDRAW_BASE}/withdraws`,
+  WITHDRAW_REQUESTS: () => `${WITHDRAW_BASE}`,
 } as const;
 export const withdrawalsService = {
   getAllWithdrawRequests: async ({
@@ -63,9 +63,15 @@ export const withdrawalsService = {
     >(WITHDRAW_ENDPOINTS.ID(id), data);
     return response;
   },
-  getWithdrawRequests: async (): Promise<AxiosResponse<ApiResponse<WithdrawRequest>>> => {
+  getWithdrawRequests: async (
+    {page , limit}: {page?: number; limit?: number}
+  ): Promise<AxiosResponse<ApiResponse<WithdrawRequest>>> => {
     const response = await fetchHttpClient.get<ApiResponse<WithdrawRequest>>(
-      WITHDRAW_ENDPOINTS.WITHDRAW_REQUESTS()
+      WITHDRAW_ENDPOINTS.WITHDRAW_REQUESTS(),
+      {
+        page: page,
+        limit: limit,
+      }
     );
     return response;
   },
