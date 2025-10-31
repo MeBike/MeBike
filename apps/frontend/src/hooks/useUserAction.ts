@@ -181,7 +181,7 @@ export const useUserActions = ({
     refetchNewRegistrationStats,
     getNewRegistrationStats,
     isLoadingNewRegistrationStats,
-    topRenter: topRenterData,
+    topRenter: topRenterData?.result.data,
     refetchTopRenter,
     getTopRenter,
     isLoadingTopRenter,
@@ -189,5 +189,6 @@ export const useUserActions = ({
     createUser,
     paginationUser: data?.pagination,
     isLoadingSearch,
+    totalRecordUser: data?.pagination?.totalRecords || 0,  
   };
 };

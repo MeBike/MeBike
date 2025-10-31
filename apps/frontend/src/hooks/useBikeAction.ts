@@ -280,5 +280,6 @@ export const useBikeActions = (
     bikeRentals: bikeRentals?.result.data,
     getRentalBikes,
     isFetchingRentalBikes,
+    totalRecord: data?.pagination.totalRecords || 0,
   };
 };

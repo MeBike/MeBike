@@ -10,8 +10,14 @@ import { useBikeActions } from "@/hooks/useBikeAction";
 import { useGetRevenueQuery } from "@/hooks/query/Rent/useGetRevenueQuery";
 export default function DashboardPage() {
   const { user } = useAuth();
-  const {activeUser , getActiveUser , newRegistrationStats } = useUserActions({hasToken:true}); 
-  const { statisticData } = useBikeActions(true);
+  const {
+    activeUser,
+    getActiveUser,
+    newRegistrationStats,
+    topRenter,
+    totalRecordUser,
+  } = useUserActions({ hasToken: true }); 
+  const { statisticData, totalRecord } = useBikeActions(true);
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -30,7 +36,22 @@ export default function DashboardPage() {
   const monthlyRev = monthlyRevenue?.data[0]?.totalRevenue || 0;
   const lastMonthlyRev = lastMonthlyRevenue?.data[0]?.totalRevenue || 0;
   const changePercent = lastMonthlyRev ? Math.round((monthlyRev - lastMonthlyRev) / lastMonthlyRev * 100) : 0;
-  const changeType = changePercent > 0 ? "positive" : changePercent < 0 ? "negative" : "neutral";
+  let changeType: "positive" | "negative" | "neutral";
+  if (lastMonthlyRev === 0) {
+    changeType = monthlyRev > 0 ? "positive" : "neutral";
+  } else {
+    changeType = changePercent > 0 ? "positive" : changePercent < 0 ? "negative" : "neutral";
+  }
+  const changePercentBike = statisticData?.result["CÓ SẴN"]
+    ? Math.round((statisticData.result["CÓ SẴN"] / totalRecord || 1) * 100)
+    : 0;
+  const changePercentActiveUser = newRegistrationStats
+    ? Math.round(
+        (newRegistrationStats.result.newUsersThisMonth /
+          (newRegistrationStats.result.newUsersLastMonth || 1)) *
+          100
+      )
+    : 0;  
   const formattedValue = monthlyRev ? `${(monthlyRev / 1000000).toFixed(1)}M ₫` : "0 ₫";
   if (!user) {
     return (
@@ -56,9 +77,13 @@ export default function DashboardPage() {
             />
             <StatsCard
               title="Xe đang cho thuê"
-              value={statisticData ? statisticData.result["ĐANG ĐƯỢC THUÊ"].toString() : "0"}
-              change="68% tổng số xe"
-              changeType="neutral"
+              value={
+                statisticData
+                  ? statisticData.result["ĐANG ĐƯỢC THUÊ"].toString()
+                  : "0"
+              }
+              change={`${changePercentBike > 1 ? "+" : ""}${changePercentBike}% so với tháng trước`}
+              changeType={changePercentBike > 1 ? "positive" : "negative"}
               icon={TrendingUp}
             />
             <StatsCard
@@ -68,8 +93,8 @@ export default function DashboardPage() {
                   ? newRegistrationStats.result.newUsersThisMonth.toString()
                   : "0"
               }
-              change="+8% tuần này"
-              changeType="positive"
+              change={`${changePercentActiveUser > 1 ? "+" : ""}${changePercentActiveUser}% so với tháng trước`}
+              changeType={changePercentActiveUser > 1 ? "positive" : "negative"}
               icon={Users}
             />
             {/* <StatsCard
@@ -86,7 +111,7 @@ export default function DashboardPage() {
             <StatsCard
               title="Doanh thu tháng này"
               value={formattedValue}
-              change={`${changePercent > 0 ? '+' : ''}${changePercent}% so với tháng trước`}
+              change={`${changePercent > 1 ? "+" : "-"}${changePercent}% so với tháng trước`}
               changeType={changeType}
               icon={DollarSign}
             />
