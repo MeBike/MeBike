@@ -17,7 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { ReservationsScreenNavigationProp } from "../types/navigation";
-import type { Reservation } from "../types/ReservationTypes";
+import type { Reservation } from "../types/reservation-types";
 
 const statusColorMap: Record<Reservation["status"], string> = {
   "ĐANG CHỜ XỬ LÍ": "#FFB020",

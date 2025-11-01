@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Alert } from "react-native";
 
-import type { Reservation } from "../types/ReservationTypes";
+import type { Reservation } from "../types/reservation-types";
 
 import { useCancelReservationMutation } from "./mutations/Reservation/useCancelReservationMutation";
 import { useConfirmReservationMutation } from "./mutations/Reservation/useConfirmReservationMutation";
