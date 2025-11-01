@@ -5,7 +5,7 @@ import fetchHttpClient from "@lib/httpClient";
 import type {
   PaginatedReservations,
   Reservation,
-} from "../types/ReservationTypes";
+} from "../types/reservation-types";
 
 const RESERVATION_BASE = "/reservations";
 
