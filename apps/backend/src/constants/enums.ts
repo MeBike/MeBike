@@ -14,7 +14,8 @@ export enum TokenType {
 export enum Role {
   User = 'USER',
   Staff = 'STAFF',
-  Admin = 'ADMIN'
+  Admin = 'ADMIN',
+  Sos = 'SOS'
 }
 
 export enum ReportStatus {
@@ -148,4 +149,13 @@ export enum TrendValue {
   Up = 'Tăng',
   Down = 'Giảm',
   NoChange = 'Không đổi'
+}
+
+export enum SosAlertStatus {
+  PENDING   = 'ĐANG CHỜ XỬ LÍ',
+  ACCEPTED  = 'ĐÃ CHẤP NHẬN',
+  EN_ROUTE  = 'ĐANG TRÊN ĐƯỜNG ĐẾN',
+  ON_SITE   = 'ĐÃ ĐẾN ĐỊA ĐIỂM',
+  RESOLVED  = 'ĐÃ XỬ LÍ',
+  CANCELLED = 'ĐÃ HUỶ',
 }
