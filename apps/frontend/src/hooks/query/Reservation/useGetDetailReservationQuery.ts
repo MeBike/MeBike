@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { reservationService } from "@/services/reservation.service";
+import { reservationService } from "@services/reservation.service";
 
 const getDetailReservation = async (id: string) => {
   try {
