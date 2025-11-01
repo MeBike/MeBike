@@ -18,19 +18,19 @@ export interface MyWallet {
   _id: string;
   user_id: string;
   balance: {
-    $numberDecimal : string;
+    $numberDecimal: string;
   };
-  status : "ĐANG HOẠT ĐỘNG" | "KHÓA";
-  created_at : string;
-  updated_at : string;
+  status: "ĐANG HOẠT ĐỘNG" | "KHÓA";
+  created_at: string;
+  updated_at: string;
 }
-interface Wallet {
+export interface Wallet {
   _id: string;
   user_id: string;
   balance: number;
-  status : "ĐANG HOẠT ĐỘNG" | "KHÓA";
-  created_at : string;
-  updated_at : string;
+  status: "ĐANG HOẠT ĐỘNG" | "KHÓA";
+  created_at: string;
+  updated_at: string;
 }
 const WALLET_BASE = "/wallets";
 const WALLET_ENDPOINTS = {
@@ -40,7 +40,10 @@ const WALLET_ENDPOINTS = {
   DEBIT: `${WALLET_BASE}/decrease`,
   GET_ALL_WALLET_USER: `${WALLET_BASE}/manage-wallet`,
 } as const;
-import type { TopUpSchemaFormData , DecreaseSchemaFormData } from "@/schemas/walletSchema";
+import type {
+  TopUpSchemaFormData,
+  DecreaseSchemaFormData,
+} from "@/schemas/walletSchema";
 export const walletService = {
   getMyWallet: async (): Promise<AxiosResponse<MyWallet>> => {
     const response = await fetchHttpClient.get<MyWallet>(
@@ -66,9 +69,19 @@ export const walletService = {
     );
     return response;
   },
-  getAllWalletUser: async (): Promise<AxiosResponse<ApiResponse<Wallet[]>>> => {
+  getAllWalletUser: async ({
+    page,
+    limit,
+  }: { page?: number; limit?: number } = {}): Promise<
+    AxiosResponse<ApiResponse<Wallet[]>>
+  > => {
     const response = await fetchHttpClient.get<ApiResponse<Wallet[]>>(
-      WALLET_ENDPOINTS.GET_ALL_WALLET_USER
+      WALLET_ENDPOINTS.GET_ALL_WALLET_USER,
+
+      {
+        page,
+        limit,
+      }
     );
     return response;
   },

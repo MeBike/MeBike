@@ -31,10 +31,10 @@ type ErrorWithMessage = {
 
 //   return defaultMessage;
 // }
-export function useWalletActions(hasToken: boolean, limit: number = 5) {
+export function useWalletActions(hasToken: boolean, page ?: number, limit?: number) {
   const queryClient = useQueryClient();
   const { data: allWallets, refetch: isRefetchingAllWallets } =
-    useGetAllWalletQuery();
+    useGetAllWalletQuery({ page, limit });
   const getAllWalletUser = useCallback(async () => {
     if (!hasToken) {
       return;
@@ -42,7 +42,8 @@ export function useWalletActions(hasToken: boolean, limit: number = 5) {
     isRefetchingAllWallets();
   }, [isRefetchingAllWallets, hasToken]);
   return {
-    allWallets,
+    allWallets : allWallets?.data || [],
     getAllWalletUser,
+    paginationWallet : allWallets?.pagination,
   };
 }
