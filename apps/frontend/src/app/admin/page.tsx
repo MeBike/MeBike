@@ -80,7 +80,7 @@ export default function DashboardPage() {
             <StatsCard
               title="Tổng lượt thuê hôm nay"
               value={dashboardSummaryData ? dashboardSummaryData.result.revenueSummary.today.totalRentals.toString() : "0"}
-              change={`+${changeRentPercent}% so với hôm qua`}
+              change={`${changeRentPercent}% so với hôm qua`}
               changeType={changeRentPercent > 1 ? "positive" : "negative"}
               icon={Bike}
             />
