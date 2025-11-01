@@ -10,7 +10,7 @@ export type CreateSosReqBody = {
 
 export interface CreateSosPayload extends CreateSosReqBody {
   rental_id: ObjectId
-  user_id: ObjectId
+  requester_id: ObjectId
   bike_id: ObjectId
 }
 

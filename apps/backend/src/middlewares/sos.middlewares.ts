@@ -11,6 +11,7 @@ import HTTP_STATUS from '~/constants/http-status';
 import { TokenPayLoad } from '~/models/requests/users.requests';
 import { NextFunction, Request, Response } from 'express';
 import { isBase64Image, isImageURL } from '~/utils/image-validator';
+import User from '~/models/schemas/user.schema';
 
 export const createSosAlertValidator = validate(
   checkSchema(
@@ -254,6 +255,54 @@ export const confirmSosValidator = validate(
     ['params', 'body']
   )
 );
+
+export const getSosRequestByIdValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: {
+        errorMessage: SOS_MESSAGE.REQUIRED_ID
+      },
+      isMongoId: {
+        errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'ID yêu cầu cứu hộ')
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const sos = await databaseService.sos_alerts.findOne({
+            _id: toObjectId(value)
+          })
+
+          if (!sos) {
+            throw new ErrorWithStatus({
+              message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          const user = req.user as User
+
+          if (user.role === Role.Sos) {
+            if (!sos.sos_agent_id || !user._id?.equals(sos.sos_agent_id)) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.CANNOT_VIEW_OTHER_DISPATCHED_REQUEST,
+                status: HTTP_STATUS.FORBIDDEN
+              })
+            }
+
+            if (sos.status !== SosAlertStatus.DISPATCHED) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.CANNOT_VIEW_UNDISPATCHED_REQUEST,
+                status: HTTP_STATUS.FORBIDDEN
+              })
+            }
+          }
+          req.sos_alert = sos
+          return true
+        }
+      }
+    }
+  })
+)
 
 export const isSosAgentValidator = async(req: Request, res: Response, next: NextFunction) => {
   try {

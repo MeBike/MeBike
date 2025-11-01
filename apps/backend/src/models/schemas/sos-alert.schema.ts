@@ -10,7 +10,7 @@ type LocationType = {
 type SosAlertType = {
   _id?: ObjectId;
   rental_id: ObjectId;
-  user_id: ObjectId;
+  requester_id: ObjectId;
   bike_id: ObjectId;
   photos?: string[]
   issue: string;
@@ -26,7 +26,7 @@ type SosAlertType = {
 export default class SosAlert {
   _id?: ObjectId;
   rental_id: ObjectId;
-  user_id: ObjectId;
+  requester_id: ObjectId;
   bike_id: ObjectId;
   photos?: string[]
   issue: string;
@@ -43,7 +43,7 @@ export default class SosAlert {
 
     this._id = alert._id ?? new ObjectId();
     this.rental_id = alert.rental_id;
-    this.user_id = alert.user_id;
+    this.requester_id = alert.requester_id;
     this.bike_id = alert.bike_id;
     this.photos = alert.photos || []
     this.issue = alert.issue;

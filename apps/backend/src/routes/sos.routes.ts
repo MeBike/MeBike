@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { confirmSosController, createSosRequestController, dispatchSosController } from '~/controllers/sos.controllers'
+import { confirmSosController, createSosRequestController, dispatchSosController, getSosRequestByIdController, getSosRequestsController } from '~/controllers/sos.controllers'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
-import { confirmSosValidator, createSosAlertValidator, dispatchSosValidator, isSosAgentValidator, isStaffOrSosAgentValidator } from '~/middlewares/sos.middlewares'
+import { confirmSosValidator, createSosAlertValidator, dispatchSosValidator, getSosRequestByIdValidator, isSosAgentValidator, isStaffOrSosAgentValidator } from '~/middlewares/sos.middlewares'
 import { isStaffValidator } from '~/middlewares/staff.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { ConfirmSosReqBody, CreateSosReqBody, DispatchSosReqBody } from '~/models/requests/sos.requests'
@@ -11,6 +11,11 @@ const sosRouter = Router()
 
 sosRouter
   .route('/')
+  .get(
+    accessTokenValidator,
+    isStaffOrSosAgentValidator,
+    wrapAsync(getSosRequestsController)
+  )
   .post(
     accessTokenValidator,
     isStaffValidator,
@@ -37,6 +42,15 @@ sosRouter
     filterMiddleware<ConfirmSosReqBody>(['confirmed', 'agent_notes', 'photos']),
     confirmSosValidator,
     wrapAsync(confirmSosController)
+  )
+
+sosRouter
+  .route('/:id')
+  .get(
+    accessTokenValidator,
+    isStaffOrSosAgentValidator,
+    getSosRequestByIdValidator,
+    wrapAsync(getSosRequestByIdController)
   )
 
 export default sosRouter

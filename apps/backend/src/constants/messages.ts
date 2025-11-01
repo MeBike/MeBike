@@ -553,6 +553,7 @@ export const SOS_MESSAGE = {
   INVALID_LOCATION_FORMAT: 'Vị trí phải có dạng { lat, lng }',
   RENTAL_NOT_FOUND: 'Không tìm thấy phiên thuê với ID: %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe với ID: %s',
+  USER_NOT_FOUND: 'Không tìm thấy người dùng với ID: %s',
   RENTAL_NOT_ACTIVE: 'Chỉ có thể gửi SOS khi đang thuê xe',
   SOS_SENT_SUCCESS: 'SOS đã được gửi, đội hỗ trợ đang đến',
   SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ với ID: ',
@@ -571,9 +572,13 @@ export const SOS_MESSAGE = {
   INVALID_PHOTO: 'Mỗi ảnh phải là kiểu chuỗi hợp lệ',
   INVALID_PHOTO_FORMAT: 'Mỗi ảnh phải là Base64 hoặc URL hợp lệ (jpg, png, webp)',
   INVALID_PHOTOS_ARRAY: 'Danh sách ảnh phải là 1 mảng từ 1-5 ảnh',
+  INVALID_STATUS: 'Trạng thái không hợp lệ',
   SOS_DISPATCHED_SUCCESS: 'Đã phân đội xử lí cho yêu cầu cứu hộ',
   SOS_CONFIRMED: 'Đã xác nhận yêu cầu, tình trạng nằm trong phạm vi phải xử lí',
   SOS_REJECTED: 'Đã từ chối yêu cầu, tình trạng không nằm trong phạm vi xử lí',
   CANNOT_CONFIRM_SOS: 'Không thể xác nhận yêu cầu cứu hộ với trạng thái: %s (trạng thái cần: DISPATCHED)',
   CANNOT_DISPATCH_SOS: 'Không thể phân phối đội cứu hộ với trạng thái: %s (trạng thái cần: PENDING)',
+  GET_REQUEST_BY_ID_SUCCESS: 'Xem chi tiết yêu cầu hỗ trợ thành công',
+  CANNOT_VIEW_OTHER_DISPATCHED_REQUEST: 'Không thể xem yêu cầu được phân công bởi người khác',
+  CANNOT_VIEW_UNDISPATCHED_REQUEST: 'Bạn chỉ có thể xem yêu cầu đã được phân công'
 };
