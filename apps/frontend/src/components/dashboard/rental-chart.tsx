@@ -12,7 +12,7 @@ import {
 } from "recharts";
 
 interface RentalChartProps {
-  data: Array<{ time: string; rentals: number }>;
+  data?: Array<{ time: string; rentals: number }>;
 }
 
 export function RentalChart({ data }: RentalChartProps) {

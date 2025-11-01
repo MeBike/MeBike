@@ -4,7 +4,6 @@ import fetchHttpClient from "@lib/httpClient";
 import type { RentingHistory } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
 import { DetailRentalReponse } from "@custom-types";
-import { get } from "http";
 export type Pagination = {
   limit: number;
   currentPage: number;

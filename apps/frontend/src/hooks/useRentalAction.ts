@@ -157,7 +157,7 @@ export function useRentalsActions({
       status,
     ]
   );
-  const { data: dashboardSummaryData, isLoading: isDashboardSummaryLoading } = useGetDashboardSummaryQuery();
+  const { data: dashboardSummaryData } = useGetDashboardSummaryQuery();
   return {
     allRentalsData: allRentalsData?.data,
     getRentals,
