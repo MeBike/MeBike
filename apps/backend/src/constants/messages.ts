@@ -543,12 +543,15 @@ export const SOS_MESSAGE = {
   REQUIRED_BIKE_ID: 'Vui lòng nhập ID xe đạp',
   REQUIRED_ISSUE: 'Vui lòng mô tả vấn đề',
   REQUIRED_LOCATION: 'Vui lòng cung cấp vị trí',
+  REQUIRED_ID: 'Vui lòng nhập ID yêu cầu cứu hộ',
+  REQUIRED_AGENT_ID: 'Vui lòng nhập ID người cứu hộ',
   INVALID_LOCATION_FORMAT: 'Vị trí phải có dạng { lat, lng }',
   RENTAL_NOT_FOUND: 'Không tìm thấy phiên thuê với ID: %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe với ID: %s',
   RENTAL_NOT_ACTIVE: 'Chỉ có thể gửi SOS khi đang thuê xe',
   SOS_SENT_SUCCESS: 'SOS đã được gửi, đội hỗ trợ đang đến',
-  SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ',
+  SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ với ID: ',
+  AGENT_NOT_FOUND: 'Không tìm thấy người cứu hộ với ID: %s',
   SOS_ALREADY_ACCEPTED: 'Yêu cầu đã được nhận bởi người khác',
   SOS_ACCEPTED_SUCCESS: 'Bạn đã nhận yêu cầu hỗ trợ',
   SOS_STATUS_UPDATED: 'Cập nhật trạng thái thành công',
@@ -558,5 +561,6 @@ export const SOS_MESSAGE = {
   INVALID_LATITUDE: 'Latitude phải từ -90 đến 90',
   INVALID_LONGITUDE: 'Longitude phải từ -180 đến 180',
   INVALID_NOTE: 'Ghi chú phải là kiểu chuỗi',
-  INVALID_NOTE_LENGTH: 'Độ dài của ghi chú không được vượt quá 300 kí tự'
+  INVALID_NOTE_LENGTH: 'Độ dài của ghi chú không được vượt quá 300 kí tự',
+  SOS_DISPATCHED_SUCCESS: 'Đã phân đội xử lí cho yêu cầu cứu hộ'
 };

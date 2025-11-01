@@ -14,3 +14,11 @@ export interface CreateSosPayload extends CreateSosReqBody {
   bike_id: ObjectId
 }
 
+export type DispatchSosReqBody = {
+  agent_id: string;
+}
+
+export type SosParam = {
+  id: string
+}
+

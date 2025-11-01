@@ -1,7 +1,7 @@
 // validators/sosValidator.ts
 import { checkSchema } from 'express-validator';
 import { SOS_MESSAGE } from '~/constants/messages';
-import { SosAlertStatus } from '~/constants/enums';
+import { Role, SosAlertStatus } from '~/constants/enums';
 import { RentalStatus } from '~/constants/enums';
 import { validate } from '~/utils/validation';
 import { toObjectId } from '~/utils/string';
@@ -97,5 +97,62 @@ export const createSosAlertValidator = validate(
       }
     },
     ['body']
+  )
+);
+
+export const dispatchSosValidator = validate(
+  checkSchema(
+    {
+      id: {
+        in: ['params'],
+        notEmpty: {
+          errorMessage: SOS_MESSAGE.REQUIRED_ID
+        },
+        isMongoId: {
+          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace("%s", "ID yêu cầu cứu hộ")
+        },
+        custom: {
+          options: async (value, { req }) => {
+            const sos = await databaseService.sos_alerts.findOne({
+              _id: toObjectId(value),
+              status: SosAlertStatus.PENDING,
+            });
+            if (!sos) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.SOS_NOT_FOUND.replace("%s", value),
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
+            req.sos_alert = sos;
+            return true;
+          },
+        },
+      },
+      agent_id: {
+        in: ['body'],
+        notEmpty: {
+          errorMessage: SOS_MESSAGE.REQUIRED_AGENT_ID
+        },
+        isMongoId: {
+          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace("%s", "agent_id")
+        },
+        custom: {
+          options: async (value) => {
+            const agent = await databaseService.users.findOne({
+              _id: toObjectId(value),
+              role: Role.Sos,
+            });
+            if (!agent) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.AGENT_NOT_FOUND.replace("%s", value),
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
+            return true;
+          },
+        },
+      },
+    },
+    ['params', 'body']
   )
 );
