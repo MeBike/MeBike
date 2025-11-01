@@ -17,7 +17,7 @@ import ForgotPasswordScreen from "./screen/ForgotPassword";
 import HomeScreen from "./screen/Home";
 import IntroScreen from "./screen/Intro";
 import LoginScreen from "./screen/Login";
-import MyWalletScreen from "./screen/MyWalletScreen";
+import MyWalletScreen from "./screen/my-wallet-screen";
 import ProfileScreen from "./screen/ProfileScreen";
 import RegisterScreen from "./screen/Register";
 import ReportScreen from "./screen/ReportScreen";

@@ -1,6 +1,5 @@
-import type { AxiosResponse } from "axios";
-
 import type { DecreaseSchemaFormData, TopUpSchemaFormData } from "@schemas/walletSchema";
+import type { AxiosResponse } from "axios";
 
 import fetchHttpClient from "@lib/httpClient";
 
@@ -33,6 +32,7 @@ const WALLET_ENDPOINTS = {
   TOP_UP: `${WALLET_BASE}/increase`,
   DEBIT: `${WALLET_BASE}/decrease`,
   TRANSACTIONS: `${WALLET_BASE}/transaction`,
+  TRANSACTION_DETAIL: (id: string) => `${WALLET_BASE}/transaction/${id}`,
 } as const;
 type ApiResponse<T> = {
   message: string;
@@ -64,13 +64,18 @@ export const walletService = {
     );
     return response;
   },
-  transactions: async ({page , limit }: {page: number, limit: number}): Promise<AxiosResponse<ApiResponse<Transaction[]>>> => {
+  transactions: async ({ page, limit }: { page: number; limit: number }): Promise<AxiosResponse<ApiResponse<Transaction[]>>> => {
     return await fetchHttpClient.get<ApiResponse<Transaction[]>>(
       WALLET_ENDPOINTS.TRANSACTIONS,
       {
-        page : page,
-        limit : limit,
-      }
+        page,
+        limit,
+      },
+    );
+  },
+  getTransactionDetail: async (transactionId: string): Promise<AxiosResponse<ApiResponse<Transaction>>> => {
+    return await fetchHttpClient.get<ApiResponse<Transaction>>(
+      WALLET_ENDPOINTS.TRANSACTION_DETAIL(transactionId),
     );
   },
 };
