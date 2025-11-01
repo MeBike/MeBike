@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Alert } from "react-native";
 
-import type { Reservation } from "../types/ReservationTypes";
+import type { Reservation } from "../types/reservation-types";
 
 import { useCancelReservationMutation } from "./mutations/Reservation/useCancelReservationMutation";
 import { useConfirmReservationMutation } from "./mutations/Reservation/useConfirmReservationMutation";
@@ -96,8 +96,8 @@ export function useReservationActions({
   const navigation = useNavigation();
   const queryClient = useQueryClient();
 
-  const SERVER_TIME_OFFSET_MS = 7 * 60 * 60 * 1000; // Backend compares against Vietnam local time (UTC+7)
-  const RESERVATION_BUFFER_MS = 2 * 60 * 1000; // keep a short lead to avoid race conditions
+  const SERVER_TIME_OFFSET_MS = 7 * 60 * 60 * 1000;
+  const RESERVATION_BUFFER_MS = 2 * 60 * 1000;
 
   type MutationCallbacks = {
     onSuccess?: () => void;
@@ -159,11 +159,12 @@ export function useReservationActions({
     (bikeId: string, startTime?: string, callbacks?: MutationCallbacks) => {
       if (!ensureAuthenticated())
         return;
+      const startISO = startTime
+        ? new Date(new Date(startTime).getTime() + SERVER_TIME_OFFSET_MS).toISOString()
+        : new Date(Date.now() + SERVER_TIME_OFFSET_MS + RESERVATION_BUFFER_MS).toISOString();
       const payload = {
         bike_id: bikeId,
-        start_time:
-          startTime
-          ?? new Date(Date.now() + SERVER_TIME_OFFSET_MS + RESERVATION_BUFFER_MS).toISOString(),
+        start_time: startISO,
       };
 
       createReservationMutation.mutate(payload, {
