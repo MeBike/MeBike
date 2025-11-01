@@ -60,8 +60,8 @@ export default function WalletPage() {
     (sum, wallet) => sum + (wallet.balance || 0),
     0
   ) || 0;
-  const totalDeposited = 0; // TODO: Get from API
-  const totalWithdrawn = 0; // TODO: Get from API
+  const totalDeposited = 0; 
+  const totalWithdrawn = 0; 
 
   return (
     <div className="space-y-6">
@@ -118,12 +118,12 @@ export default function WalletPage() {
             ? {
                 _id: selectedWallet.user_id,
                 userId: selectedWallet.user_id,
-                fullName: "User Name", // TODO: Get from API
-                email: "user@example.com", // TODO: Get from API
+                fullName: "User Name",
+                email: "user@example.com",
                 avatar: "/diverse-user-avatars.png",
                 current_balance: selectedWallet.balance,
-                total_spent: 0, // TODO: Get from API
-                total_deposited: 0, // TODO: Get from API
+                total_spent: 0,
+                total_deposited: 0,
                 last_transaction: new Date().toISOString().split("T")[0],
               }
             : null

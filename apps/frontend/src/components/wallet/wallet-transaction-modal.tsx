@@ -78,7 +78,6 @@ export function WalletTransactionModal({
     }
   }, [user?._id, reset, actionType]);
   const onSubmit = (data: TopUpSchemaFormData | DecreaseSchemaFormData) => {
-    console.log(data);
     if (!data.amount || data.amount <= 0 || !actionType) return;
     const details = {
       fee: data.fee || 0,
@@ -148,7 +147,7 @@ export function WalletTransactionModal({
             </Button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form key={actionType} onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
             <div className="space-y-4 py-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">
