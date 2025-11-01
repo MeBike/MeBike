@@ -46,9 +46,9 @@ export enum RentalStatus {
 }
 
 export enum GroupByOptions {
-  Day = 'DAY',
-  Month = 'MONTH',
-  Year = 'YEAR'
+  Date = 'NGÀY',
+  Month = 'THÁNG',
+  Year = 'NĂM'
 }
 
 export enum ReservationStatus {

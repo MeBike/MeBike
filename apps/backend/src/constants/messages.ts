@@ -356,6 +356,13 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_SOURCE_STATION_ID: 'Id trạm nguồn không hợp lệ.',
   INVALID_DESTINATION_STATION_ID: 'Id trạm đích không hợp lệ',
   INVALID_BIKE_LIST: 'Danh sách Id xe không hợp lệ (phải là 1 mảng chuỗi không rỗng)',
+  INVALID_INPUT: 'Dữ liệu đầu vào không hợp lệ',
+  INVALID_START_DATE_FORMAT: 'Ngày bắt đầu phải có định dạng YYYY-MM-DD',
+  INVALID_END_DATE_FORMAT: 'Ngày kết thúc phải có định dạng YYYY-MM-DD',
+  INVALID_START_DATE: 'Ngày bắt đầu không hợp lệ: %s',
+  INVALID_END_DATE: 'Ngày kết thúc không hợp lệ: %s',
+  START_DATE_AFTER_END_DATE: 'Ngày bắt đầu không được phép lớn hơn ngày kết thúc',
+  INVALID_GROUP_BY: 'groupBy phải là một trong: %s',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
@@ -389,7 +396,7 @@ export const RESERVATIONS_MESSAGE = {
   DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',
   BIKE_NOT_AT_SOURCE_STATION: 'Xe (Id: %s) không nằm ở trạm nguồn đã khai báo',
   // Report
-  GET_REPORT_SUCCESS: 'Lấy báo cáo đặt trước thành công',
+  GET_REPORT_SUCCESS: 'Lấy báo cáo đặt trước theo %s thành công',
   REPORT_PERIOD_DEFAULT: '12 tháng gần nhất',
   REPORT_PERIOD_FULL_RANGE: 'Từ %s đến %s',
   REPORT_PERIOD_START_ONLY: 'Từ ngày %s',

@@ -16,6 +16,7 @@ import {
 import { isAdminAndStaffValidator, isAdminValidator } from '~/middlewares/admin.middlewares'
 import {
   batchDispatchSameStationValidator,
+  filterByDateValidator,
   reserveBikeValidator,
   staffCancelReservationValidator,
   staffConfirmReservationValidator,
@@ -45,7 +46,7 @@ reserveRouter
 
 reserveRouter
   .route('/stats')
-  .get(accessTokenValidator, isAdminValidator, wrapAsync(getReservationReportController))
+  .get(accessTokenValidator, isAdminValidator, filterByDateValidator, wrapAsync(getReservationReportController))
 
 reserveRouter
   .route('/')

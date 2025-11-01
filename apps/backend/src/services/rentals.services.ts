@@ -615,7 +615,7 @@ class RentalsService {
     const result = await databaseService.rentals.aggregate(pipeline).toArray()
     return {
       period: { from: startDate, to: endDate },
-      groupBy: groupBy ?? GroupByOptions.Day,
+      groupBy: groupBy ?? GroupByOptions.Date,
       data: result
     }
   }
@@ -822,7 +822,7 @@ class RentalsService {
     const result = await databaseService.reservations.aggregate(pipeline).toArray()
     return {
       period: { from: startDate, to: endDate },
-      groupBy: groupBy ?? GroupByOptions.Day,
+      groupBy: groupBy ?? GroupByOptions.Date,
       data: result
     }
   }

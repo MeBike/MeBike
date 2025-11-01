@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 import { Decimal128, ObjectId } from 'mongodb'
-import { BikeStatus, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
+import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
 import { fromHoursToMs, fromMinutesToMs, getLocalTime } from '~/utils/date-time'
@@ -457,7 +457,7 @@ class ReservationsService {
     }
   }
 
-  async getReservationReport(startDateStr?: string, endDateStr?: string) {
+  async getReservationReport(startDateStr?: string, endDateStr?: string, groupBy?: GroupByOptions) {
     let dateFilter: { $gte?: Date; $lte?: Date } = {}
     let twelveMonthsAgo = getLocalTime()
     twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1)
@@ -473,6 +473,13 @@ class ReservationsService {
     } else {
       dateFilter.$lte = getLocalTime()
     }
+
+    const dateFormatMap: Record<GroupByOptions, string> = {
+    [GroupByOptions.Date]: '%Y-%m-%d',
+    [GroupByOptions.Month]: '%Y-%m',       
+    [GroupByOptions.Year]: '%Y',           
+  };
+  const dateFormat = dateFormatMap[groupBy || GroupByOptions.Date];
 
     const pipeline = [
       {
@@ -498,7 +505,7 @@ class ReservationsService {
                   $filter: {
                     input: '$rental_info',
                     as: 'r',
-                    cond: { $eq: ['$$r.status', 'Completed'] }
+                    cond: { $eq: ['$$r.status', RentalStatus.Completed] }
                   }
                 }
               },
@@ -510,9 +517,10 @@ class ReservationsService {
       {
         $group: {
           _id: {
-            month: { $month: '$created_at' },
-            year: { $year: '$created_at' },
-            status: '$status'
+            $dateToString: {
+            format: dateFormat,
+            date: '$created_at',
+          },
           },
           count: { $sum: 1 },
           successCount: {
@@ -521,7 +529,7 @@ class ReservationsService {
                 {
                   $or: [
                     { $eq: ['$status', ReservationStatus.Active] },
-                    { $and: [{ $eq: ['$status', ReservationStatus.Expired] }, { $eq: ['$hasCompletedRental', true] }] }
+                    { $and: [{ $eq: ['$status', ReservationStatus.Expired] }, '$hasCompletedRental'] }
                   ]
                 },
                 1,
@@ -533,7 +541,16 @@ class ReservationsService {
             $sum: { $cond: [{ $eq: ['$status', ReservationStatus.Cancelled] }, 1, 0] }
           },
           expiredCount: {
-            $sum: { $cond: [{ $eq: ['$status', ReservationStatus.Expired] }, 1, 0] }
+            $sum: { 
+              $cond: [
+                { $and: [
+                  { $eq: ['$status', ReservationStatus.Expired]},
+                  { $not: '$hasCompletedRental'}
+                ]},
+                1,
+                0
+              ] 
+            }
           },
           totalPrepaidRevenue: { $sum: '$prepaid' }
         }
@@ -541,8 +558,7 @@ class ReservationsService {
       {
         $project: {
           _id: 0,
-          month: '$_id.month',
-          year: '$_id.year',
+          group_key: '$_id',
           total: '$count',
           success: '$successCount',
           cancelled: '$cancelledCount',
@@ -550,30 +566,30 @@ class ReservationsService {
           revenue: '$totalPrepaidRevenue'
         }
       },
-      { $sort: { year: 1, month: 1 } }
+      { $sort: { year: 1, month: 1, day: 1 } }
     ]
 
-    const monthlyStats = await databaseService.reservations.aggregate(pipeline).toArray()
+    const stats = await databaseService.reservations.aggregate(pipeline).toArray()
 
-    const finalReport = monthlyStats.map((item) => {
+    return stats.map((item) => {
       const successRate = item.total > 0 ? (item.success / item.total) * 100 : 0
       const cancelRate = item.total > 0 ? (item.cancelled / item.total) * 100 : 0
       const expireRate = item.total > 0 ? (item.expired / item.total) * 100 : 0
 
+      const keyName = groupBy === GroupByOptions.Year ? 'year' : groupBy === GroupByOptions.Month ? 'month' : 'date';
+
       return {
-        month_year: `${item.year}-${item.month}`,
+        [keyName]: item.group_key,
         total_reservations: item.total,
-        success_count: item.success,
+        successed_count: item.success,
         cancelled_count: item.cancelled,
         expired_count: item.expired,
-        total_prepaid_revenue: Number(item.revenue.toString()),
-        success_rate: successRate.toFixed(2) + '%',
-        cancel_rate: cancelRate.toFixed(2) + '%',
-        expire_rate: expireRate.toFixed(2) + '%'
+        total_prepaid_revenue: Number(item.revenue.toString() || '0'),
+        successed_rate: successRate.toFixed(2) + '%',
+        cancelled_rate: cancelRate.toFixed(2) + '%',
+        expired_rate: expireRate.toFixed(2) + '%'
       }
     })
-
-    return finalReport
   }
 
   async expireReservations() {
