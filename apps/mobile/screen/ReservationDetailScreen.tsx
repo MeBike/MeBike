@@ -1,4 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useGetStationLookupQuery } from "@hooks/query/Reservation/useGetStationLookupQuery";
+import { useReservationActions } from "@hooks/useReservationActions";
+import { useAuth } from "@providers/auth-providers";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo } from "react";
@@ -13,10 +16,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useGetStationLookupQuery } from "@hooks/query/Reservation/useGetStationLookupQuery";
-import { useReservationActions } from "@hooks/useReservationActions";
-import { useAuth } from "@providers/auth-providers";
-
 import type {
   ReservationDetailNavigationProp,
   ReservationDetailRouteProp,
@@ -30,14 +29,26 @@ const statusColorMap: Record<Reservation["status"], string> = {
   "ĐÃ HẾT HẠN": "#9E9E9E",
 };
 
+const SERVER_TIME_OFFSET_MS = 7 * 60 * 60 * 1000;
+
 function formatDateTime(value?: string | null) {
   if (!value)
     return "Không có dữ liệu";
   const date = new Date(value);
-  return `${date.toLocaleDateString("vi-VN")}, ${date.toLocaleTimeString("vi-VN", {
+  if (Number.isNaN(date.getTime()))
+    return "Không có dữ liệu";
+
+  const compensatedDate = new Date(date.getTime() - SERVER_TIME_OFFSET_MS);
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })}`;
+    hour12: false,
+  }).format(compensatedDate);
 }
 
 function formatCurrency(

@@ -1,4 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useReservationActions } from "@hooks/useReservationActions";
+import { useStationActions } from "@hooks/useStationAction";
+import { useAuth } from "@providers/auth-providers";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -13,10 +16,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useReservationActions } from "@hooks/useReservationActions";
-import { useStationActions } from "@hooks/useStationAction";
-import { useAuth } from "@providers/auth-providers";
-
 import type { ReservationsScreenNavigationProp } from "../types/navigation";
 import type { Reservation } from "../types/ReservationTypes";
 
@@ -27,14 +26,26 @@ const statusColorMap: Record<Reservation["status"], string> = {
   "ĐÃ HẾT HẠN": "#9E9E9E",
 };
 
+const SERVER_TIME_OFFSET_MS = 7 * 60 * 60 * 1000;
+
 function formatDateTime(value?: string | null) {
   if (!value)
     return "Không có dữ liệu";
   const date = new Date(value);
-  return `${date.toLocaleDateString("vi-VN")}, ${date.toLocaleTimeString("vi-VN", {
+  if (Number.isNaN(date.getTime()))
+    return "Không có dữ liệu";
+
+  const compensatedDate = new Date(date.getTime() - SERVER_TIME_OFFSET_MS);
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })}`;
+    hour12: false,
+  }).format(compensatedDate);
 }
 
 function formatCurrency(value?: number | string | { $numberDecimal?: string }) {
@@ -239,6 +250,15 @@ function ReservationScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
+        {navigation.canGoBack() && (
+          <TouchableOpacity
+            style={styles.headerBack}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="chevron-back" size={22} color="#fff" />
+          </TouchableOpacity>
+        )}
         <Text style={styles.headerTitle}>Đặt trước của tôi</Text>
         <Text style={styles.headerSubtitle}>
           Quản lý các lượt đặt trước và bắt đầu chuyến đi nhanh chóng.
@@ -309,6 +329,15 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 14,
     color: "rgba(255,255,255,0.85)",
+  },
+  headerBack: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
   },
   content: {
     flex: 1,
