@@ -463,15 +463,12 @@ class ReservationsService {
     twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1)
     twelveMonthsAgo.setDate(1)
 
-    if (startDateStr) {
-      dateFilter.$gte = new Date(startDateStr)
-    } else {
-      dateFilter.$gte = twelveMonthsAgo
-    }
+    dateFilter.$gte = startDateStr ? new Date(startDateStr) : twelveMonthsAgo
 
     if (endDateStr) {
       const endDate = new Date(endDateStr)
-      endDate.setDate(endDate.getDate() + 1)
+      endDate.setUTCHours(23, 59, 59, 999)
+
       dateFilter.$lte = endDate
     } else {
       dateFilter.$lte = getLocalTime()
@@ -481,8 +478,32 @@ class ReservationsService {
       {
         $match: {
           created_at: dateFilter,
-          status: {
-            $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired]
+          status: { $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired] }
+        }
+      },
+      {
+        $lookup: {
+          from: 'rentals',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'rental_info'
+        }
+      },
+      {
+        $addFields: {
+          hasCompletedRental: {
+            $gt: [
+              {
+                $size: {
+                  $filter: {
+                    input: '$rental_info',
+                    as: 'r',
+                    cond: { $eq: ['$$r.status', 'Completed'] }
+                  }
+                }
+              },
+              0
+            ]
           }
         }
       },
@@ -494,6 +515,26 @@ class ReservationsService {
             status: '$status'
           },
           count: { $sum: 1 },
+          successCount: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: ['$status', ReservationStatus.Active] },
+                    { $and: [{ $eq: ['$status', ReservationStatus.Expired] }, { $eq: ['$hasCompletedRental', true] }] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          },
+          cancelledCount: {
+            $sum: { $cond: [{ $eq: ['$status', ReservationStatus.Cancelled] }, 1, 0] }
+          },
+          expiredCount: {
+            $sum: { $cond: [{ $eq: ['$status', ReservationStatus.Expired] }, 1, 0] }
+          },
           totalPrepaidRevenue: { $sum: '$prepaid' }
         }
       },
@@ -502,8 +543,10 @@ class ReservationsService {
           _id: 0,
           month: '$_id.month',
           year: '$_id.year',
-          status: '$_id.status',
-          count: '$count',
+          total: '$count',
+          success: '$successCount',
+          cancelled: '$cancelledCount',
+          expired: '$expiredCount',
           revenue: '$totalPrepaidRevenue'
         }
       },
@@ -512,42 +555,21 @@ class ReservationsService {
 
     const monthlyStats = await databaseService.reservations.aggregate(pipeline).toArray()
 
-    const summaryMap = monthlyStats.reduce((acc, item) => {
-      const monthKey = `${item.year}-${item.month}`
-      if (!acc[monthKey]) {
-        acc[monthKey] = {
-          month_year: monthKey,
-          total: 0,
-          success: 0,
-          cancelled: 0,
-          total_revenue: 0
-        }
-      }
-
-      acc[monthKey].total += item.count
-      acc[monthKey].total_revenue += Number(item.revenue.toString())
-
-      if (item.status === ReservationStatus.Cancelled) {
-        acc[monthKey].cancelled += item.count
-      } else if (item.status === ReservationStatus.Active || item.status === ReservationStatus.Expired) {
-        acc[monthKey].success += item.count
-      }
-      return acc
-    }, {})
-
-    const finalReport = Object.keys(summaryMap).map((key) => {
-      const data = summaryMap[key]
-      const successRate = data.total > 0 ? (data.success / data.total) * 100 : 0
-      const cancelRate = data.total > 0 ? (data.cancelled / data.total) * 100 : 0
+    const finalReport = monthlyStats.map((item) => {
+      const successRate = item.total > 0 ? (item.success / item.total) * 100 : 0
+      const cancelRate = item.total > 0 ? (item.cancelled / item.total) * 100 : 0
+      const expireRate = item.total > 0 ? (item.expired / item.total) * 100 : 0
 
       return {
-        month_year: key,
-        total_reservations: data.total,
-        success_count: data.success,
-        cancelled_count: data.cancelled,
-        total_prepaid_revenue: data.total_revenue,
+        month_year: `${item.year}-${item.month}`,
+        total_reservations: item.total,
+        success_count: item.success,
+        cancelled_count: item.cancelled,
+        expired_count: item.expired,
+        total_prepaid_revenue: Number(item.revenue.toString()),
         success_rate: successRate.toFixed(2) + '%',
-        cancel_rate: cancelRate.toFixed(2) + '%'
+        cancel_rate: cancelRate.toFixed(2) + '%',
+        expire_rate: expireRate.toFixed(2) + '%'
       }
     })
 
