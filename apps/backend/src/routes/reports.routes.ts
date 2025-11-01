@@ -1,6 +1,4 @@
 import { Router } from 'express'
-import multer from 'multer'
-
 import type { CreateReportReqBody } from '~/models/requests/reports.requests'
 
 import {
@@ -21,10 +19,6 @@ import {
 import { getIdValidator } from '~/middlewares/supplier.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handler'
-
-const storage = multer.memoryStorage()
-
-const upload = multer({ storage })
 
 const reportsRouter = Router()
 
@@ -52,7 +46,6 @@ reportsRouter.post(
     'station_id',
     'type'
   ]),
-  upload.array('files', 10),
   createReportValidator,
   wrapAsync(createReportController)
 )

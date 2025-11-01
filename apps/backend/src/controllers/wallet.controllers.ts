@@ -5,6 +5,7 @@ import type {
   DecreaseBalanceWalletReqBody,
   GetAllRefundReqQuery,
   GetTransactionReqQuery,
+  GetWalletReqQuery,
   GetWithdrawReqQuery,
   IncreaseBalanceWalletReqBody,
   UpdateWithdrawStatusReqBody
@@ -80,6 +81,27 @@ export async function getUserTransactionController(
   const query = req.query
 
   await walletService.getUserTransaction(res, next, query)
+}
+
+export async function getUserWalletHistoryController(
+  req: Request<ParamsDictionary, any, any, GetWalletReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const query = req.query
+
+  await walletService.getUserWalletHistory(res, next, query)
+}
+
+export async function getUserWalletHistoryDetailController(
+  req: Request<ParamsDictionary, any, any, GetTransactionReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const query = req.query
+  const user_id = req.params.user_id
+
+  await walletService.getWalletHistory(res, next, query, user_id)
 }
 
 export async function getUserTransactionWalletController(
