@@ -12,11 +12,13 @@ type SosAlertType = {
   rental_id: ObjectId;
   user_id: ObjectId;
   bike_id: ObjectId;
+  photos?: string[]
   issue: string;
   location: LocationType;
   status: SosAlertStatus;
   sos_agent_id?: ObjectId;
   staff_id?: ObjectId
+  resolved_at?: Date;
   created_at?: Date;
   updated_at?: Date;
 };
@@ -26,11 +28,13 @@ export default class SosAlert {
   rental_id: ObjectId;
   user_id: ObjectId;
   bike_id: ObjectId;
+  photos?: string[]
   issue: string;
   location: LocationType;
   status: SosAlertStatus;
   sos_agent_id?: ObjectId;
   staff_id?: ObjectId
+  resolved_at?: Date;
   created_at?: Date;
   updated_at?: Date;
 
@@ -41,6 +45,7 @@ export default class SosAlert {
     this.rental_id = alert.rental_id;
     this.user_id = alert.user_id;
     this.bike_id = alert.bike_id;
+    this.photos = alert.photos || []
     this.issue = alert.issue;
     this.location = {
       type: 'Point',
@@ -49,6 +54,7 @@ export default class SosAlert {
     this.status = alert.status ?? SosAlertStatus.PENDING;
     this.sos_agent_id = alert.sos_agent_id ?? undefined;
     this.staff_id = alert.staff_id ?? undefined;
+    this.resolved_at = alert.resolved_at ?? now;
     this.created_at = alert.created_at ?? now;
     this.updated_at = alert.updated_at ?? now;
   }

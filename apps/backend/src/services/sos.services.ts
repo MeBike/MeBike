@@ -1,7 +1,7 @@
 import SosAlert from '~/models/schemas/sos-alert.schema'
 import databaseService from './database.services'
 import { ObjectId } from 'mongodb'
-import { SosAlertStatus } from '~/constants/enums'
+import { RentalStatus, SosAlertStatus } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/errors'
 import { SOS_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
@@ -60,7 +60,7 @@ class SosService {
 
     if (!result) {
       throw new ErrorWithStatus({
-        message: SOS_MESSAGE.SOS_NOT_FOUND.replace("%s", sos_id),
+        message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', sos_id),
         status: HTTP_STATUS.NOT_FOUND
       })
     }
@@ -68,6 +68,38 @@ class SosService {
     // TODO: Push message to this SOS agent
 
     return result
+  }
+
+  async confirmSos({
+    sos_alert,
+    confirmed,
+    agent_notes,
+    photos
+  }: {
+    sos_alert: SosAlert
+    confirmed: boolean
+    agent_notes: string
+    photos?: string[]
+  }) {
+    const now = getLocalTime()
+    const sosId = sos_alert._id as ObjectId
+    const newStatus = confirmed ? SosAlertStatus.CONFIRMED : SosAlertStatus.REJECTED
+
+    const update: any = {
+      status: newStatus,
+      agent_notes,
+      photos,
+      updated_at: now
+    }
+    if (confirmed) update.resolved_at = now
+
+    const updatedAlert = await databaseService.sos_alerts.findOneAndUpdate(
+      { _id: sosId }, 
+      { $set: update }, 
+      { returnDocument: 'after' }
+    )
+
+    return updatedAlert
   }
 }
 

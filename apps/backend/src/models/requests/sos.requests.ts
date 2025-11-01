@@ -18,6 +18,12 @@ export type DispatchSosReqBody = {
   agent_id: string;
 }
 
+export type ConfirmSosReqBody = {
+  confirmed: boolean;
+  agent_notes: string;
+  photos: string[]
+}
+
 export type SosParam = {
   id: string
 }

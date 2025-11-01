@@ -1,6 +1,6 @@
 // validators/sosValidator.ts
 import { checkSchema } from 'express-validator';
-import { SOS_MESSAGE } from '~/constants/messages';
+import { SOS_MESSAGE, USERS_MESSAGES } from '~/constants/messages';
 import { Role, SosAlertStatus } from '~/constants/enums';
 import { RentalStatus } from '~/constants/enums';
 import { validate } from '~/utils/validation';
@@ -9,6 +9,8 @@ import databaseService from '~/services/database.services';
 import { ErrorWithStatus } from '~/models/errors';
 import HTTP_STATUS from '~/constants/http-status';
 import { TokenPayLoad } from '~/models/requests/users.requests';
+import { NextFunction, Request, Response } from 'express';
+import { isBase64Image, isImageURL } from '~/utils/image-validator';
 
 export const createSosAlertValidator = validate(
   checkSchema(
@@ -91,7 +93,7 @@ export const createSosAlertValidator = validate(
           errorMessage: SOS_MESSAGE.INVALID_NOTE
         },
         isLength: {
-          options: {max: 300},
+          options: {max: 500},
           errorMessage: SOS_MESSAGE.INVALID_NOTE_LENGTH
         }
       }
@@ -115,14 +117,22 @@ export const dispatchSosValidator = validate(
           options: async (value, { req }) => {
             const sos = await databaseService.sos_alerts.findOne({
               _id: toObjectId(value),
-              status: SosAlertStatus.PENDING,
             });
+
             if (!sos) {
               throw new ErrorWithStatus({
                 message: SOS_MESSAGE.SOS_NOT_FOUND.replace("%s", value),
                 status: HTTP_STATUS.NOT_FOUND,
               });
             }
+
+            if (sos.status !== SosAlertStatus.PENDING){
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.CANNOT_DISPATCH_SOS.replace("%s", sos.status),
+                status: HTTP_STATUS.BAD_REQUEST,
+              });
+            }
+
             req.sos_alert = sos;
             return true;
           },
@@ -142,6 +152,7 @@ export const dispatchSosValidator = validate(
               _id: toObjectId(value),
               role: Role.Sos,
             });
+            
             if (!agent) {
               throw new ErrorWithStatus({
                 message: SOS_MESSAGE.AGENT_NOT_FOUND.replace("%s", value),
@@ -156,3 +167,159 @@ export const dispatchSosValidator = validate(
     ['params', 'body']
   )
 );
+
+export const confirmSosValidator = validate(
+  checkSchema(
+    {
+      id: {
+        in: ['params'],
+        notEmpty: {
+          errorMessage: SOS_MESSAGE.REQUIRED_ID
+        },
+        isMongoId: {
+          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace("%s", "ID yêu cầu cứu hộ")
+        },
+        custom: {
+          options: async (value, { req }) => {
+            const sos = await databaseService.sos_alerts.findOne({
+              _id: toObjectId(value),
+            });
+
+            if (!sos) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.SOS_NOT_FOUND.replace("%s", value),
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
+
+            if (sos.status !== SosAlertStatus.DISPATCHED){
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.CANNOT_CONFIRM_SOS.replace("%s", sos.status),
+                status: HTTP_STATUS.BAD_REQUEST,
+              });
+            }
+            req.sos_alert = sos;
+            return true;
+          },
+        },
+      },
+      confirmed: {
+        in: ['body'],
+        isBoolean: { 
+          errorMessage: SOS_MESSAGE.INVALID_CONFIRMED 
+        },
+      },
+      agent_notes: {
+        in: ['body'],
+        notEmpty: { errorMessage: SOS_MESSAGE.REQUIRED_AGENT_NOTES },
+        trim: true,
+        isString: {
+          errorMessage: SOS_MESSAGE.INVALID_NOTE
+        },
+        isLength: {
+          options: {max: 500},
+          errorMessage: SOS_MESSAGE.INVALID_NOTE_LENGTH
+        }
+      },
+      photos: {
+        in: ['body'],
+        optional: true,
+        isArray: { 
+          options: { min: 1, max: 5 }, 
+          errorMessage: SOS_MESSAGE.INVALID_PHOTOS_ARRAY 
+        },
+        custom: {
+          options: (value: string[]) => {
+            if (!Array.isArray(value)) return false;
+
+            for (const photo of value) {
+              if (typeof photo !== 'string') {
+                throw new ErrorWithStatus({
+                  message: SOS_MESSAGE.INVALID_PHOTO,
+                  status: HTTP_STATUS.BAD_REQUEST,
+                });
+              }
+              if (!isBase64Image(photo) && !isImageURL(photo)) {
+                throw new ErrorWithStatus({
+                  message: SOS_MESSAGE.INVALID_PHOTO_FORMAT,
+                  status: HTTP_STATUS.BAD_REQUEST,
+                });
+              }
+            }
+            return true;
+          },
+        }
+      }
+    },
+    ['params', 'body']
+  )
+);
+
+export const isSosAgentValidator = async(req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayLoad;
+    const user = await databaseService.users.findOne({ _id: toObjectId(user_id) });
+    if (user === null) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+    if (user.role !== Role.Sos) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.ACCESS_DENIED_SOS_ONLY,
+        status: HTTP_STATUS.FORBIDDEN,
+      });
+    }
+    next();
+  }
+  catch (error) {
+    let status: number = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+    let message = "Internal Server Error";
+
+    if (error instanceof ErrorWithStatus) {
+      status = error.status;
+      message = error.message;
+    }
+    else if (error instanceof Error) {
+      message = error.message;
+    }
+    res.status(status).json({ message });
+  }
+}
+
+export const isStaffOrSosAgentValidator = async(req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayLoad;
+    const user = await databaseService.users.findOne({ _id: toObjectId(user_id) });
+    if (user === null) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND,
+      });
+    }
+
+    if (![Role.Staff, Role.Sos].includes(user.role)) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.ACCESS_DENIED_STAFF_AND_SOS_ONLY,
+        status: HTTP_STATUS.FORBIDDEN,
+      });
+    }
+
+    req.user = user
+    next();
+  }
+  catch (error) {
+    let status: number = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+    let message = "Internal Server Error";
+
+    if (error instanceof ErrorWithStatus) {
+      status = error.status;
+      message = error.message;
+    }
+    else if (error instanceof Error) {
+      message = error.message;
+    }
+    res.status(status).json({ message });
+  }
+}
