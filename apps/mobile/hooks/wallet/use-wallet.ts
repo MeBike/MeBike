@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/filename-case */
 import { WALLET_CONSTANTS } from "../../utils/wallet/constants";
 import { useWithdrawalAction } from "../use-withdrawal-action";
 import { useRefundAction } from "../useRefundAction";
@@ -42,6 +41,7 @@ export function useWallet() {
 
     // Actions
     getMyWallet: wallet.getMyWallet,
+    getMyTransaction: wallet.getMyTransaction,
     createWithdrawal: withdrawals.createWithdrawal,
     isCreatingWithdrawal: withdrawals.isCreating,
     createRefund: refunds.createRefund,

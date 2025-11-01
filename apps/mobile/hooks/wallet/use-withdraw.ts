@@ -8,7 +8,7 @@ import {
   validateNote,
   validateWithdrawalAmount,
 } from "../../utils/wallet/validators";
-import { useWithdrawalAction } from "../useWithdrawalAction";
+import { useWithdrawalAction } from "../use-withdrawal-action";
 
 type WithdrawalFormData = {
   amount: string;

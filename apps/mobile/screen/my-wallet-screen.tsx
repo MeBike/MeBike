@@ -3,8 +3,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { FlatList, StatusBar, Text, View } from "react-native";
 
-import type { RootStackParamList } from "../types/navigation";
-
 import { LoadingSpinner } from "../components/wallet/loading-spinner";
 import { QRModal } from "../components/wallet/qr-modal";
 import { RefundDetailModal } from "../components/wallet/refund-detail-modal";
@@ -15,10 +13,9 @@ import { WalletBalance } from "../components/wallet/wallet-balance";
 import { WalletHeader, WalletSettings } from "../components/wallet/wallet-header";
 import { WalletTabs } from "../components/wallet/wallet-tabs";
 import { WithdrawDetailModal } from "../components/wallet/withdraw-detail-modal";
+import { useWallet } from "../hooks/wallet/use-wallet";
 import { useWithdraw } from "../hooks/wallet/use-withdraw";
-import { useRefund } from "../hooks/wallet/useRefund";
-import { useWallet } from "../hooks/wallet/useWallet";
-import { myWalletScreenStyles as styles } from "../styles/wallet/myWalletScreen";
+import { myWalletScreenStyles as styles } from "../styles/wallet/my-wallet-screen";
 import { TAB_TYPES } from "../utils/wallet/constants";
 
 function MyWalletScreen() {
@@ -33,12 +30,12 @@ function MyWalletScreen() {
 
   const wallet = useWallet();
   const withdraw = useWithdraw();
-  const { handleRefundFromTransaction } = useRefund();
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const _navigation = useNavigation();
 
   useEffect(() => {
     wallet.getMyWallet();
-  }, [wallet.getMyWallet]);
+    wallet.getMyTransaction();
+  }, []);
 
   const handleTopUp = () => {
     setShowQR(true);
@@ -67,8 +64,8 @@ function MyWalletScreen() {
         <WalletHeader />
         <WalletSettings />
         <WalletBalance
-          balance={wallet.myWallet.balance?.$numberDecimal}
-          status={wallet.myWallet.status}
+          balance={wallet.myWallet?.balance?.$numberDecimal || "0"}
+          status={wallet.myWallet?.status || ""}
         />
       </LinearGradient>
 
@@ -152,13 +149,6 @@ function MyWalletScreen() {
   };
 
   const handleItemPress = (item: any) => {
-    // If it's a payment transaction, show refund option
-    if (activeTab === TAB_TYPES.TRANSACTIONS && item.type === "THANH TOÁN") {
-      handleRefundFromTransaction(item._id, item.amount);
-      return;
-    }
-
-    // Show detail modal based on active tab
     if (activeTab === TAB_TYPES.TRANSACTIONS) {
       setSelectedTransaction(item);
       setShowTransactionDetail(true);
@@ -186,13 +176,12 @@ function MyWalletScreen() {
         type={type}
         item={item}
         onPress={() => handleItemPress(item)}
-        showRefundHint={activeTab === TAB_TYPES.TRANSACTIONS && item.type === "THANH TOÁN"}
       />
     );
   };
 
   const renderEmptyState = () => {
-    const currentData = getCurrentData();
+    const _currentData = getCurrentData();
     const title = getCurrentTabTitle();
 
     return (
@@ -219,7 +208,6 @@ function MyWalletScreen() {
 
   const currentData = getCurrentData();
 
-  // Show empty state if no data
   if (currentData.length === 0) {
     return (
       <View style={styles.container}>
@@ -229,7 +217,7 @@ function MyWalletScreen() {
         <QRModal
           visible={showQR}
           onClose={() => setShowQR(false)}
-          userId={wallet.myWallet.user_id}
+          userId={wallet.myWallet?.user_id || ""}
         />
         <TransactionDetailModal
           visible={showTransactionDetail}
@@ -271,7 +259,7 @@ function MyWalletScreen() {
       <QRModal
         visible={showQR}
         onClose={() => setShowQR(false)}
-        userId={wallet.myWallet.user_id}
+        userId={wallet.myWallet?.user_id || ""}
       />
       <TransactionDetailModal
         visible={showTransactionDetail}
