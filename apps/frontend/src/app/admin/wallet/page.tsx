@@ -107,7 +107,7 @@ export default function WalletPage() {
     useState<WalletTransaction[]>(mockTransactions);
   const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { allWallets , paginationWallet} = useWalletActions(true, page, limit);
+  const { allWallets , paginationWallet , debitWallet , topUpWallet} = useWalletActions(true, page, limit);
   const handleDepositOld = (
     userId: string,
     amount: number,
@@ -180,14 +180,28 @@ export default function WalletPage() {
     }
   };
 
-  const handleDeposit = (walletId: string, amount: number, details: any) => {
-    // TODO: Implement API call for deposit
-    console.log("Deposit:", walletId, amount, details);
+  const handleDeposit = (userId: string, amount: number, details: TransactionDetails) => {
+    const data = {
+      user_id: userId,
+      amount,
+      fee: details.fee || 0,
+      description: details.description,
+      message: details.description,
+      transaction_hash: details.transaction_hash || '',
+    };
+    topUpWallet(data);
   };
 
-  const handleWithdraw = (walletId: string, amount: number, details: any) => {
-    // TODO: Implement API call for withdraw
-    console.log("Withdraw:", walletId, amount, details);
+  const handleWithdraw = (userId: string, amount: number, details: TransactionDetails) => {
+    const data = {
+      user_id: userId,
+      amount,
+      fee: details.fee || 0,
+      description: details.description,
+      message: details.description,
+      transaction_hash: details.transaction_hash || '',
+    };
+    debitWallet(data);
   };
 
   const handleOpenModal = (wallet: Wallet, actionType: "deposit" | "withdraw") => {
@@ -262,7 +276,7 @@ export default function WalletPage() {
       <WalletTransactionModal
         isOpen={isModalOpen}
         user={selectedWallet ? {
-          _id: selectedWallet._id,
+          _id: selectedWallet.user_id,
           userId: selectedWallet.user_id,
           fullName: "User Name", // TODO: Get from API
           email: "user@example.com", // TODO: Get from API

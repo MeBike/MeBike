@@ -57,20 +57,23 @@ export function useWalletActions(
       }
       useTopUpWallet.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 201) {
-            toast.success("Bike created successfully");
+          if (result.status === 200) {
+            toast.success("Top up wallet successfully");
+            queryClient.invalidateQueries({
+              queryKey: ["all-wallet-users", page, limit],
+            });
           } else {
-            const errorMessage = result.data?.message || "Error creating bikes";
+            const errorMessage = result.data?.message || "Error topping up wallet";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error creating bikes");
+          const errorMessage = getErrorMessage(error, "Error topping up wallet");
           toast.error(errorMessage);
         },
       });
     },
-    [useTopUpWallet, hasToken]
+    [useTopUpWallet, hasToken, queryClient]
   );
   const debitWallet = useCallback(
     (data: DecreaseSchemaFormData) => {
@@ -79,20 +82,23 @@ export function useWalletActions(
       }
       useDebitWallet.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 201) {
-            toast.success("Bike created successfully");
+          if (result.status === 200) {
+            toast.success("Debit wallet successfully");
+            queryClient.invalidateQueries({
+              queryKey: ["all-wallet-users", page, limit],
+            });
           } else {
-            const errorMessage = result.data?.message || "Error creating bikes";
+            const errorMessage = result.data?.message || "Error debiting wallet";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error creating bikes");
+          const errorMessage = getErrorMessage(error, "Error debiting wallet");
           toast.error(errorMessage);
         },
       });
     },
-    [useTopUpWallet, hasToken]
+    [useDebitWallet, hasToken, queryClient]
   );
   return {
     allWallets: allWallets?.data || [],

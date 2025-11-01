@@ -49,7 +49,7 @@ export function WalletTransactionModal({
   const [transactionHash, setTransactionHash] = useState("");
 
   const handleSubmit = () => {
-    if (!user || !amount || Number.parseFloat(amount) <= 0) return;
+    if (!user || !amount || Number.parseFloat(amount) <= 0 || !transactionHash) return;
 
     const details = {
       fee: fee ? Number.parseFloat(fee) : 0,
@@ -169,12 +169,13 @@ export function WalletTransactionModal({
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium">Mã giao dịch</label>
+              <label className="text-sm font-medium">Mã giao dịch *</label>
               <Input
                 type="text"
                 placeholder="Nhập mã giao dịch (transaction hash)"
                 value={transactionHash}
                 onChange={(e) => setTransactionHash(e.target.value)}
+                required
               />
             </div>
 
