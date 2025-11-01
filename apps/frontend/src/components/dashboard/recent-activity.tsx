@@ -5,7 +5,6 @@ import { useUserActions } from "@/hooks/useUserAction";
 
 export function RecentActivity() {
   const { topRenter } = useUserActions({ hasToken: true });
-
   return (
     <Card className="p-6">
       <div className="space-y-4">
