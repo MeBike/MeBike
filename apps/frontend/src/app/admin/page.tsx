@@ -50,7 +50,11 @@ export default function DashboardPage() {
           100
       )
     : 0;  
-  const formattedValue = monthlyRev ? `${(monthlyRev / 1000000).toFixed(1)}M ₫` : "0 ₫";
+  const formattedValue =
+    monthlyRev && Number(monthlyRev) >= 1000000
+      ? `${(monthlyRev / 1000000).toFixed(1)}M ₫`
+      : "0 ₫";
+
   const changeRentPercent = dashboardSummaryData?.result.revenueSummary.today.totalRentals && dashboardSummaryData?.result.revenueSummary.yesterday.totalRentals
     ? Math.round(
         ((dashboardSummaryData.result.revenueSummary.today.totalRentals - dashboardSummaryData.result.revenueSummary.yesterday.totalRentals) /
@@ -115,8 +119,8 @@ export default function DashboardPage() {
             /> */}
             <StatsCard
               title="Doanh thu tháng này"
-              value={formattedValue}
-              change={`${changePercent > 1 ? "+" : "-"}${changePercent}% so với tháng trước`}
+              value={formattedValue ? formattedValue : "0 ₫"}
+              change={`${changePercent > 1 ? "+" : ""}${changePercent}% so với tháng trước`}
               changeType={changeType}
               icon={DollarSign}
             />
