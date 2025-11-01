@@ -7,6 +7,7 @@ import { useGetDetailRentalAdminQuery } from "./query/Rent/useGetDetailRentalAdm
 import { usePutUpdateRentalMutation } from "./mutations/Rentals/usePutUpdateRentalMutation";
 import { UpdateRentalSchema } from "@/schemas/rentalSchema";
 import { toast } from "sonner";
+import { useGetDashboardSummaryQuery } from "./query/Rent/useGetDashboardSummaryQuery";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -156,6 +157,7 @@ export function useRentalsActions({
       status,
     ]
   );
+  const { data: dashboardSummaryData, isLoading: isDashboardSummaryLoading } = useGetDashboardSummaryQuery();
   return {
     allRentalsData: allRentalsData?.data,
     getRentals,
@@ -173,6 +175,7 @@ export function useRentalsActions({
     getDetailRental,
     detailData,
     isDetailLoading,
+    dashboardSummaryData,
   };
 }
 

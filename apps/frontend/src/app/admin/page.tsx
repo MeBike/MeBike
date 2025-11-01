@@ -8,12 +8,14 @@ import { Progress } from "@/components/ui/progress";
 import { useUserActions } from "@/hooks/useUserAction";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { useGetRevenueQuery } from "@/hooks/query/Rent/useGetRevenueQuery";
+import { useRentalsActions } from "@/hooks/useRentalAction";
 export default function DashboardPage() {
   const { user } = useAuth();
   const {
     newRegistrationStats,
   } = useUserActions({ hasToken: true }); 
   const { statisticData, totalRecord } = useBikeActions(true);
+  const { dashboardSummaryData } = useRentalsActions({ hasToken: true });
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -49,6 +51,13 @@ export default function DashboardPage() {
       )
     : 0;  
   const formattedValue = monthlyRev ? `${(monthlyRev / 1000000).toFixed(1)}M ₫` : "0 ₫";
+  const changeRentPercent = dashboardSummaryData?.result.revenueSummary.today.totalRentals && dashboardSummaryData?.result.revenueSummary.yesterday.totalRentals
+    ? Math.round(
+        ((dashboardSummaryData.result.revenueSummary.today.totalRentals - dashboardSummaryData.result.revenueSummary.yesterday.totalRentals) /
+          dashboardSummaryData.result.revenueSummary.yesterday.totalRentals) *
+          100
+      )
+    : 0;
   if (!user) {
     return (
       <div>
@@ -66,9 +75,9 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               title="Tổng lượt thuê hôm nay"
-              value="127"
-              change="+12% so với hôm qua"
-              changeType="positive"
+              value={dashboardSummaryData ? dashboardSummaryData.result.revenueSummary.today.totalRentals.toString() : "0"}
+              change={`+${changeRentPercent}% so với hôm qua`}
+              changeType={changeRentPercent > 1 ? "positive" : "negative"}
               icon={Bike}
             />
             <StatsCard
@@ -116,7 +125,10 @@ export default function DashboardPage() {
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <RentalChart />
+            <RentalChart data={dashboardSummaryData?.result.hourlyRentalStats.map(stat => ({
+              time: stat.hour,
+              rentals: stat.totalRentals
+            })) || []} />
           </div>
           <div className="lg:col-span-1">
             <RecentActivity />

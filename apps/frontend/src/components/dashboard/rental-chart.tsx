@@ -11,19 +11,11 @@ import {
     YAxis,
 } from "recharts";
 
-const data = [
-  { time: "00:00", rentals: 12 },
-  { time: "03:00", rentals: 8 },
-  { time: "06:00", rentals: 25 },
-  { time: "09:00", rentals: 45 },
-  { time: "12:00", rentals: 62 },
-  { time: "15:00", rentals: 58 },
-  { time: "18:00", rentals: 72 },
-  { time: "21:00", rentals: 38 },
-  { time: "24:00", rentals: 15 },
-];
+interface RentalChartProps {
+  data: Array<{ time: string; rentals: number }>;
+}
 
-export function RentalChart() {
+export function RentalChart({ data }: RentalChartProps) {
   return (
     <Card className="p-6">
       <div className="space-y-4">

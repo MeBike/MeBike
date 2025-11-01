@@ -2,10 +2,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp } from "lucide-react";
 import { useUserActions } from "@/hooks/useUserAction";
+import { useRentalsActions } from "@/hooks/useRentalAction";
 
 export function RecentActivity() {
   const { topRenter } = useUserActions({ hasToken: true });
-
+  const { dashboardSummaryData } = useRentalsActions({ hasToken: true });
   return (
     <Card className="p-6">
       <div className="space-y-4">

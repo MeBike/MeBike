@@ -4,6 +4,7 @@ import fetchHttpClient from "@lib/httpClient";
 import type { RentingHistory } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
 import { DetailRentalReponse } from "@custom-types";
+import { get } from "http";
 export type Pagination = {
   limit: number;
   currentPage: number;
@@ -16,6 +17,26 @@ export interface GetAllRentalsForStaffAdminProps {
   start_station?: string;
   end_station?: string;
   status?: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
+}
+interface Dashboardsummary {
+  revenueSummary: {
+    today: {
+      totalRevenue: number;
+      totalRentals: number;
+    };
+    yesterday: {
+      totalRevenue: number;
+      totalRentals: number;
+    };
+    revenueChange: number;
+    revenueTrend: string;
+    rentalChange: number;
+    rentalTrend: string;
+  };
+  hourlyRentalStats: Array<{
+    hour: string;
+    totalRentals: number;
+  }>;
 }
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
@@ -35,10 +56,11 @@ const RENTAL_ENDPOINTS = {
   GET_REVENUE: () => `${RENTAL_BASE}/stats/revenue`,
   GET_STATS_STATION_ACTIVITY: () => `${RENTAL_BASE}/stats/station-activity`,
   GET_RESERVATION_STATS: () => `${RENTAL_BASE}/stats/reservations`,
-  UPDATE_RENTAL_DETAIL : (id: string) => `${RENTAL_BASE}/${id}`,
-  END_RENTAL : (id: string) => `${RENTAL_BASE}/${id}/end`,
-  CANCEL_RENTAL : (id: string) => `${RENTAL_BASE}/${id}/cancel`,
-  DETAIL_RENTAL : (id: string) => `${RENTAL_BASE}/${id}`,
+  UPDATE_RENTAL_DETAIL: (id: string) => `${RENTAL_BASE}/${id}`,
+  END_RENTAL: (id: string) => `${RENTAL_BASE}/${id}/end`,
+  CANCEL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}/cancel`,
+  DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
+  DASHBOARD_RENTAL_STATS: () => `${RENTAL_BASE}/dashboard-summary`,
 };
 type RentalResponse = {
   data: RentingHistory[];
@@ -195,6 +217,12 @@ export const rentalService = {
     );
     return response;
   },
+  getDashboardRentalStats: async (): Promise<AxiosResponse<DetailApiResponse<Dashboardsummary>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<Dashboardsummary>>(
+      RENTAL_ENDPOINTS.DASHBOARD_RENTAL_STATS()
+    );
+    return response;
+  }
   // staffAdminUpdateDetailRental: async (
   //   id: string,
   //   data: any
