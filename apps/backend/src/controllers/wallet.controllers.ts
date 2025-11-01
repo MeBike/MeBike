@@ -73,6 +73,15 @@ export async function getUserWalletController(req: Request<any, any, any>, res: 
   })
 }
 
+export async function getWalletOverviewController(req: Request<any, any, any>, res: Response) {
+  const result = await walletService.getWalletOverview()
+
+  res.json({
+    message: WALLETS_MESSAGE.GET_WALLET_OVERVIEW_SUCCESS,
+    result
+  })
+}
+
 export async function getUserTransactionController(
   req: Request<ParamsDictionary, any, any, GetTransactionReqQuery>,
   res: Response,

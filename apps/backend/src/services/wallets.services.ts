@@ -149,7 +149,7 @@ class WalletService {
       fee: Decimal128.fromString(payload.fee.toString()),
       description: payload.description || 'Admin decrease balance',
       transaction_hash: payload.transaction_hash || '',
-      type: TransactionTypeEnum.PAYMENT,
+      type: TransactionTypeEnum.DECREASE,
       status: TransactionStaus.Success
     }
 
@@ -176,6 +176,69 @@ class WalletService {
     }
 
     return result
+  }
+
+  async getWalletOverview() {
+    const result = await databaseService.wallets
+      .aggregate([
+        {
+          $group: {
+            _id: null,
+            totalBalance: { $sum: '$balance' }
+          }
+        },
+        {
+          $lookup: {
+            from: 'transactions', 
+            pipeline: [
+              {
+                $group: {
+                  _id: null,
+                  totalTransactions: { $sum: 1 },
+                  totalDeposit: {
+                    $sum: {
+                      $cond: [{ $eq: ['$type', TransactionTypeEnum.Deposit] }, '$amount', 0]
+                    }
+                  },
+                  totalDecrease: {
+                    $sum: {
+                      $cond: [{ $eq: ['$type', TransactionTypeEnum.DECREASE] }, '$amount', 0]
+                    }
+                  }
+                }
+              }
+            ],
+            as: 'transactionStats' 
+          }
+        },
+        {
+          $unwind: {
+            path: '$transactionStats',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $project: {
+            _id: 0, 
+            totalWallets: '$totalWallets',
+            totalBalance: '$totalBalance',
+            totalTransactions: { $ifNull: ['$transactionStats.totalTransactions', 0] },
+            totalDeposit: { $ifNull: ['$transactionStats.totalDeposit', 0] },
+            totalDecrease: { $ifNull: ['$transactionStats.totalDecrease', 0] }
+          }
+        }
+      ])
+      .toArray()
+
+    return (
+      result[0] || {
+        totalWallets: 0,
+        totalBalance: 0,
+        totalTransactions: 0,
+        totalDeposit: 0,
+        totalDecrease: 0
+      }
+    )
   }
 
   async getUserTransaction(res: Response, next: NextFunction, query: GetTransactionReqQuery) {
