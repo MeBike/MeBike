@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 
 import { refundsTabStyles as styles } from "../../styles/wallet/refundsTab";
 import { LoadingSpinner } from "./loading-spinner";
@@ -25,35 +25,52 @@ type RefundsTabProps = {
 export function RefundsTab({
   refundRequests,
   isLoading,
-  hasNextPage: _hasNextPage,
+  hasNextPage,
   isFetchingNextPage,
   totalRefunds,
   onLoadMore,
 }: RefundsTabProps) {
+  const renderRequest = ({ item }: { item: RefundRequest }) => (
+    <TransactionItem type="refund" item={item} />
+  );
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage)
+      return null;
+
+    return (
+      <View style={styles.loadingFooter}>
+        <Text style={styles.loadingText}>Đang tải thêm...</Text>
+      </View>
+    );
+  };
+
   if (isLoading) {
     return <LoadingSpinner message="Đang tải..." />;
   }
 
-  return (
-    <>
-      <View style={styles.header}>
-        <Text style={styles.title}>Yêu cầu hoàn tiền</Text>
-        {refundRequests.length < totalRefunds && (
-          <TouchableOpacity onPress={onLoadMore} disabled={isFetchingNextPage}>
-            <Text style={styles.loadMoreText}>
-              {isFetchingNextPage ? "Đang tải..." : "Tải thêm"}
-            </Text>
-          </TouchableOpacity>
-        )}
+  if (!refundRequests || refundRequests.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>Chưa có yêu cầu hoàn tiền nào</Text>
       </View>
+    );
+  }
 
-      {refundRequests.map(request => (
-        <TransactionItem
-          key={request._id}
-          type="refund"
-          item={request}
-        />
-      ))}
-    </>
+  return (
+    <FlatList
+      data={refundRequests}
+      renderItem={renderRequest}
+      keyExtractor={item => item._id}
+      onEndReached={() => {
+        if (hasNextPage && !isFetchingNextPage) {
+          onLoadMore();
+        }
+      }}
+      onEndReachedThreshold={0.3}
+      ListFooterComponent={renderFooter}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.listContent}
+    />
   );
 }

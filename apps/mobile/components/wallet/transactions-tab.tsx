@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 
 import { useRefund } from "../../hooks/wallet/useRefund";
 import { transactionsTabStyles as styles } from "../../styles/wallet/transactionsTab";
@@ -27,7 +27,7 @@ type TransactionsTabProps = {
 export function TransactionsTab({
   transactions,
   isLoading,
-  hasNextPage: _hasNextPage,
+  hasNextPage,
   isFetchingNextPage,
   totalTransactions,
   onLoadMore,
@@ -40,32 +40,52 @@ export function TransactionsTab({
     }
   };
 
+  const renderTransaction = ({ item }: { item: Transaction }) => (
+    <TransactionItem
+      type="transaction"
+      item={item}
+      onPress={() => handleTransactionPress(item)}
+      showRefundHint={item.type === "THANH TOÁN"}
+    />
+  );
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage)
+      return null;
+
+    return (
+      <View style={styles.loadingFooter}>
+        <Text style={styles.loadingText}>Đang tải thêm...</Text>
+      </View>
+    );
+  };
+
   if (isLoading) {
     return <LoadingSpinner message="Đang tải giao dịch..." />;
   }
 
-  return (
-    <>
-      <View style={styles.header}>
-        <Text style={styles.title}>Lịch sử giao dịch</Text>
-        {transactions.length < totalTransactions && (
-          <TouchableOpacity onPress={onLoadMore} disabled={isFetchingNextPage}>
-            <Text style={styles.loadMoreText}>
-              {isFetchingNextPage ? "Đang tải..." : "Tải thêm"}
-            </Text>
-          </TouchableOpacity>
-        )}
+  if (!transactions || transactions.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>Chưa có giao dịch nào</Text>
       </View>
+    );
+  }
 
-      {transactions.map((transaction, index) => (
-        <TransactionItem
-          key={`${transaction._id}-${index}`}
-          type="transaction"
-          item={transaction}
-          onPress={() => handleTransactionPress(transaction)}
-          showRefundHint={transaction.type === "THANH TOÁN"}
-        />
-      ))}
-    </>
+  return (
+    <FlatList
+      data={transactions}
+      renderItem={renderTransaction}
+      keyExtractor={item => item._id}
+      onEndReached={() => {
+        if (hasNextPage && !isFetchingNextPage) {
+          onLoadMore();
+        }
+      }}
+      onEndReachedThreshold={0.3}
+      ListFooterComponent={renderFooter}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.listContent}
+    />
   );
 }

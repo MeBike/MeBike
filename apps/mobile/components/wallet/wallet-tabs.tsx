@@ -19,7 +19,7 @@ export function WalletTabs({ activeTab, onTabChange }: WalletTabsProps) {
         onPress={() => onTabChange(TAB_TYPES.TRANSACTIONS)}
       >
         <Text style={[styles.tabText, activeTab === TAB_TYPES.TRANSACTIONS && styles.activeTabText]}>
-          Lịch sử giao dịch
+          Giao dịch
         </Text>
       </TouchableOpacity>
 

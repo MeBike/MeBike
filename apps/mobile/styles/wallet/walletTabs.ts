@@ -23,7 +23,7 @@ export const walletTabsStyles = StyleSheet.create({
     backgroundColor: "#0066FF",
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "600",
     color: "#666",
   },

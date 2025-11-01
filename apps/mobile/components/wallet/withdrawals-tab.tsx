@@ -1,17 +1,13 @@
 import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
+
+import type { DetailWithdrawRequest } from "../../types/Withdrawal";
 
 import { withdrawalsTabStyles as styles } from "../../styles/wallet/withdrawalsTab";
 import { LoadingSpinner } from "./loading-spinner";
 import { TransactionItem } from "./transaction-item";
 
-type WithdrawalRequest = {
-  _id: string;
-  amount: number;
-  created_at: string;
-  status: string;
-  bank_name: string;
-};
+type WithdrawalRequest = DetailWithdrawRequest;
 
 type WithdrawalsTabProps = {
   withdrawalRequests: WithdrawalRequest[];
@@ -25,35 +21,52 @@ type WithdrawalsTabProps = {
 export function WithdrawalsTab({
   withdrawalRequests,
   isLoading,
-  hasNextPage: _hasNextPage,
+  hasNextPage,
   isFetchingNextPage,
   totalWithdrawals,
   onLoadMore,
 }: WithdrawalsTabProps) {
+  const renderRequest = ({ item }: { item: WithdrawalRequest }) => (
+    <TransactionItem type="withdrawal" item={item} />
+  );
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage)
+      return null;
+
+    return (
+      <View style={styles.loadingFooter}>
+        <Text style={styles.loadingText}>Đang tải thêm...</Text>
+      </View>
+    );
+  };
+
   if (isLoading) {
     return <LoadingSpinner message="Đang tải..." />;
   }
 
-  return (
-    <>
-      <View style={styles.header}>
-        <Text style={styles.title}>Yêu cầu rút tiền</Text>
-        {withdrawalRequests.length < totalWithdrawals && (
-          <TouchableOpacity onPress={onLoadMore} disabled={isFetchingNextPage}>
-            <Text style={styles.loadMoreText}>
-              {isFetchingNextPage ? "Đang tải..." : "Tải thêm"}
-            </Text>
-          </TouchableOpacity>
-        )}
+  if (!withdrawalRequests || withdrawalRequests.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>Chưa có yêu cầu rút tiền nào</Text>
       </View>
+    );
+  }
 
-      {withdrawalRequests.map(request => (
-        <TransactionItem
-          key={request._id}
-          type="withdrawal"
-          item={request}
-        />
-      ))}
-    </>
+  return (
+    <FlatList
+      data={withdrawalRequests}
+      renderItem={renderRequest}
+      keyExtractor={item => item._id}
+      onEndReached={() => {
+        if (hasNextPage && !isFetchingNextPage) {
+          onLoadMore();
+        }
+      }}
+      onEndReachedThreshold={0.3}
+      ListFooterComponent={renderFooter}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.listContent}
+    />
   );
 }

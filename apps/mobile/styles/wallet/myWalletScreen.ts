@@ -19,4 +19,19 @@ export const myWalletScreenStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
+  listContainer: {
+    paddingBottom: 16,
+  },
+  loadingFooter: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  emptyState: {
+    paddingVertical: 48,
+    alignItems: "center",
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: "#999",
+  },
 });

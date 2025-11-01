@@ -3,7 +3,13 @@ import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 import { transactionItemStyles as styles } from "../../styles/wallet/transactionItem";
-import { formatCurrency, getTransactionColor, getTransactionIcon } from "../../utils/wallet/formatters";
+import {
+  formatCurrency,
+  formatDate,
+  getTransactionColor,
+  getTransactionIcon,
+  truncateId,
+} from "../../utils/wallet/formatters";
 
 export type TransactionType = "transaction" | "withdrawal" | "refund";
 
@@ -45,12 +51,36 @@ export function TransactionItem({ type, item, onPress, showRefundHint = false }:
 
   const getDescription = () => {
     if (type === "withdrawal") {
-      return `Rút tiền về ${(item as any).bank_name}`;
+      return `Rút tiền về ${(item as any).bank}`;
     }
     if (type === "refund") {
-      return `Hoàn tiền cho giao dịch ${(item as any).transaction_id}`;
+      return `Hoàn tiền cho giao dịch ${truncateId((item as any).transaction_id)}`;
     }
-    return (item as any).description;
+    // For regular transactions, check if description contains bike_id and truncate it
+    const description = (item as any).description;
+    if (description && typeof description === "string") {
+      // Pattern 1: "bike_id:" or "bike id:" or "bikeid:"
+      let bikeIdMatch = description.match(/bike[_\s]?id[:\s]*([a-f0-9]{24})/i);
+      if (bikeIdMatch) {
+        const bikeId = bikeIdMatch[1];
+        return description.replace(bikeId, truncateId(bikeId));
+      }
+
+      // Pattern 2: At the end of description (e.g., "cho xe 671f3c2e8a4b5c6d7e8f9a0b")
+      bikeIdMatch = description.match(/([a-f0-9]{24})$/i);
+      if (bikeIdMatch) {
+        const bikeId = bikeIdMatch[1];
+        return description.replace(bikeId, truncateId(bikeId));
+      }
+
+      // Pattern 3: Any 24-char hex string anywhere in the description
+      bikeIdMatch = description.match(/([a-f0-9]{24})/i);
+      if (bikeIdMatch) {
+        const bikeId = bikeIdMatch[1];
+        return description.replace(bikeId, truncateId(bikeId));
+      }
+    }
+    return description;
   };
 
   const getAmount = () => {
@@ -71,19 +101,16 @@ export function TransactionItem({ type, item, onPress, showRefundHint = false }:
         <View style={styles.info}>
           <Text style={styles.description}>{getDescription()}</Text>
           <Text style={styles.date}>
-            {item.created_at}
+            {formatDate(item.created_at)}
             {" "}
             •
             {" "}
-            {item.status}
+            <Text style={{ fontWeight: "bold" }}>{item.status}</Text>
           </Text>
         </View>
       </View>
       <View style={styles.right}>
         <Text style={[styles.amount, { color: getColor() }]}>{getAmount()}</Text>
-        {showRefundHint && (
-          <Text style={styles.hint}>Nhấn để hoàn tiền</Text>
-        )}
       </View>
     </View>
   );

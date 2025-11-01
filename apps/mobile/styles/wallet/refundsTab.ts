@@ -17,4 +17,24 @@ export const refundsTabStyles = StyleSheet.create({
     color: "#0066FF",
     fontWeight: "600",
   },
+  listContent: {
+    paddingBottom: 16,
+  },
+  loadingFooter: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 13,
+    color: "#666",
+    fontWeight: "500",
+  },
+  emptyState: {
+    paddingVertical: 48,
+    alignItems: "center",
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: "#999",
+  },
 });
