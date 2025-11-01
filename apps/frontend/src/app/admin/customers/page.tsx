@@ -3,14 +3,16 @@
 import {  useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { CustomerCard } from "@/components/customers/customer-card";
+import { DataTable } from "@/components/TableCustom";
 import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userProfileSchema, UserProfile } from "@schemas/userSchema";
-import type { VerifyStatus, UserRole, DetailUser } from "@custom-types";
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import type { VerifyStatus, UserRole } from "@custom-types";
+import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/useUserAction";
+import { userColumns } from "@/columns/user-columns";
+import { PaginationDemo } from "@/components/PaginationCustomer";
 
 export default function CustomersPage() {
   const {
@@ -26,7 +28,7 @@ export default function CustomersPage() {
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit,] = useState<number>(6);
+  const [limit,] = useState<number>(10);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const {
     users,
@@ -48,7 +50,6 @@ export default function CustomersPage() {
     searchQuery: searchQuery,
   });
 
-  const totalPages = paginationUser?.totalPages ?? 1;
   useEffect(() => {
     getAllUsers();
     getAllStatistics();
@@ -59,18 +60,14 @@ export default function CustomersPage() {
     setRoleFilter("all");
     setCurrentPage(1);
   };
-  const handlePreviousPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-  const handleNextPage = () => {
-    setCurrentPage((prev) =>
-      Math.min(prev + 1, paginationUser?.totalPages ?? 1)
-    );
+
+  const handleFilterChange = () => {
+    setCurrentPage(1);
   };
   useEffect(() => {
     if (!searchQuery) getAllUsers();
     else getSearchUsers();
-  }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getSearchUsers]);
+  }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getSearchUsers, currentPage]);
   if (isLoading && isLoadingStatistics && isFetching) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -161,9 +158,10 @@ export default function CustomersPage() {
               <label className="text-sm font-medium">Trạng thái xác thực</label>
               <select
                 value={verifyFilter}
-                onChange={(e) =>
-                  setVerifyFilter(e.target.value as VerifyStatus | "all")
-                }
+                onChange={(e) => {
+                  setVerifyFilter(e.target.value as VerifyStatus | "all");
+                  handleFilterChange();
+                }}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
               >
                 <option value="all">Tất cả</option>
@@ -177,9 +175,10 @@ export default function CustomersPage() {
               <label className="text-sm font-medium">Vai trò</label>
               <select
                 value={roleFilter}
-                onChange={(e) =>
-                  setRoleFilter(e.target.value as UserRole | "all")
-                }
+                onChange={(e) => {
+                  setRoleFilter(e.target.value as UserRole | "all");
+                  handleFilterChange();
+                }}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
               >
                 <option value="all">Tất cả</option>
@@ -196,18 +195,16 @@ export default function CustomersPage() {
             Hiển thị {paginationUser?.currentPage ?? 1} /{" "}
             {paginationUser?.totalPages ?? 1} trang
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {users?.map((user) => (
-              <CustomerCard
-                key={user._id}
-                customer={user as DetailUser}
-                onView={(user) => console.log("[v0] View user:", user._id)}
-                onEdit={(user) => console.log("[v0] Edit user:", user._id)}
-              />
-            ))}
-          </div>
+          <DataTable
+            columns={userColumns({
+              onView: (user) => console.log("[v0] View user:", user.id),
+              onEdit: (user) => console.log("[v0] Edit user:", user.id),
+            })}
+            data={users || []}
+            // filterPlaceholder="Tìm kiếm người dùng..."
+          />
 
-          {totalPages > 1 && (
+          {/* {totalPages >= 1 && (
             <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
               <div className="text-sm text-muted-foreground">
                 Trang {currentPage} / {paginationUser?.totalPages ?? 1}
@@ -251,7 +248,14 @@ export default function CustomersPage() {
                 </Button>
               </div>
             </div>
-          )}
+          )} */}
+          <div className="pt-3">
+            <PaginationDemo
+              currentPage={currentPage}
+              totalPages={paginationUser?.totalPages ?? 1}
+              onPageChange={setCurrentPage}
+            />
+          </div>
           {isCreateModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
@@ -394,3 +398,4 @@ export default function CustomersPage() {
     </div>
   );
 }
+
