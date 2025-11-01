@@ -11,11 +11,12 @@ type InfoRowProps = {
   label: string;
   value: React.ReactNode;
   secondaryValue?: React.ReactNode;
+  marginBottom?: number;
 };
 
-export function InfoRow({ icon, label, value, secondaryValue }: InfoRowProps) {
+export function InfoRow({ icon, label, value, secondaryValue, marginBottom }: InfoRowProps) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 18 }}>
+    <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: marginBottom ?? 18 }}>
       <Ionicons name={icon as any} size={20} color="#607D8B" />
       <View style={{ marginLeft: 12, flex: 1 }}>
         <Text
@@ -93,6 +94,7 @@ export function ReservationInfo({
         icon="document-text"
         label="Tạo lúc"
         value={formatDateTime(reservation.created_at)}
+        marginBottom={0}
         secondaryValue={(
           <>
             Cập nhật gần nhất

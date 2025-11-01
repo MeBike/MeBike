@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/filename-case */
 import { Ionicons } from "@expo/vector-icons";
 import { AuthProvider, useAuth } from "@providers/auth-providers";
 import Providers from "@providers/providers";
@@ -9,7 +10,6 @@ import React from "react";
 
 import type { RootStackParamList } from "./types/navigation";
 
-import { LoadingScreen } from "./components/LoadingScreen";
 import BookingHistoryDetail from "./screen/BookingHistoryDetail";
 import BookingHistoryScreen from "./screen/BookingHistoryScreen";
 import ChangePasswordScreen from "./screen/ChangePasswordScreen";
@@ -22,7 +22,7 @@ import ProfileScreen from "./screen/ProfileScreen";
 import RegisterScreen from "./screen/Register";
 import ReportScreen from "./screen/ReportScreen";
 import ReservationDetailScreen from "./screen/reservation-detail-screen";
-import ReservationScreen from "./screen/ReservationScreen";
+import ReservationScreen from "./screen/reservation-screen";
 import StationDetailScreen from "./screen/StationDetail";
 import SupportScreen from "./screen/SupportScreen";
 import UpdateProfileScreen from "./screen/UpdateProfileScreen";
