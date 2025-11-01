@@ -10,3 +10,12 @@ export interface Reservation {
   created_at: string;
   updated_at: string;
 }
+export interface ReservationStats {
+  month_year: string;
+  total_reservations: number;
+  success_count: number;
+  cancelled_count: number;
+  total_prepaid_revenue: number;
+  success_rate: string;
+  cancel_rate:string;
+}
