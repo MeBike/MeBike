@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export const walletBalanceStyles = StyleSheet.create({
   gradient: {
     paddingTop: 32,
-    paddingBottom: 38,
+    paddingBottom: 32,
     paddingHorizontal: 24,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
@@ -24,7 +24,7 @@ export const walletBalanceStyles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   balanceCard: {
-    width: "100%",
+    width: "115%",
     backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: 18,
     padding: 22,
