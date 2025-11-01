@@ -29,10 +29,9 @@ type TransactionItemProps = {
     transaction_id?: string;
   };
   onPress?: () => void;
-  _showRefundHint?: boolean;
 };
 
-export function TransactionItem({ type, item, onPress, _showRefundHint = false }: TransactionItemProps) {
+export function TransactionItem({ type, item, onPress }: TransactionItemProps) {
   const getIcon = () => {
     if (type === "withdrawal")
       return "arrow-up-circle";

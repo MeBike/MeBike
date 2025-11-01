@@ -18,7 +18,6 @@ type RefundsTabProps = {
   isLoading: boolean;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
-  _totalRefunds: number;
   onLoadMore: () => void;
 };
 
@@ -27,7 +26,6 @@ export function RefundsTab({
   isLoading,
   hasNextPage,
   isFetchingNextPage,
-  _totalRefunds,
   onLoadMore,
 }: RefundsTabProps) {
   const renderRequest = ({ item }: { item: RefundRequest }) => (
@@ -52,7 +50,7 @@ export function RefundsTab({
   if (!refundRequests || refundRequests.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <Text style={styles.emptyStateText}>No refund requests yet</Text>
+        <Text style={styles.emptyStateText}>Chưa có yêu cầu hoàn tiền nào</Text>
       </View>
     );
   }

@@ -16,7 +16,6 @@ type WithdrawalsTabProps = {
   isLoading: boolean;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
-  _totalWithdrawals: number;
   onLoadMore: () => void;
 };
 
@@ -25,7 +24,6 @@ export function WithdrawalsTab({
   isLoading,
   hasNextPage,
   isFetchingNextPage,
-  _totalWithdrawals,
   onLoadMore,
 }: WithdrawalsTabProps) {
   const renderRequest = ({ item }: { item: WithdrawalRequest }) => (
@@ -50,7 +48,7 @@ export function WithdrawalsTab({
   if (!withdrawalRequests || withdrawalRequests.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <Text style={styles.emptyStateText}>No withdrawal requests yet</Text>
+        <Text style={styles.emptyStateText}>Chưa có yêu cầu rút tiền nào</Text>
       </View>
     );
   }

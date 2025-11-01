@@ -1,4 +1,3 @@
-import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { FlatList, StatusBar, Text, View } from "react-native";
@@ -30,7 +29,6 @@ function MyWalletScreen() {
 
   const wallet = useWallet();
   const withdraw = useWithdraw();
-  const _navigation = useNavigation();
 
   useEffect(() => {
     wallet.getMyWallet();

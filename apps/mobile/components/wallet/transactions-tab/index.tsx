@@ -19,7 +19,6 @@ type TransactionsTabProps = {
   isLoading: boolean;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
-  _totalTransactions: number;
   onLoadMore: () => void;
 };
 
@@ -28,7 +27,6 @@ export function TransactionsTab({
   isLoading,
   hasNextPage,
   isFetchingNextPage,
-  _totalTransactions,
   onLoadMore,
 }: TransactionsTabProps) {
   const renderTransaction = ({ item }: { item: Transaction }) => (
@@ -53,7 +51,7 @@ export function TransactionsTab({
   if (!transactions || transactions.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <Text style={styles.emptyStateText}>No transactions yet</Text>
+        <Text style={styles.emptyStateText}>Chưa có giao dịch nào</Text>
       </View>
     );
   }
