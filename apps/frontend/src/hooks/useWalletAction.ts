@@ -5,6 +5,7 @@ import { useTopUpWalletMutation } from "./mutations/Wallet/useTopUpWalletMutatio
 import { useDebitWalletMutation } from "./mutations/Wallet/useDebitWalletMutation";
 import { DecreaseSchemaFormData, TopUpSchemaFormData } from "@/schemas/walletSchema";
 import { toast } from "sonner";
+import { useGetManageTransactionQuery } from "./query/Wallet/useGetManageTransactionQuery";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -42,6 +43,7 @@ export function useWalletActions(
   const queryClient = useQueryClient();
   const { data: allWallets, refetch: isRefetchingAllWallets } =
     useGetAllWalletQuery({ page, limit });
+  const { data: manageTransactions } = useGetManageTransactionQuery({page:1 , limit:5});
   const useTopUpWallet = useTopUpWalletMutation();
   const useDebitWallet = useDebitWalletMutation();
   const getAllWalletUser = useCallback(async () => {
@@ -73,7 +75,7 @@ export function useWalletActions(
         },
       });
     },
-    [useTopUpWallet, hasToken, queryClient]
+    [useTopUpWallet, hasToken, queryClient , page , limit]
   );
   const debitWallet = useCallback(
     (data: DecreaseSchemaFormData) => {
@@ -98,7 +100,7 @@ export function useWalletActions(
         },
       });
     },
-    [useDebitWallet, hasToken, queryClient]
+    [useDebitWallet, hasToken, queryClient,page ,limit]
   );
   return {
     allWallets: allWallets?.data || [],
@@ -106,5 +108,6 @@ export function useWalletActions(
     paginationWallet: allWallets?.pagination,
     debitWallet,
     topUpWallet,
+    manageTransactions,
   };
 }

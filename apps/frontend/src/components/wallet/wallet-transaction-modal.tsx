@@ -50,7 +50,7 @@ export function WalletTransactionModal({
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     reset,
   } = useForm<TopUpSchemaFormData | DecreaseSchemaFormData>({
     resolver: zodResolver(actionType === "deposit" ? topUpWalletSchema : decreaseWalletSchema),

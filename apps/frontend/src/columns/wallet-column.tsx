@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, RefreshCw, Pencil, Plus, Minus } from "lucide-react";
+import { Eye, RefreshCw, Wallet2 } from "lucide-react";
 import { Wallet } from "@/services/wallet.service";
 export const getStatusColor = (status: Wallet["status"]) => {
   switch (status) {
@@ -61,14 +61,20 @@ export const walletColumn = ({
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
-        return new Date(row.original.created_at).toLocaleDateString("vi-VN") || "Không có";
+      return (
+        new Date(row.original.created_at).toLocaleDateString("vi-VN") ||
+        "Không có"
+      );
     },
   },
   {
     accessorKey: "updated_at",
     header: "Cập nhật lần cuối",
     cell: ({ row }) => {
-        return new Date(row.original.updated_at).toLocaleDateString("vi-VN") || "Không có";
+      return (
+        new Date(row.original.updated_at).toLocaleDateString("vi-VN") ||
+        "Không có"
+      );
     },
   },
   {
@@ -96,29 +102,7 @@ export const walletColumn = ({
             }
           }}
         >
-          <Plus className="w-4 h-4 text-green-600" />
-        </button>
-        <button
-          className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-          title="Trừ tiền"
-          onClick={() => {
-            if (onWithdraw) {
-              onWithdraw({ id: row.original._id });
-            }
-          }}
-        >
-          <Minus className="w-4 h-4 text-red-600" />
-        </button>
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Chỉnh sửa"
-          onClick={() => {
-            if (onEdit) {
-              onEdit({ id: row.original._id });
-            }
-          }}
-        >
-          <Pencil className="w-4 h-4 text-blue-500" />
+          <Wallet2 className="w-4 h-4 text-green-600" />
         </button>
         <button
           title="Cập nhật trạng thái"

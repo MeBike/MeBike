@@ -24,6 +24,18 @@ export interface MyWallet {
   created_at: string;
   updated_at: string;
 }
+export interface ManageTransactionsResponse {
+  _id: string;
+  wallet_id: string;
+  rental_id: string;
+  amount: number;
+  fee: number;
+  description: string;
+  transaction_hash: string;
+  type: "CỘNG TIỀN" | "RÚT TIỀN" | "HOÀN TIỀN" | "ĐẶT TRƯỚC" | "NẠP TIỀN";
+  status: "THÀNH CÔNG" | "THẤT BẠI" | "ĐANG XỬ LÝ";
+  created_at: string;
+}
 export interface Wallet {
   _id: string;
   user_id: string;
@@ -39,6 +51,7 @@ const WALLET_ENDPOINTS = {
   TOP_UP: `${WALLET_BASE}/increase`,
   DEBIT: `${WALLET_BASE}/decrease`,
   GET_ALL_WALLET_USER: `${WALLET_BASE}/manage-wallet`,
+  MANAAGE_TRANSACTIONS: `${WALLET_BASE}/manage-transactions`,
 } as const;
 import type {
   TopUpSchemaFormData,
@@ -72,6 +85,21 @@ export const walletService = {
     const response = await fetchHttpClient.get<ApiResponse<Wallet[]>>(
       WALLET_ENDPOINTS.GET_ALL_WALLET_USER,
 
+      {
+        page,
+        limit,
+      }
+    );
+    return response;
+  },
+  getManageTransactions: async ({
+    page,
+    limit,
+  }: { page?: number; limit?: number } = {}): Promise<
+    AxiosResponse<ApiResponse<ManageTransactionsResponse[]>>
+  > => {
+    const response = await fetchHttpClient.get<ApiResponse<ManageTransactionsResponse[]>>(
+      WALLET_ENDPOINTS.MANAAGE_TRANSACTIONS,
       {
         page,
         limit,
