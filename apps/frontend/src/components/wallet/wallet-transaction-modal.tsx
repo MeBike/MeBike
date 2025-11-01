@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus, X } from "lucide-react";
 import type { UserWallet } from "@/types/Wallet";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { TopUpSchemaFormData, topUpWalletSchema, DecreaseSchemaFormData, decreaseWalletSchema } from "@/schemas/walletSchema";
 interface WalletTransactionModalProps {
   isOpen: boolean;
   user: UserWallet | null;
@@ -32,6 +35,7 @@ interface TransactionDetails {
   fee?: number;
   description: string;
   transaction_hash?: string;
+  message?: string;
 }
 export function WalletTransactionModal({
   isOpen,
@@ -43,40 +47,63 @@ export function WalletTransactionModal({
   const [actionType, setActionType] = useState<"deposit" | "withdraw" | null>(
     null
   );
-  const [amount, setAmount] = useState("");
-  const [fee, setFee] = useState("");
-  const [description, setDescription] = useState("");
-  const [transactionHash, setTransactionHash] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<TopUpSchemaFormData | DecreaseSchemaFormData>({
+    resolver: zodResolver(actionType === "deposit" ? topUpWalletSchema : decreaseWalletSchema),
+    defaultValues: {
+      user_id: user?._id || "",
+      amount: 0,
+      fee: 0,
+      description: "",
+      message: "",
+      transaction_hash: "",
+    },
+  });
 
-  const handleSubmit = () => {
-    if (!user || !amount || Number.parseFloat(amount) <= 0 || !transactionHash) return;
-
+  // Cập nhật form khi user thay đổi
+  useEffect(() => {
+    if (user?._id) {
+      reset({
+        user_id: user._id,
+        amount: 0,
+        fee: 0,
+        description: "",
+        message: "",
+        transaction_hash: "",
+      });
+    }
+  }, [user?._id, reset, actionType]);
+  const onSubmit = (data: TopUpSchemaFormData | DecreaseSchemaFormData) => {
+    console.log(data);
+    if (!data.amount || data.amount <= 0 || !actionType) return;
     const details = {
-      fee: fee ? Number.parseFloat(fee) : 0,
+      fee: data.fee || 0,
       description:
-        description ||
+        data.description ||
         (actionType === "deposit"
           ? "Nạp tiền qua admin"
           : "Trừ tiền qua admin"),
-      transaction_hash: transactionHash,
+      message: data.message || "",
+      transaction_hash: actionType === "deposit" ? (data as TopUpSchemaFormData).transaction_hash : undefined,
     };
-
+    console.log(data);
     if (actionType === "deposit") {
-      onDeposit(user._id, Number.parseFloat(amount), details);
+      onDeposit(data.user_id, data.amount, details);
     } else if (actionType === "withdraw") {
-      onWithdraw(user._id, Number.parseFloat(amount), details);
+      onWithdraw(data.user_id, data.amount, details);
     }
-
-    resetForm();
+    reset(); // reset form fields
+    setActionType(null); // reset view
     onClose();
   };
 
   const resetForm = () => {
     setActionType(null);
-    setAmount("");
-    setFee("");
-    setDescription("");
-    setTransactionHash("");
+    reset();
   };
 
   const handleClose = () => {
@@ -121,80 +148,114 @@ export function WalletTransactionModal({
             </Button>
           </div>
         ) : (
-          <div className="space-y-4 py-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">
-                {actionType === "deposit"
-                  ? "Nạp tiền vào ví"
-                  : "Trừ tiền từ ví"}
-              </h3>
-              <button
-                onClick={() => setActionType(null)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-              </button>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <div className="space-y-4 py-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">
+                  {actionType === "deposit"
+                    ? "Nạp tiền vào ví"
+                    : "Trừ tiền từ ví"}
+                </h3>
+                <button
+                  onClick={() => setActionType(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">User ID</label>
+                <Input
+                  type="text"
+                  placeholder="Nhập User ID"
+                  {...register("user_id")}
+                  disabled
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Số tiền *</label>
+                <Input
+                  type="number"
+                  placeholder="Nhập số tiền"
+                  {...register("amount", { valueAsNumber: true })}
+                  min="0"
+                />
+              </div>
+              {errors.amount && (
+                <p className="text-sm text-red-600">{errors.amount.message}</p>
+              )}
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Phí</label>
+                <Input
+                  type="number"
+                  placeholder="Nhập phí (nếu có)"
+                  {...register("fee", { valueAsNumber: true })}
+                  min="0"
+                />
+              </div>
+              {errors.fee && (
+                <p className="text-sm text-red-600">{errors.fee.message}</p>
+              )}
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Mô tả</label>
+                <Input
+                  type="text"
+                  placeholder="Nhập mô tả giao dịch"
+                  {...register("description")}
+                />
+              </div>
+              {errors.description && (
+                <p className="text-sm text-red-600">
+                  {errors.description.message}
+                </p>
+              )}
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Lời nhắn</label>
+                <Input
+                  type="text"
+                  placeholder="Nhập lời nhắn (nếu có)"
+                  {...register("message")}
+                />
+              </div>
+              {errors.message && (
+                <p className="text-sm text-red-600">{errors.message.message}</p>
+              )}
+              {actionType === "deposit" && (
+                <>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">
+                      Mã giao dịch (tùy chọn)
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="Nhập mã giao dịch (transaction hash)"
+                      {...register("transaction_hash")}
+                    />
+                  </div>
+                  {errors.transaction_hash && (
+                    <p className="text-sm text-red-600">
+                      {errors.transaction_hash.message}
+                    </p>
+                  )}
+                </>
+              )}
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setActionType(null)}>
+                  Quay lại
+                </Button>
+                <Button
+                  type="submit"
+                  className={
+                    actionType === "deposit"
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-red-600 hover:bg-red-700"
+                  }
+                >
+                  {actionType === "deposit" ? "Nạp tiền" : "Trừ tiền"}
+                </Button>
+              </DialogFooter>
             </div>
-
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Số tiền *</label>
-              <Input
-                type="number"
-                placeholder="Nhập số tiền"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                min="0"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Phí</label>
-              <Input
-                type="number"
-                placeholder="Nhập phí (nếu có)"
-                value={fee}
-                onChange={(e) => setFee(e.target.value)}
-                min="0"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Mô tả</label>
-              <Input
-                type="text"
-                placeholder="Nhập mô tả giao dịch"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Mã giao dịch *</label>
-              <Input
-                type="text"
-                placeholder="Nhập mã giao dịch (transaction hash)"
-                value={transactionHash}
-                onChange={(e) => setTransactionHash(e.target.value)}
-                required
-              />
-            </div>
-
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setActionType(null)}>
-                Quay lại
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                className={
-                  actionType === "deposit"
-                    ? "bg-green-600 hover:bg-green-700"
-                    : "bg-red-600 hover:bg-red-700"
-                }
-              >
-                {actionType === "deposit" ? "Nạp tiền" : "Trừ tiền"}
-              </Button>
-            </DialogFooter>
-          </div>
+          </form>
         )}
       </DialogContent>
     </Dialog>
