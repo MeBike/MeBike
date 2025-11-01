@@ -45,16 +45,10 @@ import type {
   DecreaseSchemaFormData,
 } from "@/schemas/walletSchema";
 export const walletService = {
-  getMyWallet: async (): Promise<AxiosResponse<MyWallet>> => {
-    const response = await fetchHttpClient.get<MyWallet>(
-      WALLET_ENDPOINTS.MY_WALLET
-    );
-    return response;
-  },
   topUpWallet: async (
     data: TopUpSchemaFormData
-  ): Promise<AxiosResponse<MyWallet>> => {
-    const response = await fetchHttpClient.put<MyWallet>(
+  ): Promise<AxiosResponse<DetailApiResponse<MyWallet>>> => {
+    const response = await fetchHttpClient.put<DetailApiResponse<MyWallet>>(
       WALLET_ENDPOINTS.TOP_UP,
       data
     );
@@ -62,8 +56,8 @@ export const walletService = {
   },
   debitWallet: async (
     data: DecreaseSchemaFormData
-  ): Promise<AxiosResponse<MyWallet>> => {
-    const response = await fetchHttpClient.put<MyWallet>(
+  ): Promise<AxiosResponse<DetailApiResponse<MyWallet>>> => {
+    const response = await fetchHttpClient.put<DetailApiResponse<MyWallet>>(
       WALLET_ENDPOINTS.DEBIT,
       data
     );
