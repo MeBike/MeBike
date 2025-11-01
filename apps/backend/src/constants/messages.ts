@@ -145,7 +145,9 @@ export const REPORTS_MESSAGES = {
   DATE_IN_VALID: 'Ngày không hợp lệ',
   STAFF_ID_IS_REQUIRED: 'ID của nhân viên điều phối là bắt buộc',
   PRIORITY_IS_REQUIRED: 'Độ ưu tiên của report là bắt buộc',
-  INVALID_PRIORITY: 'Độ ưu tiên không hợp lệ!'
+  INVALID_PRIORITY: 'Độ ưu tiên không hợp lệ!',
+  FILES_MUST_BE_ARRAY: 'Files phải là một mảng các chuỗi URL.',
+  FILE_MUST_BE_URL: 'Mỗi file phải là một URL hợp lệ.'
 }
 
 export const SUPPLIER_MESSAGE = {

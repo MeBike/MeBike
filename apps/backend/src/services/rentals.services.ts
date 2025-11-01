@@ -981,13 +981,12 @@ class RentalsService {
     const pipeline = [
       {
         $match: {
-          status: RentalStatus.Completed,
-          end_time: { $gte: startOfToday, $lte: endOfToday }
+          start_time: { $gte: startOfToday, $lte: endOfToday }
         }
       },
       {
         $group: {
-          _id: { $hour: '$end_time' },
+          _id: { $hour: '$start_time' },
           totalRentals: { $sum: 1 }
         }
       },
