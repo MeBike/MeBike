@@ -21,20 +21,35 @@ export default function WalletPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedWallet, setSelectedWallet] = useState<Wallet | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { allWallets , paginationWallet , debitWallet , topUpWallet , manageTransactions } = useWalletActions(true, page, limit);
-  const handleDeposit = (userId: string, amount: number, details: TransactionDetails) => {
+  const {
+    allWallets,
+    paginationWallet,
+    debitWallet,
+    topUpWallet,
+    manageTransactions,
+    walletOverview,
+  } = useWalletActions(true, page, limit);
+  const handleDeposit = (
+    userId: string,
+    amount: number,
+    details: TransactionDetails
+  ) => {
     const data = {
       user_id: userId,
       amount,
       fee: details.fee || 0,
       description: details.description,
       message: details.description,
-      transaction_hash: details.transaction_hash || '',
+      transaction_hash: details.transaction_hash || "",
     };
     topUpWallet(data);
   };
 
-  const handleWithdraw = (userId: string, amount: number, details: TransactionDetails) => {
+  const handleWithdraw = (
+    userId: string,
+    amount: number,
+    details: TransactionDetails
+  ) => {
     const data = {
       user_id: userId,
       amount,
@@ -55,13 +70,6 @@ export default function WalletPage() {
     setSelectedWallet(null);
   };
 
-  const totalBalance = allWallets?.reduce(
-    (sum, wallet) => sum + (wallet.balance || 0),
-    0
-  ) || 0;
-  const totalDeposited = 0; 
-  const totalWithdrawn = 0; 
-
   return (
     <div className="space-y-6">
       <div>
@@ -74,10 +82,16 @@ export default function WalletPage() {
       </div>
 
       <WalletStats
-        totalBalance={totalBalance}
-        totalDeposited={totalDeposited}
-        totalWithdrawn={totalWithdrawn}
-        transactionCount={allWallets?.length || 0}
+        totalBalance={
+          Number(walletOverview?.result.totalBalance.$numberDecimal) || 0
+        }
+        totalDeposited={
+          Number(walletOverview?.result.totalDeposit.$numberDecimal) || 0
+        }
+        totalWithdrawn={
+          Number(walletOverview?.result.totalDecrease.$numberDecimal) || 0
+        }
+        transactionCount={Number(walletOverview?.result.totalTransactions) || 0}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">

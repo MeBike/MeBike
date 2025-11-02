@@ -10,11 +10,16 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus, X } from "lucide-react";
+import { Plus, Minus} from "lucide-react";
 import type { UserWallet } from "@/types/Wallet";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { TopUpSchemaFormData, topUpWalletSchema, DecreaseSchemaFormData, decreaseWalletSchema } from "@/schemas/walletSchema";
+import {
+  TopUpSchemaFormData,
+  topUpWalletSchema,
+  DecreaseSchemaFormData,
+  decreaseWalletSchema,
+} from "@/schemas/walletSchema";
 interface WalletTransactionModalProps {
   isOpen: boolean;
   user: UserWallet | null;
@@ -53,7 +58,9 @@ export function WalletTransactionModal({
     formState: { errors },
     reset,
   } = useForm<TopUpSchemaFormData | DecreaseSchemaFormData>({
-    resolver: zodResolver(actionType === "deposit" ? topUpWalletSchema : decreaseWalletSchema),
+    resolver: zodResolver(
+      actionType === "deposit" ? topUpWalletSchema : decreaseWalletSchema
+    ),
     mode: "onBlur",
     defaultValues: {
       user_id: user?._id || "",
@@ -88,7 +95,10 @@ export function WalletTransactionModal({
           ? "Nạp tiền qua admin"
           : "Trừ tiền qua admin"),
       message: data.message || "",
-      transaction_hash: actionType === "deposit" ? (data as TopUpSchemaFormData).transaction_hash : undefined,
+      transaction_hash:
+        actionType === "deposit"
+          ? (data as TopUpSchemaFormData).transaction_hash
+          : undefined,
     };
     console.log(data);
     if (actionType === "deposit") {
@@ -148,7 +158,11 @@ export function WalletTransactionModal({
             </Button>
           </div>
         ) : (
-          <form key={actionType} onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          <form
+            key={actionType}
+            onSubmit={handleSubmit(onSubmit)}
+            className="space-y-4 py-4"
+          >
             <div className="space-y-4 py-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold">
@@ -160,11 +174,14 @@ export function WalletTransactionModal({
                   onClick={() => setActionType(null)}
                   className="text-muted-foreground hover:text-foreground"
                 >
-                  <X className="w-4 h-4" />
+                  <span>Quay lại</span>
                 </button>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">User ID</label>
+                <label className="flex items-center gap-1 text-sm font-medium">
+                  <span className="text-red-600">*</span>
+                  Mã người dùng
+                </label>
                 <Input
                   type="text"
                   placeholder="Nhập User ID"
@@ -173,7 +190,10 @@ export function WalletTransactionModal({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium">Số tiền *</label>
+                <label className="flex items-center gap-1 text-sm font-medium">
+                  <span className="text-red-600">*</span>
+                  Số tiền
+                </label>
                 <Input
                   type="number"
                   placeholder="Nhập số tiền"
@@ -185,7 +205,10 @@ export function WalletTransactionModal({
                 <p className="text-sm text-red-600">{errors.amount.message}</p>
               )}
               <div className="space-y-1">
-                <label className="text-sm font-medium">Phí</label>
+                <label className="flex items-center gap-1 text-sm font-medium">
+                  <span className="text-red-600">*</span>
+                  Phí
+                </label>
                 <Input
                   type="number"
                   placeholder="Nhập phí (nếu có)"
@@ -197,7 +220,10 @@ export function WalletTransactionModal({
                 <p className="text-sm text-red-600">{errors.fee.message}</p>
               )}
               <div className="space-y-1">
-                <label className="text-sm font-medium">Mô tả</label>
+                <label className="flex items-center gap-1 text-sm font-medium">
+                  <span className="text-red-600">*</span>
+                  Mô tả
+                </label>
                 <Input
                   type="text"
                   placeholder="Nhập mô tả giao dịch"
@@ -210,7 +236,10 @@ export function WalletTransactionModal({
                 </p>
               )}
               <div className="space-y-1">
-                <label className="text-sm font-medium">Lời nhắn</label>
+                <label className="flex items-center gap-1 text-sm font-medium">
+                  <span className="text-red-600">*</span>
+                  Lời nhắn
+                </label>
                 <Input
                   type="text"
                   placeholder="Nhập lời nhắn (nếu có)"
@@ -223,12 +252,13 @@ export function WalletTransactionModal({
               {actionType === "deposit" && (
                 <>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium">
-                      Mã giao dịch (tùy chọn)
+                    <label className="flex items-center gap-1 text-sm font-medium">
+                      <span className="text-red-600">*</span>
+                      Mã giao dịch
                     </label>
                     <Input
                       type="text"
-                      placeholder="Nhập mã giao dịch (transaction hash)"
+                      placeholder="Nhập mã giao dịch (nếu đưa tiền mặt thì ghi 'MONEY')"
                       {...register("transaction_hash")}
                     />
                   </div>
@@ -261,4 +291,3 @@ export function WalletTransactionModal({
     </Dialog>
   );
 }
-

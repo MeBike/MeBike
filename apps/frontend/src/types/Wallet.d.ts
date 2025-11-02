@@ -23,3 +23,15 @@ export interface UserWallet {
   total_deposited: number;
   last_transaction: string;
 }
+export interface WalletOverview {
+  totalBalance: {
+    $numberDecimal: string;
+  };
+  totalTransactions: string;
+  totalDeposit: {
+    $numberDecimal: string;
+  };
+  totalDecrease: {
+    $numberDecimal: string;
+  };
+}
