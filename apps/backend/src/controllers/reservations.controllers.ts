@@ -227,3 +227,13 @@ export async function expireReservationsController(req: Request, res: Response) 
     result
   })
 }
+
+export async function getReservationDetailController(req: Request, res: Response) {
+  const {id} = req.params
+  const result = await reservationsService.getReservationDetail(id)
+
+  res.json({
+    message: RESERVATIONS_MESSAGE.GET_RESERVATION_DETAIL_SUCCESS,
+    result
+  })
+}

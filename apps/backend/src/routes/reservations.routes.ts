@@ -5,6 +5,7 @@ import {
   confirmReservationController,
   dispatchSameStationController,
   expireReservationsController,
+  getReservationDetailController,
   getReservationHistoryController,
   getReservationListController,
   getReservationReportController,
@@ -14,6 +15,7 @@ import {
   staffConfirmReservationController
 } from '~/controllers/reservations.controllers'
 import { isAdminAndStaffValidator, isAdminValidator } from '~/middlewares/admin.middlewares'
+import { checkUserWalletBeforeRentOrReserve } from '~/middlewares/rentals.middlewares'
 import {
   batchDispatchSameStationValidator,
   filterByDateValidator,
@@ -51,7 +53,7 @@ reserveRouter
 reserveRouter
   .route('/')
   .get(accessTokenValidator, wrapAsync(getReservationListController))
-  .post(accessTokenValidator, verifiedUserValidator, reserveBikeValidator, wrapAsync(reserveBikeController))
+  .post(accessTokenValidator, verifiedUserValidator, checkUserWalletBeforeRentOrReserve, reserveBikeValidator, wrapAsync(reserveBikeController))
   
 reserveRouter
   .route('/:stationId/stats')
@@ -72,4 +74,9 @@ reserveRouter
 reserveRouter
   .route('/:id/cancel')
   .post(accessTokenValidator, userCancelReservationValidator, wrapAsync(cancelReservationController))
+  
+reserveRouter
+  .route('/:id')
+  .get(accessTokenValidator, wrapAsync(getReservationDetailController))
+
 export default reserveRouter

@@ -2,7 +2,15 @@ import type { ClientSession, Document, ObjectId } from 'mongodb'
 
 import { Decimal128, Int32 } from 'mongodb'
 
-import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role, TrendValue } from '~/constants/enums'
+import {
+  BikeStatus,
+  GroupByOptions,
+  RentalStatus,
+  ReservationStatus,
+  Role,
+  SosAlertStatus,
+  TrendValue
+} from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { AUTH_MESSAGE, RENTALS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -168,39 +176,48 @@ class RentalsService {
     end_station_id: ObjectId,
     effective_end_time: Date,
     session: ClientSession,
-    reason?: string
+    reason?: string,
   ): Promise<{ rental: Rental; logData?: any }> {
     const now = getLocalTime()
     const result: any = {}
+    const endBikeStatus = BikeStatus.Available
 
+    const sosAlert = await databaseService.sos_alerts.findOne({
+      rental_id: rental._id,
+      status: SosAlertStatus.UNSOLVABLE
+    })
     const duration = this.generateDuration(rental.start_time, effective_end_time)
-    let totalPrice = this.generateTotalPrice(duration)
-
-    const reservation = await databaseService.reservations.findOneAndUpdate(
-      { _id: rental._id },
-      {
-        $set: {
-          status: ReservationStatus.Expired,
-          updated_at: now
-        }
-      },
-      { returnDocument: 'before', session }
-    )
-
-    result.origin_price = totalPrice
-    if (reservation) {
-      totalPrice = Math.max(0, totalPrice - parseFloat(reservation.prepaid.toString()))
-      result.is_reservation = true
-      result.prepaid = parseFloat(reservation.prepaid.toString())
-    }
-
-    const hours = duration / 60
-    if (hours > PENALTY_HOURS) {
-      result.penalty_amount = PENALTY_AMOUNT
-      totalPrice += PENALTY_AMOUNT
-      console.log(
-        `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${hours.toFixed(2)}h)`
+    let totalPrice = 0
+    if (!sosAlert) {
+      totalPrice = this.generateTotalPrice(duration)
+      const reservation = await databaseService.reservations.findOneAndUpdate(
+        { _id: rental._id },
+        {
+          $set: {
+            status: ReservationStatus.Expired,
+            updated_at: now
+          }
+        },
+        { returnDocument: 'before', session }
       )
+
+      result.origin_price = totalPrice
+      if (reservation) {
+        totalPrice = Math.max(0, totalPrice - parseFloat(reservation.prepaid.toString()))
+        result.is_reservation = true
+        result.prepaid = parseFloat(reservation.prepaid.toString())
+      }
+
+      const hours = duration / 60
+      if (hours > PENALTY_HOURS) {
+        result.penalty_amount = PENALTY_AMOUNT
+        totalPrice += PENALTY_AMOUNT
+        console.log(
+          `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${hours.toFixed(2)}h)`
+        )
+      }
+    } else {
+      console.log(`[SOS] Bike unsolvable, user will not be charged for this rental.`)
     }
 
     const decimalTotalPrice = Decimal128.fromString(totalPrice.toString())
@@ -224,7 +241,7 @@ class RentalsService {
         { _id: rental.bike_id },
         {
           $set: {
-            status: BikeStatus.Available,
+            status: endBikeStatus,
             updated_at: now
           }
         },

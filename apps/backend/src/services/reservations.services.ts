@@ -275,7 +275,7 @@ class ReservationsService {
           ),
           databaseService.bikes.updateOne(
             { _id: reservation.bike_id },
-            { $set: { station_id: null, status: BikeStatus.Booked, updated_at: now } },
+            { $set: { status: BikeStatus.Booked, updated_at: now } },
             { session }
           ),
           ...(user && user.role === Role.Staff && rental._id
@@ -475,11 +475,11 @@ class ReservationsService {
     }
 
     const dateFormatMap: Record<GroupByOptions, string> = {
-    [GroupByOptions.Date]: '%Y-%m-%d',
-    [GroupByOptions.Month]: '%Y-%m',       
-    [GroupByOptions.Year]: '%Y',           
-  };
-  const dateFormat = dateFormatMap[groupBy || GroupByOptions.Date];
+      [GroupByOptions.Date]: '%Y-%m-%d',
+      [GroupByOptions.Month]: '%Y-%m',
+      [GroupByOptions.Year]: '%Y'
+    }
+    const dateFormat = dateFormatMap[groupBy || GroupByOptions.Date]
 
     const pipeline = [
       {
@@ -518,9 +518,9 @@ class ReservationsService {
         $group: {
           _id: {
             $dateToString: {
-            format: dateFormat,
-            date: '$created_at',
-          },
+              format: dateFormat,
+              date: '$created_at'
+            }
           },
           count: { $sum: 1 },
           successCount: {
@@ -541,15 +541,12 @@ class ReservationsService {
             $sum: { $cond: [{ $eq: ['$status', ReservationStatus.Cancelled] }, 1, 0] }
           },
           expiredCount: {
-            $sum: { 
+            $sum: {
               $cond: [
-                { $and: [
-                  { $eq: ['$status', ReservationStatus.Expired]},
-                  { $not: '$hasCompletedRental'}
-                ]},
+                { $and: [{ $eq: ['$status', ReservationStatus.Expired] }, { $not: '$hasCompletedRental' }] },
                 1,
                 0
-              ] 
+              ]
             }
           },
           totalPrepaidRevenue: { $sum: '$prepaid' }
@@ -576,7 +573,7 @@ class ReservationsService {
       const cancelRate = item.total > 0 ? (item.cancelled / item.total) * 100 : 0
       const expireRate = item.total > 0 ? (item.expired / item.total) * 100 : 0
 
-      const keyName = groupBy === GroupByOptions.Year ? 'year' : groupBy === GroupByOptions.Month ? 'month' : 'date';
+      const keyName = groupBy === GroupByOptions.Year ? 'year' : groupBy === GroupByOptions.Month ? 'month' : 'date'
 
       return {
         [keyName]: item.group_key,
@@ -827,6 +824,85 @@ class ReservationsService {
       console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
       return { success: false }
     }
+  }
+
+  async getReservationDetail(id: string) {
+    const objectId = new ObjectId(id)
+
+    const pipeline = [
+      { $match: { _id: objectId } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },
+      {
+        $lookup: {
+          from: 'bikes',
+          localField: 'bike_id',
+          foreignField: '_id',
+          as: 'bike'
+        }
+      },
+      { $unwind: { path: '$bike', preserveNullAndEmptyArrays: false } },
+      {
+        $lookup: {
+          from: 'stations',
+          localField: 'station_id',
+          foreignField: '_id',
+          as: 'station'
+        }
+      },
+      { $unwind: { path: '$station', preserveNullAndEmptyArrays: false } },
+      {
+        $project: {
+          // reservation info
+          _id: 1,
+          start_time: 1,
+          end_time: 1,
+          prepaid: { $toDouble: '$prepaid' },
+          status: 1,
+          created_at: 1,
+          updated_at: 1,
+
+          // insensitive user info
+          'user._id': 1,
+          'user.fullname': 1,
+          'user.username': 1,
+          'user.email': 1,
+          'user.phone_number': 1,
+          'user.avatar': 1,
+          'user.role': 1,
+
+          // bike info
+          'bike._id': 1,
+          'bike.chip_id': 1,
+          'bike.status': 1,
+
+          // station info
+          'station._id': 1,
+          'station.name': 1,
+          'station.address': 1,
+          'station.latitude': 1,
+          'station.longitude': 1
+        }
+      }
+    ]
+
+    const [result] = await databaseService.reservations.aggregate(pipeline).toArray()
+
+    if (!result) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.NOT_FOUND.replace("%s", id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return result
   }
 }
 
