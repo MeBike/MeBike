@@ -9,7 +9,7 @@ import {
 const RESERVATION_BASE = "/reservations";
 const RESERVATION_ENDPOINTS = {
   BASE: RESERVATION_BASE,
-  USER_RESERVATIONS: `${RESERVATION_BASE}/user`,
+  USER_RESERVATIONS: `${RESERVATION_BASE}`,
   ID: (id: string) => `${RESERVATION_BASE}/${id}`,
   STATS: `${RESERVATION_BASE}/stats`,
   STATS_STATION: (stationId: string) =>

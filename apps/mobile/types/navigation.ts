@@ -30,6 +30,9 @@ export type RootStackParamList = {
     reservationId: string;
     reservation?: Reservation;
   };
+  TransactionDetail: { transactionId: string };
+  WithdrawDetail: { withdrawId: string };
+  RefundDetail: { refundId: string };
   Support: undefined;
   Report: {
     bike_id?: string;

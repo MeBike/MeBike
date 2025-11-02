@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useGetAllReservationQuery } from "./query/Reservation/useGetAllReservationQuery";
+import { useGetReservationStatsQuery } from "./query/Reservation/useGetReservationStatsQuery";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -38,6 +39,7 @@ export const useReservationActions = ({ hasToken, page, limit }: ActionProps) =>
   const queryClient = useQueryClient();
   const { data: allReservations, refetch: isRefetchingAllReservation } =
     useGetAllReservationQuery({ page, limit });
+  const { data: reservationStats , refetch : isRefetchingReservationStats} = useGetReservationStatsQuery();
   const fetchAllReservations = useCallback(() => {
     if (!hasToken) {
       return;
@@ -46,9 +48,20 @@ export const useReservationActions = ({ hasToken, page, limit }: ActionProps) =>
       queryKey: ["all-reservations", page, limit],
     });
   }, [queryClient, hasToken, page, limit]);
+  const fetchReservationStats = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    queryClient.invalidateQueries({
+      queryKey: ["reservation", "stats"],
+    });
+  }, [queryClient, hasToken]);
   return {
     allReservations,
     fetchAllReservations,
     isRefetchingAllReservation,
+    reservationStats,
+    fetchReservationStats,
+    isRefetchingReservationStats,
   };
 };

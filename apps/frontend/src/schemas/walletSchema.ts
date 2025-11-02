@@ -21,19 +21,10 @@ const baseWalletSchema = z.object({
 
 export const topUpWalletSchema = baseWalletSchema.extend({
   transaction_hash: z
-    .string()
-    .length(64, "Transaction hash must be 64 characters")
-    .refine((hash) => /^[0-9a-fA-F]{64}$/.test(hash), {
-      message: "Transaction hash must be a valid 64-character hex string",
-    }),
+    .string().min(40, "Transaction hash must be at least 40 characters"),
 });
 export const decreaseWalletSchema = baseWalletSchema.extend({
-  transaction_hash: z
-    .string()
-    .length(64, "Transaction hash must be 64 characters")
-    .refine((hash) => /^[0-9a-fA-F]{64}$/.test(hash), {
-      message: "Transaction hash must be a valid 64-character hex string",
-    }),
+  transaction_hash: z.string().optional(),
 }); 
 export type WalletSchemaFormData = z.infer<typeof baseWalletSchema>;
 export type TopUpSchemaFormData = z.infer<typeof topUpWalletSchema>;
