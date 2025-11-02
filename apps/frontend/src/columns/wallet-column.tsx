@@ -15,9 +15,9 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 };
 export const walletColumn = ({
   onView,
-  // onEdit,
+  onEdit,
   onDeposit,
-  // onWithdraw,
+  onWithdraw,
 }: {
   onView?: ({ id }: { id: string }) => void;
   onEdit?: ({ id }: { id: string }) => void;
