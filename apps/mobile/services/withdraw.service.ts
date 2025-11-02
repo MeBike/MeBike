@@ -1,12 +1,15 @@
-import fetchHttpClient from "@lib/httpClient";
+import type { CreateWithdrawSchemaFormData, UpdateWithdrawSchemaFormData } from "@schemas/withDrawalSchema";
 import type { AxiosResponse } from "axios";
+
+import fetchHttpClient from "@lib/httpClient";
+
 import type {
+  DetailWithdrawRequest,
   WithdrawRequest,
   WithdrawStatus,
-  DetailWithdrawRequest,
 } from "../types/Withdrawal";
-import { CreateWithdrawSchemaFormData, UpdateWithdrawSchemaFormData } from "@schemas/withDrawalSchema";
-interface ApiResponse<T> {
+
+type ApiResponse<T> = {
   data: T[];
   pagination: {
     totalPages: number;
@@ -14,11 +17,11 @@ interface ApiResponse<T> {
     limit: number;
     totalRecords: number;
   };
-}
-interface DetailApiResponse<T> {
+};
+type DetailApiResponse<T> = {
   result: T;
   message: string;
-}
+};
 const WITHDRAW_BASE = "/withdraws";
 const WITHDRAW_ENDPOINTS = {
   BASE: WITHDRAW_BASE,
@@ -39,15 +42,15 @@ export const withdrawalsService = {
     const response = await fetchHttpClient.get<ApiResponse<WithdrawRequest>>(
       WITHDRAW_ENDPOINTS.MANAGE_WITHDRAW_REQUEST(),
       {
-        page: page,
-        limit: limit,
-        status: status,
-      }
+        page,
+        limit,
+        status,
+      },
     );
     return response;
   },
   getWithdrawRequestById: async (
-    id: string
+    id: string,
   ): Promise<AxiosResponse<DetailApiResponse<DetailWithdrawRequest>>> => {
     const response = await fetchHttpClient.get<
       DetailApiResponse<DetailWithdrawRequest>
@@ -56,7 +59,7 @@ export const withdrawalsService = {
   },
   updateWithdrawRequestById: async (
     id: string,
-    data: UpdateWithdrawSchemaFormData
+    data: UpdateWithdrawSchemaFormData,
   ): Promise<AxiosResponse<DetailApiResponse<DetailWithdrawRequest>>> => {
     const response = await fetchHttpClient.put<
       DetailApiResponse<DetailWithdrawRequest>
@@ -64,14 +67,14 @@ export const withdrawalsService = {
     return response;
   },
   getWithdrawRequests: async (
-    {page , limit}: {page?: number; limit?: number}
-  ): Promise<AxiosResponse<ApiResponse<WithdrawRequest>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<WithdrawRequest>>(
+    { page, limit }: { page?: number; limit?: number },
+  ): Promise<AxiosResponse<ApiResponse<DetailWithdrawRequest>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<DetailWithdrawRequest>>(
       WITHDRAW_ENDPOINTS.WITHDRAW_REQUESTS(),
       {
-        page: page,
-        limit: limit,
-      }
+        page,
+        limit,
+      },
     );
     return response;
   },
