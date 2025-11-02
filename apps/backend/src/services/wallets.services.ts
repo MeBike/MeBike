@@ -272,8 +272,8 @@ class WalletService {
       const skip = (page - 1) * limit
 
       const filter: Filter<Wallet> = {}
-      if (query.type) {
-        filter.type = query.type
+      if (query.status) {
+        filter.status = query.status
       }
       if (query.user_id) {
         filter.user_id = new ObjectId(query.user_id)
