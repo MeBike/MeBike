@@ -41,7 +41,6 @@ export default function WalletPage() {
       fee: details.fee || 0,
       description: details.description,
       message: details.description,
-      transaction_hash: details.transaction_hash || '',
     };
     debitWallet(data);
   };
