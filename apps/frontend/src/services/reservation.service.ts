@@ -19,11 +19,19 @@ const RESERVATION_ENDPOINTS = {
   STAFF_CANCEL: (id: string) => `${RESERVATION_BASE}/${id}/staff-cancel`,
 } as const;
 export const reservationService = {
-  getUserReservations: async (): Promise<
-    AxiosResponse<ApiResponse<Reservation[]>>
-  > => {
+  getUserReservations: async ({
+    page,
+    limit,
+  }: {
+    page?: number;
+    limit?: number;
+  }): Promise<AxiosResponse<ApiResponse<Reservation[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Reservation[]>>(
-      RESERVATION_ENDPOINTS.USER_RESERVATIONS
+      RESERVATION_ENDPOINTS.USER_RESERVATIONS,
+      {
+        page,
+        limit,
+      }
     );
     return response;
   },

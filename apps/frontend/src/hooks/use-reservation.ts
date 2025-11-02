@@ -1,0 +1,54 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
+import { toast } from "sonner";
+import { useGetAllReservationQuery } from "./query/Reservation/useGetAllReservationQuery";
+interface ErrorResponse {
+  response?: {
+    data?: {
+      errors?: Record<string, { msg?: string }>;
+      message?: string;
+    };
+  };
+}
+interface ErrorWithMessage {
+  message: string;
+}
+const getErrorMessage = (error: unknown, defaultMessage: string): string => {
+  const axiosError = error as ErrorResponse;
+  if (axiosError?.response?.data) {
+    const { errors, message } = axiosError.response.data;
+    if (errors) {
+      const firstError = Object.values(errors)[0];
+      if (firstError?.msg) return firstError.msg;
+    }
+    if (message) return message;
+  }
+  const simpleError = error as ErrorWithMessage;
+  if (simpleError?.message) {
+    return simpleError.message;
+  }
+  return defaultMessage;
+};
+interface ActionProps {
+  hasToken: boolean;
+  page?: number;
+  limit?: number;
+}
+export const useReservationActions = ({ hasToken, page, limit }: ActionProps) => {
+  const queryClient = useQueryClient();
+  const { data: allReservations, refetch: isRefetchingAllReservation } =
+    useGetAllReservationQuery({ page, limit });
+  const fetchAllReservations = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    queryClient.invalidateQueries({
+      queryKey: ["all-reservations", page, limit],
+    });
+  }, [queryClient, hasToken, page, limit]);
+  return {
+    allReservations,
+    fetchAllReservations,
+    isRefetchingAllReservation,
+  };
+};
