@@ -33,6 +33,7 @@ import { NextFunction, Response } from 'express'
 import { CreateRefundReqBody } from '~/models/requests/refunds.request'
 import Refund, { RefundType } from '~/models/schemas/refund.schema'
 import Withdraw, { WithdrawType } from '~/models/schemas/withdraw-request'
+import { normalizeDecimal } from '~/utils/string'
 
 class WalletService {
   async createWallet(user_id: string, session?: ClientSession) {
@@ -189,7 +190,7 @@ class WalletService {
         },
         {
           $lookup: {
-            from: 'transactions', 
+            from: 'transactions',
             pipeline: [
               {
                 $group: {
@@ -208,7 +209,7 @@ class WalletService {
                 }
               }
             ],
-            as: 'transactionStats' 
+            as: 'transactionStats'
           }
         },
         {
@@ -219,7 +220,7 @@ class WalletService {
         },
         {
           $project: {
-            _id: 0, 
+            _id: 0,
             totalWallets: '$totalWallets',
             totalBalance: '$totalBalance',
             totalTransactions: { $ifNull: ['$transactionStats.totalTransactions', 0] },
@@ -265,26 +266,76 @@ class WalletService {
   }
 
   async getUserWalletHistory(res: Response, next: NextFunction, query: GetWalletReqQuery) {
-    const filter: Filter<Wallet> = {}
-    if (query.type) {
-      filter.type = query.type
-    }
+    try {
+      const page = Number.parseInt(query.page as string) || 1
+      const limit = Number.parseInt(query.limit as string) || 10
+      const skip = (page - 1) * limit
 
-    if (query.user_id) {
-      const findWallet = await databaseService.wallets.findOne({
-        user_id: new ObjectId(query.user_id)
-      })
-      if (!findWallet) {
-        throw new ErrorWithStatus({
-          message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', query.user_id),
-          status: HTTP_STATUS.BAD_REQUEST
-        })
+      const filter: Filter<Wallet> = {}
+      if (query.status) {
+        filter.status = query.status
+      }
+      if (query.user_id) {
+        filter.user_id = new ObjectId(query.user_id)
       }
 
-      filter.wallet_id = new ObjectId(findWallet._id)
-    }
+      const aggregationPipeline = [
+        { $match: filter },
+        { $sort: { created_at: -1 } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user_info'
+          }
+        },
+        {
+          $unwind: {
+            path: '$user_info',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $addFields: {
+            fullname: { $ifNull: ['$user_info.fullname', 'Unknown User'] }
+          }
+        },
+        {
+          $project: {
+            user_info: 0
+          }
+        },
+        {
+          $facet: {
+            data: [{ $skip: skip }, { $limit: limit }],
+            totalCount: [{ $count: 'count' }]
+          }
+        }
+      ]
 
-    await sendPaginatedResponse(res, next, databaseService.wallets, query, filter)
+      const result = await databaseService.wallets.aggregate(aggregationPipeline).toArray()
+
+      const data = result[0]?.data || []
+      const totalRecords = result[0]?.totalCount[0]?.count || 0
+
+      const normalized = data.map(normalizeDecimal)
+      const totalPages = Math.ceil(totalRecords / limit)
+
+      const response = {
+        data: normalized,
+        pagination: {
+          limit,
+          currentPage: page,
+          totalPages,
+          totalRecords
+        }
+      }
+
+      return res.status(200).json(response)
+    } catch (error) {
+      next(error)
+    }
   }
 
   // lịch sử cộng trừ tiền của ví

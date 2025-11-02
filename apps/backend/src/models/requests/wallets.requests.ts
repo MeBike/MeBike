@@ -30,7 +30,7 @@ export type GetTransactionReqQuery = {
 export type GetWalletReqQuery = {
   limit?: string
   page?: string
-  type?: WalletStatus,
+  status?: WalletStatus,
   user_id?: string
 }
 
