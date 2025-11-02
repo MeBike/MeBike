@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus} from "lucide-react";
-import type { UserWallet } from "@/types/Wallet";
+import type { UserWallet, DetailWallet } from "@/types/Wallet";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -34,6 +34,7 @@ interface WalletTransactionModalProps {
     amount: number,
     details: TransactionDetails
   ) => void;
+  detailTransactions?: DetailWallet[];
 }
 
 interface TransactionDetails {
@@ -48,6 +49,7 @@ export function WalletTransactionModal({
   onClose,
   onDeposit,
   onWithdraw,
+  detailTransactions = [],
 }: WalletTransactionModalProps) {
   const [actionType, setActionType] = useState<"deposit" | "withdraw" | null>(
     null
@@ -156,6 +158,32 @@ export function WalletTransactionModal({
               <Minus className="w-4 h-4 mr-2" />
               Trừ tiền từ ví
             </Button>
+
+            {detailTransactions.length > 0 && (
+              <div className="mt-4">
+                <h4 className="font-semibold mb-2">Lịch sử giao dịch gần đây</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {detailTransactions.slice(0, 5).map((transaction) => (
+                    <div key={transaction._id} className="p-2 border rounded bg-muted/30">
+                      <div className="flex justify-between items-center text-sm">
+                        <div>
+                          <p className="font-medium">{transaction.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(transaction.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-semibold ${transaction.type === "NẠP TIỀN" ? "text-green-600" : "text-red-600"}`}>
+                            {transaction.type === "NẠP TIỀN" ? "+" : "-"}
+                            {transaction.amount.toLocaleString("vi-VN")}₫
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <form
