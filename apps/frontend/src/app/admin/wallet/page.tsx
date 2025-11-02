@@ -174,7 +174,6 @@ export default function WalletPage() {
         onClose={handleCloseModal}
         onDeposit={handleDeposit}
         onWithdraw={handleWithdraw}
-        detailTransactions={detailWallet?.data || []}
       />
 
       <WalletDetailModal
