@@ -54,6 +54,7 @@ export function WalletTransactionModal({
     reset,
   } = useForm<TopUpSchemaFormData | DecreaseSchemaFormData>({
     resolver: zodResolver(actionType === "deposit" ? topUpWalletSchema : decreaseWalletSchema),
+    mode: "onBlur",
     defaultValues: {
       user_id: user?._id || "",
       amount: 0,
@@ -260,3 +261,4 @@ export function WalletTransactionModal({
     </Dialog>
   );
 }
+
