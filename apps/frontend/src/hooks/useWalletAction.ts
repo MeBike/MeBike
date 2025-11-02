@@ -6,6 +6,7 @@ import { useDebitWalletMutation } from "./mutations/Wallet/useDebitWalletMutatio
 import { DecreaseSchemaFormData, TopUpSchemaFormData } from "@/schemas/walletSchema";
 import { toast } from "sonner";
 import { useGetManageTransactionQuery } from "./query/Wallet/useGetManageTransactionQuery";
+import { useGetWalletOverviewQuery } from "./query/Wallet/useGetWalletOverviewQuery";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -44,6 +45,7 @@ export function useWalletActions(
   const { data: allWallets, refetch: isRefetchingAllWallets } =
     useGetAllWalletQuery({ page, limit });
   const { data: manageTransactions } = useGetManageTransactionQuery({page:1 , limit:5});
+  const { data: walletOverview } = useGetWalletOverviewQuery();
   const useTopUpWallet = useTopUpWalletMutation();
   const useDebitWallet = useDebitWalletMutation();
   const getAllWalletUser = useCallback(async () => {
@@ -109,5 +111,6 @@ export function useWalletActions(
     debitWallet,
     topUpWallet,
     manageTransactions,
+    walletOverview,
   };
 }
