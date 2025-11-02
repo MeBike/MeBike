@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Edit2, Eye, RefreshCw } from "lucide-react";
 import type { Reservation } from "@/types/Reservation";
+import type { Station } from "@/types/Station";
 
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
@@ -11,10 +12,12 @@ export const reservationColumn = ({
   onView,
   onUpdateStatus,
   onEdit,
+  stations,
 }: {
   onView?: ({ id }: { id: string }) => void;
   onUpdateStatus?: ((data: Reservation) => void) | undefined;
   onEdit?: ({ data }: { data: Reservation }) => void;
+  stations?: Station[];
 }): ColumnDef<Reservation>[] => [
   {
     accessorKey: "_id",
@@ -35,8 +38,11 @@ export const reservationColumn = ({
   },
   {
     accessorKey: "station_id",
-    header: "Mã trạm",
-    cell: ({ row }) => row.original.station_id,
+    header: "Tên trạm",
+    cell: ({ row }) => {
+      const station = stations?.find(s => s._id === row.original.station_id);
+      return station ? station.name : row.original.station_id;
+    },
   },
   {
     accessorKey: "prepaid",

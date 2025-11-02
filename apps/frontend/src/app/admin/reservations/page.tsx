@@ -1,29 +1,48 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { ReservationStats } from "@/components/reservations/reservation-stats";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useReservationActions } from "@/hooks/use-reservation";
+import { useStationActions } from "@/hooks/useStationAction";
 import { reservationColumn } from "@/columns/reservation-columns";
 import type { Reservation } from "@/types/Reservation";
 
 export default function ReservationsPage() {
-  const { allReservations, fetchAllReservations, isRefetchingAllReservation, reservationStats, fetchReservationStats, isRefetchingReservationStats } = useReservationActions({ hasToken: true });
+  const { stations, getAllStations } = useStationActions({ hasToken: true });
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<Reservation["status"] | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    Reservation["status"] | "all"
+  >("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedReservationId, setSelectedReservationId] = useState<string>("");
-
+  // const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedReservationId, setSelectedReservationId] =
+    useState<string>("");
+  const {
+    allReservations,
+    fetchAllReservations,
+    reservationStats,
+    fetchReservationStats,
+  } = useReservationActions({
+    hasToken: true,
+    page: currentPage,
+    limit: limit,
+    id: selectedReservationId,
+  });
   useEffect(() => {
     fetchAllReservations();
     fetchReservationStats();
-  }, [fetchAllReservations, fetchReservationStats, currentPage]);
+    getAllStations();
+  }, [
+    fetchAllReservations,
+    fetchReservationStats,
+    getAllStations,
+    currentPage,
+  ]);
 
   const handleReset = () => {
     setSearchQuery("");
@@ -34,14 +53,6 @@ export default function ReservationsPage() {
   const handleFilterChange = () => {
     setCurrentPage(1);
   };
-
-  if (false) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-        <Loader2 className="animate-spin w-16 h-16 text-primary" />
-      </div>
-    );
-  }
   return (
     <div>
       <div className="space-y-6">
@@ -56,9 +67,9 @@ export default function ReservationsPage() {
           </div>
           <div className="flex items-center gap-3">
             <Button
-              onClick={() => {
-                setIsCreateModalOpen(true);
-              }}
+              // onClick={() => {
+              //   setIsCreateModalOpen(true);
+              // }}
             >
               <Plus className="w-4 h-4 mr-2" />
               Tạo đặt trước
@@ -66,11 +77,7 @@ export default function ReservationsPage() {
           </div>
         </div>
 
-        <ReservationStats
-          stats={reservationStats?.result ?? []}
-        />
-
-        {/* Filters */}
+        <ReservationStats stats={reservationStats?.result ?? []} />
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Bộ lọc</h3>
@@ -78,7 +85,6 @@ export default function ReservationsPage() {
               Xóa bộ lọc
             </Button>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Tìm kiếm</label>
@@ -90,13 +96,14 @@ export default function ReservationsPage() {
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
               />
             </div>
-
             <div className="space-y-2">
               <label className="text-sm font-medium">Trạng thái</label>
               <select
                 value={statusFilter}
                 onChange={(e) => {
-                  setStatusFilter(e.target.value as Reservation["status"] | "all");
+                  setStatusFilter(
+                    e.target.value as Reservation["status"] | "all"
+                  );
                   handleFilterChange();
                 }}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
@@ -110,7 +117,6 @@ export default function ReservationsPage() {
             </div>
           </div>
         </div>
-
         <div>
           <p className="text-sm text-muted-foreground mb-4">
             Hiển thị trang {currentPage}
@@ -125,7 +131,11 @@ export default function ReservationsPage() {
                 setSelectedReservationId(data._id);
                 console.log("[v0] Edit reservation:", data._id);
               },
+              stations: stations,
             })}
+            title={"Danh sách đặt trước"}
+            searchValue={searchQuery}
+            filterPlaceholder="Tìm kiếm theo mã ví hoặc mã người dùng..."
             data={allReservations?.data || []}
           />
 
@@ -136,7 +146,6 @@ export default function ReservationsPage() {
               onPageChange={setCurrentPage}
             />
           </div>
-          {/* Create Reservation Modal can be added later */}
         </div>
       </div>
     </div>

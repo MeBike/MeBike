@@ -17,5 +17,6 @@ export const useGetDetailReservationQuery = (id: string) => {
     queryKey: ["detail-reservation", id],
     queryFn: () => getDetailReservation(id),
     staleTime: 5 * 60 * 1000,
+    enabled: !!id,
   });
 };

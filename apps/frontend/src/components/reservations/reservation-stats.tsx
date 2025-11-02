@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Calendar, CheckCircle, XCircle, DollarSign, TrendingUp } from "lucide-react";
+import { Calendar, CheckCircle, XCircle, DollarSign } from "lucide-react";
 import type { ReservationStats } from "@/types/Reservation";
 
 export function ReservationStats({ stats }: { stats: ReservationStats[] }) {
