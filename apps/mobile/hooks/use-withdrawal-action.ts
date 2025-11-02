@@ -1,9 +1,11 @@
-import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
-import { withdrawalsService } from "../services/withdraw.service";
-import type { CreateWithdrawSchemaFormData } from "../../frontend/src/schemas/withdrawalSchema";
-import type { WithdrawRequest } from "../types/Withdrawal";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-interface ApiResponse<T> {
+import type { CreateWithdrawSchemaFormData } from "../../frontend/src/schemas/withdrawalSchema";
+// import type { DetailWithdrawRequest } from "../types/Withdrawal";
+
+import { withdrawalsService } from "../services/withdraw.service";
+
+type _ApiResponse<T> = {
   data: T[];
   pagination: {
     totalPages: number;
@@ -11,7 +13,7 @@ interface ApiResponse<T> {
     limit: number;
     totalRecords: number;
   };
-}
+};
 
 export function useWithdrawalAction() {
   const queryClient = useQueryClient();
@@ -29,7 +31,7 @@ export function useWithdrawalAction() {
     queryFn: ({ pageParam = 1 }) =>
       withdrawalsService
         .getWithdrawRequests({ page: pageParam, limit })
-        .then((res) => res.data),
+        .then(res => res.data),
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination.currentPage < lastPage.pagination.totalPages) {
         return lastPage.pagination.currentPage + 1;
@@ -41,7 +43,7 @@ export function useWithdrawalAction() {
 
   const createWithdrawalMutation = useMutation({
     mutationFn: (data: CreateWithdrawSchemaFormData) =>
-      withdrawalsService.createWithdrawRequest(data).then((res) => res.data),
+      withdrawalsService.createWithdrawRequest(data).then(res => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["withdrawalRequests"] });
     },
@@ -53,7 +55,12 @@ export function useWithdrawalAction() {
     }
   };
 
-  const withdrawalRequests = withdrawalRequestsData?.pages.flatMap(page => page.data) || [];
+  const withdrawalRequests = withdrawalRequestsData?.pages
+    .flatMap(page => page.data)
+    .map(item => ({
+      ...item,
+      amount: Number(item.amount.$numberDecimal),
+    })) || [];
   const totalWithdrawals = withdrawalRequestsData?.pages[0]?.pagination?.totalRecords || 0;
 
   return {
