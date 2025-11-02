@@ -33,7 +33,6 @@ export default function WalletPage() {
      manageTransactions,
      walletOverview,
      detailWallet,
-     getDetailWallet,
      isLoadingDetailWallet
    } = useWalletActions(true, page, limit, selectedUserId);
   const handleDeposit = (
