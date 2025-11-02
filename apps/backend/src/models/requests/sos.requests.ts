@@ -19,7 +19,12 @@ export type DispatchSosReqBody = {
 }
 
 export type ConfirmSosReqBody = {
-  confirmed: boolean;
+  solvable: boolean;
+  agent_notes: string;
+  photos: string[]
+}
+
+export type RejectSosReqBody = {
   agent_notes: string;
   photos: string[]
 }

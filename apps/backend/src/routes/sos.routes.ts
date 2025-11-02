@@ -1,10 +1,10 @@
 import { Router } from 'express'
-import { confirmSosController, createSosRequestController, dispatchSosController, getSosRequestByIdController, getSosRequestsController } from '~/controllers/sos.controllers'
+import { confirmSosController, createSosRequestController, dispatchSosController, getSosRequestByIdController, getSosRequestsController, rejectSosController } from '~/controllers/sos.controllers'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
-import { confirmSosValidator, createSosAlertValidator, dispatchSosValidator, getSosRequestByIdValidator, isSosAgentValidator, isStaffOrSosAgentValidator } from '~/middlewares/sos.middlewares'
+import { confirmSosValidator, createSosAlertValidator, dispatchSosValidator, getSosRequestByIdValidator, isSosAgentValidator, isStaffOrSosAgentValidator, rejectSosValidator } from '~/middlewares/sos.middlewares'
 import { isStaffValidator } from '~/middlewares/staff.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
-import { ConfirmSosReqBody, CreateSosReqBody, DispatchSosReqBody } from '~/models/requests/sos.requests'
+import { ConfirmSosReqBody, CreateSosReqBody, DispatchSosReqBody, RejectSosReqBody } from '~/models/requests/sos.requests'
 import { wrapAsync } from '~/utils/handler'
 
 const sosRouter = Router()
@@ -39,9 +39,19 @@ sosRouter
   .post(
     accessTokenValidator,
     isSosAgentValidator,
-    filterMiddleware<ConfirmSosReqBody>(['confirmed', 'agent_notes', 'photos']),
+    filterMiddleware<ConfirmSosReqBody>(['solvable', 'agent_notes', 'photos']),
     confirmSosValidator,
     wrapAsync(confirmSosController)
+  )
+
+sosRouter
+  .route('/:id/reject')
+  .post(
+    accessTokenValidator,
+    isSosAgentValidator,
+    filterMiddleware<RejectSosReqBody>(['agent_notes', 'photos']),
+    rejectSosValidator,
+    wrapAsync(rejectSosController)
   )
 
 sosRouter

@@ -10,6 +10,7 @@ import {
   CreateSosPayload,
   CreateSosReqBody,
   DispatchSosReqBody,
+  RejectSosReqBody,
   SosParam
 } from '~/models/requests/sos.requests'
 import { TokenPayLoad } from '~/models/requests/users.requests'
@@ -35,7 +36,7 @@ export async function createSosRequestController(req: Request<ParamsDictionary, 
   const result = await sosService.createAlert(payload)
 
   res.json({
-    message: SOS_MESSAGE.SOS_SENT_SUCCESS,
+    message: SOS_MESSAGE.SOS_CREATE_SUCCESS,
     result
   })
 }
@@ -58,18 +59,34 @@ export async function dispatchSosController(req: Request<SosParam, any, Dispatch
 }
 
 export async function confirmSosController(req: Request<SosParam, any, ConfirmSosReqBody>, res: Response) {
-  const { confirmed, agent_notes, photos } = req.body
+  const { solvable, agent_notes, photos } = req.body
   const sos_alert = req.sos_alert as SosAlert
 
   const result = await sosService.confirmSos({
     sos_alert,
-    confirmed,
+    solvable,
     agent_notes,
     photos
   })
 
   res.json({
-    message: confirmed ? SOS_MESSAGE.SOS_CONFIRMED : SOS_MESSAGE.SOS_REJECTED,
+    message: solvable ? SOS_MESSAGE.SOS_RESOLVED : SOS_MESSAGE.SOS_UNSOLVABLE,
+    result
+  })
+}
+
+export async function rejectSosController(req: Request<SosParam, any, RejectSosReqBody>, res: Response) {
+  const { agent_notes, photos } = req.body
+  const sos_alert = req.sos_alert as SosAlert
+
+  const result = await sosService.rejectSos({
+    sos_alert,
+    agent_notes,
+    photos
+  })
+
+  res.json({
+    message: SOS_MESSAGE.SOS_REJECTED,
     result
   })
 }

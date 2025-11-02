@@ -28,12 +28,9 @@ export const createSosAlertValidator = validate(
         custom: {
           options: async (value, { req }) => {
             const rentalId = toObjectId(value);
-            const { user_id } = req.decoded_authorization as TokenPayLoad
-            const objUserId = toObjectId(user_id) 
             
             const rental = await databaseService.rentals.findOne({
               _id: rentalId,
-              user_id: objUserId,
             });
 
             if (!rental) {
@@ -63,7 +60,7 @@ export const createSosAlertValidator = validate(
         isString: true,
         trim: true,
         isLength: {
-          options: { min: 10, max: 500 },
+          options: { min: 5, max: 500 },
           errorMessage: SOS_MESSAGE.INVALID_ISSUE_LENGTH,
         },
       },
@@ -169,92 +166,94 @@ export const dispatchSosValidator = validate(
   )
 );
 
-export const confirmSosValidator = validate(
-  checkSchema(
-    {
-      id: {
-        in: ['params'],
-        notEmpty: {
-          errorMessage: SOS_MESSAGE.REQUIRED_ID
-        },
-        isMongoId: {
-          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace("%s", "ID yêu cầu cứu hộ")
-        },
-        custom: {
-          options: async (value, { req }) => {
-            const sos = await databaseService.sos_alerts.findOne({
-              _id: toObjectId(value),
-            });
-
-            if (!sos) {
-              throw new ErrorWithStatus({
-                message: SOS_MESSAGE.SOS_NOT_FOUND.replace("%s", value),
-                status: HTTP_STATUS.NOT_FOUND,
-              });
-            }
-
-            if (sos.status !== SosAlertStatus.DISPATCHED){
-              throw new ErrorWithStatus({
-                message: SOS_MESSAGE.CANNOT_CONFIRM_SOS.replace("%s", sos.status),
-                status: HTTP_STATUS.BAD_REQUEST,
-              });
-            }
-            req.sos_alert = sos;
-            return true;
-          },
-        },
+const createSosValidator = (includeResolvedField = false) => {
+  const baseSchema: any = {
+    id: {
+      in: ['params'],
+      notEmpty: { errorMessage: SOS_MESSAGE.REQUIRED_ID },
+      isMongoId: {
+        errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'ID yêu cầu cứu hộ')
       },
-      confirmed: {
-        in: ['body'],
-        isBoolean: { 
-          errorMessage: SOS_MESSAGE.INVALID_CONFIRMED 
-        },
-      },
-      agent_notes: {
-        in: ['body'],
-        notEmpty: { errorMessage: SOS_MESSAGE.REQUIRED_AGENT_NOTES },
-        trim: true,
-        isString: {
-          errorMessage: SOS_MESSAGE.INVALID_NOTE
-        },
-        isLength: {
-          options: {max: 500},
-          errorMessage: SOS_MESSAGE.INVALID_NOTE_LENGTH
-        }
-      },
-      photos: {
-        in: ['body'],
-        optional: true,
-        isArray: { 
-          options: { min: 1, max: 5 }, 
-          errorMessage: SOS_MESSAGE.INVALID_PHOTOS_ARRAY 
-        },
-        custom: {
-          options: (value: string[]) => {
-            if (!Array.isArray(value)) return false;
+      custom: {
+        options: async (value: string, { req }: {req: Request}) => {
+          const sos = await databaseService.sos_alerts.findOne({
+            _id: toObjectId(value)
+          })
 
-            for (const photo of value) {
-              if (typeof photo !== 'string') {
-                throw new ErrorWithStatus({
-                  message: SOS_MESSAGE.INVALID_PHOTO,
-                  status: HTTP_STATUS.BAD_REQUEST,
-                });
-              }
-              if (!isBase64Image(photo) && !isImageURL(photo)) {
-                throw new ErrorWithStatus({
-                  message: SOS_MESSAGE.INVALID_PHOTO_FORMAT,
-                  status: HTTP_STATUS.BAD_REQUEST,
-                });
-              }
-            }
-            return true;
-          },
+          if (!sos) {
+            throw new ErrorWithStatus({
+              message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          if (sos.status !== SosAlertStatus.DISPATCHED) {
+            throw new ErrorWithStatus({
+              message: SOS_MESSAGE.CANNOT_CONFIRM_SOS.replace('%s', sos.status),
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+          req.sos_alert = sos
+          return true
         }
       }
     },
-    ['params', 'body']
-  )
-);
+    agent_notes: {
+      in: ['body'],
+      notEmpty: { errorMessage: SOS_MESSAGE.REQUIRED_AGENT_NOTES },
+      trim: true,
+      isString: { errorMessage: SOS_MESSAGE.INVALID_NOTE },
+      isLength: {
+        options: { max: 500 },
+        errorMessage: SOS_MESSAGE.INVALID_NOTE_LENGTH
+      }
+    },
+    photos: {
+      in: ['body'],
+      optional: true,
+      isArray: {
+        options: { min: 1, max: 5 },
+        errorMessage: SOS_MESSAGE.INVALID_PHOTOS_ARRAY
+      },
+      custom: {
+        options: (value: string[]) => {
+          if (!Array.isArray(value)) return false
+
+          for (const photo of value) {
+            if (typeof photo !== 'string') {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.INVALID_PHOTO,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            if (!isBase64Image(photo) && !isImageURL(photo)) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.INVALID_PHOTO_FORMAT,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+          }
+
+          return true
+        }
+      }
+    }
+  }
+
+  if (includeResolvedField) {
+    baseSchema.solvable = {
+      in: ['body'],
+      isBoolean: { errorMessage: SOS_MESSAGE.INVALID_SOLVABLE }
+    }
+  }
+
+  return validate(checkSchema(baseSchema, ['params', 'body']))
+}
+
+export const confirmSosValidator = createSosValidator(true)
+
+export const rejectSosValidator = createSosValidator(false)
 
 export const getSosRequestByIdValidator = validate(
   checkSchema({

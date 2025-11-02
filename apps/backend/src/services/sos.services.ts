@@ -73,18 +73,18 @@ class SosService {
 
   async confirmSos({
     sos_alert,
-    confirmed,
+    solvable,
     agent_notes,
     photos
   }: {
     sos_alert: SosAlert
-    confirmed: boolean
+    solvable: boolean
     agent_notes: string
     photos?: string[]
   }) {
     const now = getLocalTime()
     const sosId = sos_alert._id as ObjectId
-    const newStatus = confirmed ? SosAlertStatus.CONFIRMED : SosAlertStatus.REJECTED
+    const newStatus = solvable ? SosAlertStatus.RESOLVED : SosAlertStatus.UNSOLVABLE
 
     const update: any = {
       status: newStatus,
@@ -92,7 +92,7 @@ class SosService {
       photos,
       updated_at: now
     }
-    if (confirmed) update.resolved_at = now
+    if (solvable) update.resolved_at = now
 
     const updatedAlert = await databaseService.sos_alerts.findOneAndUpdate(
       { _id: sosId },
@@ -103,107 +103,111 @@ class SosService {
     return updatedAlert
   }
 
-async getSosRequestById(sos: SosAlert, currentUser: User) {
-  const sosId = sos._id as ObjectId;
+  async rejectSos({ sos_alert, agent_notes, photos }: { sos_alert: SosAlert; agent_notes: string; photos?: string[] }) {
+    const now = getLocalTime()
+    const sosId = sos_alert._id as ObjectId
 
-  const pipeline: any[] = [
-    { $match: { _id: sosId } },
-    {
-      $lookup: {
-        from: 'rentals',
-        localField: 'rental_id',
-        foreignField: '_id',
-        as: 'rental',
-      },
-    },
-    { $unwind: { path: '$rental', preserveNullAndEmptyArrays: false } },
-    {
-      $lookup: {
-        from: 'bikes',
-        localField: 'bike_id',
-        foreignField: '_id',
-        as: 'bike',
-      },
-    },
-    { $unwind: { path: '$bike', preserveNullAndEmptyArrays: false } },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'requester_id',
-        foreignField: '_id',
-        as: 'requester',
-      },
-    },
-    { $unwind: { path: '$requester', preserveNullAndEmptyArrays: false } },
-  ];
+    const update: any = {
+      status: SosAlertStatus.REJECTED,
+      agent_notes,
+      photos,
+      updated_at: now
+    }
 
-  if (currentUser.role === Role.Staff && sos.sos_agent_id) {
-    pipeline.push(
+    const updatedAlert = await databaseService.sos_alerts.findOneAndUpdate(
+      { _id: sosId },
+      { $set: update },
+      { returnDocument: 'after' }
+    )
+
+    return updatedAlert
+  }
+
+  async getSosRequestById(sos: SosAlert, currentUser: User) {
+    const sosId = sos._id as ObjectId
+
+    const pipeline: any[] = [
+      { $match: { _id: sosId } },
+      {
+        $lookup: {
+          from: 'rentals',
+          localField: 'rental_id',
+          foreignField: '_id',
+          as: 'rental'
+        }
+      },
+      { $unwind: { path: '$rental', preserveNullAndEmptyArrays: false } },
+      {
+        $lookup: {
+          from: 'bikes',
+          localField: 'bike_id',
+          foreignField: '_id',
+          as: 'bike'
+        }
+      },
+      { $unwind: { path: '$bike', preserveNullAndEmptyArrays: false } },
       {
         $lookup: {
           from: 'users',
-          localField: 'sos_agent_id',
+          localField: 'requester_id',
           foreignField: '_id',
-          as: 'sos_agent',
+          as: 'requester'
+        }
+      },
+      { $unwind: { path: '$requester', preserveNullAndEmptyArrays: false } }
+    ]
+
+    if (currentUser.role === Role.Staff && sos.sos_agent_id) {
+      pipeline.push(
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'sos_agent_id',
+            foreignField: '_id',
+            as: 'sos_agent'
+          }
         },
+        { $unwind: { path: '$sos_agent', preserveNullAndEmptyArrays: true } }
+      )
+    } else {
+      pipeline.push({
+        $addFields: { sos_agent: null }
+      })
+    }
+
+    pipeline.push(
+      {
+        $project: {
+          'rental.bike_id': 0,
+          'rental.user_id': 0,
+          'requester.password': 0,
+          'requester.email_verify_otp': 0,
+          'requester.email_verify_otp_expires': 0,
+          'requester.forgot_password_otp': 0,
+          'requester.forgot_password_otp_expires': 0,
+          'sos_agent.password': 0,
+          'sos_agent.email_verify_otp': 0,
+          'sos_agent.email_verify_otp_expires': 0,
+          'sos_agent.forgot_password_otp': 0,
+          'sos_agent.forgot_password_otp_expires': 0,
+          rental_id: 0,
+          requester_id: 0,
+          bike_id: 0
+        }
       },
-      { $unwind: { path: '$sos_agent', preserveNullAndEmptyArrays: true } }
-    );
-  } else {
-    pipeline.push({
-      $addFields: { sos_agent: null },
-    });
+    )
+
+    const [result] = await databaseService.sos_alerts.aggregate(pipeline).toArray()
+
+    if (!result) {
+      throw new ErrorWithStatus({
+        message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', sosId.toString()),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return result
   }
-
-  pipeline.push(
-    {
-      $project: {
-        'rental.bike_id': 0,
-        'rental.user_id': 0,
-        'requester.password': 0,
-        'requester.email_verify_otp': 0,
-        'requester.email_verify_otp_expires': 0,
-        'requester.forgot_password_otp': 0,
-        'requester.forgot_password_otp_expires': 0,
-        'sos_agent.password': 0,
-        'sos_agent.email_verify_otp': 0,
-        'sos_agent.email_verify_otp_expires': 0,
-        'sos_agent.forgot_password_otp': 0,
-        'sos_agent.forgot_password_otp_expires': 0,
-        rental_id: 0,
-        requester_id: 0,
-        bike_id: 0,
-      },
-    },
-    {
-      $replaceRoot: {
-        newRoot: {
-          $mergeObjects: [
-            '$$ROOT',
-            {
-              rental: '$rental',
-              requester: '$requester',
-              bike: '$bike',
-              sos_agent: '$sos_agent',
-            },
-          ],
-        },
-      },
-    },
-    { $unset: ['rental', 'requester', 'bike', 'sos_agent'] } // clean up
-  );
-
-  const [result] = await databaseService.sos_alerts.aggregate(pipeline).toArray();
-
-  if (!result) {
-    throw new ErrorWithStatus({
-      message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', sosId.toString()),
-      status: HTTP_STATUS.NOT_FOUND,
-    });
-  }
-
-  return result;
-}
 }
 
 const sosService = new SosService()

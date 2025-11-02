@@ -154,6 +154,7 @@ export enum TrendValue {
 export enum SosAlertStatus {
   PENDING   = 'ĐANG CHỜ XỬ LÍ',
   DISPATCHED= 'ĐÃ GỬI ĐỘI CỨU HỘ',
-  CONFIRMED = 'ĐÃ XÁC NHẬN',
+  RESOLVED = 'ĐÃ XỬ LÍ',
+  UNSOLVABLE = 'KHÔNG XỬ LÍ ĐƯỢC',
   REJECTED = 'ĐÃ TỪ CHỐI',
 }
