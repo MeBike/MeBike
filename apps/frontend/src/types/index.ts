@@ -6,3 +6,5 @@ export * from "./Rental";
 export * from "./Supplier";
 export * from "./Withdrawal";
 export * from "./Refund";
+export * from "./Reservation";
+export * from "./Response"
