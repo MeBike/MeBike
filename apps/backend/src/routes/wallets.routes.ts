@@ -8,8 +8,9 @@ import {
   getUserTransactionWalletController,
   getUserWalletController,
   getUserWalletHistoryController,
+  getUserWalletHistoryDetailController,
   getWalletOverviewController,
-  increateBalanceController
+  increateBalanceController,
 } from '~/controllers/wallet.controllers'
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
@@ -42,7 +43,7 @@ walletsRouter.get(
   '/manage-wallet/:user_id',
   accessTokenValidator,
   isAdminValidator,
-  wrapAsync(getUserWalletHistoryController)
+  wrapAsync(getUserWalletHistoryDetailController)
 )
 // lấy các thông tin transaction trong ví chưa có lịch sử rental của user (cộng tiền, rút tiền)
 walletsRouter.get('/transaction', accessTokenValidator, wrapAsync(getUserTransactionWalletController))

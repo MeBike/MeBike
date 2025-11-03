@@ -35,3 +35,14 @@ export interface WalletOverview {
     $numberDecimal: string;
   };
 }
+export interface DetailWallet {
+  _id: string;
+  wallet_id: string;
+  amount: number;
+  fee: number;
+  description: string;
+  transaction_hash: string;
+  type: "NẠP TIỀN" | "TRỪ TIỀN";
+  status: "THÀNH CÔNG" | "THẤT BẠI" | "ĐANG XỬ LÝ";
+  created_at: string;
+}

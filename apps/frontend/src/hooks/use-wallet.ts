@@ -7,6 +7,7 @@ import { DecreaseSchemaFormData, TopUpSchemaFormData } from "@/schemas/walletSch
 import { toast } from "sonner";
 import { useGetManageTransactionQuery } from "./query/Wallet/useGetManageTransactionQuery";
 import { useGetWalletOverviewQuery } from "./query/Wallet/useGetWalletOverviewQuery";
+import { useGetDetailWalletQuery } from "./query/Wallet/useGetDetailWalletQuery";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -39,7 +40,8 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
 export function useWalletActions(
   hasToken: boolean,
   page?: number,
-  limit?: number
+  limit?: number,
+  user_id?: string
 ) {
   const queryClient = useQueryClient();
   const { data: allWallets, refetch: isRefetchingAllWallets } =
@@ -48,10 +50,11 @@ export function useWalletActions(
   const { data: walletOverview } = useGetWalletOverviewQuery();
   const useTopUpWallet = useTopUpWalletMutation();
   const useDebitWallet = useDebitWalletMutation();
+  const { data: detailWallet , refetch:isRefetchingDetailWallet  , isLoading:isLoadingDetailWallet } = useGetDetailWalletQuery(user_id || "");
   const getAllWalletUser = useCallback(async () => {
     if (!hasToken) {
       return;
-    }
+    } 
     isRefetchingAllWallets();
   }, [isRefetchingAllWallets, hasToken]);
   const topUpWallet = useCallback(
@@ -104,6 +107,12 @@ export function useWalletActions(
     },
     [useDebitWallet, hasToken, queryClient,page ,limit]
   );
+  const getDetailWallet = useCallback(async () => {
+    if (!hasToken) {
+      return;
+    }
+    isRefetchingDetailWallet(); 
+  }, [isRefetchingDetailWallet, hasToken]);
   return {
     allWallets: allWallets?.data || [],
     getAllWalletUser,
@@ -112,5 +121,8 @@ export function useWalletActions(
     topUpWallet,
     manageTransactions,
     walletOverview,
+    detailWallet,
+    getDetailWallet,
+    isLoadingDetailWallet,
   };
 }

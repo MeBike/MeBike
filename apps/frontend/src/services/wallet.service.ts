@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import { WalletOverview } from "@/types/Wallet";
+import { WalletOverview , DetailWallet } from "@/types/Wallet";
 interface ApiResponse<T> {
   data: T;
   pagination: {
@@ -52,8 +52,9 @@ const WALLET_ENDPOINTS = {
   TOP_UP: `${WALLET_BASE}/increase`,
   DEBIT: `${WALLET_BASE}/decrease`,
   GET_ALL_WALLET_USER: `${WALLET_BASE}/manage-wallet`,
-  MANAAGE_TRANSACTIONS: `${WALLET_BASE}/manage-transactions`,
+  MANAGE_TRANSACTIONS: `${WALLET_BASE}/manage-transactions`,
   OVERVIEW: `${WALLET_BASE}/overview`,
+  DETAIL_WALLET: (user_id: string) => `${WALLET_BASE}/manage-wallet/${user_id}`,
 } as const;
 import type {
   TopUpSchemaFormData,
@@ -102,7 +103,7 @@ export const walletService = {
   > => {
     const response = await fetchHttpClient.get<
       ApiResponse<ManageTransactionsResponse[]>
-    >(WALLET_ENDPOINTS.MANAAGE_TRANSACTIONS, {
+    >(WALLET_ENDPOINTS.MANAGE_TRANSACTIONS, {
       page,
       limit,
     });
@@ -116,4 +117,12 @@ export const walletService = {
     >(WALLET_ENDPOINTS.OVERVIEW);
     return response;
   },
+  getDetailWallet: async ({user_id}:{user_id: string}): Promise<
+    AxiosResponse<ApiResponse<DetailWallet[]>>
+  > => {
+    const response = await fetchHttpClient.get<
+      ApiResponse<DetailWallet[]>
+    >(`${WALLET_ENDPOINTS.DETAIL_WALLET(user_id)}`);
+    return response;
+  }
 };
