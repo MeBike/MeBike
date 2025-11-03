@@ -13,7 +13,6 @@ import * as tt from "@tomtom-international/web-sdk-maps";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { stationColumns } from "@/columns/station-column";
-
 // MAIN
 export default function StationsPage() {
   // STATES
@@ -24,7 +23,6 @@ export default function StationsPage() {
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
   const [stationID, setStationID] = useState<string>("");
-
   const {
     getAllStations,
     stations,
@@ -35,6 +33,8 @@ export default function StationsPage() {
     responseStationDetail,
     isLoadingGetStationByID,
     updateStation,
+    getReservationStats,
+    responseStationReservationStats,
   } = useStationActions({
     hasToken: true,
     page: page,
@@ -89,7 +89,8 @@ export default function StationsPage() {
   }, [limit, page, getAllStations]);
   useEffect(() => {
     getStationByID();
-  }, [stationID, getStationByID]);
+    getReservationStats();
+  }, [stationID, getStationByID, getReservationStats]);
   useEffect(() => {
     console.log(responseStationDetail);
   }, [responseStationDetail]);
@@ -600,6 +601,65 @@ export default function StationsPage() {
                     </p>
                   </div>
                 </div>
+
+                {/* Reservation Stats */}
+                {responseStationReservationStats?.result && (
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Thống kê đặt chỗ
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                          Tổng đặt chỗ
+                        </label>
+                        <p className="text-foreground font-medium">
+                          {responseStationReservationStats.result.total_count}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                          Đang chờ xử lý
+                        </label>
+                        <p className="text-foreground font-medium">
+                          {responseStationReservationStats.result.status_counts["ĐANG CHỜ XỬ LÝ"]}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                          Đã hủy
+                        </label>
+                        <p className="text-foreground font-medium">
+                          {responseStationReservationStats.result.status_counts["ĐÃ HỦY"]}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                          Đã hết hạn
+                        </label>
+                        <p className="text-foreground font-medium">
+                          {responseStationReservationStats.result.status_counts["ĐÃ HẾT HẠN"]}
+                        </p>
+                      </div>
+                      {/* <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                          Đã hết hạn
+                        </label>
+                        <p className="text-foreground font-medium">
+                          {responseStationReservationStats.result.status_counts["ĐÃ HẾT HẠN"]}
+                        </p>
+                      </div> */}
+                      <div>
+                        <label className="block text-sm font-medium text-muted-foreground mb-1">
+                          Xe đang đặt trước
+                        </label>
+                        <p className="text-foreground font-medium">
+                          {responseStationReservationStats.result.reserving_bikes.length}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="pt-4">
                   <Button

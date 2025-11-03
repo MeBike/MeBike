@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useCreateSupplierMutation } from "./mutations/Station/useCreateStationQuery";
 import { useSoftDeleteStationMutation } from "./mutations/Station/useSoftDeleteStationMutation";
 import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQuery";
+import { useGetStationStatsReservationQuery } from "./query/Station/useGetStationStatsReservation";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -51,6 +52,7 @@ export const useStationActions = ({
   limit,
 }: StationActionProps) => {
   const queryClient = useQueryClient();
+  const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
   const router = useRouter();
   const {
     refetch,
@@ -65,6 +67,12 @@ export const useStationActions = ({
   const useCreateStation = useCreateSupplierMutation();
   const useSoftDeleteStation = useSoftDeleteStationMutation();
   const useUpdateStation = useUpdateStationMutation(stationId || "");
+  const getReservationStats = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchStationReservationStats();
+  }, [refetchStationReservationStats, hasToken, stationId]);
   const getAllStations = useCallback(() => {
     if (!hasToken) {
       return;
@@ -178,5 +186,7 @@ export const useStationActions = ({
     fetchingStationID,
     responseStationDetail,
     isLoadingGetStationByID: isLoadingStationID,
+    responseStationReservationStats,
+    getReservationStats,
   };
 };
