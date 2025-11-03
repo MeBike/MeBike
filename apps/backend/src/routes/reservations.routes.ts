@@ -19,6 +19,7 @@ import { checkUserWalletBeforeRentOrReserve } from '~/middlewares/rentals.middle
 import {
   batchDispatchSameStationValidator,
   filterByDateValidator,
+  getReservationDetailValidator,
   reserveBikeValidator,
   staffCancelReservationValidator,
   staffConfirmReservationValidator,
@@ -77,6 +78,6 @@ reserveRouter
   
 reserveRouter
   .route('/:id')
-  .get(accessTokenValidator, wrapAsync(getReservationDetailController))
+  .get(accessTokenValidator, getReservationDetailValidator, wrapAsync(getReservationDetailController))
 
 export default reserveRouter

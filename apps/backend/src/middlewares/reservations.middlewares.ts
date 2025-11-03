@@ -440,3 +440,41 @@ export const filterByDateValidator = (req: Request, res: Response, next: NextFun
 
   next()
 }
+
+export const getReservationDetailValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_ID },
+      isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Id') },
+      custom: {
+        options: async (value, {req}) => {
+          const {user_id} = req.decoded_authorization as TokenPayLoad
+          const user = await databaseService.users.findOne({_id: toObjectId(user_id)})
+          if(!user){
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace("%s", user_id),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          const reservation = await databaseService.reservations.findOne({_id: toObjectId(value)})
+          if(!reservation){
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.NOT_FOUND.replace("%s", value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          if(user.role === Role.User && !reservation.user_id.equals(user_id)){
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.CANNOT_VIEW_OTHER_RESERVATION,
+              status: HTTP_STATUS.FORBIDDEN
+            })
+          }
+          return true
+        }
+      }
+    },
+  })
+)
