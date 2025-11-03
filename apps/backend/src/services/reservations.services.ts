@@ -897,12 +897,47 @@ class ReservationsService {
 
     if (!result) {
       throw new ErrorWithStatus({
-        message: RESERVATIONS_MESSAGE.NOT_FOUND.replace("%s", id),
+        message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', id),
         status: HTTP_STATUS.NOT_FOUND
       })
     }
 
     return result
+  }
+
+  async sendReservationEmailFormat(format: string, data: Reservation, toUser: User) {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_APP,
+        pass: process.env.EMAIL_PASSWORD_APP
+      }
+    })
+
+    const userIdString = data.user_id.toString()
+
+    if (!toUser || !toUser.email) {
+      console.error(RESERVATIONS_MESSAGE.SKIPPING_USER_NOT_FOUND(userIdString))
+      return { success: false }
+    }
+
+    try {
+      const htmlContent = readEmailTemplate(format, {
+        fullname: toUser.fullname
+      })
+
+      const mailOptions = {
+        from: `"MeBike" <${process.env.EMAIL_APP}>`,
+        to: toUser.email,
+        subject: RESERVATIONS_MESSAGE.EMAIL_SUBJECT_NEAR_EXPIRY,
+        html: htmlContent
+      }
+      await transporter.sendMail(mailOptions)
+      return { success: true }
+    } catch (error) {
+      console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
+      return { success: false }
+    }
   }
 }
 
