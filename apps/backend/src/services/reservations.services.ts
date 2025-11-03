@@ -803,6 +803,85 @@ class ReservationsService {
       return { success: false }
     }
   }
+
+  async getReservationDetail(id: string) {
+    const objectId = new ObjectId(id)
+
+    const pipeline = [
+      { $match: { _id: objectId } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },
+      {
+        $lookup: {
+          from: 'bikes',
+          localField: 'bike_id',
+          foreignField: '_id',
+          as: 'bike'
+        }
+      },
+      { $unwind: { path: '$bike', preserveNullAndEmptyArrays: false } },
+      {
+        $lookup: {
+          from: 'stations',
+          localField: 'station_id',
+          foreignField: '_id',
+          as: 'station'
+        }
+      },
+      { $unwind: { path: '$station', preserveNullAndEmptyArrays: false } },
+      {
+        $project: {
+          // reservation info
+          _id: 1,
+          start_time: 1,
+          end_time: 1,
+          prepaid: { $toDouble: '$prepaid' },
+          status: 1,
+          created_at: 1,
+          updated_at: 1,
+
+          // insensitive user info
+          'user._id': 1,
+          'user.fullname': 1,
+          'user.username': 1,
+          'user.email': 1,
+          'user.phone_number': 1,
+          'user.avatar': 1,
+          'user.role': 1,
+
+          // bike info
+          'bike._id': 1,
+          'bike.chip_id': 1,
+          'bike.status': 1,
+
+          // station info
+          'station._id': 1,
+          'station.name': 1,
+          'station.address': 1,
+          'station.latitude': 1,
+          'station.longitude': 1
+        }
+      }
+    ]
+
+    const [result] = await databaseService.reservations.aggregate(pipeline).toArray()
+
+    if (!result) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return result
+  }
 }
 
 const reservationsService = new ReservationsService()
