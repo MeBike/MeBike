@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đặt Trước Thành Công - MeBike</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        background: linear-gradient(135deg, #fefeff 0%, #f1f1f1 100%);
+        color: #000000;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid #ebebeb;
+      }
+
+      .email-header {
+        background: linear-gradient(135deg, #7355cd 0%, #1eaedb 100%);
+        padding: 40px 30px;
+        text-align: center;
+        color: #fefeff;
+      }
+
+      .email-header h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 700;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        letter-spacing: -0.5px;
+      }
+
+      .email-header .subtitle {
+        margin: 15px 0 0 0;
+        font-size: 16px;
+        opacity: 0.95;
+        font-weight: 400;
+      }
+
+      .email-body {
+        padding: 40px 30px;
+        background: #ffffff;
+      }
+
+      .greeting {
+        font-size: 18px;
+        font-weight: 600;
+        color: #000000;
+        margin-bottom: 25px;
+      }
+
+      .content {
+        font-size: 16px;
+        color: #000000;
+        margin-bottom: 30px;
+        line-height: 1.7;
+      }
+
+      .success-box {
+        background-color: #d4edda; /* Light green background */
+        border: 2px solid #28a745; /* Green border */
+        color: #155724; /* Dark green text */
+        padding: 25px;
+        border-radius: 8px;
+        margin: 30px 0;
+        text-align: center;
+        font-weight: bold;
+      }
+      
+      .success-box h3 {
+          margin: 0 0 10px 0;
+          font-size: 20px;
+          color: #28a745;
+      }
+      
+      .success-box p {
+          margin: 0;
+          font-size: 16px;
+      }
+
+      .info-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 15px;
+      }
+
+      .info-table th {
+        text-align: left;
+        padding: 10px 0;
+        color: #555555;
+        font-weight: 600;
+        width: 35%;
+      }
+
+      .info-table td {
+        text-align: left;
+        padding: 10px 0;
+        color: #000000;
+      }
+
+      .info-table tr {
+        border-bottom: 1px solid #ebebeb;
+      }
+
+      .info-table tr:last-child {
+        border-bottom: none;
+      }
+
+      .cta-container {
+        text-align: center;
+        margin: 40px 0;
+      }
+
+      .cta-button {
+        display: inline-block;
+        padding: 18px 40px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fefeff;
+        background: linear-gradient(135deg, #28a745 0%, #209939 100%);
+        text-decoration: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+      }
+
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(40, 167, 69, 0.5);
+      }
+
+      .footer {
+        background: #f1f1f1;
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid #ebebeb;
+      }
+
+      .footer .signature {
+        font-size: 16px;
+        font-weight: 600;
+        color: #000000;
+        margin-bottom: 5px;
+      }
+
+      .footer .team {
+        font-size: 14px;
+        color: #000000;
+      }
+
+      .logo {
+        width: 70px;
+        height: 70px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        margin: 0 auto 20px;
+        display: block;
+        line-height: 63px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        backdrop-filter: blur(10px);
+      }
+
+      @media (max-width: 600px) {
+        .email-container {
+          margin: 20px;
+          border-radius: 8px;
+        }
+
+        .email-header,
+        .email-body,
+        .footer {
+          padding: 30px 20px;
+        }
+
+        .email-header h1 {
+          font-size: 28px;
+        }
+
+        .cta-button {
+          padding: 16px 32px;
+          font-size: 15px;
+        }
+
+        .info-table th,
+        .info-table td {
+          display: block;
+          width: 100%;
+        }
+
+        .info-table th {
+          padding-bottom: 5px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="email-header">
+        <div class="logo">🚲</div>
+        <h1>MeBike</h1>
+        <p class="subtitle">Phiên đặt trước của bạn đã được xác nhận!</p>
+      </div>
+
+      <div class="email-body">
+        <div class="greeting">Xin chào {{fullname}},</div>
+
+        <div class="content">
+          Chúc mừng! Bạn đã **đặt trước xe đạp thành công**. Xe đã được giữ riêng cho bạn trong vòng <strong>15 phút</strong> kể từ bây giờ.
+        </div>
+
+        <div class="success-box">
+          <h3>✅ ĐẶT TRƯỚC THÀNH CÔNG</h3>
+          <p>
+            Xe <strong>#{{bikeId}}</strong> đang chờ bạn tại <strong>{{stationName}}</strong>
+          </p>
+        </div>
+
+        <table class="info-table">
+          <tr>
+            <th>Mã xe:</th>
+            <td><strong>#{{bikeId}}</strong></td>
+          </tr>
+          <tr>
+            <th>Trạm xe:</th>
+            <td>{{stationName}}</td>
+          </tr>
+          <tr>
+            <th>Thời gian đặt trước:</th>
+            <td>{{reservationTime}}</td>
+          </tr>
+          <tr>
+            <th>Hạn mở khóa:</th>
+            <td><strong style="color: #dc3545;">{{expirationTime}} (còn 15 phút)</strong></td>
+          </tr>
+        </table>
+
+        <div class="content">
+          Vui lòng đến trạm xe trong thời gian sớm nhất để mở khóa và bắt đầu chuyến đi. Nếu không mở khóa trước <strong>{{expirationTime}}</strong>, phiên đặt trước sẽ **tự động bị hủy** và xe sẽ được giải phóng cho người dùng khác.
+        </div>
+
+        <div class="cta-container">
+          <a href="{{appURL}}" class="cta-button"> Mở Ứng Dụng để Mở Khóa </a>
+        </div>
+
+        <div class="content" style="font-size: 14px; color: #666666;">
+          **Mẹo:** Bạn có thể theo dõi vị trí trạm xe và tình trạng xe trực tiếp trong ứng dụng MeBike.
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="signature">Trân trọng,</div>
+        <div class="team">Đội ngũ MeBike</div>
+      </div>
+    </div>
+  </body>
+</html>
