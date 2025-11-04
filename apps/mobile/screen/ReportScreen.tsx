@@ -2,14 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Image,
-  Modal,
-  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -19,11 +19,43 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { useAuth } from "@providers/auth-providers";
-
-import { useReportActions } from "@hooks/useReportActions";
+import { useAuth } from "../providers/auth-providers";
+import { useReportActions } from "../hooks/useReportActions";
+import { getAccessToken } from "../utils/tokenManager";
 import type { ReportScreenNavigationProp } from "../types/navigation";
+
+// TomTom API
+const TOMTOM_API_KEY =
+  process.env.EXPO_PUBLIC_TOMTOM_API_KEY || "N5uyS5ZiQ4Uwxmu0JqgpLXG0exsrmeMP";
+
+const fetchTomTomReverseGeocode = async (
+  latitude: string,
+  longitude: string
+) => {
+  try {
+    const url = `https://api.tomtom.com/search/2/reverseGeocode/${latitude},${longitude}.JSON?key=${TOMTOM_API_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data?.addresses?.[0]?.address?.freeformAddress || "";
+  } catch (e) {
+    return "";
+  }
+};
+
+const fetchTomTomAddressSuggest = async (addressText: string) => {
+  try {
+    const url = `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(addressText)}.JSON?key=${TOMTOM_API_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results.map((r: any) => ({
+      address: r.address.freeformAddress,
+      latitude: r.position.lat,
+      longitude: r.position.lon,
+    }));
+  } catch (e) {
+    return [];
+  }
+};
 
 type RouteParams = {
   bike_id?: string;
@@ -44,17 +76,69 @@ function ReportScreen() {
   const [reportType, setReportType] = useState("");
   const [message, setMessage] = useState("");
   const [location, setLocation] = useState("");
-  const [selectedImages, setSelectedImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
+  const [selectedImages, setSelectedImages] = useState<
+    ImagePicker.ImagePickerAsset[]
+  >([]);
+  const [currentLocation, setCurrentLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+
+
+
+  // Lấy latitude/longitude từ địa chỉ nhập, rồi lấy lại địa chỉ từ coordinates
+  const handleLocationChange = async (text: string) => {
+    setLocation(text);
+    if (typingTimeout) clearTimeout(typingTimeout);
+    
+    if (text.length > 3) {
+      const timeout = setTimeout(async () => {
+        try {
+          // Lấy lat/lon từ địa chỉ nhập
+          const sugg = await fetchTomTomAddressSuggest(text);
+          setAddressSuggestions(sugg);
+        } catch (error) {
+          console.error("Error fetching address:", error);
+        }
+      }, 500);
+      setTypingTimeout(timeout);
+    } else {
+      setAddressSuggestions([]);
+      setCurrentLocation(null);
+    }
+  };
+
+  const handleSelectSuggestion = async (item: any) => {
+    setLocation(item.address);
+    setAddressSuggestions([]);
+    
+    // Lấy địa chỉ chính xác từ lat/lon
+    const address = await fetchTomTomReverseGeocode(
+      item.latitude.toString(),
+      item.longitude.toString()
+    );
+    
+    // Cập nhật location với địa chỉ chính xác
+    if (address) {
+      setLocation(address);
+    }
+    
+    // Lưu coordinates
+    setCurrentLocation({
+      latitude: item.latitude,
+      longitude: item.longitude,
+    });
+  };
 
   const reportTypes = [
     { value: "XE HƯ HỎNG", label: "Xe bị hỏng" },
     { value: "XE BẨN", label: "Xe bẩn" },
     { value: "TRẠM ĐẦY", label: "Trạm đầy" },
     { value: "TRẠM KHÔNG NHẬN XE", label: "Trạm không nhận xe" },
-    { value: "TRẠM NGOẠI TUYẾN", label: "Trạm ngoại tuyến" },
-    { value: "CẤP CỨU TAI NẠN", label: "Cấp cứu tai nạn" },
-    { value: "CẤP CỨU SỨC KHỎE", label: "Cấp cứu sức khỏe" },
-    { value: "CẤP CỨU NGUY HIỂM", label: "Cấp cứu nguy hiểm" },
     { value: "KHÁC", label: "Khác" },
   ];
 
@@ -67,7 +151,6 @@ function ReportScreen() {
       Alert.alert("Lỗi", "Vui lòng nhập mô tả vấn đề");
       return;
     }
-
     const reportData = {
       bike_id: bike_id || undefined,
       station_id: station_id || undefined,
@@ -76,9 +159,11 @@ function ReportScreen() {
       type: reportType,
       message: message.trim(),
       media_urls: selectedImages.length > 0 ? selectedImages : undefined,
+      ...(currentLocation && {
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+      }),
     };
-    console.log(reportData);
-
     createReport(reportData, {
       onSuccess: () => {
         Alert.alert("Thành công", "Báo cáo đã được gửi thành công", [
@@ -95,51 +180,38 @@ function ReportScreen() {
     });
   };
 
-
   const handleAddImage = async () => {
     try {
-      // Request permissions
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Quyền truy cập bị từ chối', 'Cần quyền truy cập thư viện ảnh để chọn hình ảnh');
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Quyền truy cập bị từ chối",
+          "Cần quyền truy cập thư viện ảnh để chọn hình ảnh"
+        );
         return;
       }
-
-      // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false, // Disabled when allowsMultipleSelection is true
+        allowsEditing: false,
         aspect: [4, 3],
         quality: 0.8,
         allowsMultipleSelection: true,
-        selectionLimit: 5, // Maximum 5 images
+        selectionLimit: 5,
       });
-
       if (!result.canceled && result.assets) {
-        setSelectedImages(prev => [...prev, ...result.assets]);
+        setSelectedImages((prev) => [...prev, ...result.assets]);
       }
     } catch (error) {
-      console.error('Image picker error:', error);
-      Alert.alert('Lỗi', 'Không thể chọn hình ảnh. Vui lòng thử lại.');
+      console.error("Image picker error:", error);
+      Alert.alert("Lỗi", "Không thể chọn hình ảnh. Vui lòng thử lại.");
     }
   };
 
   const removeImage = (index: number) => {
-    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-
-  const getToken = async (): Promise<string> => {
-    // Get token from your token manager
-    try {
-      const { getAccessToken } = await import('../utils/tokenManager');
-      return (await getAccessToken()) || '';
-    } catch {
-      return '';
-    }
-  };
-
-  // Check if user is authenticated
   if (!isAuthenticated) {
     return (
       <View style={styles.container}>
@@ -160,7 +232,9 @@ function ReportScreen() {
         </LinearGradient>
         <View style={styles.authRequiredContainer}>
           <Ionicons name="log-in-outline" size={64} color="#ccc" />
-          <Text style={styles.authRequiredText}>Vui lòng đăng nhập để báo cáo</Text>
+          <Text style={styles.authRequiredText}>
+            Vui lòng đăng nhập để báo cáo
+          </Text>
           <TouchableOpacity
             style={styles.loginButton}
             onPress={() => navigation.navigate("Login")}
@@ -189,10 +263,11 @@ function ReportScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Báo cáo sự cố</Text>
       </LinearGradient>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-
-        {/* Pre-filled info */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.content}
+      >
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {(bike_id || station_id || rental_id) && (
           <View style={styles.infoCard}>
             <View style={styles.cardHeader}>
@@ -274,10 +349,40 @@ function ReportScreen() {
           </View>
           <TextInput
             style={styles.locationInput}
-            placeholder="Nhập vị trí xảy ra sự cố..."
+            placeholder="Nhập địa chỉ"
             value={location}
-            onChangeText={setLocation}
+            onChangeText={handleLocationChange}
           />
+          {addressSuggestions.length > 0 && (
+            <View
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: 8,
+                marginTop: 8,
+                maxHeight: 180,
+                borderColor: "#d0d7de",
+                borderWidth: 1,
+                overflow: "hidden",
+              }}
+            >
+              {addressSuggestions.map((item, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={{
+                    padding: 10,
+                    borderBottomColor: idx === addressSuggestions.length - 1 ? "transparent" : "#eee",
+                    borderBottomWidth: idx === addressSuggestions.length - 1 ? 0 : 1,
+                  }}
+                  onPress={() => handleSelectSuggestion(item)}
+                >
+                  <Text style={{ color: "#0066FF" }}>{item.address}</Text>
+                  <Text style={{ fontSize: 12, color: "#888" }}>
+                    ({item.latitude}, {item.longitude})
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Images */}
@@ -286,7 +391,10 @@ function ReportScreen() {
             <Ionicons name="images" size={24} color="#0066FF" />
             <Text style={styles.cardTitle}>Hình ảnh (tùy chọn)</Text>
           </View>
-          <TouchableOpacity style={styles.addImageButton} onPress={handleAddImage}>
+          <TouchableOpacity
+            style={styles.addImageButton}
+            onPress={handleAddImage}
+          >
             <Ionicons name="add" size={24} color="#0066FF" />
             <Text style={styles.addImageText}>Thêm hình ảnh</Text>
           </TouchableOpacity>
@@ -294,7 +402,10 @@ function ReportScreen() {
             <View style={styles.selectedImageList}>
               {selectedImages.map((image, index) => (
                 <View key={index} style={styles.selectedImageItem}>
-                  <Image source={{ uri: image.uri }} style={styles.imagePreview} />
+                  <Image
+                    source={{ uri: image.uri }}
+                    style={styles.imagePreview}
+                  />
                   <TouchableOpacity
                     style={styles.removeImageButton}
                     onPress={() => removeImage(index)}
@@ -307,12 +418,8 @@ function ReportScreen() {
           )}
         </View>
 
-        {/* Submit Button */}
         <TouchableOpacity
-          style={[
-            styles.submitButton,
-            isCreatingReport && { opacity: 0.6 },
-          ]}
+          style={[styles.submitButton, isCreatingReport && { opacity: 0.6 }]}
           onPress={handleSubmit}
           disabled={isCreatingReport}
         >
@@ -325,12 +432,11 @@ function ReportScreen() {
             </>
           )}
         </TouchableOpacity>
-
       </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -680,6 +786,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  locationInfo: {
+    backgroundColor: "#f0f8ff",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#0066FF",
+  },
+  locationText: {
+    fontSize: 14,
+    color: "#0066FF",
+    fontWeight: "500",
+    marginBottom: 4,
+  },
+  locationNote: {
+    fontSize: 12,
+    color: "#666",
+    fontStyle: "italic",
+  },
 });
+
+// giữ nguyên phần styles phía dưới...
 
 export default ReportScreen;

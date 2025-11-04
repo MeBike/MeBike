@@ -1,6 +1,7 @@
 import type { AxiosResponse } from "axios";
 
 import fetchHttpClient from "../lib/httpClient";
+import { uploadMultipleImagesToFirebase } from "../lib/imageUpload";
 
 type ApiResponse<T> = {
   data: T;
@@ -27,6 +28,8 @@ export type CreateReportData = {
   type: string;
   message: string;
   media_urls?: ImagePickerAsset[];
+  latitude?: number;
+  longitude?: number;
 };
 
 export type Report = {
@@ -54,32 +57,33 @@ const REPORT_ENDPOINTS = {
 
 export const reportService = {
   createReport: async (data: CreateReportData): Promise<AxiosResponse> => {
-    const formData = new FormData();
+    let mediaUrls: string[] = [];
 
-    // Add text fields
-    if (data.type) formData.append('type', data.type);
-    if (data.message) formData.append('message', data.message);
-    const typesRequireBikeId = ["XE HƯ HỎNG", "XE BẨN"];
-    if (typesRequireBikeId.includes(data.type) && data.bike_id) {
-      formData.append("bike_id", data.bike_id);
-    }
-    if (data.station_id) formData.append('station_id', data.station_id);
-    if (data.rental_id) formData.append('rental_id', data.rental_id);
-    if (data.location) formData.append('location', data.location);
-
-    // Add image files
+    // Upload images to Firebase first if any
     if (data.media_urls && data.media_urls.length > 0) {
-      data.media_urls.forEach((image, index) => {
-         formData.append('files', {
-         uri: image.uri,
-          type: image.type || 'image/jpeg',
-         name: image.fileName || `image-${index}.jpg`,
-         } as any);
-        // formData.append("files", image.uri); // Một số API chỉ nhận chuỗi URI và tự fetch lại file từ client
-      });
+      try {
+        mediaUrls = await uploadMultipleImagesToFirebase(data.media_urls);
+      } catch (error) {
+        console.error('Failed to upload images to Firebase:', error);
+        throw new Error('Failed to upload images');
+      }
     }
-    console.log(formData);
-    const response = await fetchHttpClient.post(REPORT_ENDPOINTS.BASE, formData);
+
+    // Prepare JSON payload
+    const payload = {
+      type: data.type,
+      message: data.message,
+      bike_id: data.bike_id,
+      station_id: data.station_id,
+      rental_id: data.rental_id,
+      location: data.location,
+      files: mediaUrls.length > 0 ? mediaUrls : undefined,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    };
+
+    console.log('Report payload:', payload);
+    const response = await fetchHttpClient.post(REPORT_ENDPOINTS.BASE, payload);
     return response;
   },
 
