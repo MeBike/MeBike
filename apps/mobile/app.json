@@ -42,7 +42,8 @@
     "extra": {
       "eas": {
         "projectId": "fe3621a0-88f9-4578-b1a7-e989bdb70c86"
-      }
+      },
+      "tomtomApiKey": "N5uyS5ZiQ4Uwxmu0JqgpLXG0exsrmeMP"
     }
   }
 }

@@ -17,6 +17,7 @@ import type { StationDetailScreenNavigationProp } from "../types/navigation";
 import { Ionicons } from "@expo/vector-icons";
 
 import { StationCard } from "../components/StationCard";
+import { MapView } from "../components/MapView";
 import { LoadingScreen } from "@components/LoadingScreen";
 import {
   requestForegroundPermissionsAsync,
@@ -27,6 +28,7 @@ export default function StationSelectScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   const [showLoading, setShowLoading] = useState(false);
   const [showingNearby, setShowingNearby] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -89,6 +91,14 @@ export default function StationSelectScreen() {
     setShowingNearby(!showingNearby);
   };
 
+  const handleToggleMap = () => {
+    setShowMap(!showMap);
+  };
+
+  const handleStationPress = (stationId: string) => {
+    navigation.navigate("StationDetail", { stationId });
+  };
+
   const stations = showingNearby ? nearbyStations : data;
   const insets = useSafeAreaInsets();
   if (
@@ -119,51 +129,62 @@ export default function StationSelectScreen() {
         <Text style={styles.headerSubtitle}>
           Xem tất cả các lần thuê xe của bạn
         </Text>
-        <TouchableOpacity 
-          style={styles.findNearbyButton}
-          onPress={handleFindNearbyStations}
-          disabled={isLoadingNearbyStations}
-        >
-          {isLoadingNearbyStations ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <>
-              <Ionicons name="location" size={16} color="#fff" />
-              <Text style={styles.findNearbyButtonText}>
-                {showingNearby ? "Tất cả trạm" : "Tìm trạm gần bạn"}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.findNearbyButton}
+            onPress={handleFindNearbyStations}
+            disabled={isLoadingNearbyStations}
+          >
+            {isLoadingNearbyStations ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Ionicons name="location" size={16} color="#fff" />
+                <Text style={styles.findNearbyButtonText}>
+                  {showingNearby ? "Tất cả trạm" : "Tìm trạm gần bạn"}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+          
+        </View>
       </LinearGradient>
-      <FlatList
-        data={stations}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => {
-          const stationCardData = {
-            id: item._id,
-            name: item.name,
-            location: {
-              latitude: Number(item.latitude),
-              longitude: Number(item.longitude),
-              address: item.address,
-            },
-            availableBikes: Number(item.availableBikes),
-            totalSlots: Number(item.capacity),
-            isActive: true,
-            bikes: [],
-            layout: { width: 0, height: 0, entrances: [] },
-          };
-          return (
-            <StationCard
-              station={item}
-              onPress={() => handleSelectStation(item._id)}
-              userLocation={currentLocation || undefined}
-            />
-          );
-        }}
-        contentContainerStyle={styles.list}
-      />
+      {showMap ? (
+        <MapView
+          currentLocation={currentLocation || undefined}
+          stations={stations}
+          onStationPress={handleStationPress}
+        />
+      ) : (
+        <FlatList
+          data={stations}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => {
+            const stationCardData = {
+              id: item._id,
+              name: item.name,
+              location: {
+                latitude: Number(item.latitude),
+                longitude: Number(item.longitude),
+                address: item.address,
+              },
+              availableBikes: Number(item.availableBikes),
+              totalSlots: Number(item.capacity),
+              isActive: true,
+              bikes: [],
+              layout: { width: 0, height: 0, entrances: [] },
+            };
+            return (
+              <StationCard
+                station={item}
+                onPress={() => handleSelectStation(item._id)}
+                
+              />
+            );
+          }}
+          contentContainerStyle={styles.list}
+        />
+      )}
     </View>
   );
 }
@@ -217,6 +238,22 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 14,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  mapButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   list: {
     gap: 12,

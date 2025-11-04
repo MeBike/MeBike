@@ -59,28 +59,12 @@ export default function StationSelectScreen() {
         <FlatList
           data={stations}
           keyExtractor={(item) => item._id}
-          renderItem={({ item }) => {
-            const stationCardData = {
-              id: item._id,
-              name: item.name,
-              location: {
-                latitude: Number(item.latitude),
-                longitude: Number(item.longitude),
-                address: item.address,
-              },
-              availableBikes: 0,
-              totalSlots: Number(item.capacity),
-              isActive: true,
-              bikes: [],
-              layout: { width: 0, height: 0, entrances: [] },
-            };
-            return (
-              <StationCard
-                station={stationCardData}
-                onPress={() => handleSelectStation(item._id)}
-              />
-            );
-          }}
+          renderItem={({ item }) => (
+            <StationCard
+              station={item}
+              onPress={() => handleSelectStation(item._id)}
+            />
+          )}
           contentContainerStyle={styles.list}
         />
       )}

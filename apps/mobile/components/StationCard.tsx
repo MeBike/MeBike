@@ -10,10 +10,9 @@ import { IconSymbol } from "./IconSymbol";
 type StationCardProps = {
   station: Station | StationType;
   onPress: () => void;
-  userLocation?: { latitude: number; longitude: number };
 };
 
-export function StationCard({ station, onPress, userLocation }: StationCardProps) {
+export function StationCard({ station, onPress }: StationCardProps) {
   const capacity = parseInt(station.capacity) || 1;
   const availabilityPercentage = (station.availableBikes / capacity) * 100;
 
@@ -23,29 +22,6 @@ export function StationCard({ station, onPress, userLocation }: StationCardProps
     if (percentage > 30)
       return BikeColors.warning;
     return BikeColors.error;
-  };
-
-  const handleOpenMap = () => {
-    const stationLat = parseFloat(station.latitude);
-    const stationLng = parseFloat(station.longitude);
-    
-    if (userLocation) {
-      // Open TomTom Maps with directions
-      const tomtomUrl = `https://www.tomtom.com/en_US/maps/directions/route?destination=${stationLat},${stationLng}&source=${userLocation.latitude},${userLocation.longitude}`;
-      
-      // Also try opening with native maps app
-      const nativeUrl = `geo:${stationLat},${stationLng}?q=${station.name}`;
-      
-      Linking.canOpenURL(tomtomUrl)
-        .then(supported => {
-          if (supported) {
-            return Linking.openURL(tomtomUrl);
-          } else {
-            return Linking.openURL(nativeUrl);
-          }
-        })
-        .catch(err => console.error('Error opening map:', err));
-    }
   };
 
   return (
@@ -99,12 +75,6 @@ export function StationCard({ station, onPress, userLocation }: StationCardProps
             <IconSymbol name="map.fill" size={14} color={BikeColors.accent} />
             <Text style={styles.actionHintText}>Nhấn để xem chi tiết</Text>
           </View>
-          {userLocation && (
-            <TouchableOpacity style={styles.directionButton} onPress={handleOpenMap}>
-              <IconSymbol name="arrow.triangle.turn.up.right.circle.fill" size={14} color="#fff" />
-              <Text style={styles.directionButtonText}>Chỉ đường</Text>
-            </TouchableOpacity>
-          )}
         </View>
       </View>
     </Pressable>
