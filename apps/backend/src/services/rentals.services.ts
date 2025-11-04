@@ -54,7 +54,6 @@ class RentalsService {
             { _id: bike_id },
             {
               $set: {
-                station_id: null,
                 status: BikeStatus.Booked,
                 updated_at: now
               }
@@ -225,7 +224,6 @@ class RentalsService {
         { _id: rental.bike_id },
         {
           $set: {
-            station_id: end_station_id,
             status: BikeStatus.Available,
             updated_at: now
           }

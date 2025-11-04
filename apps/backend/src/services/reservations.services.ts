@@ -275,7 +275,7 @@ class ReservationsService {
           ),
           databaseService.bikes.updateOne(
             { _id: reservation.bike_id },
-            { $set: { station_id: null, status: BikeStatus.Booked, updated_at: now } },
+            { $set: { status: BikeStatus.Booked, updated_at: now } },
             { session }
           ),
           ...(user && user.role === Role.Staff && rental._id
