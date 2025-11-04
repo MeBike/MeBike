@@ -24,6 +24,7 @@ import reserveRouter from "./routes/reservations.routes";
 import { warningExpiryReservation } from "./utils/cron/email.services";
 import ratingRouter from './routes/rating.routes'
 import { initQueue } from './lib/queue'
+import dashboardRouter from './routes/dashboard.routes'
 
 const port = process.env.PORT || 4000
 
@@ -59,6 +60,7 @@ app.use('/rentals', rentalsRouter)
 app.use('/stations', stationRouter)
 app.use('/reservations', reserveRouter)
 app.use('/ratings', ratingRouter)
+app.use('/dashboard', dashboardRouter)
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 

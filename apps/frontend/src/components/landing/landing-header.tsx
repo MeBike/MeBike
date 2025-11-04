@@ -1,8 +1,39 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Smartphone } from "lucide-react";
-import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { dashboardService } from "@/services/dashboard.service";
+
+interface DashboardStats {
+  totalStations: number;
+  totalBikes: number;
+  totalUsers: number;
+}
+
 export function Hero() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalStations: 15,
+    totalBikes: 500,
+    totalUsers: 10000
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await dashboardService.getDashboardStats();
+        if (response.data.result) {
+          setStats(response.data.result);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
   return (
     <section className="relative h-[80vh] flex items-center justify-center overflow-hidden pt-10">
       <div className="absolute inset-0 z-0">
@@ -35,24 +66,38 @@ export function Hero() {
               size="lg"
               variant="outline"
               className="text-base px-6 h-12 bg-transparent"
-              asChild
+              onClick={() => {
+                const element = document.getElementById('how-it-works');
+                if (element) {
+                  element.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                  });
+                }
+              }}
             >
-              <Link href="#how-it-works">Tìm hiểu thêm</Link>
+              Tìm hiểu thêm
             </Button>
           </div>
           <div className="flex items-center justify-center gap-8 pt-4">
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">15+</div>
+              <div className="text-3xl font-bold text-primary">
+                {loading ? "..." : `${stats.totalStations}`}
+              </div>
               <div className="text-sm text-muted-foreground">Trạm Metro</div>
             </div>
             <div className="w-px h-12 bg-border" />
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">500+</div>
+              <div className="text-3xl font-bold text-primary">
+                {loading ? "..." : `${stats.totalBikes}`}
+              </div>
               <div className="text-sm text-muted-foreground">Xe đạp</div>
             </div>
             <div className="w-px h-12 bg-border" />
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary">10K+</div>
+              <div className="text-3xl font-bold text-primary">
+                {loading ? "..." : `${(stats.totalUsers)}`}
+              </div>
               <div className="text-sm text-muted-foreground">Người dùng</div>
             </div>
           </div>

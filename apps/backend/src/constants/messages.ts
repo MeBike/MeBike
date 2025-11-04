@@ -534,4 +534,9 @@ export const RATING_MESSAGE = {
   RENTAL_ID_INVALID: 'ID phiên thuê không hợp lệ',
   CANNOT_RATE_UNCOMPLETED_RENTAL: 'Chỉ có thể đánh giá các phiên thuê đã hoàn thành',
   RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này'
-}
+} as const
+
+export const DASHBOARD_MESSAGES = {
+  GET_DASHBOARD_STATS_SUCCESS: 'Lấy thống kê dashboard thành công',
+  GET_DASHBOARD_STATS_ERROR: 'Lỗi khi lấy thống kê dashboard'
+} as const
