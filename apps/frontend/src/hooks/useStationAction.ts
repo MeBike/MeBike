@@ -72,7 +72,7 @@ export const useStationActions = ({
       return;
     }
     refetchStationReservationStats();
-  }, [refetchStationReservationStats, hasToken, stationId]);
+  }, [refetchStationReservationStats, hasToken]);
   const getAllStations = useCallback(() => {
     if (!hasToken) {
       return;

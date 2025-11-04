@@ -614,7 +614,7 @@ export default function StationsPage() {
                           Tổng đặt chỗ
                         </label>
                         <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.total_count}
+                          {responseStationReservationStats.result.total_count || "0"}
                         </p>
                       </div>
                       <div>
@@ -622,7 +622,7 @@ export default function StationsPage() {
                           Đang chờ xử lý
                         </label>
                         <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.status_counts["ĐANG CHỜ XỬ LÝ"]}
+                          {responseStationReservationStats.result.status_counts.Pending || "0"}
                         </p>
                       </div>
                       <div>
@@ -630,7 +630,7 @@ export default function StationsPage() {
                           Đã hủy
                         </label>
                         <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.status_counts["ĐÃ HỦY"]}
+                          {responseStationReservationStats.result.status_counts.Cancelled || "0"}
                         </p>
                       </div>
                       <div>
@@ -638,7 +638,7 @@ export default function StationsPage() {
                           Đã hết hạn
                         </label>
                         <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.status_counts["ĐÃ HẾT HẠN"]}
+                          {responseStationReservationStats.result.status_counts.Expired || "0"}
                         </p>
                       </div>
                       {/* <div>

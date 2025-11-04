@@ -19,12 +19,6 @@ export interface ReservationStats {
   success_rate: string;
   cancel_rate:string;
 }
-export enum StatusType {
-  DA_HET_HAN = 'ĐÃ HẾT HẠN',
-  DA_HUY = 'ĐÃ HỦY',
-  DANG_CHO_XU_LY = 'ĐANG CHỜ XỬ LÝ'
-}
-
 export interface ReservationStatsStation {
   station: {
     id: string;
@@ -32,7 +26,9 @@ export interface ReservationStatsStation {
   };
   total_count: number;
   status_counts: {
-    [key in StatusType]: number;
+    Expired: number;
+    Cancelled: number;
+    Pending; number;
   };
   reserving_bikes: Array<{
     _id: string;
