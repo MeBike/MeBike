@@ -4,6 +4,37 @@ import { DASHBOARD_MESSAGES } from "~/constants/messages";
 import databaseService from "~/services/database.services";
 import { BikeStatus, UserVerifyStatus } from "~/constants/enums";
 
+export const getStationsController = async (req: Request, res: Response) => {
+  try {
+    const stations = await databaseService.stations.find({}).toArray();
+
+    const stationsWithAvailableBikes = await Promise.all(
+      stations.map(async (station) => {
+        const availableBikesCount = await databaseService.bikes.countDocuments({
+          station_id: station._id,
+          status: BikeStatus.Available
+        });
+
+        return {
+          name: station.name,
+          availableBikes: availableBikesCount
+        };
+      })
+    );
+
+    return res.json({
+      message: DASHBOARD_MESSAGES.STATIONS_FETCH_SUCCESS,
+      result: stationsWithAvailableBikes
+    });
+  } catch (error) {
+    console.error("Error fetching stations:", error);
+    return res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      message: "Error fetching stations",
+      result: null
+    });
+  }
+};
+
 export const getDashboardStatsController = async (req: Request, res: Response) => {
   try {
     const totalStations = await databaseService.stations.countDocuments();

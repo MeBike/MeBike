@@ -538,5 +538,6 @@ export const RATING_MESSAGE = {
 
 export const DASHBOARD_MESSAGES = {
   GET_DASHBOARD_STATS_SUCCESS: 'Lấy thống kê dashboard thành công',
-  GET_DASHBOARD_STATS_ERROR: 'Lỗi khi lấy thống kê dashboard'
+  GET_DASHBOARD_STATS_ERROR: 'Lỗi khi lấy thống kê dashboard',
+  STATIONS_FETCH_SUCCESS: 'Lấy danh sách trạm thành công',
 } as const
