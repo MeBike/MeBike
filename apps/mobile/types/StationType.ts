@@ -15,3 +15,28 @@ export type StationType = {
   maintainedBikes: number;
   emptySlots: number;
 };
+export interface StationLocation {
+  type: "Point";
+  coordinates: [number, number];
+}
+
+export interface Station {
+  _id: string;
+  name: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  capacity: string;
+  created_at: string;
+  updated_at: string;
+  location_geo: StationLocation;
+  distance_meters: number;
+  totalBikes: number;
+  emptySlots: number;
+  availableBikes: number;
+  bookedBikes: number;
+  brokenBikes: number;
+  reservedBikes: number;
+  maintainedBikes: number;
+  unavailableBikes: number;
+}
