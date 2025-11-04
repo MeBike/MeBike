@@ -9,6 +9,7 @@ import {
   ReservationStatus,
   Role,
   SosAlertStatus,
+  SummaryPeriodType,
   TrendValue
 } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
@@ -176,7 +177,7 @@ class RentalsService {
     end_station_id: ObjectId,
     effective_end_time: Date,
     session: ClientSession,
-    reason?: string,
+    reason?: string
   ): Promise<{ rental: Rental; logData?: any }> {
     const now = getLocalTime()
     const result: any = {}
@@ -588,13 +589,13 @@ class RentalsService {
     let dateFormat
     switch (groupBy) {
       case GroupByOptions.Month:
-        dateFormat = '%m-%Y'
+        dateFormat = '%Y-%m'
         break
       case GroupByOptions.Year:
         dateFormat = '%Y'
         break
       default:
-        dateFormat = '%d-%m-%Y'
+        dateFormat = '%Y-%m-%d'
     }
 
     const startDate = from ? new Date(from) : new Date('2025-01-01')
@@ -616,7 +617,7 @@ class RentalsService {
           totalRentals: { $sum: 1 }
         }
       },
-      { $sort: { _id: 1 } },
+      { $sort: { _id: -1 } },
       {
         $project: {
           _id: 0,
@@ -1023,6 +1024,82 @@ class RentalsService {
     })
 
     return fullDay
+  }
+
+  async getRevenueBy(type: SummaryPeriodType) {
+    const now = getLocalTime ? getLocalTime() : new Date()
+
+    let start: Date
+    let end: Date
+
+    if (type === SummaryPeriodType.TODAY) {
+      start = new Date(now)
+      start.setUTCHours(0, 0, 0, 0)
+      end = new Date(now)
+      end.setUTCHours(23, 59, 59, 999)
+    } else {
+      start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0))
+      end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999))
+    }
+
+    const result = await databaseService.rentals
+      .aggregate([
+        {
+          $match: {
+            status: RentalStatus.Completed,
+            end_time: { $gte: start, $lte: end }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$total_price' }
+          }
+        }
+      ])
+      .toArray()
+
+    return result.length > 0 ? parseFloat(result[0].totalRevenue) : 0
+  }
+
+  async countRentalByStatus() {
+    const pipeline = [
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          status: '$_id',
+          count: 1
+        }
+      }
+    ]
+    const result = await databaseService.rentals.aggregate(pipeline).toArray()
+
+    const counts = {
+      Rented: 0,
+      Completed: 0,
+      Cancelled: 0,
+      Reserved: 0
+    }
+
+    const statusMap: Record<string, keyof typeof counts> = {
+      [RentalStatus.Rented]: 'Rented',
+      [RentalStatus.Completed]: 'Completed',
+      [RentalStatus.Cancelled]: 'Cancelled',
+      [RentalStatus.Reserved]: 'Reserved'
+    }
+
+    result.forEach((item) => {
+      const key = statusMap[item.status]
+      if (key) counts[key] = item.count
+    })
+
+    return counts
   }
 
   generateDuration(start: Date, end: Date) {

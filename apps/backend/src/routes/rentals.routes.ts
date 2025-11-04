@@ -14,6 +14,7 @@ import {
   getMyDetailRentalController,
   getMyRentalsController,
   getRentalRevenueController,
+  getRentalSummaryController,
   getReservationsStatisticController,
   getStationActivityController,
   updateDetailRentalController
@@ -22,6 +23,7 @@ import { isAdminAndStaffValidator, isAdminValidator } from '~/middlewares/admin.
 import {
   cancelRentalValidator,
   checkUserWalletBeforeRentOrReserve,
+  createRentalSessionByStaffValidator,
   createRentalSessionValidator,
   endRentalByAdminOrStaffValidator,
   endRentalSessionValidator,
@@ -30,11 +32,24 @@ import {
 import { cardTapApiKeyValidator } from '~/middlewares/card-tap.middlewares'
 import { wrapAsync } from '~/utils/handler'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
-import { CancelRentalReqBody, CreateRentalReqBody, EndRentalByAdminOrStaffReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
+import { CancelRentalReqBody, CreateRentalByStaffReqBody, CreateRentalReqBody, EndRentalByAdminOrStaffReqBody, UpdateRentalReqBody } from '~/models/requests/rentals.requests'
+import { isStaffValidator } from '~/middlewares/staff.middlewares'
 
 const rentalsRouter = Router()
 
+rentalsRouter
+  .route('/staff-create')
+  .post(
+    accessTokenValidator,
+    isStaffValidator,
+    filterMiddleware<CreateRentalByStaffReqBody>(['bike_id', 'user_id']),
+    createRentalSessionByStaffValidator,
+    wrapAsync(createRentalSessionController)
+  )
+
 rentalsRouter.route('/dashboard-summary').get(accessTokenValidator, isAdminValidator, wrapAsync(getDashboardSummaryController))
+
+rentalsRouter.route('/summary').get(accessTokenValidator, isAdminValidator, wrapAsync(getRentalSummaryController))
 
 rentalsRouter.route('/stats/revenue').get(accessTokenValidator, isAdminValidator, wrapAsync(getRentalRevenueController))
 

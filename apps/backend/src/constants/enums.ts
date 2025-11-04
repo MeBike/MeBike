@@ -158,3 +158,8 @@ export enum SosAlertStatus {
   UNSOLVABLE = 'KHÔNG XỬ LÍ ĐƯỢC',
   REJECTED = 'ĐÃ TỪ CHỐI',
 }
+
+export enum SummaryPeriodType {
+  TODAY = 'HÔM NAY',
+  THIS_MONTH = 'THÁNG NÀY',
+}

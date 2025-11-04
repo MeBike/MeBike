@@ -244,6 +244,7 @@ export const RENTALS_MESSAGE = {
   CANCEL_RENTAL_SUCCESS: 'Huỷ phiên thuê thành công',
   TRACKING_RENTAL_IN_STATION_SUCCESS: 'Xem danh sách các phiên thuê tại trạm thành công',
   GET_DASHBOARD_SUMMARY_SUCCESS: 'Lấy dữ liệu thống kê cho các phiên thuê hôm nay thành công',
+  GET_SUMMARY_SUCCESS: 'Lấy dữ liệu thống kê tổng quan các phiên thuê thành công',
   // Fail action
   CREATE_SESSION_FAILED: 'Tạo phiên thuê xe không thành công',
   RENTAL_UPDATE_FAILED: 'Cập nhật phiên thuê không thành công',
