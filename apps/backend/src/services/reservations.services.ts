@@ -3,7 +3,7 @@ import { Decimal128, ObjectId } from 'mongodb'
 import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
-import { fromHoursToMs, fromMinutesToMs, getLocalTime } from '~/utils/date-time'
+import { formatUTCDateToVietnamese, fromHoursToMs, fromMinutesToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import { ErrorWithStatus } from '~/models/errors'
 import { COMMON_MESSAGE, RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
@@ -17,23 +17,25 @@ import iotService from './iot.services'
 import { IotBookingCommand, IotReservationCommand } from '@mebike/shared/sdk/iot-service'
 import { reservationExpireQueue, reservationNotifyQueue } from '~/lib/queue/reservation.queue'
 import User from '~/models/schemas/user.schema'
+import Station from '~/models/schemas/station.schema'
 
 class ReservationsService {
   async reserveBike({
     user_id,
     bike,
-    station_id,
+    station,
     start_time
   }: {
     user_id: ObjectId
     bike: Bike
-    station_id: ObjectId
+    station: Station
     start_time: string
   }) {
     const now = getLocalTime()
     const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '2000')
     const reservationId = new ObjectId()
     const bike_id = bike._id as ObjectId
+    const station_id = station._id as ObjectId
 
     const startTime = new Date(start_time)
     const endTime = this.generateEndTime(start_time)
@@ -71,7 +73,8 @@ class ReservationsService {
         ])
       })
 
-      const beforeExpirationMin = Number(process.env.EXPIRY_NOTIFY_MINUTES || '15')
+      // const beforeExpirationMin = Number(process.env.EXPIRY_NOTIFY_MINUTES || '15')
+      const beforeExpirationMin = Number('29')
       const beforeExpirationMs = fromMinutesToMs(beforeExpirationMin)
 
       const delayToExpiry = Math.max(0, endTime.getTime() - now.getTime())
@@ -86,7 +89,7 @@ class ReservationsService {
         reservationExpireQueue.add(
           'reservation-expire',
           { reservationId: reservation._id, bikeId: bike._id },
-          { delay: delayToExpiry, removeOnComplete: true, removeOnFail: false }
+          { delay: delayToNotify, removeOnComplete: true, removeOnFail: false }
         )
       ])
 
@@ -100,6 +103,13 @@ class ReservationsService {
       await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
 
       void iotService.sendReservationCommand(bike.chip_id ?? bike_id.toString(), IotReservationCommand.reserve)
+
+      const toUser = await databaseService.users.findOne({ _id: user_id })
+      const data = {
+        ...reservation,
+        station_name: station.name
+      }
+      void this.sendSuccessReservingEmail(data, toUser!)
 
       return {
         ...reservation,
@@ -805,38 +815,12 @@ class ReservationsService {
   }
 
   async sendExpiringNotification(expiringReservation: Reservation, toUser: User) {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_APP,
-        pass: process.env.EMAIL_PASSWORD_APP
-      }
-    })
-
-    const userIdString = expiringReservation.user_id.toString()
-
-    if (!toUser || !toUser.email) {
-      console.error(RESERVATIONS_MESSAGE.SKIPPING_USER_NOT_FOUND(userIdString))
-      return { success: false }
-    }
-
-    try {
-      const htmlContent = readEmailTemplate('neer-expiry-reservation.html', {
-        fullname: toUser.fullname
-      })
-
-      const mailOptions = {
-        from: `"MeBike" <${process.env.EMAIL_APP}>`,
-        to: toUser.email,
-        subject: RESERVATIONS_MESSAGE.EMAIL_SUBJECT_NEAR_EXPIRY,
-        html: htmlContent
-      }
-      await transporter.sendMail(mailOptions)
-      return { success: true }
-    } catch (error) {
-      console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
-      return { success: false }
-    }
+    return await this.sendReservationEmailFormat(
+      'neer-expiry-reservation.html',
+      RESERVATIONS_MESSAGE.EMAIL_SUBJECT_NEAR_EXPIRY,
+      expiringReservation,
+      toUser
+    )
   }
 
   async getReservationDetail(id: string) {
@@ -918,7 +902,19 @@ class ReservationsService {
     return result
   }
 
-  async sendReservationEmailFormat(format: string, data: Reservation, toUser: User) {
+  async sendSuccessReservingEmail(data: any, toUser: User) {
+    data.start_time = formatUTCDateToVietnamese(data.start_time)
+    data.end_time = formatUTCDateToVietnamese(data.end_time)
+
+    await this.sendReservationEmailFormat(
+      'success-reservation.html',
+      RESERVATIONS_MESSAGE.EMAIL_SUBJECT_SUCCESS_RESERVING,
+      data,
+      toUser
+    )
+  }
+
+  async sendReservationEmailFormat(format: string, subject: string, data: any, toUser: User) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -936,13 +932,14 @@ class ReservationsService {
 
     try {
       const htmlContent = readEmailTemplate(format, {
+        ...data,
         fullname: toUser.fullname
       })
 
       const mailOptions = {
         from: `"MeBike" <${process.env.EMAIL_APP}>`,
         to: toUser.email,
-        subject: RESERVATIONS_MESSAGE.EMAIL_SUBJECT_NEAR_EXPIRY,
+        subject,
         html: htmlContent
       }
       await transporter.sendMail(mailOptions)

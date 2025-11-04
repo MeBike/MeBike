@@ -48,7 +48,7 @@ export const reserveBikeValidator = validate(
             }
 
             const [stationExists, aggResult] = await Promise.all([
-              databaseService.stations.findOne({ _id: stationId }, { projection: { _id: 1 } }),
+              databaseService.stations.findOne({ _id: stationId }, { projection: { _id: 1, name: 1 } }),
               databaseService.bikes
                 .aggregate([
                   {
@@ -88,6 +88,7 @@ export const reserveBikeValidator = validate(
               })
             }
 
+            req.station = stationExists
             req.bike = bike
             return true
           }

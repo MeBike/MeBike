@@ -225,31 +225,31 @@
         <div class="success-box">
           <h3>✅ ĐẶT TRƯỚC THÀNH CÔNG</h3>
           <p>
-            Xe <strong>#{{bikeId}}</strong> đang chờ bạn tại <strong>{{stationName}}</strong>
+            Xe <strong>#{{bike_id}}</strong> đang chờ bạn tại <strong>{{station_name}}</strong>
           </p>
         </div>
 
         <table class="info-table">
           <tr>
             <th>Mã xe:</th>
-            <td><strong>#{{bikeId}}</strong></td>
+            <td><strong>#{{bike_id}}</strong></td>
           </tr>
           <tr>
             <th>Trạm xe:</th>
-            <td>{{stationName}}</td>
+            <td>{{station_name}}</td>
           </tr>
           <tr>
             <th>Thời gian đặt trước:</th>
-            <td>{{reservationTime}}</td>
+            <td>{{start_time}}</td>
           </tr>
           <tr>
             <th>Hạn mở khóa:</th>
-            <td><strong style="color: #dc3545;">{{expirationTime}} (còn 15 phút)</strong></td>
+            <td><strong style="color: #dc3545;">{{end_time}}</strong></td>
           </tr>
         </table>
 
         <div class="content">
-          Vui lòng đến trạm xe trong thời gian sớm nhất để mở khóa và bắt đầu chuyến đi. Nếu không mở khóa trước <strong>{{expirationTime}}</strong>, phiên đặt trước sẽ **tự động bị hủy** và xe sẽ được giải phóng cho người dùng khác.
+          Vui lòng đến trạm xe trong thời gian sớm nhất để mở khóa và bắt đầu chuyến đi. Nếu không mở khóa trước <strong>{{end_time}}</strong>, phiên đặt trước sẽ **tự động bị hủy** và xe sẽ được giải phóng cho người dùng khác.
         </div>
 
         <div class="cta-container">

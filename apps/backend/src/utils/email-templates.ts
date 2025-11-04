@@ -146,31 +146,31 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
 
         <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
             <p style="font-size: 16px; font-weight: bold; margin: 0;">
-                Xe <strong>#${data.bikeId}</strong> đã được giữ cho bạn tại <strong>${data.stationName}</strong>
+                Xe <strong>#${data.bike_id}</strong> đã được giữ cho bạn tại <strong>${data.station_name}</strong>
             </p>
         </div>
 
         <table style="width: 100%; margin: 20px 0; font-size: 15px; color: #333333;">
             <tr>
                 <td style="padding: 8px 0; font-weight: bold; width: 40%;">Mã xe:</td>
-                <td style="padding: 8px 0;">#${data.bikeId}</td>
+                <td style="padding: 8px 0;">#${data.bike_id}</td>
             </tr>
             <tr>
                 <td style="padding: 8px 0; font-weight: bold;">Trạm xe:</td>
-                <td style="padding: 8px 0;">${data.stationName}</td>
+                <td style="padding: 8px 0;">${data.station_name}</td>
             </tr>
             <tr>
                 <td style="padding: 8px 0; font-weight: bold;">Thời gian đặt:</td>
-                <td style="padding: 8px 0;">${data.reservationTime}</td>
+                <td style="padding: 8px 0;">${data.start_time}</td>
             </tr>
             <tr>
                 <td style="padding: 8px 0; font-weight: bold; color: #dc3545;">Hạn mở khóa:</td>
-                <td style="padding: 8px 0; color: #dc3545;"><strong>${data.expirationTime} (còn 15 phút)</strong></td>
+                <td style="padding: 8px 0; color: #dc3545;"><strong>${data.end_time}</strong></td>
             </tr>
         </table>
 
         <p style="color: #333333; line-height: 1.5;">
-            Vui lòng đến trạm xe và <strong>mở khóa xe trước ${data.expirationTime}</strong> để bắt đầu chuyến đi.
+            Vui lòng đến trạm xe và <strong>mở khóa xe trước ${data.end_time}</strong> để bắt đầu chuyến đi.
         </p>
         
         <p style="color: #333333; line-height: 1.5;">

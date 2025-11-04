@@ -422,6 +422,7 @@ export const RESERVATIONS_MESSAGE = {
         `Scheduling expiration task for reservation ${reservationId} in ${delayMinutes} minutes.`,
   // Email Messages
   EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn',
+  EMAIL_SUBJECT_SUCCESS_RESERVING: 'Xác nhận đặt trước thành công',
   // Status
   RESERVATION_NOT_PENDING: 'Phiên đặt trước phải ở trạng thái "ĐANG CHỜ XỬ LÍ"'
 } as const

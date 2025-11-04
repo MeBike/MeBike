@@ -15,6 +15,7 @@ import {
 } from '~/models/requests/reservations.requests'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import Reservation from '~/models/schemas/reservation.schema'
+import Station from '~/models/schemas/station.schema'
 import databaseService from '~/services/database.services'
 import reservationsService from '~/services/reservations.services'
 import { buildAdminReservationFilter } from '~/utils/filters.helper'
@@ -46,12 +47,13 @@ export async function getReservationListController(req: Request, res: Response, 
 export async function reserveBikeController(req: Request<ParamsDictionary, any, ReserveBikeReqBody>, res: Response) {
   const { user_id } = req.decoded_authorization as TokenPayLoad
   const objUserId = toObjectId(user_id)
+  const station = req.station as Station
   const objStationId = toObjectId(req.bike?.station_id as ObjectId)
 
   const result = await reservationsService.reserveBike({
     user_id: objUserId,
     bike: req.bike!,
-    station_id: objStationId,
+    station,
     start_time: req.body.start_time
   })
   res.json({
