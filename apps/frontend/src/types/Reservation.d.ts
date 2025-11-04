@@ -19,3 +19,31 @@ export interface ReservationStats {
   success_rate: string;
   cancel_rate:string;
 }
+export interface ReservationStatsStation {
+  station: {
+    id: string;
+    name: string;
+  };
+  total_count: number;
+  status_counts: {
+    Expired: number;
+    Cancelled: number;
+    Pending; number;
+  };
+  reserving_bikes: Array<{
+    _id: string;
+    station_id: string;
+    status:
+      | "ĐANG CHỜ XỬ LÝ"
+      | "ĐANG HOẠT ĐỘNG"
+      | "ĐÃ HỦY"
+      | "ĐÃ HẾT HẠN"
+      | "ĐANG ĐƯỢC THUÊ"
+      | "CÓ SẴN"
+      | "ĐÃ ĐẶT TRƯỚC";
+    supplier_id: string;
+    created_at: string;
+    updated_at: string;
+    chip_id: string;
+  }>;
+}

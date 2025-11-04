@@ -329,6 +329,7 @@ export const RESERVATIONS_MESSAGE = {
   STAFF_CANCEL_SUCCESS: 'Nhân viên hỗ trợ huỷ phiên đặt trước thành công',
   GET_STATION_RESERVATIONS_SUCCESS: 'Xem chi tiết thống kê các phiên đặt trước tại trạm thành công',
   MARK_EXPIRED_RESERVATIONS_SUCCESS: 'Cập nhật trạng thái cho các phiên đã hết hạn thành công',
+  GET_RESERVATION_DETAIL_SUCCESS: 'Xem chi tiết phiên đặt trước thành công',
   // Fail action
   PARTIAL_UPDATE_FAILURE: 'Lỗi hệ thống: Chỉ %s/%s xe được cập nhật. Hành động bị hủy',
   RESERVATION_UPDATE_FAILED: 'Cập nhật phiên đặt trước không thành công',
@@ -377,6 +378,7 @@ export const RESERVATIONS_MESSAGE = {
   CANNOT_CANCEL_THIS_RESERVATION: 'Bạn chỉ có thể huỷ phiên đặt trước ở trạng thái đang được xử lí',
   CANNOT_CONFIRM_OTHER_RESERVATION: 'Bạn không có quyền xác nhận phiên đặt trước của người khác',
   CANNOT_CANCEL_EXPIRED_RESERVATION: 'Phiên đặt trước này đã hết hạn, bạn không thể huỷ',
+  CANNOT_VIEW_OTHER_RESERVATION: 'Bạn không có quyền xem phiên đặt trước của người khác',
   // Over time
   OVER_CANCELLED_TIME: 'Đã quá thời gian quy định để có thể huỷ phiên đặt trước',
   // Default
