@@ -10,14 +10,7 @@ import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { Search } from "lucide-react";
 import * as React from "react";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export interface FilterOptionsProps {
   value: string;
@@ -55,6 +48,7 @@ interface DataTableProps<TData, TValue> {
   filterPlaceholder?: string;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  title?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -63,6 +57,7 @@ export function DataTable<TData, TValue>({
   filterPlaceholder,
   searchValue,
   onSearchChange,
+  title,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState({});
@@ -107,78 +102,73 @@ export function DataTable<TData, TValue>({
   // };
 
   return (
-    <div className="w-full  rounded-2xl  from-blue-50 via-white to-zinc-50  border-gray-200 overflow-x-auto">
-      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        {showSearchBar && (
-          <div className="relative w-full max-w-xs">
-            <Search className="absolute top-1/2 left-2 h-5 w-5 -translate-y-1/2 text-blue-400" />
-            <Input
-              placeholder={filterPlaceholder || "Tìm kiếm..."}
-              value={searchValue ?? ""}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              className="rounded-xl border border-blue-200 bg-white py-3 pl-10 pr-3 focus:ring-2 focus:ring-blue-300 shadow-sm"
-            />
-          </div>
-        )}
-        {/* Có thể thêm filter dropdown ở đây nếu cần */}
-      </div>
-
-      <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
-        <Table className="min-w-full">
-          <TableHeader className="bg-blue-50 sticky top-0 z-10">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="px-4 py-3 text-blue-800 font-semibold uppercase tracking-wide text-xs border-b border-blue-200"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="transition-colors hover:bg-blue-50/50"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      className="px-4 py-3 border-b border-gray-100 text-gray-800"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-20 text-center text-gray-500"
-                >
-                  Không có kết quả.
-                </TableCell>
-              </TableRow>
+    <Card>
+      {title && (
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+      )}
+      <CardContent>
+        <div className="space-y-4">
+          <div className="relative">
+            {showSearchBar && (
+              <>
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={filterPlaceholder || "Tìm kiếm..."}
+                  value={searchValue ?? ""}
+                  onChange={(e) => onSearchChange?.(e.target.value)}
+                  className="pl-10"
+                />
+              </>
             )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  {table.getHeaderGroups().map((headerGroup) =>
+                    headerGroup.headers.map((header) => (
+                      <th key={header.id} className="text-left py-3 px-4 font-medium">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </th>
+                    ))
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className="border-b hover:bg-muted/50">
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className="py-3 px-4">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={columns.length} className="h-20 text-center text-muted-foreground">
+                      Không có kết quả.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 
 }

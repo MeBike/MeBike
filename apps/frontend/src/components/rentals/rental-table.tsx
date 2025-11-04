@@ -1,6 +1,6 @@
 "use client";
 
-import type { Rental } from "@custom-types";
+import type { Rental, RentingHistory } from "@custom-types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,11 +16,11 @@ import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
 interface RentalTableProps {
-  rentals: Rental[];
-  onView?: (rental: Rental) => void;
-  onEdit?: (rental: Rental) => void;
-  onComplete?: (rental: Rental) => void;
-  onCancel?: (rental: Rental) => void;
+  rentals: Rental[] | RentingHistory[];
+  onView?: (rental: Rental | RentingHistory) => void;
+  onEdit?: (rental: Rental | RentingHistory) => void;
+  onComplete?: (rental: Rental | RentingHistory) => void;
+  onCancel?: (rental: Rental | RentingHistory) => void;
 }
 
 const statusConfig = {
@@ -85,43 +85,50 @@ export function RentalTable({
         </TableHeader>
         <TableBody>
           {rentals.map((rental) => {
-            const status = statusConfig[rental.status];
-            const paymentStatus = paymentStatusConfig[rental.payment_status];
+            const isRentingHistory = 'start_time' in rental;
+            const statusMap = {
+              "ĐANG THUÊ": "active",
+              "HOÀN THÀNH": "completed",
+              "ĐÃ HỦY": "cancelled",
+            };
+            const mappedStatus = isRentingHistory ? (statusMap[rental.status as keyof typeof statusMap] || "pending") : rental.status;
+            const status = statusConfig[mappedStatus as keyof typeof statusConfig];
+            const paymentStatus = isRentingHistory ? paymentStatusConfig.paid : paymentStatusConfig[rental.payment_status];
 
             return (
               <TableRow key={rental._id} className="hover:bg-muted/30">
                 <TableCell className="font-medium text-primary">
-                  {rental.rental_code}
+                  {isRentingHistory ? rental._id : rental.rental_code}
                 </TableCell>
                 <TableCell>
                   <div>
                     <p className="font-medium text-foreground">
-                      {rental.customer_name}
+                      {isRentingHistory ? rental.user_id : rental.customer_name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {rental.customer_phone}
+                      {isRentingHistory ? rental.bike_id : rental.customer_phone}
                     </p>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div>
                     <p className="font-medium text-foreground">
-                      {rental.bike_name}
+                      {isRentingHistory ? rental.bike_id : rental.bike_name}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {rental.bike_type}
+                      {isRentingHistory ? rental.start_station : rental.bike_type}
                     </p>
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
                     <p className="text-foreground">
-                      {format(new Date(rental.start_date), "dd/MM/yyyy HH:mm", {
+                      {format(new Date(isRentingHistory ? rental.start_time : rental.start_date), "dd/MM/yyyy HH:mm", {
                         locale: vi,
                       })}
                     </p>
                     <p className="text-muted-foreground">
-                      {format(new Date(rental.end_date), "dd/MM/yyyy HH:mm", {
+                      {format(new Date(isRentingHistory ? (rental.end_time || rental.start_time) : rental.end_date), "dd/MM/yyyy HH:mm", {
                         locale: vi,
                       })}
                     </p>
@@ -129,10 +136,10 @@ export function RentalTable({
                 </TableCell>
                 <TableCell>
                   <p className="font-semibold text-foreground">
-                    {rental.total_amount.toLocaleString()}đ
+                    {isRentingHistory ? rental.total_price.toLocaleString() : rental.total_amount.toLocaleString()}đ
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Cọc: {rental.deposit_amount.toLocaleString()}đ
+                    {isRentingHistory ? `Thời gian: ${rental.duration} phút` : `Cọc: ${rental.deposit_amount.toLocaleString()}đ`}
                   </p>
                 </TableCell>
                 <TableCell>
@@ -152,7 +159,7 @@ export function RentalTable({
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                    {rental.status === "pending" && (
+                    {mappedStatus === "pending" && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -161,7 +168,7 @@ export function RentalTable({
                         <Edit className="w-4 h-4" />
                       </Button>
                     )}
-                    {rental.status === "active" && (
+                    {mappedStatus === "active" && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -170,8 +177,8 @@ export function RentalTable({
                         <CheckCircle className="w-4 h-4 text-green-500" />
                       </Button>
                     )}
-                    {(rental.status === "pending" ||
-                      rental.status === "active") && (
+                    {(mappedStatus === "pending" ||
+                      mappedStatus === "active") && (
                       <Button
                         variant="ghost"
                         size="sm"

@@ -766,7 +766,20 @@ class ReservationsService {
 
     const statusCounts = reservations.reduce(
       (counts, r) => {
-        const statusKey = r.status as string
+        const statusKey = (() => {
+          switch (r.status) {
+            case ReservationStatus.Pending:
+              return 'Pending'
+            case ReservationStatus.Active:
+              return 'Active'
+            case ReservationStatus.Cancelled:
+              return 'Cancelled'
+            case ReservationStatus.Expired:
+              return 'Expired'
+            default:
+              return String(r.status)
+          }
+        })()
         counts[statusKey] = (counts[statusKey] || 0) + 1
         return counts
       },

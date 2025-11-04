@@ -3,7 +3,7 @@ import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 // Navigation Types for React Navigation
-import type { Reservation } from "./ReservationTypes";
+import type { Reservation } from "./reservation-types";
 
 export type RootStackParamList = {
   Booking: undefined;
@@ -30,6 +30,9 @@ export type RootStackParamList = {
     reservationId: string;
     reservation?: Reservation;
   };
+  TransactionDetail: { transactionId: string };
+  WithdrawDetail: { withdrawId: string };
+  RefundDetail: { refundId: string };
   Support: undefined;
   Report: {
     bike_id?: string;

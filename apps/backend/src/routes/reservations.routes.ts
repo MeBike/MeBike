@@ -74,8 +74,8 @@ reserveRouter
 
 reserveRouter
   .route('/:id/cancel')
-  .post(accessTokenValidator, userCancelReservationValidator, wrapAsync(cancelReservationController))
-  
+  .post(accessTokenValidator, userCancelReservationValidator, wrapAsync(cancelReservationController))  
+
 reserveRouter
   .route('/:id')
   .get(accessTokenValidator, getReservationDetailValidator, wrapAsync(getReservationDetailController))

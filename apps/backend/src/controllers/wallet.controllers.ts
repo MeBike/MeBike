@@ -5,6 +5,7 @@ import type {
   DecreaseBalanceWalletReqBody,
   GetAllRefundReqQuery,
   GetTransactionReqQuery,
+  GetWalletReqQuery,
   GetWithdrawReqQuery,
   IncreaseBalanceWalletReqBody,
   UpdateWithdrawStatusReqBody
@@ -72,6 +73,15 @@ export async function getUserWalletController(req: Request<any, any, any>, res: 
   })
 }
 
+export async function getWalletOverviewController(req: Request<any, any, any>, res: Response) {
+  const result = await walletService.getWalletOverview()
+
+  res.json({
+    message: WALLETS_MESSAGE.GET_WALLET_OVERVIEW_SUCCESS,
+    result
+  })
+}
+
 export async function getUserTransactionController(
   req: Request<ParamsDictionary, any, any, GetTransactionReqQuery>,
   res: Response,
@@ -80,6 +90,27 @@ export async function getUserTransactionController(
   const query = req.query
 
   await walletService.getUserTransaction(res, next, query)
+}
+
+export async function getUserWalletHistoryController(
+  req: Request<ParamsDictionary, any, any, GetWalletReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const query = req.query
+
+  await walletService.getUserWalletHistory(res, next, query)
+}
+
+export async function getUserWalletHistoryDetailController(
+  req: Request<ParamsDictionary, any, any, GetTransactionReqQuery>,
+  res: Response,
+  next: NextFunction
+) {
+  const query = req.query
+  const user_id = req.params.user_id
+
+  await walletService.getWalletHistory(res, next, query, user_id)
 }
 
 export async function getUserTransactionWalletController(

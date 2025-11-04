@@ -5,6 +5,7 @@ import type {
   DecreaseBalanceWalletReqBody,
   GetAllRefundReqQuery,
   GetTransactionReqQuery,
+  GetWalletReqQuery,
   GetWithdrawReqQuery,
   IncreaseBalanceWalletReqBody,
   UpdateWithdrawStatusReqBody
@@ -32,6 +33,7 @@ import { NextFunction, Response } from 'express'
 import { CreateRefundReqBody } from '~/models/requests/refunds.request'
 import Refund, { RefundType } from '~/models/schemas/refund.schema'
 import Withdraw, { WithdrawType } from '~/models/schemas/withdraw-request'
+import { normalizeDecimal } from '~/utils/string'
 
 class WalletService {
   async createWallet(user_id: string, session?: ClientSession) {
@@ -148,7 +150,7 @@ class WalletService {
       fee: Decimal128.fromString(payload.fee.toString()),
       description: payload.description || 'Admin decrease balance',
       transaction_hash: payload.transaction_hash || '',
-      type: TransactionTypeEnum.PAYMENT,
+      type: TransactionTypeEnum.DECREASE,
       status: TransactionStaus.Success
     }
 
@@ -177,6 +179,69 @@ class WalletService {
     return result
   }
 
+  async getWalletOverview() {
+    const result = await databaseService.wallets
+      .aggregate([
+        {
+          $group: {
+            _id: null,
+            totalBalance: { $sum: '$balance' }
+          }
+        },
+        {
+          $lookup: {
+            from: 'transactions',
+            pipeline: [
+              {
+                $group: {
+                  _id: null,
+                  totalTransactions: { $sum: 1 },
+                  totalDeposit: {
+                    $sum: {
+                      $cond: [{ $eq: ['$type', TransactionTypeEnum.Deposit] }, '$amount', 0]
+                    }
+                  },
+                  totalDecrease: {
+                    $sum: {
+                      $cond: [{ $eq: ['$type', TransactionTypeEnum.DECREASE] }, '$amount', 0]
+                    }
+                  }
+                }
+              }
+            ],
+            as: 'transactionStats'
+          }
+        },
+        {
+          $unwind: {
+            path: '$transactionStats',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            totalWallets: '$totalWallets',
+            totalBalance: '$totalBalance',
+            totalTransactions: { $ifNull: ['$transactionStats.totalTransactions', 0] },
+            totalDeposit: { $ifNull: ['$transactionStats.totalDeposit', 0] },
+            totalDecrease: { $ifNull: ['$transactionStats.totalDecrease', 0] }
+          }
+        }
+      ])
+      .toArray()
+
+    return (
+      result[0] || {
+        totalWallets: 0,
+        totalBalance: 0,
+        totalTransactions: 0,
+        totalDeposit: 0,
+        totalDecrease: 0
+      }
+    )
+  }
+
   async getUserTransaction(res: Response, next: NextFunction, query: GetTransactionReqQuery) {
     const filter: Filter<Transaction> = {}
     if (query.type) {
@@ -198,6 +263,79 @@ class WalletService {
     }
 
     await sendPaginatedResponse(res, next, databaseService.transactions, query, filter)
+  }
+
+  async getUserWalletHistory(res: Response, next: NextFunction, query: GetWalletReqQuery) {
+    try {
+      const page = Number.parseInt(query.page as string) || 1
+      const limit = Number.parseInt(query.limit as string) || 10
+      const skip = (page - 1) * limit
+
+      const filter: Filter<Wallet> = {}
+      if (query.status) {
+        filter.status = query.status
+      }
+      if (query.user_id) {
+        filter.user_id = new ObjectId(query.user_id)
+      }
+
+      const aggregationPipeline = [
+        { $match: filter },
+        { $sort: { created_at: -1 } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user_info'
+          }
+        },
+        {
+          $unwind: {
+            path: '$user_info',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $addFields: {
+            fullname: { $ifNull: ['$user_info.fullname', 'Unknown User'] }
+          }
+        },
+        {
+          $project: {
+            user_info: 0
+          }
+        },
+        {
+          $facet: {
+            data: [{ $skip: skip }, { $limit: limit }],
+            totalCount: [{ $count: 'count' }]
+          }
+        }
+      ]
+
+      const result = await databaseService.wallets.aggregate(aggregationPipeline).toArray()
+
+      const data = result[0]?.data || []
+      const totalRecords = result[0]?.totalCount[0]?.count || 0
+
+      const normalized = data.map(normalizeDecimal)
+      const totalPages = Math.ceil(totalRecords / limit)
+
+      const response = {
+        data: normalized,
+        pagination: {
+          limit,
+          currentPage: page,
+          totalPages,
+          totalRecords
+        }
+      }
+
+      return res.status(200).json(response)
+    } catch (error) {
+      next(error)
+    }
   }
 
   // lịch sử cộng trừ tiền của ví

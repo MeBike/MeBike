@@ -1,14 +1,12 @@
+/* eslint-disable unicorn/filename-case */
 import { Ionicons } from "@expo/vector-icons";
+import { AuthProvider, useAuth } from "@providers/auth-providers";
+import Providers from "@providers/providers";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-
-import { AuthProvider, useAuth } from "@providers/auth-providers";
-import Providers from "@providers/providers";
-
-import { LoadingScreen } from "./components/LoadingScreen";
 
 import type { RootStackParamList } from "./types/navigation";
 
@@ -19,16 +17,16 @@ import ForgotPasswordScreen from "./screen/ForgotPassword";
 import HomeScreen from "./screen/Home";
 import IntroScreen from "./screen/Intro";
 import LoginScreen from "./screen/Login";
-import MyWalletScreen from "./screen/MyWalletScreen";
+import MyWalletScreen from "./screen/my-wallet-screen";
 import ProfileScreen from "./screen/ProfileScreen";
 import RegisterScreen from "./screen/Register";
-import ReservationDetailScreen from "./screen/ReservationDetailScreen";
-import ReservationScreen from "./screen/ReservationScreen";
+import ReportScreen from "./screen/ReportScreen";
+import ReservationDetailScreen from "./screen/reservation-detail-screen";
+import ReservationScreen from "./screen/reservation-screen";
 import StationDetailScreen from "./screen/StationDetail";
+import SupportScreen from "./screen/SupportScreen";
 import UpdateProfileScreen from "./screen/UpdateProfileScreen";
 import StationSelectScreen from "./styles/StationSelect";
-import SupportScreen from "./screen/SupportScreen";
-import ReportScreen from "./screen/ReportScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();

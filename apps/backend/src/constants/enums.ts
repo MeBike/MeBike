@@ -109,6 +109,7 @@ export enum TransactionStaus {
 export enum TransactionTypeEnum {
   Deposit = 'NẠP TIỀN',
   PAYMENT = 'THANH TOÁN',
+  DECREASE = 'TRỪ TIỀN',
   WithDrawal = 'RÚT TIỀN',
   Refund = 'HOÀN TIỀN',
   RESERVATION = 'ĐẶT TRUỚC'

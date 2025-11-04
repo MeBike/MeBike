@@ -7,7 +7,10 @@ import {
   getUserTransactionController,
   getUserTransactionWalletController,
   getUserWalletController,
-  increateBalanceController
+  getUserWalletHistoryController,
+  getUserWalletHistoryDetailController,
+  getWalletOverviewController,
+  increateBalanceController,
 } from '~/controllers/wallet.controllers'
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
@@ -24,8 +27,24 @@ const walletsRouter = Router()
 
 // lấy thông tin ví cho user
 walletsRouter.get('/', accessTokenValidator, wrapAsync(getUserWalletController))
+// lấy thông tin tổng quan ví cho admin
+walletsRouter.get('/overview', accessTokenValidator, isAdminValidator, wrapAsync(getWalletOverviewController))
 // lấy thông tin giao dịch của user cho admin
-walletsRouter.get('/manage-transactions', accessTokenValidator, isAdminValidator, wrapAsync(getUserTransactionController))
+walletsRouter.get(
+  '/manage-transactions',
+  accessTokenValidator,
+  isAdminValidator,
+  wrapAsync(getUserTransactionController)
+)
+// lấy thông tin lịch sử ví cho admin
+walletsRouter.get('/manage-wallet', accessTokenValidator, isAdminValidator, wrapAsync(getUserWalletHistoryController))
+// lấy thông tin lịch sử ví của user cụ thể cho admin
+walletsRouter.get(
+  '/manage-wallet/:user_id',
+  accessTokenValidator,
+  isAdminValidator,
+  wrapAsync(getUserWalletHistoryDetailController)
+)
 // lấy các thông tin transaction trong ví chưa có lịch sử rental của user (cộng tiền, rút tiền)
 walletsRouter.get('/transaction', accessTokenValidator, wrapAsync(getUserTransactionWalletController))
 walletsRouter.get('/transaction/:id', accessTokenValidator, wrapAsync(getTransactionDetailController))

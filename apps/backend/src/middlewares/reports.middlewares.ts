@@ -162,7 +162,7 @@ export const createReportValidator = validate(
             if ([ReportTypeEnum.SosAccident, ReportTypeEnum.SosHealth, ReportTypeEnum.SosThreat].includes(type)) {
               if (value === undefined || value === null || isNaN(value)) {
                 throw new ErrorWithStatus({
-                  message: REPORTS_MESSAGES.LOCATION_IS_REQUIRED, 
+                  message: REPORTS_MESSAGES.LOCATION_IS_REQUIRED,
                   status: HTTP_STATUS.BAD_REQUEST
                 })
               }
@@ -182,13 +182,26 @@ export const createReportValidator = validate(
             if ([ReportTypeEnum.SosAccident, ReportTypeEnum.SosHealth, ReportTypeEnum.SosThreat].includes(type)) {
               if (value === undefined || value === null || isNaN(value)) {
                 throw new ErrorWithStatus({
-                  message: REPORTS_MESSAGES.LOCATION_IS_REQUIRED, 
+                  message: REPORTS_MESSAGES.LOCATION_IS_REQUIRED,
                   status: HTTP_STATUS.BAD_REQUEST
                 })
               }
             }
             return true
           }
+        }
+      },
+      files: {
+        in: ['body'],
+        optional: true,
+        isArray: {
+          errorMessage: REPORTS_MESSAGES.FILES_MUST_BE_ARRAY
+        }
+      },
+      'files.*': {
+        in: ['body'],
+        isURL: {
+          errorMessage: REPORTS_MESSAGES.FILE_MUST_BE_URL
         }
       }
     },

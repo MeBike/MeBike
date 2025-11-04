@@ -15,4 +15,18 @@ export interface Station {
   created_at: string;
   updated_at: string;
   location_geo: LocationGeo;
+  description?: string;
+  type?: string;
+  stationNumber?: string;
+  bikeStation?: {
+    id: string;
+    stationId: number;
+    totalBikes: number;
+    availableBikes: number;
+    location: {
+      lat: number;
+      lng: number;
+    };
+    distance: number;
+  };
 }

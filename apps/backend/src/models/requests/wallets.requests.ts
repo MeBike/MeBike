@@ -1,6 +1,6 @@
 import type { Decimal128 } from 'mongodb'
 
-import type { RefundStatus, TransactionTypeEnum, WithDrawalStatus } from '~/constants/enums'
+import type { RefundStatus, TransactionTypeEnum, WalletStatus, WithDrawalStatus } from '~/constants/enums'
 
 export type IncreaseBalanceWalletReqBody = {
   user_id: string
@@ -24,6 +24,13 @@ export type GetTransactionReqQuery = {
   limit?: string
   page?: string
   type?: TransactionTypeEnum,
+  user_id?: string
+}
+
+export type GetWalletReqQuery = {
+  limit?: string
+  page?: string
+  status?: WalletStatus,
   user_id?: string
 }
 
