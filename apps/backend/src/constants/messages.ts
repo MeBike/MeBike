@@ -564,7 +564,7 @@ export const SOS_MESSAGE = {
   USER_NOT_FOUND: 'Không tìm thấy người dùng với ID: %s',
   RENTAL_NOT_ACTIVE: 'Chỉ có thể gửi SOS khi đang thuê xe',
   SOS_CREATE_SUCCESS: 'Tạo yêu cầu cứu hộ thành công',
-  SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ với ID: ',
+  SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ với ID: %s',
   AGENT_NOT_FOUND: 'Không tìm thấy người cứu hộ với ID: %s',
   SOS_ALREADY_ACCEPTED: 'Yêu cầu đã được nhận bởi người khác',
   SOS_ACCEPTED_SUCCESS: 'Bạn đã nhận yêu cầu hỗ trợ',
