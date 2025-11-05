@@ -64,8 +64,8 @@ export const reportService = {
       try {
         mediaUrls = await uploadMultipleImagesToFirebase(data.media_urls);
       } catch (error) {
-        console.error('Failed to upload images to Firebase:', error);
-        throw new Error('Failed to upload images');
+        console.error("Failed to upload images to Firebase:", error);
+        throw new Error("Failed to upload images");
       }
     }
 
@@ -82,14 +82,25 @@ export const reportService = {
       longitude: data.longitude,
     };
 
-    console.log('Report payload:', payload);
+    console.log("Report payload:", payload);
     const response = await fetchHttpClient.post(REPORT_ENDPOINTS.BASE, payload);
     return response;
   },
 
-  getUserReports: async (): Promise<AxiosResponse<ApiResponse<Report[]>>> => {
+  getUserReports: async ({
+    page,
+    limit,
+  }: {
+    page?: number;
+    limit?: number;
+  }): Promise<AxiosResponse<ApiResponse<Report[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Report[]>>(
-      REPORT_ENDPOINTS.BASE
+      REPORT_ENDPOINTS.BASE,
+
+      {
+        page,
+        limit,
+      }
     );
     return response;
   },

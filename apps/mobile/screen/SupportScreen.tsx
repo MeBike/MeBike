@@ -21,7 +21,8 @@ import type { SupportScreenNavigationProp } from "../types/navigation";
 function SupportScreen() {
   const navigation = useNavigation<SupportScreenNavigationProp>();
   const insets = useSafeAreaInsets();
-  const { userReports, isLoadingUserReports } = useReportActions();
+  const { userReports, isLoadingUserReports, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useReportActions({ limit: 5 });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -158,6 +159,19 @@ function SupportScreen() {
             keyExtractor={(item) => item._id}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) {
+                fetchNextPage();
+              }
+            }}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <View style={styles.loadingMore}>
+                  <Text style={styles.loadingMoreText}>Đang tải thêm...</Text>
+                </View>
+              ) : null
+            }
           />
         ) : (
           <View style={styles.emptyContainer}>
@@ -307,6 +321,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#999",
     textAlign: "center",
+  },
+  loadingMore: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  loadingMoreText: {
+    fontSize: 14,
+    color: "#666",
   },
 });
 

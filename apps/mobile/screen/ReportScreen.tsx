@@ -26,7 +26,7 @@ import type { ReportScreenNavigationProp } from "../types/navigation";
 
 // TomTom API
 const TOMTOM_API_KEY =
-  process.env.EXPO_PUBLIC_TOMTOM_API_KEY || "N5uyS5ZiQ4Uwxmu0JqgpLXG0exsrmeMP";
+  process.env.EXPO_PUBLIC_TOMTOM_API_KEY;
 
 const fetchTomTomReverseGeocode = async (
   latitude: string,

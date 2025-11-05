@@ -17,7 +17,6 @@ import type { StationDetailScreenNavigationProp } from "../types/navigation";
 import { Ionicons } from "@expo/vector-icons";
 
 import { StationCard } from "../components/StationCard";
-import { MapView } from "../components/MapView";
 import { LoadingScreen } from "@components/LoadingScreen";
 import {
   requestForegroundPermissionsAsync,
@@ -149,13 +148,6 @@ export default function StationSelectScreen() {
           
         </View>
       </LinearGradient>
-      {showMap ? (
-        <MapView
-          currentLocation={currentLocation || undefined}
-          stations={stations}
-          onStationPress={handleStationPress}
-        />
-      ) : (
         <FlatList
           data={stations}
           keyExtractor={(item) => item._id}
@@ -184,7 +176,6 @@ export default function StationSelectScreen() {
           }}
           contentContainerStyle={styles.list}
         />
-      )}
     </View>
   );
 }
