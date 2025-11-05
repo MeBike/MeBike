@@ -8,9 +8,11 @@ import { Button } from "@components/ui/button";
 import { Input } from "@components/ui/input";
 import { Textarea } from "@components/ui/textarea";
 import { Label } from "@components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@components/ui/select";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { sendContactEmail } from "./actions";
 export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: "",
@@ -19,10 +21,29 @@ export default function ContactPage() {
     subject: "",
     message: "",
   });
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[v0] Contact form submitted:", formData);
-    toast.success("Tin nhắn của bạn đã được gửi thành công!");
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("phone", formData.phone);
+      formDataToSend.append("subject", formData.subject);
+      formDataToSend.append("message", formData.message);
+
+      await sendContactEmail(formDataToSend);
+      toast.success("Tin nhắn của bạn đã được gửi thành công!");
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast.error("Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại!");
+    }
   };
   return (
     <div className="min-h-screen bg-background">
@@ -92,18 +113,32 @@ export default function ContactPage() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="subject">Chủ đề *</Label>
-                        <Input
-                          id="subject"
-                          placeholder="Vấn đề cần hỗ trợ"
+                        <Select
                           value={formData.subject}
-                          onChange={(e) =>
+                          onValueChange={(value) =>
                             setFormData({
                               ...formData,
-                              subject: e.target.value,
+                              subject: value,
                             })
                           }
                           required
-                        />
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Chọn chủ đề cần hỗ trợ" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Vấn đề thuê trả xe đạp">Vấn đề thuê trả xe đạp</SelectItem>
+                            <SelectItem value="Vấn đề nạp tiền vào ví">Vấn đề nạp tiền vào ví</SelectItem>
+                            <SelectItem value="Vấn đề đặt chỗ trước">Vấn đề đặt chỗ trước</SelectItem>
+                            <SelectItem value="Vấn đề bảo trì xe đạp">Vấn đề bảo trì xe đạp</SelectItem>
+                            <SelectItem value="Vấn đề hoàn tiền">Vấn đề hoàn tiền</SelectItem>
+                            <SelectItem value="Vấn đề rút tiền">Vấn đề rút tiền</SelectItem>
+                            <SelectItem value="Vấn đề tài khoản">Vấn đề tài khoản</SelectItem>
+                            <SelectItem value="Vấn đề kỹ thuật ứng dụng">Vấn đề kỹ thuật ứng dụng</SelectItem>
+                            <SelectItem value="Vấn đề thanh toán">Vấn đề thanh toán</SelectItem>
+                            <SelectItem value="Khác">Khác</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -124,7 +159,7 @@ export default function ContactPage() {
                     <Button
                       type="submit"
                       size="lg"
-                      className="w-full md:w-auto"
+                      className="w-full md:w-auto cursor-pointer"
                     >
                       Gửi tin nhắn
                     </Button>
@@ -143,10 +178,7 @@ export default function ContactPage() {
                         Email
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        support@metrobike.vn
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        info@metrobike.vn
+                        nguyennvse173423@fpt.edu.vn
                       </p>
                     </div>
                   </div>
@@ -162,7 +194,7 @@ export default function ContactPage() {
                         Điện thoại
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Hotline: 1900 1234
+                        Hotline: 0392588354
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Hỗ trợ: 028 1234 5678
@@ -181,7 +213,7 @@ export default function ContactPage() {
                         Văn phòng
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        123 Đường Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí
+                        138 Đường 400, Phường Tăng Nhơn Phú, TP. Hồ Chí
                         Minh
                       </p>
                     </div>
@@ -198,13 +230,10 @@ export default function ContactPage() {
                         Giờ làm việc
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        Thứ 2 - Thứ 6: 8:00 - 18:00
+                        Cả tuần
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Thứ 7: 8:00 - 12:00
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Chủ nhật: Nghỉ
+                        05:00 - 23:00
                       </p>
                     </div>
                   </div>

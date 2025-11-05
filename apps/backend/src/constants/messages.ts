@@ -66,6 +66,10 @@ export const USERS_MESSAGES = {
   ACCESS_DENIED_ADMIN_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên',
   // check staff role messages
   ACCESS_DENIED_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho nhân viên',
+  // check sos role messages
+  ACCESS_DENIED_SOS_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho nhân viên cứu hộ',
+  // check staff and sos role messages
+  ACCESS_DENIED_STAFF_AND_SOS_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho nhân viên trạm và nhân viên cứu hộ',
   // check admin and staff role messages
   ACCESS_DENIED_ADMIN_AND_STAFF_ONLY: 'Quyền truy cập bị từ chối. Chỉ dành cho quản trị viên và nhân viên',
   EMAIL_OTP_IS_INCORRECT_OR_EXPIRED: 'Mã OTP xác thực email không chính xác hoặc đã hết hạn',
@@ -243,6 +247,7 @@ export const RENTALS_MESSAGE = {
   CANCEL_RENTAL_SUCCESS: 'Huỷ phiên thuê thành công',
   TRACKING_RENTAL_IN_STATION_SUCCESS: 'Xem danh sách các phiên thuê tại trạm thành công',
   GET_DASHBOARD_SUMMARY_SUCCESS: 'Lấy dữ liệu thống kê cho các phiên thuê hôm nay thành công',
+  GET_SUMMARY_SUCCESS: 'Lấy dữ liệu thống kê tổng quan các phiên thuê thành công',
   // Fail action
   CREATE_SESSION_FAILED: 'Tạo phiên thuê xe không thành công',
   RENTAL_UPDATE_FAILED: 'Cập nhật phiên thuê không thành công',
@@ -288,6 +293,7 @@ export const RENTALS_MESSAGE = {
   CANNOT_CANCEL_WITH_BIKE_STATUS: 'Bạn không thể huỷ phiên thuê với xe đang ở trạng thái %s (Booked, Reserved only)',
   CANNOT_EDIT_BIKE_STATUS_TO:
     'Bạn không thể cập nhật trạng thái xe thành %s khi huỷ phiên thuê (Available, Broken only)',
+  NOT_ENOUGH_BALANCE_TO_RENT: 'Tài khoản của bạn không đủ để bắt đầu phiên thuê (tối thiếu: %s)',
   // Not allowed body fields
   NOT_ALLOWED_CREATED_FIELD: '%s không nằm trong các trường được cho phép để tạo',
   NOT_ALLOWED_UPDATED_FIELD: '%s không nằm trong các trường được cho phép để cập nhật',
@@ -360,6 +366,13 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_SOURCE_STATION_ID: 'Id trạm nguồn không hợp lệ.',
   INVALID_DESTINATION_STATION_ID: 'Id trạm đích không hợp lệ',
   INVALID_BIKE_LIST: 'Danh sách Id xe không hợp lệ (phải là 1 mảng chuỗi không rỗng)',
+  INVALID_INPUT: 'Dữ liệu đầu vào không hợp lệ',
+  INVALID_START_DATE_FORMAT: 'Ngày bắt đầu phải có định dạng YYYY-MM-DD',
+  INVALID_END_DATE_FORMAT: 'Ngày kết thúc phải có định dạng YYYY-MM-DD',
+  INVALID_START_DATE: 'Ngày bắt đầu không hợp lệ: %s',
+  INVALID_END_DATE: 'Ngày kết thúc không hợp lệ: %s',
+  START_DATE_AFTER_END_DATE: 'Ngày bắt đầu không được phép lớn hơn ngày kết thúc',
+  INVALID_GROUP_BY: 'groupBy phải là một trong: %s',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
@@ -394,7 +407,7 @@ export const RESERVATIONS_MESSAGE = {
   DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',
   BIKE_NOT_AT_SOURCE_STATION: 'Xe (Id: %s) không nằm ở trạm nguồn đã khai báo',
   // Report
-  GET_REPORT_SUCCESS: 'Lấy báo cáo đặt trước thành công',
+  GET_REPORT_SUCCESS: 'Lấy báo cáo đặt trước theo %s thành công',
   REPORT_PERIOD_DEFAULT: '12 tháng gần nhất',
   REPORT_PERIOD_FULL_RANGE: 'Từ %s đến %s',
   REPORT_PERIOD_START_ONLY: 'Từ ngày %s',
@@ -410,6 +423,7 @@ export const RESERVATIONS_MESSAGE = {
         `Scheduling expiration task for reservation ${reservationId} in ${delayMinutes} minutes.`,
   // Email Messages
   EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn',
+  EMAIL_SUBJECT_SUCCESS_RESERVING: 'Xác nhận đặt trước thành công',
   // Status
   RESERVATION_NOT_PENDING: 'Phiên đặt trước phải ở trạng thái "ĐANG CHỜ XỬ LÍ"'
 } as const
@@ -537,4 +551,51 @@ export const RATING_MESSAGE = {
   RENTAL_ID_INVALID: 'ID phiên thuê không hợp lệ',
   CANNOT_RATE_UNCOMPLETED_RENTAL: 'Chỉ có thể đánh giá các phiên thuê đã hoàn thành',
   RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này'
+}
+
+export const SOS_MESSAGE = {
+  REQUIRED_RENTAL_ID: 'Vui lòng nhập ID phiên thuê',
+  REQUIRED_BIKE_ID: 'Vui lòng nhập ID xe đạp',
+  REQUIRED_ISSUE: 'Vui lòng mô tả vấn đề',
+  REQUIRED_LOCATION: 'Vui lòng cung cấp vị trí',
+  REQUIRED_ID: 'Vui lòng nhập ID yêu cầu cứu hộ',
+  REQUIRED_AGENT_ID: 'Vui lòng nhập ID người cứu hộ',
+  REQUIRED_AGENT_NOTES: 'Vui lòng nhập ghi chú',
+  INVALID_LOCATION_FORMAT: 'Vị trí phải có dạng { lat, lng }',
+  RENTAL_NOT_FOUND: 'Không tìm thấy phiên thuê với ID: %s',
+  BIKE_NOT_FOUND: 'Không tìm thấy xe với ID: %s',
+  USER_NOT_FOUND: 'Không tìm thấy người dùng với ID: %s',
+  RENTAL_NOT_ACTIVE: 'Chỉ có thể gửi SOS khi đang thuê xe',
+  SOS_CREATE_SUCCESS: 'Tạo yêu cầu cứu hộ thành công',
+  SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ với ID: %s',
+  AGENT_NOT_FOUND: 'Không tìm thấy người cứu hộ với ID: %s',
+  SOS_ALREADY_ACCEPTED: 'Yêu cầu đã được nhận bởi người khác',
+  SOS_ACCEPTED_SUCCESS: 'Bạn đã nhận yêu cầu hỗ trợ',
+  SOS_STATUS_UPDATED: 'Cập nhật trạng thái thành công',
+  INVALID_STATUS_TRANSITION: 'Không thể chuyển sang trạng thái này',
+  INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
+  INVALID_ISSUE_LENGTH: 'Mô tả vấn đề từ 5-500 ký tự',
+  INVALID_LATITUDE: 'Latitude phải từ -90 đến 90',
+  INVALID_LONGITUDE: 'Longitude phải từ -180 đến 180',
+  INVALID_NOTE: 'Ghi chú phải là kiểu chuỗi',
+  INVALID_NOTE_LENGTH: 'Độ dài của ghi chú không được vượt quá 500 kí tự',
+  INVALID_SOLVABLE: 'Khả năng xử lí sự cố phải là đúng hoặc sai',
+  INVALID_PHOTO: 'Mỗi ảnh phải là kiểu chuỗi hợp lệ',
+  INVALID_PHOTO_FORMAT: 'Mỗi ảnh phải là Base64 hoặc URL hợp lệ (jpg, png, webp)',
+  INVALID_PHOTOS_ARRAY: 'Danh sách ảnh phải là 1 mảng từ 1-5 ảnh',
+  INVALID_STATUS: 'Trạng thái không hợp lệ',
+  SOS_DISPATCHED_SUCCESS: 'Đã phân đội xử lí cho yêu cầu cứu hộ',
+  SOS_RESOLVED: 'Sự cố đã được xử lí, phiên thuê có thể tiếp tục',
+  SOS_UNSOLVABLE: 'Sự cố không thể xử lí tại chỗ, phiên thuê không thể tiếp tục',
+  SOS_REJECTED: 'Đã từ chối yêu cầu, tình trạng không nằm trong phạm vi xử lí hoặc không đúng với báo cáo',
+  CANNOT_CONFIRM_SOS: 'Không thể xác nhận yêu cầu cứu hộ với trạng thái: %s (trạng thái cần: PENDING)',
+  GET_REQUEST_BY_ID_SUCCESS: 'Xem chi tiết yêu cầu hỗ trợ thành công',
+  CANNOT_VIEW_OTHER_DISPATCHED_REQUEST: 'Không thể xem yêu cầu được phân công bởi người khác',
+  YOUR_RENTAL_NOT_FOUND: 'Không tìm thấy phiên thuê nào của bạn với ID: %s'
+};
+
+export const DASHBOARD_MESSAGES = {
+  GET_DASHBOARD_STATS_SUCCESS: 'Lấy thống kê dashboard thành công',
+  GET_DASHBOARD_STATS_ERROR: 'Lỗi khi lấy thống kê dashboard',
+  STATIONS_FETCH_SUCCESS: 'Lấy danh sách trạm thành công',
 }

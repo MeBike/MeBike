@@ -49,11 +49,11 @@ export function QRModal({ visible, onClose, userId }: QRModalProps) {
             VUI LÒNG COPY ID VÀO TIN NHẮN CHUYỂN KHOẢN
           </Text>
           <Text selectable style={styles.userId}>
-            {`user_id: ${userId}`}
+            {`Mã giao dịch: ${userId}`}
           </Text>
 
           <TouchableOpacity style={styles.shareButton} onPress={handleShareUserId}>
-            <Text style={styles.shareText}>Copy user_id</Text>
+            <Text style={styles.shareText}>Copy mã</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>

@@ -14,7 +14,8 @@ export enum TokenType {
 export enum Role {
   User = 'USER',
   Staff = 'STAFF',
-  Admin = 'ADMIN'
+  Admin = 'ADMIN',
+  Sos = 'SOS'
 }
 
 export enum ReportStatus {
@@ -46,9 +47,9 @@ export enum RentalStatus {
 }
 
 export enum GroupByOptions {
-  Day = 'DAY',
-  Month = 'MONTH',
-  Year = 'YEAR'
+  Date = 'NGÀY',
+  Month = 'THÁNG',
+  Year = 'NĂM'
 }
 
 export enum ReservationStatus {
@@ -149,4 +150,16 @@ export enum TrendValue {
   Up = 'Tăng',
   Down = 'Giảm',
   NoChange = 'Không đổi'
+}
+
+export enum SosAlertStatus {
+  PENDING   = 'ĐANG CHỜ XỬ LÍ', 
+  RESOLVED = 'ĐÃ XỬ LÍ',
+  UNSOLVABLE = 'KHÔNG XỬ LÍ ĐƯỢC',
+  REJECTED = 'ĐÃ TỪ CHỐI',
+}
+
+export enum SummaryPeriodType {
+  TODAY = 'HÔM NAY',
+  THIS_MONTH = 'THÁNG NÀY',
 }

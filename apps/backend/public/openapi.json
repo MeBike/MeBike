@@ -67,6 +67,10 @@
     {
       "name": "Ratings",
       "description": "Operations for managing ratings and feedback."
+    },
+    {
+      "name": "Dashboard",
+      "description": "Public statistics for the dashboard/landing page."
     }
   ],
   "paths": {
@@ -5035,6 +5039,95 @@
           }
         }
       }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get public dashboard statistics",
+        "description": "Retrieves general statistics for the landing page. This is a public endpoint and does not require authentication.\n- **totalStations**: Total count of all stations.\n- **totalBikes**: Count of all bikes *except* those marked 'KHÔNG CÓ SẴN'.\n- **totalUsers**: Count of all users *except* those marked 'BANNED'.\n",
+        "responses": {
+          "200": {
+            "description": "Dashboard statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê dashboard thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/DashboardStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error while fetching stats.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lỗi khi lấy thống kê dashboard"
+                    },
+                    "result": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/stations": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get all stations with available bike counts",
+        "description": "Retrieves a list of all stations along with the count of *available* bikes at each one.\nThis is a public endpoint and does not require authentication.\n",
+        "responses": {
+          "200": {
+            "description": "List of stations and their available bike counts retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetDashboardStationsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error while fetching stations.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Error fetching stations"
+                    },
+                    "result": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6145,6 +6238,21 @@
               "pagination": {
                 "$ref": "#/components/schemas/PaginatedResponse/properties/pagination"
               }
+            }
+          }
+        }
+      },
+      "GetDashboardStationsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Lấy danh sách trạm thành công"
+          },
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardStation"
             }
           }
         }
@@ -7292,6 +7400,48 @@
             "format": "float",
             "description": "Tỷ lệ phần trăm xe đang được thuê so với tổng số xe đang hoạt động.",
             "example": 16.89
+          }
+        }
+      },
+      "DashboardStats": {
+        "type": "object",
+        "description": "Thống kê tổng quan cho trang chủ (landing page).",
+        "properties": {
+          "totalStations": {
+            "type": "integer",
+            "description": "Tổng số trạm xe đạp.",
+            "example": 50
+          },
+          "totalBikes": {
+            "type": "integer",
+            "description": "Tổng số xe đạp đang hoạt động (không bao gồm xe có trạng thái 'KHÔNG CÓ SẴN').",
+            "example": 148
+          },
+          "totalUsers": {
+            "type": "integer",
+            "description": "Tổng số người dùng đang hoạt động (không bao gồm người dùng 'BANNED').",
+            "example": 250
+          }
+        }
+      },
+      "DashboardStation": {
+        "type": "object",
+        "description": "Thông tin cơ bản của trạm và số lượng xe đạp có sẵn cho dashboard.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Tên của trạm.",
+            "example": "Trạm Vincom Mega Mall"
+          },
+          "address": {
+            "type": "string",
+            "description": "Địa chỉ của trạm.",
+            "example": "161 Xa lộ Hà Nội, Thảo Điền"
+          },
+          "availableBikes": {
+            "type": "integer",
+            "description": "Số lượng xe đạp hiện có sẵn tại trạm.",
+            "example": 8
           }
         }
       }

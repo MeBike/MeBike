@@ -2,62 +2,97 @@ import { checkSchema } from 'express-validator'
 
 import { BikeStatus, RentalStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
-import { RENTALS_MESSAGE } from '~/constants/messages'
+import { RENTALS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import databaseService from '~/services/database.services'
 import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { toObjectId } from '~/utils/string'
+import { NextFunction, Request, Response } from 'express'
+import { TokenPayLoad } from '~/models/requests/users.requests'
+import { Decimal128 } from 'mongodb'
 
-export const createRentalSessionValidator = validate(
-  checkSchema(
-    {
-      bike_id: {
-        notEmpty: {
-          errorMessage: RENTALS_MESSAGE.REQUIRED_BIKE_ID,
-          bail: true
-        },
-        isMongoId: {
-          errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'bike_id'),
-          bail: true
-        },
-        custom: {
-          options: async (value, { req }) => {
-            const bikeId = toObjectId(value)
-            const bike = await databaseService.bikes.findOne({ _id: bikeId })
-            if (!bike) {
-              throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', value),
-                status: HTTP_STATUS.NOT_FOUND
-              })
-            }
-            isAvailability(bike.status as BikeStatus)
-
-            const stationId = bike.station_id
-            if (!stationId) {
-              throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.UNAVAILABLE_BIKE,
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
-            const station = await databaseService.stations.findOne({ _id: stationId })
-            if (!station) {
-              throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', stationId.toString()),
-                status: HTTP_STATUS.NOT_FOUND
-              })
-            }
-
-            req.station = station
-            req.bike = bike
-            return true
+const createRentalValidator = (includeUserIdField = false) => {
+  const baseSchema: any = {
+    bike_id: {
+      in: ['body'],
+      notEmpty: {
+        errorMessage: RENTALS_MESSAGE.REQUIRED_BIKE_ID,
+        bail: true
+      },
+      isMongoId: {
+        errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'bike_id'),
+        bail: true
+      },
+      custom: {
+        options: async (value: string, { req }:{req: Request}) => {
+          const bikeId = toObjectId(value)
+          const bike = await databaseService.bikes.findOne({ _id: bikeId })
+          if (!bike) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
           }
+          isAvailability(bike.status as BikeStatus)
+
+          const stationId = bike.station_id
+          if (!stationId) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.UNAVAILABLE_BIKE,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+          const station = await databaseService.stations.findOne({ _id: stationId })
+          if (!station) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', stationId.toString()),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          req.station = station
+          req.bike = bike
+          return true
         }
       }
-    },
-    ['body']
-  )
-)
+    }
+  }
+
+  if(includeUserIdField){
+    baseSchema.user_id = {
+      in: ['body'],
+      notEmpty: {
+        errorMessage: RENTALS_MESSAGE.REQUIRED_USER_ID,
+        bail: true
+      },
+      isMongoId: {
+        errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'user_id'),
+        bail: true
+      },
+      custom: {
+        options: async(value: string, {req}:{req: Request}) => {
+          const user = await databaseService.users.findOne({_id: toObjectId(value)})
+          if(!user){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.USER_NOT_FOUND.replace("%s", value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          req.user = user
+          return true
+        }
+      }
+    }
+  }
+
+  return validate(checkSchema(baseSchema, ['body']))
+}
+
+export const createRentalSessionValidator = createRentalValidator(false)
+
+export const createRentalSessionByStaffValidator = createRentalValidator(true)
 
 export const endRentalSessionValidator = validate(
   checkSchema({
@@ -376,3 +411,28 @@ export const cancelRentalValidator = validate(
     ['body', 'params']
   )
 )
+
+export const checkUserWalletBeforeRentOrReserve = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayLoad
+    const minWalletBalanceToRent = Decimal128.fromString(process.env.MIN_WALLET_BALANCE_TO_RENT || '2000')
+    const findWallet = await databaseService.wallets.findOne({ user_id: toObjectId(user_id) })
+    if (!findWallet) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (findWallet.balance < minWalletBalanceToRent) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.NOT_ENOUGH_BALANCE_TO_RENT.replace('%s', minWalletBalanceToRent.toString()),
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    next()
+  } catch (error) {
+    next(error)
+  }
+}

@@ -3005,3 +3005,68 @@
                         $ref: '../components/schemas/Rating.yaml'
       '404':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+# ===================================================================
+# Dashboard API
+# ===================================================================
+/dashboard/stats:
+  get:
+    tags: [Dashboard]
+    summary: Get public dashboard statistics
+    description: |
+      Retrieves general statistics for the landing page. This is a public endpoint and does not require authentication.
+      - **totalStations**: Total count of all stations.
+      - **totalBikes**: Count of all bikes *except* those marked 'KHÔNG CÓ SẴN'.
+      - **totalUsers**: Count of all users *except* those marked 'BANNED'.
+    responses:
+      '200':
+        description: "Dashboard statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê dashboard thành công"
+                result:
+                  $ref: '../components/schemas/DashboardStats.yaml'
+      '500':
+        description: "Internal server error while fetching stats."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lỗi khi lấy thống kê dashboard"
+                result:
+                  type: 'null'
+
+/dashboard/stations:
+  get:
+    tags: [Dashboard]
+    summary: Get all stations with available bike counts
+    description: |
+      Retrieves a list of all stations along with the count of *available* bikes at each one.
+      This is a public endpoint and does not require authentication.
+    responses:
+      '200':
+        description: "List of stations and their available bike counts retrieved successfully."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetDashboardStationsResponse.yaml'
+      '500':
+        description: "Internal server error while fetching stations."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Error fetching stations"
+                result:
+                  type: 'null'
