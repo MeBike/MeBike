@@ -39,6 +39,8 @@ tags:
     description: Operations for managing bike stations.
   - name: Ratings
     description: Operations for managing ratings and feedback.
+  - name: Dashboard
+    description: Public statistics for the dashboard/landing page.
   
 paths:
   $ref: './paths/all-paths.yaml'
@@ -156,6 +158,8 @@ components:
       $ref: './components/schemas/GetTopRentersStatsResponse.yaml'
     GetBikeRentalHistoryResponse:
       $ref: './components/schemas/GetBikeRentalHistoryResponse.yaml'
+    GetDashboardStationsResponse:
+      $ref: './components/schemas/GetDashboardStationsResponse.yaml'
 
     # --- Model Schemas ---
     User:
@@ -226,6 +230,10 @@ components:
       $ref: './components/schemas/StationStats.yaml'
     BikeRentalOverviewStats:
       $ref: './components/schemas/BikeRentalOverviewStats.yaml'
+    DashboardStats:
+      $ref: './components/schemas/DashboardStats.yaml'
+    DashboardStation:
+      $ref: './components/schemas/DashboardStation.yaml'
 
   securitySchemes:
     BearerAuth:

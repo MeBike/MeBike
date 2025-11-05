@@ -10,8 +10,7 @@ export function CTA() {
             Sẵn sàng khám phá Sài Gòn?
           </h2>
           <p className="text-xl text-primary-foreground/90 text-pretty leading-relaxed">
-            Tải ứng dụng MetroBike ngay hôm nay và nhận 3 chuyến đi miễn phí đầu
-            tiên. Trải nghiệm cách di chuyển thông minh nhất ở TP.HCM.
+            Tải ứng dụng MetroBike ngay hôm nay. Trải nghiệm cách di chuyển thông minh nhất ở TP.HCM.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button

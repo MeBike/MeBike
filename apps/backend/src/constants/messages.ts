@@ -592,3 +592,9 @@ export const SOS_MESSAGE = {
   CANNOT_VIEW_OTHER_DISPATCHED_REQUEST: 'Không thể xem yêu cầu được phân công bởi người khác',
   YOUR_RENTAL_NOT_FOUND: 'Không tìm thấy phiên thuê nào của bạn với ID: %s'
 };
+
+export const DASHBOARD_MESSAGES = {
+  GET_DASHBOARD_STATS_SUCCESS: 'Lấy thống kê dashboard thành công',
+  GET_DASHBOARD_STATS_ERROR: 'Lỗi khi lấy thống kê dashboard',
+  STATIONS_FETCH_SUCCESS: 'Lấy danh sách trạm thành công',
+}

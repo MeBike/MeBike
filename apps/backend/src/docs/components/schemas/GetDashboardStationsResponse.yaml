@@ -1,0 +1,9 @@
+type: object
+properties:
+  message:
+    type: string
+    example: "Lấy danh sách trạm thành công"
+  result:
+    type: array
+    items:
+      $ref: './DashboardStation.yaml'

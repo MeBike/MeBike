@@ -1,0 +1,15 @@
+type: object
+description: "Thông tin cơ bản của trạm và số lượng xe đạp có sẵn cho dashboard."
+properties:
+  name:
+    type: string
+    description: "Tên của trạm."
+    example: "Trạm Vincom Mega Mall"
+  address:
+    type: string
+    description: "Địa chỉ của trạm."
+    example: "161 Xa lộ Hà Nội, Thảo Điền"
+  availableBikes:
+    type: integer
+    description: "Số lượng xe đạp hiện có sẵn tại trạm."
+    example: 8
