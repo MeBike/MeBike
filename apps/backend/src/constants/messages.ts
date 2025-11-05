@@ -465,7 +465,9 @@ export const WALLETS_MESSAGE = {
   ACCOUNT_OWNER_IS_REQUIRED: 'Chủ tài khoản là bắt buộc',
   REFUND_ALREADY_REQUESTED: 'Yêu cầu hoàn tiền cho giao dịch %s đã được tạo',
   WITHDRAW_NOT_FOUND: 'Không tìm thấy yêu cầu rút tiền',
-  GET_WALLET_OVERVIEW_SUCCESS: 'Lấy tổng quan ví thành công'
+  GET_WALLET_OVERVIEW_SUCCESS: 'Lấy tổng quan ví thành công',
+  GET_REFUND_OVERVIEW_SUCCESS: 'Lấy tổng quan yêu cầu hoàn tiền thành công',
+  GET_WITHDRAW_OVERVIEW_SUCCESS: 'Lấy tổng quan yêu cầu rút tiền thành công'
 }
 
 export const WITHDRAWLS_MESSAGE = {

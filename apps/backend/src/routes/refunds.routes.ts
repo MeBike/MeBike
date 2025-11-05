@@ -3,6 +3,7 @@ import {
   getAllRefundController,
   getAllUserRefundController,
   getRefundDetailController,
+  getRefundOverviewController,
   refundController,
   updateRefundController
 } from '~/controllers/wallet.controllers'
@@ -25,6 +26,7 @@ refundsRouter.post(
 )
 
 refundsRouter.get('/manage-refunds', accessTokenValidator, isAdminValidator, wrapAsync(getAllRefundController))
+refundsRouter.get('/overview', accessTokenValidator, isAdminValidator, wrapAsync(getRefundOverviewController))
 refundsRouter.get('/', accessTokenValidator, wrapAsync(getAllUserRefundController))
 refundsRouter.get('/:id', accessTokenValidator, wrapAsync(getRefundDetailController))
 refundsRouter.put(

@@ -242,6 +242,138 @@ class WalletService {
     )
   }
 
+  async getRefundOverview() {
+    const result = await databaseService.refunds
+      .aggregate([
+        {
+          $facet: {
+            totalCompleteAmount: [
+              { $match: { status: RefundStatus.Completed } },
+              { $group: { _id: null, total: { $sum: '$amount' } } }
+            ],
+            totalRefunds: [{ $count: 'total' }],
+            totalCompleteRefund: [
+              { $match: { status: RefundStatus.Completed } },
+              { $count: 'total' } 
+            ],
+            totalApproveRefund: [
+              { $match: { status: RefundStatus.Approved } },
+              { $count: 'total' } 
+            ],
+            totalRejectRefund: [
+              { $match: { status: RefundStatus.Rejected } },
+              { $count: 'total' } 
+            ],
+            totalPendingRefund: [
+              { $match: { status: RefundStatus.Pending } },
+              { $count: 'total' } 
+            ]
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            totalCompletedRefundAmount: {
+              $ifNull: [{ $arrayElemAt: ['$totalCompleteAmount.total', 0] }, Decimal128.fromString('0')]
+            },
+            totalRefunds: {
+              $ifNull: [{ $arrayElemAt: ['$totalRefunds.total', 0] }, 0]
+            },
+            totalCompleteRefund: {
+              $ifNull: [{ $arrayElemAt: ['$totalCompleteRefund.total', 0] }, 0]
+            },
+            totalApproveRefund: {
+              $ifNull: [{ $arrayElemAt: ['$totalApproveRefund.total', 0] }, 0]
+            },
+            totalRejectRefund: {
+              $ifNull: [{ $arrayElemAt: ['$totalRejectRefund.total', 0] }, 0]
+            },
+            totalPendingRefund: {
+              $ifNull: [{ $arrayElemAt: ['$totalPendingRefund.total', 0] }, 0]
+            }
+          }
+        }
+      ])
+      .toArray()
+
+    return (
+      result[0] || {
+        totalCompletedRefundAmount: Decimal128.fromString('0'),
+        totalRefunds: 0,
+        totalCompleteRefund: 0,
+        totalApproveRefund: 0,
+        totalRejectRefund: 0,
+        totalPendingRefund: 0
+      }
+    )
+  }
+
+  async getWithdrawOverview() {
+    const result = await databaseService.withdraws
+      .aggregate([
+        {
+          $facet: {
+            totalCompletedWithdrawAmount: [
+              { $match: { status: WithDrawalStatus.Completed } },
+              { $group: { _id: null, total: { $sum: '$amount' } } }
+            ],
+            totalWithdraw: [{ $count: 'total' }],
+            totalCompleteWithdraw: [
+              { $match: { status: WithDrawalStatus.Completed } },
+              { $count: 'total' } 
+            ],
+            totalApproveWithdraw: [
+              { $match: { status: WithDrawalStatus.Approved } },
+              { $count: 'total' } 
+            ],
+            totalRejectWithdraw: [
+              { $match: { status: WithDrawalStatus.Rejected } },
+              { $count: 'total' } 
+            ],
+            totalPendingWithdraw: [
+              { $match: { status: WithDrawalStatus.Pending } },
+              { $count: 'total' } 
+            ]
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            totalCompletedWithdrawAmount: {
+              $ifNull: [{ $arrayElemAt: ['$totalCompletedWithdrawAmount.total', 0] }, Decimal128.fromString('0')]
+            },
+            totalWithdraw: {
+              $ifNull: [{ $arrayElemAt: ['$totalWithdraw.total', 0] }, 0]
+            },
+            totalCompleteWithdraw: {
+              $ifNull: [{ $arrayElemAt: ['$totalCompleteWithdraw.total', 0] }, 0]
+            },
+            totalApproveWithdraw: {
+              $ifNull: [{ $arrayElemAt: ['$totalApproveWithdraw.total', 0] }, 0]
+            },
+            totalRejectWithdraw: {
+              $ifNull: [{ $arrayElemAt: ['$totalRejectWithdraw.total', 0] }, 0]
+            },
+            totalPendingWithdraw: {
+              $ifNull: [{ $arrayElemAt: ['$totalPendingWithdraw.total', 0] }, 0]
+            }
+          }
+        }
+      ])
+      .toArray()
+
+    return (
+      result[0] || {
+        totalCompletedWithdrawAmount: Decimal128.fromString('0'),
+        totalWithdraw: 0,
+        totalCompleteWithdraw: 0,
+        totalApproveWithdraw: 0,
+        totalRejectWithdraw: 0,
+        totalPendingWithdraw: 0
+      }
+    )
+  }
+
   async getUserTransaction(res: Response, next: NextFunction, query: GetTransactionReqQuery) {
     const filter: Filter<Transaction> = {}
     if (query.type) {
