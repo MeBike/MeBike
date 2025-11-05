@@ -242,7 +242,7 @@ class RentalsService {
         { _id: rental.bike_id },
         {
           $set: {
-            status: endBikeStatus,
+            status: BikeStatus.Available,
             updated_at: now
           }
         },

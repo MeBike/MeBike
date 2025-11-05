@@ -151,7 +151,8 @@ export const REPORTS_MESSAGES = {
   PRIORITY_IS_REQUIRED: 'Độ ưu tiên của report là bắt buộc',
   INVALID_PRIORITY: 'Độ ưu tiên không hợp lệ!',
   FILES_MUST_BE_ARRAY: 'Files phải là một mảng các chuỗi URL.',
-  FILE_MUST_BE_URL: 'Mỗi file phải là một URL hợp lệ.'
+  FILE_MUST_BE_URL: 'Mỗi file phải là một URL hợp lệ.',
+  GET_REPORT_OVERVIEW_SUCCESS: 'Lấy tổng quan báo cáo thành công'
 }
 
 export const SUPPLIER_MESSAGE = {

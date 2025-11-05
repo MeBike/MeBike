@@ -13,10 +13,6 @@ import React from "react";
 
 // Add your SFSymbol to MaterialIcons mappings here.
 const MAPPING = {
-  // See MaterialIcons here: https://icons.expo.fyi
-  // See SF Symbols in the SF Symbols app on Mac.
-
-  // Navigation & Home
   "house.fill": "home",
   "house": "home-outlined",
   "arrow.left": "arrow-back",
@@ -111,6 +107,8 @@ const MAPPING = {
   "battery.25": "battery-2-bar",
   "lock.fill": "lock",
   "lock.open.fill": "lock-open",
+  "bicycle.circle.fill": "directions-bike",
+  "bicycle.circle": "directions-bike",
 
   // Shopping & Commerce
   "cart.fill": "shopping-cart",

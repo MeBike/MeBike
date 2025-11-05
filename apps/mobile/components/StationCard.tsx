@@ -1,20 +1,20 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { Linking } from "react-native";
 
-import type { Station } from "../types/BikeTypes";
+import type { Station, StationType } from "../types/StationType";
 
 import { BikeColors } from "../constants/BikeColors";
 import { IconSymbol } from "./IconSymbol";
 
 type StationCardProps = {
-  station: Station;
+  station: Station | StationType;
   onPress: () => void;
 };
 
 export function StationCard({ station, onPress }: StationCardProps) {
-  const availabilityPercentage = (station.availableBikes / station.totalSlots) * 100;
-  const manualBikes = station.bikes?.filter(bike => bike.type === "manual").length || 0;
-  const availableManual = station.bikes?.filter(bike => bike.type === "manual" && bike.isAvailable).length || 0;
+  const capacity = parseInt(station.capacity) || 1;
+  const availabilityPercentage = (station.availableBikes / capacity) * 100;
 
   const getAvailabilityColor = (percentage: number) => {
     if (percentage > 60)
@@ -34,7 +34,7 @@ export function StationCard({ station, onPress }: StationCardProps) {
           </Text>
         </View>
         <View style={styles.headerRight}>
-          <View style={[styles.statusIndicator, { backgroundColor: station.isActive ? BikeColors.success : BikeColors.error }]} />
+          <View style={[styles.statusIndicator, { backgroundColor: station.availableBikes > 0 ? BikeColors.success : BikeColors.error }]} />
           <IconSymbol name="chevron.right" size={16} color={BikeColors.onSurfaceVariant} />
         </View>
       </View>
@@ -43,7 +43,7 @@ export function StationCard({ station, onPress }: StationCardProps) {
         <View style={styles.locationContainer}>
           <IconSymbol name="location.fill" size={16} color={BikeColors.onSurfaceVariant} />
           <Text style={styles.locationText} numberOfLines={2}>
-            {station.location.address}
+            {station.address}
           </Text>
         </View>
 
@@ -53,7 +53,7 @@ export function StationCard({ station, onPress }: StationCardProps) {
             <Text style={[styles.availabilityCount, { color: getAvailabilityColor(availabilityPercentage) }]}>
               {station.availableBikes}
               /
-              {station.totalSlots}
+              {capacity}
             </Text>
           </View>
 
@@ -70,21 +70,11 @@ export function StationCard({ station, onPress }: StationCardProps) {
           </View>
         </View>
 
-        <View style={styles.bikeTypesContainer}>
-          <View style={styles.bikeTypeItem}>
-            <IconSymbol name="gear" size={16} color={BikeColors.primary} />
-            <Text style={styles.bikeTypeText}>
-              Xe thường:
-              {availableManual}
-              /
-              {manualBikes}
-            </Text>
+        <View style={styles.actionButtons}>
+          <View style={styles.actionHint}>
+            <IconSymbol name="map.fill" size={14} color={BikeColors.accent} />
+            <Text style={styles.actionHintText}>Nhấn để xem chi tiết</Text>
           </View>
-        </View>
-
-        <View style={styles.actionHint}>
-          <IconSymbol name="map.fill" size={14} color={BikeColors.accent} />
-          <Text style={styles.actionHintText}>Nhấn để xem sơ đồ 2D và chi tiết xe</Text>
         </View>
       </View>
     </Pressable>
@@ -199,5 +189,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: BikeColors.accent,
     fontStyle: "italic",
+  },
+  actionButtons: {
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: BikeColors.divider,
+  },
+  directionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: BikeColors.primary,
+    borderRadius: 8,
+  },
+  directionButtonText: {
+    fontSize: 12,
+    color: "#fff",
+    fontWeight: "600",
   },
 });

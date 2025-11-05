@@ -26,6 +26,7 @@ import ReservationScreen from "./screen/reservation-screen";
 import StationDetailScreen from "./screen/StationDetail";
 import SupportScreen from "./screen/SupportScreen";
 import UpdateProfileScreen from "./screen/UpdateProfileScreen";
+import WithdrawScreen from "./screen/withdraw-screen";
 import StationSelectScreen from "./styles/StationSelect";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -192,6 +193,11 @@ export default function App() {
             <Stack.Screen
               name="Report"
               component={ReportScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="Withdraw"
+              component={WithdrawScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
           </Stack.Navigator>

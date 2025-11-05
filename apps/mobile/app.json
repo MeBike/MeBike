@@ -17,7 +17,9 @@
       "infoPlist": {
         "NSBluetoothPeripheralUsageDescription": "Allow MeBike to connect to your bike",
         "NSBluetoothAlwaysUsageDescription": "Allow MeBike to connect to your bike",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "We need your location to show nearby bike stations",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to show nearby bike stations"
       },
       "bundleIdentifier": "com.aaang123.mobile"
     },
@@ -28,7 +30,11 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"

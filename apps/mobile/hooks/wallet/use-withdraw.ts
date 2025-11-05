@@ -29,6 +29,16 @@ export function useWithdraw() {
     note: "Rút tiền từ ví",
   });
 
+  const createWithdrawalDirect = useCallback((data: {
+    amount: number;
+    bank: string;
+    account: string;
+    account_owner: string;
+    note: string;
+  }) => {
+    createWithdrawal(data);
+  }, [createWithdrawal]);
+
   const resetForm = useCallback(() => {
     setCurrentStep(0);
     setFormData({
@@ -176,6 +186,7 @@ export function useWithdraw() {
 
   return {
     handleWithdraw,
+    createWithdrawal: createWithdrawalDirect,
     isCreatingWithdrawal: isCreating,
     currentStep,
     formData,
