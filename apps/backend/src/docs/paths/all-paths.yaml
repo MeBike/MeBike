@@ -782,6 +782,48 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/users/manage-users/dashboard-stats:
+  get:
+    tags: [Users]
+    summary: Get user dashboard statistics (Admin only)
+    description: |
+      Retrieves key statistics about the user base for the Admin dashboard.
+      Includes total customers, active customers, new customers this month, total revenue, average spending, and the top renter (VIP).
+      **Requires Admin privileges (not Staff).**
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: "User dashboard statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê dashboard người dùng thành công"
+                result:
+                  $ref: '../components/schemas/AdminUserDashboardStats.yaml'
+      '401':
+        description: "Unauthorized (Invalid access token)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden (User is not an Admin)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "User not found (Admin user from token does not exist)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Bikes API
 # ===================================================================

@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { ParamsDictionary } from "express-serve-static-core";
-
+ 
 import { ObjectId } from "mongodb";
 
 import type { AdminCreateUserReqBody, AdminGetAllUsersReqQuery, AdminResetPasswordReqBody, ChangePasswordReqBody, LoginReqBody, LogoutReqBody, RefreshTokenReqBody, RegisterReqBody, ResetPasswordOtpReqBody, TokenPayLoad, UpdateUserReqBody, VerifyEmailOtpReqBody } from "~/models/requests/users.requests";
@@ -247,6 +247,14 @@ export const getUserStatsController = async (req: Request, res: Response) => {
   const stats = await usersService.getUserStats()
   res.json({
     message: USERS_MESSAGES.GET_USER_STATS_SUCCESS,
+    result: stats
+  })
+}
+
+export const getAdminUserDashboardStatsController = async (req: Request, res: Response) => {
+  const stats = await usersService.getAdminUserDashboardStats()
+  res.json({
+    message: USERS_MESSAGES.GET_USER_DASHBOARD_STATS_SUCCESS,
     result: stats
   })
 }

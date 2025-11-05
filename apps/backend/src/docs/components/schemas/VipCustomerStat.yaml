@@ -1,0 +1,12 @@
+type: object
+nullable: true
+description: "Thông tin về khách hàng VIP (người có tổng thời gian thuê cao nhất). Trả về null nếu chưa có ai thuê."
+properties:
+  fullname:
+    type: string
+    description: "Tên đầy đủ của khách hàng VIP."
+    example: "Nguyen Van A"
+  totalDuration:
+    type: integer
+    description: "Tổng số phút đã thuê của khách hàng VIP."
+    example: 4500
