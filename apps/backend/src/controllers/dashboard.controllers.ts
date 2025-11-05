@@ -8,7 +8,7 @@ export const getStationsController = async (req: Request, res: Response) => {
   try {
     const stations = await databaseService.stations.find({}).toArray();
 
-    const stationsWithAvailableBikes = await Promise.all(
+    const stationsWithData = await Promise.all(
       stations.map(async (station) => {
         const availableBikesCount = await databaseService.bikes.countDocuments({
           station_id: station._id,
@@ -17,6 +17,7 @@ export const getStationsController = async (req: Request, res: Response) => {
 
         return {
           name: station.name,
+          address: station.address,
           availableBikes: availableBikesCount
         };
       })
@@ -24,7 +25,7 @@ export const getStationsController = async (req: Request, res: Response) => {
 
     return res.json({
       message: DASHBOARD_MESSAGES.STATIONS_FETCH_SUCCESS,
-      result: stationsWithAvailableBikes
+      result: stationsWithData
     });
   } catch (error) {
     console.error("Error fetching stations:", error);

@@ -15,6 +15,7 @@ interface DashboardStats {
 
 interface StationData {
   name: string;
+  address: string;
   availableBikes: number;
 }
 
