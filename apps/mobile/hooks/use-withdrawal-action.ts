@@ -59,7 +59,6 @@ export function useWithdrawalAction() {
     .flatMap(page => page.data)
     .map(item => ({
       ...item,
-      amount: Number(item.amount.$numberDecimal),
     })) || [];
   const totalWithdrawals = withdrawalRequestsData?.pages[0]?.pagination?.totalRecords || 0;
 

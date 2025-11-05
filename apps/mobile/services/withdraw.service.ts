@@ -45,12 +45,12 @@ export const withdrawalsService = {
         page,
         limit,
         status,
-      },
+      }
     );
     return response;
   },
   getWithdrawRequestById: async (
-    id: string,
+    id: string
   ): Promise<AxiosResponse<DetailApiResponse<DetailWithdrawRequest>>> => {
     const response = await fetchHttpClient.get<
       DetailApiResponse<DetailWithdrawRequest>
@@ -59,26 +59,32 @@ export const withdrawalsService = {
   },
   updateWithdrawRequestById: async (
     id: string,
-    data: UpdateWithdrawSchemaFormData,
+    data: UpdateWithdrawSchemaFormData
   ): Promise<AxiosResponse<DetailApiResponse<DetailWithdrawRequest>>> => {
     const response = await fetchHttpClient.put<
       DetailApiResponse<DetailWithdrawRequest>
     >(WITHDRAW_ENDPOINTS.ID(id), data);
     return response;
   },
-  getWithdrawRequests: async (
-    { page, limit }: { page?: number; limit?: number },
-  ): Promise<AxiosResponse<ApiResponse<DetailWithdrawRequest>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<DetailWithdrawRequest>>(
+  getWithdrawRequests: async ({
+    page,
+    limit,
+  }: {
+    page?: number;
+    limit?: number;
+  }): Promise<AxiosResponse<ApiResponse<WithdrawRequest[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<WithdrawRequest[]>>(
       WITHDRAW_ENDPOINTS.WITHDRAW_REQUESTS(),
       {
         page,
         limit,
-      },
+      }
     );
     return response;
   },
-  createWithdrawRequest: async (data: CreateWithdrawSchemaFormData): Promise<AxiosResponse<DetailApiResponse<DetailWithdrawRequest>>> => {
+  createWithdrawRequest: async (
+    data: CreateWithdrawSchemaFormData
+  ): Promise<AxiosResponse<DetailApiResponse<DetailWithdrawRequest>>> => {
     const response = await fetchHttpClient.post<
       DetailApiResponse<DetailWithdrawRequest>
     >(WITHDRAW_ENDPOINTS.WITHDRAW_REQUESTS(), data);
