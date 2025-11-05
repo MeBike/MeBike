@@ -1,6 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { FlatList, StatusBar, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { MyWalletNavigationProp } from "../types/navigation";
 import { LoadingSpinner } from "../components/wallet/loading-spinner";
 import { QRModal } from "../components/wallet/qr-modal";
 import { RefundDetailModal } from "../components/wallet/refund-detail-modal";
@@ -17,6 +19,7 @@ import { myWalletScreenStyles as styles } from "../styles/wallet/my-wallet-scree
 import { TAB_TYPES } from "../utils/wallet/constants";
 
 function MyWalletScreen() {
+  const navigation = useNavigation<MyWalletNavigationProp>();
   const [showQR, setShowQR] = useState(false);
   const [activeTab, setActiveTab] = useState<"transactions" | "withdrawals" | "refunds">("transactions");
   const [showTransactionDetail, setShowTransactionDetail] = useState(false);
@@ -39,7 +42,7 @@ function MyWalletScreen() {
   };
 
   const handleWithdraw = () => {
-    withdraw.handleWithdraw();
+    navigation.navigate("Withdraw");
   };
 
   if (wallet.isLoadingWallet || wallet.isLoadingTransactions) {
