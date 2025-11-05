@@ -73,10 +73,6 @@ const Page = () => {
     setBikeStation(station.bikeStation || null);
   };
 
-  const getStationTypeColor = (type: string) => {
-    return "bg-gray-100 text-gray-800 border-gray-200";
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <Header />
