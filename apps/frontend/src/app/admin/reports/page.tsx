@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { DataTable } from "@/components/TableCustom";
 import { ReportStats } from "@/components/reports/report-stats";
 import { Button } from "@/components/ui/button";
@@ -9,14 +11,18 @@ import { reportColumns } from "@/columns/report-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useUserReport } from "@/hooks/user-report";
 import { reportService } from "@/services/report.service";
-import { Report } from "@custom-types";
+import { userService } from "@/services/user.service";
+import { UpdateReportSchema, type UpdateReportSchemaFormData } from "@/schemas/reportSchema";
+import type { Report } from "@custom-types";
+import { DetailUser } from "@/services/auth.service";
 
 export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [staffList, setStaffList] = useState<DetailUser[]>([]);
+  const [isLoadingStaff, setIsLoadingStaff] = useState(false);
 
   const {
     reports,
@@ -24,11 +30,40 @@ export default function ReportsPage() {
     isFetchingReports,
     pagination,
     reportOverview,
+    updateReport,
   } = useUserReport({ hasToken: true });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<UpdateReportSchemaFormData>({
+    resolver: zodResolver(UpdateReportSchema),
+  });
 
   useEffect(() => {
     refetchReports();
   }, [currentPage, refetchReports]);
+
+  // Fetch staff list when modal opens
+  useEffect(() => {
+    if (isUpdateModalOpen) {
+      setIsLoadingStaff(true);
+      userService
+        .getAllUsers({ role: "STAFF", limit: 100 })
+        .then((res) => {
+          setStaffList(res.data.data || []);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch staff list:", error);
+          setStaffList([]);
+        })
+        .finally(() => {
+          setIsLoadingStaff(false);
+        });
+    }
+  }, [isUpdateModalOpen]);
 
   const handleViewReport = (report: Report) => {
     console.log("[v0] View report:", report._id);
@@ -36,19 +71,23 @@ export default function ReportsPage() {
 
   const handleUpdateReport = (report: Report) => {
     setSelectedReport(report);
-    setSelectedStatus(report.status);
+    reset({
+      newStatus: report.status as any,
+      staff_id: report.assignee_id || "",
+      priority: report.priority,
+    });
     setIsUpdateModalOpen(true);
   };
 
-  const handleStatusUpdate = async () => {
+  const onSubmit = async (data: UpdateReportSchemaFormData) => {
     if (!selectedReport) return;
     try {
-      await reportService.updateReportStatus(selectedReport._id, selectedStatus);
+      await reportService.updateReport(selectedReport._id, data);
       setIsUpdateModalOpen(false);
       setSelectedReport(null);
       refetchReports();
     } catch (error) {
-      console.error("Failed to update report status:", error);
+      console.error("Failed to update report:", error);
     }
   };
 
@@ -99,31 +138,88 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Update Status Modal */}
+      {/* Update Report Modal */}
       {isUpdateModalOpen && selectedReport && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-foreground mb-4">
-              Cập nhật trạng thái báo cáo
+              Cập nhật báo cáo
             </h2>
 
-            <div className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {/* Status Field */}
               <div>
                 <label className="text-sm font-medium text-foreground">
-                  Trạng thái mới
+                  Trạng thái
                 </label>
                 <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  {...register("newStatus")}
                   className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                 >
-                  <option value="PENDING">Chờ xử lý</option>
-                  <option value="IN_PROGRESS">Đang xử lý</option>
-                  <option value="RESOLVED">Đã giải quyết</option>
-                  <option value="CANCELLED">Đã hủy</option>
+                  <option value="">Chọn trạng thái</option>
+                  <option value="ĐANG CHỜ XỬ LÝ">Đang chờ xử lý</option>
+                  <option value="ĐANG XỬ LÝ">Đang xử lý</option>
+                  <option value="ĐÃ GIẢI QUYẾT">Đã giải quyết</option>
+                  <option value="ĐÃ HỦY">Đã hủy</option>
                 </select>
+                {errors.newStatus && (
+                  <div className="flex items-center gap-2 mt-1 text-sm text-destructive">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.newStatus.message}
+                  </div>
+                )}
               </div>
-            </div>
+
+              {/* Priority Field */}
+              <div>
+                <label className="text-sm font-medium text-foreground">
+                  Ưu tiên
+                </label>
+                <select
+                  {...register("priority")}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                >
+                  <option value="">Chọn ưu tiên</option>
+                  <option value="THẤP">Thấp</option>
+                  <option value="BÌNH THƯỜNG">Bình thường</option>
+                  <option value="CAO">Cao</option>
+                  <option value="KHẨN CẤP">Khẩn cấp</option>
+                </select>
+                {errors.priority && (
+                  <div className="flex items-center gap-2 mt-1 text-sm text-destructive">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.priority.message}
+                  </div>
+                )}
+              </div>
+
+              {/* Staff ID Field */}
+              <div>
+                <label className="text-sm font-medium text-foreground">
+                  Nhân viên xử lý
+                </label>
+                <select
+                  {...register("staff_id")}
+                  disabled={isLoadingStaff}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1 disabled:opacity-50"
+                >
+                  <option value="">
+                    {isLoadingStaff ? "Đang tải..." : "Chọn nhân viên"}
+                  </option>
+                  {staffList.map((staff) => (
+                    <option key={staff._id} value={staff._id}>
+                      {staff.fullname} ({staff.email})
+                    </option>
+                  ))}
+                </select>
+                {errors.staff_id && (
+                  <div className="flex items-center gap-2 mt-1 text-sm text-destructive">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.staff_id.message}
+                  </div>
+                )}
+              </div>
+            </form>
 
             <div className="flex gap-3 mt-6">
               <Button
@@ -133,8 +229,19 @@ export default function ReportsPage() {
               >
                 Hủy
               </Button>
-              <Button onClick={handleStatusUpdate} className="flex-1">
-                Cập nhật
+              <Button
+                onClick={handleSubmit(onSubmit)}
+                disabled={isSubmitting}
+                className="flex-1"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Đang cập nhật...
+                  </>
+                ) : (
+                  "Cập nhật"
+                )}
               </Button>
             </div>
           </div>
