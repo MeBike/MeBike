@@ -15,6 +15,7 @@ import {
   UpdateProfileSchemaFormData,
 } from "@/schemas/authSchema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
+import { useVerifyEmailOtpMutation } from "./mutations/Auth/useVerifyEmailOtp";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
@@ -58,6 +59,7 @@ export const useAuthActions = () => {
   const useLogout = useLogoutMutation();
   const useChangePassword = useChangePasswordMutation();
   const useVerifyEmail = useVerifyEmailMutation();
+  const useVerifyEmailOtp = useVerifyEmailOtpMutation();
   const useUpdateProfile = useUpdateProfileMutation();
   const useForgotPassword = useForgotPasswordMutation();
   const useResetPassword = useResetPasswordMutation();
@@ -191,6 +193,35 @@ export const useAuthActions = () => {
     },
     [useVerifyEmail, queryClient]
   );
+  const verifyEmailOtp = useCallback(
+    (email: string, otp: string): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        useVerifyEmailOtp.mutate({ email, otp }, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Email verified successfully");
+              queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+              resolve();
+            } else {
+              const errorMessage =
+                result.data?.message || "Error verifying email";
+              toast.error(errorMessage);
+              reject(new Error(errorMessage));
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Error verifying email"
+            );
+            toast.error(errorMessage);
+            reject(error);
+          },
+        });
+      });
+    },
+    [useVerifyEmailOtp, queryClient]
+  );
   const resendVerifyEmail = useCallback(() => {
     useResendVerifyEmail.mutate(undefined, {
       onSuccess: (result) => {
@@ -286,6 +317,7 @@ export const useAuthActions = () => {
     register,
     logOut,
     verifyEmail,
+    verifyEmailOtp,
     resendVerifyEmail,
     forgotPassword,
     resetPassword,
@@ -296,6 +328,6 @@ export const useAuthActions = () => {
     isReseting: useResetPassword.isPending,
     isLoadingForgottingPassword: useForgotPassword.isPending,
     isLoggingIn: useLogin.isPending,
-    isLoggingOut: useLogout.isPending,  
+    isLoggingOut: useLogout.isPending,
   };
 };

@@ -54,6 +54,10 @@ export const authService = {
         const response = await fetchHttpClient.post<MessageResponse>("/users/verify-email", { email_verify_token });
         return response;
     },
+    verifyEmailOtp : async (email : string, otp : string) : Promise<AxiosResponse<MessageResponse>> => {
+        const response = await fetchHttpClient.post<MessageResponse>("/users/verify-email", { email, otp });
+        return response;
+    },
     getMe : async() : Promise<AxiosResponse<ProfileUserResponse>> => {
         const response = await fetchHttpClient.get<ProfileUserResponse>("/users/me");
         return response;

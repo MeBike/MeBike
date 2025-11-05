@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Bike, Mail, Lock, Eye, EyeOff, User, Clock, RefreshCw } from "lucide-react";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-providers";
@@ -23,9 +23,13 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [step, setStep] = useState<"register" | "verify">("register");
+  const [otp, setOtp] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [email, setEmail] = useState("");
   const router = useRouter();
   const { user } = useAuth();
-  const { register: registerUser } = useAuthActions();
+  const { register: registerUser, verifyEmailOtp, resendVerifyEmail } = useAuthActions();
   const {
     register,
     handleSubmit,
@@ -41,6 +45,13 @@ const RegisterPage = () => {
     },
   });
 
+  useEffect(() => {
+    if (timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [timeLeft]);
+
   const handleRegister = async (data: RegisterSchemaFormData) => {
     if (!agreeTerms) {
       toast.error("Vui lòng đồng ý với điều khoản sử dụng!");
@@ -50,18 +61,42 @@ const RegisterPage = () => {
     if (!registerData.phone_number || registerData.phone_number.trim() === '') {
       delete registerData.phone_number;
     }
-    registerUser(registerData);
-    setTimeout(() => {
-      router.push("/user");
-    }, 2000);
-    console.log(user);
+    try {
+      await registerUser(registerData);
+      setEmail(data.email);
+      setStep("verify");
+      setTimeLeft(300); // 5 minutes
+    } catch (error) {
+      // Error is handled in useAuthActions
+    }
+  };
 
+  const handleVerifyOtp = async () => {
+    if (!otp.trim()) {
+      toast.error("Vui lòng nhập mã OTP!");
+      return;
+    }
+    try {
+      await verifyEmailOtp(email, otp);
+      router.push("/user");
+    } catch (error) {
+      // Error is handled in useAuthActions
+    }
+  };
+
+  const handleResendOtp = () => {
+    resendVerifyEmail();
+    setTimeLeft(300); // Reset timer
+  };
+
+  const handleSkip = () => {
+    router.push("/user");
   };
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
-    bg-[linear-gradient(135deg,hsl(214_100%_40%)_0%,hsl(215_16%_47%)_100%)] 
+      className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4
+    bg-[linear-gradient(135deg,hsl(214_100%_40%)_0%,hsl(215_16%_47%)_100%)]
     overflow-hidden"
     >
       <div className="w-full max-w-md">
@@ -80,15 +115,16 @@ const RegisterPage = () => {
           <div className="h-1 bg-gradient-metro rounded-t-lg"></div>
           <CardHeader className="space-y-2 text-center ">
             <CardTitle className="text-3xl font-bold text-foreground tracking-tight">
-              Đăng ký
+              {step === "register" ? "Đăng ký" : "Xác thực Email"}
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Nhập thông tin để tạo tài khoản mới
+              {step === "register" ? "Nhập thông tin để tạo tài khoản mới" : `Mã OTP đã được gửi đến ${email}`}
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4 overflow-y-auto">
-            <form onSubmit={handleSubmit(handleRegister)} className="space-y-4">
+            {step === "register" ? (
+              <form onSubmit={handleSubmit(handleRegister)} className="space-y-4">
               {/* Họ và tên */}
               <div className="space-y-2">
                 <Label htmlFor="full_name" className="text-sm font-medium">
@@ -266,6 +302,61 @@ const RegisterPage = () => {
                 </Button>
               </div>
             </form>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="otp" className="text-sm font-medium">
+                    Mã OTP
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="otp"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      type="text"
+                      placeholder="Nhập mã OTP"
+                      className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-center text-sm text-muted-foreground">
+                  <Clock className="inline h-4 w-4 mr-1" />
+                  Thời gian còn lại: {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleVerifyOtp}
+                    className="flex-1 h-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
+                    bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white"
+                  >
+                    <Mail className="mr-2 h-5 w-5" />
+                    Xác thực
+                  </Button>
+                  <Button
+                    onClick={handleSkip}
+                    variant="outline"
+                    className="flex-1 h-12"
+                  >
+                    Bỏ qua
+                  </Button>
+                </div>
+
+                <div className="text-center">
+                  <Button
+                    onClick={handleResendOtp}
+                    variant="link"
+                    className="text-sm text-primary p-0 h-auto"
+                    disabled={timeLeft > 0}
+                  >
+                    <RefreshCw className="mr-1 h-4 w-4" />
+                    Gửi lại mã OTP
+                  </Button>
+                </div>
+              </div>
+            )}
 
             <div className="text-center">
               <p className="text-sm text-muted-foreground">
