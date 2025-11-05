@@ -280,6 +280,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.19.17
+      '@types/nodemailer':
+        specifier: ^7.0.2
+        version: 7.0.2
       '@types/react':
         specifier: ^19
         version: 19.1.15
