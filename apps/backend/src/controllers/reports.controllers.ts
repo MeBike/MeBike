@@ -70,7 +70,7 @@ export async function getAllUserReportController(req: Request, res: Response, ne
   try {
     const { user_id } = req.decoded_authorization as TokenPayLoad
 
-    const filter: any = {
+    const filter: Filter<Report> = {
       user_id: new ObjectId(user_id)
     }
 
