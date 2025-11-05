@@ -1,4 +1,4 @@
-import { ReservationStatus, Role } from './../constants/enums'
+import { GroupByOptions, ReservationStatus, Role } from './../constants/enums'
 import { checkSchema, ParamSchema } from 'express-validator'
 import HTTP_STATUS from '~/constants/http-status'
 import { RESERVATIONS_MESSAGE } from '~/constants/messages'
@@ -11,6 +11,9 @@ import { BikeStatus } from '~/constants/enums'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import { getLocalTime } from '~/utils/date-time'
 import { DispatchBikeReqBody } from '~/models/requests/reservations.requests'
+import { NextFunction, Request, Response } from 'express'
+
+const VALID_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
 
 export const reserveBikeValidator = validate(
   checkSchema(
@@ -45,10 +48,7 @@ export const reserveBikeValidator = validate(
             }
 
             const [stationExists, aggResult] = await Promise.all([
-              databaseService.stations.findOne(
-                { _id: stationId },
-                { projection: { _id: 1 } }
-              ),
+              databaseService.stations.findOne({ _id: stationId }, { projection: { _id: 1, name: 1 } }),
               databaseService.bikes
                 .aggregate([
                   {
@@ -88,6 +88,7 @@ export const reserveBikeValidator = validate(
               })
             }
 
+            req.station = stationExists
             req.bike = bike
             return true
           }
@@ -149,14 +150,14 @@ const checkReservationBeforeCancel = async (reservationId: string, req: any) => 
 }
 
 const ReasonValidationSchema = (requiredMessage: string): ParamSchema => ({
-    in: ['body'],
-    notEmpty: { errorMessage: requiredMessage },
-    isString: { errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON },
-    isLength: {
-        options: { min: 5, max: 255 },
-        errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON_LENGTH
-    }
-});
+  in: ['body'],
+  notEmpty: { errorMessage: requiredMessage },
+  isString: { errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON },
+  isLength: {
+    options: { min: 5, max: 255 },
+    errorMessage: RESERVATIONS_MESSAGE.INVALID_REASON_LENGTH
+  }
+})
 
 export const userCancelReservationValidator = validate(
   checkSchema({
@@ -382,6 +383,64 @@ export const batchDispatchSameStationValidator = validate(
     ['body']
   )
 )
+
+export const filterByDateValidator = (req: Request, res: Response, next: NextFunction) => {
+  const { startDate, endDate, groupBy } = req.query
+
+  const errors: string[] = []
+
+  const validGroupByValues = Object.values(GroupByOptions)
+  const normalizedGroupBy = (groupBy as string)?.toUpperCase()
+
+  if (groupBy && !validGroupByValues.includes(normalizedGroupBy as GroupByOptions)) {
+    errors.push(RESERVATIONS_MESSAGE.INVALID_GROUP_BY.replace('%s', validGroupByValues.join(', ')))
+  }
+
+  if (startDate && typeof startDate === 'string') {
+    if (!VALID_DATE_REGEX.test(startDate)) {
+      errors.push(RESERVATIONS_MESSAGE.INVALID_START_DATE_FORMAT)
+    } else {
+      const date = new Date(startDate)
+      if (isNaN(date.getTime())) {
+        errors.push(RESERVATIONS_MESSAGE.INVALID_START_DATE.replace('%s', startDate))
+      }
+    }
+  }
+
+  if (endDate && typeof endDate === 'string') {
+    if (!VALID_DATE_REGEX.test(endDate)) {
+      errors.push(RESERVATIONS_MESSAGE.INVALID_END_DATE_FORMAT)
+    } else {
+      const date = new Date(endDate)
+      if (isNaN(date.getTime())) {
+        errors.push(RESERVATIONS_MESSAGE.INVALID_END_DATE.replace('%s', endDate))
+      }
+    }
+  }
+
+  if (startDate && endDate && typeof startDate === 'string' && typeof endDate === 'string') {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    if (start > end) {
+      errors.push(RESERVATIONS_MESSAGE.START_DATE_AFTER_END_DATE)
+    }
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({
+      message: RESERVATIONS_MESSAGE.INVALID_INPUT,
+      errors
+    })
+  }
+
+  if (groupBy) {
+    req.query.groupBy = normalizedGroupBy
+  } else {
+    req.query.groupBy = GroupByOptions.Date
+  }
+
+  next()
+}
 
 export const getReservationDetailValidator = validate(
   checkSchema({

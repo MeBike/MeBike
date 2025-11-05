@@ -31,3 +31,21 @@ export const fromMinutesToMs = (value: number) => {
 export const fromSecondsToMs = (value: number) => {
     return toMs(TimeType.Second, value)
 }
+
+export const formatUTCDateToVietnamese = (dateStr: string) => {
+  const date = new Date(dateStr)
+  const days = [
+    'Chủ Nhật', 'Thứ Hai', 'Thứ Ba',
+    'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'
+  ]
+  const dayName = days[date.getUTCDay()]
+
+  const day = date.getUTCDate().toString().padStart(2, '0')
+  const month = (date.getUTCMonth() + 1).toString().padStart(2, '0')
+  const year = date.getUTCFullYear()
+
+  const hours = date.getUTCHours().toString().padStart(2, '0')
+  const minutes = date.getUTCMinutes().toString().padStart(2, '0')
+
+  return `${dayName}, ngày ${day}/${month}/${year} lúc ${hours} giờ ${minutes} phút`
+}

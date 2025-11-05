@@ -70,9 +70,12 @@ export async function getAllUserReportController(req: Request, res: Response, ne
   try {
     const { user_id } = req.decoded_authorization as TokenPayLoad
 
-    const filter = {
-      user_id: new ObjectId(user_id),
-      status: req.query.status as ReportStatus
+    const filter: Filter<Report> = {
+      user_id: new ObjectId(user_id)
+    }
+
+    if (req.query.status) {
+      filter.status = req.query.status as ReportStatus
     }
 
     await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter, {})
