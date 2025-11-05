@@ -14,6 +14,7 @@ class SosService {
     rental_id,
     requester_id,
     bike_id,
+    agent_id,
     issue,
     latitude,
     longitude
@@ -21,6 +22,7 @@ class SosService {
     rental_id: ObjectId
     requester_id: ObjectId
     bike_id: ObjectId
+    agent_id: string
     issue: string
     latitude: number
     longitude: number
@@ -29,6 +31,7 @@ class SosService {
       rental_id,
       requester_id,
       bike_id,
+      sos_agent_id: toObjectId(agent_id),
       issue,
       location: { type: 'Point', coordinates: [longitude, latitude] },
       status: SosAlertStatus.PENDING
@@ -40,35 +43,6 @@ class SosService {
     // TODO: Push message to nearby SOS agents
 
     return alert
-  }
-
-  async dispatchSos({ sos_id, staff_id, agent_id }: { sos_id: string; staff_id: string; agent_id: string }) {
-    const objSosId = toObjectId(sos_id)
-    const now = getLocalTime()
-
-    const result = await databaseService.sos_alerts.findOneAndUpdate(
-      { _id: objSosId, status: SosAlertStatus.PENDING },
-      {
-        $set: {
-          status: SosAlertStatus.DISPATCHED,
-          sos_agent_id: toObjectId(agent_id),
-          staff_id: toObjectId(staff_id),
-          updated_at: now
-        }
-      },
-      { returnDocument: 'after' }
-    )
-
-    if (!result) {
-      throw new ErrorWithStatus({
-        message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', sos_id),
-        status: HTTP_STATUS.NOT_FOUND
-      })
-    }
-
-    // TODO: Push message to this SOS agent
-
-    return result
   }
 
   async confirmSos({

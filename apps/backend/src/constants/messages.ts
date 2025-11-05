@@ -585,10 +585,8 @@ export const SOS_MESSAGE = {
   SOS_RESOLVED: 'Sự cố đã được xử lí, phiên thuê có thể tiếp tục',
   SOS_UNSOLVABLE: 'Sự cố không thể xử lí tại chỗ, phiên thuê không thể tiếp tục',
   SOS_REJECTED: 'Đã từ chối yêu cầu, tình trạng không nằm trong phạm vi xử lí hoặc không đúng với báo cáo',
-  CANNOT_CONFIRM_SOS: 'Không thể xác nhận yêu cầu cứu hộ với trạng thái: %s (trạng thái cần: DISPATCHED)',
-  CANNOT_DISPATCH_SOS: 'Không thể phân phối đội cứu hộ với trạng thái: %s (trạng thái cần: PENDING)',
+  CANNOT_CONFIRM_SOS: 'Không thể xác nhận yêu cầu cứu hộ với trạng thái: %s (trạng thái cần: PENDING)',
   GET_REQUEST_BY_ID_SUCCESS: 'Xem chi tiết yêu cầu hỗ trợ thành công',
   CANNOT_VIEW_OTHER_DISPATCHED_REQUEST: 'Không thể xem yêu cầu được phân công bởi người khác',
-  CANNOT_VIEW_UNDISPATCHED_REQUEST: 'Bạn chỉ có thể xem yêu cầu đã được phân công',
   YOUR_RENTAL_NOT_FOUND: 'Không tìm thấy phiên thuê nào của bạn với ID: %s'
 };

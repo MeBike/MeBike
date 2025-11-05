@@ -16,8 +16,7 @@ type SosAlertType = {
   issue: string;
   location: LocationType;
   status: SosAlertStatus;
-  sos_agent_id?: ObjectId;
-  staff_id?: ObjectId
+  sos_agent_id: ObjectId;
   resolved_at?: Date;
   created_at?: Date;
   updated_at?: Date;
@@ -32,8 +31,7 @@ export default class SosAlert {
   issue: string;
   location: LocationType;
   status: SosAlertStatus;
-  sos_agent_id?: ObjectId;
-  staff_id?: ObjectId
+  sos_agent_id: ObjectId;
   resolved_at?: Date;
   created_at?: Date;
   updated_at?: Date;
@@ -53,7 +51,6 @@ export default class SosAlert {
     };
     this.status = alert.status ?? SosAlertStatus.PENDING;
     this.sos_agent_id = alert.sos_agent_id ?? undefined;
-    this.staff_id = alert.staff_id ?? undefined;
     this.resolved_at = alert.resolved_at ?? undefined;
     this.created_at = alert.created_at ?? now;
     this.updated_at = alert.updated_at ?? now;

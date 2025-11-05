@@ -9,7 +9,6 @@ import {
   ConfirmSosReqBody,
   CreateSosPayload,
   CreateSosReqBody,
-  DispatchSosReqBody,
   RejectSosReqBody,
   SosParam
 } from '~/models/requests/sos.requests'
@@ -37,23 +36,6 @@ export async function createSosRequestController(req: Request<ParamsDictionary, 
 
   res.json({
     message: SOS_MESSAGE.SOS_CREATE_SUCCESS,
-    result
-  })
-}
-
-export async function dispatchSosController(req: Request<SosParam, any, DispatchSosReqBody>, res: Response) {
-  const { user_id } = req.decoded_authorization as TokenPayLoad
-  const { agent_id } = req.body
-  const { id } = req.params
-
-  const result = await sosService.dispatchSos({
-    sos_id: id,
-    staff_id: user_id,
-    agent_id
-  })
-
-  res.json({
-    message: SOS_MESSAGE.SOS_DISPATCHED_SUCCESS,
     result
   })
 }
@@ -98,33 +80,29 @@ export async function getSosRequestsController(req: Request, res: Response, next
 
   if (user.role === Role.Sos) {
     filters.sos_agent_id = user._id
-    filters.status = SosAlertStatus.DISPATCHED
-  } else if (user.role === Role.Staff) {
-    if (status && typeof status === 'string') {
-      if (!Object.values(SosAlertStatus).includes(status as SosAlertStatus)) {
-        throw new ErrorWithStatus({
-          message: SOS_MESSAGE.INVALID_STATUS,
-          status: HTTP_STATUS.BAD_REQUEST
-        })
-      }
-      filters.status = status as SosAlertStatus
+  }
+
+  if (status && typeof status === 'string') {
+    if (!Object.values(SosAlertStatus).includes(status as SosAlertStatus)) {
+      throw new ErrorWithStatus({
+        message: SOS_MESSAGE.INVALID_STATUS,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
     }
+    filters.status = status as SosAlertStatus
   }
 
   return sendPaginatedResponse(res, next, databaseService.sos_alerts, req.query, filters)
 }
 
-export async function getSosRequestByIdController(
-  req: Request<SosParam>,
-  res: Response,
-) {
+export async function getSosRequestByIdController(req: Request<SosParam>, res: Response) {
   const user = req.user as User
   const sos = req.sos_alert as SosAlert
 
-  const result = await sosService.getSosRequestById(sos, user);
-  
+  const result = await sosService.getSosRequestById(sos, user)
+
   res.json({
     message: SOS_MESSAGE.GET_REQUEST_BY_ID_SUCCESS,
-    result,
-  });
+    result
+  })
 }

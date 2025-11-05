@@ -10,7 +10,7 @@ import { ErrorWithStatus } from '~/models/errors';
 import HTTP_STATUS from '~/constants/http-status';
 import { TokenPayLoad } from '~/models/requests/users.requests';
 import { NextFunction, Request, Response } from 'express';
-import { isBase64Image, isImageURL } from '~/utils/image-validator';
+import { isBase64Image, isImageFilename, isImageURL } from '~/utils/image-validator';
 import User from '~/models/schemas/user.schema';
 
 export const createSosAlertValidator = validate(
@@ -48,6 +48,31 @@ export const createSosAlertValidator = validate(
             }
 
             req.rental = rental;
+            return true;
+          },
+        },
+      },
+      agent_id: {
+        in: ['body'],
+        notEmpty: {
+          errorMessage: SOS_MESSAGE.REQUIRED_AGENT_ID
+        },
+        isMongoId: {
+          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace("%s", "agent_id")
+        },
+        custom: {
+          options: async (value) => {
+            const agent = await databaseService.users.findOne({
+              _id: toObjectId(value),
+              role: Role.Sos,
+            });
+            
+            if (!agent) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.AGENT_NOT_FOUND.replace("%s", value),
+                status: HTTP_STATUS.NOT_FOUND,
+              });
+            }
             return true;
           },
         },
@@ -100,72 +125,6 @@ export const createSosAlertValidator = validate(
   )
 );
 
-export const dispatchSosValidator = validate(
-  checkSchema(
-    {
-      id: {
-        in: ['params'],
-        notEmpty: {
-          errorMessage: SOS_MESSAGE.REQUIRED_ID
-        },
-        isMongoId: {
-          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace("%s", "ID yêu cầu cứu hộ")
-        },
-        custom: {
-          options: async (value, { req }) => {
-            const sos = await databaseService.sos_alerts.findOne({
-              _id: toObjectId(value),
-            });
-
-            if (!sos) {
-              throw new ErrorWithStatus({
-                message: SOS_MESSAGE.SOS_NOT_FOUND.replace("%s", value),
-                status: HTTP_STATUS.NOT_FOUND,
-              });
-            }
-
-            if (sos.status !== SosAlertStatus.PENDING){
-              throw new ErrorWithStatus({
-                message: SOS_MESSAGE.CANNOT_DISPATCH_SOS.replace("%s", sos.status),
-                status: HTTP_STATUS.BAD_REQUEST,
-              });
-            }
-
-            req.sos_alert = sos;
-            return true;
-          },
-        },
-      },
-      agent_id: {
-        in: ['body'],
-        notEmpty: {
-          errorMessage: SOS_MESSAGE.REQUIRED_AGENT_ID
-        },
-        isMongoId: {
-          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace("%s", "agent_id")
-        },
-        custom: {
-          options: async (value) => {
-            const agent = await databaseService.users.findOne({
-              _id: toObjectId(value),
-              role: Role.Sos,
-            });
-            
-            if (!agent) {
-              throw new ErrorWithStatus({
-                message: SOS_MESSAGE.AGENT_NOT_FOUND.replace("%s", value),
-                status: HTTP_STATUS.NOT_FOUND,
-              });
-            }
-            return true;
-          },
-        },
-      },
-    },
-    ['params', 'body']
-  )
-);
-
 const createSosValidator = (includeResolvedField = false) => {
   const baseSchema: any = {
     id: {
@@ -187,7 +146,7 @@ const createSosValidator = (includeResolvedField = false) => {
             })
           }
 
-          if (sos.status !== SosAlertStatus.DISPATCHED) {
+          if (sos.status !== SosAlertStatus.PENDING) {
             throw new ErrorWithStatus({
               message: SOS_MESSAGE.CANNOT_CONFIRM_SOS.replace('%s', sos.status),
               status: HTTP_STATUS.BAD_REQUEST
@@ -227,7 +186,7 @@ const createSosValidator = (includeResolvedField = false) => {
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }
-            if (!isBase64Image(photo) && !isImageURL(photo)) {
+            if (!isBase64Image(photo) && !isImageURL(photo) && !isImageFilename(photo)) {
               throw new ErrorWithStatus({
                 message: SOS_MESSAGE.INVALID_PHOTO_FORMAT,
                 status: HTTP_STATUS.BAD_REQUEST
@@ -284,13 +243,6 @@ export const getSosRequestByIdValidator = validate(
             if (!sos.sos_agent_id || !user._id?.equals(sos.sos_agent_id)) {
               throw new ErrorWithStatus({
                 message: SOS_MESSAGE.CANNOT_VIEW_OTHER_DISPATCHED_REQUEST,
-                status: HTTP_STATUS.FORBIDDEN
-              })
-            }
-
-            if (sos.status !== SosAlertStatus.DISPATCHED) {
-              throw new ErrorWithStatus({
-                message: SOS_MESSAGE.CANNOT_VIEW_UNDISPATCHED_REQUEST,
                 status: HTTP_STATUS.FORBIDDEN
               })
             }
