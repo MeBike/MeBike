@@ -129,6 +129,52 @@ class ReportService {
 
     return result
   }
+
+  async getReportOverview() {
+    const result = await databaseService.reports
+      .aggregate([
+        {
+          $facet: {
+            totalReport: [{ $count: 'total' }],
+            totalCompleteReport: [{ $match: { status: ReportStatus.Resolved } }, { $count: 'total' }],
+            totalInProgressReport: [{ $match: { status: ReportStatus.InProgress } }, { $count: 'total' }],
+            totalCancelReport: [{ $match: { status: ReportStatus.Cancel } }, { $count: 'total' }],
+            totalPendingReport: [{ $match: { status: ReportStatus.Pending } }, { $count: 'total' }]
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            totalCompleteReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalCompleteReport.total', 0] }, 0]
+            },
+            totalReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalReport.total', 0] }, 0]
+            },
+            totalInProgressReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalInProgressReport.total', 0] }, 0]
+            },
+            totalCancelReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalCancelReport.total', 0] }, 0]
+            },
+            totalPendingReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalPendingReport.total', 0] }, 0]
+            }
+          }
+        }
+      ])
+      .toArray()
+
+    return (
+      result[0] || {
+        totalCompleteWithdraw: 0,
+        totalReport: 0,
+        totalInProgressWithdraw: 0,
+        totalCancelReport: 0,
+        totalPendingReport: 0
+      }
+    )
+  }
 }
 
 const reportService = new ReportService()

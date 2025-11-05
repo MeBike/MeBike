@@ -6,6 +6,7 @@ import {
   getAllReportController,
   getAllUserReportController,
   getByIdController,
+  getReportOverviewController,
   updateReportStatusController
 } from '~/controllers/reports.controllers'
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
@@ -32,6 +33,7 @@ reportsRouter.get(
   getAllReportValidator,
   wrapAsync(getAllReportController)
 )
+reportsRouter.get('/overview', accessTokenValidator, isAdminValidator, wrapAsync(getReportOverviewController))
 reportsRouter.get('/:reportID', accessTokenValidator, getIdValidator, wrapAsync(getByIdController))
 reportsRouter.post(
   '/',
