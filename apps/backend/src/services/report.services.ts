@@ -10,7 +10,7 @@ import type { ReportPriority } from '~/constants/enums'
 import type { CreateReportReqBody } from '~/models/requests/reports.requests'
 import type { ReportType } from '~/models/schemas/report.schema'
 
-import { ReportStatus } from '~/constants/enums'
+import { ReportStatus, ReportTypeEnum } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { REPORTS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -128,6 +128,99 @@ class ReportService {
     )
 
     return result
+  }
+
+  async getReportOverview() {
+    const result = await databaseService.reports
+      .aggregate([
+        {
+          $facet: {
+            totalReport: [{ $count: 'total' }],
+            totalCompleteReport: [{ $match: { status: ReportStatus.Resolved } }, { $count: 'total' }],
+            totalInProgressReport: [{ $match: { status: ReportStatus.InProgress } }, { $count: 'total' }],
+            totalCancelReport: [{ $match: { status: ReportStatus.Cancel } }, { $count: 'total' }],
+            totalPendingReport: [{ $match: { status: ReportStatus.Pending } }, { $count: 'total' }],
+            totalBikeReport: [
+              {
+                $match: {
+                  type: {
+                    $in: [ReportTypeEnum.BikeDamage, ReportTypeEnum.BikeDirty]
+                  }
+                }
+              },
+              { $count: 'total' }
+            ],
+            totalStationReport: [
+              {
+                $match: {
+                  type: {
+                    $in: [ReportTypeEnum.StationFull, ReportTypeEnum.StationNotAccepting, ReportTypeEnum.StationOffline]
+                  }
+                }
+              },
+              { $count: 'total' }
+            ],
+            totalSosReport: [
+              {
+                $match: {
+                  type: {
+                    $in: [ReportTypeEnum.SosAccident, ReportTypeEnum.SosHealth, ReportTypeEnum.SosThreat]
+                  }
+                }
+              },
+              { $count: 'total' }
+            ],
+            totalOtherReport: [{ $match: { type: ReportTypeEnum.Other } }, { $count: 'total' }]
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            totalCompleteReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalCompleteReport.total', 0] }, 0]
+            },
+            totalReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalReport.total', 0] }, 0]
+            },
+            totalInProgressReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalInProgressReport.total', 0] }, 0]
+            },
+            totalCancelReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalCancelReport.total', 0] }, 0]
+            },
+            totalPendingReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalPendingReport.total', 0] }, 0]
+            },
+            totalBikeReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalBikeReport.total', 0] }, 0]
+            },
+            totalStationReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalStationReport.total', 0] }, 0]
+            },
+            totalSosReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalSosReport.total', 0] }, 0]
+            },
+            totalOtherReport: {
+              $ifNull: [{ $arrayElemAt: ['$totalOtherReport.total', 0] }, 0]
+            }
+          }
+        }
+      ])
+      .toArray()
+
+    return (
+      result[0] || {
+        totalCompleteWithdraw: 0,
+        totalReport: 0,
+        totalInProgressWithdraw: 0,
+        totalCancelReport: 0,
+        totalPendingReport: 0,
+        totalBikeReport: 0,
+        totalStationReport: 0,
+        totalSosReport: 0,
+        totalOtherReport: 0
+      }
+    )
   }
 }
 

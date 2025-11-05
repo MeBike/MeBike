@@ -104,3 +104,12 @@ export async function getAllReportController(req: Request<any, any, any>, res: R
 
   await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter)
 }
+
+export async function getReportOverviewController(req: Request<any, any, any>, res: Response) {
+  const result = await reportService.getReportOverview()
+
+  res.json({
+    message: REPORTS_MESSAGES.GET_REPORT_OVERVIEW_SUCCESS,
+    result
+  })
+}
