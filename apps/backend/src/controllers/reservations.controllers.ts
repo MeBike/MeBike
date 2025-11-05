@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { Filter, ObjectId } from 'mongodb'
-import { ReservationStatus, Role } from '~/constants/enums'
+import { GroupByOptions, ReservationStatus, Role } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RESERVATIONS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -15,6 +15,7 @@ import {
 } from '~/models/requests/reservations.requests'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import Reservation from '~/models/schemas/reservation.schema'
+import Station from '~/models/schemas/station.schema'
 import databaseService from '~/services/database.services'
 import reservationsService from '~/services/reservations.services'
 import { buildAdminReservationFilter } from '~/utils/filters.helper'
@@ -46,12 +47,13 @@ export async function getReservationListController(req: Request, res: Response, 
 export async function reserveBikeController(req: Request<ParamsDictionary, any, ReserveBikeReqBody>, res: Response) {
   const { user_id } = req.decoded_authorization as TokenPayLoad
   const objUserId = toObjectId(user_id)
+  const station = req.station as Station
   const objStationId = toObjectId(req.bike?.station_id as ObjectId)
 
   const result = await reservationsService.reserveBike({
     user_id: objUserId,
     bike: req.bike!,
-    station_id: objStationId,
+    station,
     start_time: req.body.start_time
   })
   res.json({
@@ -93,20 +95,23 @@ export async function confirmReservationController(req: Request<ReservationParam
   })
 }
 
-export async function staffConfirmReservationController(req: Request<ReservationParam, any, ConfirmReservationByStaffReqBody>, res: Response) {
-  const { user_id } = req.decoded_authorization as TokenPayLoad;
-  const reservation = req.reservation as Reservation;
+export async function staffConfirmReservationController(
+  req: Request<ReservationParam, any, ConfirmReservationByStaffReqBody>,
+  res: Response
+) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  const reservation = req.reservation as Reservation
 
   const result = await reservationsService.staffConfirmReservation({
     staff_id: toObjectId(user_id),
     reservation,
     reason: req.body.reason
-  });
+  })
 
   res.json({
     message: RESERVATIONS_MESSAGE.STAFF_CONFIRM_SUCCESS,
     result
-  });
+  })
 }
 
 export async function notifyExpiringReservationsController(req: Request, res: Response) {
@@ -148,7 +153,10 @@ export async function getReservationHistoryController(req: Request, res: Respons
   await sendPaginatedResponse(res, next, databaseService.reservations, req.query, filter)
 }
 
-export async function dispatchSameStationController(req: Request<ParamsDictionary, any, DispatchBikeReqBody>, res: Response) {
+export async function dispatchSameStationController(
+  req: Request<ParamsDictionary, any, DispatchBikeReqBody>,
+  res: Response
+) {
   const { source_station_id, destination_station_id } = req.body
 
   const result = await reservationsService.dispatchSameStation({
@@ -165,11 +173,12 @@ export async function dispatchSameStationController(req: Request<ParamsDictionar
 }
 
 export async function getReservationReportController(req: Request, res: Response, next: NextFunction) {
-  const { startDate, endDate } = req.query
+  const { startDate, endDate, groupBy } = req.query
 
   const result = await reservationsService.getReservationReport(
     startDate as string | undefined,
-    endDate as string | undefined
+    endDate as string | undefined,
+    groupBy as GroupByOptions
   )
 
   let reportPeriod = ''
@@ -186,15 +195,25 @@ export async function getReservationReportController(req: Request, res: Response
     reportPeriod = RESERVATIONS_MESSAGE.REPORT_PERIOD_END_ONLY.replace('%s', endDate as string)
   }
 
+ const groupByDisplayText: Record<GroupByOptions, string> = {
+  [GroupByOptions.Date]: GroupByOptions.Date,
+  [GroupByOptions.Month]: GroupByOptions.Month,
+  [GroupByOptions.Year]: GroupByOptions.Year,
+};
+
+const groupByValue = (groupBy as string)?.toUpperCase() as GroupByOptions;
+const groupByText = groupByDisplayText[groupByValue] || GroupByOptions.Date;
+const message = RESERVATIONS_MESSAGE.GET_REPORT_SUCCESS.replace('%s', groupByText);
+
   res.json({
-    message: RESERVATIONS_MESSAGE.GET_REPORT_SUCCESS,
+    message,
     report_period: reportPeriod,
     result
   })
 }
 
 export async function getStationReservationsController(req: Request<StationParam>, res: Response) {
-  const result = await reservationsService.getStationReservations({stationId: toObjectId(req.params.stationId)})
+  const result = await reservationsService.getStationReservations({ stationId: toObjectId(req.params.stationId) })
 
   res.json({
     message: RESERVATIONS_MESSAGE.GET_STATION_RESERVATIONS_SUCCESS,

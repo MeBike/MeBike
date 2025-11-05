@@ -128,6 +128,70 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
 </html>
 
   `,
+  'success-reservation.html': (data) => `
+    <!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Trước Xe Đạp Thành Công - MeBike</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+    <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
+        <h1 style="color: ${MBIKE_PRIMARY_COLOR}; text-align: center; margin-bottom: 20px;">MeBike</h1>
+        
+        <h2 style="font-size: 18px; color: #333333; margin-top: 0;">Xin chào ${data.fullname},</h2>
+        
+        <p style="color: #333333; line-height: 1.5;">Chúc mừng! Bạn đã <strong>đặt trước xe đạp thành công</strong>.</p>
+
+        <div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
+            <p style="font-size: 16px; font-weight: bold; margin: 0;">
+                Xe <strong>#${data.bike_id}</strong> đã được giữ cho bạn tại <strong>${data.station_name}</strong>
+            </p>
+        </div>
+
+        <table style="width: 100%; margin: 20px 0; font-size: 15px; color: #333333;">
+            <tr>
+                <td style="padding: 8px 0; font-weight: bold; width: 40%;">Mã xe:</td>
+                <td style="padding: 8px 0;">#${data.bike_id}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Trạm xe:</td>
+                <td style="padding: 8px 0;">${data.station_name}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Thời gian đặt:</td>
+                <td style="padding: 8px 0;">${data.start_time}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; font-weight: bold; color: #dc3545;">Hạn mở khóa:</td>
+                <td style="padding: 8px 0; color: #dc3545;"><strong>${data.end_time}</strong></td>
+            </tr>
+        </table>
+
+        <p style="color: #333333; line-height: 1.5;">
+            Vui lòng đến trạm xe và <strong>mở khóa xe trước ${data.end_time}</strong> để bắt đầu chuyến đi.
+        </p>
+        
+        <p style="color: #333333; line-height: 1.5;">
+            Nếu không mở khóa kịp thời, phiên đặt trước sẽ <strong>tự động bị hủy</strong> và xe sẽ được giải phóng.
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.callBackUrl || '#'}" 
+               style="background: ${MBIKE_PRIMARY_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px;">
+               Mở Ứng Dụng để Mở Khóa
+            </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">
+            <strong>Mẹo:</strong> Mở ứng dụng để xem vị trí trạm xe và hướng dẫn chi tiết.<br><br>
+            Trân trọng,<br><strong>Đội ngũ MeBike</strong>
+        </p>
+    </div>
+</body>
+</html>
+`,
   "verify-otp.html": data => `
     <!DOCTYPE html>
     <html lang="vi">

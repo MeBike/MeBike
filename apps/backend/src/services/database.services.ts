@@ -20,6 +20,7 @@ import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import Reservation from '~/models/schemas/reservation.schema'
 import Rating from '~/models/schemas/rating.schema'
 import RatingReason from '~/models/schemas/rating-reason.schema'
+import SosAlert from '~/models/schemas/sos-alert.schema'
 
 config()
 // const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
@@ -131,6 +132,10 @@ class DatabaseService {
 
   get rating_reasons(): Collection<RatingReason> {
     return this.db.collection(process.env.DB_RATING_REASON_COLLECTION as string)
+  }
+
+  get sos_alerts(): Collection<SosAlert> {
+    return this.db.collection(process.env.SOS_ALERT_COLLECTION as string)
   }
 }
 

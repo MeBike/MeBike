@@ -1,9 +1,9 @@
 import nodemailer from 'nodemailer'
 import { Decimal128, ObjectId } from 'mongodb'
-import { BikeStatus, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
+import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
-import { fromHoursToMs, fromMinutesToMs, getLocalTime } from '~/utils/date-time'
+import { formatUTCDateToVietnamese, fromHoursToMs, fromMinutesToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import { ErrorWithStatus } from '~/models/errors'
 import { COMMON_MESSAGE, RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
@@ -17,23 +17,25 @@ import iotService from './iot.services'
 import { IotBookingCommand, IotReservationCommand } from '@mebike/shared/sdk/iot-service'
 import { reservationExpireQueue, reservationNotifyQueue } from '~/lib/queue/reservation.queue'
 import User from '~/models/schemas/user.schema'
+import Station from '~/models/schemas/station.schema'
 
 class ReservationsService {
   async reserveBike({
     user_id,
     bike,
-    station_id,
+    station,
     start_time
   }: {
     user_id: ObjectId
     bike: Bike
-    station_id: ObjectId
+    station: Station
     start_time: string
   }) {
     const now = getLocalTime()
     const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '2000')
     const reservationId = new ObjectId()
     const bike_id = bike._id as ObjectId
+    const station_id = station._id as ObjectId
 
     const startTime = new Date(start_time)
     const endTime = this.generateEndTime(start_time)
@@ -71,7 +73,8 @@ class ReservationsService {
         ])
       })
 
-      const beforeExpirationMin = Number(process.env.EXPIRY_NOTIFY_MINUTES || '15')
+      // const beforeExpirationMin = Number(process.env.EXPIRY_NOTIFY_MINUTES || '15')
+      const beforeExpirationMin = Number('29')
       const beforeExpirationMs = fromMinutesToMs(beforeExpirationMin)
 
       const delayToExpiry = Math.max(0, endTime.getTime() - now.getTime())
@@ -86,7 +89,7 @@ class ReservationsService {
         reservationExpireQueue.add(
           'reservation-expire',
           { reservationId: reservation._id, bikeId: bike._id },
-          { delay: delayToExpiry, removeOnComplete: true, removeOnFail: false }
+          { delay: delayToNotify, removeOnComplete: true, removeOnFail: false }
         )
       ])
 
@@ -100,6 +103,13 @@ class ReservationsService {
       await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
 
       void iotService.sendReservationCommand(bike.chip_id ?? bike_id.toString(), IotReservationCommand.reserve)
+
+      const toUser = await databaseService.users.findOne({ _id: user_id })
+      const data = {
+        ...reservation,
+        station_name: station.name
+      }
+      void this.sendSuccessReservingEmail(data, toUser!)
 
       return {
         ...reservation,
@@ -275,7 +285,7 @@ class ReservationsService {
           ),
           databaseService.bikes.updateOne(
             { _id: reservation.bike_id },
-            { $set: { station_id: null, status: BikeStatus.Booked, updated_at: now } },
+            { $set: { status: BikeStatus.Booked, updated_at: now } },
             { session }
           ),
           ...(user && user.role === Role.Staff && rental._id
@@ -457,101 +467,136 @@ class ReservationsService {
     }
   }
 
-  async getReservationReport(startDateStr?: string, endDateStr?: string) {
+  async getReservationReport(startDateStr?: string, endDateStr?: string, groupBy?: GroupByOptions) {
     let dateFilter: { $gte?: Date; $lte?: Date } = {}
     let twelveMonthsAgo = getLocalTime()
     twelveMonthsAgo.setFullYear(twelveMonthsAgo.getFullYear() - 1)
     twelveMonthsAgo.setDate(1)
 
-    if (startDateStr) {
-      dateFilter.$gte = new Date(startDateStr)
-    } else {
-      dateFilter.$gte = twelveMonthsAgo
-    }
+    dateFilter.$gte = startDateStr ? new Date(startDateStr) : twelveMonthsAgo
 
     if (endDateStr) {
       const endDate = new Date(endDateStr)
-      endDate.setDate(endDate.getDate() + 1)
+      endDate.setUTCHours(23, 59, 59, 999)
+
       dateFilter.$lte = endDate
     } else {
       dateFilter.$lte = getLocalTime()
     }
 
+    const dateFormatMap: Record<GroupByOptions, string> = {
+      [GroupByOptions.Date]: '%Y-%m-%d',
+      [GroupByOptions.Month]: '%Y-%m',
+      [GroupByOptions.Year]: '%Y'
+    }
+    const dateFormat = dateFormatMap[groupBy || GroupByOptions.Date]
+
     const pipeline = [
       {
         $match: {
           created_at: dateFilter,
-          status: {
-            $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired]
+          status: { $in: [ReservationStatus.Active, ReservationStatus.Cancelled, ReservationStatus.Expired] }
+        }
+      },
+      {
+        $lookup: {
+          from: 'rentals',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'rental_info'
+        }
+      },
+      {
+        $addFields: {
+          hasCompletedRental: {
+            $gt: [
+              {
+                $size: {
+                  $filter: {
+                    input: '$rental_info',
+                    as: 'r',
+                    cond: { $eq: ['$$r.status', RentalStatus.Completed] }
+                  }
+                }
+              },
+              0
+            ]
           }
         }
       },
       {
         $group: {
           _id: {
-            month: { $month: '$created_at' },
-            year: { $year: '$created_at' },
-            status: '$status'
+            $dateToString: {
+              format: dateFormat,
+              date: '$created_at'
+            }
           },
           count: { $sum: 1 },
+          successCount: {
+            $sum: {
+              $cond: [
+                {
+                  $or: [
+                    { $eq: ['$status', ReservationStatus.Active] },
+                    { $and: [{ $eq: ['$status', ReservationStatus.Expired] }, '$hasCompletedRental'] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          },
+          cancelledCount: {
+            $sum: { $cond: [{ $eq: ['$status', ReservationStatus.Cancelled] }, 1, 0] }
+          },
+          expiredCount: {
+            $sum: {
+              $cond: [
+                { $and: [{ $eq: ['$status', ReservationStatus.Expired] }, { $not: '$hasCompletedRental' }] },
+                1,
+                0
+              ]
+            }
+          },
           totalPrepaidRevenue: { $sum: '$prepaid' }
         }
       },
       {
         $project: {
           _id: 0,
-          month: '$_id.month',
-          year: '$_id.year',
-          status: '$_id.status',
-          count: '$count',
+          group_key: '$_id',
+          total: '$count',
+          success: '$successCount',
+          cancelled: '$cancelledCount',
+          expired: '$expiredCount',
           revenue: '$totalPrepaidRevenue'
         }
       },
-      { $sort: { year: 1, month: 1 } }
+      { $sort: { year: 1, month: 1, day: 1 } }
     ]
 
-    const monthlyStats = await databaseService.reservations.aggregate(pipeline).toArray()
+    const stats = await databaseService.reservations.aggregate(pipeline).toArray()
 
-    const summaryMap = monthlyStats.reduce((acc, item) => {
-      const monthKey = `${item.year}-${item.month}`
-      if (!acc[monthKey]) {
-        acc[monthKey] = {
-          month_year: monthKey,
-          total: 0,
-          success: 0,
-          cancelled: 0,
-          total_revenue: 0
-        }
-      }
+    return stats.map((item) => {
+      const successRate = item.total > 0 ? (item.success / item.total) * 100 : 0
+      const cancelRate = item.total > 0 ? (item.cancelled / item.total) * 100 : 0
+      const expireRate = item.total > 0 ? (item.expired / item.total) * 100 : 0
 
-      acc[monthKey].total += item.count
-      acc[monthKey].total_revenue += Number(item.revenue.toString())
-
-      if (item.status === ReservationStatus.Cancelled) {
-        acc[monthKey].cancelled += item.count
-      } else if (item.status === ReservationStatus.Active || item.status === ReservationStatus.Expired) {
-        acc[monthKey].success += item.count
-      }
-      return acc
-    }, {})
-
-    const finalReport = Object.keys(summaryMap).map((key) => {
-      const data = summaryMap[key]
-      const successRate = data.total > 0 ? (data.success / data.total) * 100 : 0
-      const cancelRate = data.total > 0 ? (data.cancelled / data.total) * 100 : 0
+      const keyName = groupBy === GroupByOptions.Year ? 'year' : groupBy === GroupByOptions.Month ? 'month' : 'date'
 
       return {
-        month_year: key,
-        total_reservations: data.total,
-        success_count: data.success,
-        cancelled_count: data.cancelled,
-        total_prepaid_revenue: data.total_revenue,
-        success_rate: successRate.toFixed(2) + '%',
-        cancel_rate: cancelRate.toFixed(2) + '%'
+        [keyName]: item.group_key,
+        total_reservations: item.total,
+        successed_count: item.success,
+        cancelled_count: item.cancelled,
+        expired_count: item.expired,
+        total_prepaid_revenue: Number(item.revenue.toString() || '0'),
+        successed_rate: successRate.toFixed(2) + '%',
+        cancelled_rate: cancelRate.toFixed(2) + '%',
+        expired_rate: expireRate.toFixed(2) + '%'
       }
     })
-
-    return finalReport
   }
 
   async expireReservations() {
@@ -770,38 +815,12 @@ class ReservationsService {
   }
 
   async sendExpiringNotification(expiringReservation: Reservation, toUser: User) {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_APP,
-        pass: process.env.EMAIL_PASSWORD_APP
-      }
-    })
-
-    const userIdString = expiringReservation.user_id.toString()
-
-    if (!toUser || !toUser.email) {
-      console.error(RESERVATIONS_MESSAGE.SKIPPING_USER_NOT_FOUND(userIdString))
-      return { success: false }
-    }
-
-    try {
-      const htmlContent = readEmailTemplate('neer-expiry-reservation.html', {
-        fullname: toUser.fullname
-      })
-
-      const mailOptions = {
-        from: `"MeBike" <${process.env.EMAIL_APP}>`,
-        to: toUser.email,
-        subject: RESERVATIONS_MESSAGE.EMAIL_SUBJECT_NEAR_EXPIRY,
-        html: htmlContent
-      }
-      await transporter.sendMail(mailOptions)
-      return { success: true }
-    } catch (error) {
-      console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
-      return { success: false }
-    }
+    return await this.sendReservationEmailFormat(
+      'neer-expiry-reservation.html',
+      RESERVATIONS_MESSAGE.EMAIL_SUBJECT_NEAR_EXPIRY,
+      expiringReservation,
+      toUser
+    )
   }
 
   async getReservationDetail(id: string) {
@@ -881,6 +900,54 @@ class ReservationsService {
     }
 
     return result
+  }
+
+  async sendSuccessReservingEmail(data: any, toUser: User) {
+    data.start_time = formatUTCDateToVietnamese(data.start_time)
+    data.end_time = formatUTCDateToVietnamese(data.end_time)
+
+    await this.sendReservationEmailFormat(
+      'success-reservation.html',
+      RESERVATIONS_MESSAGE.EMAIL_SUBJECT_SUCCESS_RESERVING,
+      data,
+      toUser
+    )
+  }
+
+  async sendReservationEmailFormat(format: string, subject: string, data: any, toUser: User) {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_APP,
+        pass: process.env.EMAIL_PASSWORD_APP
+      }
+    })
+
+    const userIdString = data.user_id.toString()
+
+    if (!toUser || !toUser.email) {
+      console.error(RESERVATIONS_MESSAGE.SKIPPING_USER_NOT_FOUND(userIdString))
+      return { success: false }
+    }
+
+    try {
+      const htmlContent = readEmailTemplate(format, {
+        ...data,
+        fullname: toUser.fullname
+      })
+
+      const mailOptions = {
+        from: `"MeBike" <${process.env.EMAIL_APP}>`,
+        to: toUser.email,
+        subject,
+        html: htmlContent
+      }
+      await transporter.sendMail(mailOptions)
+      return { success: true }
+    } catch (error) {
+      console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
+      return { success: false }
+    }
   }
 }
 
