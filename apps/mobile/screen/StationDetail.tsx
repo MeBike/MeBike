@@ -98,7 +98,6 @@ export default function StationDetailScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { stationId } = route.params;
-
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(20);
   const [currentPage, setCurrentPage] = useState(1);
@@ -271,10 +270,6 @@ export default function StationDetailScreen() {
     );
   }
 
-  const handleViewBike = (bike: any) => {
-    console.log("Viewing bike:", bike.id);
-    setSelectedDetailBike(bike);
-  };
 
   const handleRentPress = (bike: any) => {
     console.log("Bike selected:", bike.id);
@@ -296,7 +291,7 @@ export default function StationDetailScreen() {
               if (user?.verify === "UNVERIFIED") {
                 Alert.alert(
                   "Tài khoản chưa xác thực",
-                  "Vui lòng xác thực tài khoản để thuê xe.",
+                  "Vui lòng xác thực tài khoản để thuê xe."
                 );
                 setSelectedBike(null);
                 return;
@@ -305,7 +300,23 @@ export default function StationDetailScreen() {
               setSelectedBike(null);
             },
           },
-        ],
+          {
+            text: "Đặt xe",
+            onPress: () => {
+              console.log("Renting bike:", bike.id);
+              if (user?.verify === "UNVERIFIED") {
+                Alert.alert(
+                  "Tài khoản chưa xác thực",
+                  "Vui lòng xác thực tài khoản để thuê xe."
+                );
+                setSelectedBike(null);
+                return;
+              }
+              handleReservePress(bike);
+              setSelectedBike(null);
+            },
+          },
+        ]
       );
     }
     else {
@@ -416,15 +427,15 @@ export default function StationDetailScreen() {
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <IconSymbol name="bolt.fill" size={24} color={BikeColors.primary} />
+            <IconSymbol name="bicycle.circle.fill" size={24} color={BikeColors.primary} />
             <Text style={styles.statNumber}>{station.totalBikes}</Text>
             <Text style={styles.statLabel}>Tổng số Xe</Text>
           </View>
           <View style={styles.statCard}>
             <IconSymbol
-              name="bicycle.circle"
+              name="bicycle.circle.fill"
               size={24}
-              color={BikeColors.primary}
+              color={BikeColors.success}
             />
             <Text style={styles.statNumber}>{station.availableBikes}</Text>
             <Text style={styles.statLabel}>Xe có sẵn</Text>

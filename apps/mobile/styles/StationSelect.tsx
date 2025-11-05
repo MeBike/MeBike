@@ -14,26 +14,98 @@ import {
   View,
 } from "react-native";
 import type { StationDetailScreenNavigationProp } from "../types/navigation";
+import { Ionicons } from "@expo/vector-icons";
 
 import { StationCard } from "../components/StationCard";
 import { LoadingScreen } from "@components/LoadingScreen";
+import {
+  requestForegroundPermissionsAsync,
+  getCurrentPositionAsync,
+} from "expo-location";
 
 export default function StationSelectScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
-  // const { data: response, isLoading } = useGetAllStation();
-   const [showLoading, setShowLoading] = useState(false);
+  const [showLoading, setShowLoading] = useState(false);
+  const [showingNearby, setShowingNearby] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+
+  const getCurrentLocation = async () => {
+    try {
+      let { status } = await requestForegroundPermissionsAsync();
+      console.log("Permission status:", status);
+      
+      if (status !== "granted") {
+        console.log("Permission denied");
+        return;
+      }
+      
+      let location = await getCurrentPositionAsync({
+        accuracy: 5,
+      });
+      console.log("Location obtained:", location);
+      
+      setCurrentLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    } catch (e) {
+      console.error("Location error:", e);
+    }
+  };
+
+  // gọi lấy vị trí khi vào màn
+  React.useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  React.useEffect(() => {
+    if (showingNearby && currentLocation) {
+      getNearbyStations();
+    }
+  }, [showingNearby, currentLocation]);
+  
+  
   const {
     getStationByID,
     isLoadingGetStationByID,
     getAllStations,
     stations: data,
-  } = useStationActions(true);
+    getNearbyStations,
+    nearbyStations,
+    isLoadingNearbyStations,
+  } = useStationActions(true, undefined, currentLocation?.latitude, currentLocation?.longitude);
   const handleSelectStation = (stationId: string) => {
     navigation.navigate("StationDetail", { stationId });
   };
-  const stations = data;
+
+  const handleFindNearbyStations = async () => {
+    if (!currentLocation) {
+      console.log("Location not available");
+      return;
+    }
+    setShowingNearby(!showingNearby);
+  };
+
+  const handleToggleMap = () => {
+    setShowMap(!showMap);
+  };
+
+  const handleStationPress = (stationId: string) => {
+    navigation.navigate("StationDetail", { stationId });
+  };
+
+  const stations = showingNearby ? nearbyStations : data;
   const insets = useSafeAreaInsets();
-  if (!Array.isArray(stations) || stations === null || stations.length === 0 || showLoading) {
+  if (
+    !Array.isArray(stations) ||
+    stations === null ||
+    stations.length === 0 ||
+    showLoading
+  ) {
     return <LoadingScreen />;
   }
   // if(stations.length === 0){
@@ -56,6 +128,25 @@ export default function StationSelectScreen() {
         <Text style={styles.headerSubtitle}>
           Xem tất cả các lần thuê xe của bạn
         </Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.findNearbyButton}
+            onPress={handleFindNearbyStations}
+            disabled={isLoadingNearbyStations}
+          >
+            {isLoadingNearbyStations ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Ionicons name="location" size={16} color="#fff" />
+                <Text style={styles.findNearbyButtonText}>
+                  {showingNearby ? "Tất cả trạm" : "Tìm trạm gần bạn"}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+          
+        </View>
       </LinearGradient>
         <FlatList
           data={stations}
@@ -77,8 +168,9 @@ export default function StationSelectScreen() {
             };
             return (
               <StationCard
-                station={stationCardData}
+                station={item}
                 onPress={() => handleSelectStation(item._id)}
+                
               />
             );
           }}
@@ -119,6 +211,40 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.9)",
+    marginBottom: 12,
+  },
+  findNearbyButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  findNearbyButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  mapButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   list: {
     gap: 12,
