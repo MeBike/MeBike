@@ -114,7 +114,9 @@ export const USERS_MESSAGES = {
   // admin create user messages
   CREATE_USER_SUCCESS: 'Tạo người dùng mới thành công',
   // get new users stats
-  GET_NEW_USER_STATS_SUCCESS: 'Lấy thống kê người dùng mới thành công'
+  GET_NEW_USER_STATS_SUCCESS: 'Lấy thống kê người dùng mới thành công',
+  // get user dashboard stats
+  GET_USER_DASHBOARD_STATS_SUCCESS: 'Lấy thống kê tổng quan người dùng thành công'
 } as const
 
 export const REPORTS_MESSAGES = {

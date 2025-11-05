@@ -234,6 +234,10 @@ components:
       $ref: './components/schemas/DashboardStats.yaml'
     DashboardStation:
       $ref: './components/schemas/DashboardStation.yaml'
+    VipCustomerStat:
+      $ref: './components/schemas/VipCustomerStat.yaml'
+    AdminUserDashboardStats:
+      $ref: './components/schemas/AdminUserDashboardStats.yaml'
 
   securitySchemes:
     BearerAuth:

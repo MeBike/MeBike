@@ -1,8 +1,8 @@
 import { Router } from "express";
 
 import type { UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
-
-import { adminAndStaffGetAllUsersController, adminCreateUserController, adminResetPasswordController, changePasswordController, forgotPasswordController, getActiveUserStatsController, getMeController, getNewUserStatsController, getTopRentersStatsController, getUserDetailController, getUserStatsController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
+ 
+import { adminAndStaffGetAllUsersController, adminCreateUserController, adminResetPasswordController, changePasswordController, forgotPasswordController, getActiveUserStatsController, getAdminUserDashboardStatsController, getMeController, getNewUserStatsController, getTopRentersStatsController, getUserDetailController, getUserStatsController, loginController, logoutController, refreshController, registerController, resendEmailVerifyController, resetPasswordController, searchUsersController, updateMeController, updateUserByIdController, verifyEmailOtpController } from "~/controllers/users.controllers";
 import { filterMiddleware } from "~/middlewares/common.middlewares";
 import { accessTokenValidator, activeUserStatsValidator, adminAndStaffGetAllUsersValidator, adminCreateUserValidator, adminResetPasswordValidator, changePasswordValidator, forgotPasswordValidator, loginValidator, refreshTokenValidator, registerValidator, resetPasswordValidator, searchUsersValidator, statsPaginationValidator, updateMeValidator, updateUserByIdValidator, userDetailValidator, verifiedUserValidator, verifyEmailOtpValidator } from "~/middlewares/users.middlewares";
 import { wrapAsync } from "~/utils/handler";
@@ -123,6 +123,20 @@ usersRouter.get(
   accessTokenValidator,
   isAdminValidator,
   wrapAsync(getNewUserStatsController)
+)
+
+/**
+ * Description: Get user dashboard stats (for Admin)
+ * Path: /users/manage-users/dashboard-stats
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN
+ */
+usersRouter.get(
+  '/manage-users/dashboard-stats',
+  accessTokenValidator,
+  isAdminValidator,
+  wrapAsync(getAdminUserDashboardStatsController)
 )
 
 /**
