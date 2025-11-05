@@ -2,10 +2,11 @@ import type { Request, Response } from 'express'
 import type { NextFunction, ParamsDictionary } from 'express-serve-static-core'
 import type { Filter, ObjectId } from 'mongodb'
 
-import { GroupByOptions, RentalStatus } from '~/constants/enums'
+import { GroupByOptions, RentalStatus, SummaryPeriodType } from '~/constants/enums'
 import type {
   CancelRentalReqBody,
   CardRentalReqBody,
+  CreateRentalByStaffReqBody,
   CreateRentalReqBody,
   EndRentalByAdminOrStaffReqBody,
   RentalParams,
@@ -22,6 +23,7 @@ import { cardTapService } from '~/services/card-tap.service'
 import { sendPaginatedAggregationResponse, sendPaginatedResponse } from '~/utils/pagination.helper'
 import { toObjectId } from '~/utils/string'
 import { TokenPayLoad } from '~/models/requests/users.requests'
+import User from '~/models/schemas/user.schema'
 
 export async function createRentalSessionController(
   req: Request<ParamsDictionary, any, CreateRentalReqBody>,
@@ -33,6 +35,25 @@ export async function createRentalSessionController(
 
   const result = await rentalsService.createRentalSession({
     user_id,
+    start_station: station._id as ObjectId,
+    bike
+  })
+  res.json({
+    message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,
+    result
+  })
+}
+
+export async function createRentalSessionByStaffController(
+  req: Request<ParamsDictionary, any, CreateRentalByStaffReqBody>,
+  res: Response
+) {
+  const user = req.user as User
+  const station = req.station as Station
+  const bike = req.bike as Bike
+
+  const result = await rentalsService.createRentalSession({
+    user_id: user._id as ObjectId,
     start_station: station._id as ObjectId,
     bike
   })
@@ -238,6 +259,22 @@ export async function getDashboardSummaryController(req: Request, res: Response)
     result: {
       revenueSummary,
       hourlyRentalStats
+    }
+  })
+}
+
+export async function getRentalSummaryController(req: Request, res: Response) {
+  const [rentalList, todayRevenue, thisMonthRevenue] = await Promise.all([
+    rentalsService.countRentalByStatus(),
+    rentalsService.getRevenueBy(SummaryPeriodType.TODAY),
+    rentalsService.getRevenueBy(SummaryPeriodType.THIS_MONTH)
+  ])
+  res.json({
+    message: RENTALS_MESSAGE.GET_SUMMARY_SUCCESS,
+    result: {
+      rentalList,
+      todayRevenue,
+      thisMonthRevenue
     }
   })
 }
