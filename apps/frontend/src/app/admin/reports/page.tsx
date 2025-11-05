@@ -9,7 +9,7 @@ import { reportColumns } from "@/columns/report-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useUserReport } from "@/hooks/user-report";
 import { reportService } from "@/services/report.service";
-import type { Report } from "@/services/report.service";
+import { Report } from "@custom-types";
 
 export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,6 +23,7 @@ export default function ReportsPage() {
     refetchReports,
     isFetchingReports,
     pagination,
+    reportOverview,
   } = useUserReport({ hasToken: true });
 
   useEffect(() => {
@@ -31,7 +32,6 @@ export default function ReportsPage() {
 
   const handleViewReport = (report: Report) => {
     console.log("[v0] View report:", report._id);
-    // TODO: Implement view modal
   };
 
   const handleUpdateReport = (report: Report) => {
@@ -73,7 +73,9 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <ReportStats reports={reports} />
+      {
+        reportOverview && <ReportStats reports={reportOverview} />
+      }
 
       <div>
         <p className="text-sm text-muted-foreground mb-4">
@@ -131,10 +133,7 @@ export default function ReportsPage() {
               >
                 Hủy
               </Button>
-              <Button
-                onClick={handleStatusUpdate}
-                className="flex-1"
-              >
+              <Button onClick={handleStatusUpdate} className="flex-1">
                 Cập nhật
               </Button>
             </div>

@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Eye, Edit } from "lucide-react";
-import type { Report } from "@/services/report.service";
+import type { Report } from "@custom-types";
 
 interface ReportColumnsProps {
   onView: (report: Report) => void;
@@ -42,15 +42,20 @@ export const reportColumns = ({
     header: "Ưu tiên",
     cell: ({ row }) => {
       const priority = row.getValue("priority") as string;
+      if (priority === "") {
+        return <Badge variant="secondary">KHÔNG XÁC ĐỊNH</Badge>;
+      }
       const variant =
-        priority === "HIGH"
+        priority === "KHẨN CẤP"
           ? "destructive"
-          : priority === "MEDIUM"
-          ? "default"
-          : "secondary";
+          : priority === "CAO"
+            ? "warning"
+            : priority === "BÌNH THƯỜNG"
+              ? "default"
+              : "secondary";
       return (
         <Badge variant={variant} className="capitalize">
-          {priority === "HIGH" ? "Cao" : priority === "MEDIUM" ? "Trung bình" : "Thấp"}
+          {priority}
         </Badge>
       );
     },
@@ -63,20 +68,14 @@ export const reportColumns = ({
       const variant =
         status === "ĐANG CHỜ XỬ LÝ"
           ? "default"
-          : status === "IN_PROGRESS"
-            ? "success"
-            : status === "RESOLVED"
-              ? "secondary"
+          : status === "ĐANG XỬ LÝ"
+            ? "secondary"
+            : status === "ĐÃ GIẢI QUYẾT"
+              ? "outline"
               : "destructive";
       return (
         <Badge variant={variant} className="capitalize">
-          {status === "ĐANG CHỜ XỬ LÝ"
-            ? "ĐANG CHỜ XỬ LÝ"
-            : status === "IN_PROGRESS"
-              ? "ĐANG XỬ LÝ"
-              : status === "RESOLVED"
-                ? "ĐÃ GIẢI QUYẾT"
-                : "ĐÃ HỦY"}
+          {status}
         </Badge>
       );
     },
@@ -105,19 +104,11 @@ export const reportColumns = ({
 
       return (
         <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onView(report)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => onView(report)}>
             <Eye className="h-4 w-4 mr-1" />
             Xem
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onUpdate(report)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => onUpdate(report)}>
             <Edit className="h-4 w-4 mr-1" />
             Cập nhật
           </Button>

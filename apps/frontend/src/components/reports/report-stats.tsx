@@ -2,17 +2,14 @@
 
 import { Card } from "@/components/ui/card";
 import { FileText, Clock, CheckCircle, AlertTriangle } from "lucide-react";
-import type { Report } from "@/services/report.service";
+import { ReportOverview } from "@/types";
 
 interface ReportStatsProps {
-  reports: Report[];
+  reports: ReportOverview;
 }
 
 export function ReportStats({ reports }: ReportStatsProps) {
-  const totalReports = reports.length;
-  const pendingReports = reports.filter(r => r.status === "PENDING").length;
-  const resolvedReports = reports.filter(r => r.status === "RESOLVED").length;
-  const urgentReports = reports.filter(r => r.priority === "HIGH").length;
+
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -21,7 +18,7 @@ export function ReportStats({ reports }: ReportStatsProps) {
           <div>
             <p className="text-sm text-muted-foreground">Tổng báo cáo</p>
             <p className="text-3xl font-bold text-primary mt-1">
-              {totalReports}
+              {reports.totalReport || 0}
             </p>
           </div>
           <div className="p-3 bg-primary/10 rounded-lg">
@@ -35,7 +32,7 @@ export function ReportStats({ reports }: ReportStatsProps) {
           <div>
             <p className="text-sm text-muted-foreground">Đang chờ xử lý</p>
             <p className="text-3xl font-bold text-yellow-500 mt-1">
-              {pendingReports}
+              {reports.totalPendingReport || 0}
             </p>
           </div>
           <div className="p-3 bg-yellow-500/10 rounded-lg">
@@ -47,9 +44,9 @@ export function ReportStats({ reports }: ReportStatsProps) {
       <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Đã giải quyết</p>
+            <p className="text-sm text-muted-foreground">Đang xử lý</p>
             <p className="text-3xl font-bold text-green-500 mt-1">
-              {resolvedReports}
+              {reports.totalInProgressReport || 0}
             </p>
           </div>
           <div className="p-3 bg-green-500/10 rounded-lg">
@@ -58,16 +55,16 @@ export function ReportStats({ reports }: ReportStatsProps) {
         </div>
       </Card>
 
-      <Card className="p-4 bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/20">
+      <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Ưu tiên cao</p>
-            <p className="text-3xl font-bold text-red-500 mt-1">
-              {urgentReports}
+            <p className="text-sm text-muted-foreground">Đã hoàn thành</p>
+            <p className="text-3xl font-bold text-blue-500 mt-1">
+              {reports.totalCompleteReport}
             </p>
           </div>
-          <div className="p-3 bg-red-500/10 rounded-lg">
-            <AlertTriangle className="w-6 h-6 text-red-500" />
+          <div className="p-3 bg-blue-500/10 rounded-lg">
+            <CheckCircle className="w-6 h-6 text-blue-500" />
           </div>
         </div>
       </Card>
