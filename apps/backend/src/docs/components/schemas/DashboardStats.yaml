@@ -1,0 +1,15 @@
+type: object
+description: "Thống kê tổng quan cho trang chủ (landing page)."
+properties:
+  totalStations:
+    type: integer
+    description: "Tổng số trạm xe đạp."
+    example: 50
+  totalBikes:
+    type: integer
+    description: "Tổng số xe đạp đang hoạt động (không bao gồm xe có trạng thái 'KHÔNG CÓ SẴN')."
+    example: 148
+  totalUsers:
+    type: integer
+    description: "Tổng số người dùng đang hoạt động (không bao gồm người dùng 'BANNED')."
+    example: 250

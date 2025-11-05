@@ -2,7 +2,16 @@ import type { ClientSession, Document, ObjectId } from 'mongodb'
 
 import { Decimal128, Int32 } from 'mongodb'
 
-import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role, TrendValue } from '~/constants/enums'
+import {
+  BikeStatus,
+  GroupByOptions,
+  RentalStatus,
+  ReservationStatus,
+  Role,
+  SosAlertStatus,
+  SummaryPeriodType,
+  TrendValue
+} from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { AUTH_MESSAGE, RENTALS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -172,35 +181,44 @@ class RentalsService {
   ): Promise<{ rental: Rental; logData?: any }> {
     const now = getLocalTime()
     const result: any = {}
+    const endBikeStatus = BikeStatus.Available
 
+    const sosAlert = await databaseService.sos_alerts.findOne({
+      rental_id: rental._id,
+      status: SosAlertStatus.UNSOLVABLE
+    })
     const duration = this.generateDuration(rental.start_time, effective_end_time)
-    let totalPrice = this.generateTotalPrice(duration)
-
-    const reservation = await databaseService.reservations.findOneAndUpdate(
-      { _id: rental._id },
-      {
-        $set: {
-          status: ReservationStatus.Expired,
-          updated_at: now
-        }
-      },
-      { returnDocument: 'before', session }
-    )
-
-    result.origin_price = totalPrice
-    if (reservation) {
-      totalPrice = Math.max(0, totalPrice - parseFloat(reservation.prepaid.toString()))
-      result.is_reservation = true
-      result.prepaid = parseFloat(reservation.prepaid.toString())
-    }
-
-    const hours = duration / 60
-    if (hours > PENALTY_HOURS) {
-      result.penalty_amount = PENALTY_AMOUNT
-      totalPrice += PENALTY_AMOUNT
-      console.log(
-        `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${hours.toFixed(2)}h)`
+    let totalPrice = 0
+    if (!sosAlert) {
+      totalPrice = this.generateTotalPrice(duration)
+      const reservation = await databaseService.reservations.findOneAndUpdate(
+        { _id: rental._id },
+        {
+          $set: {
+            status: ReservationStatus.Expired,
+            updated_at: now
+          }
+        },
+        { returnDocument: 'before', session }
       )
+
+      result.origin_price = totalPrice
+      if (reservation) {
+        totalPrice = Math.max(0, totalPrice - parseFloat(reservation.prepaid.toString()))
+        result.is_reservation = true
+        result.prepaid = parseFloat(reservation.prepaid.toString())
+      }
+
+      const hours = duration / 60
+      if (hours > PENALTY_HOURS) {
+        result.penalty_amount = PENALTY_AMOUNT
+        totalPrice += PENALTY_AMOUNT
+        console.log(
+          `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${hours.toFixed(2)}h)`
+        )
+      }
+    } else {
+      console.log(`[SOS] Bike unsolvable, user will not be charged for this rental.`)
     }
 
     const decimalTotalPrice = Decimal128.fromString(totalPrice.toString())
@@ -571,13 +589,13 @@ class RentalsService {
     let dateFormat
     switch (groupBy) {
       case GroupByOptions.Month:
-        dateFormat = '%m-%Y'
+        dateFormat = '%Y-%m'
         break
       case GroupByOptions.Year:
         dateFormat = '%Y'
         break
       default:
-        dateFormat = '%d-%m-%Y'
+        dateFormat = '%Y-%m-%d'
     }
 
     const startDate = from ? new Date(from) : new Date('2025-01-01')
@@ -599,7 +617,7 @@ class RentalsService {
           totalRentals: { $sum: 1 }
         }
       },
-      { $sort: { _id: 1 } },
+      { $sort: { _id: -1 } },
       {
         $project: {
           _id: 0,
@@ -613,7 +631,7 @@ class RentalsService {
     const result = await databaseService.rentals.aggregate(pipeline).toArray()
     return {
       period: { from: startDate, to: endDate },
-      groupBy: groupBy ?? GroupByOptions.Day,
+      groupBy: groupBy ?? GroupByOptions.Date,
       data: result
     }
   }
@@ -820,7 +838,7 @@ class RentalsService {
     const result = await databaseService.reservations.aggregate(pipeline).toArray()
     return {
       period: { from: startDate, to: endDate },
-      groupBy: groupBy ?? GroupByOptions.Day,
+      groupBy: groupBy ?? GroupByOptions.Date,
       data: result
     }
   }
@@ -1006,6 +1024,82 @@ class RentalsService {
     })
 
     return fullDay
+  }
+
+  async getRevenueBy(type: SummaryPeriodType) {
+    const now = getLocalTime ? getLocalTime() : new Date()
+
+    let start: Date
+    let end: Date
+
+    if (type === SummaryPeriodType.TODAY) {
+      start = new Date(now)
+      start.setUTCHours(0, 0, 0, 0)
+      end = new Date(now)
+      end.setUTCHours(23, 59, 59, 999)
+    } else {
+      start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0))
+      end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999))
+    }
+
+    const result = await databaseService.rentals
+      .aggregate([
+        {
+          $match: {
+            status: RentalStatus.Completed,
+            end_time: { $gte: start, $lte: end }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: '$total_price' }
+          }
+        }
+      ])
+      .toArray()
+
+    return result.length > 0 ? parseFloat(result[0].totalRevenue) : 0
+  }
+
+  async countRentalByStatus() {
+    const pipeline = [
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          status: '$_id',
+          count: 1
+        }
+      }
+    ]
+    const result = await databaseService.rentals.aggregate(pipeline).toArray()
+
+    const counts = {
+      Rented: 0,
+      Completed: 0,
+      Cancelled: 0,
+      Reserved: 0
+    }
+
+    const statusMap: Record<string, keyof typeof counts> = {
+      [RentalStatus.Rented]: 'Rented',
+      [RentalStatus.Completed]: 'Completed',
+      [RentalStatus.Cancelled]: 'Cancelled',
+      [RentalStatus.Reserved]: 'Reserved'
+    }
+
+    result.forEach((item) => {
+      const key = statusMap[item.status]
+      if (key) counts[key] = item.count
+    })
+
+    return counts
   }
 
   generateDuration(start: Date, end: Date) {

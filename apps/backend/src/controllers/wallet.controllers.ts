@@ -232,6 +232,24 @@ export async function getAllRefundController(
   await walletService.getAllRefund(res, next, query)
 }
 
+export async function getRefundOverviewController(req: Request<any, any, any>, res: Response) {
+  const result = await walletService.getRefundOverview()
+
+  res.json({
+    message: WALLETS_MESSAGE.GET_REFUND_OVERVIEW_SUCCESS,
+    result
+  })
+}
+
+export async function getWithdrawOverviewController(req: Request<any, any, any>, res: Response) {
+  const result = await walletService.getWithdrawOverview()
+
+  res.json({
+    message: WALLETS_MESSAGE.GET_WITHDRAW_OVERVIEW_SUCCESS,
+    result
+  })
+}
+
 export async function getAllUserRefundController(
   req: Request<ParamsDictionary, any, any, GetAllRefundReqQuery>,
   res: Response,

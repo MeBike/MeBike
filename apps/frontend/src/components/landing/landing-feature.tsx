@@ -12,19 +12,19 @@ const features = [
     icon: Clock,
     title: "Thuê xe nhanh chóng",
     description:
-      "Quét QR code, mở khóa và bắt đầu hành trình chỉ trong 30 giây. Không cần thủ tục phức tạp.",
+      "Đăng kí tài khoản, đặt xe đang sẵn sàng được thuê và bắt đầu hành trình chỉ trong 2 phút. Không cần thủ tục phức tạp.",
   },
   {
     icon: Wallet,
     title: "Giá cả phải chăng",
     description:
-      "Chỉ từ 5.000đ/30 phút. Gói tháng chỉ 99.000đ cho sinh viên và người lao động.",
+      "Chỉ từ 2.000đ/30 phút. Nhiều gói cước linh hoạt phù hợp với nhu cầu di chuyển hàng ngày của bạn.",
   },
   {
     icon: Shield,
     title: "An toàn & Bảo hiểm",
     description:
-      "Xe được bảo trì định kỳ, có bảo hiểm tai nạn. Hỗ trợ 24/7 khi bạn cần.",
+      "Xe được bảo trì định kỳ. Hỗ trợ bạn trong phiên thuê xe khi bạn cần.",
   },
 ];
 
