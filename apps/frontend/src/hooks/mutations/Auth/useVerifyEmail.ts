@@ -3,6 +3,6 @@ import { useMutation } from "@tanstack/react-query";
 
 export const useVerifyEmailMutation = () => {
     return useMutation({
-        mutationFn: (email_verify_token:string) => authService.verifyEmail(email_verify_token),
+        mutationFn: ({ email, otp }: { email: string; otp: string }) => authService.verifyEmail({email, otp}),
     })
 }

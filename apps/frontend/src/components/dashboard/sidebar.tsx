@@ -30,7 +30,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       ? "/admin"
       : userRole === "STAFF"
         ? "/staff"
-        : "/customer";
+        : "/user";
   return [
     {
       title: "Tổng quan",
