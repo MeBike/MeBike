@@ -36,9 +36,18 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
     };
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("auth:session_expired", handleAuthFailure);
+    
+    // Listen for custom token change event
+    const handleTokenChange = () => {
+      const token = getAccessToken();
+      setHasToken(!!token);
+    };
+    window.addEventListener("token:changed", handleTokenChange);
+    
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("auth:session_expired", handleAuthFailure);
+      window.removeEventListener("token:changed", handleTokenChange);
     };
   }, [queryClient]);
   

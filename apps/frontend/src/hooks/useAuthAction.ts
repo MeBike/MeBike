@@ -115,14 +115,19 @@ export const useAuthActions = () => {
   const register = useCallback(
     (data: RegisterSchemaFormData) => {
       useRegister.mutate(data, {
-        onSuccess: (result) => {
+        onSuccess: async (result) => {
           if (result.status === 200) {
             const { access_token, refresh_token } = result.data.result;
             setTokens(access_token, refresh_token);
-            queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+            // Dispatch token change event
+            window.dispatchEvent(new Event("token:changed"));
+            // Wait for token to be set
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
             toast.success("Registration Successful", {
               description: "Your account has been created.",
             });
+            // router.push("/user/profile");
           } else {
             const errorMessage = result.data?.message || "Error registering";
             toast.error(errorMessage);
@@ -170,6 +175,16 @@ export const useAuthActions = () => {
             if (result.status === 200) {
               toast.success("Email verified successfully");
               queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+              const accessToken = result.data.result?.access_token;
+              const refreshToken = result.data.result?.refresh_token;
+              if (accessToken && refreshToken) {
+                setTokens(accessToken, refreshToken);
+              } else {
+                toast.error("Missing access or refresh token");
+                reject(new Error("Missing access or refresh token"));
+                return;
+              }
+              window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
               resolve();
             } else {
               const errorMessage =
@@ -234,7 +249,6 @@ export const useAuthActions = () => {
     },
     [useForgotPassword]
   );
-
   const resetPassword = useCallback(
     (data: ResetPasswordSchemaFormData) => {
       useResetPassword.mutate(data, {

@@ -13,36 +13,69 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/auth-providers";
 
 interface VerifyEmailModalProps {
+  isAuthenticated?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (email: string, otp: string) => Promise<void>;
+  onSkip?: () => void;
   isLoading?: boolean;
+  defaultEmail?: string;
 }
 
 export function VerifyEmailModal({
+  isAuthenticated,
   isOpen,
   onClose,
   onSubmit,
+  onSkip,
   isLoading = false,
+  defaultEmail,
 }: VerifyEmailModalProps) {
-  const [email, setEmail] = useState("");
+  const { user } = useAuth();
+  const [email, setEmail] = useState(defaultEmail || user?.email || "");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!email.trim()) {
+  //     setError("Vui lòng nhập email");
+  //     return;
+  //   }
+  //   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+  //     setError("Email không hợp lệ");
+  //     return;
+  //   }
+  //   if (!otp.trim()) {
+  //     setError("Vui lòng nhập mã OTP");
+  //     return;
+  //   }
+  //   if (otp.trim().length < 4) {
+  //     setError("Mã OTP phải có ít nhất 4 ký tự");
+  //     return;
+  //   }
+  //   try {
+  //     setError("");
+  //     await onSubmit(email.trim(), otp.trim());
+  //     setOtp("");
+  //     setEmail("");
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
+
+  const handleClose = () => {
+    setOtp("");
+    setEmail(user?.email || "");
+    setError("");
+    onClose();
+  };
+
+  const handleValidateOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!email.trim()) {
-      setError("Vui lòng nhập email");
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Email không hợp lệ");
-      return;
-    }
 
     if (!otp.trim()) {
       setError("Vui lòng nhập mã OTP");
@@ -56,19 +89,12 @@ export function VerifyEmailModal({
 
     try {
       setError("");
-      await onSubmit(email.trim(), otp.trim());
+      await onSubmit(email, otp.trim());
       setOtp("");
-      setEmail("");
+      setEmail(user?.email || "");
     } catch (err) {
       console.log(err);
     }
-  };
-
-  const handleClose = () => {
-    setOtp("");
-    setEmail("");
-    setError("");
-    onClose();
   };
 
   return (
@@ -88,8 +114,8 @@ export function VerifyEmailModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 mt-6">
-          <div className="space-y-2">
+        <form onSubmit={handleValidateOTP} className="space-y-5 mt-6">
+          {/* <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
               Email <span className="text-destructive">*</span>
             </Label>
@@ -104,11 +130,11 @@ export function VerifyEmailModal({
                   setEmail(e.target.value);
                   if (error) setError("");
                 }}
-                disabled={isLoading}
+                disabled
                 className="pl-10 bg-background border-border"
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <Label htmlFor="otp" className="text-sm font-medium">
@@ -141,15 +167,28 @@ export function VerifyEmailModal({
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isLoading}
-              className="flex-1 cursor-pointer"
-            >
-              Hủy
-            </Button>
+            {isAuthenticated && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isLoading}
+                className="flex-1 cursor-pointer"
+              >
+                Hủy
+              </Button>
+            )}
+            {onSkip && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onSkip}
+                disabled={isLoading}
+                className="flex-1 cursor-pointer"
+              >
+                Bỏ qua
+              </Button>
+            )}
             <Button
               type="submit"
               className="flex-1 gap-2 cursor-pointer bg-primary hover:bg-primary/90"
@@ -161,7 +200,7 @@ export function VerifyEmailModal({
                   Đang xác thực...
                 </>
               ) : (
-                "Xác thực"
+                "Xác thực OTP"
               )}
             </Button>
           </div>

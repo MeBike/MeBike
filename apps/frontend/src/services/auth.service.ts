@@ -16,6 +16,10 @@ interface AuthResponse {
   };
 }
 interface MessageResponse {
+  result?: {
+    access_token: string;
+    refresh_token: string;
+  };
   message: string;
 }
 export const ROLES = ["USER", "ADMIN", "STAFF"] as const;

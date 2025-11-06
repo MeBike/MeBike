@@ -18,14 +18,16 @@ import {
 import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { toast } from "sonner";
-import { useAuth } from "@/providers/auth-providers";
+import { EmailVerificationForm } from "@/components/auth/EmailVerificationForm";
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isVerifyingEmail] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
   const router = useRouter();
-  const { user } = useAuth();
-  const { register: registerUser } = useAuthActions();
+  const { register: registerUser, verifyEmail, resendVerifyEmail } = useAuthActions();
   const {
     register,
     handleSubmit,
@@ -50,20 +52,44 @@ const RegisterPage = () => {
     if (!registerData.phone_number || registerData.phone_number.trim() === '') {
       delete registerData.phone_number;
     }
+    // Lưu email để dùng cho verification
+    setRegisteredEmail(data.email);
     registerUser(registerData);
-    setTimeout(() => {
-      router.push("/user");
-    }, 2000);
-    console.log(user);
+    // Show verify email form after registration
+    setShowEmailVerification(true);
+    resendVerifyEmail();
+  };
 
+  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
+    try {
+      await verifyEmail({ email: registeredEmail, otp });
+      // Wait 2 seconds to show loading, then redirect
+      setTimeout(() => {
+        setShowEmailVerification(false);
+        router.push("/user/profile");
+      }, 2000);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleSkipVerification = () => {
+    setShowEmailVerification(false);
+    router.push("/user/profile");
+  };
+
+  const handleBackToRegister = () => {
+    setShowEmailVerification(false);
   };
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
+    <>
+      {!showEmailVerification ? (
+        <div
+          className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
     bg-[linear-gradient(135deg,hsl(214_100%_40%)_0%,hsl(215_16%_47%)_100%)] 
     overflow-hidden"
-    >
+        >
       <div className="w-full max-w-md">
         <div className="text-center animate-fade-in mb-4">
           <div className="flex items-center justify-center">
@@ -292,7 +318,17 @@ const RegisterPage = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+        </div>
+      ) : (
+        <EmailVerificationForm
+          email={registeredEmail}
+          onSubmit={handleVerifyEmailSubmit}
+          onSkip={handleSkipVerification}
+          onBack={handleBackToRegister}
+          isLoading={isVerifyingEmail}
+        />
+      )}
+    </>
   );
 };
 

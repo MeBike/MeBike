@@ -69,6 +69,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
     //   roles: ["ADMIN"],
     // },
     {
+      title: "Tổng quan người dùng",
+      icon: Users,
+      href: "/user",
+      roles: ["USER"],
+    },
+    {
       title: "Hồ sơ cá nhân",
       icon: Users,
       href: "/user/profile",
@@ -229,7 +235,7 @@ export function Sidebar() {
             type="button"
             onClick={() =>
               handleNav(
-                `${user?.role === "ADMIN" ? "/admin" : "/staff"}/profile`
+                `${user?.role === "ADMIN" ? "/admin" : user?.role === "USER" ? "/user" : "/staff"}/profile`
               )
             }
             className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"

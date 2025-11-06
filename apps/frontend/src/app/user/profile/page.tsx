@@ -152,13 +152,14 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 bg-muted">
                   <Image
                     src={avatarPreview || "/placeholder.svg"}
                     alt="Avatar"
                     className="w-full h-full object-cover"
                     width={128}
                     height={128}
+                    priority
                   />
                 </div>
                 {isEditing && (
@@ -375,17 +376,30 @@ export default function ProfilePage() {
                   Tăng cường bảo mật tài khoản
                 </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => handleResendVerifyEmail()}
-                className="gap-2 cursor-pointer"
-                disabled={formData?.verify === "VERIFIED"}
-              >
-                <Mail className="w-4 h-4" />
-                {formData?.verify === "VERIFIED"
-                  ? "Đã xác thực"
-                  : "Gửi email xác thực"}
-              </Button>
+              
+              <div className="flex gap-2">
+                {formData?.verify !== "VERIFIED" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsVerifyEmailModalOpen(true)}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Xác thực với OTP
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => handleResendVerifyEmail()}
+                  className="gap-2 cursor-pointer"
+                  disabled={formData?.verify === "VERIFIED"}
+                >
+                  <Mail className="w-4 h-4" />
+                  {formData?.verify === "VERIFIED"
+                    ? "Đã xác thực"
+                    : "Gửi email xác thực"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
