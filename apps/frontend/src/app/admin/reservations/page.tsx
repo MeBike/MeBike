@@ -4,13 +4,12 @@ import { useEffect, useState } from "react";
 import { DataTable } from "@/components/TableCustom";
 import { ReservationStats } from "@/components/reservations/reservation-stats";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useReservationActions } from "@/hooks/use-reservation";
 import { useStationActions } from "@/hooks/useStationAction";
 import { reservationColumn } from "@/columns/reservation-columns";
 import type { Reservation } from "@/types/Reservation";
-
+import { Loader2 } from "lucide-react";
 export default function ReservationsPage() {
   const { stations, getAllStations } = useStationActions({ hasToken: true });
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,6 +52,13 @@ export default function ReservationsPage() {
   const handleFilterChange = () => {
     setCurrentPage(1);
   };
+  if(!allReservations) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+        <Loader2 className="animate-spin w-16 h-16 text-primary" />
+      </div>
+    );
+  }
   return (
     <div>
       <div className="space-y-6">
@@ -66,14 +72,14 @@ export default function ReservationsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button
+            {/* <Button
               // onClick={() => {
               //   setIsCreateModalOpen(true);
               // }}
             >
               <Plus className="w-4 h-4 mr-2" />
               Tạo đặt trước
-            </Button>
+            </Button> */}
           </div>
         </div>
 
