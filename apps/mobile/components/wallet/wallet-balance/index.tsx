@@ -27,11 +27,7 @@ export function WalletBalance({ balance, status }: WalletBalanceProps) {
       <View style={styles.balanceCard}>
         <View style={styles.balanceContent}>
           <Text style={styles.balanceLabel}>Số dư hiện tại</Text>
-          <Text style={styles.balanceAmount}>
-            {formatBalance(balance)}
-            {" "}
-            đ
-          </Text>
+          <Text style={styles.balanceAmount}>{formatBalance(balance)} đ</Text>
           <View style={styles.statusBadge}>
             <View
               style={[

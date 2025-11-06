@@ -9,8 +9,6 @@ export const myWalletScreenStyles = StyleSheet.create({
     paddingTop: 32,
     paddingBottom: 38,
     paddingHorizontal: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
     marginBottom: 8,
     alignItems: "center",
     elevation: 8,
