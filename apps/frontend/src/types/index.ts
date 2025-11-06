@@ -8,3 +8,4 @@ export * from "./Withdrawal";
 export * from "./Refund";
 export * from "./Reservation";
 export * from "./Response"
+export * from "./SOS";
