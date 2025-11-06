@@ -6,6 +6,7 @@ import { RefundStatus } from "@/types";
 import { useRouter } from "next/navigation";
 import { useUpdateRefundRequestMutation } from "./mutations/Refund/useUpdateRefundRequestMutation";
 import { toast } from "sonner";
+import { useGetRefundOverview } from "./query/Refund/useGetRefundOverview";
 export const useRefundAction = ({
   page,
   limit,
@@ -65,6 +66,7 @@ export const useRefundAction = ({
     },
     [hasToken, router, useUpdateRefundRequest, queryClient, id, limit , page ,status]
   );
+  const { data: overviewResponse } = useGetRefundOverview();
   return {
     response: data?.data,
     isLoading,
@@ -75,6 +77,7 @@ export const useRefundAction = ({
     isDetailLoading,
     pagination: data?.pagination,
     refetch,
+    overviewResponse,
     updateRefundRequest,
   };
 };
