@@ -81,27 +81,25 @@ const handleSaveStatus = async () => {
 };
   useEffect(() => {
     getAllRefundRequest();
-    console.log(detailResponse)
-  }, [selectedID , detailResponse, getAllRefundRequest]);
-  useEffect(() => {
-    console.log(detailResponse);
-  }, [detailResponse]);
+  }, [selectedID , getAllRefundRequest]);
+
   const getNextStatuses = useCallback((current: RefundStatus): RefundStatus[] => {
     return (refundTransitions[current] ?? []).filter((s) => s !== current);
   }, [refundTransitions]);
-  const nextStatuses = getNextStatuses(detailResponse?.status as RefundStatus);
+
+  // Reset newStatus khi modal mở và detailResponse được load
   useEffect(() => {
-    console.log("Next statuses:", newStatus);
-  }, [newStatus]);
-  useEffect(() => {
-    if (detailResponse?.status) {
-      setNewStatus(detailResponse.status as RefundStatus);
+    if (isUpdateModalOpen && detailResponse?.status) {
+      const next = getNextStatuses(detailResponse.status as RefundStatus);
+      if (next.length > 0) {
+        setNewStatus(next[0]);
+      } else {
+        setNewStatus(detailResponse.status as RefundStatus);
+      }
     }
-  }, [detailResponse]);
-  useEffect(() => {
-    const next = getNextStatuses(detailResponse?.status as RefundStatus);
-    if (next.length > 0) setNewStatus(next[0]);
-  }, [detailResponse , getNextStatuses]);
+  }, [isUpdateModalOpen, detailResponse, getNextStatuses]);
+
+  const nextStatuses = getNextStatuses(detailResponse?.status as RefundStatus);
   return (
     <div>
       <div className="space-y-6">

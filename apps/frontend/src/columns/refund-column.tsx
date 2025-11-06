@@ -65,27 +65,32 @@ export const refundColumn = ({
   {
     id: "actions",
     header: "Hành động",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết"
-          onClick={() => {
-            if (onView) {
-              onView({ id: row.original._id });
-            }
-          }}
-        >
-          <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button
-          title="Cập nhật trạng thái"
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          onClick={() => onUpdateStatus?.(row.original)}
-        >
-          <RefreshCw className="w-4 h-4 text-blue-500" />
-        </button>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const status = row.original.status;
+      return (
+        <div className="flex items-center gap-2">
+          <button
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            title="Xem chi tiết"
+            onClick={() => {
+              if (onView) {
+                onView({ id: row.original._id });
+              }
+            }}
+          >
+            <Eye className="w-4 h-4 text-muted-foreground" />
+            </button>
+          {status !== "ĐÃ HOÀN THÀNH" && (
+            <button
+              title="Cập nhật trạng thái"
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              onClick={() => onUpdateStatus?.(row.original)}
+            >
+              <RefreshCw className="w-4 h-4 text-blue-500" />
+            </button>
+          )}
+        </div>
+      );
+    }
   },
 ];

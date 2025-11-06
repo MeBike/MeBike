@@ -6,6 +6,7 @@ import { WithdrawStatus } from "@/types";
 import { useRouter } from "next/navigation";
 import { useUpdateWithdrawRequestMutation } from "./mutations/Withdrawal/useUpdateWithdrawalRequestMutation";
 import { toast } from "sonner";
+import { useGetAllWithdrawalOverviewQuery } from "./query/Withdrawal/useGetAllWithdrawalOverviewQuery";
 export const useWithdrawAction = ({
   page,
   limit,
@@ -56,7 +57,11 @@ export const useWithdrawAction = ({
           queryClient.invalidateQueries({
             queryKey: ["withdrawRequests", page, limit, status],
           });
-          queryClient.invalidateQueries({ queryKey: ["withdrawRequest", id] });
+          queryClient.invalidateQueries({ 
+            queryKey: ["withdrawRequests", id],
+            refetchType: "active"
+          });
+          refetchDetail();
         },
         onError: (error) => {
           console.log(error);
@@ -72,8 +77,10 @@ export const useWithdrawAction = ({
       limit,
       page,
       status,
+      refetchDetail,
     ]
   );
+  const { data: overviewResponse } = useGetAllWithdrawalOverviewQuery();
   return {
     response: data?.data,
     isLoading,
@@ -85,5 +92,6 @@ export const useWithdrawAction = ({
     pagination: data?.pagination,
     refetch,
     updateWithdrawRequest,
+    overviewResponse,
   };
 };
