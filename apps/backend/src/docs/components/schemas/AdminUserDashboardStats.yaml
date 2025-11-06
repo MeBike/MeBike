@@ -1,0 +1,27 @@
+type: object
+description: "Thống kê tổng quan về người dùng cho trang dashboard của Admin."
+properties:
+  totalCustomers:
+    type: integer
+    description: "Tổng số khách hàng (Role: User)."
+    example: 250
+  activeCustomers:
+    type: integer
+    description: "Số lượng khách hàng đang hoạt động (Đã xác thực)."
+    example: 220
+  newCustomersThisMonth:
+    type: integer
+    description: "Số lượng khách hàng mới đăng ký trong tháng này."
+    example: 30
+  vipCustomer:
+    $ref: './VipCustomerStat.yaml'
+  totalRevenue:
+    type: number
+    format: double
+    description: "Tổng doanh thu từ tất cả các lượt thuê đã hoàn thành."
+    example: 15000000
+  averageSpending:
+    type: number
+    format: float
+    description: "Chi tiêu trung bình trên mỗi khách hàng (Tổng doanh thu / Tổng khách hàng)."
+    example: 60000.50

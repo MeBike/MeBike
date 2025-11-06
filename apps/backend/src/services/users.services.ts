@@ -1,6 +1,6 @@
 import { Filter, ObjectId } from "mongodb";
 import process from "node:process";
-import nodemailer from "nodemailer";
+import nodemailer from 'nodemailer'
 
 import type { AdminCreateUserReqBody, AdminGetAllUsersReqQuery, RegisterReqBody, UpdateMeReqBody, UpdateUserReqBody } from "~/models/requests/users.requests";
 
@@ -956,6 +956,103 @@ class UsersService {
       newUsersLastMonth: newUsersLastMonth,
       percentageChange: parseFloat(percentageChange.toFixed(2))
     }
+  }
+
+  async getAdminUserDashboardStats() {
+    const now = getLocalTime()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
+    const statsPipeline = [
+      {
+        $facet: {
+          //tổng khách hàng
+          totalCustomers: [
+            { $match: { role: Role.User } },
+            { $count: 'count' }
+          ],
+          //khách hàng đang hoạt động(verified)
+          activeCustomers: [
+            { $match: { role: Role.User, verify: UserVerifyStatus.Verified } },
+            { $count: 'count' }
+          ],
+          //khách hàng mới trong tháng
+          newCustomersThisMonth: [
+            {
+              $match: {
+                role: Role.User,
+                created_at: { $gte: startOfMonth, $lte: endOfMonth }
+              }
+            },
+            { $count: 'count' }
+          ]
+        }
+      },
+      {
+        $project: {
+          totalCustomers: { $ifNull: [{ $arrayElemAt: ['$totalCustomers.count', 0] }, 0] },
+          activeCustomers: { $ifNull: [{ $arrayElemAt: ['$activeCustomers.count', 0] }, 0] },
+          newCustomersThisMonth: { $ifNull: [{ $arrayElemAt: ['$newCustomersThisMonth.count', 0] }, 0] }
+        }
+      }
+    ]
+
+    const vipCustomerPipeline = [
+      //lọc các chuyến đi đã hoàn thành
+      { $match: { status: RentalStatus.Completed } },
+      //nhóm theo user và tính tổng thời gian thuê
+      {
+        $group: {
+          _id: '$user_id',
+          totalDuration: { $sum: '$duration' }
+        }
+      },
+      //sắp xếp để tìm người có thời gian thuê cao nhất
+      { $sort: { totalDuration: -1 } },
+      //lấy top 1
+      { $limit: 1 },
+      //join với collection 'users' để lấy tên
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: '$userInfo' },
+      //định dạng output
+      {
+        $project: {
+          _id: 0,
+          fullname: '$userInfo.fullname',
+          totalDuration: 1
+        }
+      }
+    ]
+
+    const revenuePipeline = [
+      { $match: { status: RentalStatus.Completed } },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: { $toDouble: '$total_price' } }
+        }
+      }
+    ]
+
+    const [statsResult, vipResult, revenueResult] = await Promise.all([
+      databaseService.users.aggregate(statsPipeline).toArray(),
+      databaseService.rentals.aggregate(vipCustomerPipeline).toArray(),
+      databaseService.rentals.aggregate(revenuePipeline).toArray()
+    ])
+
+    const stats = statsResult[0] || { totalCustomers: 0, activeCustomers: 0, newCustomersThisMonth: 0 }
+    const vipCustomer = vipResult[0] || null
+    const totalRevenue = revenueResult[0]?.totalRevenue || 0
+    const averageSpending = stats.totalCustomers > 0 ? totalRevenue / stats.totalCustomers : 0
+
+    return { ...stats, vipCustomer, totalRevenue, averageSpending: parseFloat(averageSpending.toFixed(2)) }
   }
 }
 

@@ -1350,6 +1350,71 @@
         }
       }
     },
+    "/users/manage-users/dashboard-stats": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Get user dashboard statistics (Admin only)",
+        "description": "Retrieves key statistics about the user base for the Admin dashboard.\nIncludes total customers, active customers, new customers this month, total revenue, average spending, and the top renter (VIP).\n**Requires Admin privileges (not Staff).**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User dashboard statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê dashboard người dùng thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/AdminUserDashboardStats"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (Invalid access token).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (User is not an Admin).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found (Admin user from token does not exist).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/bikes": {
       "get": {
         "tags": [
@@ -7442,6 +7507,59 @@
             "type": "integer",
             "description": "Số lượng xe đạp hiện có sẵn tại trạm.",
             "example": 8
+          }
+        }
+      },
+      "VipCustomerStat": {
+        "type": "object",
+        "nullable": true,
+        "description": "Thông tin về khách hàng VIP (người có tổng thời gian thuê cao nhất). Trả về null nếu chưa có ai thuê.",
+        "properties": {
+          "fullname": {
+            "type": "string",
+            "description": "Tên đầy đủ của khách hàng VIP.",
+            "example": "Nguyen Van A"
+          },
+          "totalDuration": {
+            "type": "integer",
+            "description": "Tổng số phút đã thuê của khách hàng VIP.",
+            "example": 4500
+          }
+        }
+      },
+      "AdminUserDashboardStats": {
+        "type": "object",
+        "description": "Thống kê tổng quan về người dùng cho trang dashboard của Admin.",
+        "properties": {
+          "totalCustomers": {
+            "type": "integer",
+            "description": "Tổng số khách hàng (Role: User).",
+            "example": 250
+          },
+          "activeCustomers": {
+            "type": "integer",
+            "description": "Số lượng khách hàng đang hoạt động (Đã xác thực).",
+            "example": 220
+          },
+          "newCustomersThisMonth": {
+            "type": "integer",
+            "description": "Số lượng khách hàng mới đăng ký trong tháng này.",
+            "example": 30
+          },
+          "vipCustomer": {
+            "$ref": "#/components/schemas/VipCustomerStat"
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu từ tất cả các lượt thuê đã hoàn thành.",
+            "example": 15000000
+          },
+          "averageSpending": {
+            "type": "number",
+            "format": "float",
+            "description": "Chi tiêu trung bình trên mỗi khách hàng (Tổng doanh thu / Tổng khách hàng).",
+            "example": 60000.5
           }
         }
       }
