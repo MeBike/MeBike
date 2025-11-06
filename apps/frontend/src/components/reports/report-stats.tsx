@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { FileText, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { FileText, Clock, CheckCircle } from "lucide-react";
 import { ReportOverview } from "@/types";
 
 interface ReportStatsProps {
@@ -60,7 +60,7 @@ export function ReportStats({ reports }: ReportStatsProps) {
           <div>
             <p className="text-sm text-muted-foreground">Đã hoàn thành</p>
             <p className="text-3xl font-bold text-blue-500 mt-1">
-              {reports.totalCompleteReport}
+              {reports.totalCompleteReport || 0}
             </p>
           </div>
           <div className="p-3 bg-blue-500/10 rounded-lg">

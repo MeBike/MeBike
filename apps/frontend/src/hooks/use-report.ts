@@ -14,6 +14,7 @@ interface ErrorResponse {
     data?: {
       errors?: Record<string, { msg?: string }>;
       message?: string;
+      error?: string;
     };
   };
 }
@@ -21,39 +22,42 @@ interface ErrorResponse {
 const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   const axiosError = error as ErrorResponse;
   if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
+    const data = axiosError.response.data;
+    const { errors, message, error: errorField } = data;
     if (errors) {
       const firstError = Object.values(errors)[0];
       if (firstError?.msg) return firstError.msg;
     }
     if (message) return message;
+    if (errorField) return errorField;
+    // If data is a string, return it
+    if (typeof data === 'string') return data;
   }
   const simpleError = error as ErrorWithMessage;
   if (simpleError?.message) {
     return simpleError.message;
   }
-
   return defaultMessage;
 };
-export const useUserReport = ({ hasToken }: { hasToken: boolean }) => {
+export const useUserReport = ({ hasToken , page , limit }: { hasToken: boolean , page?: number , limit?: number }) => {
   const queryClient = useQueryClient();
   const router = useRouter();
   const {
     data: reports,
     refetch: refetchReports,
     isFetching: isFetchingReports,
-  } = useGetAllManageReportQuery();
+  } = useGetAllManageReportQuery({ page, limit });
   const { data: reportOverview, refetch: refetchReportOverview } =
     useGetReportOverview();
   const refreshReports = useCallback(async () => {
     if (!hasToken) return;
     refetchReports();
-  }, [queryClient]);
+  }, [hasToken , refetchReports]);
   const useUpdateReport = useUpdateReportMutation();
   const refreshReportOverview = useCallback(async () => {
     if (!hasToken) return;
     refetchReportOverview();
-  }, [queryClient]);
+  }, [hasToken , refetchReportOverview]);
   const updateReport = useCallback(
     async (id: string, data: UpdateReportSchemaFormData) => {
       if (!hasToken) {
@@ -68,9 +72,14 @@ export const useUserReport = ({ hasToken }: { hasToken: boolean }) => {
             data?: { message?: string };
           }) => {
             if (result?.status === 200) {
-              toast.success("Cập nhật báo cáo thành công");
-              queryClient.invalidateQueries({ queryKey: ["all", "report"] });
-              refetchReports();
+              const message = result?.data?.message;
+              if (message && message !== "Update trạng thái report thành công!") {
+                toast.error(message);
+              } else {
+                toast.success("Cập nhật báo cáo thành công");
+                queryClient.invalidateQueries({ queryKey: ["all", "report"] });
+                refetchReports();
+              }
             } else {
               const errorMessage =
                 result?.data?.message || "Lỗi khi cập nhật báo cáo";
@@ -87,7 +96,7 @@ export const useUserReport = ({ hasToken }: { hasToken: boolean }) => {
         }
       );
     },
-    [hasToken, router, queryClient, refetchReports]
+    [hasToken, router, queryClient, refetchReports , useUpdateReport]
   );
 
   return {

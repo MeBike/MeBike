@@ -41,11 +41,17 @@ export const reportService = {
     );
     return response;
   },
-  getManageUserReports: async (): Promise<
+  getManageUserReports: async ({
+    page , limit
+  } : {page ?: number , limit ?: number}): Promise<
     AxiosResponse<ApiResponse<Report[]>>
   > => {
     const response = await fetchHttpClient.get<ApiResponse<Report[]>>(
-      REPORT_ENDPOINTS.MANAGE_USER_REPORTS
+      REPORT_ENDPOINTS.MANAGE_USER_REPORTS,
+      {
+        page,
+        limit
+      }
     );
     return response;
   },

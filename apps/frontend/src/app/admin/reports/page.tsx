@@ -4,15 +4,18 @@ import { useEffect, useState } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import { DataTable } from "@/components/TableCustom";
 import { ReportStats } from "@/components/reports/report-stats";
 import { Button } from "@/components/ui/button";
 import { reportColumns } from "@/columns/report-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { useUserReport } from "@/hooks/user-report";
-import { reportService } from "@/services/report.service";
+import { useUserReport } from "@/hooks/use-report";
 import { userService } from "@/services/user.service";
-import { UpdateReportSchema, type UpdateReportSchemaFormData } from "@/schemas/reportSchema";
+import {
+  UpdateReportSchema,
+  type UpdateReportSchemaFormData,
+} from "@/schemas/reportSchema";
 import type { Report } from "@custom-types";
 import { DetailUser } from "@/services/auth.service";
 
@@ -31,16 +34,31 @@ export default function ReportsPage() {
     pagination,
     reportOverview,
     updateReport,
-  } = useUserReport({ hasToken: true });
+  } = useUserReport({ hasToken: true , page : currentPage , limit : limit });
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    watch,
   } = useForm<UpdateReportSchemaFormData>({
     resolver: zodResolver(UpdateReportSchema),
   });
+
+  const currentStatus = watch("newStatus");
+
+  // Get available status transitions based on current status
+  const getAvailableStatuses = () => {
+    const statusTransitions: Record<string, string[]> = {
+      "": ["ĐANG CHỜ XỬ LÝ"],
+      "ĐANG CHỜ XỬ LÝ": ["ĐANG CHỜ XỬ LÝ", "ĐANG XỬ LÝ", "ĐÃ HỦY"],
+      "ĐANG XỬ LÝ": ["ĐANG XỬ LÝ", "ĐÃ GIẢI QUYẾT", "ĐÃ HỦY"],
+      "ĐÃ GIẢI QUYẾT": ["ĐÃ GIẢI QUYẾT", "ĐÃ HỦY"],
+      "ĐÃ HỦY": ["ĐÃ HỦY"],
+    };
+    return statusTransitions[currentStatus] || [];
+  };
 
   useEffect(() => {
     refetchReports();
@@ -72,7 +90,7 @@ export default function ReportsPage() {
   const handleUpdateReport = (report: Report) => {
     setSelectedReport(report);
     reset({
-      newStatus: report.status as any,
+      newStatus: report.status,
       staff_id: report.assignee_id || "",
       priority: report.priority,
     });
@@ -81,14 +99,32 @@ export default function ReportsPage() {
 
   const onSubmit = async (data: UpdateReportSchemaFormData) => {
     if (!selectedReport) return;
-    try {
-      await reportService.updateReport(selectedReport._id, data);
-      setIsUpdateModalOpen(false);
-      setSelectedReport(null);
-      refetchReports();
-    } catch (error) {
-      console.error("Failed to update report:", error);
-    }
+    // try {
+    //   const response = await reportService.updateReport(selectedReport._id, data);
+    //   if (response?.status === 200) {
+    //     toast.success("Cập nhật báo cáo thành công");
+    //     setIsUpdateModalOpen(false);
+    //     setSelectedReport(null);
+    //     refetchReports();
+    //   }
+    // } catch (error: unknown) {
+    //   const axiosError = error as {
+    //     response?: {
+    //       data?: {
+    //         message?: string;
+    //       };
+    //     };
+    //     message?: string;
+    //   };
+    //   const errorMessage =
+    //     axiosError?.response?.data?.message ||
+    //     axiosError?.message ||
+    //     "Lỗi khi cập nhật báo cáo";
+    //   toast.error(errorMessage);
+    // }
+    updateReport(selectedReport._id, data);
+    setIsUpdateModalOpen(false);
+    setSelectedReport(null);
   };
 
   if (isFetchingReports) {
@@ -112,9 +148,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {
-        reportOverview && <ReportStats reports={reportOverview} />
-      }
+      {reportOverview && <ReportStats reports={reportOverview} />}
 
       <div>
         <p className="text-sm text-muted-foreground mb-4">
@@ -138,16 +172,13 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Update Report Modal */}
       {isUpdateModalOpen && selectedReport && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-foreground mb-4">
               Cập nhật báo cáo
             </h2>
-
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* Status Field */}
               <div>
                 <label className="text-sm font-medium text-foreground">
                   Trạng thái
@@ -157,15 +188,22 @@ export default function ReportsPage() {
                   className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                 >
                   <option value="">Chọn trạng thái</option>
-                  <option value="ĐANG CHỜ XỬ LÝ">Đang chờ xử lý</option>
-                  <option value="ĐANG XỬ LÝ">Đang xử lý</option>
-                  <option value="ĐÃ GIẢI QUYẾT">Đã giải quyết</option>
-                  <option value="ĐÃ HỦY">Đã hủy</option>
+                  {getAvailableStatuses().map((status) => (
+                    <option key={status} value={status}>
+                      {status === "ĐANG CHỜ XỬ LÝ"
+                        ? "Đang chờ xử lý"
+                        : status === "ĐANG XỬ LÝ"
+                          ? "Đang xử lý"
+                          : status === "ĐÃ GIẢI QUYẾT"
+                            ? "Đã giải quyết"
+                            : "Đã hủy"}
+                    </option>
+                  ))}
                 </select>
                 {errors.newStatus && (
                   <div className="flex items-center gap-2 mt-1 text-sm text-destructive">
                     <AlertCircle className="w-4 h-4" />
-                    {errors.newStatus.message}
+                    {errors.newStatus?.message}
                   </div>
                 )}
               </div>
@@ -188,7 +226,7 @@ export default function ReportsPage() {
                 {errors.priority && (
                   <div className="flex items-center gap-2 mt-1 text-sm text-destructive">
                     <AlertCircle className="w-4 h-4" />
-                    {errors.priority.message}
+                    {errors.priority?.message}
                   </div>
                 )}
               </div>
@@ -215,7 +253,7 @@ export default function ReportsPage() {
                 {errors.staff_id && (
                   <div className="flex items-center gap-2 mt-1 text-sm text-destructive">
                     <AlertCircle className="w-4 h-4" />
-                    {errors.staff_id.message}
+                    {errors.staff_id?.message}
                   </div>
                 )}
               </div>

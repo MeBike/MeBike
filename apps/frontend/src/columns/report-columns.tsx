@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 import type { Report } from "@custom-types";
 
 interface ReportColumnsProps {
@@ -10,7 +10,7 @@ interface ReportColumnsProps {
 }
 
 export const reportColumns = ({
-  onView,
+  // onView,
   onUpdate,
 }: ReportColumnsProps): ColumnDef<Report>[] => [
   {
@@ -51,8 +51,8 @@ export const reportColumns = ({
           : priority === "CAO"
             ? "warning"
             : priority === "BÌNH THƯỜNG"
-              ? "default"
-              : "secondary";
+              ? "pending"
+              : "success";
       return (
         <Badge variant={variant} className="capitalize">
           {priority}
@@ -67,11 +67,11 @@ export const reportColumns = ({
       const status = row.getValue("status") as string;
       const variant =
         status === "ĐANG CHỜ XỬ LÝ"
-          ? "default"
+          ? "pending"
           : status === "ĐANG XỬ LÝ"
-            ? "secondary"
+            ? "warning"
             : status === "ĐÃ GIẢI QUYẾT"
-              ? "outline"
+              ? "success"
               : "destructive";
       return (
         <Badge variant={variant} className="capitalize">
@@ -101,17 +101,19 @@ export const reportColumns = ({
     header: "Thao tác",
     cell: ({ row }) => {
       const report = row.original;
-
+      const status = row.getValue("status") as string;
       return (
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => onView(report)}>
+          {/* <Button variant="ghost" size="sm" onClick={() => onView(report)}>
             <Eye className="h-4 w-4 mr-1" />
             Xem
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => onUpdate(report)}>
-            <Edit className="h-4 w-4 mr-1" />
-            Cập nhật
-          </Button>
+          </Button> */}
+          {status !== "ĐÃ GIẢI QUYẾT" &&  status !== "ĐÃ HỦY" && (
+            <Button variant="ghost" size="sm" onClick={() => onUpdate(report)}>
+              <Edit className="h-4 w-4 mr-1" />
+              Cập nhật
+            </Button>
+          )}
         </div>
       );
     },
