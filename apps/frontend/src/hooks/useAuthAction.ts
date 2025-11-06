@@ -139,7 +139,7 @@ export const useAuthActions = () => {
         },
       });
     },
-    [useRegister, queryClient, router]
+    [useRegister, queryClient]
   );
   const logOut = useCallback(
     (refresh_token: string) => {

@@ -18,17 +18,15 @@ import {
 import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { toast } from "sonner";
-import { useAuth } from "@/providers/auth-providers";
 import { EmailVerificationForm } from "@/components/auth/EmailVerificationForm";
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
-  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const [isVerifyingEmail] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const router = useRouter();
-  const { user } = useAuth();
   const { register: registerUser, verifyEmail, resendVerifyEmail } = useAuthActions();
   const {
     register,

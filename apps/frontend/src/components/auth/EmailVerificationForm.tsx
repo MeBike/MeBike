@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Mail, Lock, Loader2, ChevronLeft } from "lucide-react";
+import { Mail, Loader2, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface EmailVerificationFormProps {

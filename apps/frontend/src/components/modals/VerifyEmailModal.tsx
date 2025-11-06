@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuthActions } from "@/hooks/useAuthAction";
 import { useAuth } from "@/providers/auth-providers";
 
 interface VerifyEmailModalProps {
@@ -40,33 +39,33 @@ export function VerifyEmailModal({
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      setError("Vui lòng nhập email");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setError("Email không hợp lệ");
-      return;
-    }
-    if (!otp.trim()) {
-      setError("Vui lòng nhập mã OTP");
-      return;
-    }
-    if (otp.trim().length < 4) {
-      setError("Mã OTP phải có ít nhất 4 ký tự");
-      return;
-    }
-    try {
-      setError("");
-      await onSubmit(email.trim(), otp.trim());
-      setOtp("");
-      setEmail("");
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!email.trim()) {
+  //     setError("Vui lòng nhập email");
+  //     return;
+  //   }
+  //   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+  //     setError("Email không hợp lệ");
+  //     return;
+  //   }
+  //   if (!otp.trim()) {
+  //     setError("Vui lòng nhập mã OTP");
+  //     return;
+  //   }
+  //   if (otp.trim().length < 4) {
+  //     setError("Mã OTP phải có ít nhất 4 ký tự");
+  //     return;
+  //   }
+  //   try {
+  //     setError("");
+  //     await onSubmit(email.trim(), otp.trim());
+  //     setOtp("");
+  //     setEmail("");
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // };
 
   const handleClose = () => {
     setOtp("");

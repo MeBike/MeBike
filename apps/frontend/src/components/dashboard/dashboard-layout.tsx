@@ -3,8 +3,6 @@
 import type React from "react";
 import { useState } from "react";
 import { Sidebar } from "./sidebar";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import type { DetailUser } from "@/services/auth.service";
 import Image from "next/image";
 interface DashboardLayoutProps {
