@@ -10,11 +10,20 @@ const SOS_ENDPOINTS = {
   ID: (id: string) => `${SOS_BASE}/${id}`,
 } as const;
 export const sosService = {
-  getSOSRequest: async (
-    id: string
-  ): Promise<AxiosResponse<ApiResponse<SOS[]>>> => {
+  getSOSRequest: async ({
+    page,
+    limit,
+  }: {
+    page?: number;
+    limit?: number;
+  }): Promise<AxiosResponse<ApiResponse<SOS[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<SOS[]>>(
-      SOS_ENDPOINTS.ID(id)
+      SOS_ENDPOINTS.BASE,
+
+      {
+        page,
+        limit,
+      }
     );
     return response;
   },
