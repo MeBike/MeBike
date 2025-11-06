@@ -175,6 +175,16 @@ export const useAuthActions = () => {
             if (result.status === 200) {
               toast.success("Email verified successfully");
               queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+              const accessToken = result.data.result?.access_token;
+              const refreshToken = result.data.result?.refresh_token;
+              if (accessToken && refreshToken) {
+                setTokens(accessToken, refreshToken);
+              } else {
+                toast.error("Missing access or refresh token");
+                reject(new Error("Missing access or refresh token"));
+                return;
+              }
+              window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
               resolve();
             } else {
               const errorMessage =
@@ -239,7 +249,6 @@ export const useAuthActions = () => {
     },
     [useForgotPassword]
   );
-
   const resetPassword = useCallback(
     (data: ResetPasswordSchemaFormData) => {
       useResetPassword.mutate(data, {

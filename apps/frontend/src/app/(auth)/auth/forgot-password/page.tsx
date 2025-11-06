@@ -15,25 +15,56 @@ import { Separator } from "@components/ui/separator";
 import { Bike, Mail, ArrowLeft, Send } from "lucide-react";
 import React from "react";
 import { useAuthActions } from "@hooks/useAuthAction";
+import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 
 const ForgotPassword = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [email, setEmail] = useState("");
-  const { forgotPassword, isLoadingForgottingPassword } = useAuthActions();
+  const [showResetForm, setShowResetForm] = useState(false);
+  const { forgotPassword, isLoadingForgottingPassword, resetPassword, isReseting } = useAuthActions();
   const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-        forgotPassword({ email });
+      forgotPassword({ email });
       setIsSubmitted(true);
     } catch (error) {
       console.error('Forgot password error:', error);
     }
   };
 
+  const handleResetPasswordSubmit = async (emailParam: string, otp: string, newPassword: string, confirmPassword: string) => {
+    try {
+      await resetPassword({ email: emailParam, otp, password: newPassword, confirm_password: confirmPassword });
+      // Will redirect from useAuthActions after success
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 2000);
+    } catch (error) {
+      console.error('Reset password error:', error);
+    }
+  };
+
   const handleBackToLogin = () => {
     router.push("/auth/login");
   };
+
+  // Show reset password form with OTP
+  if (isSubmitted && showResetForm) {
+    return (
+      <ResetPasswordForm
+        email={email}
+        onSubmit={handleResetPasswordSubmit}
+        onBack={() => {
+          setIsSubmitted(false);
+          setShowResetForm(false);
+          setEmail("");
+        }}
+        isLoading={isReseting}
+      />
+    );
+  }
 
   if (isSubmitted) {
     return (
@@ -67,9 +98,16 @@ const ForgotPassword = () => {
             <CardContent className="space-y-4">
               <div className="space-y-4">
                 <Button
-                  onClick={handleBackToLogin}
+                  onClick={() => setShowResetForm(true)}
                   className="w-full h-12 hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
                     bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white"
+                >
+                  Nhập mã OTP để đặt lại mật khẩu
+                </Button>
+                <Button
+                  onClick={handleBackToLogin}
+                  variant="outline"
+                  className="w-full h-12 hover:bg-gray-50 transition-all duration-300"
                 >
                   <ArrowLeft className="mr-2 h-5 w-5" />
                   Quay lại đăng nhập
