@@ -163,12 +163,12 @@ export const userService = {
     >(USER_ENDPOINTS.GET_NEW_REGISRATION_STATS);
     return response;
   },
-  getActiveUser : async (): Promise<
+  getActiveUser: async (): Promise<
     AxiosResponse<DetailUserResponse<GetActiveStatisticsUser[]>>
   > => {
     const response = await fetchHttpClient.get<
       DetailUserResponse<GetActiveStatisticsUser[]>
     >(USER_ENDPOINTS.GET_ACTIVE_USER);
     return response;
-  }
+  },
 };

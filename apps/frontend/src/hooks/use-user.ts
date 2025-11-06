@@ -11,6 +11,7 @@ import { useGetTopRenterQuery } from "./query/User/useGetTopRenterQuery";
 import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
 import { UserProfile } from "@/schemas/userSchema";
+import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
 interface ErrorWithMessage {
   message: string;
 }
@@ -47,6 +48,7 @@ export const useUserActions = ({
   limit,
   page,
   searchQuery,
+  id,
 }: {
   hasToken: boolean;
   verify?: VerifyStatus;
@@ -54,11 +56,13 @@ export const useUserActions = ({
   limit?: number;
   page?: number;
   searchQuery?: string;
+  id?: string;
 }) => {
   const router = useRouter();
   const useCreateUser = useCreateUserMutation();  
   const queryClient = useQueryClient();
-  const { data, refetch, isLoading , isFetching} = useGetAllUserQuery({
+  const { data: detailUserData, refetch: refetchDetailUser, isLoading: isLoadingDetailUser } = useGetDetailUserQuery(id || "");
+  const { data, refetch, isLoading, isFetching } = useGetAllUserQuery({
     page,
     limit,
     role: role || "",
@@ -110,6 +114,13 @@ export const useUserActions = ({
     }
     refetchActiveUser();
   }, [hasToken, router, refetchActiveUser]);
+  const getDetailUser = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchDetailUser();
+  }, [hasToken, router, refetchDetailUser]);
   const getNewRegistrationStats = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -189,6 +200,9 @@ export const useUserActions = ({
     createUser,
     paginationUser: data?.pagination,
     isLoadingSearch,
-    totalRecordUser: data?.pagination?.totalRecords || 0,  
+    totalRecordUser: data?.pagination?.totalRecords || 0,
+    getDetailUser,
+    detailUserData,
+    isLoadingDetailUser,
   };
 };

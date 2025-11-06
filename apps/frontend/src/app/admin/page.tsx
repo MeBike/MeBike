@@ -5,7 +5,7 @@ import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { Bike, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@/components/ui/progress";
-import { useUserActions } from "@/hooks/useUserAction";
+import { useUserActions } from "@/hooks/use-user";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { useGetRevenueQuery } from "@/hooks/query/Rent/useGetRevenueQuery";
 import { useRentalsActions } from "@/hooks/useRentalAction";

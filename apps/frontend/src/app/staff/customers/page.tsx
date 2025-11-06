@@ -7,7 +7,7 @@ import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import type { VerifyStatus, UserRole, DetailUser } from "@custom-types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useUserActions } from "@/hooks/useUserAction";
+import { useUserActions } from "@/hooks/use-user";
 
 export default function CustomersPage() {
 
