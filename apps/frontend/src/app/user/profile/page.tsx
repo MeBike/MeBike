@@ -152,13 +152,14 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 bg-muted">
                   <Image
                     src={avatarPreview || "/placeholder.svg"}
                     alt="Avatar"
                     className="w-full h-full object-cover"
                     width={128}
                     height={128}
+                    priority
                   />
                 </div>
                 {isEditing && (

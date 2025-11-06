@@ -19,13 +19,17 @@ import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-providers";
+import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
   const router = useRouter();
   const { user } = useAuth();
-  const { register: registerUser } = useAuthActions();
+  const { register: registerUser, verifyEmail, resendVerifyEmail } = useAuthActions();
   const {
     register,
     handleSubmit,
@@ -50,7 +54,28 @@ const RegisterPage = () => {
     if (!registerData.phone_number || registerData.phone_number.trim() === '') {
       delete registerData.phone_number;
     }
+    // Lưu email để dùng cho verification
+    setRegisteredEmail(data.email);
     registerUser(registerData);
+    // Show verify email modal after registration
+    setIsVerifyEmailModalOpen(true);
+    resendVerifyEmail();
+  };
+
+  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
+    setIsVerifyingEmail(true);
+    try {
+      await verifyEmail({ email: registeredEmail, otp });
+      setIsVerifyEmailModalOpen(false);
+      router.push("/user/profile");
+    } finally {
+      setIsVerifyingEmail(false);
+    }
+  };
+
+  const handleSkipVerification = () => {
+    setIsVerifyEmailModalOpen(false);
+    router.push("/user/profile");
   };
 
   return (
@@ -287,6 +312,15 @@ const RegisterPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      <VerifyEmailModal
+        isOpen={isVerifyEmailModalOpen}
+        onClose={() => setIsVerifyEmailModalOpen(false)}
+        onSubmit={handleVerifyEmailSubmit}
+        onSkip={handleSkipVerification}
+        isLoading={isVerifyingEmail}
+        defaultEmail={registeredEmail}
+      />
     </div>
   );
 };

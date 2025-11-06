@@ -17,20 +17,26 @@ import { useAuthActions } from "@/hooks/useAuthAction";
 import { useAuth } from "@/providers/auth-providers";
 
 interface VerifyEmailModalProps {
+  isAuthenticated?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (email: string, otp: string) => Promise<void>;
+  onSkip?: () => void;
   isLoading?: boolean;
+  defaultEmail?: string;
 }
 
 export function VerifyEmailModal({
+  isAuthenticated,
   isOpen,
   onClose,
   onSubmit,
+  onSkip,
   isLoading = false,
+  defaultEmail,
 }: VerifyEmailModalProps) {
   const { user } = useAuth();
-  const [email, setEmail] = useState(user?.email || "");
+  const [email, setEmail] = useState(defaultEmail || user?.email || "");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
 
@@ -162,15 +168,28 @@ export function VerifyEmailModal({
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isLoading}
-              className="flex-1 cursor-pointer"
-            >
-              Hủy
-            </Button>
+            {isAuthenticated && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isLoading}
+                className="flex-1 cursor-pointer"
+              >
+                Hủy
+              </Button>
+            )}
+            {onSkip && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onSkip}
+                disabled={isLoading}
+                className="flex-1 cursor-pointer"
+              >
+                Bỏ qua
+              </Button>
+            )}
             <Button
               type="submit"
               className="flex-1 gap-2 cursor-pointer bg-primary hover:bg-primary/90"

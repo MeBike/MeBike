@@ -127,7 +127,7 @@ export const useAuthActions = () => {
             toast.success("Registration Successful", {
               description: "Your account has been created.",
             });
-            router.push("/user/profile");
+            // router.push("/user/profile");
           } else {
             const errorMessage = result.data?.message || "Error registering";
             toast.error(errorMessage);
