@@ -163,9 +163,9 @@ export const useAuthActions = () => {
     [useLogout, queryClient, router]
   );
   const verifyEmail = useCallback(
-    (email_verify_token: string): Promise<void> => {
+    ({email , otp} : {email: string; otp: string}): Promise<void> => {
       return new Promise((resolve, reject) => {
-        useVerifyEmail.mutate(email_verify_token, {
+        useVerifyEmail.mutate({ email, otp }, {
           onSuccess: (result) => {
             if (result.status === 200) {
               toast.success("Email verified successfully");

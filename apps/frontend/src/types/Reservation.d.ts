@@ -13,11 +13,11 @@ export interface Reservation {
 export interface ReservationStats {
   month_year: string;
   total_reservations: number;
-  success_count: number;
+  successed_count: number;
   cancelled_count: number;
   total_prepaid_revenue: number;
   success_rate: string;
-  cancel_rate:string;
+  cancel_rate: string;
 }
 export interface ReservationStatsStation {
   station: {

@@ -16,6 +16,7 @@ import { useAuthActions } from "@/hooks/useAuthAction";
 import Image from "next/image";
 import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
 import Link from "next/link";
+import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -24,7 +25,9 @@ export default function ProfilePage() {
     () => user || ({} as DetailUser)
   );
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
-  const { resendVerifyEmail } = useAuthActions();
+  const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const { resendVerifyEmail, verifyEmail } = useAuthActions();
   useEffect(() => {
     if (user) {
       setData(user);
@@ -93,6 +96,17 @@ export default function ProfilePage() {
       return;
     }
     resendVerifyEmail();
+    setIsVerifyEmailModalOpen(true);
+  };
+
+  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
+    setIsVerifyingEmail(true);
+    try {
+      await verifyEmail({email, otp});
+      setIsVerifyEmailModalOpen(false);
+    } finally {
+      setIsVerifyingEmail(false);
+    }
   };
   return (
     <DashboardLayout user={data}>
@@ -376,6 +390,13 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      <VerifyEmailModal
+        isOpen={isVerifyEmailModalOpen}
+        onClose={() => setIsVerifyEmailModalOpen(false)}
+        onSubmit={handleVerifyEmailSubmit}
+        isLoading={isVerifyingEmail}
+      />
     </DashboardLayout>
   );
 }
