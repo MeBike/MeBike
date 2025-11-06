@@ -14,19 +14,26 @@ import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
+import { useAuth } from "@/providers/auth-providers";
 
 interface VerifyEmailModalProps {
+  isAuthenticated?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (email: string, otp: string) => Promise<void>;
+  onSkip?: () => void;
   isLoading?: boolean;
+  defaultEmail?: string;
 }
 
 export function VerifyEmailModal({
+  isAuthenticated,
   isOpen,
   onClose,
   onSubmit,
+  onSkip,
   isLoading = false,
+  defaultEmail,
 }: VerifyEmailModalProps) {
   const { user } = useAuth();
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
@@ -116,7 +123,7 @@ export function VerifyEmailModal({
                 className="pl-10 bg-background border-border opacity-70 cursor-not-allowed"
               />
             </div>
-          </div>
+          </div> */}
 
           {/* OTP Input - 6 Digits */}
           <div className="space-y-2">
@@ -184,6 +191,7 @@ export function VerifyEmailModal({
                   Đang xác thực...
                 </>
               ) : (
+                "Xác thực OTP"
                 "Xác thực OTP"
               )}
             </Button>
