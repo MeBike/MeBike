@@ -1,7 +1,9 @@
 "use client";
 
 import type React from "react";
+
 import { useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import type { DetailUser } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,15 +15,19 @@ import { Progress } from "@radix-ui/react-progress";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import Image from "next/image";
 import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
-import { clearTokens } from "@/utils/tokenManager";
 import Link from "next/link";
+import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 export default function ProfilePage() {
-  const { user, updateProfile  } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [data,setData] = useState<DetailUser | null>(null);
-  const [formData, setFormData] = useState<DetailUser>(() => user || {} as DetailUser);
+  const [data, setData] = useState<DetailUser | null>(null);
+  const [formData, setFormData] = useState<DetailUser>(
+    () => user || ({} as DetailUser)
+  );
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
-  const { resendVerifyEmail } = useAuthActions();
+  const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const { resendVerifyEmail, verifyEmail } = useAuthActions();
   useEffect(() => {
     if (user) {
       setData(user);
@@ -31,7 +37,11 @@ export default function ProfilePage() {
     }
   }, [user]);
   if (!user || !data) {
-    return <div><Progress /></div>;
+    return (
+      <div>
+        <Progress />
+      </div>
+    );
   }
   const handleInputChange = (field: keyof DetailUser, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -45,7 +55,7 @@ export default function ProfilePage() {
       };
       reader.readAsDataURL(file);
     }
-  };  
+  };
   const handleSave = () => {
     if (!user) return;
     const fields: (keyof UpdateProfileSchemaFormData)[] = [
@@ -86,297 +96,304 @@ export default function ProfilePage() {
       return;
     }
     resendVerifyEmail();
+    setIsVerifyEmailModalOpen(true);
   };
-  if (user.role !== "STAFF") {
-    clearTokens();
-    window.location.href = "/auth/login";
-    return null;
-  }
-    return (
-      <div>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                Hồ sơ cá nhân
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Quản lý thông tin tài khoản của bạn
-              </p>
-            </div>
-            {!isEditing ? (
+
+  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
+    setIsVerifyingEmail(true);
+    try {
+      await verifyEmail({ email, otp });
+      setIsVerifyEmailModalOpen(false);
+    } finally {
+      setIsVerifyingEmail(false);
+    }
+  };
+  return (
+    <DashboardLayout user={data}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Hồ sơ cá nhân
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Quản lý thông tin tài khoản của bạn
+            </p>
+          </div>
+          {!isEditing ? (
+            <Button
+              onClick={() => setIsEditing(true)}
+              className="bg-primary hover:bg-primary/90 cursor-pointer gap-2"
+            >
+              Chỉnh sửa hồ sơ
+            </Button>
+          ) : (
+            <div className="flex gap-2">
               <Button
-                onClick={() => setIsEditing(true)}
-                className="bg-primary hover:bg-primary/90"
+                onClick={handleCancel}
+                variant="outline"
+                className="gap-2 bg-transparent cursor-pointer"
               >
-                Chỉnh sửa hồ sơ
+                <X className="w-4 h-4" />
+                Hủy
               </Button>
-            ) : (
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleCancel}
-                  variant="outline"
-                  className="gap-2 bg-transparent"
-                >
-                  <X className="w-4 h-4" />
-                  Hủy
-                </Button>
-                <Button
-                  onClick={() => handleSave()}
-                  className="bg-primary hover:bg-primary/90 gap-2"
-                >
-                  <Save className="w-4 h-4" />
-                  Lưu thay đổi
-                </Button>
-              </div>
-            )}
-          </div>
+              <Button
+                onClick={() => handleSave()}
+                className="bg-primary hover:bg-primary/90 gap-2 cursor-pointer"
+              >
+                <Save className="w-4 h-4" />
+                Lưu thay đổi
+              </Button>
+            </div>
+          )}
+        </div>
 
-          <div className="bg-card border border-border rounded-xl p-8">
-            <div className="flex flex-col md:flex-row gap-8">
-              <div className="flex flex-col items-center gap-4">
-                <div className="relative group">
-                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
-                    <Image
-                      src={avatarPreview || "/placeholder.svg"}
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                      width={128}
-                      height={128}
-                    />
-                  </div>
-                  {isEditing && (
-                    <label
-                      htmlFor="avatar-upload"
-                      className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    >
-                      <Camera className="w-8 h-8 text-white" />
-                      <input
-                        id="avatar-upload"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleAvatarChange}
-                      />
-                    </label>
-                  )}
+        <div className="bg-card border border-border rounded-xl p-8">
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 bg-muted">
+                  <Image
+                    src={avatarPreview || "/placeholder.svg"}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                    width={128}
+                    height={128}
+                    priority
+                  />
                 </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-foreground">
-                    {formData?.fullname || "Chưa có tên"}
-                  </p>
-                  <p
-                    className={cn(
-                      "text-xs px-2 py-1 rounded-full inline-block mt-1",
-                      formData?.role === "ADMIN"
-                        ? "bg-primary/20 text-primary"
-                        : "bg-accent/20 text-accent-foreground"
-                    )}
+                {isEditing && (
+                  <label
+                    htmlFor="avatar-upload"
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   >
-                    {formData?.role === "ADMIN" ? "Quản trị viên" : "Nhân viên"}
-                  </p>
+                    <Camera className="w-8 h-8 text-white" />
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                  </label>
+                )}
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground">
+                  {formData?.fullname || "Chưa có tên"}
+                </p>
+                <p
+                  className={cn(
+                    "text-xs px-2 py-1 rounded-full inline-block mt-1",
+                    formData?.role === "ADMIN"
+                      ? "bg-primary/20 text-primary"
+                      : "bg-accent/20 text-accent-foreground"
+                  )}
+                >
+                  {formData?.role === "ADMIN" ? "Quản trị viên" : "Nhân viên"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="fullname"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Họ và tên
+                  </Label>
+                  <Input
+                    id="fullname"
+                    value={formData?.fullname || ""}
+                    onChange={(e) =>
+                      handleInputChange("fullname", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="username"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Tên đăng nhập
+                  </Label>
+                  <Input
+                    id="username"
+                    value={formData?.username || ""}
+                    onChange={(e) =>
+                      handleInputChange("username", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="email"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData?.email || ""}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    disabled
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="phone"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Số điện thoại
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={formData?.phone_number || ""}
+                    onChange={(e) =>
+                      handleInputChange("phone_number", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label
+                    htmlFor="location"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Địa chỉ
+                  </Label>
+                  <Input
+                    id="location"
+                    value={formData?.location || ""}
+                    onChange={(e) =>
+                      handleInputChange("location", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
                 </div>
               </div>
 
-              {/* Form Section */}
-              <div className="flex-1 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="fullname"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Họ và tên
-                    </Label>
-                    <Input
-                      id="fullname"
-                      value={formData?.fullname || ""}
-                      onChange={(e) =>
-                        handleInputChange("fullname", e.target.value)
-                      }
-                      disabled={!isEditing}
+              <div className="pt-6 border-t border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-4">
+                  Thông tin tài khoản
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Trạng thái xác thực</p>
+                    <p
                       className={cn(
-                        "bg-background border-border",
-                        !isEditing && "opacity-70 cursor-not-allowed"
+                        "font-medium mt-1",
+                        formData?.verify === "VERIFIED"
+                          ? "text-accent"
+                          : "text-destructive"
                       )}
-                    />
-                  </div>
-
-                  {/* Username */}
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="username"
-                      className="text-sm font-medium text-foreground"
                     >
-                      Tên đăng nhập
-                    </Label>
-                    <Input
-                      id="username"
-                      value={formData?.username || ""}
-                      onChange={(e) =>
-                        handleInputChange("username", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      className={cn(
-                        "bg-background border-border",
-                        !isEditing && "opacity-70 cursor-not-allowed"
-                      )}
-                    />
+                      {formData?.verify === "VERIFIED"
+                        ? "Đã xác thực"
+                        : "Chưa xác thực"}
+                    </p>
                   </div>
-
-                  {/* Email */}
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="email"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Email
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData?.email || ""}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
-                      }
-                      disabled
-                      className={cn(
-                        "bg-background border-border",
-                        !isEditing && "opacity-70 cursor-not-allowed"
-                      )}
-                    />
+                  <div>
+                    <p className="text-muted-foreground">Ngày tạo tài khoản</p>
+                    <p className="font-medium text-foreground mt-1">
+                      {formData?.created_at
+                        ? new Date(formData.created_at).toLocaleDateString(
+                            "vi-VN"
+                          )
+                        : "Chưa có thông tin"}
+                    </p>
                   </div>
-
-                  {/* Phone Number */}
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="phone"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Số điện thoại
-                    </Label>
-                    <Input
-                      id="phone"
-                      value={formData?.phone_number || ""}
-                      onChange={(e) =>
-                        handleInputChange("phone_number", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      className={cn(
-                        "bg-background border-border",
-                        !isEditing && "opacity-70 cursor-not-allowed"
-                      )}
-                    />
+                  <div>
+                    <p className="text-muted-foreground">Cập nhật lần cuối</p>
+                    <p className="font-medium text-foreground mt-1">
+                      {formData?.updated_at
+                        ? new Date(formData.updated_at).toLocaleDateString(
+                            "vi-VN"
+                          )
+                        : "Chưa có thông tin"}
+                    </p>
                   </div>
-
-                  {/* Location */}
-                  <div className="space-y-2 md:col-span-2">
-                    <Label
-                      htmlFor="location"
-                      className="text-sm font-medium text-foreground"
-                    >
-                      Địa chỉ
-                    </Label>
-                    <Input
-                      id="location"
-                      value={formData?.location || ""}
-                      onChange={(e) =>
-                        handleInputChange("location", e.target.value)
-                      }
-                      disabled={!isEditing}
-                      className={cn(
-                        "bg-background border-border",
-                        !isEditing && "opacity-70 cursor-not-allowed"
-                      )}
-                    />
-                  </div>
-                </div>
-
-                {/* Account Info */}
-                <div className="pt-6 border-t border-border">
-                  <h3 className="text-sm font-semibold text-foreground mb-4">
-                    Thông tin tài khoản
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">
-                        Trạng thái xác thực
-                      </p>
-                      <p
-                        className={cn(
-                          "font-medium mt-1",
-                          formData?.verify === "VERIFIED"
-                            ? "text-accent"
-                            : "text-destructive"
-                        )}
-                      >
-                        {formData?.verify === "VERIFIED"
-                          ? "Đã xác thực"
-                          : "Chưa xác thực"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">
-                        Ngày tạo tài khoản
-                      </p>
-                      <p className="font-medium text-foreground mt-1">
-                        {formData?.created_at
-                          ? new Date(formData.created_at).toLocaleDateString(
-                              "vi-VN"
-                            )
-                          : "Chưa có thông tin"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Cập nhật lần cuối</p>
-                      <p className="font-medium text-foreground mt-1">
-                        {formData?.updated_at
-                          ? new Date(formData.updated_at).toLocaleDateString(
-                              "vi-VN"
-                            )
-                          : "Chưa có thông tin"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">ID tài khoản</p>
-                      <p className="font-medium text-foreground mt-1 font-mono text-xs">
-                        {formData?._id || "Chưa có ID"}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="text-muted-foreground">ID tài khoản</p>
+                    <p className="font-medium text-foreground mt-1 font-mono text-xs">
+                      {formData?._id || "Chưa có ID"}
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Security Section */}
-          <div className="bg-card border border-border rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              Bảo mật
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-foreground">Đổi mật khẩu</p>
-                  <p className="text-sm text-muted-foreground">
-                    Cập nhật mật khẩu của bạn
-                  </p>
-                </div>
-                <Link href="/staff/profile/change-password">
-                  <Button variant="outline">Thay đổi</Button>
-                </Link>
+        {/* Security Section */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            Bảo mật
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-foreground">Đổi mật khẩu</p>
+                <p className="text-sm text-muted-foreground">
+                  Cập nhật mật khẩu của bạn
+                </p>
               </div>
-              <div className="flex items-center justify-between pt-4 border-t border-border">
-                <div>
-                  <p className="font-medium text-foreground">Xác thực email</p>
-                  <p className="text-sm text-muted-foreground">
-                    Tăng cường bảo mật tài khoản
-                  </p>
-                </div>
+              <Link href="/user/profile/change-password">
+                <Button variant="outline" className="cursor-pointer">
+                  Thay đổi
+                </Button>
+              </Link>
+            </div>
+            <div className="flex items-center justify-between pt-4 border-t border-border">
+              <div>
+                <p className="font-medium text-foreground">Xác thực email</p>
+                <p className="text-sm text-muted-foreground">
+                  Tăng cường bảo mật tài khoản
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                {formData?.verify !== "VERIFIED" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsVerifyEmailModalOpen(true)}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Xác thực với OTP
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => handleResendVerifyEmail()}
-                  className="gap-2"
+                  className="gap-2 cursor-pointer"
                   disabled={formData?.verify === "VERIFIED"}
                 >
                   <Mail className="w-4 h-4" />
@@ -389,5 +406,13 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    );
+
+      <VerifyEmailModal
+        isOpen={isVerifyEmailModalOpen}
+        onClose={() => setIsVerifyEmailModalOpen(false)}
+        onSubmit={handleVerifyEmailSubmit}
+        isLoading={isVerifyingEmail}
+      />
+    </DashboardLayout>
+  );
 }
