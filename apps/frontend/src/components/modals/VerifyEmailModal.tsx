@@ -60,7 +60,7 @@ export function VerifyEmailModal({
       setOtp("");
       setEmail("");
     } catch (err) {
-      // Error is handled by the parent component
+      console.log(err);
     }
   };
 
