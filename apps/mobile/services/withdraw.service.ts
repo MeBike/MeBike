@@ -28,6 +28,7 @@ const WITHDRAW_ENDPOINTS = {
   MANAGE_WITHDRAW_REQUEST: () => `${WITHDRAW_BASE}/manage-withdrawal`,
   ID: (id: string) => `${WITHDRAW_BASE}/${id}`,
   WITHDRAW_REQUESTS: () => `${WITHDRAW_BASE}`,
+  OVERVIEW : () => `${WITHDRAW_BASE}/overview`,
 } as const;
 export const withdrawalsService = {
   getAllWithdrawRequests: async ({

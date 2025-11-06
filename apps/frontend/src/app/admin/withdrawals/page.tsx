@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import type { WithdrawStatus , WithdrawRequest } from "@custom-types";
+import type { WithdrawStatus, WithdrawRequest } from "@custom-types";
 import { Download } from "lucide-react";
-import { useWithdrawAction } from "@/hooks/useWithdrawalAction";
+import { useWithdrawAction } from "@/hooks/use-withdraw";
 import { withdrawColumn } from "@/columns/withdraw-column";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { DataTable } from "@/components/TableCustom";
+import { WithdrawStats } from "@/components/withdrawals/withdraw-stats";
 import {
   getStatusColor,
   getStatusIcon,
@@ -56,6 +57,7 @@ export default function RefundPage() {
     detailResponse,
     isDetailLoading,
     updateWithdrawRequest,
+    overviewResponse,
   } = useWithdrawAction({
     hasToken: true,
     page: page,
@@ -90,30 +92,29 @@ export default function RefundPage() {
   };
   useEffect(() => {
     getAllWithdrawRequest();
-    console.log(detailResponse);
-  }, [selectedID, detailResponse, getAllWithdrawRequest]);
-  useEffect(() => {
-    console.log(detailResponse);
-  }, [detailResponse]);
+  }, [selectedID, getAllWithdrawRequest]);
+
   const getNextStatuses = useCallback(
     (current: WithdrawStatus): WithdrawStatus[] => {
       return (withdrawTransitions[current] ?? []).filter((s) => s !== current);
     },
     [withdrawTransitions]
   );
-  const nextStatuses = getNextStatuses(detailResponse?.status as WithdrawStatus);
+
+  // Reset newStatus khi modal mở và detailResponse được load
   useEffect(() => {
-    console.log("Next statuses:", newStatus);
-  }, [newStatus]);
-  useEffect(() => {
-    if (detailResponse?.status) {
-      setNewStatus(detailResponse.status as WithdrawStatus);
+    if (isUpdateModalOpen && detailResponse?.status) {
+      const next = getNextStatuses(detailResponse.status as WithdrawStatus);
+      if (next.length > 0) {
+        setNewStatus(next[0]);
+      } else {
+        setNewStatus(detailResponse.status as WithdrawStatus);
+      }
+      setReason("");
     }
-  }, [detailResponse]);
-  useEffect(() => {
-    const next = getNextStatuses(detailResponse?.status as WithdrawStatus);
-    if (next.length > 0) setNewStatus(next[0]);
-  }, [detailResponse, getNextStatuses]);
+  }, [isUpdateModalOpen, detailResponse, getNextStatuses]);
+
+  const nextStatuses = getNextStatuses(detailResponse?.status as WithdrawStatus);
   return (
     <div>
       <div className="space-y-6">
@@ -133,18 +134,9 @@ export default function RefundPage() {
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Tổng số yêu cầu</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              {pagination?.totalRecords}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Chờ xử lý</p>
-          </div>
-        </div>
+        {overviewResponse && (
+          <WithdrawStats stats={overviewResponse} />
+        )}
 
         {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
@@ -345,7 +337,10 @@ export default function RefundPage() {
                 <div className="flex gap-3 pt-4">
                   <Button
                     variant="outline"
-                    onClick={() => setIsUpdateModalOpen(false)}
+                    onClick={() => {
+                      setIsUpdateModalOpen(false);
+                      setReason("");
+                    }}
                     className="flex-1"
                   >
                     Hủy
