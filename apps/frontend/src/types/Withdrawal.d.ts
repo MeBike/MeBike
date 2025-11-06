@@ -37,3 +37,14 @@ export interface DetailWithdrawRequest {
   updated_at: string;
   user_info: DetailUser;
 }
+
+export interface WithdrawalOverview {
+  totalCompletedWithdrawAmount: {
+    $numberDecimal: string;
+  };
+  totalWithdraw: number;
+  totalCompleteWithdraw: number;
+  totalApproveWithdraw: number;
+  totalRejectWithdraw: number;
+  totalPendingWithdraw: number;
+}

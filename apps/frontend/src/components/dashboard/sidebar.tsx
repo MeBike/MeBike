@@ -15,6 +15,7 @@ import {
   Download,
   RotateCcw,
   MapIcon,
+  FileCheck2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
@@ -29,7 +30,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       ? "/admin"
       : userRole === "STAFF"
         ? "/staff"
-        : "/customer";
+        : "/user";
   return [
     {
       title: "Tổng quan",
@@ -119,6 +120,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       title: "Quản lý đặt trước",
       icon: FileText,
       href: "/admin/reservations",
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Quản lý đơn báo cáo",
+      icon: FileCheck2,
+      href: "/admin/reports",
       roles: ["ADMIN"],
     },
   ];

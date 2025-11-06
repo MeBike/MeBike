@@ -4,6 +4,7 @@ import type {
   WithdrawRequest,
   WithdrawStatus,
   DetailWithdrawRequest,
+  WithdrawalOverview
 } from "@/types";
 import { UpdateWithdrawSchemaFormData } from "@/schemas/withdrawalSchema";
 interface ApiResponse<T> {
@@ -24,6 +25,7 @@ const WITHDRAW_ENDPOINTS = {
   BASE: WITHDRAW_BASE,
   MANAGE_WITHDRAW_REQUEST: () => `${WITHDRAW_BASE}/manage-withdrawal`,
   ID: (id: string) => `${WITHDRAW_BASE}/${id}`,
+  OVERVIEW : () => `${WITHDRAW_BASE}/overview`,
 } as const;
 export const withdrawalsService = {
   getAllWithdrawRequests: async ({
@@ -62,4 +64,8 @@ export const withdrawalsService = {
     >(WITHDRAW_ENDPOINTS.ID(id), data);
     return response;
   },
+  getOverview: async (): Promise<AxiosResponse<DetailApiResponse<WithdrawalOverview>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<WithdrawalOverview>>(WITHDRAW_ENDPOINTS.OVERVIEW());
+    return response;
+  }
 };

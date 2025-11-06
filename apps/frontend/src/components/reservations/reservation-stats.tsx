@@ -6,7 +6,10 @@ import type { ReservationStats } from "@/types/Reservation";
 
 export function ReservationStats({ stats }: { stats: ReservationStats[] }) {
   const totalReservations = stats.reduce((sum, item) => sum + item.total_reservations, 0);
-  const totalSuccess = stats.reduce((sum, item) => sum + item.success_count, 0);
+  const totalSuccess = stats.reduce(
+    (sum, item) => sum + item.successed_count,
+    0
+  );
   const totalCancelled = stats.reduce((sum, item) => sum + item.cancelled_count, 0);
   const totalRevenue = stats.reduce((sum, item) => sum + item.total_prepaid_revenue, 0);
 
@@ -31,7 +34,7 @@ export function ReservationStats({ stats }: { stats: ReservationStats[] }) {
           <div>
             <p className="text-sm text-muted-foreground">Thành công</p>
             <p className="text-3xl font-bold text-green-500 mt-1">
-              {totalSuccess}
+              {totalSuccess || "0"}
             </p>
           </div>
           <div className="p-3 bg-green-500/10 rounded-lg">

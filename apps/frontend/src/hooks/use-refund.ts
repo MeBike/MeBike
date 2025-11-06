@@ -57,14 +57,18 @@ export const useRefundAction = ({
           queryClient.invalidateQueries({
             queryKey: ["refundRequests", page, limit, status ],
           });
-          queryClient.invalidateQueries({ queryKey: ["refundRequest", id] });
+          queryClient.invalidateQueries({ 
+            queryKey: ["refundRequests", id],
+            refetchType: "active"
+          });
+          refetchDetail();
         },
         onError: (error) => {
           console.log(error);
         },
       });
     },
-    [hasToken, router, useUpdateRefundRequest, queryClient, id, limit , page ,status]
+    [hasToken, router, useUpdateRefundRequest, queryClient, id, limit , page ,status, refetchDetail]
   );
   const { data: overviewResponse } = useGetRefundOverview();
   return {
