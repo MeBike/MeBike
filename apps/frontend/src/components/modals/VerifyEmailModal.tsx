@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,85 +16,71 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 
 interface VerifyEmailModalProps {
-  isAuthenticated?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (email: string, otp: string) => Promise<void>;
-  onSkip?: () => void;
   isLoading?: boolean;
-  defaultEmail?: string;
 }
 
 export function VerifyEmailModal({
-  isAuthenticated,
   isOpen,
   onClose,
   onSubmit,
-  onSkip,
   isLoading = false,
-  defaultEmail,
 }: VerifyEmailModalProps) {
   const { user } = useAuth();
-  const [email, setEmail] = useState(defaultEmail || user?.email || "");
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   if (!email.trim()) {
-  //     setError("Vui lòng nhập email");
-  //     return;
-  //   }
-  //   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-  //     setError("Email không hợp lệ");
-  //     return;
-  //   }
-  //   if (!otp.trim()) {
-  //     setError("Vui lòng nhập mã OTP");
-  //     return;
-  //   }
-  //   if (otp.trim().length < 4) {
-  //     setError("Mã OTP phải có ít nhất 4 ký tự");
-  //     return;
-  //   }
-  //   try {
-  //     setError("");
-  //     await onSubmit(email.trim(), otp.trim());
-  //     setOtp("");
-  //     setEmail("");
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // };
-
-  const handleClose = () => {
-    setOtp("");
-    setEmail(user?.email || "");
+  const handleInputChange = (index: number, value: string) => {
+    if (!/^\d*$/.test(value)) return;
+    
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
     setError("");
-    onClose();
+
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
   };
 
-  const handleValidateOTP = async (e: React.FormEvent) => {
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
-    if (!otp.trim()) {
-      setError("Vui lòng nhập mã OTP");
+    const otpString = otp.join("");
+    if (otpString.length !== 6) {
+      setError("Vui lòng nhập đầy đủ 6 chữ số");
       return;
     }
 
-    if (otp.trim().length < 4) {
-      setError("Mã OTP phải có ít nhất 4 ký tự");
-      return;
-    }
-
+    setIsSubmitting(true);
     try {
+      await onSubmit(user?.email || "", otpString);
+      // Only close modal and reset if successful
+      setOtp(["", "", "", "", "", ""]);
       setError("");
-      await onSubmit(email, otp.trim());
-      setOtp("");
-      setEmail(user?.email || "");
+      onClose();
     } catch (err) {
       console.log(err);
+      setIsSubmitting(false);
     }
+  };
+
+  const handleClose = () => {
+    setOtp(["", "", "", "", "", ""]);
+    setError("");
+    setIsSubmitting(false);
+    onClose();
   };
 
   return (
@@ -110,91 +96,89 @@ export function VerifyEmailModal({
             Xác thực Email
           </DialogTitle>
           <DialogDescription className="text-center mt-2">
-            Vui lòng nhập mã OTP được gửi đến email của bạn
+            Nhập mã OTP được gửi đến email của bạn
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleValidateOTP} className="space-y-5 mt-6">
-          {/* <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-5 mt-6">
+          {/* Email Display */}
+          <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
-              Email <span className="text-destructive">*</span>
+              Email
             </Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="email"
                 type="email"
-                placeholder="Nhập email của bạn"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError("");
-                }}
+                value={user?.email || ""}
                 disabled
-                className="pl-10 bg-background border-border"
+                className="pl-10 bg-background border-border opacity-70 cursor-not-allowed"
               />
             </div>
-          </div> */}
+          </div>
 
+          {/* OTP Input - 6 Digits */}
           <div className="space-y-2">
-            <Label htmlFor="otp" className="text-sm font-medium">
+            <Label className="text-sm font-medium">
               Mã OTP <span className="text-destructive">*</span>
             </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <Input
-                id="otp"
-                type="text"
-                placeholder="Nhập mã OTP"
-                value={otp}
-                onChange={(e) => {
-                  setOtp(e.target.value);
-                  if (error) setError("");
-                }}
-                disabled={isLoading}
-                maxLength={10}
-                className={cn(
-                  "pl-10 bg-background border-border text-center font-mono tracking-widest text-lg",
-                  error && "border-destructive focus-visible:ring-destructive"
-                )}
-              />
+            <div className="flex gap-2 justify-center">
+              {otp.map((digit, index) => (
+                <Input
+                  key={index}
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleInputChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  disabled={isSubmitting || isLoading}
+                  className={cn(
+                    "w-12 h-12 text-center font-bold text-lg rounded-lg border-2 transition-all",
+                    digit
+                      ? "border-primary bg-primary/5"
+                      : "border-gray-300 bg-white hover:border-gray-400",
+                    error && "border-destructive",
+                    (isSubmitting || isLoading) && "opacity-50 cursor-not-allowed"
+                  )}
+                />
+              ))}
             </div>
             {error && (
-              <p className="text-sm text-destructive flex items-center gap-1">
+              <p className="text-sm text-destructive text-center">
                 {error}
               </p>
             )}
           </div>
 
+          {/* Info Text */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-700">
+              💡 Kiểm tra thư mục spam nếu không thấy email
+            </p>
+          </div>
+
+          {/* Buttons */}
           <div className="flex gap-3 pt-4">
-            {isAuthenticated && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={isLoading}
-                className="flex-1 cursor-pointer"
-              >
-                Hủy
-              </Button>
-            )}
-            {onSkip && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onSkip}
-                disabled={isLoading}
-                className="flex-1 cursor-pointer"
-              >
-                Bỏ qua
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isSubmitting || isLoading}
+              className="flex-1 cursor-pointer"
+            >
+              Hủy
+            </Button>
             <Button
               type="submit"
               className="flex-1 gap-2 cursor-pointer bg-primary hover:bg-primary/90"
-              disabled={isLoading}
+              disabled={isSubmitting || isLoading || otp.join("").length !== 6}
             >
-              {isLoading ? (
+              {isSubmitting || isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Đang xác thực...

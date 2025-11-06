@@ -196,7 +196,7 @@ export const useAuthActions = () => {
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(
               error,
-              "Error verifying email"
+              "OTP không hợp lệ hoặc đã hết hạn"
             );
             toast.error(errorMessage);
             reject(error);
@@ -265,7 +265,7 @@ export const useAuthActions = () => {
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error resetting password"
+            "OTP không hợp lệ hoặc đã hết hạn"
           );
           toast.error(errorMessage);
         },
