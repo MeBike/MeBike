@@ -115,14 +115,19 @@ export const useAuthActions = () => {
   const register = useCallback(
     (data: RegisterSchemaFormData) => {
       useRegister.mutate(data, {
-        onSuccess: (result) => {
+        onSuccess: async (result) => {
           if (result.status === 200) {
             const { access_token, refresh_token } = result.data.result;
             setTokens(access_token, refresh_token);
-            queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+            // Dispatch token change event
+            window.dispatchEvent(new Event("token:changed"));
+            // Wait for token to be set
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
             toast.success("Registration Successful", {
               description: "Your account has been created.",
             });
+            router.push("/user/profile");
           } else {
             const errorMessage = result.data?.message || "Error registering";
             toast.error(errorMessage);
@@ -134,7 +139,7 @@ export const useAuthActions = () => {
         },
       });
     },
-    [useRegister, queryClient]
+    [useRegister, queryClient, router]
   );
   const logOut = useCallback(
     (refresh_token: string) => {

@@ -51,11 +51,6 @@ const RegisterPage = () => {
       delete registerData.phone_number;
     }
     registerUser(registerData);
-    setTimeout(() => {
-      router.push("/user");
-    }, 2000);
-    console.log(user);
-
   };
 
   return (

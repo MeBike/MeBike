@@ -18,6 +18,6 @@ export function useUserProfileQuery(isAuthenticated: boolean) {
         queryKey: USER_PROFILE_QUERY_KEY,
         queryFn: fetchUserProfile,
         enabled: isAuthenticated,
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime : 0,
     });
 } 

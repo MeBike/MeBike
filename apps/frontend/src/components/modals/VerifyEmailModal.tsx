@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthActions } from "@/hooks/useAuthAction";
+import { useAuth } from "@/providers/auth-providers";
 
 interface VerifyEmailModalProps {
   isOpen: boolean;
@@ -27,22 +29,48 @@ export function VerifyEmailModal({
   onSubmit,
   isLoading = false,
 }: VerifyEmailModalProps) {
-  const [email, setEmail] = useState("");
+  const { user } = useAuth();
+  const [email, setEmail] = useState(user?.email || "");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!email.trim()) {
       setError("Vui lòng nhập email");
       return;
     }
-
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setError("Email không hợp lệ");
       return;
     }
+    if (!otp.trim()) {
+      setError("Vui lòng nhập mã OTP");
+      return;
+    }
+    if (otp.trim().length < 4) {
+      setError("Mã OTP phải có ít nhất 4 ký tự");
+      return;
+    }
+    try {
+      setError("");
+      await onSubmit(email.trim(), otp.trim());
+      setOtp("");
+      setEmail("");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleClose = () => {
+    setOtp("");
+    setEmail(user?.email || "");
+    setError("");
+    onClose();
+  };
+
+  const handleValidateOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     if (!otp.trim()) {
       setError("Vui lòng nhập mã OTP");
@@ -56,19 +84,12 @@ export function VerifyEmailModal({
 
     try {
       setError("");
-      await onSubmit(email.trim(), otp.trim());
+      await onSubmit(email, otp.trim());
       setOtp("");
-      setEmail("");
+      setEmail(user?.email || "");
     } catch (err) {
       console.log(err);
     }
-  };
-
-  const handleClose = () => {
-    setOtp("");
-    setEmail("");
-    setError("");
-    onClose();
   };
 
   return (
@@ -88,8 +109,8 @@ export function VerifyEmailModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 mt-6">
-          <div className="space-y-2">
+        <form onSubmit={handleValidateOTP} className="space-y-5 mt-6">
+          {/* <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
               Email <span className="text-destructive">*</span>
             </Label>
@@ -104,11 +125,11 @@ export function VerifyEmailModal({
                   setEmail(e.target.value);
                   if (error) setError("");
                 }}
-                disabled={isLoading}
+                disabled
                 className="pl-10 bg-background border-border"
               />
             </div>
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <Label htmlFor="otp" className="text-sm font-medium">
@@ -161,7 +182,7 @@ export function VerifyEmailModal({
                   Đang xác thực...
                 </>
               ) : (
-                "Xác thực"
+                "Xác thực OTP"
               )}
             </Button>
           </div>

@@ -375,17 +375,30 @@ export default function ProfilePage() {
                   Tăng cường bảo mật tài khoản
                 </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => handleResendVerifyEmail()}
-                className="gap-2 cursor-pointer"
-                disabled={formData?.verify === "VERIFIED"}
-              >
-                <Mail className="w-4 h-4" />
-                {formData?.verify === "VERIFIED"
-                  ? "Đã xác thực"
-                  : "Gửi email xác thực"}
-              </Button>
+              
+              <div className="flex gap-2">
+                {formData?.verify !== "VERIFIED" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsVerifyEmailModalOpen(true)}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Xác thực với OTP
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => handleResendVerifyEmail()}
+                  className="gap-2 cursor-pointer"
+                  disabled={formData?.verify === "VERIFIED"}
+                >
+                  <Mail className="w-4 h-4" />
+                  {formData?.verify === "VERIFIED"
+                    ? "Đã xác thực"
+                    : "Gửi email xác thực"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
