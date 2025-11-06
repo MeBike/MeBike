@@ -22,3 +22,13 @@ export interface DetailRefundRequest {
   updated_at: string;
   user_info: DetailUser;
 }
+export interface RefundOverview {
+  totalCompletedRefundAmount: {
+    $numberDecimal: string;
+  };
+  totalRefunds: number;
+  totalCompleteRefund: number;
+  totalApproveRefund: number;
+  totalRejectRefund: number;
+  totalPendingRefund: number;
+}

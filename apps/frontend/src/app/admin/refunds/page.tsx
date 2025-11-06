@@ -4,10 +4,11 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import type { RefundRequest, RefundStatus } from "@custom-types";
 import { Download } from "lucide-react";
-import { useRefundAction } from "@/hooks/useRefundAction";
+import { useRefundAction } from "@/hooks/use-refund";
 import { refundColumn } from "@/columns/refund-column";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { DataTable } from "@/components/TableCustom";
+import { RefundStats } from "@/components/refunds/refund-stats";
 import { getStatusColor, getStatusIcon, getStatusLabel } from "@/utils/refund-status";
 function InfoRow({
   label,
@@ -51,6 +52,7 @@ export default function RefundPage() {
     detailResponse,
     isDetailLoading,
     updateRefundRequest,
+    overviewResponse,
   } = useRefundAction({
     hasToken: true,
     page: page,
@@ -119,18 +121,9 @@ const handleSaveStatus = async () => {
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Tổng số yêu cầu</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              {pagination?.totalRecords}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Chờ xử lý</p>
-          </div>
-        </div>
+        {overviewResponse?.result && (
+          <RefundStats stats={overviewResponse.result} />
+        )}
 
         {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
@@ -161,17 +154,18 @@ const handleSaveStatus = async () => {
         </div>
         <div className="w-full rounded-lg space-y-4  flex flex-col">
           <DataTable
+            title="Danh sách đơn yêu cầu hoàn tiền"
             columns={refundColumn({
               onView: ({ id }) => {
                 setSelectedID(id);
                 setIsDetailModalOpen(true);
               },
-                onUpdateStatus: (request) => {
-                  setSelectedID(request._id);
-                  setIsUpdateModalOpen(true);
-                  setSelectedRequest(request);
-                },
-            })} 
+              onUpdateStatus: (request) => {
+                setSelectedID(request._id);
+                setIsUpdateModalOpen(true);
+                setSelectedRequest(request);
+              },
+            })}
             data={response || []}
           />
           <PaginationDemo
@@ -296,7 +290,7 @@ const handleSaveStatus = async () => {
                     Hủy
                   </Button>
                   <Button onClick={() => handleSaveStatus()} className="flex-1">
-                    Lưu 
+                    Lưu
                   </Button>
                 </div>
               </div>

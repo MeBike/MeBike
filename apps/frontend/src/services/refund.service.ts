@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { UpdateRefundSchemaFormData } from "@/schemas/refund.schema";
-import type { RefundRequest , RefundStatus , DetailRefundRequest} from "@/types";
+import type { RefundRequest , RefundStatus , DetailRefundRequest , RefundOverview} from "@/types";
 interface ApiResponse<T> {
   data: T[];
   pagination: {
@@ -19,7 +19,8 @@ const REFUND_BASE = "/refunds";
 const REFUND_ENDPOINTS = {
   BASE: REFUND_BASE,
   MANAGE_REFUND_REQUEST: () => `${REFUND_BASE}/manage-refunds`,
-  ID : (id: string) => `${REFUND_BASE}/${id}`,
+  ID: (id: string) => `${REFUND_BASE}/${id}`,
+  OVERVIEW: () => `${REFUND_BASE}/overview`,
 } as const;
 export const refundService = {
   getAllRefundRequests: async ({
@@ -58,5 +59,10 @@ export const refundService = {
     >(REFUND_ENDPOINTS.ID(id), data);
     return response;
   },
-
+  getRefundOverview: async (): Promise<AxiosResponse<DetailApiResponse<RefundOverview>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<RefundOverview>>(
+      REFUND_ENDPOINTS.OVERVIEW()
+    );
+    return response;
+  }
 };
