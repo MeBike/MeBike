@@ -8,7 +8,7 @@ import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userProfileSchema, UserProfile } from "@schemas/userSchema";
-import { resetPasswordSchema, ResetPasswordSchemaFormData } from "@schemas/authSchema";
+import { resetPasswordSchema, ResetPasswordSchemaFormData, profileUpdateSchema, UpdateProfileSchemaFormData } from "@schemas/authSchema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
@@ -34,6 +34,16 @@ export default function CustomersPage() {
     resolver: zodResolver(resetPasswordSchema),
   });
 
+  const {
+    register: registerUpdateProfile,
+    handleSubmit: handleSubmitUpdateProfile,
+    formState: { errors: errorsUpdateProfile },
+    reset: resetUpdateProfile,
+    setValue: setValueUpdateProfile,
+  } = useForm<UpdateProfileSchemaFormData>({
+    resolver: zodResolver(profileUpdateSchema),
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
@@ -42,6 +52,7 @@ export default function CustomersPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<"info" | "activity" | "stats">("info");
   const {
@@ -60,6 +71,7 @@ export default function CustomersPage() {
     getDetailUser,
     dashboardStatsData,
     resetPassword,
+    updateProfileUser,
   } = useUserActions({
     hasToken: true,
     limit: limit,
@@ -127,6 +139,21 @@ export default function CustomersPage() {
     console.log("[v0] Reset password:", data);
     setIsResetPasswordModalOpen(false);
     resetResetPassword();
+  });
+
+  const handleUpdateProfile = handleSubmitUpdateProfile((data) => {
+    updateProfileUser({
+      fullname: data.fullname,
+      email: detailUserData?.data?.result?.email || "",
+      phone_number: data.phone_number || "",
+      password: "",
+      role: detailUserData?.data?.result?.role || "USER",
+      location: data.location || "",
+      username: data.username || "",
+    } as UserProfile);
+    console.log("[v0] Update profile:", data);
+    setIsEditProfileModalOpen(false);
+    resetUpdateProfile();
   });
   return (
     <div>
@@ -538,6 +565,21 @@ export default function CustomersPage() {
                   </Button>
                   <Button
                     onClick={() => {
+                      if (detailUserData?.data?.result) {
+                        setValueUpdateProfile("fullname", detailUserData.data.result.fullname || "");
+                        setValueUpdateProfile("location", detailUserData.data.result.location || "");
+                        setValueUpdateProfile("username", detailUserData.data.result.username || "");
+                        setValueUpdateProfile("phone_number", detailUserData.data.result.phone_number || "");
+                      }
+                      setIsEditProfileModalOpen(true);
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Chỉnh sửa
+                  </Button>
+                  <Button
+                    onClick={() => {
                       setIsResetPasswordModalOpen(true);
                     }}
                     variant="outline"
@@ -682,6 +724,124 @@ export default function CustomersPage() {
                     className="flex-1"
                   >
                     Tạo người dùng
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Profile Modal */}
+          {isEditProfileModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <h2 className="text-xl font-bold text-foreground mb-4">
+                  Chỉnh sửa thông tin người dùng
+                </h2>
+
+                {detailUserData?.data?.result && (
+                  <div className="mb-4 p-3 bg-muted rounded-lg text-sm">
+                    <p className="text-muted-foreground mb-2"><strong>Thông tin hiện tại:</strong></p>
+                    <div className="space-y-1 text-xs">
+                      <p><strong>Họ tên:</strong> {detailUserData.data.result.fullname}</p>
+                      <p><strong>Username:</strong> {detailUserData.data.result.username || "Chưa có"}</p>
+                      <p><strong>SĐT:</strong> {detailUserData.data.result.phone_number || "Chưa có"}</p>
+                      <p><strong>Địa chỉ:</strong> {detailUserData.data.result.location || "Chưa có"}</p>
+                    </div>
+                  </div>
+                )}
+
+                <form
+                  id="edit-profile-form"
+                  onSubmit={handleUpdateProfile}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Họ tên
+                    </label>
+                    <input
+                      type="text"
+                      {...registerUpdateProfile("fullname")}
+                      placeholder="Nhập họ tên"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errorsUpdateProfile.fullname && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsUpdateProfile.fullname.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      {...registerUpdateProfile("username")}
+                      placeholder="Nhập username"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errorsUpdateProfile.username && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsUpdateProfile.username.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      {...registerUpdateProfile("phone_number")}
+                      placeholder="Nhập số điện thoại"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errorsUpdateProfile.phone_number && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsUpdateProfile.phone_number.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Địa chỉ
+                    </label>
+                    <input
+                      type="text"
+                      {...registerUpdateProfile("location")}
+                      placeholder="Nhập địa chỉ"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errorsUpdateProfile.location && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsUpdateProfile.location.message}
+                      </p>
+                    )}
+                  </div>
+
+                </form>
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditProfileModalOpen(false);
+                      resetUpdateProfile();
+                    }}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    form="edit-profile-form"
+                    className="flex-1"
+                  >
+                    Cập nhật
                   </Button>
                 </div>
               </div>

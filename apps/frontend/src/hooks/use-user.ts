@@ -10,12 +10,13 @@ import { useGetNewRegistrationStatsQuery } from "./query/User/useGetNewRegistrat
 import { useGetTopRenterQuery } from "./query/User/useGetTopRenterQuery";
 import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
-import { UserProfile } from "@/schemas/userSchema";
 import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
 import { useGetDashboardStatsQuery } from "./query/User/useGetDashboardStatsQuery";
 import { ResetPasswordSchemaFormData } from "@/schemas/authSchema";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
 import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
+import { UserProfile } from "@/schemas/userSchema";
+import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
 interface ErrorWithMessage {
   message: string;
 }
@@ -209,6 +210,7 @@ export const useUserActions = ({
     ]
   );
   const useResetPassword = useResetPasswordUserMutation();
+  const useUpdateProfile = useUpdateProfileUserMutation();
   const resetPassword = useCallback(
     async (userData: ResetPasswordRequest) => {
       if (!hasToken) {
@@ -244,6 +246,60 @@ export const useUserActions = ({
       verify,
     ]
   );
+  const updateProfileUser = useCallback(
+    async (userData: UserProfile) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useUpdateProfile.mutate(
+        { id: id || "", data: userData },
+        {
+          onSuccess: (result: {
+            status: number;
+            data?: { message?: string };
+          }) => {
+            if (result?.status === 200) {
+              // Invalidate queries phải khớp với queryKey ở useGetAllUserQuery
+              queryClient.invalidateQueries({
+                queryKey: [
+                  "all",
+                  "user",
+                  page,
+                  limit,
+                  verify || "",
+                  role || "",
+                ],
+              });
+              queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+              refetchDetailUser();
+              refetch();
+              toast.success("Cập nhật thông tin người dùng thành công");
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Lỗi khi cập nhật người dùng"
+            );
+            toast.error(errorMessage);
+          },
+        }
+      );
+    },
+    [
+      hasToken,
+      router,
+      queryClient,
+      id,
+      refetchDetailUser,
+      refetch,
+      page,
+      limit,
+      verify,
+      role,
+    ]
+  );
   return {
     users: users,
     refetch,
@@ -276,5 +332,6 @@ export const useUserActions = ({
     isLoadingDetailUser,
     dashboardStatsData,
     resetPassword,
+    updateProfileUser,
   };
 };
