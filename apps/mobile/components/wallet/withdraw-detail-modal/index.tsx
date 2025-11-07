@@ -31,7 +31,12 @@ export function WithdrawDetailModal({
     return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
         <View style={styles.content}>
           <View style={styles.header}>
@@ -48,7 +53,9 @@ export function WithdrawDetailModal({
 
           <View style={styles.infoRow}>
             <Text style={styles.label}>Số tiền:</Text>
-            <Text style={styles.amount}>{formatCurrency(withdrawal.amount.toString())}</Text>
+            <Text style={styles.amount}>
+              {formatCurrency(withdrawal.amount.toString())}
+            </Text>
           </View>
 
           <View style={styles.infoRow}>
@@ -73,15 +80,16 @@ export function WithdrawDetailModal({
 
           <View style={styles.infoRow}>
             <Text style={styles.label}>Thời gian:</Text>
-            <Text style={styles.value}>{formatDate(withdrawal.created_at)}</Text>
+            <Text style={styles.value}>
+              {formatDate(withdrawal.created_at)}
+            </Text>
           </View>
-
-          {withdrawal.note && (
-            <View style={styles.descriptionContainer}>
-              <Text style={styles.label}>Ghi chú:</Text>
-              <Text style={styles.description}>{withdrawal.note}</Text>
-            </View>
-          )}
+          <View style={styles.infoRow}>
+            <Text style={styles.label}>Ghi chú:</Text>
+            <Text style={styles.value}>
+              {withdrawal.note}
+            </Text>
+          </View>
         </View>
       </View>
     </Modal>

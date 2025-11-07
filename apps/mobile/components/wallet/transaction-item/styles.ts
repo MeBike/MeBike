@@ -15,12 +15,14 @@ const transactionItemStyles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    width: "100%",
   },
   container: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     flex: 1,
+    paddingHorizontal: 14,
   },
   left: {
     flexDirection: "row",

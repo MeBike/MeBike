@@ -142,7 +142,7 @@ function BookingHistoryScreen() {
       </TouchableOpacity>
     </View>
   );
-  if(bookings === null ||  isGetAllRentalsFetching || bookings.length === 0){
+  if(bookings === null ||  isGetAllRentalsFetching){
     return <LoadingScreen />;
   }
   return (

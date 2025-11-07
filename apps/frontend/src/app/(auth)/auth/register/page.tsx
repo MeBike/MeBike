@@ -27,7 +27,7 @@ const RegisterPage = () => {
   const [registeredEmail, setRegisteredEmail] = useState("");
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const router = useRouter();
-  const { register: registerUser, verifyEmail, resendVerifyEmail } = useAuthActions();
+  const { register: registerUser, verifyEmail } = useAuthActions();
   const {
     register,
     handleSubmit,
@@ -54,32 +54,33 @@ const RegisterPage = () => {
     }
     // Lưu email để dùng cho verification
     setRegisteredEmail(data.email);
-    registerUser(registerData);
-    // Show verify email form after registration
-    setShowEmailVerification(true);
-    resendVerifyEmail();
+    try {
+      console.log("Starting registration with email:", data.email);
+      await registerUser(registerData);
+      console.log("Registration successful! Email:", data.email);
+      setShowEmailVerification(true);
+    } catch (err) {
+      console.log("Registration error:", err);
+      // Don't proceed to email verification if registration fails
+    }
   };
-
   const handleVerifyEmailSubmit = async (email: string, otp: string) => {
     try {
+      console.log("Verifying OTP:", otp);
+      console.log("Registered email:", registeredEmail);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      console.log("Token exists:", !!token);
       await verifyEmail({ email: registeredEmail, otp });
-      // Wait 2 seconds to show loading, then redirect
-      setTimeout(() => {
-        setShowEmailVerification(false);
-        router.push("/user/profile");
-      }, 2000);
+      console.log("OTP verified successfully!");
     } catch (err) {
-      console.log(err);
+      console.log("Verification error (caught):", err);
+      throw err;
     }
   };
 
   const handleSkipVerification = () => {
     setShowEmailVerification(false);
     router.push("/user/profile");
-  };
-
-  const handleBackToRegister = () => {
-    setShowEmailVerification(false);
   };
 
   return (
@@ -98,7 +99,7 @@ const RegisterPage = () => {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mt-3 tracking-tight">
-            MetroBike
+            MeBike
           </h1>
         </div>
 
@@ -324,7 +325,6 @@ const RegisterPage = () => {
           email={registeredEmail}
           onSubmit={handleVerifyEmailSubmit}
           onSkip={handleSkipVerification}
-          onBack={handleBackToRegister}
           isLoading={isVerifyingEmail}
         />
       )}
