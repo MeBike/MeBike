@@ -207,23 +207,28 @@ export const useAuthActions = () => {
     [useVerifyEmail, queryClient]
   );
   const resendVerifyEmail = useCallback(() => {
-    useResendVerifyEmail.mutate(undefined, {
-      onSuccess: (result) => {
-        if (result.status === 200) {
-          toast.success("Verification email resent successfully");
-        } else {
-          const errorMessage =
-            result.data?.message || "Error resending verification email";
+    return new Promise<void>((resolve, reject) => {
+      useResendVerifyEmail.mutate(undefined, {
+        onSuccess: (result) => {
+          if (result.status === 200) {
+            toast.success("Verification email resent successfully");
+            resolve();
+          } else {
+            const errorMessage =
+              result.data?.message || "Error resending verification email";
+            toast.error(errorMessage);
+            reject(new Error(errorMessage));
+          }
+        },
+        onError: (error: unknown) => {
+          const errorMessage = getErrorMessage(
+            error,
+            "Error resending verification email"
+          );
           toast.error(errorMessage);
-        }
-      },
-      onError: (error: unknown) => {
-        const errorMessage = getErrorMessage(
-          error,
-          "Error resending verification email"
-        );
-        toast.error(errorMessage);
-      },
+          reject(error);
+        },
+      });
     });
   }, [useResendVerifyEmail]);
   const forgotPassword = useCallback(

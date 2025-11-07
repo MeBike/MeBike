@@ -61,7 +61,6 @@ export default function CustomersPage() {
     isLoading,
     getAllStatistics,
     isLoadingStatistics,
-    statistics,
     getSearchUsers,
     createUser,
     isFetching,

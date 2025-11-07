@@ -10,8 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Mail, Loader2, ChevronLeft } from "lucide-react";
+import { Mail, Loader2, ChevronLeft, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthActions } from "@/hooks/useAuthAction";
 
 interface EmailVerificationFormProps {
   email: string;
@@ -19,6 +20,7 @@ interface EmailVerificationFormProps {
   onSkip: () => void;
   isLoading?: boolean;
   onBack?: () => void;
+  onResendOtp?: () => Promise<void>;
 }
 
 export function EmailVerificationForm({
@@ -27,23 +29,27 @@ export function EmailVerificationForm({
   onSkip,
   isLoading = false,
   onBack,
+  onResendOtp,
 }: EmailVerificationFormProps) {
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(30); // 5 minutes in seco6nds
+  const [isTimeExpired, setIsTimeExpired] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const { resendVerifyEmail } = useAuthActions();
 
   // Countdown timer
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // Time's up, trigger skip
+          // Time's up, show resend button instead of skipping
           if (timerRef.current) clearInterval(timerRef.current);
-          onSkip();
+          setIsTimeExpired(true);
           return 0;
         }
         return prev - 1;
@@ -53,7 +59,7 @@ export function EmailVerificationForm({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [onSkip]);
+  }, []);
 
   // Format time to MM:SS
   const formatTime = (seconds: number) => {
@@ -103,6 +109,38 @@ export function EmailVerificationForm({
     }
   };
 
+  const handleResendOtp = async () => {
+    setIsResending(true);
+    try {
+      await resendVerifyEmail();
+      // Reset timer and state
+      setTimeLeft(300);
+      setIsTimeExpired(false);
+      setOtp(["", "", "", "", "", ""]);
+      setError("");
+      
+      // Focus first input
+      inputRefs.current[0]?.focus();
+      
+      // Restart timer
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            if (timerRef.current) clearInterval(timerRef.current);
+            setIsTimeExpired(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err) {
+      console.log(err);
+      setError("Không thể gửi lại OTP, vui lòng thử lại");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
@@ -138,19 +176,25 @@ export function EmailVerificationForm({
                 Nhập mã OTP được gửi đến <span className="font-medium text-foreground">{email}</span>
               </CardDescription>
               <div className="pt-2 text-sm">
-                <span className={cn(
-                  "font-semibold",
-                  timeLeft <= 60 ? "text-destructive" : "text-amber-600"
-                )}>
-                  ⏱️ Thời gian còn lại: {formatTime(timeLeft)}
-                </span>
+                {!isTimeExpired ? (
+                  <span className={cn(
+                    "font-semibold",
+                    timeLeft <= 60 ? "text-destructive" : "text-amber-600"
+                  )}>
+                    ⏱️ Thời gian còn lại: {formatTime(timeLeft)}
+                  </span>
+                ) : (
+                  <span className="text-destructive font-semibold">
+                    ⏱️ Mã OTP đã hết hạn
+                  </span>
+                )}
               </div>
             </CardHeader>
 
             <CardContent className="space-y-6 overflow-y-auto flex-1">
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email Display */}
-                <div className="space-y-2">
+             
+                {/* <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium">
                     Email
                   </Label>
@@ -164,7 +208,7 @@ export function EmailVerificationForm({
                       className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-gray-50 shadow-sm opacity-70 cursor-not-allowed"
                     />
                   </div>
-                </div>
+                </div> */}
 
                 {/* OTP Input - 6 Digits */}
                 <div className="space-y-2">
@@ -212,23 +256,23 @@ export function EmailVerificationForm({
 
                 {/* Buttons */}
                 <div className="space-y-3 pt-4">
-                  <Button
-                    type="submit"
-                    className="w-full h-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
-                    bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white gap-2 cursor-pointer"
-                    disabled={isSubmitting || isLoading || otp.join("").length !== 6}
-                  >
-                    {isSubmitting || isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Đang xác thực...
-                      </>
-                    ) : (
-                      "Xác thực OTP"
-                    )}
-                  </Button>
-
                   <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      type="submit"
+                      className="h-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
+                      bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white gap-2 cursor-pointer"
+                      disabled={isSubmitting || isLoading || otp.join("").length !== 6}
+                    >
+                      {isSubmitting || isLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Đang xác thực...
+                        </>
+                      ) : (
+                        "Xác thực"
+                      )}
+                    </Button>
+
                     <Button
                       type="button"
                       variant="outline"
@@ -238,18 +282,27 @@ export function EmailVerificationForm({
                     >
                       Bỏ qua
                     </Button>
-                    {onBack && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={onBack}
-                        disabled={isSubmitting || isLoading}
-                        className="h-12 cursor-pointer gap-2"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                        Quay lại
-                      </Button>
-                    )}
+                  </div>
+
+                  <div className="flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={!isTimeExpired || isResending}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                    >
+                      {isResending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Đang gửi lại...
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw className="w-4 h-4" />
+                          Gửi lại mã OTP
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </form>

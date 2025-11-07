@@ -11,27 +11,21 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 interface VerifyEmailModalProps {
-  isAuthenticated?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (email: string, otp: string) => Promise<void>;
-  onSkip?: () => void;
   isLoading?: boolean;
-  defaultEmail?: string;
 }
 
 export function VerifyEmailModal({
-  isAuthenticated,
   isOpen,
   onClose,
   onSubmit,
-  onSkip,
   isLoading = false,
-  defaultEmail,
 }: VerifyEmailModalProps) {
   const { user } = useAuth();
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);

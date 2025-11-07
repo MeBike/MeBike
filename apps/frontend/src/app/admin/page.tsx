@@ -34,12 +34,6 @@ export default function DashboardPage() {
   const monthlyRev = monthlyRevenue?.data[0]?.totalRevenue || 0;
   const lastMonthlyRev = lastMonthlyRevenue?.data[0]?.totalRevenue || 0;
   const changePercent = lastMonthlyRev ? Math.round((monthlyRev - lastMonthlyRev) / lastMonthlyRev * 100) : 0;
-  let changeType: "positive" | "negative" | "neutral";
-  if (lastMonthlyRev === 0) {
-    changeType = monthlyRev > 0 ? "positive" : "neutral";
-  } else {
-    changeType = changePercent > 0 ? "positive" : changePercent < 0 ? "negative" : "neutral";
-  }
   const changePercentBike = statisticData?.result["CÓ SẴN"]
     ? Math.round((statisticData.result["CÓ SẴN"] / totalRecord || 1) * 100)
     : 0;

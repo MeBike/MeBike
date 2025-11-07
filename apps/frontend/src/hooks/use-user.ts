@@ -12,7 +12,6 @@ import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
 import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
 import { useGetDashboardStatsQuery } from "./query/User/useGetDashboardStatsQuery";
-import { ResetPasswordSchemaFormData } from "@/schemas/authSchema";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
 import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
 import { UserProfile } from "@/schemas/userSchema";
@@ -235,15 +234,10 @@ export const useUserActions = ({
     [
       hasToken,
       router,
-      queryClient,
       useCreateUser,
       searchQuery,
-      refetch,
-      refetchSearch,
-      limit,
-      page,
-      role,
-      verify,
+      id,
+      useResetPassword,
     ]
   );
   const updateProfileUser = useCallback(
@@ -289,6 +283,7 @@ export const useUserActions = ({
     },
     [
       hasToken,
+      useUpdateProfile,
       router,
       queryClient,
       id,

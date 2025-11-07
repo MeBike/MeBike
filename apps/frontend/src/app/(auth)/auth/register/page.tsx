@@ -55,11 +55,9 @@ const RegisterPage = () => {
     // Lưu email để dùng cho verification
     setRegisteredEmail(data.email);
     registerUser(registerData);
-    // Show verify email form after registration
     setShowEmailVerification(true);
-    resendVerifyEmail();
-  };
 
+  };
   const handleVerifyEmailSubmit = async (email: string, otp: string) => {
     try {
       await verifyEmail({ email: registeredEmail, otp });
