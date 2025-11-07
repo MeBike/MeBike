@@ -203,7 +203,7 @@ export function WalletTransactionModal({
                   {...register("amount")}
                   onChange={(e) => {
                     const numValue = parseInt(e.target.value.replace(/\./g, "")) || 0;
-                    setValue("amount", numValue as any);
+                    setValue("amount", numValue);
                     e.target.value = numValue ? numValue.toLocaleString("vi-VN") : "";
                   }}
                   onBlur={(e) => {
@@ -213,7 +213,7 @@ export function WalletTransactionModal({
                 />
               </div>
               {errors.amount && (
-                <p className="text-sm text-red-600">{(errors.amount as any)?.message}</p>
+                <p className="text-sm text-red-600">{String((errors.amount)?.message)}</p>
               )}
               <div className="space-y-1">
                 <label className="flex items-center gap-1 text-sm font-medium">
@@ -226,7 +226,7 @@ export function WalletTransactionModal({
                   {...register("fee")}
                   onChange={(e) => {
                     const numValue = parseInt(e.target.value.replace(/\./g, "")) || 0;
-                    setValue("fee", numValue as any);
+                    setValue("fee", numValue);
                     e.target.value = numValue ? numValue.toLocaleString("vi-VN") : "";
                   }}
                   onBlur={(e) => {
@@ -236,7 +236,7 @@ export function WalletTransactionModal({
                 />
               </div>
               {errors.fee && (
-                <p className="text-sm text-red-600">{(errors.fee as any)?.message}</p>
+                <p className="text-sm text-red-600">{String((errors.fee)?.message)}</p>
               )}
               <div className="space-y-1">
                 <label className="flex items-center gap-1 text-sm font-medium">

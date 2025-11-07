@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Supplier } from "@custom-types";
-import { Plus, Download, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useSupplierActions } from "@/hooks/useSupplierAction";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { columns } from "@/columns/supplier-column";
