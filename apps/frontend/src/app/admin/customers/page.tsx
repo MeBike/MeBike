@@ -8,6 +8,7 @@ import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userProfileSchema, UserProfile } from "@schemas/userSchema";
+import { resetPasswordSchema, ResetPasswordSchemaFormData } from "@schemas/authSchema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
@@ -24,6 +25,15 @@ export default function CustomersPage() {
     resolver: zodResolver(userProfileSchema),
   });
 
+  const {
+    register: registerResetPassword,
+    handleSubmit: handleSubmitResetPassword,
+    formState: { errors: errorsResetPassword },
+    reset: resetResetPassword,
+  } = useForm<ResetPasswordSchemaFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
@@ -31,6 +41,7 @@ export default function CustomersPage() {
   const [limit,] = useState<number>(10);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [detailTab, setDetailTab] = useState<"info" | "activity" | "stats">("info");
   const {
@@ -48,6 +59,7 @@ export default function CustomersPage() {
     isLoadingDetailUser,
     getDetailUser,
     dashboardStatsData,
+    resetPassword,
   } = useUserActions({
     hasToken: true,
     limit: limit,
@@ -109,6 +121,13 @@ export default function CustomersPage() {
     setIsCreateModalOpen(false);
     reset();
   });
+
+  const handleResetPassword = handleSubmitResetPassword((data) => {
+    resetPassword({new_password: data.password, confirm_new_password: data.confirm_password});
+    console.log("[v0] Reset password:", data);
+    setIsResetPasswordModalOpen(false);
+    resetResetPassword();
+  });
   return (
     <div>
       <div className="space-y-6">
@@ -133,9 +152,9 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        {
-          dashboardStatsData && (<CustomerStats stats={dashboardStatsData.result} />)
-        }
+        {dashboardStatsData && (
+          <CustomerStats stats={dashboardStatsData.result} />
+        )}
 
         {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
@@ -506,16 +525,27 @@ export default function CustomersPage() {
                   </>
                 )}
 
-                <Button
-                  onClick={() => {
-                    setIsDetailModalOpen(false);
-                    setSelectedUserId(null);
-                    setDetailTab("info");
-                  }}
-                  className="w-full mt-6"
-                >
-                  Đóng
-                </Button>
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    onClick={() => {
+                      setIsDetailModalOpen(false);
+                      setSelectedUserId(null);
+                      setDetailTab("info");
+                    }}
+                    className="flex-1"
+                  >
+                    Đóng
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsResetPasswordModalOpen(true);
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Đặt lại mật khẩu
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -652,6 +682,77 @@ export default function CustomersPage() {
                     className="flex-1"
                   >
                     Tạo người dùng
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Reset Password Modal */}
+          {isResetPasswordModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+                <h2 className="text-xl font-bold text-foreground mb-4">
+                  Đặt lại mật khẩu
+                </h2>
+
+                <form
+                  id="reset-password-form"
+                  onSubmit={handleResetPassword}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Mật khẩu mới
+                    </label>
+                    <input
+                      type="password"
+                      {...registerResetPassword("password")}
+                      placeholder="Nhập mật khẩu mới"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errorsResetPassword.password && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsResetPassword.password.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground">
+                      Xác nhận mật khẩu
+                    </label>
+                    <input
+                      type="password"
+                      {...registerResetPassword("confirm_password")}
+                      placeholder="Xác nhận mật khẩu mới"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errorsResetPassword.confirm_password && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsResetPassword.confirm_password.message}
+                      </p>
+                    )}
+                  </div>
+                </form>
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsResetPasswordModalOpen(false);
+                      resetResetPassword();
+                    }}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    form="reset-password-form"
+                    className="flex-1"
+                  >
+                    Đặt lại
                   </Button>
                 </div>
               </div>

@@ -13,6 +13,9 @@ import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
 import { UserProfile } from "@/schemas/userSchema";
 import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
 import { useGetDashboardStatsQuery } from "./query/User/useGetDashboardStatsQuery";
+import { ResetPasswordSchemaFormData } from "@/schemas/authSchema";
+import { ResetPasswordRequest } from "@/schemas/userSchema";
+import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
 interface ErrorWithMessage {
   message: string;
 }
@@ -60,9 +63,13 @@ export const useUserActions = ({
   id?: string;
 }) => {
   const router = useRouter();
-  const useCreateUser = useCreateUserMutation();  
+  const useCreateUser = useCreateUserMutation();
   const queryClient = useQueryClient();
-  const { data: detailUserData, refetch: refetchDetailUser, isLoading: isLoadingDetailUser } = useGetDetailUserQuery(id || "");
+  const {
+    data: detailUserData,
+    refetch: refetchDetailUser,
+    isLoading: isLoadingDetailUser,
+  } = useGetDetailUserQuery(id || "");
   const { data, refetch, isLoading, isFetching } = useGetAllUserQuery({
     page,
     limit,
@@ -144,38 +151,99 @@ export const useUserActions = ({
     }
     refetchSearch();
   }, [hasToken, router, refetchSearch]);
-  const users = searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
+  const users =
+    searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
   const createUser = useCallback(
-      async (userData: UserProfile) => {
-        if (!hasToken) {
-          router.push("/login");
-          return;
-        }
-        useCreateUser.mutate(userData, {
-          onSuccess: (result: { status: number; data?: { message?: string } }) => {
-            if (result?.status === 201) {
-              toast.success("Tạo người dùng thành công");
-              queryClient.invalidateQueries({ queryKey: ["all", "user", page, limit, verify || "all", role || "all"] });
-              queryClient.invalidateQueries({ queryKey: ["user-stats"] });
-              if (searchQuery && searchQuery.length > 0) {
-                refetchSearch();
-              } else {
-                refetch();
-              }
+    async (userData: UserProfile) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useCreateUser.mutate(userData, {
+        onSuccess: (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result?.status === 201) {
+            toast.success("Tạo người dùng thành công");
+            queryClient.invalidateQueries({
+              queryKey: [
+                "all",
+                "user",
+                page,
+                limit,
+                verify || "all",
+                role || "all",
+              ],
+            });
+            queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+            if (searchQuery && searchQuery.length > 0) {
+              refetchSearch();
             } else {
-              const errorMessage =
-                result?.data?.message || "Lỗi khi tạo người dùng";
-              toast.error(errorMessage);
+              refetch();
             }
-          },
-          onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
+          } else {
+            const errorMessage =
+              result?.data?.message || "Lỗi khi tạo người dùng";
             toast.error(errorMessage);
-          },
-        });
-      },
-      [hasToken, router, queryClient, useCreateUser, searchQuery, refetch, refetchSearch, limit, page, role, verify]
-    );
+          }
+        },
+        onError: (error: unknown) => {
+          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
+          toast.error(errorMessage);
+        },
+      });
+    },
+    [
+      hasToken,
+      router,
+      queryClient,
+      useCreateUser,
+      searchQuery,
+      refetch,
+      refetchSearch,
+      limit,
+      page,
+      role,
+      verify,
+    ]
+  );
+  const useResetPassword = useResetPasswordUserMutation();
+  const resetPassword = useCallback(
+    async (userData: ResetPasswordRequest) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useResetPassword.mutate({id: id || "", data: userData}, {
+        onSuccess: (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result?.status === 200) {
+            toast.success("Đặt lại mật khẩu thành công");
+          }
+        },
+        onError: (error: unknown) => {
+          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
+          toast.error(errorMessage);
+        },
+      });
+    },
+    [
+      hasToken,
+      router,
+      queryClient,
+      useCreateUser,
+      searchQuery,
+      refetch,
+      refetchSearch,
+      limit,
+      page,
+      role,
+      verify,
+    ]
+  );
   return {
     users: users,
     refetch,
@@ -207,5 +275,6 @@ export const useUserActions = ({
     detailUserData,
     isLoadingDetailUser,
     dashboardStatsData,
+    resetPassword,
   };
 };
