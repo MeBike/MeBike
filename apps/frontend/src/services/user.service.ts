@@ -2,6 +2,7 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
 import { UserProfile } from "@/schemas/userSchema";
+import { ResetPasswordRequest } from "@/schemas/userSchema";
 interface ApiReponse<T> {
   data: T;
   pagination?: {
@@ -74,6 +75,8 @@ const USER_ENDPOINTS = {
   GET_USER_STATS: `${USER_BASE}/stats`,
   GET_ACTIVE_USER: `${USER_BASE}/stats`,
   DASHBOARD_USER_STATS: `${USER_BASE}/dashboard-stats`,
+  RESET_PASSWORD: (id: string) => `${USER_BASE}/admin-reset-password/${id}`,
+  UPDATE_PROFILE_ADMIN: (id: string) => `${USER_BASE}/${id}`,
 } as const;
 export const userService = {
   getAllUsers: async ({
@@ -189,6 +192,24 @@ export const userService = {
     const response = await fetchHttpClient.get<
       DetailUserResponse<DashboardUserStats>
     >(USER_ENDPOINTS.DASHBOARD_USER_STATS);
+    return response;
+  },
+  postResetPassword: async (
+    id: string,
+    data: ResetPasswordRequest
+  ): Promise<AxiosResponse<DetailUserResponse<ResetPasswordResponse>>> => {
+    const response = await fetchHttpClient.post<
+      DetailUserResponse<ResetPasswordResponse>
+    >(USER_ENDPOINTS.RESET_PASSWORD(id), data);
+    return response;
+  },
+  updateProfileAdmin: async (
+    id: string,
+    data: Partial<UserProfile>
+  ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
+    const response = await fetchHttpClient.patch<
+      DetailUserResponse<DetailUser>
+    >(USER_ENDPOINTS.UPDATE_PROFILE_ADMIN(id), data);
     return response;
   }
 };
