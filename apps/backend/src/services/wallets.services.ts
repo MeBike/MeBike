@@ -252,22 +252,10 @@ class WalletService {
               { $group: { _id: null, total: { $sum: '$amount' } } }
             ],
             totalRefunds: [{ $count: 'total' }],
-            totalCompleteRefund: [
-              { $match: { status: RefundStatus.Completed } },
-              { $count: 'total' } 
-            ],
-            totalApproveRefund: [
-              { $match: { status: RefundStatus.Approved } },
-              { $count: 'total' } 
-            ],
-            totalRejectRefund: [
-              { $match: { status: RefundStatus.Rejected } },
-              { $count: 'total' } 
-            ],
-            totalPendingRefund: [
-              { $match: { status: RefundStatus.Pending } },
-              { $count: 'total' } 
-            ]
+            totalCompleteRefund: [{ $match: { status: RefundStatus.Completed } }, { $count: 'total' }],
+            totalApproveRefund: [{ $match: { status: RefundStatus.Approved } }, { $count: 'total' }],
+            totalRejectRefund: [{ $match: { status: RefundStatus.Rejected } }, { $count: 'total' }],
+            totalPendingRefund: [{ $match: { status: RefundStatus.Pending } }, { $count: 'total' }]
           }
         },
         {
@@ -318,22 +306,10 @@ class WalletService {
               { $group: { _id: null, total: { $sum: '$amount' } } }
             ],
             totalWithdraw: [{ $count: 'total' }],
-            totalCompleteWithdraw: [
-              { $match: { status: WithDrawalStatus.Completed } },
-              { $count: 'total' } 
-            ],
-            totalApproveWithdraw: [
-              { $match: { status: WithDrawalStatus.Approved } },
-              { $count: 'total' } 
-            ],
-            totalRejectWithdraw: [
-              { $match: { status: WithDrawalStatus.Rejected } },
-              { $count: 'total' } 
-            ],
-            totalPendingWithdraw: [
-              { $match: { status: WithDrawalStatus.Pending } },
-              { $count: 'total' } 
-            ]
+            totalCompleteWithdraw: [{ $match: { status: WithDrawalStatus.Completed } }, { $count: 'total' }],
+            totalApproveWithdraw: [{ $match: { status: WithDrawalStatus.Approved } }, { $count: 'total' }],
+            totalRejectWithdraw: [{ $match: { status: WithDrawalStatus.Rejected } }, { $count: 'total' }],
+            totalPendingWithdraw: [{ $match: { status: WithDrawalStatus.Pending } }, { $count: 'total' }]
           }
         },
         {
@@ -410,8 +386,11 @@ class WalletService {
       if (query.user_id) {
         filter.user_id = new ObjectId(query.user_id)
       }
+      if (query.wallet_id) {
+        filter._id = new ObjectId(query.wallet_id)
+      }
 
-      const aggregationPipeline = [
+      const aggregationPipeline: any[] = [
         { $match: filter },
         { $sort: { created_at: -1 } },
         {
@@ -432,10 +411,20 @@ class WalletService {
           $addFields: {
             fullname: { $ifNull: ['$user_info.fullname', 'Unknown User'] }
           }
-        },
+        }
+      ]
+
+      if (query.email) {
+        aggregationPipeline.push({
+          $match: {
+            email: { $regex: query.email, $options: 'i' }
+          }
+        })
+      }
+      aggregationPipeline.push(
         {
           $project: {
-            user_info: 0
+            user_info: 0 
           }
         },
         {
@@ -444,7 +433,7 @@ class WalletService {
             totalCount: [{ $count: 'count' }]
           }
         }
-      ]
+      )
 
       const result = await databaseService.wallets.aggregate(aggregationPipeline).toArray()
 

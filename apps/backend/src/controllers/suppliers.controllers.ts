@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { ParamsDictionary } from 'express-serve-static-core'
 
-import { ObjectId } from 'mongodb'
+import { Filter, ObjectId } from 'mongodb'
 
 import { SupplierStatus } from '~/constants/enums'
 import type {
@@ -16,6 +16,7 @@ import { ErrorWithStatus } from '~/models/errors'
 import databaseService from '~/services/database.services'
 import supplierService from '~/services/supplier.services'
 import util from 'node:util'
+import Supplier from '~/models/schemas/supplier.schema'
 
 export async function createSupplierController(req: Request<any, any, CreateSupplierReqBody>, res: Response) {
   try {
