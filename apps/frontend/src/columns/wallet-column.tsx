@@ -37,6 +37,13 @@ export const walletColumn = ({
     },
   },
   {
+    accessorKey: "fullname",
+    header: "Họ và tên",
+    cell: ({ row }) => {
+      return row.original.fullname || "Không có";
+    },
+  },
+  {
     accessorKey: "balance",
     header: "Số dư",
     cell: ({ row }) => {

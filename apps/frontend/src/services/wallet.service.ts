@@ -44,6 +44,7 @@ export interface Wallet {
   status: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG";
   created_at: string;
   updated_at: string;
+  fullname: string;
 }
 export interface UpdateWalletStatusResponse {
   _id: string;

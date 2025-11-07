@@ -82,6 +82,9 @@ export function useWalletActions(
             queryClient.invalidateQueries({
               queryKey: ["all-wallet-users", page, limit],
             });
+            queryClient.invalidateQueries({
+              queryKey: ["wallet-overview"],
+            });
           } else {
             const errorMessage =
               result.data?.message || "Error topping up wallet";
@@ -110,6 +113,9 @@ export function useWalletActions(
             toast.success("Debit wallet successfully");
             queryClient.invalidateQueries({
               queryKey: ["all-wallet-users", page, limit],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ["wallet-overview"],
             });
           } else {
             const errorMessage =
