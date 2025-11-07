@@ -53,7 +53,8 @@ export default function BikesPage() {
     bikeRentals,
     isFetchingRentalBikes,
     getRentalBikes,
-    getBikeStats
+    getBikeStats,
+    
   } = useBikeActions(
     true,
     detailId,

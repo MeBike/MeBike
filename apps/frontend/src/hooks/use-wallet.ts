@@ -3,11 +3,16 @@ import { useCallback } from "react";
 import { useGetAllWalletQuery } from "./query/Wallet/useGetAllWalletQuery";
 import { useTopUpWalletMutation } from "./mutations/Wallet/useTopUpWalletMutation";
 import { useDebitWalletMutation } from "./mutations/Wallet/useDebitWalletMutation";
-import { DecreaseSchemaFormData, TopUpSchemaFormData } from "@/schemas/walletSchema";
+import {
+  DecreaseSchemaFormData,
+  TopUpSchemaFormData,
+} from "@/schemas/walletSchema";
 import { toast } from "sonner";
 import { useGetManageTransactionQuery } from "./query/Wallet/useGetManageTransactionQuery";
 import { useGetWalletOverviewQuery } from "./query/Wallet/useGetWalletOverviewQuery";
 import { useGetDetailWalletQuery } from "./query/Wallet/useGetDetailWalletQuery";
+import { useUpdateStatusWalletMutation } from "./mutations/Wallet/useUpdateStatusWalletMutation";
+import { useRouter } from "next/navigation";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -43,18 +48,26 @@ export function useWalletActions(
   limit?: number,
   user_id?: string
 ) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { data: allWallets, refetch: isRefetchingAllWallets } =
     useGetAllWalletQuery({ page, limit });
-  const { data: manageTransactions } = useGetManageTransactionQuery({page:1 , limit:5});
+  const { data: manageTransactions } = useGetManageTransactionQuery({
+    page: 1,
+    limit: 5,
+  });
   const { data: walletOverview } = useGetWalletOverviewQuery();
   const useTopUpWallet = useTopUpWalletMutation();
   const useDebitWallet = useDebitWalletMutation();
-  const { data: detailWallet , refetch:isRefetchingDetailWallet  , isLoading:isLoadingDetailWallet } = useGetDetailWalletQuery(user_id || "");
+  const {
+    data: detailWallet,
+    refetch: isRefetchingDetailWallet,
+    isLoading: isLoadingDetailWallet,
+  } = useGetDetailWalletQuery(user_id || "");
   const getAllWalletUser = useCallback(async () => {
     if (!hasToken) {
       return;
-    } 
+    }
     isRefetchingAllWallets();
   }, [isRefetchingAllWallets, hasToken]);
   const topUpWallet = useCallback(
@@ -70,17 +83,21 @@ export function useWalletActions(
               queryKey: ["all-wallet-users", page, limit],
             });
           } else {
-            const errorMessage = result.data?.message || "Error topping up wallet";
+            const errorMessage =
+              result.data?.message || "Error topping up wallet";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error topping up wallet");
+          const errorMessage = getErrorMessage(
+            error,
+            "Error topping up wallet"
+          );
           toast.error(errorMessage);
         },
       });
     },
-    [useTopUpWallet, hasToken, queryClient , page , limit]
+    [useTopUpWallet, hasToken, queryClient, page, limit]
   );
   const debitWallet = useCallback(
     (data: DecreaseSchemaFormData) => {
@@ -95,7 +112,8 @@ export function useWalletActions(
               queryKey: ["all-wallet-users", page, limit],
             });
           } else {
-            const errorMessage = result.data?.message || "Error debiting wallet";
+            const errorMessage =
+              result.data?.message || "Error debiting wallet";
             toast.error(errorMessage);
           }
         },
@@ -105,14 +123,52 @@ export function useWalletActions(
         },
       });
     },
-    [useDebitWallet, hasToken, queryClient,page ,limit]
+    [useDebitWallet, hasToken, queryClient, page, limit]
   );
   const getDetailWallet = useCallback(async () => {
     if (!hasToken) {
       return;
     }
-    isRefetchingDetailWallet(); 
+    isRefetchingDetailWallet();
   }, [isRefetchingDetailWallet, hasToken]);
+  const useUpdateWallet = useUpdateStatusWalletMutation();
+  const updateStatusWallet = useCallback(
+    (newStatus: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG", id: string) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useUpdateWallet.mutate(
+        { id, newStatus },
+        {
+          onSuccess: (result: {
+            status: number;
+            data?: { message?: string };
+          }) => {
+            if (result.status === 200) {
+              toast.success("Cập nhật trạng thái ví thành công");
+              // Invalidate queries to refresh data
+              queryClient.invalidateQueries({
+                queryKey: ["all-wallet-users", page, limit],
+              });
+            } else {
+              const errorMessage =
+                result.data?.message || "Error updating wallet status";
+              toast.error(errorMessage);
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Error updating wallet status"
+            );
+            toast.error(errorMessage);
+          },
+        }
+      );
+    },
+    [useUpdateWallet, hasToken, router, queryClient, page, limit]
+  );
   return {
     allWallets: allWallets?.data || [],
     getAllWalletUser,
@@ -124,5 +180,6 @@ export function useWalletActions(
     detailWallet,
     getDetailWallet,
     isLoadingDetailWallet,
+    updateStatusWallet,
   };
 }

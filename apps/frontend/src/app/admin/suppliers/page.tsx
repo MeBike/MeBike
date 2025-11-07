@@ -183,10 +183,10 @@ export default function SuppliersPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline">
+              {/* <Button variant="outline">
                 <Download className="w-4 h-4 mr-2" />
                 Xuất Excel
-              </Button>
+              </Button> */}
               <Button onClick={() => setIsModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Thêm nhà cung cấp

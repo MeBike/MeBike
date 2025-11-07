@@ -15,14 +15,12 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 };
 export const walletColumn = ({
   onView,
-  // onEdit,
+  onEdit,
   onDeposit,
-  // onWithdraw,
 }: {
   onView?: ({ id }: { id: string }) => void;
-  // onEdit?: ({ id }: { id: string }) => void;
+  onEdit?: ({ id }: { id: string }) => void;
   onDeposit?: ({ id }: { id: string }) => void;
-  // onWithdraw?: ({ id }: { id: string }) => void;
 }): ColumnDef<Wallet>[] => [
   {
     accessorKey: "_id",
@@ -95,7 +93,7 @@ export const walletColumn = ({
         </button>
         <button
           className="p-2 hover:bg-green-100 rounded-lg transition-colors"
-          title="Nạp tiền"
+          title="Giao dịch nạp tiền"
           onClick={() => {
             if (onDeposit) {
               onDeposit({ id: row.original._id });
@@ -107,7 +105,11 @@ export const walletColumn = ({
         <button
           title="Cập nhật trạng thái"
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          onClick={() => {}}
+          onClick={() => {
+            if (onEdit) {
+              onEdit({ id: row.original._id });
+            }
+          }}
         >
           <RefreshCw className="w-4 h-4 text-blue-500" />
         </button>
