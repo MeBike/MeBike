@@ -22,7 +22,7 @@ const ForgotPassword = () => {
   const [step, setStep] = useState<"email" | "otp" | "password">("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [timeLeft, setTimeLeft] = useState(10); // Move timer state to parent
+  const [timeLeft, setTimeLeft] = useState(300); // Move timer state to parent
   const { forgotPassword, isLoadingForgottingPassword, resetPassword, isReseting } = useAuthActions();
   const router = useRouter();
 

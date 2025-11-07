@@ -32,7 +32,7 @@ export function EmailVerificationForm({
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(10); // 5 minutes in seco6nds
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seco6nds
   const [isTimeExpired, setIsTimeExpired] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -112,7 +112,7 @@ export function EmailVerificationForm({
     try {
       await resendVerifyEmail();
       // Reset timer and state
-      setTimeLeft(10);
+      setTimeLeft(300);
       setIsTimeExpired(false);
       setOtp(["", "", "", "", "", ""]);
       setError("");
@@ -248,7 +248,7 @@ export function EmailVerificationForm({
                 {/* Info Text */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-xs text-blue-700">
-                    💡 Kiểm tra thư mục spam nếu không thấy email. Mã OTP có hiệu lực trong 10 phút.
+                    💡 Kiểm tra thư mục spam nếu không thấy email. Mã OTP có hiệu lực trong 5 phút.
                   </p>
                 </div>
 
