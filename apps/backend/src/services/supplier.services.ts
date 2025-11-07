@@ -254,11 +254,14 @@ class SupplierService {
   }
 
   async getAllSupplier(res: Response, next: NextFunction, query: GetSupplierReqQuery) {
-    const { status } = query
+    const { status, name } = query
     const filter: any = {}
 
     if (status) {
       filter.status = status
+    }
+    if (name) {
+      filter.name = { $regex: name, $options: 'i' }
     }
 
     await sendPaginatedResponse(res, next, databaseService.suppliers, query, filter)
