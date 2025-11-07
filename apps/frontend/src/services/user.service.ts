@@ -44,6 +44,17 @@ interface GetNewRegistrationStats {
   newUsersLastMonth: number;
   percentageChange: number;
 }
+export interface DashboardUserStats {
+  totalCustomers: number;
+  activeCustomers: number;
+  newCustomersThisMonth: number;
+  vipCustomer: {
+    fullname: string;
+    totalDuration: number;
+  };
+  totalRevenue: number;
+  averageSpending: number;
+}
 const USER_BASE = "/users/manage-users";
 const USER_ENDPOINTS = {
   BASE: USER_BASE,
@@ -62,6 +73,7 @@ const USER_ENDPOINTS = {
   GET_ACTIVE_USERS: `${USER_BASE}/stats/active-users`,
   GET_USER_STATS: `${USER_BASE}/stats`,
   GET_ACTIVE_USER: `${USER_BASE}/stats`,
+  DASHBOARD_USER_STATS: `${USER_BASE}/dashboard-stats`,
 } as const;
 export const userService = {
   getAllUsers: async ({
@@ -171,4 +183,12 @@ export const userService = {
     >(USER_ENDPOINTS.GET_ACTIVE_USER);
     return response;
   },
+  getDashboardUserStats: async (): Promise<
+    AxiosResponse<DetailUserResponse<DashboardUserStats>>
+  > => {
+    const response = await fetchHttpClient.get<
+      DetailUserResponse<DashboardUserStats>
+    >(USER_ENDPOINTS.DASHBOARD_USER_STATS);
+    return response;
+  }
 };

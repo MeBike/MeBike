@@ -47,6 +47,7 @@ export default function CustomersPage() {
     detailUserData,
     isLoadingDetailUser,
     getDetailUser,
+    dashboardStatsData,
   } = useUserActions({
     hasToken: true,
     limit: limit,
@@ -132,19 +133,9 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        <CustomerStats
-          stats={
-            statistics?.result ?? {
-              total_users: 0,
-              total_verified: 0,
-              total_unverified: 0,
-              total_banned: 0,
-              // admins: 0,
-              // staffs: 0,
-              // users: 0,
-            }
-          }
-        />
+        {
+          dashboardStatsData && (<CustomerStats stats={dashboardStatsData.result} />)
+        }
 
         {/* Filters */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
@@ -344,7 +335,9 @@ export default function CustomersPage() {
                         </div>
 
                         <div>
-                          <p className="text-sm text-muted-foreground">Họ tên</p>
+                          <p className="text-sm text-muted-foreground">
+                            Họ tên
+                          </p>
                           <p className="text-foreground font-medium">
                             {detailUserData?.data?.result?.fullname}
                           </p>
@@ -358,28 +351,34 @@ export default function CustomersPage() {
                         </div>
 
                         <div>
-                          <p className="text-sm text-muted-foreground">Số điện thoại</p>
+                          <p className="text-sm text-muted-foreground">
+                            Số điện thoại
+                          </p>
                           <p className="text-foreground font-medium">
                             {detailUserData?.data?.result?.phone_number}
                           </p>
                         </div>
 
                         <div>
-                          <p className="text-sm text-muted-foreground">Username</p>
+                          <p className="text-sm text-muted-foreground">
+                            Username
+                          </p>
                           <p className="text-foreground font-medium">
                             {detailUserData?.data?.result?.username}
                           </p>
                         </div>
 
                         <div>
-                          <p className="text-sm text-muted-foreground">Vai trò</p>
+                          <p className="text-sm text-muted-foreground">
+                            Vai trò
+                          </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
                               detailUserData?.data?.result?.role === "ADMIN"
                                 ? "bg-red-100 text-red-800"
                                 : detailUserData?.data?.result?.role === "STAFF"
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-green-100 text-green-800"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-green-100 text-green-800"
                             }`}
                           >
                             {detailUserData?.data?.result?.role}
@@ -387,14 +386,18 @@ export default function CustomersPage() {
                         </div>
 
                         <div>
-                          <p className="text-sm text-muted-foreground">Trạng thái xác thực</p>
+                          <p className="text-sm text-muted-foreground">
+                            Trạng thái xác thực
+                          </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData?.data?.result?.verify === "VERIFIED"
+                              detailUserData?.data?.result?.verify ===
+                              "VERIFIED"
                                 ? "bg-green-100 text-green-800"
-                                : detailUserData?.data?.result?.verify === "UNVERIFIED"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
+                                : detailUserData?.data?.result?.verify ===
+                                    "UNVERIFIED"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
                             }`}
                           >
                             {detailUserData?.data?.result?.verify}
@@ -402,21 +405,29 @@ export default function CustomersPage() {
                         </div>
 
                         <div>
-                          <p className="text-sm text-muted-foreground">Địa chỉ</p>
+                          <p className="text-sm text-muted-foreground">
+                            Địa chỉ
+                          </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.location || "Chưa có"}
+                            {detailUserData?.data?.result?.location ||
+                              "Chưa có"}
                           </p>
                         </div>
 
                         <div>
-                          <p className="text-sm text-muted-foreground">NFC Card UID</p>
+                          <p className="text-sm text-muted-foreground">
+                            NFC Card UID
+                          </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.nfc_card_uid || "Chưa có"}
+                            {detailUserData?.data?.result?.nfc_card_uid ||
+                              "Chưa có"}
                           </p>
                         </div>
 
                         <div>
-                          <p className="text-sm text-muted-foreground">Ngày tạo</p>
+                          <p className="text-sm text-muted-foreground">
+                            Ngày tạo
+                          </p>
                           <p className="text-foreground font-medium">
                             {detailUserData?.data?.result?.created_at
                               ? new Date(
@@ -427,7 +438,9 @@ export default function CustomersPage() {
                         </div>
 
                         <div>
-                          <p className="text-sm text-muted-foreground">Lần cập nhật cuối</p>
+                          <p className="text-sm text-muted-foreground">
+                            Lần cập nhật cuối
+                          </p>
                           <p className="text-foreground font-medium">
                             {detailUserData?.data?.result?.updated_at
                               ? new Date(
@@ -456,7 +469,9 @@ export default function CustomersPage() {
                         <div className="bg-muted rounded-lg p-4">
                           <div className="grid grid-cols-2 gap-3">
                             <div className="bg-primary/10 border border-primary rounded p-3">
-                              <p className="text-xs text-primary">ID Người dùng</p>
+                              <p className="text-xs text-primary">
+                                ID Người dùng
+                              </p>
                               <p className="text-2xl font-bold text-primary">
                                 {detailUserData?.data?.result?._id.slice(0, 8)}
                               </p>
@@ -477,7 +492,9 @@ export default function CustomersPage() {
                             </div>
 
                             <div className="bg-yellow-100 border border-yellow-300 rounded p-3">
-                              <p className="text-xs text-yellow-600">Trạng thái</p>
+                              <p className="text-xs text-yellow-600">
+                                Trạng thái
+                              </p>
                               <p className="text-lg font-bold text-yellow-800">
                                 {detailUserData?.data?.result?.verify}
                               </p>
@@ -502,7 +519,7 @@ export default function CustomersPage() {
               </div>
             </div>
           )}
-          
+
           {isCreateModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">

@@ -2,10 +2,9 @@
 
 import { Card } from "@/components/ui/card";
 import { Users, UserCheck, TrendingUp, DollarSign, Award } from "lucide-react";
-import { UserStatistics } from "@/services/user.service";
+import { DashboardUserStats } from "@/services/user.service";
 
-
-export function CustomerStats({ stats }: { stats: UserStatistics })  {
+export function CustomerStats({ stats }: { stats: DashboardUserStats })  {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
@@ -13,7 +12,7 @@ export function CustomerStats({ stats }: { stats: UserStatistics })  {
           <div>
             <p className="text-sm text-muted-foreground">Tổng khách hàng</p>
             <p className="text-3xl font-bold text-primary mt-1">
-              {stats.total_users}
+              {stats.totalCustomers}
             </p>
           </div>
           <div className="p-3 bg-primary/10 rounded-lg">
@@ -27,7 +26,7 @@ export function CustomerStats({ stats }: { stats: UserStatistics })  {
           <div>
             <p className="text-sm text-muted-foreground">Đang hoạt động</p>
             <p className="text-3xl font-bold text-green-500 mt-1">
-              {stats.total_verified}
+              {stats.activeCustomers}
             </p>
           </div>
           <div className="p-3 bg-green-500/10 rounded-lg">
@@ -41,7 +40,7 @@ export function CustomerStats({ stats }: { stats: UserStatistics })  {
           <div>
             <p className="text-sm text-muted-foreground">Khách mới tháng này</p>
             <p className="text-3xl font-bold text-blue-500 mt-1">
-              {/* {stats.newThisMonth} */} 12
+              {stats.newCustomersThisMonth || 0}
             </p>
           </div>
           <div className="p-3 bg-blue-500/10 rounded-lg">
@@ -55,7 +54,7 @@ export function CustomerStats({ stats }: { stats: UserStatistics })  {
           <div>
             <p className="text-sm text-muted-foreground">Khách VIP</p>
             <p className="text-3xl font-bold text-yellow-500 mt-1">
-              {/* {stats.topCustomers} */} 12
+              {stats.vipCustomer ? stats.vipCustomer.fullname : "N/A"}
             </p>
           </div>
           <div className="p-3 bg-yellow-500/10 rounded-lg">
@@ -71,7 +70,7 @@ export function CustomerStats({ stats }: { stats: UserStatistics })  {
               Tổng doanh thu từ khách hàng
             </p>
             <p className="text-3xl font-bold text-accent mt-1">
-              {/* {(stats.totalRevenue || 0).toLocaleString()}đ */} 1.000.000đ
+              {stats.totalRevenue || 0}
             </p>
           </div>
           <div className="p-3 bg-accent/10 rounded-lg">
@@ -87,7 +86,7 @@ export function CustomerStats({ stats }: { stats: UserStatistics })  {
               Chi tiêu trung bình/khách
             </p>
             <p className="text-3xl font-bold text-purple-500 mt-1">
-              {/* {(stats.averageSpent || 0).toLocaleString()}đ */} 500.000đ
+              {stats.averageSpending || 0}
             </p>
           </div>
           <div className="p-3 bg-purple-500/10 rounded-lg">

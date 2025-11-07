@@ -12,6 +12,7 @@ import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
 import { UserProfile } from "@/schemas/userSchema";
 import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
+import { useGetDashboardStatsQuery } from "./query/User/useGetDashboardStatsQuery";
 interface ErrorWithMessage {
   message: string;
 }
@@ -135,6 +136,7 @@ export const useUserActions = ({
     }
     refetchTopRenter();
   }, [hasToken, router, refetchTopRenter]);
+  const { data: dashboardStatsData } = useGetDashboardStatsQuery();
   const getSearchUsers = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -204,5 +206,6 @@ export const useUserActions = ({
     getDetailUser,
     detailUserData,
     isLoadingDetailUser,
+    dashboardStatsData,
   };
 };
