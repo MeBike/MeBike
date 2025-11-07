@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp } from "lucide-react";
-import { useUserActions } from "@/hooks/useUserAction";
+import { useUserActions } from "@/hooks/use-user";
 
 export function RecentActivity() {
   const { topRenter } = useUserActions({ hasToken: true });

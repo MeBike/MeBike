@@ -5,7 +5,7 @@ import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { Bike, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@/components/ui/progress";
-import { useUserActions } from "@/hooks/useUserAction";
+import { useUserActions } from "@/hooks/use-user";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { useGetRevenueQuery } from "@/hooks/query/Rent/useGetRevenueQuery";
 import { useRentalsActions } from "@/hooks/useRentalAction";
@@ -34,12 +34,6 @@ export default function DashboardPage() {
   const monthlyRev = monthlyRevenue?.data[0]?.totalRevenue || 0;
   const lastMonthlyRev = lastMonthlyRevenue?.data[0]?.totalRevenue || 0;
   const changePercent = lastMonthlyRev ? Math.round((monthlyRev - lastMonthlyRev) / lastMonthlyRev * 100) : 0;
-  let changeType: "positive" | "negative" | "neutral";
-  if (lastMonthlyRev === 0) {
-    changeType = monthlyRev > 0 ? "positive" : "neutral";
-  } else {
-    changeType = changePercent > 0 ? "positive" : changePercent < 0 ? "negative" : "neutral";
-  }
   const changePercentBike = statisticData?.result["CÓ SẴN"]
     ? Math.round((statisticData.result["CÓ SẴN"] / totalRecord || 1) * 100)
     : 0;

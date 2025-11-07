@@ -41,14 +41,17 @@ const Login = () => {
     setEmail("");
     setPassword("");
   };
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoggingIn || isLoading || isNavigating) return;
     setIsNavigating(true);
-    logIn({ email, password }, (success) => {
-      if (!success) setIsNavigating(false);
-    });
-    resetFormData();
+    try {
+      await logIn({ email, password });
+      resetFormData();
+    } catch (error) {
+      console.error("Login failed:", error);
+      setIsNavigating(false);
+    }
   };
 
   return (
