@@ -84,9 +84,17 @@ class WalletService {
       })
     }
 
+    const netChange = Number.parseFloat(payload.amount.toString()) - Number.parseFloat(payload.fee.toString())
+    if (netChange <= 0) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.FEE_EXCEEDS_AMOUNT,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+    
     const wallet = await databaseService.wallets.findOneAndUpdate(
       { _id: new ObjectId(findWallet._id) },
-      { $inc: { balance: Decimal128.fromString(payload.amount.toString()) } },
+      { $inc: { balance: Decimal128.fromString(netChange.toString()) } },
       { returnDocument: 'after' }
     )
 
@@ -424,7 +432,7 @@ class WalletService {
       aggregationPipeline.push(
         {
           $project: {
-            user_info: 0 
+            user_info: 0
           }
         },
         {
