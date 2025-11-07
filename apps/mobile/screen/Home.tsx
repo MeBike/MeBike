@@ -21,247 +21,6 @@ import { BikeColors } from "../constants/BikeColors";
 import { useDashboardStats } from "../hooks/useDashboardStats";
 
 const { width, height } = Dimensions.get("window");
-export default function HomeScreen() {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { user, isAuthenticated } = useAuth();
-  const { stats, isLoading } = useDashboardStats();
-
-  const formatNumber = (num: number) => {
-    if (num >= 10000) {
-      return `${(num / 1000).toFixed(0)}K+`;
-    }
-    if (num >= 1000) {
-      return `${(num / 1000).toFixed(1)}K+`;
-    }
-    return `${num}+`;
-  };
-
-  const displayStats = useMemo(() => ({
-    stations: stats ? formatNumber(stats.totalStations) : "...",
-    bikes: stats ? formatNumber(stats.totalBikes) : "...",
-    users: stats ? formatNumber(stats.totalUsers) : "...",
-  }), [stats]);
-  const navigateToLogin = () => {
-    navigation.navigate("Login");
-  };
-
-  const navigateToIntro = () => {
-    navigation.navigate("Intro");
-  };
-
-  const features = [
-    {
-      icon: "bicycle",
-      title: "Thuê xe đạp dễ dàng",
-      description: "Tìm và thuê xe đạp tại các trạm metro gần bạn",
-      color: BikeColors.primary,
-    },
-    {
-      icon: "qrcode.viewfinder",
-      title: "Quét QR để mở khóa",
-      description: "Mở khóa xe đạp chỉ bằng một lần quét mã QR",
-      color: BikeColors.secondary,
-    },
-    {
-      icon: "map",
-      title: "Theo dõi thời gian thực",
-      description: "Xem vị trí và tình trạng xe đạp trực tiếp",
-      color: BikeColors.accent,
-    },
-  ];
-
-  return (
-    <>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor={BikeColors.primary}
-      />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={[BikeColors.primary, BikeColors.secondary]}
-          style={styles.header}
-        >
-          <View style={styles.navigationBar}>
-            <View style={styles.logo}>
-              <IconSymbol name="bicycle" size={32} color="white" />
-              <Text style={styles.logoText}>MeBike</Text>
-            </View>
-
-            <View style={styles.navButtons}>
-              <Pressable style={styles.navButton} onPress={navigateToIntro}>
-                <Text style={styles.navButtonText}>Giới thiệu</Text>
-              </Pressable>
-
-              {isAuthenticated
-                ? (
-                    <Pressable
-                      style={styles.navButton}
-                      onPress={() => navigation.navigate("Tôi")}
-                    >
-                      <User size={24} color="white" />
-                    </Pressable>
-                  )
-                : (
-                    <Pressable style={styles.loginButton} onPress={navigateToLogin}>
-                      <Text style={styles.loginButtonText}>Đăng nhập</Text>
-                    </Pressable>
-                  )}
-            </View>
-          </View>
-
-          {/* Hero Section */}
-          <View style={styles.heroSection}>
-            <Text style={styles.heroTitle}>
-              Khám phá thành phố
-              {"\n"}
-              với MeBike
-            </Text>
-            <Text style={styles.heroSubtitle}>
-              Giải pháp di chuyển thông minh và thân thiện với môi trường
-            </Text>
-
-            <View style={styles.heroButtons}>
-              {isAuthenticated
-                ? (
-                    <Pressable
-                      style={styles.primaryButton}
-                      onPress={() => navigation.navigate("Trạm")}
-                    >
-                      <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
-                      <IconSymbol
-                        name="arrow.right"
-                        size={20}
-                        color={BikeColors.primary}
-                      />
-                    </Pressable>
-                  )
-                : (
-                    <Pressable
-                      style={styles.primaryButton}
-                      onPress={navigateToLogin}
-                    >
-                      <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
-                      <IconSymbol
-                        name="arrow.right"
-                        size={20}
-                        color={BikeColors.primary}
-                      />
-                    </Pressable>
-                  )}
-
-              <Pressable
-                style={styles.secondaryButton}
-                onPress={navigateToIntro}
-              >
-                <Text style={styles.secondaryButtonText}>Tìm hiểu thêm</Text>
-              </Pressable>
-            </View>
-          </View>
-        </LinearGradient>
-
-        {/* Features Section */}
-        <View style={styles.featuresSection}>
-          <Text style={styles.sectionTitle}>Tại sao chọn MeBike?</Text>
-
-          {features.map((feature, index) => (
-            <View key={index} style={styles.featureCard}>
-              <LinearGradient
-                colors={[`${feature.color}20`, `${feature.color}10`]}
-                style={styles.featureIcon}
-              >
-                <IconSymbol
-                  name={feature.icon as any}
-                  size={32}
-                  color={feature.color}
-                />
-              </LinearGradient>
-
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>{feature.title}</Text>
-                <Text style={styles.featureDescription}>
-                  {feature.description}
-                </Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Stats Section */}
-        <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}>Thống kê hệ thống</Text>
-
-          {isLoading
-            ? (
-                <ActivityIndicator size="large" color={BikeColors.primary} />
-              )
-            : (
-                <View style={styles.statsGrid}>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>{displayStats.stations}</Text>
-                    <Text style={styles.statLabel}>Trạm metro</Text>
-                  </View>
-
-                  <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>{displayStats.bikes}</Text>
-                    <Text style={styles.statLabel}>Xe đạp</Text>
-                  </View>
-
-                  <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>{displayStats.users}</Text>
-                    <Text style={styles.statLabel}>Người dùng</Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>24/7</Text>
-                    <Text style={styles.statLabel}>Hoạt động</Text>
-                  </View>
-                </View>
-              )}
-        </View>
-
-        {/* CTA Section */}
-        <View style={styles.ctaSection}>
-          <LinearGradient
-            colors={[`${BikeColors.primary}20`, `${BikeColors.secondary}20`]}
-            style={styles.ctaCard}
-          >
-            <IconSymbol name="bicycle" size={48} color={BikeColors.primary} />
-            <Text style={styles.ctaTitle}>Sẵn sàng bắt đầu?</Text>
-            <Text style={styles.ctaDescription}>
-              Tham gia cộng đồng MeBike và khám phá cách di chuyển mới
-            </Text>
-
-            <Pressable style={styles.ctaButton} onPress={navigateToLogin}>
-              {
-                isAuthenticated
-                  ? (
-                      <Text
-                        style={styles.ctaButtonText}
-                        onPress={() => navigation.navigate("Tôi")}
-                      >
-                        Đi đến hồ sơ
-                      </Text>
-                    )
-                  : <Text style={styles.ctaButtonText}>Đăng ký ngay</Text>
-              }
-              <IconSymbol name="arrow.right" size={18} color="white" />
-            </Pressable>
-          </LinearGradient>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            ©
-            {" "}
-            {new Date().getFullYear()}
-            {" "}
-            MeBike. Tất cả quyền được bảo lưu.
-          </Text>
-        </View>
-      </ScrollView>
-    </>
-  );
-}
 
 const styles = StyleSheet.create({
   container: {
@@ -500,3 +259,245 @@ const styles = StyleSheet.create({
     color: BikeColors.textSecondary,
   },
 });
+
+export default function HomeScreen() {
+  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { user, isAuthenticated } = useAuth();
+  const { stats, isLoading } = useDashboardStats();
+
+  const formatNumber = (num: number) => {
+    if (num >= 10000) {
+      return `${(num / 1000).toFixed(0)}K+`;
+    }
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K+`;
+    }
+    return `${num}`;
+  };
+
+  const displayStats = useMemo(() => ({
+    stations: stats ? formatNumber(stats.totalStations) : "...",
+    bikes: stats ? formatNumber(stats.totalBikes) : "...",
+    users: stats ? formatNumber(stats.totalUsers) : "...",
+  }), [stats]);
+  const navigateToLogin = () => {
+    navigation.navigate("Login");
+  };
+
+  const navigateToIntro = () => {
+    navigation.navigate("Intro");
+  };
+
+  const features = [
+    {
+      icon: "bicycle",
+      title: "Thuê xe đạp dễ dàng",
+      description: "Tìm và thuê xe đạp tại các trạm metro gần bạn",
+      color: BikeColors.primary,
+    },
+    {
+      icon: "qrcode.viewfinder",
+      title: "Quét QR để mở khóa",
+      description: "Mở khóa xe đạp chỉ bằng một lần quét mã QR",
+      color: BikeColors.secondary,
+    },
+    {
+      icon: "map",
+      title: "Theo dõi thời gian thực",
+      description: "Xem vị trí và tình trạng xe đạp trực tiếp",
+      color: BikeColors.accent,
+    },
+  ];
+
+  return (
+    <>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={BikeColors.primary}
+      />
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={[BikeColors.primary, BikeColors.secondary]}
+          style={styles.header}
+        >
+          <View style={styles.navigationBar}>
+            <View style={styles.logo}>
+              <IconSymbol name="bicycle" size={32} color="white" />
+              <Text style={styles.logoText}>MeBike</Text>
+            </View>
+
+            <View style={styles.navButtons}>
+              <Pressable style={styles.navButton} onPress={navigateToIntro}>
+                <Text style={styles.navButtonText}>Giới thiệu</Text>
+              </Pressable>
+
+              {isAuthenticated
+                ? (
+                    <Pressable
+                      style={styles.navButton}
+                      onPress={() => navigation.navigate("Tôi")}
+                    >
+                      <User size={24} color="white" />
+                    </Pressable>
+                  )
+                : (
+                    <Pressable style={styles.loginButton} onPress={navigateToLogin}>
+                      <Text style={styles.loginButtonText}>Đăng nhập</Text>
+                    </Pressable>
+                  )}
+            </View>
+          </View>
+
+          {/* Hero Section */}
+          <View style={styles.heroSection}>
+            <Text style={styles.heroTitle}>
+              Khám phá thành phố
+              {"\n"}
+              với MeBike
+            </Text>
+            <Text style={styles.heroSubtitle}>
+              Giải pháp di chuyển thông minh và thân thiện với môi trường
+            </Text>
+
+            <View style={styles.heroButtons}>
+              {isAuthenticated
+                ? (
+                    <Pressable
+                      style={styles.primaryButton}
+                      onPress={() => navigation.navigate("Trạm")}
+                    >
+                      <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
+                      <IconSymbol
+                        name="arrow.right"
+                        size={20}
+                        color={BikeColors.primary}
+                      />
+                    </Pressable>
+                  )
+                : (
+                    <Pressable
+                      style={styles.primaryButton}
+                      onPress={navigateToLogin}
+                    >
+                      <Text style={styles.primaryButtonText}>Bắt đầu ngay</Text>
+                      <IconSymbol
+                        name="arrow.right"
+                        size={20}
+                        color={BikeColors.primary}
+                      />
+                    </Pressable>
+                  )}
+
+              <Pressable
+                style={styles.secondaryButton}
+                onPress={navigateToIntro}
+              >
+                <Text style={styles.secondaryButtonText}>Tìm hiểu thêm</Text>
+              </Pressable>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Features Section */}
+        <View style={styles.featuresSection}>
+          <Text style={styles.sectionTitle}>Tại sao chọn MeBike?</Text>
+
+          {features.map((feature, index) => (
+            <View key={index} style={styles.featureCard}>
+              <LinearGradient
+                colors={[`${feature.color}20`, `${feature.color}10`]}
+                style={styles.featureIcon}
+              >
+                <IconSymbol
+                  name={feature.icon as any}
+                  size={32}
+                  color={feature.color}
+                />
+              </LinearGradient>
+
+              <View style={styles.featureContent}>
+                <Text style={styles.featureTitle}>{feature.title}</Text>
+                <Text style={styles.featureDescription}>
+                  {feature.description}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {/* Stats Section */}
+        <View style={styles.statsSection}>
+          <Text style={styles.sectionTitle}>Thống kê hệ thống</Text>
+
+          {isLoading
+            ? (
+                <ActivityIndicator size="large" color={BikeColors.primary} />
+              )
+            : (
+                <View style={styles.statsGrid}>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>{displayStats.stations}</Text>
+                    <Text style={styles.statLabel}>Trạm</Text>
+                  </View>
+
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>{displayStats.bikes}</Text>
+                    <Text style={styles.statLabel}>Xe đạp</Text>
+                  </View>
+
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>{displayStats.users}</Text>
+                    <Text style={styles.statLabel}>Người dùng</Text>
+                  </View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>24/7</Text>
+                    <Text style={styles.statLabel}>Hoạt động</Text>
+                  </View>
+                </View>
+              )}
+        </View>
+
+        {/* CTA Section */}
+        <View style={styles.ctaSection}>
+          <LinearGradient
+            colors={[`${BikeColors.primary}20`, `${BikeColors.secondary}20`]}
+            style={styles.ctaCard}
+          >
+            <IconSymbol name="bicycle" size={48} color={BikeColors.primary} />
+            <Text style={styles.ctaTitle}>Sẵn sàng bắt đầu?</Text>
+            <Text style={styles.ctaDescription}>
+              Tham gia cộng đồng MeBike và khám phá cách di chuyển mới
+            </Text>
+
+            <Pressable style={styles.ctaButton} onPress={navigateToLogin}>
+              {
+                isAuthenticated
+                  ? (
+                      <Text
+                        style={styles.ctaButtonText}
+                        onPress={() => navigation.navigate("Tôi")}
+                      >
+                        Đi đến hồ sơ
+                      </Text>
+                    )
+                  : <Text style={styles.ctaButtonText}>Đăng ký ngay</Text>
+              }
+              <IconSymbol name="arrow.right" size={18} color="white" />
+            </Pressable>
+          </LinearGradient>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            ©
+            {" "}
+            {new Date().getFullYear()}
+            {" "}
+            MeBike. Tất cả quyền được bảo lưu.
+          </Text>
+        </View>
+      </ScrollView>
+    </>
+  );
+}
