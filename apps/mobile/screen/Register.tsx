@@ -85,7 +85,7 @@ export default function RegisterScreen() {
               color={BikeColors.secondary}
             />
             <Text style={styles.logoText}>Tạo tài khoản</Text>
-            <Text style={styles.subtitle}>Tham gia cộng đồng BikeShare</Text>
+            <Text style={styles.subtitle}>Tham gia cộng đồng MeBike</Text>
           </View>
         </LinearGradient>
 

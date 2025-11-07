@@ -2,8 +2,9 @@ import { useAuth } from "@providers/auth-providers";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { User } from "lucide-react-native";
-import React from "react";
+import React, { useMemo } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   Pressable,
   ScrollView,
@@ -17,11 +18,29 @@ import type { HomeScreenNavigationProp } from "../types/navigation";
 
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
+import { useDashboardStats } from "../hooks/useDashboardStats";
 
 const { width, height } = Dimensions.get("window");
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { user, isAuthenticated } = useAuth();
+  const { stats, isLoading } = useDashboardStats();
+
+  const formatNumber = (num: number) => {
+    if (num >= 10000) {
+      return `${(num / 1000).toFixed(0)}K+`;
+    }
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}K+`;
+    }
+    return `${num}+`;
+  };
+
+  const displayStats = useMemo(() => ({
+    stations: stats ? formatNumber(stats.totalStations) : "...",
+    bikes: stats ? formatNumber(stats.totalBikes) : "...",
+    users: stats ? formatNumber(stats.totalUsers) : "...",
+  }), [stats]);
   const navigateToLogin = () => {
     navigation.navigate("Login");
   };
@@ -65,7 +84,7 @@ export default function HomeScreen() {
           <View style={styles.navigationBar}>
             <View style={styles.logo}>
               <IconSymbol name="bicycle" size={32} color="white" />
-              <Text style={styles.logoText}>BikeShare</Text>
+              <Text style={styles.logoText}>MeBike</Text>
             </View>
 
             <View style={styles.navButtons}>
@@ -95,7 +114,7 @@ export default function HomeScreen() {
             <Text style={styles.heroTitle}>
               Khám phá thành phố
               {"\n"}
-              với BikeShare
+              với MeBike
             </Text>
             <Text style={styles.heroSubtitle}>
               Giải pháp di chuyển thông minh và thân thiện với môi trường
@@ -142,7 +161,7 @@ export default function HomeScreen() {
 
         {/* Features Section */}
         <View style={styles.featuresSection}>
-          <Text style={styles.sectionTitle}>Tại sao chọn BikeShare?</Text>
+          <Text style={styles.sectionTitle}>Tại sao chọn MeBike?</Text>
 
           {features.map((feature, index) => (
             <View key={index} style={styles.featureCard}>
@@ -171,27 +190,32 @@ export default function HomeScreen() {
         <View style={styles.statsSection}>
           <Text style={styles.sectionTitle}>Thống kê hệ thống</Text>
 
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>50+</Text>
-              <Text style={styles.statLabel}>Trạm metro</Text>
-            </View>
+          {isLoading
+            ? (
+                <ActivityIndicator size="large" color={BikeColors.primary} />
+              )
+            : (
+                <View style={styles.statsGrid}>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>{displayStats.stations}</Text>
+                    <Text style={styles.statLabel}>Trạm metro</Text>
+                  </View>
 
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>500+</Text>
-              <Text style={styles.statLabel}>Xe đạp</Text>
-            </View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>{displayStats.bikes}</Text>
+                    <Text style={styles.statLabel}>Xe đạp</Text>
+                  </View>
 
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>10K+</Text>
-              <Text style={styles.statLabel}>Người dùng</Text>
-            </View>
-
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>24/7</Text>
-              <Text style={styles.statLabel}>Hoạt động</Text>
-            </View>
-          </View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>{displayStats.users}</Text>
+                    <Text style={styles.statLabel}>Người dùng</Text>
+                  </View>
+                  <View style={styles.statCard}>
+                    <Text style={styles.statNumber}>24/7</Text>
+                    <Text style={styles.statLabel}>Hoạt động</Text>
+                  </View>
+                </View>
+              )}
         </View>
 
         {/* CTA Section */}
@@ -203,7 +227,7 @@ export default function HomeScreen() {
             <IconSymbol name="bicycle" size={48} color={BikeColors.primary} />
             <Text style={styles.ctaTitle}>Sẵn sàng bắt đầu?</Text>
             <Text style={styles.ctaDescription}>
-              Tham gia cộng đồng BikeShare và khám phá cách di chuyển mới
+              Tham gia cộng đồng MeBike và khám phá cách di chuyển mới
             </Text>
 
             <Pressable style={styles.ctaButton} onPress={navigateToLogin}>
