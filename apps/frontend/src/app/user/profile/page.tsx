@@ -63,11 +63,10 @@ export default function ProfilePage() {
       "username",
       "phone_number",
       "location",
-      "avatar",
     ];
 
     const updatedData = fields.reduce((acc, field) => {
-      const newValue = field === "avatar" ? avatarPreview : formData[field];
+      const newValue = formData[field];
       const oldValue = user[field as keyof DetailUser] ?? "";
 
       if (newValue !== oldValue) {

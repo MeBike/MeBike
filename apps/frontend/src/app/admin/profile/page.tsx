@@ -3,7 +3,6 @@
 import type React from "react";
 
 import { useEffect, useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import type { DetailUser } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,11 +62,10 @@ export default function ProfilePage() {
       "username",
       "phone_number",
       "location",
-      "avatar",
     ];
 
     const updatedData = fields.reduce((acc, field) => {
-      const newValue = field === "avatar" ? avatarPreview : formData[field];
+      const newValue = formData[field];
       const oldValue = user[field as keyof DetailUser] ?? "";
 
       if (newValue !== oldValue) {
@@ -109,7 +107,7 @@ export default function ProfilePage() {
     }
   };
   return (
-    <DashboardLayout user={data}>
+    <div>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -413,6 +411,6 @@ export default function ProfilePage() {
         onSubmit={handleVerifyEmailSubmit}
         isLoading={isVerifyingEmail}
       />
-    </DashboardLayout>
+    </div>
   );
 }
