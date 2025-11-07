@@ -13,6 +13,7 @@ import {
 import { Mail, Loader2, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthActions } from "@/hooks/useAuthAction";
+import { useRouter } from "next/navigation";
 
 interface EmailVerificationFormProps {
   email: string;
@@ -37,7 +38,7 @@ export function EmailVerificationForm({
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { resendVerifyEmail } = useAuthActions();
-
+  const router = useRouter();
   // Countdown timer
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -97,6 +98,7 @@ export function EmailVerificationForm({
       console.log("📤 Submitting OTP to parent...");
       await onSubmit(email, otpString);
       console.log("✅ onSubmit resolved, setting showLoading = true");
+      router.push("/user/profile");
       setShowLoading(true);
     } catch (err) {
       console.log("❌ onSubmit rejected:", err);

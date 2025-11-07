@@ -72,15 +72,8 @@ const RegisterPage = () => {
       console.log("Token exists:", !!token);
       await verifyEmail({ email: registeredEmail, otp });
       console.log("OTP verified successfully!");
-      // Only navigate after successful verification
-      setTimeout(() => {
-        setShowEmailVerification(false);
-        router.push("/user/profile");
-      }, 2000);
     } catch (err) {
       console.log("Verification error (caught):", err);
-      // Error will be shown in EmailVerificationForm via toast
-      // Re-throw to let EmailVerificationForm handle it
       throw err;
     }
   };
