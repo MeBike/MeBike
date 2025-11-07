@@ -12,7 +12,7 @@ export function Logo() {
       </div>
       <div>
         <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">
-          MetroBike
+          MeBike
         </h1>
         <p className="text-sm text-[hsl(var(--muted-foreground))]">
           The Last Mile Solution

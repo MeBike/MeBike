@@ -1,3 +1,4 @@
+import { useAuth } from "@providers/auth-providers";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { User } from "lucide-react-native";
@@ -11,8 +12,6 @@ import {
   Text,
   View,
 } from "react-native";
-
-import { useAuth } from "@providers/auth-providers";
 
 import type { HomeScreenNavigationProp } from "../types/navigation";
 
@@ -210,8 +209,14 @@ export default function HomeScreen() {
             <Pressable style={styles.ctaButton} onPress={navigateToLogin}>
               {
                 isAuthenticated
-                  ? <Text style={styles.ctaButtonText}
-                  onPress={() => navigation.navigate("Tôi")}>Đi đến hồ sơ</Text>
+                  ? (
+                      <Text
+                        style={styles.ctaButtonText}
+                        onPress={() => navigation.navigate("Tôi")}
+                      >
+                        Đi đến hồ sơ
+                      </Text>
+                    )
                   : <Text style={styles.ctaButtonText}>Đăng ký ngay</Text>
               }
               <IconSymbol name="arrow.right" size={18} color="white" />
@@ -222,7 +227,11 @@ export default function HomeScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            © 2024 BikeShare. Tất cả quyền được bảo lưu.
+            ©
+            {" "}
+            {new Date().getFullYear()}
+            {" "}
+            MeBike. Tất cả quyền được bảo lưu.
           </Text>
         </View>
       </ScrollView>
