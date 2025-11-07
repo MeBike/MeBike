@@ -28,7 +28,6 @@ export default function SOSPage() {
     isLoading,
     refetchSOSRequest,
     sosDetail,
-    isLoadingSOSDetail,
     refetchSOSDetail,
     createSOS,
   } = useSOS({
