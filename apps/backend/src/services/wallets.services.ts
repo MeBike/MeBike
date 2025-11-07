@@ -425,7 +425,7 @@ class WalletService {
       if (query.email) {
         aggregationPipeline.push({
           $match: {
-            email: { $regex: query.email, $options: 'i' }
+            'user_info.email': { $regex: query.email, $options: 'i' }
           }
         })
       }
