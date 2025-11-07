@@ -233,7 +233,7 @@ export default function ContactPage() {
                         Cả tuần
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        05:00 - 23:00
+                        05:00 - 22:00
                       </p>
                     </div>
                   </div>

@@ -1,8 +1,8 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import { useGetAllStation } from "./query/Station/useGetAllStationQuery";
-import { useGetStationById } from "./query/Station/useGetStationByIDQuery";
 import { useGetNearMeStations } from "./query/Station/useGetNearMeStationQuery";
+import { useGetStationById } from "./query/Station/useGetStationByIDQuery";
 
 type ErrorResponse = {
   response?: {
@@ -42,11 +42,15 @@ export function useStationActions(hasToken: boolean, stationId?: string, latitud
     data: responseStationDetail,
     isLoading: isLoadingStationID,
   } = useGetStationById(stationId || "");
+  const [nearbyCoords, setNearbyCoords] = useState<{ lat: number; lng: number } | null>(null);
   const {
-    refetch: refetchNearMe,
     data: nearMeStations,
     isLoading: isLoadingNearMe,
-  } = useGetNearMeStations(latitude || 0, longitude || 0, false);
+  } = useGetNearMeStations(
+    nearbyCoords?.lat || 0,
+    nearbyCoords?.lng || 0,
+    nearbyCoords !== null,
+  );
   const getAllStations = useCallback(async () => {
     if (!hasToken) {
       return;
@@ -60,12 +64,17 @@ export function useStationActions(hasToken: boolean, stationId?: string, latitud
     fetchingStationID();
   }, [fetchingStationID, hasToken]);
 
-  const getNearbyStations = useCallback(async () => {
-    if (!hasToken || !latitude || !longitude) {
+  const getNearbyStations = useCallback(async (lat?: number, lng?: number) => {
+    if (!hasToken) {
       return;
     }
-    refetchNearMe();
-  }, [refetchNearMe, hasToken, latitude, longitude]);
+    if (lat && lng) {
+      setNearbyCoords({ lat, lng });
+    }
+    else if (latitude && longitude) {
+      setNearbyCoords({ lat: latitude, lng: longitude });
+    }
+  }, [hasToken, latitude, longitude]);
 
   return {
     getAllStations,

@@ -1,6 +1,7 @@
+import { useAuth } from "@providers/auth-providers";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   Pressable,
@@ -9,8 +10,6 @@ import {
   Text,
   View,
 } from "react-native";
-
-import { useAuth } from "@providers/auth-providers";
 
 import type { IntroScreenNavigationProp } from "../types/navigation";
 
@@ -23,7 +22,7 @@ const { width, height } = Dimensions.get("window");
 const introSlides = [
   {
     id: 1,
-    title: "Chào mừng đến với BikeShare",
+    title: "Chào mừng đến với MeBike",
     description: "Thuê xe đạp dễ dàng tại các trạm metro. Di chuyển nhanh chóng và thân thiện với môi trường.",
     icon: "bicycle",
     color: BikeColors.primary,
@@ -48,7 +47,16 @@ export default function IntroScreen() {
   const { user, isAuthenticated } = useAuth();
   const navigation = useNavigation<IntroScreenNavigationProp>();
   const [currentSlide, setCurrentSlide] = useState(0);
-  // const { markIntroAsSeen } = useAuth();
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({
+        x: currentSlide * width,
+        animated: true,
+      });
+    }
+  }, [currentSlide]);
 
   const nextSlide = async () => {
     if (currentSlide < introSlides.length - 1) {
@@ -121,12 +129,13 @@ export default function IntroScreen() {
           <IconSymbol name="arrow.left" size={24} color={BikeColors.textPrimary} />
         </Pressable>
 
-        <Pressable style={styles.skipButton} onPress={skipIntro}>
+        <Pressable style={styles.skipButton} onPress={goBack}>
           <Text style={styles.skipText}>Bỏ qua</Text>
         </Pressable>
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
