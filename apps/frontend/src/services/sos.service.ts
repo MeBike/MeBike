@@ -1,7 +1,11 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { SOS } from "@custom-types";
 import type { AxiosResponse } from "axios";
-import type { DetailApiResponse, ApiResponse } from "@custom-types";
+import type {
+  DetailApiResponse,
+  ApiResponse,
+  IBikeIssueReport,
+} from "@custom-types";
 const SOS_BASE = "/sos";
 const SOS_ENDPOINTS = {
   BASE: SOS_BASE,
@@ -49,10 +53,10 @@ export const sosService = {
   },
   getDetailSOSRequest: async (
     id: string
-  ): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<SOS>>(
-      SOS_ENDPOINTS.ID(id)
-    );
+  ): Promise<AxiosResponse<DetailApiResponse<IBikeIssueReport>>> => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<IBikeIssueReport>
+    >(SOS_ENDPOINTS.ID(id));
     return response;
   },
 };

@@ -101,9 +101,7 @@ export default function SOSPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => {
-                  setStatusFilter(
-                    e.target.value as SOS["status"] | "all"
-                  );
+                  setStatusFilter(e.target.value as SOS["status"] | "all");
                   handleFilterChange();
                 }}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
@@ -127,7 +125,9 @@ export default function SOSPage() {
           {sosRequests?.data && sosRequests.data.length === 0 ? (
             <div className="bg-card border border-border rounded-lg p-8 text-center">
               <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-foreground font-medium">Không có yêu cầu cứu hộ</p>
+              <p className="text-foreground font-medium">
+                Không có yêu cầu cứu hộ
+              </p>
               <p className="text-sm text-muted-foreground mt-1">
                 Không tìm thấy yêu cầu cứu hộ nào phù hợp với bộ lọc
               </p>
@@ -222,42 +222,97 @@ export default function SOSPage() {
                 {detailTab === "info" && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm text-muted-foreground">Mã yêu cầu cứu hộ</p>
+                      <p className="text-sm text-muted-foreground">
+                        Mã yêu cầu cứu hộ
+                      </p>
                       <p className="text-foreground font-medium">
                         {sosDetail.result._id}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-muted-foreground">Mã yêu cầu (requester)</p>
+                      <p className="text-sm text-muted-foreground">
+                        Tên người yêu cầu
+                      </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.requester_id}
+                        {sosDetail.result.requester?.fullname || "-"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Email người yêu cầu
+                      </p>
+                      <p className="text-foreground font-medium text-sm">
+                        {sosDetail.result.requester?.email || "-"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Số điện thoại người yêu cầu
+                      </p>
+                      <p className="text-foreground font-medium">
+                        {sosDetail.result.requester?.phone_number || "-"}
                       </p>
                     </div>
 
                     <div>
                       <p className="text-sm text-muted-foreground">Mã xe đạp</p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.bike_id}
+                        {sosDetail.result.bike?._id || "-"}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-muted-foreground">Mã nhân viên SOS</p>
+                      <p className="text-sm text-muted-foreground">
+                        Chip ID xe đạp
+                      </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.sos_agent_id || "-"}
+                        {sosDetail.result.bike?.chip_id || "-"}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-muted-foreground">Mã nhân viên</p>
+                      <p className="text-sm text-muted-foreground">
+                        Trạng thái xe đạp
+                      </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.staff_id || "-"}
+                        {sosDetail.result.bike?.status || "-"}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-muted-foreground">Trạng thái</p>
+                      <p className="text-sm text-muted-foreground">
+                        Tên nhân viên SOS
+                      </p>
+                      <p className="text-foreground font-medium">
+                        {sosDetail.result.sos_agent?.fullname || "-"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Email nhân viên SOS
+                      </p>
+                      <p className="text-foreground font-medium text-sm">
+                        {sosDetail.result.sos_agent?.email || "-"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Số điện thoại nhân viên SOS
+                      </p>
+                      <p className="text-foreground font-medium">
+                        {sosDetail.result.sos_agent?.phone_number || "-"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Trạng thái
+                      </p>
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
                           sosDetail.result.status === "ĐÃ XỬ LÍ"
@@ -277,25 +332,35 @@ export default function SOSPage() {
                       <p className="text-sm text-muted-foreground">Ngày tạo</p>
                       <p className="text-foreground font-medium">
                         {sosDetail.result.created_at
-                          ? new Date(sosDetail.result.created_at).toLocaleString("vi-VN")
+                          ? new Date(
+                              sosDetail.result.created_at
+                            ).toLocaleString("vi-VN")
                           : "-"}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-muted-foreground">Lần cập nhật cuối</p>
+                      <p className="text-sm text-muted-foreground">
+                        Lần cập nhật cuối
+                      </p>
                       <p className="text-foreground font-medium">
                         {sosDetail.result.updated_at
-                          ? new Date(sosDetail.result.updated_at).toLocaleString("vi-VN")
+                          ? new Date(
+                              sosDetail.result.updated_at
+                            ).toLocaleString("vi-VN")
                           : "-"}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-muted-foreground">Thời gian xử lý</p>
+                      <p className="text-sm text-muted-foreground">
+                        Thời gian xử lý
+                      </p>
                       <p className="text-foreground font-medium">
                         {sosDetail.result.resolved_at
-                          ? new Date(sosDetail.result.resolved_at).toLocaleString("vi-VN")
+                          ? new Date(
+                              sosDetail.result.resolved_at
+                            ).toLocaleString("vi-VN")
                           : "-"}
                       </p>
                     </div>
@@ -306,33 +371,71 @@ export default function SOSPage() {
                 {detailTab === "details" && (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">Mô tả vấn đề</p>
-                      <p className="text-foreground bg-muted rounded-lg p-3">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Mô tả vấn đề
+                      </p>
+                      <p className="text-foreground bg-muted rounded-lg p-3 whitespace-pre-wrap">
                         {sosDetail.result.issue}
                       </p>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Kinh độ
+                        </p>
+                        <p className="text-foreground font-medium">
+                          {sosDetail.result.location?.coordinates?.[0] || "-"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Vĩ độ
+                        </p>
+                        <p className="text-foreground font-medium">
+                          {sosDetail.result.location?.coordinates?.[1] || "-"}
+                        </p>
+                      </div>
+                    </div>
+
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">Vị trí</p>
-                      <p className="text-foreground text-sm">
-                        {sosDetail.result.location && sosDetail.result.location.coordinates
-                          ? `Tọa độ: ${sosDetail.result.location.coordinates[0]}, ${sosDetail.result.location.coordinates[1]}`
-                          : "-"}
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Loại vị trí
+                      </p>
+                      <p className="text-foreground font-medium">
+                        {sosDetail.result.location?.type || "-"}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">Hình ảnh</p>
-                      {sosDetail.result.photo && sosDetail.result.photo.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-2">
-                          {sosDetail.result.photo.map((photo, idx) => (
-                            <div key={idx} className="bg-muted rounded-lg p-2 text-xs text-center">
-                              <p className="truncate">{photo.slice(0, 30)}...</p>
-                            </div>
-                          ))}
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Hình ảnh đính kèm
+                      </p>
+                      {sosDetail.result.photos &&
+                      sosDetail.result.photos.length > 0 ? (
+                        <div className="space-y-2">
+                          <p className="text-sm text-foreground">
+                            Tổng cộng: {sosDetail.result.photos.length} hình ảnh
+                          </p>
+                          <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                            {sosDetail.result.photos.map((photo, idx) => (
+                              <div
+                                key={idx}
+                                className="bg-muted rounded-lg p-3 text-xs break-all hover:bg-muted/80 transition-colors"
+                              >
+                                <p className="font-mono text-xs mb-1">#{idx + 1}</p>
+                                <p title={photo}>
+                                  {photo.slice(0, 40)}...
+                                </p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ) : (
-                        <p className="text-sm text-muted-foreground">Không có hình ảnh</p>
+                        <p className="text-sm text-muted-foreground bg-muted rounded-lg p-3">
+                          Không có hình ảnh đính kèm
+                        </p>
                       )}
                     </div>
                   </div>
@@ -342,10 +445,89 @@ export default function SOSPage() {
                 {detailTab === "notes" && (
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">Ghi chú xử lý</p>
-                      <p className="text-foreground bg-muted rounded-lg p-3">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Ghi chú xử lý
+                      </p>
+                      <p className="text-foreground bg-muted rounded-lg p-3 whitespace-pre-wrap min-h-24">
                         {sosDetail.result.agent_notes || "Chưa có ghi chú"}
                       </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Nhân viên SOS
+                        </p>
+                        <p className="text-foreground font-medium">
+                          {sosDetail.result.sos_agent?.fullname || "-"}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {sosDetail.result.sos_agent?.email || "-"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Nhân viên xử lý
+                        </p>
+                        <p className="text-foreground font-medium">
+                          {sosDetail.result.staff_id ? "Đã gán" : "Chưa gán"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Ngày tạo
+                        </p>
+                        <p className="text-foreground font-medium text-sm">
+                          {sosDetail.result.created_at
+                            ? new Date(sosDetail.result.created_at).toLocaleString("vi-VN")
+                            : "-"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Cập nhật cuối
+                        </p>
+                        <p className="text-foreground font-medium text-sm">
+                          {sosDetail.result.updated_at
+                            ? new Date(sosDetail.result.updated_at).toLocaleString("vi-VN")
+                            : "-"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Thời gian xử lý
+                        </p>
+                        <p className="text-foreground font-medium text-sm">
+                          {sosDetail.result.resolved_at
+                            ? new Date(sosDetail.result.resolved_at).toLocaleString("vi-VN")
+                            : "Chưa xử lý"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Trạng thái hiện tại
+                        </p>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium inline-block ${
+                            sosDetail.result.status === "ĐÃ XỬ LÍ"
+                              ? "bg-green-100 text-green-800"
+                              : sosDetail.result.status === "ĐANG CHỜ XỬ LÍ"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
+                                  ? "bg-orange-100 text-orange-800"
+                                  : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {sosDetail.result.status}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -363,11 +545,7 @@ export default function SOSPage() {
               >
                 Đóng
               </Button>
-              <Button
-                variant="outline"
-                className="flex-1"
-                disabled
-              >
+              <Button variant="outline" className="flex-1" disabled>
                 Xử lý yêu cầu
               </Button>
             </div>
