@@ -1,6 +1,5 @@
 export interface SOS {
   _id: string;
-  user_id: string;
   requester_id: string;
   bike_id: string;
   photo: Array<string>;
