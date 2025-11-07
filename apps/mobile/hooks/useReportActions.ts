@@ -4,7 +4,7 @@ import { useCreateReport } from "@hooks/mutations/Report/useCreateReport";
 import { reportService } from "@services/report.service";
 import type { CreateReportData, Report } from "@services/report.service";
 import { useCallback } from "react";
-export function useReportActions({limit}: {limit?: number}) {
+export function useReportActions({ page, limit }: { page?: number; limit?: number }) {
   const createReportMutation = useCreateReport();
   const {
     data: userReportsData,
@@ -15,7 +15,8 @@ export function useReportActions({limit}: {limit?: number}) {
     refetch: refetchUserReports,
   } = useInfiniteQuery({
     queryKey: ["reports", "user"],
-    queryFn: ({ pageParam = 1 }) => reportService.getUserReports({ page: pageParam, limit }),
+    queryFn: () =>
+      reportService.getUserReports({ page, limit }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       const pagination = lastPage.data.pagination;
