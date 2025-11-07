@@ -98,7 +98,7 @@ const RegisterPage = () => {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mt-3 tracking-tight">
-            MetroBike
+            MeBike
           </h1>
         </div>
 

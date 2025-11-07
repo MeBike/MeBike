@@ -45,7 +45,7 @@ export function Stations() {
               Trạm xe đạp
             </h2>
             <p className="text-lg text-muted-foreground text-pretty">
-              Xe đạp có sẵn tại các trạm của MetroBike
+              Xe đạp có sẵn tại các trạm của MeBike
             </p>
           </div>
           <div className="text-center">Đang tải...</div>
@@ -62,7 +62,7 @@ export function Stations() {
             Trạm xe đạp
           </h2>
           <p className="text-lg text-muted-foreground text-pretty">
-            Xe đạp có sẵn tại các trạm của MetroBike
+            Xe đạp có sẵn tại các trạm của MeBike
           </p>
         </div>
 
