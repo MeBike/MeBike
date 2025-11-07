@@ -234,8 +234,6 @@ export const useUserActions = ({
     [
       hasToken,
       router,
-      useCreateUser,
-      searchQuery,
       id,
       useResetPassword,
     ]

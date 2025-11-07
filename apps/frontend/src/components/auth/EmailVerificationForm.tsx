@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Mail, Loader2, ChevronLeft, RotateCcw } from "lucide-react";
+import { Mail, Loader2, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthActions } from "@/hooks/useAuthAction";
 
@@ -19,8 +19,6 @@ interface EmailVerificationFormProps {
   onSubmit: (email: string, otp: string) => Promise<void>;
   onSkip: () => void;
   isLoading?: boolean;
-  onBack?: () => void;
-  onResendOtp?: () => Promise<void>;
 }
 
 export function EmailVerificationForm({
@@ -28,14 +26,12 @@ export function EmailVerificationForm({
   onSubmit,
   onSkip,
   isLoading = false,
-  onBack,
-  onResendOtp,
 }: EmailVerificationFormProps) {
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30); // 5 minutes in seco6nds
+  const [timeLeft, setTimeLeft] = useState(10); // 5 minutes in seco6nds
   const [isTimeExpired, setIsTimeExpired] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -91,20 +87,20 @@ export function EmailVerificationForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     const otpString = otp.join("");
     if (otpString.length !== 6) {
       setError("Vui lòng nhập đầy đủ 6 chữ số");
       return;
     }
-
     setIsSubmitting(true);
     try {
+      console.log("📤 Submitting OTP to parent...");
       await onSubmit(email, otpString);
-      // Show loading screen after successful verification
+      console.log("✅ onSubmit resolved, setting showLoading = true");
       setShowLoading(true);
     } catch (err) {
-      console.log(err);
+      console.log("❌ onSubmit rejected:", err);
+      setError("OTP không hợp lệ. Vui lòng thử lại.");
       setIsSubmitting(false);
     }
   };
@@ -114,7 +110,7 @@ export function EmailVerificationForm({
     try {
       await resendVerifyEmail();
       // Reset timer and state
-      setTimeLeft(300);
+      setTimeLeft(10);
       setIsTimeExpired(false);
       setOtp(["", "", "", "", "", ""]);
       setError("");

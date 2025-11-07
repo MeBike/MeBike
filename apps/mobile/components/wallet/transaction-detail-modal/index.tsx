@@ -29,7 +29,12 @@ export function TransactionDetailModal({
     return null;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <View style={styles.overlay}>
         <View style={styles.content}>
           <View style={styles.header}>
@@ -51,7 +56,9 @@ export function TransactionDetailModal({
 
           <View style={styles.infoRow}>
             <Text style={styles.label}>Số tiền:</Text>
-            <Text style={styles.amount}>{formatCurrency(transaction.amount.toString())}</Text>
+            <Text style={styles.amount}>
+              {formatCurrency(transaction.amount.toString())}
+            </Text>
           </View>
 
           <View style={styles.infoRow}>
@@ -61,12 +68,14 @@ export function TransactionDetailModal({
 
           <View style={styles.infoRow}>
             <Text style={styles.label}>Thời gian:</Text>
-            <Text style={styles.value}>{formatDate(transaction.created_at)}</Text>
+            <Text style={styles.value}>
+              {formatDate(transaction.created_at)}
+            </Text>
           </View>
 
-          <View style={styles.descriptionContainer}>
+          <View style={styles.infoRow}>
             <Text style={styles.label}>Mô tả:</Text>
-            <Text style={styles.description}>{transaction.description}</Text>
+            <Text style={styles.value}>{transaction.description}</Text>
           </View>
         </View>
       </View>

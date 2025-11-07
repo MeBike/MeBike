@@ -19,6 +19,7 @@ export const myWalletScreenStyles = StyleSheet.create({
   },
   listContainer: {
     paddingBottom: 16,
+    
   },
   loadingFooter: {
     paddingVertical: 16,

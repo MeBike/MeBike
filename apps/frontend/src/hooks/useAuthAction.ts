@@ -87,56 +87,61 @@ export const useAuthActions = () => {
     [useChangePassword]
   );
   const logIn = useCallback(
-    (data: LoginSchemaFormData, onComplete: (value: boolean) => void) => {
-      useLogin.mutate(data, {
-        onSuccess: (result) => {
-          const { access_token, refresh_token } = result.data.result;
-          setTokens(access_token, refresh_token);
-          window.dispatchEvent(
-            new StorageEvent("storage", { key: "auth_tokens" })
-          );
-          queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-          onComplete(true);
-          setTimeout(() => {
+    (data: LoginSchemaFormData) => {
+      return new Promise<void>((resolve, reject) => {
+        useLogin.mutate(data, {
+          onSuccess: async (result) => {
+            const { access_token, refresh_token } = result.data.result;
+            setTokens(access_token, refresh_token);
+            window.dispatchEvent(
+              new StorageEvent("storage", { key: "auth_tokens" })
+            );
+            await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
             toast.success("Login Successful", {
               description: "Welcome back!",
             });
-          }, 2000);
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Error logging in");
-          toast.error(errorMessage);
-          onComplete(false);
-        },
+            resolve();
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(error, "Error logging in");
+            toast.error(errorMessage);
+            reject(error);
+          },
+        });
       });
     },
     [useLogin, queryClient]
   );
   const register = useCallback(
     (data: RegisterSchemaFormData) => {
-      useRegister.mutate(data, {
-        onSuccess: async (result) => {
-          if (result.status === 200) {
-            const { access_token, refresh_token } = result.data.result;
-            setTokens(access_token, refresh_token);
-            // Dispatch token change event
-            window.dispatchEvent(new Event("token:changed"));
-            // Wait for token to be set
-            await new Promise(resolve => setTimeout(resolve, 100));
-            await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-            toast.success("Registration Successful", {
-              description: "Your account has been created.",
-            });
-            // router.push("/user/profile");
-          } else {
-            const errorMessage = result.data?.message || "Error registering";
+      return new Promise<void>((resolve, reject) => {
+        useRegister.mutate(data, {
+          onSuccess: async (result) => {
+            if (result.status === 200) {
+              const { access_token, refresh_token } = result.data.result;
+              setTokens(access_token, refresh_token);
+              // Dispatch token change event
+              window.dispatchEvent(new Event("token:changed"));
+              // Wait for token to be set
+              await new Promise(resolve => setTimeout(resolve, 100));
+              await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+              toast.success("Registration Successful", {
+                description: "Your account has been created.",
+              });
+              resolve();
+              // router.push("/user/profile");
+            } else {
+              const errorMessage = result.data?.message || "Error registering";
+              toast.error(errorMessage);
+              reject(new Error(errorMessage));
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(error, "Error registering");
             toast.error(errorMessage);
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Error registering");
-          toast.error(errorMessage);
-        },
+            reject(error);
+          },
+        });
       });
     },
     [useRegister, queryClient]
@@ -172,19 +177,20 @@ export const useAuthActions = () => {
       return new Promise((resolve, reject) => {
         useVerifyEmail.mutate({ email, otp }, {
           onSuccess: (result) => {
+            console.log("verifyEmail onSuccess:", result.status);
             if (result.status === 200) {
-              toast.success("Email verified successfully");
-              queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               const accessToken = result.data.result?.access_token;
               const refreshToken = result.data.result?.refresh_token;
-              if (accessToken && refreshToken) {
-                setTokens(accessToken, refreshToken);
-              } else {
-                toast.error("Missing access or refresh token");
-                reject(new Error("Missing access or refresh token"));
+              if (!accessToken || !refreshToken) {
+                const errMsg = "Missing access or refresh token";
+                toast.error(errMsg);
+                reject(new Error(errMsg));
                 return;
               }
+              setTokens(accessToken, refreshToken);
               window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
+              toast.success("Email verified successfully");
+              queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               resolve();
             } else {
               const errorMessage =
@@ -194,6 +200,7 @@ export const useAuthActions = () => {
             }
           },
           onError: (error: unknown) => {
+            console.log("verifyEmail onError:", error);
             const errorMessage = getErrorMessage(
               error,
               "OTP không hợp lệ hoặc đã hết hạn"
@@ -255,28 +262,32 @@ export const useAuthActions = () => {
     [useForgotPassword]
   );
   const resetPassword = useCallback(
-    (data: ResetPasswordSchemaFormData) => {
-      useResetPassword.mutate(data, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success("Password reset successfully");
-            router.push("/auth/login");
-          } else {
-            const errorMessage =
-              result.data?.message || "Error resetting password";
+    (data: ResetPasswordSchemaFormData): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        useResetPassword.mutate(data, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success("Password reset successfully");
+              resolve();
+            } else {
+              const errorMessage =
+                result.data?.message || "Error resetting password";
+              toast.error(errorMessage);
+              reject(new Error(errorMessage));
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "OTP không hợp lệ hoặc đã hết hạn"
+            );
             toast.error(errorMessage);
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(
-            error,
-            "OTP không hợp lệ hoặc đã hết hạn"
-          );
-          toast.error(errorMessage);
-        },
+            reject(error);
+          },
+        });
       });
     },
-    [useResetPassword, router]
+    [useResetPassword]
   );
   const updateProfile = useCallback(
     (data: Partial<UpdateProfileSchemaFormData>) => {
