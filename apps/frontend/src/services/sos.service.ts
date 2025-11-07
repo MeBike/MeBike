@@ -1,6 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { SOS } from "@custom-types";
 import type { AxiosResponse } from "axios";
+import type { CreateSOSSchema } from "@/schemas/sosSchema";
 import type {
   DetailApiResponse,
   ApiResponse,
@@ -57,6 +58,15 @@ export const sosService = {
     const response = await fetchHttpClient.get<
       DetailApiResponse<IBikeIssueReport>
     >(SOS_ENDPOINTS.ID(id));
+    return response;
+  },
+  postCreateSOSRequest: async ( 
+    data: CreateSOSSchema
+  ): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
+      SOS_ENDPOINTS.BASE,
+      data
+    );
     return response;
   },
 };

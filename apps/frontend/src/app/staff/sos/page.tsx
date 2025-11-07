@@ -8,6 +8,9 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import type { SOS } from "@/types/SOS";
 import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
+import { useForm } from "react-hook-form";
+import { CreateSOSSchema , createSOSSchema} from "@/schemas/sosSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -18,6 +21,7 @@ export default function SOSPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">("info");
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const {
     sosRequests,
@@ -26,13 +30,31 @@ export default function SOSPage() {
     sosDetail,
     isLoadingSOSDetail,
     refetchSOSDetail,
+    createSOS,
   } = useSOS({
     hasToken: true,
     page: currentPage,
     limit: limit,
     id: selectedSOSId,
   });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<CreateSOSSchema>({
+    resolver: zodResolver(createSOSSchema),
+  });
 
+  const onSubmit = async (data: CreateSOSSchema) => {
+    try {
+      await createSOS(data);
+      reset();
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      console.error("Error creating SOS:", error);
+    }
+  };
   useEffect(() => {
     refetchSOSRequest();
   }, [currentPage, statusFilter, searchQuery, refetchSOSRequest]);
@@ -73,6 +95,9 @@ export default function SOSPage() {
               Theo dõi và quản lý các yêu cầu cứu hộ từ người dùng
             </p>
           </div>
+          <Button onClick={() => setIsCreateModalOpen(true)}>
+            Tạo yêu cầu cứu hộ
+          </Button>
         </div>
 
         {/* Filters */}
@@ -549,6 +574,153 @@ export default function SOSPage() {
                 Xử lý yêu cầu
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create SOS Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">
+                Tạo yêu cầu cứu hộ
+              </h2>
+              <button
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  reset();
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Mã thuê xe *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nhập mã thuê xe (24 ký tự)"
+                    {...register("rental_id")}
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                  />
+                  {errors.rental_id && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.rental_id.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Mã nhân viên SOS *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nhập mã nhân viên (24 ký tự)"
+                    {...register("agent_id")}
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                  />
+                  {errors.agent_id && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.agent_id.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Mô tả vấn đề *
+                </label>
+                <textarea
+                  placeholder="Nhập mô tả vấn đề (tối thiểu 10 ký tự)"
+                  {...register("issue")}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                />
+                {errors.issue && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.issue.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Kinh độ (Longitude) *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nhập kinh độ"
+                    {...register("longitude")}
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                  />
+                  {errors.longitude && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.longitude.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Vĩ độ (Latitude) *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nhập vĩ độ"
+                    {...register("latitude")}
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                  />
+                  {errors.latitude && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.latitude.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Ghi chú *
+                </label>
+                <textarea
+                  placeholder="Nhập ghi chú (tối thiểu 10 ký tự)"
+                  {...register("staff_notes")}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                />
+                {errors.staff_notes && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.staff_notes.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsCreateModalOpen(false);
+                    reset();
+                  }}
+                  className="flex-1"
+                >
+                  Hủy
+                </Button>
+                <Button type="submit" className="flex-1">
+                  Tạo yêu cầu
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       )}
