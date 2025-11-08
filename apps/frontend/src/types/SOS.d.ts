@@ -1,4 +1,4 @@
-export interface SOS {
+export type SOS = {
   _id: string;
   requester_id: string;
   bike_id: string;
@@ -40,7 +40,7 @@ export interface LocationGEO {
 //   UNSOLVABLE = 'KHÔNG XỬ LÍ ĐƯỢC',
 //   REJECTED = 'ĐÃ TỪ CHỐI',
 // }
-export interface IUser {
+export interface IUserSOS {
   _id: string;
   fullname: string;
   email: string;
@@ -55,7 +55,7 @@ export interface IUser {
   updated_at: string;
 }
 
-export interface IBike {
+export interface IBikeSOS {
   _id: string;
   station_id: string;
   status: string;
@@ -65,7 +65,7 @@ export interface IBike {
   chip_id: string;
 }
 
-export interface IRental {
+export interface IRentalSOS {
   _id: string;
   start_station: string;
   end_station: string | null;
@@ -80,7 +80,7 @@ export interface IRental {
   updated_at: string;
 }
 
-export interface ILocation {
+export interface ILocationSOS {
   type: string; // e.g. "Point"
   coordinates: [number, number]; // [longitude, latitude]
 }
@@ -89,7 +89,7 @@ export interface IBikeIssueReport {
   _id: string;
   photos: string[] | null;
   issue: string;
-  location: ILocation;
+  location: ILocationSOS;
   status: string; // e.g. "ĐÃ XỬ LÍ"
   sos_agent_id: string;
   staff_id: string | null;
@@ -97,8 +97,8 @@ export interface IBikeIssueReport {
   created_at: string;
   updated_at: string;
   agent_notes: string;
-  rental: IRental;
-  bike: IBike;
-  requester: IUser;
-  sos_agent: IUser;
+  rental: IRentalSOS;
+  bike: IBikeSOS;
+  requester: IUserSOS;
+  sos_agent: IUserSOS;
 }

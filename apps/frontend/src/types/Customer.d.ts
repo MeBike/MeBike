@@ -1,4 +1,4 @@
-export type UserRole = "ADMIN" | "STAFF" | "USER";
+export type UserRole = "ADMIN" | "STAFF" | "USER" | "SOS";
 export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
 
 export interface DetailUser {

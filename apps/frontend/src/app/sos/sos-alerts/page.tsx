@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, X } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { Button } from "@/components/ui/button";
 import { PaginationDemo } from "@/components/PaginationCustomer";
@@ -9,10 +9,9 @@ import type { SOS } from "@/types/SOS";
 import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
 import { useForm } from "react-hook-form";
-import { CreateSOSSchema , createSOSSchema} from "@/schemas/sosSchema";
+import { RejectSOSSchema , rejectSOSSchema , ConfirmSOSSchema , confirmSOSSchema} from "@/schemas/sosSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRentalsActions } from "@/hooks/use-rental";
-import { useUserActions } from "@/hooks/use-user";
+import { uploadMultipleImagesToFirebase } from "@/lib/firebase";
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -23,43 +22,37 @@ export default function SOSPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">("info");
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const { allRentalsData } = useRentalsActions({ hasToken: true });
-  const { users } = useUserActions({ hasToken: true });
-  
-  // Filter SOS agents (users with SOS role)
-  const sosAgents = users?.filter((user: any) => user.role === "SOS") || [];
+  const [actionType, setActionType] = useState<"confirm" | "reject" | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmPhotos, setConfirmPhotos] = useState<File[]>([]);
+  const [rejectPhotos, setRejectPhotos] = useState<File[]>([]);
+  const [isUploadingConfirm, setIsUploadingConfirm] = useState(false);
+  const [isUploadingReject, setIsUploadingReject] = useState(false);
+
+  // Confirm SOS Form
+  const confirmForm = useForm<ConfirmSOSSchema>({
+    resolver: zodResolver(confirmSOSSchema),
+  });
+
+  // Reject SOS Form
+  const rejectForm = useForm<RejectSOSSchema>({
+    resolver: zodResolver(rejectSOSSchema),
+  });
   const {
     sosRequests,
     isLoading,
     refetchSOSRequest,
     sosDetail,
     refetchSOSDetail,
-    createSOS,
+    confirmSOS,
+    rejectSOS,
   } = useSOS({
     hasToken: true,
     page: currentPage,
     limit: limit,
     id: selectedSOSId,
   });
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<CreateSOSSchema>({
-    resolver: zodResolver(createSOSSchema),
-  });
 
-  const onSubmit = async (data: CreateSOSSchema) => {
-    try {
-      await createSOS(data);
-      reset();
-      setIsCreateModalOpen(false);
-    } catch (error) {
-      console.error("Error creating SOS:", error);
-    }
-  };
   useEffect(() => {
     refetchSOSRequest();
   }, [currentPage, statusFilter, searchQuery, refetchSOSRequest]);
@@ -78,6 +71,72 @@ export default function SOSPage() {
 
   const handleFilterChange = () => {
     setCurrentPage(1);
+  };
+
+  const handleConfirmSOS = confirmForm.handleSubmit(async (data) => {
+    if (!selectedSOSId) return;
+    try {
+      setIsSubmitting(true);
+      
+      // Upload photos nếu có
+      if (confirmPhotos.length > 0) {
+        setIsUploadingConfirm(true);
+        const uploadedUrls = await uploadMultipleImagesToFirebase(confirmPhotos, "sos/confirm");
+        data.photos = uploadedUrls;
+        setIsUploadingConfirm(false);
+      }
+      console.log(data)
+      await confirmSOS(data, selectedSOSId);
+      setIsDetailModalOpen(false);
+      setSelectedSOSId("");
+      setActionType(null);
+      setConfirmPhotos([]);
+      confirmForm.reset();
+    } catch (error) {
+      console.error("Error confirming SOS:", error);
+      setIsUploadingConfirm(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  });
+
+  const handleRejectSOS = rejectForm.handleSubmit(async (data) => {
+    if (!selectedSOSId) return;
+    try {
+      setIsSubmitting(true);
+      
+      // Upload photos nếu có
+      if (rejectPhotos.length > 0) {
+        setIsUploadingReject(true);
+        const uploadedUrls = await uploadMultipleImagesToFirebase(rejectPhotos, "sos/reject");
+        data.photos = uploadedUrls;
+        setIsUploadingReject(false);
+      }
+      
+      console.log(data);
+      await rejectSOS(data, selectedSOSId);
+      setIsDetailModalOpen(false);
+      setSelectedSOSId("");
+      setActionType(null);
+      setRejectPhotos([]);
+      rejectForm.reset();
+    } catch (error) {
+      console.error("Error rejecting SOS:", error);
+      setIsUploadingReject(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  });
+
+  const handleCloseModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedSOSId("");
+    setDetailTab("info");
+    setActionType(null);
+    setConfirmPhotos([]);
+    setRejectPhotos([]);
+    confirmForm.reset();
+    rejectForm.reset();
   };
 
   if (isLoading && currentPage === 1) {
@@ -100,9 +159,9 @@ export default function SOSPage() {
               Theo dõi và quản lý các yêu cầu cứu hộ từ người dùng
             </p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
+          {/* <Button onClick={() => setIsCreateModalOpen(true)}>
             Tạo yêu cầu cứu hộ
-          </Button>
+          </Button> */}
         </div>
 
         {/* Filters */}
@@ -566,179 +625,269 @@ export default function SOSPage() {
 
             <div className="flex gap-3 mt-6">
               <Button
-                onClick={() => {
-                  setIsDetailModalOpen(false);
-                  setSelectedSOSId("");
-                  setDetailTab("info");
-                }}
+                onClick={handleCloseModal}
                 className="flex-1"
               >
                 Đóng
               </Button>
-              <Button variant="outline" className="flex-1" disabled>
-                Xử lý yêu cầu
-              </Button>
+              {actionType === null && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setActionType("confirm")}
+                    disabled={sosDetail?.result?.status !== "ĐANG CHỜ XỬ LÍ"}
+                  >
+                    Xác nhận xử lý
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    className="flex-1"
+                    onClick={() => setActionType("reject")}
+                    disabled={sosDetail?.result?.status !== "ĐANG CHỜ XỬ LÍ"}
+                  >
+                    Từ chối
+                  </Button>
+                </>
+              )}
             </div>
+
+            {/* Confirm SOS Modal */}
+            {actionType === "confirm" && (
+              <div className="mt-6 p-4 border border-border rounded-lg bg-muted/50">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
+                  Xác nhận xử lý yêu cầu cứu hộ
+                </h3>
+                <form onSubmit={handleConfirmSOS} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-foreground block mb-2">
+                      Có thể giải quyết được? <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="true"
+                          checked={confirmForm.watch("solvable") === true}
+                          onChange={() => confirmForm.setValue("solvable", true)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">Có thể giải quyết</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          value="false"
+                          checked={confirmForm.watch("solvable") === false}
+                          onChange={() => confirmForm.setValue("solvable", false)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">Không thể giải quyết</span>
+                      </label>
+                    </div>
+                    {confirmForm.formState.errors.solvable && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {confirmForm.formState.errors.solvable.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground block mb-2">
+                      Ghi chú xử lý <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      {...confirmForm.register("agent_notes")}
+                      placeholder="Nhập ghi chú xử lý..."
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder-muted-foreground resize-none"
+                      rows={4}
+                    />
+                    {confirmForm.formState.errors.agent_notes && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {confirmForm.formState.errors.agent_notes.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground block mb-2">
+                      Hình ảnh đính kèm (tùy chọn)
+                    </label>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          setConfirmPhotos((prev) => [...prev, ...files]);
+                        }}
+                        disabled={isUploadingConfirm}
+                        className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm file:bg-primary file:text-primary-foreground file:border-0 file:rounded file:px-3 file:py-1 file:mr-2 disabled:opacity-50"
+                      />
+                      {confirmPhotos.length > 0 && (
+                        <div className="grid grid-cols-2 gap-2">
+                          {confirmPhotos.map((file, idx) => (
+                            <div
+                              key={idx}
+                              className="relative bg-muted rounded-lg p-2 text-xs flex items-center justify-between"
+                            >
+                              <span className="truncate text-foreground">
+                                {file.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setConfirmPhotos((prev) =>
+                                    prev.filter((_, i) => i !== idx)
+                                  );
+                                }}
+                                className="text-muted-foreground hover:text-foreground"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {confirmPhotos.length} hình ảnh được chọn
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setActionType(null)}
+                      disabled={isSubmitting || isUploadingConfirm}
+                    >
+                      Hủy
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                      disabled={isSubmitting || isUploadingConfirm}
+                    >
+                      {isSubmitting || isUploadingConfirm ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          {isUploadingConfirm ? "Đang tải ảnh..." : "Đang xử lý..."}
+                        </>
+                      ) : (
+                        "Xác nhận"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Reject SOS Modal */}
+            {actionType === "reject" && (
+              <div className="mt-6 p-4 border border-border rounded-lg bg-muted/50">
+                <h3 className="text-lg font-semibold text-foreground mb-4">
+                  Từ chối yêu cầu cứu hộ
+                </h3>
+                <form onSubmit={handleRejectSOS} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-foreground block mb-2">
+                      Lý do từ chối <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      {...rejectForm.register("agent_notes")}
+                      placeholder="Nhập lý do từ chối..."
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder-muted-foreground resize-none"
+                      rows={4}
+                    />
+                    {rejectForm.formState.errors.agent_notes && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {rejectForm.formState.errors.agent_notes.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground block mb-2">
+                      Hình ảnh đính kèm (tùy chọn)
+                    </label>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          setRejectPhotos((prev) => [...prev, ...files]);
+                        }}
+                        disabled={isUploadingReject}
+                        className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm file:bg-primary file:text-primary-foreground file:border-0 file:rounded file:px-3 file:py-1 file:mr-2 disabled:opacity-50"
+                      />
+                      {rejectPhotos.length > 0 && (
+                        <div className="grid grid-cols-2 gap-2">
+                          {rejectPhotos.map((file, idx) => (
+                            <div
+                              key={idx}
+                              className="relative bg-muted rounded-lg p-2 text-xs flex items-center justify-between"
+                            >
+                              <span className="truncate text-foreground">
+                                {file.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRejectPhotos((prev) =>
+                                    prev.filter((_, i) => i !== idx)
+                                  );
+                                }}
+                                className="text-muted-foreground hover:text-foreground"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {rejectPhotos.length} hình ảnh được chọn
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setActionType(null)}
+                      disabled={isSubmitting || isUploadingReject}
+                    >
+                      Hủy
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="flex-1 bg-red-600 hover:bg-red-700"
+                      disabled={isSubmitting || isUploadingReject}
+                    >
+                      {isSubmitting || isUploadingReject ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          {isUploadingReject ? "Đang tải ảnh..." : "Đang xử lý..."}
+                        </>
+                      ) : (
+                        "Từ chối"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Create SOS Modal */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">
-                Tạo yêu cầu cứu hộ
-              </h2>
-              <button
-                onClick={() => {
-                  setIsCreateModalOpen(false);
-                  reset();
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Chọn đơn thuê *
-                  </label>
-                  <select
-                    {...register("rental_id")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  >
-                    <option value="">-- Chọn đơn thuê --</option>
-                    {allRentalsData?.map((rental: any) => (
-                      <option key={rental._id} value={rental._id}>
-                        {rental._id} - {rental.user?.fullname || "N/A"}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.rental_id && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.rental_id.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Chọn nhân viên SOS *
-                  </label>
-                  <select
-                    {...register("agent_id")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  >
-                    <option value="">-- Chọn nhân viên SOS --</option>
-                    {sosAgents?.map((agent: any) => (
-                      <option key={agent._id} value={agent._id}>
-                        {agent.fullname} ({agent.email})
-                      </option>
-                    ))}
-                  </select>
-                  {errors.agent_id && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.agent_id.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Mô tả vấn đề *
-                </label>
-                <textarea
-                  placeholder="Nhập mô tả vấn đề (tối thiểu 10 ký tự)"
-                  {...register("issue")}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                />
-                {errors.issue && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.issue.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Kinh độ (Longitude) *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Nhập kinh độ"
-                    {...register("longitude")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  />
-                  {errors.longitude && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.longitude.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Vĩ độ (Latitude) *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Nhập vĩ độ"
-                    {...register("latitude")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  />
-                  {errors.latitude && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.latitude.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Ghi chú *
-                </label>
-                <textarea
-                  placeholder="Nhập ghi chú (tối thiểu 10 ký tự)"
-                  {...register("staff_notes")}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                />
-                {errors.staff_notes && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.staff_notes.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsCreateModalOpen(false);
-                    reset();
-                  }}
-                  className="flex-1"
-                >
-                  Hủy
-                </Button>
-                <Button type="submit" className="flex-1">
-                  Tạo yêu cầu
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

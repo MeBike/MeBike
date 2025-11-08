@@ -13,6 +13,8 @@ import { CreateSOSSchema , createSOSSchema} from "@/schemas/sosSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRentalsActions } from "@/hooks/use-rental";
 import { useUserActions } from "@/hooks/use-user";
+import type { DetailUser } from "@/services/auth.service";
+import type { RentingHistory } from "@/types/Rental";
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -28,7 +30,7 @@ export default function SOSPage() {
   const { users } = useUserActions({ hasToken: true });
   
   // Filter SOS agents (users with SOS role)
-  const sosAgents = users?.filter((user: any) => user.role === "SOS") || [];
+  const sosAgents = users?.filter((user: DetailUser) => user.role === "SOS") || [];
   const {
     sosRequests,
     isLoading,
@@ -613,9 +615,9 @@ export default function SOSPage() {
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                   >
                     <option value="">-- Chọn đơn thuê --</option>
-                    {allRentalsData?.map((rental: any) => (
+                    {allRentalsData?.map((rental: RentingHistory) => (
                       <option key={rental._id} value={rental._id}>
-                        {rental._id} - {rental.user?.fullname || "N/A"}
+                        {rental._id} - Bike {rental.bike_id}
                       </option>
                     ))}
                   </select>
@@ -635,7 +637,7 @@ export default function SOSPage() {
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                   >
                     <option value="">-- Chọn nhân viên SOS --</option>
-                    {sosAgents?.map((agent: any) => (
+                    {sosAgents?.map((agent: DetailUser) => (
                       <option key={agent._id} value={agent._id}>
                         {agent.fullname} ({agent.email})
                       </option>

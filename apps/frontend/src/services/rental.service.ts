@@ -3,7 +3,7 @@ import type { RentalSchemaFormData, UpdateRentalSchema } from "@schemas/rentalSc
 import fetchHttpClient from "@lib/httpClient";
 import type { RentingHistory } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
-import { DetailRentalReponse , RentalRecord} from "@custom-types";
+import { RentalRecord} from "@custom-types";
 export type Pagination = {
   limit: number;
   currentPage: number;

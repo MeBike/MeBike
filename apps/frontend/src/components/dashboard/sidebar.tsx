@@ -7,7 +7,6 @@ import {
   Bike,
   FileText,
   Users,
-  User,
   LogOut,
   History,
   Wallet,
@@ -22,7 +21,6 @@ import { useAuth } from "@/providers/auth-providers";
 import { getRefreshToken } from "@/utils/tokenManager";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
-import { Button } from "../ui/button";
 
 // Define menu items (giữ nguyên hàm này theo code bạn)
 const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {

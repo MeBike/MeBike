@@ -3,8 +3,14 @@ import { useGetSOSQuery } from "./query/SOS/useGetSOSQuery";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCreateSOSRequestMutation } from "./mutations/SOS/useCreateSOSRequestMutation";
-import { CreateSOSSchema } from "@/schemas/sosSchema";
+import {
+  CreateSOSSchema,
+  ConfirmSOSSchema,
+  RejectSOSSchema,
+} from "@/schemas/sosSchema";
 import { toast } from "sonner";
+import { useConfirmSOSRequestMutation } from "./mutations/SOS/usePostConfirmSOSRequestMutation";
+import { useRejectSOSRequestMutation } from "./mutations/SOS/usePostRejectSOSRequestMutation";
 interface UseSOSProps {
   hasToken: boolean;
   page?: number;
@@ -94,7 +100,76 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
     },
     [useCreateSOS, queryClient, page, limit]
   );
-
+  const useConfirmSOS = useConfirmSOSRequestMutation();
+  const confirmSOS = useCallback(
+    (data: ConfirmSOSSchema, id: string) => {
+      return new Promise<void>((resolve, reject) => {
+        useConfirmSOS.mutate(
+          { id, data },
+          {
+            onSuccess: (result) => {
+              if (result.status === 200) {
+                toast.success("SOS request confirmed successfully");
+                queryClient.invalidateQueries({
+                  queryKey: ["sos-requests", { page, limit }],
+                });
+                resolve();
+              } else {
+                const errorMessage =
+                  result.data?.message || "Error confirming SOS request";
+                toast.error(errorMessage);
+                reject(new Error(errorMessage));
+              }
+            },
+            onError: (error: unknown) => {
+              const errorMessage = getErrorMessage(
+                error,
+                "Error confirming SOS request"
+              );
+              toast.error(errorMessage);
+              reject(error);
+            },
+          }
+        );
+      });
+    },
+    [useConfirmSOS, queryClient, page, limit]
+  );
+  const useRejectSOS = useRejectSOSRequestMutation();
+  const rejectSOS = useCallback(
+    (data: RejectSOSSchema, id: string) => {
+      return new Promise<void>((resolve, reject) => {
+        useRejectSOS.mutate(
+          { id, data },
+          {
+            onSuccess: (result) => {
+              if (result.status === 200) {
+                toast.success("SOS request rejected successfully");
+                queryClient.invalidateQueries({
+                  queryKey: ["sos-requests", { page, limit }],
+                });
+                resolve();
+              } else {
+                const errorMessage =
+                  result.data?.message || "Error rejecting  SOS request";
+                toast.error(errorMessage);
+                reject(new Error(errorMessage));
+              }
+            },
+            onError: (error: unknown) => {
+              const errorMessage = getErrorMessage(
+                error,
+                "Error rejecting SOS request"
+              );
+              toast.error(errorMessage);
+              reject(error);
+            },
+          }
+        );
+      });
+    },
+    [useRejectSOS, queryClient, page, limit]
+  );
   return {
     sosRequests,
     isLoading,
@@ -103,5 +178,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
     isLoadingSOSDetail,
     refetchSOSDetail,
     createSOS,
+    confirmSOS,
+    rejectSOS,
   };
 }
