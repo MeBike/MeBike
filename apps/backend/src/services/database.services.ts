@@ -141,11 +141,11 @@ class DatabaseService {
   }
 
   get subscriptions(): Collection<Subscription> {
-    return this.db.collection(process.env.SUBSCRIPTION_COLLECTION as string)
+    return this.db.collection(process.env.DB_SUBSCRIPTION_COLLECTION as string)
   }
 
   get fixedSlotTemplates(): Collection<FixedSlotTemplate> {
-    return this.db.collection(process.env.FIXED_SLOT_TEMPLATE_COLLECTION as string)
+    return this.db.collection(process.env.DB_FIXED_SLOT_TEMPLATE_COLLECTION as string)
   }
 
   async indexReservation() {
