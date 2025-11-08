@@ -22,9 +22,10 @@ import { useAuth } from "@/providers/auth-providers";
 import { getRefreshToken } from "@/utils/tokenManager";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
+import { Button } from "../ui/button";
 
 // Define menu items (giữ nguyên hàm này theo code bạn)
-const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
+const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
   const baseUrl =
     userRole === "ADMIN"
       ? "/admin"
@@ -140,6 +141,18 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER") => {
       href: "/staff/sos",
       roles: ["STAFF"],
     },
+    {
+      title: "Quản lý đơn SOS",
+      icon: FileCheck2,
+      href: "/sos/sos-alerts",
+      roles: ["SOS"],
+    },
+    {
+      title: "Hồ sơ cá nhân",
+      icon: Users,
+      href: "/sos/profile",
+      roles: ["SOS"],
+    },
   ];
 };
 
@@ -237,11 +250,11 @@ export function Sidebar() {
         </nav>
 
         <div className="border-t border-sidebar-border p-2">
-          <button
+          {/* <button
             type="button"
             onClick={() =>
               handleNav(
-                `${user?.role === "ADMIN" ? "/admin" : user?.role === "USER" ? "/user" : "/staff"}/profile`
+                `${user?.role === "ADMIN" ? "/admin" : user?.role === "USER" ? "/user" : user?.role === "SOS" ? "/sos" : "/staff"}/profile`
               )
             }
             className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
@@ -249,15 +262,15 @@ export function Sidebar() {
           >
             <User className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">Hồ sơ</span>}
-          </button>
+          </button> */}
           <button
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-red-600 hover:text-white transition-colors cursor-pointer hover:opacity-90"
             onClick={() => handleLogout()}
             disabled={isPending}
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
             {!collapsed && (
-              <span className="text-sm font-medium ">Đăng xuất</span>
+              <span className="text-sm font-medium">Đăng xuất</span>
             )}
           </button>
         </div>
