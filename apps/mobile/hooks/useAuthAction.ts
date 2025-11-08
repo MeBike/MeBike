@@ -79,7 +79,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
                 error,
                 "Error changing password"
               );
-              Alert.alert("Error", errorMessage);
+              Alert.alert("Lỗi", errorMessage);
               reject(error);
             },
           }
@@ -178,7 +178,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
                 return;
               }
               setTokens(accessToken, refreshToken);
-              Alert.alert("Success", "Email verified successfully");
+              Alert.alert("Thành công", result.data.message);
               queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               resolve();
             } else {

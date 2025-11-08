@@ -70,7 +70,7 @@ export default function LoginScreen() {
         }),
       ).start();
 
-      logIn({ email, password });
+      await logIn({ email, password });
       // setTimeout(() => {
       //   rotateAnim.stopAnimation();
       //   rotateAnim.setValue(0);

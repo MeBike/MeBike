@@ -217,7 +217,7 @@ export default function EmailVerificationScreen() {
     setIsVerifying(true);
     try {
       await verifyEmail({ email, otp: otpCode });
-      Alert.alert("Thành công", "Email đã được xác nhận");
+      
       navigation.navigate("Main");
     } catch (error) {
       console.log("Verify error:", error);

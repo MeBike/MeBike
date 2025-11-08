@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -18,12 +18,13 @@ import type { DetailUser } from "@services/auth.service";
 
 import { useAuth } from "@providers/auth-providers";
 import { getRefreshToken } from "@utils/tokenManager";
+import { VerifyEmailModal } from "@components/VerifyEmailModal";
 
 function ProfileScreen() {
   const navigation = useNavigation();
-  const { user, logOut } = useAuth();
+  const { user, logOut, verifyEmail, resendVerifyEmail } = useAuth();
   const insets = useSafeAreaInsets();
-  const [profile] = useState<DetailUser>(() => ({
+  const [profile, setProfile] = useState<DetailUser>(() => ({
     _id: user?._id ?? "",
     fullname: user?.fullname ?? "",
     email: user?.email ?? "",
@@ -36,6 +37,27 @@ function ProfileScreen() {
     created_at: user?.created_at ?? "",
     updated_at: user?.updated_at ?? "",
   }));
+  const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
+  const [isResendingOtp, setIsResendingOtp] = useState(false);
+
+  // Update profile when user changes (after verify or any update)
+  useEffect(() => {
+    if (user) {
+      setProfile({
+        _id: user._id ?? "",
+        fullname: user.fullname ?? "",
+        email: user.email ?? "",
+        verify: user.verify ?? "",
+        location: user.location ?? "",
+        username: user.username ?? "",
+        phone_number: user.phone_number ?? "",
+        avatar: user.avatar ?? "",
+        role: user.role ?? "USER",
+        created_at: user.created_at ?? "",
+        updated_at: user.updated_at ?? "",
+      });
+    }
+  }, [user]);
 
   const formatDate = (dateString: string) => {
     if (!dateString)
@@ -84,6 +106,38 @@ function ProfileScreen() {
   };
   const handleReservations = () => {
     navigation.navigate("Reservations" as never);
+  };
+
+  const handleResendOtp = async () => {
+    if (profile.verify === "VERIFIED") {
+      Alert.alert("Info", "Email của bạn đã được xác thực.");
+      return;
+    }
+
+    setIsResendingOtp(true);
+    try {
+      await resendVerifyEmail();
+      Alert.alert("Success", "Mã OTP mới đã được gửi đến email của bạn!");
+      setIsVerifyEmailModalOpen(true);
+    } catch (error) {
+      console.log("Resend OTP error:", error);
+    } finally {
+      setIsResendingOtp(false);
+    }
+  };
+
+  const handleVerifyEmail = async (otp: string) => {
+    try {
+      await verifyEmail({ email: profile.email, otp });
+      // Close modal after successful verification
+      setTimeout(() => {
+        setIsVerifyEmailModalOpen(false);
+      }, 500);
+      // Profile will auto-update via useEffect from user context
+    } catch (error) {
+      console.log("Verify email error:", error);
+      // Error alert already shown by verifyEmail function
+    }
   };
 
   const renderMenuOption = (
@@ -237,6 +291,61 @@ function ProfileScreen() {
             </View>
           </View>
 
+          {/* Email Verification Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Xác thực Email</Text>
+            <View style={styles.emailVerificationCard}>
+              <View style={styles.verificationStatusRow}>
+                <View style={styles.verificationStatusLeft}>
+                  <Ionicons
+                    name={profile.verify === "VERIFIED" ? "checkmark-circle" : "mail"}
+                    size={24}
+                    color={profile.verify === "VERIFIED" ? "#10B981" : "#FFA500"}
+                  />
+                  <View style={styles.verificationStatusContent}>
+                    <Text style={styles.verificationStatusTitle}>
+                      {profile.verify === "VERIFIED" ? "Email Verified" : "Email Chưa Xác Thực"}
+                    </Text>
+                    <Text style={styles.verificationStatusEmail}>{profile.email}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.verificationButtonsRow}>
+                {profile.verify !== "VERIFIED" && (
+                  <TouchableOpacity
+                    style={[styles.verificationButton, styles.verifyButton]}
+                    onPress={() => setIsVerifyEmailModalOpen(true)}
+                  >
+                    <Ionicons name="key" size={16} color="white" />
+                    <Text style={styles.verificationButtonText}>Xác thực</Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  style={[
+                    styles.verificationButton,
+                    styles.resendButton,
+                    (profile.verify === "VERIFIED" || isResendingOtp) && styles.disabledVerificationButton,
+                  ]}
+                  onPress={handleResendOtp}
+                  disabled={profile.verify === "VERIFIED" || isResendingOtp}
+                >
+                  <Ionicons name="refresh" size={16} color={profile.verify === "VERIFIED" ? "#ccc" : "#0066FF"} />
+                  <Text
+                    style={[
+                      styles.verificationResendButtonText,
+                      profile.verify === "VERIFIED" && styles.disabledButtonText,
+                    ]}
+                  >
+                    {isResendingOtp ? "Đang gửi..." : "Gửi lại"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Cài đặt tài khoản</Text>
             {renderMenuOption(
@@ -277,6 +386,13 @@ function ProfileScreen() {
           <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
         </View>
       </ScrollView>
+
+      {/* Email Verification Modal */}
+      <VerifyEmailModal
+        visible={isVerifyEmailModalOpen}
+        onClose={() => setIsVerifyEmailModalOpen(false)}
+        onSubmit={handleVerifyEmail}
+      />
     </View>
   );
 }
@@ -389,6 +505,77 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
     marginBottom: 20,
+  },
+  emailVerificationCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  verificationStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  verificationStatusLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  verificationStatusContent: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  verificationStatusTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 2,
+  },
+  verificationStatusEmail: {
+    fontSize: 13,
+    color: "#666",
+  },
+  verificationButtonsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  verificationButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
+  },
+  verifyButton: {
+    backgroundColor: "#0066FF",
+  },
+  resendButton: {
+    backgroundColor: "#f0f0f0",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  verificationButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "white",
+  },
+  verificationResendButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0066FF",
+  },
+  disabledVerificationButton: {
+    opacity: 0.6,
+  },
+  disabledButtonText: {
+    color: "#ccc",
   },
 });
 
