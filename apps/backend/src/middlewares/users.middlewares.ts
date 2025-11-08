@@ -158,9 +158,14 @@ export const registerValidator = validate(
         },
         trim: true,
         custom: {
-          options: (value: string) => {
+          options: async (value: string, { req }: Meta) => {
             if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
               throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID);
+            }
+            //check phone number already exists
+            const existing = await databaseService.users.findOne({ phone_number: value });
+            if (existing) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS);
             }
             return true;
           },

@@ -3,7 +3,7 @@ import Image from "next/image";
 const steps = [
   {
     number: "01",
-    title: "Tải ứng dụng MetroBike",
+    title: "Tải ứng dụng MeBike",
     description:
       "Tải app miễn phí trên App Store hoặc Google Play. Đăng ký tài khoản chỉ trong 2 phút.",
     image: "/smartphone-app-download-screen-with-bike-rental-in.jpg",
