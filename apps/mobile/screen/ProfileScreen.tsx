@@ -313,35 +313,40 @@ function ProfileScreen() {
 
               {/* Action Buttons */}
               <View style={styles.verificationButtonsRow}>
-                {profile.verify !== "VERIFIED" && (
+                {profile.verify !== "VERIFIED" ? (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.verificationButton, styles.verifyButton]}
+                      onPress={() => setIsVerifyEmailModalOpen(true)}
+                    >
+                      <Ionicons name="key" size={16} color="white" />
+                      <Text style={styles.verificationButtonText}>Xác thực</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.verificationButton,
+                        styles.resendButton,
+                        isResendingOtp && styles.disabledVerificationButton,
+                      ]}
+                      onPress={handleResendOtp}
+                      disabled={isResendingOtp}
+                    >
+                      <Ionicons name="refresh" size={16} color="#0066FF" />
+                      <Text style={styles.verificationResendButtonText}>
+                        {isResendingOtp ? "Đang gửi..." : "Gửi lại"}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
                   <TouchableOpacity
-                    style={[styles.verificationButton, styles.verifyButton]}
-                    onPress={() => setIsVerifyEmailModalOpen(true)}
+                    style={[styles.verificationButton, styles.verifiedButton]}
+                    disabled
                   >
-                    <Ionicons name="key" size={16} color="white" />
-                    <Text style={styles.verificationButtonText}>Xác thực</Text>
+                    <Ionicons name="checkmark-circle" size={16} color="white" />
+                    <Text style={styles.verificationButtonText}>Đã xác thực</Text>
                   </TouchableOpacity>
                 )}
-
-                <TouchableOpacity
-                  style={[
-                    styles.verificationButton,
-                    styles.resendButton,
-                    (profile.verify === "VERIFIED" || isResendingOtp) && styles.disabledVerificationButton,
-                  ]}
-                  onPress={handleResendOtp}
-                  disabled={profile.verify === "VERIFIED" || isResendingOtp}
-                >
-                  <Ionicons name="refresh" size={16} color={profile.verify === "VERIFIED" ? "#ccc" : "#0066FF"} />
-                  <Text
-                    style={[
-                      styles.verificationResendButtonText,
-                      profile.verify === "VERIFIED" && styles.disabledButtonText,
-                    ]}
-                  >
-                    {isResendingOtp ? "Đang gửi..." : "Gửi lại"}
-                  </Text>
-                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -555,6 +560,9 @@ const styles = StyleSheet.create({
   },
   verifyButton: {
     backgroundColor: "#0066FF",
+  },
+  verifiedButton: {
+    backgroundColor: "#10B981",
   },
   resendButton: {
     backgroundColor: "#f0f0f0",
