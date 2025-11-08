@@ -57,6 +57,7 @@ export function WalletTransactionModal({
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<TopUpSchemaFormData | DecreaseSchemaFormData>({
     resolver: zodResolver(
       actionType === "deposit" ? topUpWalletSchema : decreaseWalletSchema
@@ -86,7 +87,9 @@ export function WalletTransactionModal({
     }
   }, [user?._id, reset, actionType]);
   const onSubmit = (data: TopUpSchemaFormData | DecreaseSchemaFormData) => {
+    // amount và fee đã được convert thành number bởi schema
     if (!data.amount || data.amount <= 0 || !actionType) return;
+    
     const details = {
       fee: data.fee || 0,
       description:
@@ -195,14 +198,22 @@ export function WalletTransactionModal({
                   Số tiền
                 </label>
                 <Input
-                  type="number"
+                  type="text"
                   placeholder="Nhập số tiền"
-                  {...register("amount", { valueAsNumber: true })}
-                  min="0"
+                  {...register("amount")}
+                  onChange={(e) => {
+                    const numValue = parseInt(e.target.value.replace(/\./g, "")) || 0;
+                    setValue("amount", numValue);
+                    e.target.value = numValue ? numValue.toLocaleString("vi-VN") : "";
+                  }}
+                  onBlur={(e) => {
+                    const numValue = parseInt(e.target.value.replace(/\./g, "")) || 0;
+                    e.target.value = numValue ? numValue.toLocaleString("vi-VN") : "";
+                  }}
                 />
               </div>
               {errors.amount && (
-                <p className="text-sm text-red-600">{errors.amount.message}</p>
+                <p className="text-sm text-red-600">{String((errors.amount)?.message)}</p>
               )}
               <div className="space-y-1">
                 <label className="flex items-center gap-1 text-sm font-medium">
@@ -210,14 +221,22 @@ export function WalletTransactionModal({
                   Phí
                 </label>
                 <Input
-                  type="number"
+                  type="text"
                   placeholder="Nhập phí (nếu có)"
-                  {...register("fee", { valueAsNumber: true })}
-                  min="0"
+                  {...register("fee")}
+                  onChange={(e) => {
+                    const numValue = parseInt(e.target.value.replace(/\./g, "")) || 0;
+                    setValue("fee", numValue);
+                    e.target.value = numValue ? numValue.toLocaleString("vi-VN") : "";
+                  }}
+                  onBlur={(e) => {
+                    const numValue = parseInt(e.target.value.replace(/\./g, "")) || 0;
+                    e.target.value = numValue ? numValue.toLocaleString("vi-VN") : "";
+                  }}
                 />
               </div>
               {errors.fee && (
-                <p className="text-sm text-red-600">{errors.fee.message}</p>
+                <p className="text-sm text-red-600">{String((errors.fee)?.message)}</p>
               )}
               <div className="space-y-1">
                 <label className="flex items-center gap-1 text-sm font-medium">

@@ -6,10 +6,47 @@ export interface Reservation {
   start_time: string;
   end_time: string;
   prepaid: number;
-  status: "ĐÃ HẾT HẠN" | "ĐÃ HỦY" | "ĐANG CHỜ XỬ LÝ" | "ĐANG HOẠT ĐỘNG";
+  status: "ĐÃ HẾT HẠN" | "ĐÃ HUỶ" | "ĐANG CHỜ XỬ LÝ" | "ĐANG HOẠT ĐỘNG" | "ĐÃ HỦY";
   created_at: string;
   updated_at: string;
 }
+export interface IUser {
+  _id: string;
+  fullname: string;
+  email: string;
+  username: string;
+  phone_number: string;
+  avatar: string;
+  role: string; 
+}
+
+export interface IBike {
+  _id: string;
+  status: string; 
+  chip_id: string;
+}
+
+export interface IStation {
+  _id: string;
+  name: string; 
+  address: string; 
+  latitude: number;
+  longitude: number;
+}
+
+export interface IRentalOrder {
+  _id: string;
+  start_time: string; 
+  end_time: string; 
+  status: string; 
+  created_at: string; 
+  updated_at: string; 
+  user: IUser;
+  bike: IBike;
+  station: IStation;
+  prepaid: number; 
+}
+
 export interface ReservationStats {
   month_year: string;
   total_reservations: number;

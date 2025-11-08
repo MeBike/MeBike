@@ -67,7 +67,6 @@ export const useReservationActions = ({ hasToken, page, limit, id }: ActionProps
       queryKey: ["detail-reservation", id],
     });
   }, [queryClient, hasToken, id]);
-
   return {
     allReservations,
     fetchAllReservations,

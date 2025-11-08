@@ -152,7 +152,6 @@ export default function CustomersPage() {
                 setSelectedUserId(user.id);
                 setIsDetailModalOpen(true);
               },
-              onEdit: (user) => console.log("[v0] Edit user:", user.id),
             })}
             data={users || []}
             // filterPlaceholder="Tìm kiếm người dùng..."
@@ -398,8 +397,6 @@ export default function CustomersPage() {
                         </div>
                       </div>
                     )}
-
-                    {/* Tab: Activity */}
                     {detailTab === "activity" && (
                       <div className="space-y-3">
                         <div className="bg-muted rounded-lg p-4 text-center">
@@ -409,8 +406,6 @@ export default function CustomersPage() {
                         </div>
                       </div>
                     )}
-
-                    {/* Tab: Stats */}
                     {detailTab === "stats" && (
                       <div className="space-y-3">
                         <div className="bg-muted rounded-lg p-4">

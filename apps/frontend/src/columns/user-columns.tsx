@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Pencil } from "lucide-react";
+import { Eye } from "lucide-react";
 import type { UserRole } from "@/types";
 import type { DetailUser as ServiceDetailUser } from "@/services/auth.service";
 
@@ -37,10 +37,8 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 export const userColumns = (
   {
     onView,
-    onEdit,
   }: {
     onView?: ({ id }: { id: string }) => void;
-    onEdit?: ({ id }: { id: string }) => void;
   }
 ): ColumnDef<ServiceDetailUser>[] => [
   {
@@ -108,17 +106,6 @@ export const userColumns = (
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Chỉnh sửa"
-          onClick={() => {
-            if (onEdit) {
-              onEdit({ id: row.original._id });
-            }
-          }}
-        >
-          <Pencil className="w-4 h-4 text-blue-500" />
         </button>
       </div>
     ),
