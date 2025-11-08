@@ -24,6 +24,8 @@ import RegisterScreen from "./screen/Register";
 import ReportScreen from "./screen/ReportScreen";
 import ReservationDetailScreen from "./screen/reservation-detail-screen";
 import ReservationScreen from "./screen/reservation-screen";
+import ResetPasswordOTPScreen from "./screen/ResetPasswordOTP";
+import ResetPasswordFormScreen from "./screen/ResetPasswordForm";
 import StationDetailScreen from "./screen/StationDetail";
 import SupportScreen from "./screen/SupportScreen";
 import UpdateProfileScreen from "./screen/UpdateProfileScreen";
@@ -169,6 +171,16 @@ export default function App() {
             <Stack.Screen
               name="ForgotPassword"
               component={ForgotPasswordScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="ResetPasswordOTP"
+              component={ResetPasswordOTPScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="ResetPasswordForm"
+              component={ResetPasswordFormScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen

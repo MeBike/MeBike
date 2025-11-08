@@ -15,6 +15,7 @@ import {
 } from "react-native";
 
 import type { RegisterScreenNavigationProp } from "../types/navigation";
+import { registerSchema } from "../schema/authSchema";
 
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
@@ -112,6 +113,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  errorText: {
+    fontSize: 12,
+    color: "#EF4444",
+    marginTop: 4,
+    marginLeft: 4,
+  },
 });
 
 export default function RegisterScreen() {
@@ -123,7 +130,8 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phone, setPhone] = useState("");
-  const { register, isRegistering, resendVerifyEmail , resetPassword } = useAuth();
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { register, isRegistering } = useAuth();
   const isLoading = isRegistering;
 
   const clearForm = () => {
@@ -132,27 +140,39 @@ export default function RegisterScreen() {
     setPassword("");
     setConfirmPassword("");
     setPhone("");
+    setErrors({});
   };
   const handleRegister = () => {
-    if (password !== confirmPassword) {
-      Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
+    // Validate using schema
+    const validationResult = registerSchema.safeParse({
+      fullname: name,
+      email,
+      password,
+      confirm_password: confirmPassword,
+      phone_number: phone || undefined,
+    });
+
+    if (!validationResult.success) {
+      // Get all field errors
+      const fieldErrors: Record<string, string> = {};
+      Object.entries(validationResult.error.flatten().fieldErrors).forEach(
+        ([field, messages]) => {
+          if (messages && messages[0]) {
+            fieldErrors[field] = messages[0];
+          }
+        }
+      );
+      setErrors(fieldErrors);
       return;
     }
-    if (password.length < 6) {
-      Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự");
-      return;
-    }
-    if (!name || !email || !password || !confirmPassword || !phone) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-    
+
+    setErrors({});
     register({
       fullname: name,
       email,
       password,
       confirm_password: confirmPassword,
-      phone_number: phone,
+      phone_number: phone || undefined,
     }).then(() => {
       clearForm();
       // Chuyển sang trang verify email thay vì Main
@@ -201,10 +221,14 @@ export default function RegisterScreen() {
                 placeholder="Nhập họ và tên"
                 placeholderTextColor={BikeColors.textSecondary}
                 value={name}
-                onChangeText={setName}
+                onChangeText={(text) => {
+                  setName(text);
+                  if (errors.fullname) setErrors(prev => ({ ...prev, fullname: "" }));
+                }}
                 autoCapitalize="words"
               />
             </View>
+            {errors.fullname && <Text style={styles.errorText}>{errors.fullname}</Text>}
           </View>
 
           <View style={styles.inputContainer}>
@@ -220,12 +244,16 @@ export default function RegisterScreen() {
                 placeholder="Nhập email"
                 placeholderTextColor={BikeColors.textSecondary}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (errors.email) setErrors(prev => ({ ...prev, email: "" }));
+                }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </View>
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
           </View>
 
           <View style={styles.inputContainer}>
@@ -241,10 +269,14 @@ export default function RegisterScreen() {
                 placeholder="Nhập số điện thoại"
                 placeholderTextColor={BikeColors.textSecondary}
                 value={phone}
-                onChangeText={setPhone}
+                onChangeText={(text) => {
+                  setPhone(text);
+                  if (errors.phone_number) setErrors(prev => ({ ...prev, phone_number: "" }));
+                }}
                 autoCapitalize="none"
               />
             </View>
+            {errors.phone_number && <Text style={styles.errorText}>{errors.phone_number}</Text>}
           </View>
 
           <View style={styles.inputContainer}>
@@ -260,7 +292,10 @@ export default function RegisterScreen() {
                 placeholder="Nhập mật khẩu"
                 placeholderTextColor={BikeColors.textSecondary}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errors.password) setErrors(prev => ({ ...prev, password: "" }));
+                }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
@@ -275,6 +310,7 @@ export default function RegisterScreen() {
                 />
               </Pressable>
             </View>
+            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
           </View>
 
           <View style={styles.inputContainer}>
@@ -290,7 +326,10 @@ export default function RegisterScreen() {
                 placeholder="Xác nhận mật khẩu"
                 placeholderTextColor={BikeColors.textSecondary}
                 value={confirmPassword}
-                onChangeText={setConfirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  if (errors.confirm_password) setErrors(prev => ({ ...prev, confirm_password: "" }));
+                }}
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
               />
@@ -305,6 +344,7 @@ export default function RegisterScreen() {
                 />
               </Pressable>
             </View>
+            {errors.confirm_password && <Text style={styles.errorText}>{errors.confirm_password}</Text>}
           </View>
 
           <Pressable

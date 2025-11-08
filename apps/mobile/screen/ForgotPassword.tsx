@@ -24,17 +24,21 @@ function ForgotPasswordScreen() {
   const navigation = useNavigation<ForgotPasswordNavigationProp>();
   const [email, setEmail] = useState<string>("");
   const { forgotPassword, isLoadingForgottingPassword } = useAuth();
+  
   const handleForgotPassword = () => {
     if (!email) {
       Alert.alert("Lỗi", "Vui lòng nhập email");
       return;
     }
+    
     forgotPassword({ email });
-    if (isLoadingForgottingPassword) {
-      setTimeout(() => {
-        navigation.navigate("Login");
-      }, 1000);
-    }
+    
+    // Navigate to OTP verification screen after sending email
+    setTimeout(() => {
+      navigation.navigate("ResetPasswordOTP", {
+        email,
+      });
+    }, 500);
   };
 
   return (

@@ -23,6 +23,8 @@ export type RootStackParamList = {
   BookingHistoryDetail: { bookingId: string };
   ChangePassword: undefined;
   ForgotPassword: undefined;
+  ResetPasswordOTP: { email: string };
+  ResetPasswordForm: { email: string; otp: string };
   UpdateProfile: undefined;
   MyWallet: undefined;
   Xe: undefined;
