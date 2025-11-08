@@ -18,5 +18,6 @@ export const useGetDashboardSummaryQuery = () => {
     queryKey: ["dashboard-rental-summary"],
     queryFn: fetchDashboardSummary,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: false,
   });
 };

@@ -11,6 +11,8 @@ import { sosColumns } from "@/columns/sos-columns";
 import { useForm } from "react-hook-form";
 import { CreateSOSSchema , createSOSSchema} from "@/schemas/sosSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRentalsActions } from "@/hooks/use-rental";
+import { useUserActions } from "@/hooks/use-user";
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -22,7 +24,11 @@ export default function SOSPage() {
   const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">("info");
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
+  const { allRentalsData } = useRentalsActions({ hasToken: true });
+  const { users } = useUserActions({ hasToken: true });
+  
+  // Filter SOS agents (users with SOS role)
+  const sosAgents = users?.filter((user: any) => user.role === "SOS") || [];
   const {
     sosRequests,
     isLoading,
@@ -600,14 +606,19 @@ export default function SOSPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
-                    Mã thuê xe *
+                    Chọn đơn thuê *
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Nhập mã thuê xe (24 ký tự)"
+                  <select
                     {...register("rental_id")}
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  />
+                  >
+                    <option value="">-- Chọn đơn thuê --</option>
+                    {allRentalsData?.map((rental: any) => (
+                      <option key={rental._id} value={rental._id}>
+                        {rental._id} - {rental.user?.fullname || "N/A"}
+                      </option>
+                    ))}
+                  </select>
                   {errors.rental_id && (
                     <p className="text-xs text-red-500 mt-1">
                       {errors.rental_id.message}
@@ -617,14 +628,19 @@ export default function SOSPage() {
 
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
-                    Mã nhân viên SOS *
+                    Chọn nhân viên SOS *
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Nhập mã nhân viên (24 ký tự)"
+                  <select
                     {...register("agent_id")}
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  />
+                  >
+                    <option value="">-- Chọn nhân viên SOS --</option>
+                    {sosAgents?.map((agent: any) => (
+                      <option key={agent._id} value={agent._id}>
+                        {agent.fullname} ({agent.email})
+                      </option>
+                    ))}
+                  </select>
                   {errors.agent_id && (
                     <p className="text-xs text-red-500 mt-1">
                       {errors.agent_id.message}

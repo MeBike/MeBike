@@ -19,10 +19,6 @@ export default function BikesPage() {
   const {
     data,
     detailBike,
-    getStatisticsBike,
-    statisticData,
-    isLoadingStatistics,
-    paginationOfBikes,
     paginationBikes,
     getBikeByID,
     isLoadingDetail,
@@ -41,18 +37,8 @@ export default function BikesPage() {
     setIsDetailModalOpen(true);
   };
   useEffect(() => {
-    getStatisticsBike();
-  }, [getStatisticsBike]);
-  useEffect(() => {
     getBikeByID();
   }, [id, getBikeByID]);
-  if (isLoadingStatistics) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-        <Loader2 className="animate-spin w-16 h-16 text-primary" />
-      </div>
-    );
-  }
   if (isLoadingDetail) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -81,32 +67,6 @@ export default function BikesPage() {
               <Plus className="w-4 h-4 mr-2" />
               Thêm xe mới
             </Button> */}
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Tổng số xe</p>
-            <p className="text-2xl font-bold text-foreground mt-1">
-              {paginationOfBikes?.totalRecords || ""}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Có sẵn</p>
-            <p className="text-2xl font-bold text-green-500 mt-1">
-              {statisticData?.result["CÓ SẴN"] || ""}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Đang thuê</p>
-            <p className="text-2xl font-bold text-blue-500 mt-1">
-              {statisticData?.result["ĐANG ĐƯỢC THUÊ"] || ""}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Bị hỏng</p>
-            <p className="text-2xl font-bold text-red-500 mt-1">
-              {statisticData?.result["BỊ HỎNG"] || "0"}
-            </p>
           </div>
         </div>
 
