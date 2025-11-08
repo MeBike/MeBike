@@ -39,7 +39,9 @@ databaseService.connect().then(async () => {
   databaseService.indexBikes()
   databaseService.indexStations()
   databaseService.indexSuppliers()
-
+  databaseService.indexReservation()
+  databaseService.indexFixedSlot()
+  databaseService.indexSubscription()
   // cron-job
   // warningExpiryReservation.start()
   // bullmq

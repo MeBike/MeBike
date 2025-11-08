@@ -21,6 +21,8 @@ import Reservation from '~/models/schemas/reservation.schema'
 import Rating from '~/models/schemas/rating.schema'
 import RatingReason from '~/models/schemas/rating-reason.schema'
 import SosAlert from '~/models/schemas/sos-alert.schema'
+import Subscription from '~/models/schemas/subscription.schema'
+import FixedSlotTemplate from '~/models/schemas/fixed-slot.schema'
 
 config()
 // const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@mebike.8rtvndo.mongodb.net/?retryWrites=true&w=majority&appName=MeBike`;
@@ -55,7 +57,7 @@ class DatabaseService {
   async indexUsers() {
     await this.users.createIndex({ email: 1 }, { unique: true })
     await this.users.createIndex({ username: 1 }, { unique: true })
-    await this.users.createIndex({ phone_number: 1 }, { unique: true });
+    await this.users.createIndex({ phone_number: 1 }, { unique: true })
     await this.users.createIndex({ email: 1, password: 1 })
   }
 
@@ -69,7 +71,7 @@ class DatabaseService {
 
   async indexStations() {
     await this.stations.createIndex({ name: 1 }, { unique: true })
-    await this.stations.createIndex({ location_geo: "2dsphere" });
+    await this.stations.createIndex({ location_geo: '2dsphere' })
   }
 
   get reports(): Collection<Report> {
@@ -136,6 +138,36 @@ class DatabaseService {
 
   get sos_alerts(): Collection<SosAlert> {
     return this.db.collection(process.env.SOS_ALERT_COLLECTION as string)
+  }
+
+  get subscriptions(): Collection<Subscription> {
+    return this.db.collection(process.env.SUBSCRIPTION_COLLECTION as string)
+  }
+
+  get fixedSlotTemplates(): Collection<FixedSlotTemplate> {
+    return this.db.collection(process.env.FIXED_SLOT_TEMPLATE_COLLECTION as string)
+  }
+
+  async indexReservation() {
+    await databaseService.reservations.createIndex({ user_id: 1, created_at: -1 })
+    await databaseService.reservations.createIndex({ bike_id: 1, start_time: 1, status: 1 })
+    await databaseService.reservations.createIndex({ station_id: 1, start_time: 1 })
+    await databaseService.reservations.createIndex({ fixed_slot_template_id: 1 })
+    await databaseService.reservations.createIndex({ subscription_id: 1 })
+    await databaseService.reservations.createIndex({ start_time: 1, status: 1 })
+  }
+
+  async indexSubscription() {
+    await databaseService.subscriptions.createIndex({ user_id: 1, status: 1 })
+    await databaseService.subscriptions.createIndex({ end_date: 1 })
+    await databaseService.subscriptions.createIndex({ user_id: 1, end_date: 1 })
+  }
+
+  async indexFixedSlot() {
+    await databaseService.fixedSlotTemplates.createIndex({ user_id: 1, status: 1 })
+    await databaseService.fixedSlotTemplates.createIndex({ station_id: 1, status: 1 })
+    await databaseService.fixedSlotTemplates.createIndex({ end_date: 1 })
+    await databaseService.fixedSlotTemplates.createIndex({ user_id: 1, end_date: 1 })
   }
 }
 
