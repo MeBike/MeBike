@@ -7,6 +7,7 @@ import { toObjectId } from '~/utils/string'
 import { getLocalTime } from '~/utils/date-time'
 import fixedSlotService from '~/services/fixed-slot.services'
 import { applySlotToDate } from '~/utils/reservation.helper'
+import subscriptionService from '~/services/subscription.services'
 
 export const reservationNotifyQueue = new Queue('reservation-notify', { connection })
 export const reservationExpireQueue = new Queue('reservation-expire', { connection })
@@ -17,6 +18,8 @@ export const generateFixedSlotQueue = new Queue('generate-fixed-slot-reservation
     removeOnFail: false
   }
 })
+export const subscriptionActivationQueue = new Queue('subscription-activation', { connection })
+export const subscriptionExpireQueue = new Queue('subscription-expire', { connection })
 
 export const reservationNotifyWorker = new Worker(
   'reservation-notify',
@@ -113,7 +116,7 @@ export const generateFixedSlotWorker = new Worker(
         continue
       }
 
-      // Có xe → tạo Reservation
+      // Có xe -> tạo Reservation
       try {
         const reservation = await reservationsService.reserveOneTime({
           user_id: template.user_id,
@@ -142,3 +145,13 @@ export const generateFixedSlotWorker = new Worker(
   },
   { connection }
 )
+
+// Kích hoạt sau 10 ngày
+new Worker('subscription-activation', async (job) => {
+  await subscriptionService.activate(job.data.subscription_id)
+}, { connection })
+
+// Hết hạn sau 30 ngày
+new Worker('subscription-expire', async (job) => {
+  await subscriptionService.expire(job.data.subscription_id)
+}, { connection })

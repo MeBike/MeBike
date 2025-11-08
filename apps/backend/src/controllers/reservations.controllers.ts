@@ -45,24 +45,6 @@ export async function getReservationListController(req: Request, res: Response, 
   await sendPaginatedResponse(res, next, databaseService.reservations, req.query, filter)
 }
 
-// export async function reserveBikeController(req: Request<ParamsDictionary, any, ReserveBikeReqBody>, res: Response) {
-//   const { user_id } = req.decoded_authorization as TokenPayLoad
-//   const objUserId = toObjectId(user_id)
-//   const station = req.station as Station
-//   const objStationId = toObjectId(req.bike?.station_id as ObjectId)
-
-//   const result = await reservationsService.reserveBike({
-//     user_id: objUserId,
-//     bike: req.bike!,
-//     station,
-//     start_time: req.body.start_time
-//   })
-//   res.json({
-//     message: RESERVATIONS_MESSAGE.RESERVE_SUCCESS,
-//     result
-//   })
-// }
-
 export async function reserveBikeController(
   req: Request<ParamsDictionary, any, ReserveBikeReqBody>,
   res: Response

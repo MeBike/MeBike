@@ -212,6 +212,13 @@ export const reserveBikeValidator = validate(
                 })
               }
 
+              if (!/^[a-fA-F0-9]{24}$/.test(value)) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'subscription_id'),
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
+
               const subscription = await databaseService.subscriptions.findOne({ _id: toObjectId(value) })
               if (!subscription) {
                 throw new ErrorWithStatus({

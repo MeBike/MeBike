@@ -70,10 +70,15 @@ class ReservationsService {
       status: RentalStatus.Reserved
     })
 
-    await this.executeReservationTransaction(reservation, rental, bike_id)
+    await this.executeReservationTransaction(reservation, rental, bike_id, station_id, user_id)
 
     await this.scheduleJobs(reservation, bike_id)
-    await walletService.paymentReservation(user_id.toString(), prepaid, `Đặt xe ${bike_id}`, reservationId)
+    await walletService.paymentReservation(
+      user_id.toString(),
+      prepaid,
+      RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', reservationId.toString()),
+      reservationId
+    )
     await iotService.sendReservationCommand(bike_id.toString(), IotReservationCommand.reserve)
 
     return reservation
@@ -110,7 +115,7 @@ class ReservationsService {
       status: RentalStatus.Reserved
     })
 
-    await this.executeReservationTransaction(reservation, rental, bike_id)
+    await this.executeReservationTransaction(reservation, rental, bike_id, station_id, user_id)
     await this.scheduleJobs(reservation, bike_id)
     await iotService.sendReservationCommand(bike_id.toString(), IotReservationCommand.reserve)
 
@@ -118,9 +123,19 @@ class ReservationsService {
   }
 
   // Helper chung
-  async executeReservationTransaction(reservation: Reservation, rental: Rental, bike_id: ObjectId) {
+  async executeReservationTransaction(
+    reservation: Reservation,
+    rental: Rental,
+    bike_id: ObjectId,
+    station_id: ObjectId,
+    user_id: ObjectId
+  ) {
     const session = databaseService.getClient().startSession()
     try {
+      const [station, user] = await Promise.all([
+        databaseService.stations.findOne({ _id: station_id }, { projection: { name: 1 } }),
+        databaseService.users.findOne({ _id: user_id }, { projection: { fullname: 1, email: 1 } })
+      ])
       await session.withTransaction(async () => {
         await Promise.all([
           databaseService.reservations.insertOne(reservation, { session }),
@@ -132,6 +147,11 @@ class ReservationsService {
           )
         ])
       })
+      const data = {
+        ...reservation,
+        station_name: station!.name
+      }
+      void this.sendSuccessReservingEmail(data, user!)
     } finally {
       await session.endSession()
     }
@@ -837,7 +857,10 @@ class ReservationsService {
       {} as Record<string, number>
     )
 
-    const bikeIds = reservations.filter((r) => r.status === ReservationStatus.Pending).map((r) => r.bike_id).filter(bikeId => bikeId != null)
+    const bikeIds = reservations
+      .filter((r) => r.status === ReservationStatus.Pending)
+      .map((r) => r.bike_id)
+      .filter((bikeId) => bikeId != null)
 
     const bikes = await databaseService.bikes.find({ _id: { $in: bikeIds } }).toArray()
 
@@ -947,6 +970,7 @@ class ReservationsService {
     data.start_time = formatUTCDateToVietnamese(data.start_time)
     data.end_time = formatUTCDateToVietnamese(data.end_time)
 
+    console.log(data)
     await this.sendReservationEmailFormat(
       'success-reservation.html',
       RESERVATIONS_MESSAGE.EMAIL_SUBJECT_SUCCESS_RESERVING,

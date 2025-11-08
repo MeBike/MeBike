@@ -366,6 +366,26 @@ export const RESERVATIONS_MESSAGE = {
   // Subscription (SUB)
   SUB_REQUIRED_SUBSCRIPTION_ID: 'Vui lòng nhập ID gói đăng ký (subscription_id)',
   SUBSCRIPTION_NOT_FOUND: 'Không tìm thấy gói đăng ký',
+  SUB_REQUIRED_PACKAGE_NAME: 'Vui lòng nhập tên gói',
+  SUB_CREATE_SUCCESS: 'Đăng ký gói tháng thành công',
+  SUB_ACTIVATE_SUCCESS: 'Kích hoạt gói tháng thành công',
+  SUB_USE_SUCCESS: 'Sử dụng lượt đặt từ gói tháng thành công',
+  SUB_EXPIRE_SUCCESS: 'Gói tháng đã được cập nhật trạng thái hết hạn',
+  SUB_AUTO_ACTIVATE_SCHEDULED: 'Gói sẽ tự động kích hoạt sau 10 ngày nếu chưa sử dụng',
+  SUB_ALREADY_ACTIVE: 'Gói đã được kích hoạt',
+  SUB_ALREADY_EXPIRED: 'Gói đã hết hạn',
+  SUB_ACTIVATION_FAILED: 'Kích hoạt gói thất bại',
+  SUB_USE_LIMIT_EXCEEDED: 'Đã dùng hết số lượt đặt trong tháng',
+  SUB_NOT_FOUND_OR_ACTIVATED: 'Gói không tồn tại hoặc chưa được kích hoạt',
+  SUB_NOT_ACTIVATED: 'Gói chưa được kích hoạt',
+  SUB_INVALID_PACKAGE: 'Gói đăng ký không hợp lệ',
+  SUB_USER_HAS_ACTIVE: 'Bạn đã có gói đang hoạt động',
+  SUB_PACKAGE_NOT_FOUND: 'Gói đăng ký không tồn tại',
+  SUB_CREATE_FAILED: 'Đăng ký gói thất bại',
+  SUB_ACTIVATE_TOO_EARLY: 'Gói chỉ có thể kích hoạt sau khi đăng ký ít nhất 1 ngày',
+  SUB_ALREADY_HAS_PENDING: 'Bạn đã có gói đang chờ kích hoạt',
+  NOT_ENOUGH_BALANCE_TO_SUBSCRIBE: 'Tài khoản của bạn không đủ để đăng kí gói tháng %s (giá gói: %s)',
+  
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
@@ -412,12 +432,14 @@ export const RESERVATIONS_MESSAGE = {
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
   // Payment
-  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước với ID: %s',
-  REFUND_DESCRIPTION: 'Hoàn tiền cho phiên đặt trước với ID: %s',
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước (ID: %s)',
+  REFUND_DESCRIPTION: 'Hoàn tiền cho phiên đặt trước (ID: %s)',
+  SUBSCRIPTION_PAYMENT_DESCRIPTION: 'Thanh toán gói đăng kí tháng (ID: %s)',
+
   // Quota
   QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước',
   DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',
-  BIKE_NOT_AT_SOURCE_STATION: 'Xe (Id: %s) không nằm ở trạm nguồn đã khai báo',
+  BIKE_NOT_AT_SOURCE_STATION: 'Xe (ID: %s) không nằm ở trạm nguồn đã khai báo',
   // Report
   GET_REPORT_SUCCESS: 'Lấy báo cáo đặt trước theo %s thành công',
   REPORT_PERIOD_DEFAULT: '12 tháng gần nhất',

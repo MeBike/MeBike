@@ -14,9 +14,12 @@ const toMs = (from: TimeType, value: number) => {
     
         case TimeType.Minute:
             return value * 60 * 1000
+    
+        case TimeType.Hour:
+            return value * 60 * 60 * 1000
 
         default:
-            return value * 60 * 60 * 1000
+            return value * 24 * 60 * 60 * 1000
     }
 }
 
@@ -30,6 +33,10 @@ export const fromMinutesToMs = (value: number) => {
 
 export const fromSecondsToMs = (value: number) => {
     return toMs(TimeType.Second, value)
+}
+
+export const fromDaysToMs = (value: number) => {
+    return toMs(TimeType.Day, value)
 }
 
 export const formatUTCDateToVietnamese = (dateStr: string) => {
