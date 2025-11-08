@@ -59,26 +59,32 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
   const useResetPassword = useResetPasswordMutation();
   const useResendVerifyEmail = useResendVerifyEmailMutation();
   const changePassword = useCallback(
-    (old_password: string, password: string, confirm_password: string) => {
-      useChangePassword.mutate(
-        { old_password, password, confirm_password },
-        {
-          onSuccess: (result) => {
-            if (result.status === 200) {
-              Alert.alert("Success", "Password changed successfully");
-            } else {
-              Alert.alert("Error", "Error changing password");
-            }
-          },
-          onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(
-              error,
-              "Error changing password"
-            );
-            Alert.alert("Error", errorMessage);
-          },
-        }
-      );
+    (old_password: string, password: string, confirm_password: string): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        useChangePassword.mutate(
+          { old_password, password, confirm_password },
+          {
+            onSuccess: (result) => {
+              if (result.status === 200) {
+                Alert.alert("Success", result.data.message);
+                resolve();
+              } else {
+                const errorMessage = result.data?.message || "Error changing password";
+                Alert.alert("Lỗi", errorMessage);
+                reject(new Error(errorMessage));
+              }
+            },
+            onError: (error: unknown) => {
+              const errorMessage = getErrorMessage(
+                error,
+                "Error changing password"
+              );
+              Alert.alert("Error", errorMessage);
+              reject(error);
+            },
+          }
+        );
+      });
     },
     [useChangePassword]
   );

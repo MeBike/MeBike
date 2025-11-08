@@ -1,8 +1,7 @@
+import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useMemo, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import React, { useState } from "react";
 import {
   Alert,
   Image,
@@ -16,198 +15,63 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { UpdateProfileSchemaFormData } from "@schemas/authSchema";
-import type { DetailUser } from "@services/auth.service";
-
 import { useAuth } from "@providers/auth-providers";
-import { profileUpdateSchema } from "@schemas/authSchema";
 
-function UpdateProfileScreen({ navigation }: any) {
+function UpdateProfileScreen() {
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user, updateProfile, isUpdatingProfile } = useAuth();
-  const initialProfile = useMemo<UpdateProfileSchemaFormData>(
-    () => ({
-      fullname: user?.fullname || "",
-      username: user?.username || "",
-      phone_number: user?.phone_number || "",
-      location: user?.location || "",
-      avatar: user?.avatar || "",
-    }),
-    [user],
-  );
-
-  const {
-    control,
-    handleSubmit,
-    reset,
-    getValues,
-    formState: { isDirty, dirtyFields, errors },
-  } = useForm<UpdateProfileSchemaFormData>({
-    resolver: zodResolver(profileUpdateSchema),
-    defaultValues: initialProfile,
-    mode: "onChange",
-  });
   const [isEditing, setIsEditing] = useState(false);
+  const [fullname, setFullname] = useState(user?.fullname || "");
+  const [username, setUsername] = useState(user?.username || "");
+  const [phone, setPhone] = useState(user?.phone_number || "");
+  const [location, setLocation] = useState(user?.location || "");
+  const [avatar, setAvatar] = useState(user?.avatar || "");
 
   const handleEditPress = () => {
     setIsEditing(true);
-    reset(getValues());
   };
 
-  const onSubmit = async (data: Partial<UpdateProfileSchemaFormData>) => {
-    if (!data.fullname || !data.fullname.trim()) {
+  const handleSave = async () => {
+    if (!fullname.trim()) {
       Alert.alert("Lỗi", "Vui lòng nhập họ tên");
       return;
     }
-    if (!data.phone_number?.trim()) {
+    if (!phone.trim()) {
       Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
       return;
     }
-    if (!isDirty) {
+
+    const changedData: any = {};
+    if (fullname !== (user?.fullname || "")) changedData.fullname = fullname;
+    if (username !== (user?.username || "")) changedData.username = username;
+    if (phone !== (user?.phone_number || "")) changedData.phone_number = phone;
+    if (location !== (user?.location || "")) changedData.location = location;
+    if (avatar !== (user?.avatar || "")) changedData.avatar = avatar;
+
+    if (Object.keys(changedData).length === 0) {
       Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
       setIsEditing(false);
       return;
     }
-    const changedData: Partial<UpdateProfileSchemaFormData> = {};
-    const dirtyFieldKeys = Object.keys(dirtyFields) as Array<
-      keyof UpdateProfileSchemaFormData
-    >;
-    for (const key of dirtyFieldKeys) {
-      changedData[key] = data[key];
-    }
 
     try {
-      updateProfile(changedData);
-      reset(data);
+      await updateProfile(changedData);
       setIsEditing(false);
+      Alert.alert("Thành công", "Cập nhật thông tin thành công!");
     }
     catch (e) {
       Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
     }
   };
+
   const handleCancel = () => {
-    reset(initialProfile);
+    setFullname(user?.fullname || "");
+    setUsername(user?.username || "");
+    setPhone(user?.phone_number || "");
+    setLocation(user?.location || "");
+    setAvatar(user?.avatar || "");
     setIsEditing(false);
-  };
-
-  const detailUserFields: Array<{
-    key: keyof DetailUser;
-    label: string;
-    icon: string;
-    editable?: boolean;
-    keyboardType?: "default" | "email-address" | "phone-pad";
-  }> = [
-    { key: "fullname", label: "Họ và tên", icon: "person", editable: true },
-    { key: "username", label: "Username", icon: "person", editable: true },
-    {
-      key: "email",
-      label: "Email",
-      icon: "mail",
-      editable: false,
-      keyboardType: "email-address",
-    },
-    {
-      key: "phone_number",
-      label: "Điện thoại",
-      icon: "call",
-      editable: true,
-      keyboardType: "phone-pad",
-    },
-    { key: "location", label: "Địa chỉ", icon: "location", editable: true },
-    { key: "avatar", label: "Avatar", icon: "image", editable: true },
-    { key: "role", label: "Vai trò", icon: "shield", editable: false },
-    {
-      key: "verify",
-      label: "Trạng thái xác thực",
-      icon: "checkmark",
-      editable: false,
-    },
-    { key: "created_at", label: "Ngày tạo", icon: "calendar", editable: false },
-    {
-      key: "updated_at",
-      label: "Ngày cập nhật",
-      icon: "calendar",
-      editable: false,
-    },
-    { key: "_id", label: "ID", icon: "key", editable: false },
-  ];
-
-  const renderInputField = (
-    key: keyof DetailUser,
-    label: string,
-    icon: string,
-    editable: boolean = false,
-    keyboardType: "default" | "email-address" | "phone-pad" = "default",
-  ) => {
-    const isFormField = (
-      key: keyof DetailUser,
-    ): key is keyof UpdateProfileSchemaFormData => {
-      return [
-        "fullname",
-        "username",
-        "phone_number",
-        "location",
-        "avatar",
-      ].includes(key as string);
-    };
-    if (isFormField(key)) {
-      return (
-        <Controller
-          control={control}
-          name={key as keyof UpdateProfileSchemaFormData}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>{label}</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons
-                  name={icon as any}
-                  size={18}
-                  color="#0066FF"
-                  style={styles.inputIcon}
-                />
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  editable={isEditing && editable}
-                  placeholderTextColor="#ccc"
-                  keyboardType={keyboardType}
-                />
-              </View>
-              {errors[key as keyof UpdateProfileSchemaFormData] && (
-                <Text style={styles.errorText}>
-                  {errors[
-                    key as keyof UpdateProfileSchemaFormData
-                  ]?.message?.toString()}
-                </Text>
-              )}
-            </View>
-          )}
-        />
-      );
-    }
-    else {
-      return (
-        <View style={styles.fieldContainer}>
-          <Text style={styles.fieldLabel}>{label}</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons
-              name={icon as any}
-              size={18}
-              color="#0066FF"
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={[styles.input, styles.inputDisabled]}
-              value={user?.[key] ? String(user[key]) : ""}
-              editable={false}
-              keyboardType={keyboardType}
-            />
-          </View>
-        </View>
-      );
-    }
   };
 
   return (
@@ -228,12 +92,11 @@ function UpdateProfileScreen({ navigation }: any) {
           <View style={{ width: 28 }} />
         </View>
         <View style={styles.avatarSection}>
-          <Controller
-            control={control}
-            name="avatar"
-            render={({ field: { value } }) => (
-              <Image source={{ uri: value }} style={styles.avatar} />
-            )}
+          <Image
+            source={{
+              uri: avatar || "https://via.placeholder.com/100",
+            }}
+            style={styles.avatar}
           />
           {isEditing && (
             <TouchableOpacity style={styles.cameraButton}>
@@ -242,21 +105,136 @@ function UpdateProfileScreen({ navigation }: any) {
           )}
         </View>
       </LinearGradient>
+
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
-        {/* Form Fields */}
         <View style={styles.formSection}>
-          {detailUserFields.map(field => (
-            <React.Fragment key={field.key}>
-              {renderInputField(
-                field.key,
-                field.label,
-                field.icon,
-                field.editable ?? false,
-                field.keyboardType ?? "default",
-              )}
-            </React.Fragment>
-          ))}
+          {/* Fullname */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Họ và tên</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons
+                name="person"
+                size={18}
+                color="#0066FF"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, !isEditing && styles.inputDisabled]}
+                placeholder="Nhập họ và tên"
+                placeholderTextColor="#ccc"
+                value={fullname}
+                onChangeText={setFullname}
+                editable={isEditing}
+              />
+            </View>
+          </View>
+
+          {/* Username */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Username</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons
+                name="person"
+                size={18}
+                color="#0066FF"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, !isEditing && styles.inputDisabled]}
+                placeholder="Nhập username"
+                placeholderTextColor="#ccc"
+                value={username}
+                onChangeText={setUsername}
+                editable={isEditing}
+              />
+            </View>
+          </View>
+
+          {/* Email (read-only) */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Email</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons
+                name="mail"
+                size={18}
+                color="#0066FF"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                placeholder="Email"
+                placeholderTextColor="#ccc"
+                value={user?.email || ""}
+                editable={false}
+              />
+            </View>
+          </View>
+
+          {/* Phone Number */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Điện thoại</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons
+                name="call"
+                size={18}
+                color="#0066FF"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, !isEditing && styles.inputDisabled]}
+                placeholder="Nhập số điện thoại"
+                placeholderTextColor="#ccc"
+                value={phone}
+                onChangeText={setPhone}
+                editable={isEditing}
+                keyboardType="phone-pad"
+              />
+            </View>
+          </View>
+
+          {/* Location */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Địa chỉ</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons
+                name="location"
+                size={18}
+                color="#0066FF"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, !isEditing && styles.inputDisabled]}
+                placeholder="Nhập địa chỉ"
+                placeholderTextColor="#ccc"
+                value={location}
+                onChangeText={setLocation}
+                editable={isEditing}
+              />
+            </View>
+          </View>
+
+          {/* Avatar URL */}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Avatar URL</Text>
+            <View style={styles.inputWrapper}>
+              <Ionicons
+                name="image"
+                size={18}
+                color="#0066FF"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, !isEditing && styles.inputDisabled]}
+                placeholder="Nhập URL avatar"
+                placeholderTextColor="#ccc"
+                value={avatar}
+                onChangeText={setAvatar}
+                editable={isEditing}
+              />
+            </View>
+          </View>
         </View>
+
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
           {!isEditing
@@ -273,7 +251,7 @@ function UpdateProfileScreen({ navigation }: any) {
                 <>
                   <TouchableOpacity
                     style={styles.saveButton}
-                    onPress={handleSubmit(onSubmit)}
+                    onPress={handleSave}
                     disabled={isUpdatingProfile}
                   >
                     <Ionicons name="checkmark" size={18} color="#fff" />

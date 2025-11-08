@@ -33,7 +33,7 @@ function ChangePasswordScreen() {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
       return;
@@ -42,10 +42,15 @@ function ChangePasswordScreen() {
       Alert.alert("Lỗi", "Mật khẩu mới và xác nhận không khớp");
       return;
     }
-    changePassword(oldPassword, newPassword, confirmPassword);
-    //     setTimeout(() => {
-    //   navigation.navigate("Main");
-    // }, 1000);
+    try {
+      await changePassword(oldPassword, newPassword, confirmPassword);
+      // Chỉ quay lại khi changePassword thành công
+      navigation.goBack();
+    }
+    catch (error) {
+      // Error đã được handle trong changePassword, không cần làm gì thêm
+      console.log("Change password failed:", error);
+    }
   };
 
   return (
