@@ -1,4 +1,4 @@
-import { GroupByOptions, ReservationStatus, Role } from './../constants/enums'
+import { GroupByOptions, ReservationOptions, ReservationStatus, Role } from './../constants/enums'
 import { checkSchema, ParamSchema } from 'express-validator'
 import HTTP_STATUS from '~/constants/http-status'
 import { RESERVATIONS_MESSAGE } from '~/constants/messages'
@@ -18,82 +18,106 @@ const VALID_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
 export const reserveBikeValidator = validate(
   checkSchema(
     {
-      bike_id: {
+      reservation_option: {
         notEmpty: {
-          errorMessage: RESERVATIONS_MESSAGE.REQUIRED_BIKE_ID,
-          bail: true
+          errorMessage: RESERVATIONS_MESSAGE.REQUIRED_OPTIONS
         },
-        isMongoId: {
-          errorMessage: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'bike_id'),
-          bail: true
-        },
+        isIn: {
+          options: [[ReservationOptions.ONE_TIME, ReservationOptions.FIXED_SLOT, ReservationOptions.SUBSCRIPTION]],
+          errorMessage: RESERVATIONS_MESSAGE.INAVLID_OPTIONS
+        }
+      },
+
+      // Common field for ONE_TIME + SUBSCRIPTION
+      bike_id: {
+        optional: true,
         custom: {
           options: async (value, { req }) => {
-            const bikeId = toObjectId(value)
-            const bike = await databaseService.bikes.findOne({ _id: bikeId })
-            if (!bike) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.BIKE_NOT_FOUND.replace('%s', value),
-                status: HTTP_STATUS.NOT_FOUND
-              })
-            }
-            isAvailability(bike.status as BikeStatus)
+            if ([ReservationOptions.ONE_TIME, ReservationOptions.SUBSCRIPTION].includes(req.body.reservation_option)) {
+              if (!value) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.REQUIRED_BIKE_ID,
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
 
-            const stationId = bike.station_id
-            if (!stationId) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.UNAVAILABLE_BIKE,
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
+              if (!/^[a-fA-F0-9]{24}$/.test(value)) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'bike_id'),
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
 
-            const [stationExists, aggResult] = await Promise.all([
-              databaseService.stations.findOne({ _id: stationId }, { projection: { _id: 1, name: 1 } }),
-              databaseService.bikes
-                .aggregate([
-                  {
-                    $match: {
-                      station_id: stationId,
-                      status: { $in: [BikeStatus.Available, BikeStatus.Reserved] }
-                    }
-                  },
-                  {
-                    $group: {
-                      _id: null,
-                      totalAvailableBikes: { $sum: 1 },
-                      currentlyReservedBikes: {
-                        $sum: { $cond: [{ $eq: ['$status', BikeStatus.Reserved] }, 1, 0] }
+              const bikeId = toObjectId(value)
+              const bike = await databaseService.bikes.findOne({ _id: bikeId })
+              if (!bike) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.BIKE_NOT_FOUND.replace('%s', value),
+                  status: HTTP_STATUS.NOT_FOUND
+                })
+              }
+
+              isAvailability(bike.status as BikeStatus)
+
+              const stationId = bike.station_id
+              if (!stationId) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.UNAVAILABLE_BIKE,
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
+
+              const [stationExists, aggResult] = await Promise.all([
+                databaseService.stations.findOne({ _id: stationId }, { projection: { _id: 1, name: 1 } }),
+                databaseService.bikes
+                  .aggregate([
+                    {
+                      $match: {
+                        station_id: stationId,
+                        status: { $in: [BikeStatus.Available, BikeStatus.Reserved] }
+                      }
+                    },
+                    {
+                      $group: {
+                        _id: null,
+                        totalAvailableBikes: { $sum: 1 },
+                        currentlyReservedBikes: {
+                          $sum: { $cond: [{ $eq: ['$status', BikeStatus.Reserved] }, 1, 0] }
+                        }
                       }
                     }
-                  }
-                ])
-                .toArray()
-            ])
+                  ])
+                  .toArray()
+              ])
 
-            if (!stationExists) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.STATION_NOT_FOUND.replace('%s', stationId.toString()),
-                status: HTTP_STATUS.NOT_FOUND
-              })
+              if (!stationExists) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.STATION_NOT_FOUND.replace('%s', stationId.toString()),
+                  status: HTTP_STATUS.NOT_FOUND
+                })
+              }
+
+              const { totalAvailableBikes = 0, currentlyReservedBikes = 0 } = aggResult[0] || {}
+              const RESERVE_QUOTA_PERCENT = parseFloat(process.env.RESERVE_QUOTA_PERCENT || '0.50')
+              const maxAllowedReserved = Math.floor(totalAvailableBikes * RESERVE_QUOTA_PERCENT)
+
+              if (currentlyReservedBikes >= maxAllowedReserved) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.QUOTA_EXCEEDED,
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
+
+              req.station = stationExists
+              req.bike = bike
             }
 
-            const { totalAvailableBikes = 0, currentlyReservedBikes = 0 } = aggResult[0] || {}
-            const RESERVE_QUOTA_PERCENT = parseFloat(process.env.RESERVE_QUOTA_PERCENT || '0.50')
-            const maxAllowedReserved = Math.floor(totalAvailableBikes * RESERVE_QUOTA_PERCENT)
-
-            if (currentlyReservedBikes >= maxAllowedReserved) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.QUOTA_EXCEEDED,
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
-
-            req.station = stationExists
-            req.bike = bike
             return true
           }
         }
       },
+
+      // Common time validation
       start_time: {
         notEmpty: {
           errorMessage: RESERVATIONS_MESSAGE.REQUIRED_START_TIME
@@ -110,7 +134,93 @@ export const reserveBikeValidator = validate(
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }
+            return true
+          }
+        }
+      },
 
+      // FIXED_SLOT-specific
+      slot_start: {
+        optional: true,
+        custom: {
+          options: (value, { req }) => {
+            if (req.body.reservation_option === ReservationOptions.FIXED_SLOT && !value) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.FS_REQUIRED_SLOT_START,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
+        }
+      },
+      slot_end: {
+        optional: true,
+        custom: {
+          options: (value, { req }) => {
+            if (req.body.reservation_option === ReservationOptions.FIXED_SLOT && !value) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.FS_REQUIRED_SLOT_END,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
+        }
+      },
+      days_of_week: {
+        optional: true,
+        custom: {
+          options: (value, { req }) => {
+            if (req.body.reservation_option === ReservationOptions.FIXED_SLOT) {
+              if (!Array.isArray(value) || value.length === 0) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.FS_REQUIRED_DAYS_OF_WEEK,
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
+            }
+            return true
+          }
+        }
+      },
+      recurrence_end_date: {
+        optional: true,
+        custom: {
+          options: (value, { req }) => {
+            if (req.body.reservation_option === ReservationOptions.FIXED_SLOT && !value) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.FS_REQUIRED_RECURRENCE_END_DATE,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
+        }
+      },
+
+      // SUBSCRIPTION-specific
+      subscription_id: {
+        optional: true,
+        custom: {
+          options: async (value, { req }) => {
+            if (req.body.reservation_option === ReservationOptions.SUBSCRIPTION) {
+              if (!value) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.SUB_REQUIRED_SUBSCRIPTION_ID,
+                  status: HTTP_STATUS.BAD_REQUEST
+                })
+              }
+
+              const subscription = await databaseService.subscriptions.findOne({ _id: toObjectId(value) })
+              if (!subscription) {
+                throw new ErrorWithStatus({
+                  message: RESERVATIONS_MESSAGE.SUBSCRIPTION_NOT_FOUND,
+                  status: HTTP_STATUS.NOT_FOUND
+                })
+              }
+              req.subscription = subscription
+            }
             return true
           }
         }
@@ -449,25 +559,25 @@ export const getReservationDetailValidator = validate(
       notEmpty: { errorMessage: RESERVATIONS_MESSAGE.REQUIRED_ID },
       isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'Id') },
       custom: {
-        options: async (value, {req}) => {
-          const {user_id} = req.decoded_authorization as TokenPayLoad
-          const user = await databaseService.users.findOne({_id: toObjectId(user_id)})
-          if(!user){
+        options: async (value, { req }) => {
+          const { user_id } = req.decoded_authorization as TokenPayLoad
+          const user = await databaseService.users.findOne({ _id: toObjectId(user_id) })
+          if (!user) {
             throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace("%s", user_id),
+              message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', user_id),
               status: HTTP_STATUS.NOT_FOUND
             })
           }
 
-          const reservation = await databaseService.reservations.findOne({_id: toObjectId(value)})
-          if(!reservation){
+          const reservation = await databaseService.reservations.findOne({ _id: toObjectId(value) })
+          if (!reservation) {
             throw new ErrorWithStatus({
-              message: RESERVATIONS_MESSAGE.NOT_FOUND.replace("%s", value),
+              message: RESERVATIONS_MESSAGE.NOT_FOUND.replace('%s', value),
               status: HTTP_STATUS.NOT_FOUND
             })
           }
 
-          if(user.role === Role.User && !reservation.user_id.equals(user_id)){
+          if (user.role === Role.User && !reservation.user_id.equals(user_id)) {
             throw new ErrorWithStatus({
               message: RESERVATIONS_MESSAGE.CANNOT_VIEW_OTHER_RESERVATION,
               status: HTTP_STATUS.FORBIDDEN
@@ -476,6 +586,6 @@ export const getReservationDetailValidator = validate(
           return true
         }
       }
-    },
+    }
   })
 )
