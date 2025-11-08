@@ -71,10 +71,7 @@ export async function createRentalFromCardController(
 
   const { mode, rental } = await cardTapService.handleCardTap({ chip_id, card_uid })
 
-  const message =
-    mode === 'ended'
-      ? RENTALS_MESSAGE.CARD_RENTAL_END_SUCCESS
-      : RENTALS_MESSAGE.CARD_RENTAL_START_SUCCESS
+  const message = mode === 'ended' ? RENTALS_MESSAGE.CARD_RENTAL_END_SUCCESS : RENTALS_MESSAGE.CARD_RENTAL_START_SUCCESS
 
   res.json({
     message,
@@ -152,18 +149,26 @@ export async function getMyCurrentRentalsController(req: Request<RentalParams>, 
 }
 
 // staff/admin only
-export async function getAllRentalsController(req: Request, res: Response, next: NextFunction) {
-  const filters: Filter<Rental> = {}
-  if (req.query.start_station) {
-    filters.start_station = toObjectId(req.query.start_station.toString())
-  }
-  if (req.query.end_station) {
-    filters.end_station = toObjectId(req.query.end_station.toString())
-  }
-  if (req.query.status) {
-    filters.status = req.query.status as RentalStatus
-  }
-  await sendPaginatedResponse(res, next, databaseService.rentals, req.query, filters)
+export async function getRentalListController(req: Request, res: Response, next: NextFunction) {
+  const { start_station, end_station, status } = req.query
+  const pipeline = await rentalsService.getRentalListPipeline({
+    start_station: toObjectId(start_station as string),
+    end_station: toObjectId(end_station as string),
+    status: status as RentalStatus
+  })
+  await sendPaginatedAggregationResponse(res, next, databaseService.rentals, req.query, pipeline)
+}
+
+export async function getRentalListByUserIdController(req: Request, res: Response, next: NextFunction) {
+  const user_id = toObjectId(req.params.userId)
+  const { start_station, end_station, status } = req.query
+  const pipeline = await rentalsService.getRentalListByUserIdPipeline({
+    user_id,
+    start_station: toObjectId(start_station as string),
+    end_station: toObjectId(end_station as string),
+    status: status as RentalStatus
+  })
+  await sendPaginatedAggregationResponse(res, next, databaseService.rentals, req.query, pipeline)
 }
 
 export async function getDetailRentalController(req: Request<RentalParams>, res: Response) {
