@@ -107,7 +107,7 @@ rentalsRouter
 
 rentalsRouter
   .route('/')
-  .get(accessTokenValidator, isAdminValidator, wrapAsync(getAllRentalsController))
+  .get(accessTokenValidator, isAdminAndStaffValidator, wrapAsync(getAllRentalsController))
   // user
   .post(
     accessTokenValidator,

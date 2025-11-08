@@ -10,7 +10,7 @@ const fetchAllUserRequests = async ({
   page?: number;
   limit?: number;
   verify?: VerifyStatus;
-  role?: "ADMIN" | "USER" | "STAFF" | "";
+  role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
 }) => {
   try {
     const query: Record<string, number | string> = {
@@ -38,7 +38,7 @@ export const useGetAllUserQuery = ({
   page?: number;
   limit?: number;
   verify?: VerifyStatus;
-  role?: "ADMIN" | "USER" | "STAFF" | "";
+  role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
 }) => {
   return useQuery({
     queryKey: ["all", "user", page, limit, verify , role],

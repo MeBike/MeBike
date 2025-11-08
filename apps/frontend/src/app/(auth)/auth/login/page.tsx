@@ -31,6 +31,8 @@ const Login = () => {
         router.push("/staff");
       } else if (user?.role === "USER") {
         router.push("/user");
+      } else if (user?.role === "SOS") {
+        router.push("/sos/profile");
       }
       resetFormData();
     } else if (isNavigating) {

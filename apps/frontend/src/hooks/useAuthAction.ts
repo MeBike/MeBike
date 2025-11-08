@@ -93,6 +93,7 @@ export const useAuthActions = () => {
           onSuccess: async (result) => {
             const { access_token, refresh_token } = result.data.result;
             setTokens(access_token, refresh_token);
+            window.dispatchEvent(new Event("token:changed"));
             window.dispatchEvent(
               new StorageEvent("storage", { key: "auth_tokens" })
             );

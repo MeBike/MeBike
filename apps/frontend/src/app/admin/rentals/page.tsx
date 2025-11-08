@@ -9,7 +9,7 @@ import type {
   RentalStatus,
 } from "@custom-types";
 import { Plus, Download } from "lucide-react";
-import { useRentalsActions } from "@/hooks/useRentalAction";
+import { useRentalsActions } from "@/hooks/use-rental";
 import { useStationActions } from "@/hooks/useStationAction";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
@@ -346,82 +346,174 @@ export default function RentalsPage() {
         {/* Detail Modal */}
         {isDetailModalOpen && detailData && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-bold text-foreground mb-4">
-                Chi tiết đơn thuê
-              </h2>
+            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-foreground">
+                  Chi tiết đơn thuê
+                </h2>
+                <button
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
 
               <div className="space-y-4">
+                {/* Row 1 */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Mã đơn thuê
                     </label>
-                    <p className="text-foreground">{detailData.result?._id}</p>
+                    <p className="text-foreground font-medium">{detailData.result?._id}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Trạng thái
                     </label>
-                    <p className="text-foreground">
+                    <p className="text-foreground font-medium">
                       {detailData.result?.status}
                     </p>
                   </div>
                 </div>
 
+                {/* Row 2 - User Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
-                      Người dùng
+                      Tên người dùng
                     </label>
-                    <p className="text-foreground">
+                    <p className="text-foreground font-medium">
                       {detailData.result?.user?.fullname}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {detailData.result?.user?.email}
                     </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
-                      Xe đạp
+                      Email
                     </label>
-                    <p className="text-foreground">
-                      {detailData.result?.bike?._id}
+                    <p className="text-foreground text-sm">
+                      {detailData.result?.user?.email}
                     </p>
                   </div>
                 </div>
 
+                {/* Row 3 - User Contact */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Số điện thoại
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.user?.phone_number}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạng thái xác minh
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.user?.verify}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 4 - Bike Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Mã xe đạp
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.bike?._id}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Chip ID
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.bike?.chip_id}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 5 - Bike Status */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạng thái xe
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.bike?.status}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Nhà cung cấp
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.bike?.supplier_id}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 6 - Start Station */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Trạm bắt đầu
                     </label>
-                    <p className="text-foreground">
+                    <p className="text-foreground font-medium">
                       {detailData.result?.start_station?.name}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {detailData.result?.start_station?.address}
                     </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
-                      Trạm kết thúc
+                      Tọa độ trạm bắt đầu
                     </label>
-                    <p className="text-foreground">
-                      {detailData.result?.end_station?.name || "Chưa trả"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {detailData.result?.end_station?.address || ""}
+                    <p className="text-foreground text-sm">
+                      {detailData.result?.start_station?.latitude}, {detailData.result?.start_station?.longitude}
                     </p>
                   </div>
                 </div>
 
+                {/* Row 7 - End Station */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạm kết thúc
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.end_station?.name || "Chưa trả"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {detailData.result?.end_station?.address || ""}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Tọa độ trạm kết thúc
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {detailData.result?.end_station 
+                        ? `${detailData.result.end_station.latitude}, ${detailData.result.end_station.longitude}`
+                        : "Chưa trả"
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 8 - Times */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Thời gian bắt đầu
                     </label>
-                    <p className="text-foreground">
+                    <p className="text-foreground text-sm">
                       {new Date(detailData.result?.start_time).toLocaleString(
                         "vi-VN"
                       )}
@@ -431,7 +523,7 @@ export default function RentalsPage() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Thời gian kết thúc
                     </label>
-                    <p className="text-foreground">
+                    <p className="text-foreground text-sm">
                       {detailData.result?.end_time
                         ? new Date(detailData.result.end_time).toLocaleString(
                             "vi-VN"
@@ -441,12 +533,13 @@ export default function RentalsPage() {
                   </div>
                 </div>
 
+                {/* Row 9 - Duration & Price */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Thời lượng (phút)
                     </label>
-                    <p className="text-foreground">
+                    <p className="text-foreground font-medium">
                       {detailData.result?.duration}
                     </p>
                   </div>
@@ -454,9 +547,33 @@ export default function RentalsPage() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Tổng tiền
                     </label>
-                    <p className="text-foreground">
-                      {detailData.result?.total_price.toLocaleString("vi-VN")}{" "}
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.total_price?.toLocaleString("vi-VN")}{" "}
                       VND
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 10 - Timestamps */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Ngày tạo
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {new Date(detailData.result?.created_at).toLocaleString(
+                        "vi-VN"
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Cập nhật lần cuối
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {new Date(detailData.result?.updated_at).toLocaleString(
+                        "vi-VN"
+                      )}
                     </p>
                   </div>
                 </div>
@@ -469,6 +586,15 @@ export default function RentalsPage() {
                   className="flex-1"
                 >
                   Đóng
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setIsDetailModalOpen(false);
+                    setIsUpdateModalOpen(true);
+                  }}
+                  className="flex-1"
+                >
+                  Cập nhật
                 </Button>
               </div>
             </div>
@@ -497,14 +623,15 @@ export default function RentalsPage() {
                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                     >
                       {detailData.result?.status === "ĐANG THUÊ" && (
-                        <option value="HOÀN THÀNH">HOÀN THÀNH</option>
-                      )}
-                      {detailData.result?.status === "ĐÃ ĐẶT TRƯỚC" && (
-                        <option value="ĐANG THUÊ">ĐANG THUÊ</option>
-                      )}
-                      {detailData.result?.status === "HOÀN THÀNH" && (
                         <>
-                          <option value="HOÀN THÀNH">HOÀN THÀNH</option>
+                          <option value="ĐANG THUÊ">ĐANG THUÊ</option>
+                          <option value="ĐÃ HOÀN THÀNH">ĐÃ HOÀN THÀNH</option>
+                          <option value="ĐÃ HỦY">ĐÃ HỦY</option>
+                        </>
+                      )}
+                      {detailData.result?.status === "ĐÃ HOÀN THÀNH" && (
+                        <>
+                          <option value="ĐÃ HOÀN THÀNH">ĐÃ HOÀN THÀNH</option>
                           <option value="ĐÃ HỦY">ĐÃ HỦY</option>
                         </>
                       )}

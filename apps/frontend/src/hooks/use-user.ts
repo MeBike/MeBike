@@ -56,7 +56,7 @@ export const useUserActions = ({
 }: {
   hasToken: boolean;
   verify?: VerifyStatus;
-  role?: "ADMIN" | "USER" | "STAFF" | "";
+  role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
   limit?: number;
   page?: number;
   searchQuery?: string;

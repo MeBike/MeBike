@@ -70,8 +70,9 @@ function ReportScreen() {
   const { bike_id, station_id, rental_id } = params || {};
   const insets = useSafeAreaInsets();
   const { isAuthenticated } = useAuth();
-
-  const { createReport, isCreatingReport } = useReportActions();
+  const [page , setPage] = useState(1);
+  const [limit] = useState(10);
+  const { createReport, isCreatingReport } = useReportActions({ page, limit });
 
   const [reportType, setReportType] = useState("");
   const [message, setMessage] = useState("");

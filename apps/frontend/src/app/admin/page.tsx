@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { useUserActions } from "@/hooks/use-user";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { useGetRevenueQuery } from "@/hooks/query/Rent/useGetRevenueQuery";
-import { useRentalsActions } from "@/hooks/useRentalAction";
+import { useRentalsActions } from "@/hooks/use-rental";
 export default function DashboardPage() {
   const { user } = useAuth();
   const {
