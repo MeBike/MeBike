@@ -13,6 +13,7 @@ import type { RootStackParamList } from "./types/navigation";
 import BookingHistoryDetail from "./screen/BookingHistoryDetail";
 import BookingHistoryScreen from "./screen/BookingHistoryScreen";
 import ChangePasswordScreen from "./screen/ChangePasswordScreen";
+import EmailVerificationScreen from "./screen/EmailVerification";
 import ForgotPasswordScreen from "./screen/ForgotPassword";
 import HomeScreen from "./screen/Home";
 import IntroScreen from "./screen/Intro";
@@ -138,6 +139,11 @@ export default function App() {
             <Stack.Screen
               name="Register"
               component={RegisterScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="EmailVerification"
+              component={EmailVerificationScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen

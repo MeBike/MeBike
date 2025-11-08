@@ -143,7 +143,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phone, setPhone] = useState("");
-  const { register, isRegistering, logIn } = useAuth();
+  const { register, isRegistering, resendVerifyEmail , resetPassword } = useAuth();
   const isLoading = isRegistering;
 
   const clearForm = () => {
@@ -153,29 +153,33 @@ export default function RegisterScreen() {
     setConfirmPassword("");
     setPhone("");
   };
-  const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword || !phone) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
-      return;
-    }
-    register({
-      fullname: name,
-      email,
-      password,
-      confirm_password: confirmPassword,
-      phone_number: phone,
-    });
-    clearForm();
-    setTimeout(() => {
-      navigation.navigate("Main");
-    }, 1000);
+  const handleRegister = () => {
     if (password !== confirmPassword) {
       Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
       return;
     }
     if (password.length < 6) {
       Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự");
+      return;
     }
+    if (!name || !email || !password || !confirmPassword || !phone) {
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
+      return;
+    }
+    
+    register({
+      fullname: name,
+      email,
+      password,
+      confirm_password: confirmPassword,
+      phone_number: phone,
+    }).then(() => {
+      clearForm();
+      // Chuyển sang trang verify email thay vì Main
+      navigation.navigate("EmailVerification", { email });
+    }).catch((error) => {
+      console.log("Register error:", error);
+    });
   };
 
   const goToLogin = () => {

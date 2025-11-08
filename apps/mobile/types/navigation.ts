@@ -13,6 +13,7 @@ export type RootStackParamList = {
   Login: undefined;
   Intro: undefined;
   Register: undefined;
+  EmailVerification: { email: string };
   StationDetail: { stationId: string };
   Trạm: undefined;
   Modal: undefined;
