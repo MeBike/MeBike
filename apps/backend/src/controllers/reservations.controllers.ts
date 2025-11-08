@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
 import { Filter, ObjectId } from 'mongodb'
-import { GroupByOptions, ReservationStatus, Role } from '~/constants/enums'
+import { GroupByOptions, ReservationOptions, ReservationStatus, Role } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RESERVATIONS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -17,6 +17,7 @@ import { TokenPayLoad } from '~/models/requests/users.requests'
 import Reservation from '~/models/schemas/reservation.schema'
 import Station from '~/models/schemas/station.schema'
 import databaseService from '~/services/database.services'
+import fixedSlotService from '~/services/fixed-slot.services'
 import reservationsService from '~/services/reservations.services'
 import { buildAdminReservationFilter } from '~/utils/filters.helper'
 import { sendPaginatedResponse } from '~/utils/pagination.helper'
@@ -44,18 +45,64 @@ export async function getReservationListController(req: Request, res: Response, 
   await sendPaginatedResponse(res, next, databaseService.reservations, req.query, filter)
 }
 
-export async function reserveBikeController(req: Request<ParamsDictionary, any, ReserveBikeReqBody>, res: Response) {
-  const { user_id } = req.decoded_authorization as TokenPayLoad
-  const objUserId = toObjectId(user_id)
-  const station = req.station as Station
-  const objStationId = toObjectId(req.bike?.station_id as ObjectId)
+// export async function reserveBikeController(req: Request<ParamsDictionary, any, ReserveBikeReqBody>, res: Response) {
+//   const { user_id } = req.decoded_authorization as TokenPayLoad
+//   const objUserId = toObjectId(user_id)
+//   const station = req.station as Station
+//   const objStationId = toObjectId(req.bike?.station_id as ObjectId)
 
-  const result = await reservationsService.reserveBike({
-    user_id: objUserId,
-    bike: req.bike!,
-    station,
-    start_time: req.body.start_time
-  })
+//   const result = await reservationsService.reserveBike({
+//     user_id: objUserId,
+//     bike: req.bike!,
+//     station,
+//     start_time: req.body.start_time
+//   })
+//   res.json({
+//     message: RESERVATIONS_MESSAGE.RESERVE_SUCCESS,
+//     result
+//   })
+// }
+
+export async function reserveBikeController(
+  req: Request<ParamsDictionary, any, ReserveBikeReqBody>,
+  res: Response
+) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  const userId = toObjectId(user_id)
+  const option = req.body.reservation_option
+  const station = req.station as Station
+
+  let result
+
+  if (option === ReservationOptions.ONE_TIME) {
+    result = await reservationsService.reserveOneTime({
+      user_id: userId,
+      bike_id: toObjectId(req.body.bike_id!),
+      station_id: station._id as ObjectId,
+      start_time: new Date(req.body.start_time)
+    })
+  } 
+  else if (option === ReservationOptions.FIXED_SLOT) {
+    result = await fixedSlotService.createTemplate({
+      user_id: userId,
+      station_id: station._id as ObjectId,
+      slot_start: req.body.slot_start!,
+      slot_end: req.body.slot_end!,
+      days_of_week: req.body.days_of_week!,
+      start_date: new Date(req.body.start_time),
+      end_date: new Date(req.body.recurrence_end_date!)
+    })
+  } 
+  else if (option === ReservationOptions.SUBSCRIPTION) {
+    result = await reservationsService.reserveWithSubscription({
+      user_id: userId,
+      bike_id: toObjectId(req.body.bike_id!),
+      station_id: station._id as ObjectId,
+      start_time: new Date(req.body.start_time),
+      subscription_id: toObjectId(req.body.subscription_id!)
+    })
+  }
+
   res.json({
     message: RESERVATIONS_MESSAGE.RESERVE_SUCCESS,
     result

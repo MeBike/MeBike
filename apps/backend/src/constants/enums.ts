@@ -163,3 +163,21 @@ export enum SummaryPeriodType {
   TODAY = 'HÔM NAY',
   THIS_MONTH = 'THÁNG NÀY',
 }
+
+export enum ReservationOptions {
+  ONE_TIME = 'MỘT LẦN',
+  FIXED_SLOT = 'KHUNG GIỜ CỐ ĐỊNH',
+  SUBSCRIPTION = 'GÓI THÁNG'
+}
+
+export enum SubscriptionStatus {
+  ACTIVE = 'ĐANG HOẠT ĐỘNG',
+  EXPIRED = 'ĐÃ HẾT HẠN',
+  CANCELLED = 'ĐÃ HUỶ'
+}
+
+export enum FixedSlotStatus {
+  ACTIVE = 'ĐANG HOẠT ĐỘNG',
+  EXPIRED = 'ĐÃ HẾT HẠN',
+  CANCELLED = 'ĐÃ HUỶ'
+}

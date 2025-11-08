@@ -357,6 +357,15 @@ export const RESERVATIONS_MESSAGE = {
   REQUIRED_DESTINATION_STATION_ID: 'Vui lòng cung cấp Id trạm đích',
   REQUIRED_BIKE_LIST: 'Danh sách xe cần điều phối không được để trống',
   REQUIRED_CONFIRM_REASON: 'Vui lòng nhập nguyên nhân xác nhận phiên đặt trước này',
+  REQUIRED_OPTIONS: 'Loại đặt chỗ là bắt buộc',
+  // Fixed slot (FS)
+  FS_REQUIRED_SLOT_START: 'Vui lòng nhập thời gian bắt đầu khung giờ (slot_start)',
+  FS_REQUIRED_SLOT_END: 'Thiếu thời gian kết thúc khung giờ (slot_end)',
+  FS_REQUIRED_DAYS_OF_WEEK: 'Thiếu danh sách ngày trong tuần (days_of_week)',
+  FS_REQUIRED_RECURRENCE_END_DATE: 'Thiếu ngày kết thúc lặp lại (recurrence_end_date)',
+  // Subscription (SUB)
+  SUB_REQUIRED_SUBSCRIPTION_ID: 'Vui lòng nhập ID gói đăng ký (subscription_id)',
+  SUBSCRIPTION_NOT_FOUND: 'Không tìm thấy gói đăng ký',
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
@@ -375,6 +384,7 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_END_DATE: 'Ngày kết thúc không hợp lệ: %s',
   START_DATE_AFTER_END_DATE: 'Ngày bắt đầu không được phép lớn hơn ngày kết thúc',
   INVALID_GROUP_BY: 'groupBy phải là một trong: %s',
+  INAVLID_OPTIONS: 'Loại đặt chỗ không hợp lệ',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
@@ -384,7 +394,7 @@ export const RESERVATIONS_MESSAGE = {
   DESTINATION_STATION_NOT_FOUND: 'Không tìm thấy trạm đích với Id %s',
   BIKE_NOT_FOUND_IN_LIST: 'Danh sách chứa Id xe không tồn tại',
   // Unavailable object
-  UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
+  UNAVAILABLE_BIKE: 'Xe không khả dụng',
   BIKE_NOT_AVAILABLE_FOR_DISPATCH: 'Xe (Id: %s) không có sẵn để điều phối (trạng thái: %s)',
   // Not allowed action
   CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền huỷ phiên đặt trước của người khác',
@@ -402,8 +412,8 @@ export const RESERVATIONS_MESSAGE = {
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
   // Payment
-  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s',
-  REFUND_DESCRIPTION: 'Hoàn tiền cho phiên đặt trước của xe %s',
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước với ID: %s',
+  REFUND_DESCRIPTION: 'Hoàn tiền cho phiên đặt trước với ID: %s',
   // Quota
   QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước',
   DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',
