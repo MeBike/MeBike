@@ -26,6 +26,7 @@ export default function LoginScreen() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
   const rotateAnim = new Animated.Value(0);
   const { logIn, isLoggingIn, isLoading, forgotPassword, isLoadingForgottingPassword } = useAuth();
@@ -134,30 +135,56 @@ export default function LoginScreen() {
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập email của bạn"
-              placeholderTextColor={BikeColors.textSecondary}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="envelope"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.inputIconStyle}
+                placeholder="Nhập email của bạn"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Mật khẩu</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập mật khẩu"
-              placeholderTextColor={BikeColors.textSecondary}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="lock"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.inputIconStyle}
+                placeholder="Nhập mật khẩu"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <View style={styles.eyeButtonContainer}>
+                <Pressable
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeButton}
+                >
+                  <IconSymbol
+                    name={showPassword ? "eye.slash" : "eye"}
+                    size={20}
+                    color={BikeColors.textSecondary}
+                  />
+                </Pressable>
+              </View>
+            </View>
           </View>
 
           <Pressable style={styles.forgotPassword} onPress={() => handleForgotPassword()}>
@@ -248,13 +275,13 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
     color: BikeColors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   input: {
     borderWidth: 1,
@@ -265,6 +292,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: BikeColors.textPrimary,
     backgroundColor: "white",
+  },
+  inputWithIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: BikeColors.divider,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: "white",
+  },
+  inputIconStyle: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 15,
+    color: BikeColors.textPrimary,
+  },
+  eyeButton: {
+    padding: 4,
+  },
+  eyeButtonContainer: {
+    marginLeft: 8,
   },
   forgotPassword: {
     alignSelf: "flex-end",

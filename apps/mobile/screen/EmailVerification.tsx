@@ -154,7 +154,7 @@ export default function EmailVerificationScreen() {
   const { verifyEmail, resendVerifyEmail } = useAuth();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(OTP_EXPIRY);
-  const [resendTimeLeft, setResendTimeLeft] = useState(0);
+  const [resendTimeLeft, setResendTimeLeft] = useState(RESEND_COOLDOWN); // Start with 10 min disabled
   const [isVerifying, setIsVerifying] = useState(false);
   const otpInputRefs = useRef<(TextInput | null)[]>([]);
 
@@ -168,7 +168,8 @@ export default function EmailVerificationScreen() {
           clearInterval(timer);
           Alert.alert("Lỗi", "Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại.");
           setOtp(["", "", "", "", "", ""]);
-          setResendTimeLeft(RESEND_COOLDOWN);
+          // Khi OTP hết hạn, cho phép gửi lại ngay (set resendTimeLeft = 0)
+          setResendTimeLeft(0);
           return 0;
         }
         return prev - 1;

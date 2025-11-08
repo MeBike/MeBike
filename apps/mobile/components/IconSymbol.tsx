@@ -14,7 +14,7 @@ import React from "react";
 // Add your SFSymbol to MaterialIcons mappings here.
 const MAPPING = {
   "house.fill": "home",
-  "house": "home-outlined",
+  "house": "home",
   "arrow.left": "arrow-back",
   "arrow.right": "arrow-forward",
   "arrow.up": "arrow-upward",
@@ -28,17 +28,17 @@ const MAPPING = {
 
   // Communication & Social
   "paperplane.fill": "send",
-  "paperplane": "send-outlined",
+  "paperplane": "send",
   "envelope.fill": "mail",
-  "envelope": "mail-outline",
+  "envelope": "mail",
   "phone.fill": "phone",
-  "phone": "phone-outlined",
+  "phone": "phone",
   "message.fill": "chat",
-  "message": "chat-bubble-outline",
+  "message": "chat",
   "bell.fill": "notifications",
-  "bell": "notifications-none",
+  "bell": "notifications",
   "heart.fill": "favorite",
-  "heart": "favorite-border",
+  "heart": "favorite",
 
   // Actions & Controls
   "plus": "add",
@@ -46,14 +46,12 @@ const MAPPING = {
   "xmark": "close",
   "checkmark": "check",
   "checkmark.circle.fill": "check-circle",
-  "checkmark.circle": "check-circle-outline",
+  "checkmark.circle": "check-circle",
   "checkmark.square.fill": "check-box",
-  "checkmark.square": "check-box-outline-blank",
+  "checkmark.square": "check-box",
   "multiply": "clear",
   "trash.fill": "delete",
-  "trash": "delete-outline",
-
-  // Editing & Creation
+  "trash": "delete",
   "pencil": "edit",
   "pencil.and.list.clipboard": "edit-note",
   "square.and.pencil": "edit",
@@ -66,11 +64,11 @@ const MAPPING = {
 
   // Media & Content
   "photo.fill": "image",
-  "photo": "image-outlined",
+  "photo": "image",
   "camera.fill": "camera-alt",
   "camera": "camera-alt",
   "video.fill": "videocam",
-  "video": "videocam-off",
+  "video": "videocam",
   "music.note": "music-note",
   "speaker.wave.2.fill": "volume-up",
   "speaker.slash.fill": "volume-off",
@@ -83,20 +81,20 @@ const MAPPING = {
   "gearshape.fill": "settings",
   "slider.horizontal.3": "tune",
   "info.circle.fill": "info",
-  "info.circle": "info-outlined",
+  "info.circle": "info",
   "exclamationmark.triangle.fill": "warning",
-  "exclamationmark.triangle": "warning-amber",
+  "exclamationmark.triangle": "warning",
   "questionmark.circle.fill": "help",
-  "questionmark.circle": "help-outline",
+  "questionmark.circle": "help",
 
   // Shapes & Symbols
   "square": "square",
   "circle": "circle",
   "triangle.fill": "change-history",
   "star.fill": "star",
-  "star": "star-border",
+  "star": "star",
   "bookmark.fill": "bookmark",
-  "bookmark": "bookmark-border",
+  "bookmark": "bookmark",
 
   // Technology & Code
   "chevron.left.forwardslash.chevron.right": "code",
@@ -105,6 +103,7 @@ const MAPPING = {
   "antenna.radiowaves.left.and.right": "signal-cellular-alt",
   "battery.100": "battery-full",
   "battery.25": "battery-2-bar",
+  "lock": "lock",
   "lock.fill": "lock",
   "lock.open.fill": "lock-open",
   "bicycle.circle.fill": "directions-bike",
@@ -113,7 +112,7 @@ const MAPPING = {
 
   // Shopping & Commerce
   "cart.fill": "shopping-cart",
-  "cart": "shopping-cart-outlined",
+  "cart": "shopping-cart",
   "creditcard.fill": "credit-card",
   "creditcard": "credit-card",
   "dollarsign.circle.fill": "monetization-on",
@@ -153,7 +152,9 @@ const MAPPING = {
   "arrow.up.arrow.down": "sort",
 
   // Visibility & Display
+  "eye": "visibility",
   "eye.fill": "visibility",
+  "eye.slash": "visibility-off",
   "eye.slash.fill": "visibility-off",
   "lightbulb.fill": "lightbulb",
   "moon.fill": "dark-mode",
