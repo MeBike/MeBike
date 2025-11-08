@@ -172,7 +172,7 @@ export default function PricingPage() {
                     Làm sao để thanh toán?
                   </h3>
                   <p className="text-muted-foreground">
-                    Bạn có thể thanh toán qua app MetroBike bằng thẻ tín dụng,
+                    Bạn có thể thanh toán qua app MeBike bằng thẻ tín dụng,
                     ví điện tử (MoMo, ZaloPay) hoặc chuyển khoản ngân hàng.
                   </p>
                 </Card>
@@ -182,7 +182,7 @@ export default function PricingPage() {
                     Có thể trả xe ở trạm khác không?
                   </h3>
                   <p className="text-muted-foreground">
-                    Có, bạn có thể trả xe tại bất kỳ trạm MetroBike nào trên hệ
+                    Có, bạn có thể trả xe tại bất kỳ trạm MeBike nào trên hệ
                     thống. Không cần trả về trạm ban đầu.
                   </p>
                 </Card>

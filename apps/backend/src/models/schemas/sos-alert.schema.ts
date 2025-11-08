@@ -43,7 +43,7 @@ export default class SosAlert {
     this.rental_id = alert.rental_id;
     this.requester_id = alert.requester_id;
     this.bike_id = alert.bike_id;
-    this.photos = alert.photos || []
+    this.photos = alert.photos ?? []
     this.issue = alert.issue;
     this.location = {
       type: 'Point',

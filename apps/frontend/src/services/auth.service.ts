@@ -16,6 +16,10 @@ interface AuthResponse {
   };
 }
 interface MessageResponse {
+  result?: {
+    access_token: string;
+    refresh_token: string;
+  };
   message: string;
 }
 export const ROLES = ["USER", "ADMIN", "STAFF"] as const;
@@ -29,7 +33,7 @@ export interface DetailUser {
   username: string;
   phone_number: string;
   avatar: string;
-  role: "STAFF" | "ADMIN" | "USER";
+  role: "STAFF" | "ADMIN" | "USER" | "SOS";
   nfc_card_uid: string;
   email_verify_otp_expires: string;
   forgot_password_otp_expires: string;

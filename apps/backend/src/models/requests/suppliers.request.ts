@@ -12,6 +12,7 @@ export type GetSupplierReqQuery = {
   status?: SupplierStatus
   limit?: string
   page?: string
+  name?: string
 }
 
 export type UpdateSupplierReqBody = Partial<CreateSupplierReqBody>

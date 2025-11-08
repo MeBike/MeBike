@@ -5,10 +5,10 @@ import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { Bike, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@/components/ui/progress";
-import { useUserActions } from "@/hooks/useUserAction";
+import { useUserActions } from "@/hooks/use-user";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { useGetRevenueQuery } from "@/hooks/query/Rent/useGetRevenueQuery";
-import { useRentalsActions } from "@/hooks/useRentalAction";
+import { useRentalsActions } from "@/hooks/use-rental";
 export default function DashboardPage() {
   const { user } = useAuth();
   const {
@@ -34,12 +34,6 @@ export default function DashboardPage() {
   const monthlyRev = monthlyRevenue?.data[0]?.totalRevenue || 0;
   const lastMonthlyRev = lastMonthlyRevenue?.data[0]?.totalRevenue || 0;
   const changePercent = lastMonthlyRev ? Math.round((monthlyRev - lastMonthlyRev) / lastMonthlyRev * 100) : 0;
-  let changeType: "positive" | "negative" | "neutral";
-  if (lastMonthlyRev === 0) {
-    changeType = monthlyRev > 0 ? "positive" : "neutral";
-  } else {
-    changeType = changePercent > 0 ? "positive" : changePercent < 0 ? "negative" : "neutral";
-  }
   const changePercentBike = statisticData?.result["CÓ SẴN"]
     ? Math.round((statisticData.result["CÓ SẴN"] / totalRecord || 1) * 100)
     : 0;
@@ -79,7 +73,11 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               title="Tổng lượt thuê hôm nay"
-              value={dashboardSummaryData ? dashboardSummaryData.result.revenueSummary.today.totalRentals.toString() : "0"}
+              value={
+                dashboardSummaryData
+                  ? dashboardSummaryData.result.revenueSummary.today.totalRentals.toString()
+                  : "0"
+              }
               change={`${changeRentPercent}% so với hôm qua`}
               changeType={changeRentPercent > 1 ? "positive" : "negative"}
               icon={Bike}
@@ -88,7 +86,7 @@ export default function DashboardPage() {
               title="Xe đang cho thuê"
               value={
                 statisticData
-                  ? statisticData.result["ĐANG ĐƯỢC THUÊ"].toString()
+                  ? statisticData.result["ĐANG ĐƯỢC THUÊ"]?.toString()
                   : "0"
               }
               change={`${changePercentBike > 1 ? "+" : ""}${changePercentBike}% so với tháng trước`}
@@ -121,7 +119,7 @@ export default function DashboardPage() {
               title="Doanh thu tháng này"
               value={formattedValue ? formattedValue : "0 ₫"}
               change={`${changePercent > 1 ? "+" : ""}${changePercent}% so với tháng trước`}
-              changeType={changeType}
+              changeType={changePercent > 1 ? "positive" : changePercent < 1 ? "negative" : "neutral"}
               icon={DollarSign}
             />
           </div>
@@ -129,12 +127,18 @@ export default function DashboardPage() {
 
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <RentalChart data={dashboardSummaryData?.result.hourlyRentalStats.map((stat: { hour: string; totalRentals: number }) => ({
-              time: stat.hour,
-              rentals: stat.totalRentals
-            })) || []} />
+            <RentalChart
+              data={
+                dashboardSummaryData?.result.hourlyRentalStats.map(
+                  (stat: { hour: string; totalRentals: number }) => ({
+                    time: stat.hour,
+                    rentals: stat.totalRentals,
+                  })
+                ) || []
+              }
+            />
           </div>
-          <div className="lg:col-span-1">c
+          <div className="lg:col-span-1">
             <RecentActivity />
           </div>
         </section>

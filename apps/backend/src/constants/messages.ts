@@ -494,7 +494,8 @@ export const WALLETS_MESSAGE = {
   WITHDRAW_NOT_FOUND: 'Không tìm thấy yêu cầu rút tiền',
   GET_WALLET_OVERVIEW_SUCCESS: 'Lấy tổng quan ví thành công',
   GET_REFUND_OVERVIEW_SUCCESS: 'Lấy tổng quan yêu cầu hoàn tiền thành công',
-  GET_WITHDRAW_OVERVIEW_SUCCESS: 'Lấy tổng quan yêu cầu rút tiền thành công'
+  GET_WITHDRAW_OVERVIEW_SUCCESS: 'Lấy tổng quan yêu cầu rút tiền thành công',
+  FEE_EXCEEDS_AMOUNT: 'Phí không được vượt quá số tiền nạp'
 }
 
 export const WITHDRAWLS_MESSAGE = {
@@ -593,7 +594,7 @@ export const SOS_MESSAGE = {
   INVALID_NOTE_LENGTH: 'Độ dài của ghi chú không được vượt quá 500 kí tự',
   INVALID_SOLVABLE: 'Khả năng xử lí sự cố phải là đúng hoặc sai',
   INVALID_PHOTO: 'Mỗi ảnh phải là kiểu chuỗi hợp lệ',
-  INVALID_PHOTO_FORMAT: 'Mỗi ảnh phải là Base64 hoặc URL hợp lệ (jpg, png, webp)',
+  INVALID_PHOTO_URL: 'Mỗi ảnh phải là 1 URL hợp lệ',
   INVALID_PHOTOS_ARRAY: 'Danh sách ảnh phải là 1 mảng từ 1-5 ảnh',
   INVALID_STATUS: 'Trạng thái không hợp lệ',
   SOS_DISPATCHED_SUCCESS: 'Đã phân đội xử lí cho yêu cầu cứu hộ',

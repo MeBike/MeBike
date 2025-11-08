@@ -3,7 +3,7 @@ import type { RentalSchemaFormData, UpdateRentalSchema } from "@schemas/rentalSc
 import fetchHttpClient from "@lib/httpClient";
 import type { RentingHistory } from "@custom-types";
 import { StatwithRevenue } from "@custom-types";
-import { DetailRentalReponse } from "@custom-types";
+import { RentalRecord} from "@custom-types";
 export type Pagination = {
   limit: number;
   currentPage: number;
@@ -189,20 +189,18 @@ export const rentalService = {
   }): Promise<AxiosResponse<DetailApiResponse<StatwithRevenue>>> => {
     const response = await fetchHttpClient.get<
       DetailApiResponse<StatwithRevenue>
-    >(RENTAL_ENDPOINTS.GET_REVENUE(), 
-     {
-        from,
-        to,
-        groupBy,
-      },
-    );
+    >(RENTAL_ENDPOINTS.GET_REVENUE(), {
+      from,
+      to,
+      groupBy,
+    });
     return response;
   },
   getDetailRental: async (
     id: string
-  ): Promise<AxiosResponse<DetailApiResponse<DetailRentalReponse>>> => {
+  ): Promise<AxiosResponse<DetailApiResponse<RentalRecord>>> => {
     const response = await fetchHttpClient.get<
-      DetailApiResponse<DetailRentalReponse>
+      DetailApiResponse<RentalRecord>
     >(RENTAL_ENDPOINTS.DETAIL_RENTAL(id));
     return response;
   },
@@ -216,12 +214,14 @@ export const rentalService = {
     );
     return response;
   },
-  getDashboardRentalStats: async (): Promise<AxiosResponse<DetailApiResponse<Dashboardsummary>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Dashboardsummary>>(
-      RENTAL_ENDPOINTS.DASHBOARD_RENTAL_STATS()
-    );
+  getDashboardRentalStats: async (): Promise<
+    AxiosResponse<DetailApiResponse<Dashboardsummary>>
+  > => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<Dashboardsummary>
+    >(RENTAL_ENDPOINTS.DASHBOARD_RENTAL_STATS());
     return response;
-  }
+  },
   // staffAdminUpdateDetailRental: async (
   //   id: string,
   //   data: any

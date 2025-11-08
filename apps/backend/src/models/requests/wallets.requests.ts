@@ -32,6 +32,8 @@ export type GetWalletReqQuery = {
   page?: string
   status?: WalletStatus,
   user_id?: string
+  email?: string
+  wallet_id?: string
 }
 
 export type CreateWithdrawlReqBody = {

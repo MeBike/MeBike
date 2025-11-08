@@ -137,7 +137,7 @@ class DatabaseService {
   }
 
   get sos_alerts(): Collection<SosAlert> {
-    return this.db.collection(process.env.SOS_ALERT_COLLECTION as string)
+    return this.db.collection(process.env.DB_SOS_ALERT_COLLECTION as string)
   }
 
   get subscriptions(): Collection<Subscription> {

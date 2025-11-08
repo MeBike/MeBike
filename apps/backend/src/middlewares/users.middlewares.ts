@@ -19,6 +19,7 @@ import databaseService from "~/services/database.services";
 import usersService from "~/services/users.services";
 import { verifyToken } from "~/utils/jwt";
 import { validate } from "~/utils/validation";
+import { toObjectId } from "~/utils/string";
 
 const fullNameSchema: ParamSchema = {
   notEmpty: {
@@ -158,9 +159,14 @@ export const registerValidator = validate(
         },
         trim: true,
         custom: {
-          options: (value: string) => {
+          options: async (value: string, { req }: Meta) => {
             if (!VIETNAMESE_PHONE_NUMBER_REGEX.test(value)) {
               throw new Error(USERS_MESSAGES.PHONE_NUMBER_IS_INVALID);
+            }
+            //check phone number already exists
+            const existing = await databaseService.users.findOne({ phone_number: value });
+            if (existing) {
+              throw new Error(USERS_MESSAGES.PHONE_NUMBER_ALREADY_EXISTS);
             }
             return true;
           },
@@ -923,3 +929,27 @@ export const adminCreateUserValidator = validate(
     ['body']
   )
 )
+
+export const checkUserExist = async(req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {userId} = req.params
+    if(!userId){
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_ID_IS_REQUIRED,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+    const user = await databaseService.users.findOne({_id: toObjectId(userId)})
+    if(!user){
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    req.user = user
+    next()
+  } catch (error) {
+    next(error)
+  }
+}

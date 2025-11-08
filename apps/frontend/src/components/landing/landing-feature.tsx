@@ -34,7 +34,7 @@ export function Features() {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 text-balance">
-            Tại sao chọn MetroBike?
+            Tại sao chọn MeBike?
           </h2>
           <p className="text-lg text-muted-foreground text-pretty">
             Giải pháp di chuyển thông minh, tiết kiệm và thân thiện với môi

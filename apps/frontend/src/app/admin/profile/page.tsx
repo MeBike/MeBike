@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+
 import { useEffect, useState } from "react";
 import type { DetailUser } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ import { Progress } from "@radix-ui/react-progress";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import Image from "next/image";
 import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
+import Link from "next/link";
+import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -21,7 +24,9 @@ export default function ProfilePage() {
     () => user || ({} as DetailUser)
   );
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
-  const { resendVerifyEmail } = useAuthActions();
+  const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const { resendVerifyEmail, verifyEmail } = useAuthActions();
   useEffect(() => {
     if (user) {
       setData(user);
@@ -57,11 +62,10 @@ export default function ProfilePage() {
       "username",
       "phone_number",
       "location",
-      "avatar",
     ];
 
     const updatedData = fields.reduce((acc, field) => {
-      const newValue = field === "avatar" ? avatarPreview : formData[field];
+      const newValue = formData[field];
       const oldValue = user[field as keyof DetailUser] ?? "";
 
       if (newValue !== oldValue) {
@@ -90,6 +94,17 @@ export default function ProfilePage() {
       return;
     }
     resendVerifyEmail();
+    setIsVerifyEmailModalOpen(true);
+  };
+
+  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
+    setIsVerifyingEmail(true);
+    try {
+      await verifyEmail({ email, otp });
+      setIsVerifyEmailModalOpen(false);
+    } finally {
+      setIsVerifyingEmail(false);
+    }
   };
   return (
     <div>
@@ -135,13 +150,14 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 bg-muted">
                   <Image
                     src={avatarPreview || "/placeholder.svg"}
                     alt="Avatar"
                     className="w-full h-full object-cover"
                     width={128}
                     height={128}
+                    priority
                   />
                 </div>
                 {isEditing && (
@@ -177,7 +193,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Form Section */}
             <div className="flex-1 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -200,8 +215,6 @@ export default function ProfilePage() {
                     )}
                   />
                 </div>
-
-                {/* Username */}
                 <div className="space-y-2">
                   <Label
                     htmlFor="username"
@@ -243,8 +256,6 @@ export default function ProfilePage() {
                     )}
                   />
                 </div>
-
-                {/* Phone Number */}
                 <div className="space-y-2">
                   <Label
                     htmlFor="phone"
@@ -265,8 +276,6 @@ export default function ProfilePage() {
                     )}
                   />
                 </div>
-
-                {/* Location */}
                 <div className="space-y-2 md:col-span-2">
                   <Label
                     htmlFor="location"
@@ -289,7 +298,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Account Info */}
               <div className="pt-6 border-t border-border">
                 <h3 className="text-sm font-semibold text-foreground mb-4">
                   Thông tin tài khoản
@@ -355,7 +363,11 @@ export default function ProfilePage() {
                   Cập nhật mật khẩu của bạn
                 </p>
               </div>
-              <Button variant="outline">Thay đổi</Button>
+              <Link href="/user/profile/change-password">
+                <Button variant="outline" className="cursor-pointer">
+                  Thay đổi
+                </Button>
+              </Link>
             </div>
             <div className="flex items-center justify-between pt-4 border-t border-border">
               <div>
@@ -364,21 +376,41 @@ export default function ProfilePage() {
                   Tăng cường bảo mật tài khoản
                 </p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => handleResendVerifyEmail()}
-                className="gap-2"
-                disabled={formData?.verify === "VERIFIED"}
-              >
-                <Mail className="w-4 h-4" />
-                {formData?.verify === "VERIFIED"
-                  ? "Đã xác thực"
-                  : "Gửi email xác thực"}
-              </Button>
+
+              <div className="flex gap-2">
+                {formData?.verify !== "VERIFIED" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsVerifyEmailModalOpen(true)}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Xác thực với OTP
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => handleResendVerifyEmail()}
+                  className="gap-2 cursor-pointer"
+                  disabled={formData?.verify === "VERIFIED"}
+                >
+                  <Mail className="w-4 h-4" />
+                  {formData?.verify === "VERIFIED"
+                    ? "Đã xác thực"
+                    : "Gửi email xác thực"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <VerifyEmailModal
+        isOpen={isVerifyEmailModalOpen}
+        onClose={() => setIsVerifyEmailModalOpen(false)}
+        onSubmit={handleVerifyEmailSubmit}
+        isLoading={isVerifyingEmail}
+      />
     </div>
   );
 }

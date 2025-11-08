@@ -31,6 +31,8 @@ const Login = () => {
         router.push("/staff");
       } else if (user?.role === "USER") {
         router.push("/user");
+      } else if (user?.role === "SOS") {
+        router.push("/sos/profile");
       }
       resetFormData();
     } else if (isNavigating) {
@@ -41,14 +43,17 @@ const Login = () => {
     setEmail("");
     setPassword("");
   };
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoggingIn || isLoading || isNavigating) return;
     setIsNavigating(true);
-    logIn({ email, password }, (success) => {
-      if (!success) setIsNavigating(false);
-    });
-    resetFormData();
+    try {
+      await logIn({ email, password });
+      resetFormData();
+    } catch (error) {
+      console.error("Login failed:", error);
+      setIsNavigating(false);
+    }
   };
 
   return (
@@ -64,7 +69,7 @@ const Login = () => {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
-            MetroBike
+            MeBike
           </h1>
         </div>
         <Card className="shadow-floating border-0 bg-white/95 backdrop-blur-xl relative z-10 overflow-hidden animate-scale-in">

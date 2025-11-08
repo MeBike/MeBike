@@ -1,14 +1,13 @@
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
-import axios from "axios";
-import { Platform } from "react-native";
-
 import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
   setTokens,
 } from "@utils/tokenManager";
+import axios from "axios";
+import { Platform } from "react-native";
 
 export const HTTP_STATUS = {
   OK: 200,
@@ -55,7 +54,7 @@ export class FetchHttpClient {
           "API Error:",
           error.response?.status,
           error.config?.url,
-          error.response?.data
+          error.response?.data,
         );
         const originalRequest = error.config;
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
@@ -82,10 +81,12 @@ export class FetchHttpClient {
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
             return this.axiosInstance(originalRequest);
-          } catch (refreshError) {
+          }
+          catch (refreshError) {
             this.processQueue(refreshError, null);
             return Promise.reject(refreshError);
-          } finally {
+          }
+          finally {
             this.isRefreshing = false;
           }
         }
@@ -110,7 +111,7 @@ export class FetchHttpClient {
         // }
 
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -196,10 +197,10 @@ export class FetchHttpClient {
 }
 
 function getBaseUrl() {
-  if (process.env.EXPO_PUBLIC_API_BASE_URL) {
-    console.log(`Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`);
-    return process.env.EXPO_PUBLIC_API_BASE_URL;
-  }
+  // if (process.env.EXPO_PUBLIC_API_BASE_URL) {
+  //   console.log(`Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`);
+  //   return process.env.EXPO_PUBLIC_API_BASE_URL;
+  // }
 
   if (Platform.OS === "android") {
     const androidUrl = "http://10.0.2.2:4000";

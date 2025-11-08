@@ -1,4 +1,4 @@
-import { accessTokenValidator, verifiedUserValidator } from '~/middlewares/users.middlewares'
+import { accessTokenValidator, checkUserExist, verifiedUserValidator } from '~/middlewares/users.middlewares'
 import { Router } from 'express'
 
 import {
@@ -7,12 +7,13 @@ import {
   createRentalSessionController,
   endRentalByAdminOrStaffController,
   endRentalSessionController,
-  getAllRentalsController,
   getDashboardSummaryController,
   getDetailRentalController,
   getMyCurrentRentalsController,
   getMyDetailRentalController,
   getMyRentalsController,
+  getRentalListByUserIdController,
+  getRentalListController,
   getRentalRevenueController,
   getRentalSummaryController,
   getReservationsStatisticController,
@@ -63,6 +64,10 @@ rentalsRouter
   .route('/stats/reservations')
   .get(accessTokenValidator, isAdminValidator, wrapAsync(getReservationsStatisticController))
 
+rentalsRouter
+  .route('/users/:userId')
+  .get(accessTokenValidator, isAdminAndStaffValidator, checkUserExist, wrapAsync(getRentalListByUserIdController))
+
 rentalsRouter.route('/me').get(accessTokenValidator, wrapAsync(getMyRentalsController))
 
 rentalsRouter.route('/me/current').get(accessTokenValidator, wrapAsync(getMyCurrentRentalsController))
@@ -107,7 +112,7 @@ rentalsRouter
 
 rentalsRouter
   .route('/')
-  .get(accessTokenValidator, isAdminValidator, wrapAsync(getAllRentalsController))
+  .get(accessTokenValidator, isAdminAndStaffValidator, wrapAsync(getRentalListController))
   // user
   .post(
     accessTokenValidator,

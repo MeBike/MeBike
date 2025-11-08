@@ -64,7 +64,7 @@ export const profileUpdateSchema = z.object({
     .max(50, { message: "Họ và tên không được vượt quá 50 ký tự" }),
   location: z
     .string()
-    .min(20, { message: "Địa điểm phải có ít nhất 20 ký tự" })
+    .min(10, { message: "Địa điểm phải có ít nhất 10 ký tự" })
     .max(50, { message: "Địa điểm không được vượt quá 100 ký tự" }),
   username: z
     .string()
@@ -83,10 +83,6 @@ export const profileUpdateSchema = z.object({
     })
     .optional()
     .or(z.literal("")),  
-  avatar: z
-    .url({ message: "Please enter a valid URL for the avatar." })
-    .optional()
-    .or(z.literal("")),
 });
 export const resetPasswordSchema = z.object({
   password: z
@@ -97,5 +93,7 @@ export const resetPasswordSchema = z.object({
     .string()
     .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" })
     .max(30, { message: "Mật khẩu không được vượt quá 30 ký tự" }),
-  forgot_password_token: z.string().nonempty({ message: "Token không được để trống" }),
+  forgot_password_token: z.string().optional(),
+  email: z.string().optional(),
+  otp: z.string().optional(),
 });

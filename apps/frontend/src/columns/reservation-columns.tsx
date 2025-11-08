@@ -40,7 +40,7 @@ export const reservationColumn = ({
     accessorKey: "station_id",
     header: "Tên trạm",
     cell: ({ row }) => {
-      const station = stations?.find(s => s._id === row.original.station_id);
+      const station = stations?.find((s) => s._id === row.original.station_id);
       return station ? station.name : row.original.station_id;
     },
   },
@@ -61,8 +61,8 @@ export const reservationColumn = ({
             : row.original.status === "ĐANG CHỜ XỬ LÝ"
               ? "bg-yellow-100 text-yellow-800"
               : row.original.status === "ĐÃ HẾT HẠN"
-              ? "bg-red-100 text-red-800"
-              : "bg-gray-100 text-gray-800"
+                ? "bg-red-100 text-red-800"
+                : "bg-gray-100 text-gray-800"
         }`}
       >
         {row.original.status}
@@ -72,7 +72,8 @@ export const reservationColumn = ({
   {
     accessorKey: "start_time",
     header: "Thời gian bắt đầu",
-    cell: ({ row }) => new Date(row.original.start_time).toLocaleString("vi-VN"),
+    cell: ({ row }) =>
+      new Date(row.original.start_time).toLocaleString("vi-VN"),
   },
   {
     accessorKey: "end_time",
@@ -95,26 +96,30 @@ export const reservationColumn = ({
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
         </button>
-        {row.original.status !== "ĐÃ HẾT HẠN" && row.original.status !== "ĐÃ HỦY" && onEdit ? (
-          <button
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-            title="Chỉnh sửa"
-            onClick={() => {
-              if (onEdit) {
-                onEdit({ data: row.original });
-              }
-            }}
-          >
-            <Edit2 className="w-4 h-4 text-muted-foreground" />
-          </button>
+        {row.original.status !== "ĐÃ HẾT HẠN" &&
+        row.original.status !== "ĐÃ HỦY" &&
+        onEdit ? (
+          <div>
+            <button
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              title="Chỉnh sửa"
+              onClick={() => {
+                if (onEdit) {
+                  onEdit({ data: row.original });
+                }
+              }}
+            >
+              <Edit2 className="w-4 h-4 text-muted-foreground" />
+            </button>
+            <button
+              title="Cập nhật trạng thái"
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              onClick={() => onUpdateStatus?.(row.original)}
+            >
+              <RefreshCw className="w-4 h-4 text-blue-500" />
+            </button>
+          </div>
         ) : null}
-        <button
-          title="Cập nhật trạng thái"
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          onClick={() => onUpdateStatus?.(row.original)}
-        >
-          <RefreshCw className="w-4 h-4 text-blue-500" />
-        </button>
       </div>
     ),
   },

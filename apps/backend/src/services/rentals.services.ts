@@ -30,6 +30,7 @@ import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
 import iotService from './iot.services'
 import { IotBookingCommand } from '@mebike/shared/sdk/iot-service'
+import { FilterQuery } from 'mongoose'
 
 const PENALTY_HOURS = parseInt(process.env.RENTAL_PENALTY_HOURS || '24', 10)
 const PENALTY_AMOUNT = parseInt(process.env.RENTAL_PENALTY_AMOUNT || '50000', 10)
@@ -1100,6 +1101,83 @@ class RentalsService {
     })
 
     return counts
+  }
+
+  async getRentalListPipelineTemplate(matchQuery: FilterQuery<Rental>) {
+    const pipeline: Document[] = [
+      { $match: matchQuery },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: '$userInfo' },
+      {
+        $project: {
+          _id: 1,
+          user: {
+            _id: '$userInfo._id',
+            fullname: '$userInfo.fullname'
+          },
+          bike_id: 1,
+          status: 1,
+          start_station: 1,
+          end_station: 1,
+          start_time: 1,
+          end_time: 1,
+          duration: 1,
+          total_price: { $toDouble: { $ifNull: ['$total_price', '0'] } },
+          created_at: 1,
+          updated_at: 1
+        }
+      },
+      {
+        $sort: { created_at: -1 }
+      }
+    ]
+
+    return pipeline
+  }
+
+  async getRentalListPipeline({
+    start_station,
+    end_station,
+    status
+  }: {
+    start_station?: ObjectId
+    end_station?: ObjectId
+    status?: RentalStatus
+  }) {
+    const matchQuery: FilterQuery<Rental> = {}
+    if (start_station) matchQuery.start_station = toObjectId(start_station)
+    if (end_station) matchQuery.end_station = toObjectId(end_station)
+    if (status) matchQuery.status = status
+
+    return this.getRentalListPipelineTemplate(matchQuery)
+  }
+
+  async getRentalListByUserIdPipeline({
+    user_id,
+    start_station,
+    end_station,
+    status
+  }: {
+    user_id: ObjectId
+    start_station?: ObjectId
+    end_station?: ObjectId
+    status?: RentalStatus
+  }) {
+    const matchQuery: FilterQuery<Rental> = {
+      user_id
+    }
+    if (start_station) matchQuery.start_station = toObjectId(start_station)
+    if (end_station) matchQuery.end_station = toObjectId(end_station)
+    if (status) matchQuery.status = status
+
+    return this.getRentalListPipelineTemplate(matchQuery)
   }
 
   generateDuration(start: Date, end: Date) {

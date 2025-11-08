@@ -1,6 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { stationService } from "@services/station.service";
+import { useQuery } from "@tanstack/react-query";
 
 async function fetchNearMeStations(latitude: number, longitude: number) {
   try {
@@ -16,8 +15,8 @@ async function fetchNearMeStations(latitude: number, longitude: number) {
 
 export function useGetNearMeStations(latitude: number, longitude: number, enabled: boolean = true) {
   return useQuery({
-    queryKey: ["near-me-stations", latitude, longitude],
+    queryKey: ["near-me-stations", latitude, longitude, enabled],
     queryFn: () => fetchNearMeStations(latitude, longitude),
-    enabled: enabled && latitude !== null && longitude !== null,
+    enabled: enabled && latitude !== 0 && longitude !== 0,
   });
 }

@@ -109,6 +109,7 @@ const MAPPING = {
   "lock.open.fill": "lock-open",
   "bicycle.circle.fill": "directions-bike",
   "bicycle.circle": "directions-bike",
+  "bicycle": "directions-bike",
 
   // Shopping & Commerce
   "cart.fill": "shopping-cart",

@@ -12,7 +12,7 @@ export function Footer() {
                 <Bike className="w-6 h-6 text-primary-foreground" />
               </div>
               <span className="text-xl font-bold text-foreground">
-                MetroBike
+                MeBike
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -97,7 +97,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="w-4 h-4" />
-                <span>support@metrobike.vn</span>
+                <span>support@MeBike.vn</span>
               </li>
               <li className="flex items-center gap-3 pt-2">
                 <Link
@@ -118,7 +118,10 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>© 2025 MetroBike. Tất cả quyền được bảo lưu.</p>
+          <p>©
+            {" "}
+            {new Date().getFullYear()}
+            {" "} MeBike. Tất cả quyền được bảo lưu.</p>
         </div>
       </div>
     </footer>

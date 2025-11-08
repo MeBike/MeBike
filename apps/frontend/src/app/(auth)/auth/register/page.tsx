@@ -18,14 +18,16 @@ import {
 import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { toast } from "sonner";
-import { useAuth } from "@/providers/auth-providers";
+import { EmailVerificationForm } from "@/components/auth/EmailVerificationForm";
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [isVerifyingEmail] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
   const router = useRouter();
-  const { user } = useAuth();
-  const { register: registerUser } = useAuthActions();
+  const { register: registerUser, verifyEmail } = useAuthActions();
   const {
     register,
     handleSubmit,
@@ -50,20 +52,45 @@ const RegisterPage = () => {
     if (!registerData.phone_number || registerData.phone_number.trim() === '') {
       delete registerData.phone_number;
     }
-    registerUser(registerData);
-    setTimeout(() => {
-      router.push("/user");
-    }, 2000);
-    console.log(user);
+    // Lưu email để dùng cho verification
+    setRegisteredEmail(data.email);
+    try {
+      console.log("Starting registration with email:", data.email);
+      await registerUser(registerData);
+      console.log("Registration successful! Email:", data.email);
+      setShowEmailVerification(true);
+    } catch (err) {
+      console.log("Registration error:", err);
+      // Don't proceed to email verification if registration fails
+    }
+  };
+  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
+    try {
+      console.log("Verifying OTP:", otp);
+      console.log("Registered email:", registeredEmail);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      console.log("Token exists:", !!token);
+      await verifyEmail({ email: registeredEmail, otp });
+      console.log("OTP verified successfully!");
+    } catch (err) {
+      console.log("Verification error (caught):", err);
+      throw err;
+    }
+  };
 
+  const handleSkipVerification = () => {
+    setShowEmailVerification(false);
+    router.push("/user/profile");
   };
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
+    <>
+      {!showEmailVerification ? (
+        <div
+          className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 
     bg-[linear-gradient(135deg,hsl(214_100%_40%)_0%,hsl(215_16%_47%)_100%)] 
     overflow-hidden"
-    >
+        >
       <div className="w-full max-w-md">
         <div className="text-center animate-fade-in mb-4">
           <div className="flex items-center justify-center">
@@ -72,7 +99,7 @@ const RegisterPage = () => {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mt-3 tracking-tight">
-            MetroBike
+            MeBike
           </h1>
         </div>
 
@@ -292,7 +319,16 @@ const RegisterPage = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
+        </div>
+      ) : (
+        <EmailVerificationForm
+          email={registeredEmail}
+          onSubmit={handleVerifyEmailSubmit}
+          onSkip={handleSkipVerification}
+          isLoading={isVerifyingEmail}
+        />
+      )}
+    </>
   );
 };
 

@@ -68,7 +68,8 @@ function WithdrawScreen() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.amount || Number(formData.amount) < 10000) {
+    const amountWithoutFormat = formData.amount.replace(/\D/g, "");
+    if (!amountWithoutFormat || Number(amountWithoutFormat) < 10000) {
       newErrors.amount = "Số tiền tối thiểu là 10,000 VND";
     }
 
@@ -94,22 +95,22 @@ function WithdrawScreen() {
 
   const handleSubmit = () => {
     if (validateForm()) {
+      const amountWithoutFormat = formData.amount.replace(/\D/g, "");
       withdraw.createWithdrawal({
-        amount: Number(formData.amount),
+        amount: Number(amountWithoutFormat),
         bank: formData.bank,
         account: formData.account,
         account_owner: formData.account_owner,
         note: formData.note,
       });
-      Alert.alert("Thành công", "Yêu cầu rút tiền đã được gửi!", [
-        {
-          text: "OK",
-          onPress: () => navigation.goBack(),
-        },
-      ]);
     }
   };
-
+  function formatNumberVND(value : string) {
+    // Loại bỏ chữ cái và số 0 thừa đầu chuỗi
+    let number = value.replace(/\D/g, "");
+    // Trả về số dạng có dấu chấm: “3.000.000”
+    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -153,24 +154,35 @@ function WithdrawScreen() {
               style={[styles.input, errors.amount && styles.inputError]}
               placeholder="Nhập số tiền"
               keyboardType="numeric"
-              value={formData.amount}
+              value={formatNumberVND(formData.amount)}
               onChangeText={(text) => {
-                setFormData(prev => ({ ...prev, amount: text }));
+                setFormData((prev) => ({ ...prev, amount: text }));
                 if (errors.amount) {
-                  setErrors(prev => ({ ...prev, amount: "" }));
+                  setErrors((prev) => ({ ...prev, amount: "" }));
                 }
               }}
             />
-            {errors.amount && <Text style={styles.errorText}>{errors.amount}</Text>}
+            {errors.amount && (
+              <Text style={styles.errorText}>{errors.amount}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Tên ngân hàng</Text>
             <TouchableOpacity
-              style={[styles.input, styles.selectInput, errors.bank && styles.inputError]}
+              style={[
+                styles.input,
+                styles.selectInput,
+                errors.bank && styles.inputError,
+              ]}
               onPress={() => setShowBankModal(true)}
             >
-              <Text style={[styles.selectText, !formData.bank && styles.placeholderText]}>
+              <Text
+                style={[
+                  styles.selectText,
+                  !formData.bank && styles.placeholderText,
+                ]}
+              >
                 {formData.bank || "Chọn ngân hàng"}
               </Text>
               <Ionicons name="chevron-down" size={20} color="#6b7280" />
@@ -186,13 +198,15 @@ function WithdrawScreen() {
               keyboardType="numeric"
               value={formData.account}
               onChangeText={(text) => {
-                setFormData(prev => ({ ...prev, account: text }));
+                setFormData((prev) => ({ ...prev, account: text }));
                 if (errors.account) {
-                  setErrors(prev => ({ ...prev, account: "" }));
+                  setErrors((prev) => ({ ...prev, account: "" }));
                 }
               }}
             />
-            {errors.account && <Text style={styles.errorText}>{errors.account}</Text>}
+            {errors.account && (
+              <Text style={styles.errorText}>{errors.account}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -202,27 +216,33 @@ function WithdrawScreen() {
               placeholder="Nhập tên chủ tài khoản"
               value={formData.account_owner}
               onChangeText={(text) => {
-                setFormData(prev => ({ ...prev, account_owner: text }));
+                setFormData((prev) => ({ ...prev, account_owner: text }));
                 if (errors.account_owner) {
-                  setErrors(prev => ({ ...prev, account_owner: "" }));
+                  setErrors((prev) => ({ ...prev, account_owner: "" }));
                 }
               }}
             />
-            {errors.account_owner && <Text style={styles.errorText}>{errors.account_owner}</Text>}
+            {errors.account_owner && (
+              <Text style={styles.errorText}>{errors.account_owner}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Ghi chú</Text>
             <TextInput
-              style={[styles.input, styles.textArea, errors.note && styles.inputError]}
+              style={[
+                styles.input,
+                styles.textArea,
+                errors.note && styles.inputError,
+              ]}
               placeholder="Nhập ghi chú (10-500 ký tự)"
               multiline
               numberOfLines={4}
               value={formData.note}
               onChangeText={(text) => {
-                setFormData(prev => ({ ...prev, note: text }));
+                setFormData((prev) => ({ ...prev, note: text }));
                 if (errors.note) {
-                  setErrors(prev => ({ ...prev, note: "" }));
+                  setErrors((prev) => ({ ...prev, note: "" }));
                 }
               }}
             />
@@ -234,12 +254,17 @@ function WithdrawScreen() {
       {/* Submit Button */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.submitButton, withdraw.isCreatingWithdrawal && styles.submitButtonDisabled]}
+          style={[
+            styles.submitButton,
+            withdraw.isCreatingWithdrawal && styles.submitButtonDisabled,
+          ]}
           onPress={handleSubmit}
           disabled={withdraw.isCreatingWithdrawal}
         >
           <Text style={styles.submitText}>
-            {withdraw.isCreatingWithdrawal ? "Đang xử lý..." : "Xác nhận rút tiền"}
+            {withdraw.isCreatingWithdrawal
+              ? "Đang xử lý..."
+              : "Xác nhận rút tiền"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -268,10 +293,10 @@ function WithdrawScreen() {
                   key={index}
                   style={styles.bankOption}
                   onPress={() => {
-                    setFormData(prev => ({ ...prev, bank }));
+                    setFormData((prev) => ({ ...prev, bank }));
                     setShowBankModal(false);
                     if (errors.bank) {
-                      setErrors(prev => ({ ...prev, bank: "" }));
+                      setErrors((prev) => ({ ...prev, bank: "" }));
                     }
                   }}
                 >
