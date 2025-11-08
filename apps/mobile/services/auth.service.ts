@@ -12,6 +12,10 @@ type AuthResponse = {
   };
 };
 type MessageResponse = {
+  result?: {
+    access_token: string;
+    refresh_token: string;
+  };
   message: string;
 };
 export const ROLES = ["USER", "ADMIN", "STAFF"] as const;
@@ -50,8 +54,14 @@ export const authService = {
     const response = await fetchHttpClient.post<MessageResponse>("/users/resend-verify-email");
     return response;
   },
-  verifyEmail: async (email_verify_token: string): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>("/users/verify-email", { email_verify_token });
+  verifyEmail: async ({
+    email,
+    otp,
+  }: {
+    email: string;
+    otp: string;
+  }): Promise<AxiosResponse<MessageResponse>> => {
+    const response = await fetchHttpClient.post<MessageResponse>("/users/verify-email", { email, otp });
     return response;
   },
   getMe: async (): Promise<AxiosResponse<ProfileUserResponse>> => {

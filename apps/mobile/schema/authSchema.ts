@@ -37,7 +37,7 @@ export const registerSchema = z
     path: ["confirm_password"],
   });
 export const forgotPasswordSchema = z.object({
-  email: z.email({ message: "Email không hợp lệ" }),
+email: z.email({ message: "Email không hợp lệ" }),
 });
 export const changePasswordSchema = z
   .object({
@@ -92,5 +92,7 @@ export const resetPasswordSchema = z.object({
     .string()
     .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" })
     .max(30, { message: "Mật khẩu không được vượt quá 30 ký tự" }),
-  forgot_password_token: z.string().nonempty({ message: "Token không được để trống" }),
+  forgot_password_token: z.string().optional(),
+  email: z.string().optional(),
+  otp: z.string().optional(),
 });

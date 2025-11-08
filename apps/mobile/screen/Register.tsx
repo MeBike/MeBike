@@ -15,6 +15,7 @@ import {
 } from "react-native";
 
 import type { RegisterScreenNavigationProp } from "../types/navigation";
+import { registerSchema } from "../schema/authSchema";
 
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
@@ -28,55 +29,66 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    paddingTop: 40,
+    paddingTop: 60,
     paddingBottom: 40,
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    padding: 8,
+    marginBottom: 20,
+  },
+  headerContent: {
     alignItems: "center",
   },
-  logoContainer: {
-    alignItems: "center",
-  },
-  logoText: {
+  headerTitle: {
     fontSize: 28,
     fontWeight: "bold",
-    color: BikeColors.secondary,
+    color: "white",
     marginTop: 16,
+    marginBottom: 8,
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: 16,
-    color: BikeColors.textSecondary,
-    marginTop: 8,
+    color: "rgba(255, 255, 255, 0.9)",
   },
   formContainer: {
     flex: 1,
-    paddingHorizontal: 32,
-    paddingTop: 20,
+    padding: 20,
   },
   inputContainer: {
+    marginBottom: 14,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: BikeColors.textPrimary,
+    marginBottom: 6,
+  },
+  inputWithIcon: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: BikeColors.lightGray,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    marginBottom: 16,
+    borderColor: BikeColors.divider,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     backgroundColor: "white",
   },
   input: {
     flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
+    marginLeft: 10,
+    fontSize: 15,
     color: BikeColors.textPrimary,
   },
   eyeButton: {
     padding: 4,
   },
   registerButton: {
-    backgroundColor: BikeColors.secondary,
+    backgroundColor: BikeColors.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
-    marginTop: 8,
     marginBottom: 24,
   },
   registerButtonText: {
@@ -86,37 +98,6 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
-  },
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: BikeColors.lightGray,
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    color: BikeColors.textSecondary,
-    fontSize: 14,
-  },
-  googleButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: BikeColors.secondary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 32,
-    gap: 12,
-  },
-  googleButtonText: {
-    color: BikeColors.secondary,
-    fontSize: 16,
-    fontWeight: "500",
   },
   loginContainer: {
     flexDirection: "row",
@@ -128,9 +109,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   loginLink: {
-    color: BikeColors.secondary,
+    color: BikeColors.primary,
     fontSize: 16,
     fontWeight: "600",
+  },
+  errorText: {
+    fontSize: 12,
+    color: "#EF4444",
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
 
@@ -143,7 +130,8 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phone, setPhone] = useState("");
-  const { register, isRegistering, logIn } = useAuth();
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { register, isRegistering } = useAuth();
   const isLoading = isRegistering;
 
   const clearForm = () => {
@@ -152,30 +140,46 @@ export default function RegisterScreen() {
     setPassword("");
     setConfirmPassword("");
     setPhone("");
+    setErrors({});
   };
-  const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword || !phone) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
+  const handleRegister = () => {
+    // Validate using schema
+    const validationResult = registerSchema.safeParse({
+      fullname: name,
+      email,
+      password,
+      confirm_password: confirmPassword,
+      phone_number: phone || undefined,
+    });
+
+    if (!validationResult.success) {
+      // Get all field errors
+      const fieldErrors: Record<string, string> = {};
+      Object.entries(validationResult.error.flatten().fieldErrors).forEach(
+        ([field, messages]) => {
+          if (messages && messages[0]) {
+            fieldErrors[field] = messages[0];
+          }
+        }
+      );
+      setErrors(fieldErrors);
       return;
     }
+
+    setErrors({});
     register({
       fullname: name,
       email,
       password,
       confirm_password: confirmPassword,
-      phone_number: phone,
+      phone_number: phone || undefined,
+    }).then(() => {
+      clearForm();
+      // Chuyển sang trang verify email thay vì Main
+      navigation.navigate("EmailVerification", { email });
+    }).catch((error) => {
+      console.log("Register error:", error);
     });
-    clearForm();
-    setTimeout(() => {
-      navigation.navigate("Main");
-    }, 1000);
-    if (password !== confirmPassword) {
-      Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
-      return;
-    }
-    if (password.length < 6) {
-      Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự");
-    }
   };
 
   const goToLogin = () => {
@@ -189,116 +193,158 @@ export default function RegisterScreen() {
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <LinearGradient
-          colors={[`${BikeColors.secondary}10`, "white"]}
+          colors={[BikeColors.primary, BikeColors.secondary]}
           style={styles.header}
         >
-          <View style={styles.logoContainer}>
-            <IconSymbol
-              name="person.badge.plus"
-              size={60}
-              color={BikeColors.secondary}
-            />
-            <Text style={styles.logoText}>Tạo tài khoản</Text>
-            <Text style={styles.subtitle}>Tham gia cộng đồng MeBike</Text>
+          <Pressable style={styles.backButton} onPress={goToLogin}>
+            <IconSymbol name="arrow.left" size={24} color="white" />
+          </Pressable>
+
+          <View style={styles.headerContent}>
+            <IconSymbol name="person.badge.plus" size={48} color="white" />
+            <Text style={styles.headerTitle}>Tạo tài khoản</Text>
+            <Text style={styles.headerSubtitle}>Tham gia cộng đồng MeBike</Text>
           </View>
         </LinearGradient>
 
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
-            <IconSymbol
-              name="person"
-              size={20}
-              color={BikeColors.textSecondary}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Họ và tên"
-              value={name}
-              onChangeText={setName}
-              autoCapitalize="words"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <IconSymbol
-              name="envelope"
-              size={20}
-              color={BikeColors.textSecondary}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <IconSymbol
-              name="phone"
-              size={20}
-              color={BikeColors.textSecondary}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Số điện thoại"
-              value={phone}
-              onChangeText={setPhone}
-              autoCapitalize="none"
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <IconSymbol
-              name="lock"
-              size={20}
-              color={BikeColors.textSecondary}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Mật khẩu"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-            />
-            <Pressable
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeButton}
-            >
+            <Text style={styles.inputLabel}>Họ và tên</Text>
+            <View style={styles.inputWithIcon}>
               <IconSymbol
-                name={showPassword ? "eye.slash" : "eye"}
+                name="person"
                 size={20}
                 color={BikeColors.textSecondary}
               />
-            </Pressable>
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập họ và tên"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={name}
+                onChangeText={(text) => {
+                  setName(text);
+                  if (errors.fullname) setErrors(prev => ({ ...prev, fullname: "" }));
+                }}
+                autoCapitalize="words"
+              />
+            </View>
+            {errors.fullname && <Text style={styles.errorText}>{errors.fullname}</Text>}
           </View>
 
           <View style={styles.inputContainer}>
-            <IconSymbol
-              name="lock"
-              size={20}
-              color={BikeColors.textSecondary}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Xác nhận mật khẩu"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              autoCapitalize="none"
-            />
-            <Pressable
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              style={styles.eyeButton}
-            >
+            <Text style={styles.inputLabel}>Email</Text>
+            <View style={styles.inputWithIcon}>
               <IconSymbol
-                name={showConfirmPassword ? "eye.slash" : "eye"}
+                name="envelope"
                 size={20}
                 color={BikeColors.textSecondary}
               />
-            </Pressable>
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập email"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (errors.email) setErrors(prev => ({ ...prev, email: "" }));
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Số điện thoại</Text>
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="phone"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập số điện thoại"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={phone}
+                onChangeText={(text) => {
+                  setPhone(text);
+                  if (errors.phone_number) setErrors(prev => ({ ...prev, phone_number: "" }));
+                }}
+                autoCapitalize="none"
+              />
+            </View>
+            {errors.phone_number && <Text style={styles.errorText}>{errors.phone_number}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Mật khẩu</Text>
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="lock"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập mật khẩu"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errors.password) setErrors(prev => ({ ...prev, password: "" }));
+                }}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+              >
+                <IconSymbol
+                  name={showPassword ? "eye.slash" : "eye"}
+                  size={20}
+                  color={BikeColors.textSecondary}
+                />
+              </Pressable>
+            </View>
+            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Xác nhận mật khẩu</Text>
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="lock"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Xác nhận mật khẩu"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={confirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  if (errors.confirm_password) setErrors(prev => ({ ...prev, confirm_password: "" }));
+                }}
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+              />
+              <Pressable
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={styles.eyeButton}
+              >
+                <IconSymbol
+                  name={showConfirmPassword ? "eye.slash" : "eye"}
+                  size={20}
+                  color={BikeColors.textSecondary}
+                />
+              </Pressable>
+            </View>
+            {errors.confirm_password && <Text style={styles.errorText}>{errors.confirm_password}</Text>}
           </View>
 
           <Pressable
@@ -310,12 +356,6 @@ export default function RegisterScreen() {
               {isLoading ? "Đang đăng ký..." : "Đăng ký"}
             </Text>
           </Pressable>
-
-          {/* <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>hoặc</Text>
-            <View style={styles.dividerLine} />
-          </View> */}
 
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Đã có tài khoản? </Text>
