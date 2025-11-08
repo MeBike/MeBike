@@ -43,14 +43,14 @@ export const bikeColumn = (
   },
   {
     accessorKey: "chip_id",
-    header: "Mã chip",
+    header: "Tên chip",
     cell: ({ row }) => {
-      return shortenId(row.original.chip_id) || "Không có";
+      return row.original.chip_id || "Không có";
     },
   },
   {
     accessorKey: "station_id",
-    header: "Mã trạm",
+    header: "Tên trạm",
     cell: ({ row }) => {
       const station = stations.find((s) => s._id === row.original.station_id);
       return station ? station.name : "Không có";
@@ -58,7 +58,7 @@ export const bikeColumn = (
   },
   {
     accessorKey: "supplier_id",
-    header: "Mã nhà cung cấp",
+    header: "Tên nhà cung cấp",
     cell: ({ row }) => {
       const supplier = suppliers.find(
         (s) => s._id === row.original.supplier_id

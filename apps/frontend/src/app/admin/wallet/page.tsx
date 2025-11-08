@@ -33,7 +33,8 @@ export default function WalletPage() {
      manageTransactions,
      walletOverview,
      detailWallet,
-     isLoadingDetailWallet
+     isLoadingDetailWallet,
+     updateStatusWallet
    } = useWalletActions(true, page, limit, selectedUserId);
   const handleDeposit = (
     userId: string,
@@ -132,6 +133,16 @@ export default function WalletPage() {
                 onDeposit: ({ id }) => {
                   const wallet = allWallets?.find((w) => w._id === id);
                   if (wallet) handleOpenModal(wallet);
+                },
+                onEdit: ({ id }) => {
+                  const wallet = allWallets?.find((w) => w._id === id);
+                  if (wallet) {
+                    // Toggle status - try with "KHÓA" if backend expects it
+                    const newStatus: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG" = 
+                      wallet.status === "ĐANG HOẠT ĐỘNG" ? "ĐÃ BỊ ĐÓNG BĂNG" : "ĐANG HOẠT ĐỘNG";
+                    console.log("🔄 Updating wallet status:", { id, newStatus, currentStatus: wallet.status });
+                    updateStatusWallet(newStatus, id);
+                  }
                 },
               })}
               data={allWallets || []}

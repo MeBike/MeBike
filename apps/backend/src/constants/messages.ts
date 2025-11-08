@@ -484,7 +484,8 @@ export const WALLETS_MESSAGE = {
   WITHDRAW_NOT_FOUND: 'Không tìm thấy yêu cầu rút tiền',
   GET_WALLET_OVERVIEW_SUCCESS: 'Lấy tổng quan ví thành công',
   GET_REFUND_OVERVIEW_SUCCESS: 'Lấy tổng quan yêu cầu hoàn tiền thành công',
-  GET_WITHDRAW_OVERVIEW_SUCCESS: 'Lấy tổng quan yêu cầu rút tiền thành công'
+  GET_WITHDRAW_OVERVIEW_SUCCESS: 'Lấy tổng quan yêu cầu rút tiền thành công',
+  FEE_EXCEEDS_AMOUNT: 'Phí không được vượt quá số tiền nạp'
 }
 
 export const WITHDRAWLS_MESSAGE = {

@@ -2,12 +2,12 @@ import type { AxiosResponse } from "axios";
 
 import fetchHttpClient from "@lib/httpClient";
 
-import type { StationType, Station } from "../types/StationType";
+import type { Station, StationType } from "../types/StationType";
 
 const STATION_BASE = "/stations";
 const STATION_ENDPOINTS = {
   BASE: STATION_BASE,
-  ALL: `${STATION_BASE}`,
+  ALL: `${STATION_BASE}?limit=30`,
   DETAIL: (id: string) => `${STATION_BASE}/${id}`,
   //   STATS: `${STATION_BASE}/stats`,
   //   BY_ID: (id: string) => `${BIKE_BASE}/${id}/rentals`,
@@ -17,7 +17,7 @@ const STATION_ENDPOINTS = {
   //   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
   //   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
   NEAR_ME: (lat: number, lng: number) =>
-    `${STATION_BASE}/nearby`,
+    `${STATION_BASE}/nearby?limit=30`,
 } as const;
 type ApiResponse<T> = {
   data: T;
@@ -48,7 +48,7 @@ export const stationService = {
     );
     return response;
   },
-  getNearMe : async (
+  getNearMe: async (
     latitude: number,
     longitude: number,
   ): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
@@ -57,8 +57,8 @@ export const stationService = {
       {
         latitude,
         longitude,
-      }
+      },
     );
     return response;
-  }
+  },
 };

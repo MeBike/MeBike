@@ -250,7 +250,6 @@ export default function CustomersPage() {
                 setSelectedUserId(user.id);
                 setIsDetailModalOpen(true);
               },
-              onEdit: (user) => console.log("[v0] Edit user:", user.id),
             })}
             data={users || []}
             // filterPlaceholder="Tìm kiếm người dùng..."

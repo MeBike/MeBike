@@ -41,7 +41,18 @@ export interface Wallet {
   _id: string;
   user_id: string;
   balance: number;
-  status: "ĐANG HOẠT ĐỘNG" | "KHÓA";
+  status: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG";
+  created_at: string;
+  updated_at: string;
+  fullname: string;
+}
+export interface UpdateWalletStatusResponse {
+  _id: string;
+  user_id: string;
+  balance: {
+    $numberDecimal: string;
+  };
+  status : "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG";
   created_at: string;
   updated_at: string;
 }
@@ -55,6 +66,7 @@ const WALLET_ENDPOINTS = {
   MANAGE_TRANSACTIONS: `${WALLET_BASE}/manage-transactions`,
   OVERVIEW: `${WALLET_BASE}/overview`,
   DETAIL_WALLET: (user_id: string) => `${WALLET_BASE}/manage-wallet/${user_id}`,
+  UPDATE_STATUS: (id: string) => `${WALLET_BASE}/${id}`,
 } as const;
 import type {
   TopUpSchemaFormData,
@@ -117,12 +129,23 @@ export const walletService = {
     >(WALLET_ENDPOINTS.OVERVIEW);
     return response;
   },
-  getDetailWallet: async ({user_id}:{user_id: string}): Promise<
-    AxiosResponse<ApiResponse<DetailWallet[]>>
-  > => {
-    const response = await fetchHttpClient.get<
-      ApiResponse<DetailWallet[]>
-    >(`${WALLET_ENDPOINTS.DETAIL_WALLET(user_id)}`);
+  getDetailWallet: async ({
+    user_id,
+  }: {
+    user_id: string;
+  }): Promise<AxiosResponse<ApiResponse<DetailWallet[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<DetailWallet[]>>(
+      `${WALLET_ENDPOINTS.DETAIL_WALLET(user_id)}`
+    );
     return response;
-  }
-};
+  },
+  updateStatusWallet: async (
+    id: string,
+    newStatus: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG"
+  ): Promise<AxiosResponse<DetailApiResponse<UpdateWalletStatusResponse>>> => {
+    const response = await fetchHttpClient.patch<
+      DetailApiResponse<UpdateWalletStatusResponse>
+    >(WALLET_ENDPOINTS.UPDATE_STATUS(id), { newStatus });
+    return response;
+  },
+}; 
