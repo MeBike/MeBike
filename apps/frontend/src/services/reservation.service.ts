@@ -5,7 +5,8 @@ import {
   Reservation,
   DetailApiResponse,
   ReservationStats,
-  ReservationStatsStation
+  ReservationStatsStation,
+  IRentalOrder,
 } from "@custom-types";
 const RESERVATION_BASE = "/reservations";
 const RESERVATION_ENDPOINTS = {
@@ -38,8 +39,8 @@ export const reservationService = {
   },
   getDetailReservation: async (
     id: string
-  ): Promise<AxiosResponse<DetailApiResponse<Reservation>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Reservation>>(
+  ): Promise<AxiosResponse<DetailApiResponse<IRentalOrder>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<IRentalOrder>>(
       RESERVATION_ENDPOINTS.ID(id)
     );
     return response;

@@ -10,8 +10,24 @@ const baseWalletSchema = z.object({
     .refine(isValidObjectId, {
       message: "User ID must be a valid MongoDB ObjectId",
     }),
-  amount: z.number().min(1000, "Amount must be at least 1000"),
-  fee: z.number().min(0, "Fee must be a positive number"),
+  amount: z
+    .any()
+    .transform((val) => {
+      if (typeof val === "string") {
+        return parseInt(val.replace(/\./g, ""));
+      }
+      return val;
+    })
+    .refine((val) => val >= 1000, "Amount must be at least 1000"),
+  fee: z
+    .any()
+    .transform((val) => {
+      if (typeof val === "string") {
+        return parseInt(val.replace(/\./g, ""));
+      }
+      return val;
+    })
+    .refine((val) => val >= 0, "Fee must be a positive number"),
   description: z
     .string()
     .min(1, "Description is required")

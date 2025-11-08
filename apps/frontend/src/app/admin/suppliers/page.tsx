@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Supplier } from "@custom-types";
-import { Plus, Download, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useSupplierActions } from "@/hooks/useSupplierAction";
 import { useBikeActions } from "@/hooks/useBikeAction";
 import { columns } from "@/columns/supplier-column";
@@ -183,10 +183,10 @@ export default function SuppliersPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline">
+              {/* <Button variant="outline">
                 <Download className="w-4 h-4 mr-2" />
                 Xuất Excel
-              </Button>
+              </Button> */}
               <Button onClick={() => setIsModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Thêm nhà cung cấp
