@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import { DecreaseSchemaFormData } from "@/schemas/walletSchema";
-import { walletService } from "@/services/wallet.service";
-export const useDebitWalletMutation = () => {
+import {ConfirmSOSSchema } from "@/schemas/sosSchema";
+import { sosService } from "@/services/sos.service";
+export const useConfirmSOSRequestMutation = () => {
   return useMutation({
-    mutationFn: (data: DecreaseSchemaFormData) =>
-      walletService.debitWallet(data),
+    mutationFn: ({id , data} : {id : string , data : ConfirmSOSSchema}) =>
+        sosService.postConfirmSOSRequest({ id , data }),
   });
 };

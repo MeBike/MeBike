@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { SOS } from "@custom-types";
 import type { AxiosResponse } from "axios";
-import type { CreateSOSSchema } from "@/schemas/sosSchema";
+import type { CreateSOSSchema , ConfirmSOSSchema , RejectSOSSchema } from "@/schemas/sosSchema";
 import type {
   DetailApiResponse,
   ApiResponse,
@@ -34,21 +34,25 @@ export const sosService = {
   },
   postConfirmSOSRequest: async ({
     id,
+    data,
   }: {
     id: string;
+    data: ConfirmSOSSchema; 
   }): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
     const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
-      SOS_ENDPOINTS.CONFIRM(id)
+      SOS_ENDPOINTS.CONFIRM(id),data
     );
     return response;
   },
   postRejectSOSRequest: async ({
     id,
+    data,
   }: {
     id: string;
+    data: RejectSOSSchema;
   }): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
     const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
-      SOS_ENDPOINTS.REJECT(id)
+      SOS_ENDPOINTS.REJECT(id),data
     );
     return response;
   },
