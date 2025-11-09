@@ -28,7 +28,7 @@ export async function createSubscriptionController(req: Request<CreateSubscripti
     user_id: userId,
     package_name: packageName,
     price: config.price,
-    max_reservations_per_month: config.max_reservations_per_month
+    max_usages: config.max_usages
   })
 
   res.json({
