@@ -20,9 +20,10 @@ const qrModalStyles = StyleSheet.create({
     marginBottom: 16,
   },
   qrImage: {
-    width: 200,
-    height: 200,
+    width: 320,
+    height: 320,
     marginVertical: 16,
+    alignSelf: "center",
   },
   instruction: {
     fontSize: 12,
