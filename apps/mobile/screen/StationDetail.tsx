@@ -194,15 +194,10 @@ export default function StationDetailScreen() {
     setBikeToReserve(null);
   }, []);
 
-  const handleConfirmReservation = useCallback((date: Date) => {
-    if (!bikeToReserve) {
-      return;
-    }
-    const targetBikeId = bikeToReserve._id;
+  const handleConfirmReservation = useCallback((date: Date, bike: Bike) => {
+    setPendingBikeId(bike._id);
     setIOSPickerVisible(false);
-    setBikeToReserve(null);
-    setPendingBikeId(targetBikeId);
-    createReservation(targetBikeId, date.toISOString(), {
+    createReservation(bike._id, date.toISOString(), {
       onSuccess: () => {
         getBikes();
         getStationByID();
@@ -210,7 +205,7 @@ export default function StationDetailScreen() {
       },
       onError: () => setPendingBikeId(null),
     });
-  }, [bikeToReserve, createReservation, getBikes, getStationByID]);
+  }, [createReservation, getBikes, getStationByID]);
 
   const handleReservePress = useCallback((bike: Bike) => {
     if (!validateReservationEligibility(bike)) {
@@ -246,7 +241,7 @@ export default function StationDetailScreen() {
                 selectedTime.getHours(),
                 selectedTime.getMinutes(),
               );
-              handleConfirmReservation(finalDate);
+              handleConfirmReservation(finalDate, bike);
             },
           });
         },
@@ -256,7 +251,7 @@ export default function StationDetailScreen() {
       setIOSPickerDate(initialDate);
       setIOSPickerVisible(true);
     }
-  }, [handleConfirmReservation, validateReservationEligibility]);
+  }, [validateReservationEligibility, handleConfirmReservation]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -303,11 +298,11 @@ export default function StationDetailScreen() {
           {
             text: "Đặt xe",
             onPress: () => {
-              console.log("Renting bike:", bike.id);
+              console.log("Reserving bike:", bike.id);
               if (user?.verify === "UNVERIFIED") {
                 Alert.alert(
                   "Tài khoản chưa xác thực",
-                  "Vui lòng xác thực tài khoản để thuê xe."
+                  "Vui lòng xác thực tài khoản để đặt xe."
                 );
                 setSelectedBike(null);
                 return;
@@ -326,6 +321,26 @@ export default function StationDetailScreen() {
         [{ text: "OK", onPress: () => setSelectedBike(null) }],
       );
     }
+  };
+
+  const handleQuickRent = (bike: Bike) => {
+    if (bike.status !== "CÓ SẴN") {
+      Alert.alert(
+        "Không thể thuê",
+        "Xe này hiện không khả dụng."
+      );
+      return;
+    }
+
+    if (user?.verify === "UNVERIFIED") {
+      Alert.alert(
+        "Tài khoản chưa xác thực",
+        "Vui lòng xác thực tài khoản để thuê xe."
+      );
+      return;
+    }
+
+    postRent({ bike_id: bike._id });
   };
 
   const handleLoadMore = () => {
@@ -366,7 +381,7 @@ export default function StationDetailScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.iosPickerButton, styles.iosPickerConfirm]}
-                  onPress={() => handleConfirmReservation(iosPickerDate)}
+                  onPress={() => bikeToReserve && handleConfirmReservation(iosPickerDate, bikeToReserve)}
                 >
                   <Text style={styles.iosPickerConfirmText}>Xác nhận</Text>
                 </TouchableOpacity>
@@ -558,7 +573,7 @@ export default function StationDetailScreen() {
                             marginLeft: 8,
                           },
                         ]}
-                        onPress={() => handleRentPress(bike)}
+                        onPress={() => handleQuickRent(bike)}
                         activeOpacity={0.8}
                       >
                         <Ionicons
