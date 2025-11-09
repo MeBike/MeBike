@@ -11,6 +11,7 @@ import subscriptionService from '~/services/subscription.services'
 
 export const reservationNotifyQueue = new Queue('reservation-notify', { connection })
 export const reservationExpireQueue = new Queue('reservation-expire', { connection })
+export const reservationConfirmEmailQueue = new Queue('send-confirm-email', { connection })
 export const generateFixedSlotQueue = new Queue('generate-fixed-slot-reservations', {
   connection,
   defaultJobOptions: {
@@ -18,6 +19,7 @@ export const generateFixedSlotQueue = new Queue('generate-fixed-slot-reservation
     removeOnFail: false
   }
 })
+export const subscriptionConfirmEmailQueue = new Queue('send-subscription-confirm-email', { connection })
 export const subscriptionActivationQueue = new Queue('subscription-activation', { connection })
 export const subscriptionExpireQueue = new Queue('subscription-expire', { connection })
 
@@ -78,7 +80,7 @@ export const generateFixedSlotWorker = new Worker(
   async (job) => {
     const today = getLocalTime()
     today.setHours(0, 0, 0, 0) // 00:00:00 hôm nay
-    console.log("today: ", today)
+    console.log('today: ', today)
 
     const templates = await fixedSlotService.getActiveTemplatesForDate(today)
 
@@ -146,12 +148,61 @@ export const generateFixedSlotWorker = new Worker(
   { connection }
 )
 
+new Worker(
+  'send-confirm-email',
+  async (job) => {
+    const { reservation_id, user_id, station_id } = job.data
+
+    const [reservation, station, user] = await Promise.all([
+      databaseService.reservations.findOne({ _id: toObjectId(reservation_id) }),
+      databaseService.stations.findOne({ _id: toObjectId(station_id) }, { projection: { name: 1 } }),
+      databaseService.users.findOne({ _id: toObjectId(user_id) }, { projection: { fullname: 1, email: 1 } })
+    ])
+
+    const data = {
+      ...reservation,
+      station_name: station!.name
+    }
+
+    await reservationsService.sendSuccessReservingEmail(data, user!)
+  },
+  { connection }
+)
+
+new Worker(
+  'send-subscription-confirm-email',
+  async (job) => {
+    const userId = job.data.user_id
+    const user = await databaseService.users.findOne(
+      { _id: toObjectId(userId) },
+      {
+        projection: {
+          fullname: 1,
+          email: 1
+        }
+      }
+    )
+
+    const result = await subscriptionService.sendSuccessSubscribingEmail(job.data, user!)
+    console.log(`[Subscription] Send confirmation email for user ${userId}:`, result)
+  },
+  { connection }
+)
+
 // Kích hoạt sau 10 ngày
-new Worker('subscription-activation', async (job) => {
-  await subscriptionService.activate(job.data.subscription_id)
-}, { connection })
+new Worker(
+  'subscription-activation',
+  async (job) => {
+    await subscriptionService.activate(job.data.subscription_id)
+  },
+  { connection }
+)
 
 // Hết hạn sau 30 ngày
-new Worker('subscription-expire', async (job) => {
-  await subscriptionService.expire(job.data.subscription_id)
-}, { connection })
+new Worker(
+  'subscription-expire',
+  async (job) => {
+    await subscriptionService.expire(job.data.subscription_id)
+  },
+  { connection }
+)

@@ -1,14 +1,20 @@
 // src/services/subscription.service.ts
 import { Decimal128, ObjectId } from 'mongodb'
-import { fromDaysToMs, fromHoursToMs, getLocalTime } from '~/utils/date-time'
+import { formatUTCDateToVietnamese, fromDaysToMs, fromHoursToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import Subscription from '~/models/schemas/subscription.schema'
 import { SubscriptionPackage, SubscriptionStatus } from '~/constants/enums'
-import { subscriptionActivationQueue, subscriptionExpireQueue } from '~/lib/queue/reservation.queue'
+import {
+  subscriptionActivationQueue,
+  subscriptionConfirmEmailQueue,
+  subscriptionExpireQueue
+} from '~/lib/queue/reservation.queue'
 import { ErrorWithStatus } from '~/models/errors'
 import { RESERVATIONS_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
 import walletService from './wallets.services'
+import reservationsService from './reservations.services'
+import User from '~/models/schemas/user.schema'
 
 interface CreateSubscriptionParams {
   user_id: ObjectId
@@ -19,13 +25,16 @@ interface CreateSubscriptionParams {
 
 class SubscriptionService {
   async create(params: CreateSubscriptionParams) {
+    const now = getLocalTime()
     const price = params.price instanceof Decimal128 ? params.price : Decimal128.fromString(params.price)
+
     const sub = new Subscription({
       user_id: params.user_id,
       package_name: params.package_name,
       max_reservations_per_month: params.max_reservations_per_month,
       used_reservations: 0,
-      price
+      price,
+      created_at: now
     })
 
     const { insertedId } = await databaseService.subscriptions.insertOne(sub)
@@ -34,7 +43,19 @@ class SubscriptionService {
       insertedId.toString()
     )
 
-    void walletService.paymentReservation(params.user_id.toString(), price, paymentDescription, insertedId)
+    await walletService.paymentReservation(params.user_id.toString(), price, paymentDescription, insertedId)
+    await subscriptionConfirmEmailQueue.add(
+      'send-subscription-confirm-email',
+      {
+        user_id: sub.user_id.toString(),
+        package_name: sub.package_name,
+        max_reservations_per_month: sub.max_reservations_per_month?.toString() ?? null, 
+        price: sub.price.toString(),
+        created_at: now
+      },
+      { jobId: `confirm-subscription-email-${insertedId.toString()}` }
+    )
+    console.log(`[Reservation] Enqueued email for ${insertedId.toString()}`)
 
     // Lên lịch kích hoạt sau 10 ngày
     const AUTO_ACTIVATED_TIME = Number(process.env.AUTO_ACTIVATE_IN_DAYS || '10')
@@ -136,6 +157,17 @@ class SubscriptionService {
       status: SubscriptionStatus.ACTIVE,
       expires_at: { $gte: now }
     })
+  }
+
+  async sendSuccessSubscribingEmail(data: any, toUser: User) {
+    data.created_at = formatUTCDateToVietnamese(data.created_at)
+
+    return await reservationsService.sendReservationEmailFormat(
+      'success-subscription.html',
+      RESERVATIONS_MESSAGE.EMAIL_SUBJECT_SUCCESS_SUBSCRIBING,
+      data,
+      toUser
+    )
   }
 }
 

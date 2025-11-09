@@ -22,7 +22,11 @@ import { readEmailTemplate } from '~/utils/email-templates'
 import { sleep } from '~/utils/timeout'
 import iotService from './iot.services'
 import { IotBookingCommand, IotReservationCommand } from '@mebike/shared/sdk/iot-service'
-import { reservationExpireQueue, reservationNotifyQueue } from '~/lib/queue/reservation.queue'
+import {
+  reservationConfirmEmailQueue,
+  reservationExpireQueue,
+  reservationNotifyQueue
+} from '~/lib/queue/reservation.queue'
 import User from '~/models/schemas/user.schema'
 import subscriptionService from './subscription.services'
 import { generateEndTime, getHoldHours } from '~/utils/reservation.helper'
@@ -132,10 +136,6 @@ class ReservationsService {
   ) {
     const session = databaseService.getClient().startSession()
     try {
-      const [station, user] = await Promise.all([
-        databaseService.stations.findOne({ _id: station_id }, { projection: { name: 1 } }),
-        databaseService.users.findOne({ _id: user_id }, { projection: { fullname: 1, email: 1 } })
-      ])
       await session.withTransaction(async () => {
         await Promise.all([
           databaseService.reservations.insertOne(reservation, { session }),
@@ -147,11 +147,16 @@ class ReservationsService {
           )
         ])
       })
-      const data = {
-        ...reservation,
-        station_name: station!.name
-      }
-      void this.sendSuccessReservingEmail(data, user!)
+      await reservationConfirmEmailQueue.add(
+        'send-confirm-email',
+        {
+          reservation_id: reservation._id!.toString(),
+          user_id: user_id.toString(),
+          station_id: station_id.toString()
+        },
+        { jobId: `confirm-email-${reservation._id}` }
+      )
+      console.log(`[Reservation] Confirmation email for ${reservation._id}`)
     } finally {
       await session.endSession()
     }
@@ -970,7 +975,6 @@ class ReservationsService {
     data.start_time = formatUTCDateToVietnamese(data.start_time)
     data.end_time = formatUTCDateToVietnamese(data.end_time)
 
-    console.log(data)
     await this.sendReservationEmailFormat(
       'success-reservation.html',
       RESERVATIONS_MESSAGE.EMAIL_SUBJECT_SUCCESS_RESERVING,
@@ -987,6 +991,7 @@ class ReservationsService {
         pass: process.env.EMAIL_PASSWORD_APP
       }
     })
+
 
     const userIdString = data.user_id.toString()
 

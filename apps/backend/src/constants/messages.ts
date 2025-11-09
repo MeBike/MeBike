@@ -458,6 +458,7 @@ export const RESERVATIONS_MESSAGE = {
   // Email Messages
   EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn',
   EMAIL_SUBJECT_SUCCESS_RESERVING: 'Xác nhận đặt trước thành công',
+  EMAIL_SUBJECT_SUCCESS_SUBSCRIBING: 'Đăng kí gói tháng thành công',
   // Status
   RESERVATION_NOT_PENDING: 'Phiên đặt trước phải ở trạng thái "ĐANG CHỜ XỬ LÍ"'
 } as const
