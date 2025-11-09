@@ -24,6 +24,7 @@ import { sendPaginatedAggregationResponse, sendPaginatedResponse } from '~/utils
 import { toObjectId } from '~/utils/string'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import User from '~/models/schemas/user.schema'
+import Subscription from '~/models/schemas/subscription.schema'
 
 export async function createRentalSessionController(
   req: Request<ParamsDictionary, any, CreateRentalReqBody>,
@@ -32,11 +33,13 @@ export async function createRentalSessionController(
   const { user_id } = req.decoded_authorization as TokenPayLoad
   const station = req.station as Station
   const bike = req.bike as Bike
+  const subscription = req.subscription as Subscription
 
   const result = await rentalsService.createRentalSession({
     user_id,
     start_station: station._id as ObjectId,
-    bike
+    bike,
+    subscription_id: subscription._id as ObjectId
   })
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,

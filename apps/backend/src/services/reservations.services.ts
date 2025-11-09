@@ -13,7 +13,7 @@ import Reservation from '~/models/schemas/reservation.schema'
 import { formatUTCDateToVietnamese, fromHoursToMs, fromMinutesToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import { ErrorWithStatus } from '~/models/errors'
-import { COMMON_MESSAGE, RENTALS_MESSAGE, RESERVATIONS_MESSAGE } from '~/constants/messages'
+import { COMMON_MESSAGE, RENTALS_MESSAGE, RESERVATIONS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
 import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import walletService from './wallets.services'
@@ -30,12 +30,20 @@ import {
 import User from '~/models/schemas/user.schema'
 import subscriptionService from './subscription.services'
 import { generateEndTime, getHoldHours } from '~/utils/reservation.helper'
+import { toObjectId } from '~/utils/string'
 
 interface ReserveOneTimeParams {
   user_id: ObjectId
   bike_id: ObjectId
   station_id: ObjectId
   start_time: Date
+}
+interface ReserveFixedSlotParams {
+  user_id: ObjectId
+  bike_id: ObjectId
+  station_id: ObjectId
+  start_time: Date
+  fixed_slot_template_id: ObjectId
 }
 
 interface ReserveWithSubscriptionParams {
@@ -88,12 +96,71 @@ class ReservationsService {
     return reservation
   }
 
+  // 2. Đặt bằng KHUNG GIỜ CỐ ĐỊNH
+  async reserveWithFixedSlot(params: ReserveFixedSlotParams) {
+    const { user_id, bike_id, station_id, start_time, fixed_slot_template_id } = params
+    const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '2000')
+
+    const findWallet = await databaseService.wallets.findOne({ user_id: toObjectId(user_id) })
+    if (!findWallet) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id.toString()),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const userBalance = BigInt(findWallet.balance.toString())
+    const minBalance = BigInt(prepaid.toString())
+    if (userBalance < minBalance) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.NOT_ENOUGH_BALANCE_TO_RENT.replace('%s', minBalance.toString()),
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+    const reservationId = new ObjectId()
+
+    const end_time = generateEndTime(start_time, getHoldHours())
+
+    const reservation = new Reservation({
+      _id: reservationId,
+      user_id,
+      bike_id,
+      station_id,
+      start_time,
+      end_time,
+      prepaid,
+      status: ReservationStatus.Pending,
+      reservation_option: ReservationOptions.FIXED_SLOT,
+      fixed_slot_template_id
+    })
+
+    const rental = new Rental({
+      _id: reservationId,
+      user_id,
+      bike_id,
+      start_station: station_id,
+      start_time: reservation.start_time,
+      status: RentalStatus.Reserved
+    })
+
+    await this.executeReservationTransaction(reservation, rental, bike_id, station_id, user_id)
+
+    await this.scheduleJobs(reservation, bike_id)
+    await walletService.paymentReservation(
+      user_id.toString(),
+      prepaid,
+      RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', reservationId.toString()),
+      reservationId
+    )
+    await iotService.sendReservationCommand(bike_id.toString(), IotReservationCommand.reserve)
+
+    return reservation
+  }
+
   // 3. Đặt bằng GÓI_THÁNG
   async reserveWithSubscription(params: ReserveWithSubscriptionParams) {
     const { user_id, bike_id, station_id, start_time, subscription_id } = params
     const reservationId = new ObjectId()
-
-    await subscriptionService.useOne(subscription_id)
 
     const end_time = generateEndTime(start_time, getHoldHours())
 
@@ -116,7 +183,8 @@ class ReservationsService {
       bike_id,
       start_station: station_id,
       start_time: reservation.start_time,
-      status: RentalStatus.Reserved
+      status: RentalStatus.Reserved,
+      subscription_id
     })
 
     await this.executeReservationTransaction(reservation, rental, bike_id, station_id, user_id)
@@ -329,7 +397,8 @@ class ReservationsService {
 
         const updatedData: any = {
           start_time: now,
-          status: RentalStatus.Rented
+          status: RentalStatus.Rented,
+          subscription_id: reservation.subscription_id
         }
 
         const [rentalUpdateResult] = await Promise.all([
@@ -991,7 +1060,6 @@ class ReservationsService {
         pass: process.env.EMAIL_PASSWORD_APP
       }
     })
-
 
     const userIdString = data.user_id.toString()
 

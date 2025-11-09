@@ -13,6 +13,7 @@ type RentalType = {
   end_time?: Date;
   duration?: Int32;
   total_price?: Decimal128;
+  subscription_id?: ObjectId;
   status: RentalStatus;
   created_at?: Date;
   updated_at?: Date;
@@ -27,7 +28,8 @@ export default class Rental {
   start_time: Date;
   end_time?: Date;
   duration: Int32;
-  total_price: Decimal128;
+  total_price?: Decimal128;
+  subscription_id?: ObjectId;
   status: RentalStatus;
   created_at?: Date;
   updated_at?: Date;
@@ -44,6 +46,7 @@ export default class Rental {
     this.end_time = rental.end_time ?? undefined;
     this.duration = rental.duration instanceof Int32 ? rental.duration : new Int32(rental.duration ?? 0);
     this.total_price = rental.total_price instanceof Decimal128 ? rental.total_price : Decimal128.fromString(String(rental.total_price ?? 0));
+    this.subscription_id = rental.subscription_id;
     this.status = rental.status ?? RentalStatus.Rented;
     this.created_at = rental.created_at || localTime;
     this.updated_at = rental.updated_at || localTime;

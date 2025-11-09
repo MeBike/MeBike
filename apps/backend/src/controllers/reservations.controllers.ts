@@ -64,17 +64,6 @@ export async function reserveBikeController(
       start_time: new Date(req.body.start_time)
     })
   } 
-  else if (option === ReservationOptions.FIXED_SLOT) {
-    result = await fixedSlotTemplateService.create({
-      user_id: userId,
-      station_id: station._id as ObjectId,
-      slot_start: req.body.slot_start!,
-      slot_end: req.body.slot_end!,
-      days_of_week: req.body.days_of_week!,
-      start_date: new Date(req.body.start_time),
-      end_date: new Date(req.body.recurrence_end_date!)
-    })
-  } 
   else if (option === ReservationOptions.SUBSCRIPTION) {
     result = await reservationsService.reserveWithSubscription({
       user_id: userId,

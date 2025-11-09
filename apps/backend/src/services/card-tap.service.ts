@@ -334,7 +334,7 @@ async function startRentalFromReservationForCard({ reservation, bike_id }: Start
 
     return {
       ...(promotedRental as any),
-      total_price: Number.parseFloat(promotedRental.total_price.toString())
+      total_price: Number.parseFloat(promotedRental.total_price?.toString() || '0')
     }
   } finally {
     await session.endSession()
@@ -366,7 +366,7 @@ async function endRentalSessionForCard({ user_id, rental }: EndRentalParams) {
         'falling back to non-transactional rental ending'
       )
       const endedRental = await endRentalSessionWithoutTransaction({ user_id, rental })
-      const totalPriceNumber = Number.parseFloat(endedRental.total_price.toString())
+      const totalPriceNumber = Number.parseFloat(endedRental.total_price?.toString() || '0')
       await chargeWalletAfterEnd({
         user_id,
         rental_id: endedRental._id as ObjectId,
