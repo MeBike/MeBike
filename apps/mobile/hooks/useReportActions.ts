@@ -44,7 +44,7 @@ export function useReportActions({ page, limit , id}: { page?: number; limit?: n
   };
 
   const userReports = userReportsData?.pages.flatMap(page => page.data.data) || [];
-  const {data: reportDetailData , isLoading: isLoadingReportDetail } = useGetReportById(id || "");
+  const {data: reportDetailData , isLoading: isLoadingReportDetail , refetch: refetchReportDetail } = useGetReportById(id || "");
   return {
     userReports,
     isLoadingUserReports,
@@ -56,5 +56,6 @@ export function useReportActions({ page, limit , id}: { page?: number; limit?: n
     isFetchingNextPage,
     reportDetailData: reportDetailData?.data,
     isLoadingReportDetail,
+    refetchReportDetail,
   };
 }
