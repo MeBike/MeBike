@@ -432,7 +432,7 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_END_DATE: 'Ngày kết thúc không hợp lệ: %s',
   START_DATE_AFTER_END_DATE: 'Ngày bắt đầu không được phép lớn hơn ngày kết thúc',
   INVALID_GROUP_BY: 'groupBy phải là một trong: %s',
-  INAVLID_OPTIONS: 'Loại đặt chỗ không hợp lệ',
+  INVALID_OPTIONS: 'Loại đặt chỗ không hợp lệ',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',

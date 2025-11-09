@@ -172,7 +172,6 @@ class SosService {
     )
 
     const [result] = await databaseService.sos_alerts.aggregate(pipeline).toArray()
-    console.log(result)
 
     if (!result) {
       throw new ErrorWithStatus({

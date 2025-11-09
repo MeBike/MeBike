@@ -24,7 +24,7 @@ export const reserveBikeValidator = validate(
         },
         isIn: {
           options: [[ReservationOptions.ONE_TIME, ReservationOptions.FIXED_SLOT, ReservationOptions.SUBSCRIPTION]],
-          errorMessage: RESERVATIONS_MESSAGE.INAVLID_OPTIONS
+          errorMessage: RESERVATIONS_MESSAGE.INVALID_OPTIONS
         }
       },
 
