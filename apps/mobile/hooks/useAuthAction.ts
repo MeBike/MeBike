@@ -281,22 +281,24 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
     [useResetPassword, navigation]
   );
   const updateProfile = useCallback(
-    (data: Partial<UpdateProfileSchemaFormData>) => {
-      useUpdateProfile.mutate(data, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            Alert.alert("Success", "Profile updated successfully");
-            queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-          } else {
-            const errorMessage =
-              result.data?.message || "Error updating profile";
-            Alert.alert("Error", errorMessage);
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Error updating profile");
-          Alert.alert("Error", errorMessage);
-        },
+    (data: Partial<UpdateProfileSchemaFormData>): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        useUpdateProfile.mutate(data, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+              resolve();
+            } else {
+              const errorMessage =
+                result.data?.message || "Error updating profile";
+              reject(new Error(errorMessage));
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(error, "Error updating profile");
+            reject(new Error(errorMessage));
+          },
+        });
       });
     },
     [useUpdateProfile, queryClient]
