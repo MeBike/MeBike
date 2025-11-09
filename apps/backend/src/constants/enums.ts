@@ -143,7 +143,8 @@ export enum AppliesToEnum {
 export enum TimeType {
   Hour = 'GIỜ',
   Minute = 'PHÚT',
-  Second = 'GIÂY'
+  Second = 'GIÂY',
+  Day = 'NGÀY'
 }
 
 export enum TrendValue {
@@ -162,4 +163,30 @@ export enum SosAlertStatus {
 export enum SummaryPeriodType {
   TODAY = 'HÔM NAY',
   THIS_MONTH = 'THÁNG NÀY',
+}
+
+export enum ReservationOptions {
+  ONE_TIME = 'MỘT LẦN',
+  FIXED_SLOT = 'KHUNG GIỜ CỐ ĐỊNH',
+  SUBSCRIPTION = 'GÓI THÁNG'
+}
+
+export enum SubscriptionStatus {
+  PENDING = 'ĐANG CHỜ XỬ LÍ',
+  ACTIVE = 'ĐANG HOẠT ĐỘNG',
+  EXPIRED = 'ĐÃ HẾT HẠN',
+  CANCELLED = 'ĐÃ HUỶ'
+}
+
+export enum FixedSlotStatus {
+  ACTIVE = 'ĐANG HOẠT ĐỘNG',
+  PAUSED = 'TẠM DỪNG',
+  EXPIRED = 'ĐÃ HẾT HẠN',
+  CANCELLED = 'ĐÃ HUỶ'
+}
+
+export enum SubscriptionPackage {
+  BASIC = 'basic',
+  PREMIUM = 'premium',
+  UNLIMITED = 'unlimited'
 }

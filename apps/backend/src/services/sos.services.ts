@@ -110,7 +110,7 @@ class SosService {
           as: 'rental'
         }
       },
-      { $unwind: { path: '$rental', preserveNullAndEmptyArrays: false } },
+      { $unwind: { path: '$rental', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: 'bikes',
@@ -119,7 +119,7 @@ class SosService {
           as: 'bike'
         }
       },
-      { $unwind: { path: '$bike', preserveNullAndEmptyArrays: false } },
+      { $unwind: { path: '$bike', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: 'users',
@@ -128,7 +128,7 @@ class SosService {
           as: 'requester'
         }
       },
-      { $unwind: { path: '$requester', preserveNullAndEmptyArrays: false } }
+      { $unwind: { path: '$requester', preserveNullAndEmptyArrays: true } }
     ]
 
     if (currentUser.role === Role.Staff && sos.sos_agent_id) {

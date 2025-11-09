@@ -192,6 +192,71 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
 </body>
 </html>
 `,
+'success-subscription.html': (data) => `
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng Ký Gói Tháng - MeBike</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+  <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
+    <h1 style="color: ${MBIKE_PRIMARY_COLOR}; text-align: center; margin-bottom: 20px;">MeBike</h1>
+
+    <h2 style="font-size: 18px; color: #333; margin-top: 0;">Xin chào ${data.fullname},</h2>
+
+    <p style="color: #333; line-height: 1.5;">
+      Cảm ơn bạn đã <strong>đăng ký gói tháng của MeBike</strong>!
+    </p>
+
+    <div style="background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
+      <p style="font-size: 16px; font-weight: bold; margin: 0;">
+        Gói <strong>${data.package_name}</strong> của bạn đang chờ được kích hoạt ⏳
+      </p>
+    </div>
+
+    <table style="width: 100%; margin: 20px 0; font-size: 15px; color: #333;">
+      <tr>
+        <td style="padding: 8px 0; font-weight: bold; width: 45%;">Tên gói:</td>
+        <td style="padding: 8px 0;">${data.package_name}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 0; font-weight: bold;">Số lượt đặt tối đa / tháng:</td>
+        <td style="padding: 8px 0;">
+          ${data.max_reservations_per_month ? data.max_reservations_per_month : '<strong>Không giới hạn</strong>'}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 0; font-weight: bold;">Giá gói:</td>
+        <td style="padding: 8px 0;">${data.price}₫</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 0; font-weight: bold;">Ngày đăng ký:</td>
+        <td style="padding: 8px 0;">${data.created_at}</td>
+      </tr>
+    </table>
+
+    <p style="color: #333; line-height: 1.5;">
+      Sau khi thanh toán được xác nhận, gói thuê xe của bạn sẽ được <strong>kích hoạt tự động sau 10 ngày</strong>.
+    </p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${data.callBackUrl || '#'}"
+         style="background: ${MBIKE_PRIMARY_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px;">
+         Kiểm Tra Trạng Thái Gói
+      </a>
+    </div>
+
+    <p style="color: #666; font-size: 14px; margin-top: 30px;">
+      <strong>Lưu ý:</strong> Nếu bạn gặp vấn đề trong quá trình thanh toán, vui lòng liên hệ với đội ngũ hỗ trợ của MeBike để được giúp đỡ.<br><br>
+      Trân trọng,<br><strong>Đội ngũ MeBike</strong>
+    </p>
+  </div>
+</body>
+</html>
+`
+,
   "verify-otp.html": data => `
     <!DOCTYPE html>
     <html lang="vi">

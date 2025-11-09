@@ -1,6 +1,13 @@
 import nodemailer from 'nodemailer'
 import { Decimal128, ObjectId } from 'mongodb'
-import { BikeStatus, GroupByOptions, RentalStatus, ReservationStatus, Role } from '~/constants/enums'
+import {
+  BikeStatus,
+  GroupByOptions,
+  RentalStatus,
+  ReservationOptions,
+  ReservationStatus,
+  Role
+} from '~/constants/enums'
 import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
 import { formatUTCDateToVietnamese, fromHoursToMs, fromMinutesToMs, getLocalTime } from '~/utils/date-time'
@@ -15,111 +22,166 @@ import { readEmailTemplate } from '~/utils/email-templates'
 import { sleep } from '~/utils/timeout'
 import iotService from './iot.services'
 import { IotBookingCommand, IotReservationCommand } from '@mebike/shared/sdk/iot-service'
-import { reservationExpireQueue, reservationNotifyQueue } from '~/lib/queue/reservation.queue'
+import {
+  reservationConfirmEmailQueue,
+  reservationExpireQueue,
+  reservationNotifyQueue
+} from '~/lib/queue/reservation.queue'
 import User from '~/models/schemas/user.schema'
-import Station from '~/models/schemas/station.schema'
+import subscriptionService from './subscription.services'
+import { generateEndTime, getHoldHours } from '~/utils/reservation.helper'
 
+interface ReserveOneTimeParams {
+  user_id: ObjectId
+  bike_id: ObjectId
+  station_id: ObjectId
+  start_time: Date
+}
+
+interface ReserveWithSubscriptionParams {
+  user_id: ObjectId
+  bike_id: ObjectId
+  station_id: ObjectId
+  start_time: Date
+  subscription_id: ObjectId
+}
 class ReservationsService {
-  async reserveBike({
-    user_id,
-    bike,
-    station,
-    start_time
-  }: {
-    user_id: ObjectId
-    bike: Bike
-    station: Station
-    start_time: string
-  }) {
-    const now = getLocalTime()
+  async reserveOneTime(params: ReserveOneTimeParams) {
+    const { user_id, bike_id, station_id, start_time } = params
     const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '2000')
     const reservationId = new ObjectId()
-    const bike_id = bike._id as ObjectId
-    const station_id = station._id as ObjectId
 
-    const startTime = new Date(start_time)
-    const endTime = this.generateEndTime(start_time)
+    const end_time = generateEndTime(start_time, getHoldHours())
 
+    const reservation = new Reservation({
+      _id: reservationId,
+      user_id,
+      bike_id,
+      station_id,
+      start_time,
+      end_time,
+      prepaid,
+      status: ReservationStatus.Pending,
+      reservation_option: ReservationOptions.ONE_TIME
+    })
+
+    const rental = new Rental({
+      _id: reservationId,
+      user_id,
+      bike_id,
+      start_station: station_id,
+      start_time: reservation.start_time,
+      status: RentalStatus.Reserved
+    })
+
+    await this.executeReservationTransaction(reservation, rental, bike_id, station_id, user_id)
+
+    await this.scheduleJobs(reservation, bike_id)
+    await walletService.paymentReservation(
+      user_id.toString(),
+      prepaid,
+      RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', reservationId.toString()),
+      reservationId
+    )
+    await iotService.sendReservationCommand(bike_id.toString(), IotReservationCommand.reserve)
+
+    return reservation
+  }
+
+  // 3. Đặt bằng GÓI_THÁNG
+  async reserveWithSubscription(params: ReserveWithSubscriptionParams) {
+    const { user_id, bike_id, station_id, start_time, subscription_id } = params
+    const reservationId = new ObjectId()
+
+    await subscriptionService.useOne(subscription_id)
+
+    const end_time = generateEndTime(start_time, getHoldHours())
+
+    const reservation = new Reservation({
+      _id: reservationId,
+      user_id,
+      bike_id,
+      station_id,
+      start_time,
+      end_time,
+      prepaid: Decimal128.fromString('0'),
+      status: ReservationStatus.Pending,
+      reservation_option: ReservationOptions.SUBSCRIPTION,
+      subscription_id
+    })
+
+    const rental = new Rental({
+      _id: reservationId,
+      user_id,
+      bike_id,
+      start_station: station_id,
+      start_time: reservation.start_time,
+      status: RentalStatus.Reserved
+    })
+
+    await this.executeReservationTransaction(reservation, rental, bike_id, station_id, user_id)
+    await this.scheduleJobs(reservation, bike_id)
+    await iotService.sendReservationCommand(bike_id.toString(), IotReservationCommand.reserve)
+
+    return reservation
+  }
+
+  // Helper chung
+  async executeReservationTransaction(
+    reservation: Reservation,
+    rental: Rental,
+    bike_id: ObjectId,
+    station_id: ObjectId,
+    user_id: ObjectId
+  ) {
     const session = databaseService.getClient().startSession()
     try {
-      const reservation = new Reservation({
-        _id: reservationId,
-        user_id,
-        bike_id,
-        station_id,
-        start_time: startTime,
-        end_time: endTime,
-        status: ReservationStatus.Pending,
-        prepaid
-      })
-
-      const rental = new Rental({
-        _id: reservationId,
-        user_id,
-        bike_id,
-        start_station: station_id,
-        start_time: reservation.start_time,
-        status: RentalStatus.Reserved
-      })
       await session.withTransaction(async () => {
         await Promise.all([
           databaseService.reservations.insertOne(reservation, { session }),
           databaseService.rentals.insertOne(rental, { session }),
           databaseService.bikes.updateOne(
             { _id: bike_id },
-            { $set: { status: BikeStatus.Reserved, updated_at: now } },
+            { $set: { status: BikeStatus.Reserved, updated_at: getLocalTime() } },
             { session }
           )
         ])
       })
-
-      // const beforeExpirationMin = Number(process.env.EXPIRY_NOTIFY_MINUTES || '15')
-      const beforeExpirationMin = Number('29')
-      const beforeExpirationMs = fromMinutesToMs(beforeExpirationMin)
-
-      const delayToExpiry = Math.max(0, endTime.getTime() - now.getTime())
-      const delayToNotify = Math.max(0, delayToExpiry - beforeExpirationMs)
-
-      await Promise.all([
-        reservationNotifyQueue.add(
-          'reservation-notify',
-          { reservationId: reservation._id, userId: user_id },
-          { delay: delayToNotify, removeOnComplete: true, removeOnFail: false }
-        ),
-        reservationExpireQueue.add(
-          'reservation-expire',
-          { reservationId: reservation._id, bikeId: bike._id },
-          { delay: delayToNotify, removeOnComplete: true, removeOnFail: false }
-        )
-      ])
-
-      console.log(
-        `[Scheduler] Jobs added: notify in ${Math.round(delayToNotify / 60000)}m, expire in ${Math.round(
-          delayToExpiry / 60000
-        )}m`
+      await reservationConfirmEmailQueue.add(
+        'send-confirm-email',
+        {
+          reservation_id: reservation._id!.toString(),
+          user_id: user_id.toString(),
+          station_id: station_id.toString()
+        },
+        { jobId: `confirm-email-${reservation._id}` }
       )
-
-      const description = RESERVATIONS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', bike_id.toString())
-      await walletService.paymentReservation(user_id.toString(), prepaid, description, reservationId)
-
-      void iotService.sendReservationCommand(bike.chip_id ?? bike_id.toString(), IotReservationCommand.reserve)
-
-      const toUser = await databaseService.users.findOne({ _id: user_id })
-      const data = {
-        ...reservation,
-        station_name: station.name
-      }
-      void this.sendSuccessReservingEmail(data, toUser!)
-
-      return {
-        ...reservation,
-        prepaid: Number.parseFloat(prepaid.toString())
-      }
-    } catch (error) {
-      throw error
+      console.log(`[Reservation] Confirmation email for ${reservation._id}`)
     } finally {
       await session.endSession()
     }
+  }
+
+  async scheduleJobs(reservation: Reservation, bikeId: ObjectId) {
+    const now = getLocalTime()
+    const beforeExpirationMin = Number(process.env.EXPIRY_NOTIFY_MINUTES || '15')
+    const beforeExpirationMs = fromMinutesToMs(beforeExpirationMin)
+
+    const delayToExpiry = Math.max(0, reservation.end_time!.getTime() - now.getTime())
+    const delayToNotify = Math.max(0, delayToExpiry - beforeExpirationMs)
+
+    await Promise.all([
+      reservationNotifyQueue.add(
+        'reservation-notify',
+        { reservationId: reservation._id, userId: reservation.user_id },
+        { delay: delayToNotify }
+      ),
+      reservationExpireQueue.add(
+        'reservation-expire',
+        { reservationId: reservation._id, bikeId },
+        { delay: delayToExpiry }
+      )
+    ])
   }
 
   async cancelReservation({
@@ -202,7 +264,10 @@ class ReservationsService {
       })
 
       if (isRefund) {
-        const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace('%s', reservation.bike_id.toString())
+        const description = RESERVATIONS_MESSAGE.REFUND_DESCRIPTION.replace(
+          '%s',
+          (reservation._id as ObjectId).toString()
+        )
         void walletService
           .refundReservation(reservation.user_id.toString(), reservation.prepaid, description, reservation._id!)
           .catch((err) => console.warn(`[Wallet] Refund failed for reservation ${reservation._id}:`, err))
@@ -613,7 +678,7 @@ class ReservationsService {
       return { expired_count: 0 }
     }
 
-    const releasedBikeIds = expiredReservations.map((r) => r.bike_id)
+    const releasedBikeIds = expiredReservations.map((r) => r.bike_id).filter((bikeId) => bikeId != null)
     const releasedBikes = await databaseService.bikes.find({ _id: { $in: releasedBikeIds } }).toArray()
     const bikeMap = new Map(releasedBikes.map((b) => [b._id.toString(), b]))
 
@@ -627,6 +692,7 @@ class ReservationsService {
 
       const results = await Promise.allSettled(
         batch.map(async (r) => {
+          if (!r.bike_id) return
           const bike = bikeMap.get(r.bike_id.toString())
           if (!bike) {
             console.warn(RESERVATIONS_MESSAGE.BIKE_NOT_FOUND.replace('%s', r.bike_id.toString()))
@@ -664,7 +730,7 @@ class ReservationsService {
       status: ReservationStatus.Pending
     })
 
-    if (currentReservation) {
+    if (currentReservation && currentReservation.bike_id) {
       const bike = await databaseService.bikes.findOne({ _id: currentReservation.bike_id })
       if (!bike) {
         throw new ErrorWithStatus({
@@ -716,7 +782,7 @@ class ReservationsService {
         }
         if (bikeUpdate.modifiedCount === 0) {
           throw new ErrorWithStatus({
-            message: RESERVATIONS_MESSAGE.BIKE_NOT_RELEASED.replace('%s', reservation.bike_id.toString()),
+            message: RESERVATIONS_MESSAGE.BIKE_NOT_RELEASED.replace('%s', (reservation.bike_id as ObjectId).toString()),
             status: HTTP_STATUS.INTERNAL_SERVER_ERROR
           })
         }
@@ -796,7 +862,10 @@ class ReservationsService {
       {} as Record<string, number>
     )
 
-    const bikeIds = reservations.filter((r) => r.status === ReservationStatus.Pending).map((r) => r.bike_id)
+    const bikeIds = reservations
+      .filter((r) => r.status === ReservationStatus.Pending)
+      .map((r) => r.bike_id)
+      .filter((bikeId) => bikeId != null)
 
     const bikes = await databaseService.bikes.find({ _id: { $in: bikeIds } }).toArray()
 
@@ -807,9 +876,9 @@ class ReservationsService {
       total_count: reservations.length,
       status_counts: statusCounts,
       reserving_bikes: reservations
-        .filter((r) => r.status === ReservationStatus.Pending)
+        .filter((r) => r.status === ReservationStatus.Pending && r.bike_id != null)
         .map((r) => ({
-          ...bikeMap.get(r.bike_id.toString())
+          ...bikeMap.get(r.bike_id!.toString())
         }))
     }
   }
@@ -922,6 +991,7 @@ class ReservationsService {
         pass: process.env.EMAIL_PASSWORD_APP
       }
     })
+
 
     const userIdString = data.user_id.toString()
 

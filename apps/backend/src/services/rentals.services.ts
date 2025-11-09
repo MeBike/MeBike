@@ -7,7 +7,6 @@ import {
   GroupByOptions,
   RentalStatus,
   ReservationStatus,
-  Role,
   SosAlertStatus,
   SummaryPeriodType,
   TrendValue
@@ -30,6 +29,7 @@ import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
 import iotService from './iot.services'
 import { IotBookingCommand } from '@mebike/shared/sdk/iot-service'
+import { FilterQuery } from 'mongoose'
 
 const PENALTY_HOURS = parseInt(process.env.RENTAL_PENALTY_HOURS || '24', 10)
 const PENALTY_AMOUNT = parseInt(process.env.RENTAL_PENALTY_AMOUNT || '50000', 10)
@@ -641,8 +641,8 @@ class RentalsService {
     const endDate = to ? new Date(to) : getLocalTime()
 
     const matchStage: any = {
-      start_time: { $gte: startDate },
-      end_time: { $lte: endDate },
+      start_time: { $lte: endDate },
+      end_time: { $gte: startDate },
       status: RentalStatus.Completed
     }
 
@@ -667,8 +667,8 @@ class RentalsService {
             {
               $group: {
                 _id: '$start_station',
-                totalUsageHours: { $sum: '$durationHours' },
-                totalRentals: { $sum: 1 }
+                totalRentals: { $sum: 1 },
+                totalUsageHours: { $sum: '$durationHours' }
               }
             }
           ],
@@ -684,18 +684,46 @@ class RentalsService {
       },
       {
         $project: {
-          all: { $concatArrays: ['$rentals', '$returns'] }
+          combined: {
+            $concatArrays: [
+              {
+                $map: {
+                  input: '$rentals',
+                  as: 'r',
+                  in: {
+                    _id: '$$r._id',
+                    totalRentals: '$$r.totalRentals',
+                    totalUsageHours: '$$r.totalUsageHours',
+                    totalReturns: 0
+                  }
+                }
+              },
+              {
+                $map: {
+                  input: '$returns',
+                  as: 'r',
+                  in: {
+                    _id: '$$r._id',
+                    totalRentals: 0,
+                    totalUsageHours: 0,
+                    totalReturns: '$$r.totalReturns'
+                  }
+                }
+              }
+            ]
+          }
         }
       },
-      { $unwind: '$all' },
+      { $unwind: '$combined' },
       {
         $group: {
-          _id: '$all._id',
-          totalRentals: { $sum: '$all.totalRentals' },
-          totalReturns: { $sum: '$all.totalReturns' },
-          totalUsageHours: { $sum: '$all.totalUsageHours' }
+          _id: '$combined._id',
+          totalRentals: { $sum: '$combined.totalRentals' },
+          totalReturns: { $sum: '$combined.totalReturns' },
+          totalUsageHours: { $sum: '$combined.totalUsageHours' }
         }
       },
+
       {
         $lookup: {
           from: 'stations',
@@ -704,7 +732,8 @@ class RentalsService {
           as: 'station'
         }
       },
-      { $unwind: '$station' },
+      { $unwind: { path: '$station', preserveNullAndEmptyArrays: true } },
+
       {
         $lookup: {
           from: 'bikes',
@@ -712,56 +741,52 @@ class RentalsService {
           pipeline: [
             {
               $match: {
-                $expr: {
-                  $eq: ['$station_id', '$$stationId']
-                }
+                $expr: { $eq: ['$station_id', '$$stationId'] },
               }
             },
-            { $count: 'totalBikes' }
+            { $count: 'count' }
           ],
-          as: 'bike_stats'
+          as: 'bikeCount'
         }
       },
       {
         $addFields: {
-          totalBikes: { $ifNull: [{ $arrayElemAt: ['$bike_stats.totalBikes', 0] }, 0] }
+          totalBikes: { $ifNull: [{ $arrayElemAt: ['$bikeCount.count', 0] }, 0] }
         }
       },
+
       {
         $addFields: {
           totalAvailableHours: {
-            $multiply: [
-              '$totalBikes',
-              {
-                $divide: [{ $subtract: [endDate, startDate] }, 1000 * 60 * 60]
-              }
-            ]
+            $multiply: ['$totalBikes', { $divide: [{ $subtract: [endDate, startDate] }, 3600000] }]
           }
         }
       },
+
       {
         $addFields: {
           usageRate: {
             $cond: [
-              { $eq: ['$totalAvailableHours', 0] },
+              { $lte: ['$totalAvailableHours', 0.001] },
               0,
               {
-                $divide: ['$totalUsageHours', '$totalAvailableHours']
+                $min: [1, { $round: [{ $divide: ['$totalUsageHours', '$totalAvailableHours'] }, 4] }]
               }
             ]
           }
         }
       },
+
       {
         $project: {
           _id: 0,
-          station: '$station.name',
+          station: { $ifNull: ['$station.name', 'Unknown'] },
           totalBikes: 1,
           totalRentals: 1,
           totalReturns: 1,
-          totalUsageHours: 1,
-          totalAvailableHours: 1,
-          usageRate: { $round: ['$usageRate', 2] }
+          totalUsageHours: { $round: ['$totalUsageHours', 2] },
+          totalAvailableHours: { $round: ['$totalAvailableHours', 2] },
+          usageRate: 1
         }
       },
       { $sort: { station: 1 } }
@@ -1100,6 +1125,83 @@ class RentalsService {
     })
 
     return counts
+  }
+
+  async getRentalListPipelineTemplate(matchQuery: FilterQuery<Rental>) {
+    const pipeline: Document[] = [
+      { $match: matchQuery },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: '$userInfo' },
+      {
+        $project: {
+          _id: 1,
+          user: {
+            _id: '$userInfo._id',
+            fullname: '$userInfo.fullname'
+          },
+          bike_id: 1,
+          status: 1,
+          start_station: 1,
+          end_station: 1,
+          start_time: 1,
+          end_time: 1,
+          duration: 1,
+          total_price: { $toDouble: { $ifNull: ['$total_price', '0'] } },
+          created_at: 1,
+          updated_at: 1
+        }
+      },
+      {
+        $sort: { created_at: -1 }
+      }
+    ]
+
+    return pipeline
+  }
+
+  async getRentalListPipeline({
+    start_station,
+    end_station,
+    status
+  }: {
+    start_station?: ObjectId
+    end_station?: ObjectId
+    status?: RentalStatus
+  }) {
+    const matchQuery: FilterQuery<Rental> = {}
+    if (start_station) matchQuery.start_station = toObjectId(start_station)
+    if (end_station) matchQuery.end_station = toObjectId(end_station)
+    if (status) matchQuery.status = status
+
+    return this.getRentalListPipelineTemplate(matchQuery)
+  }
+
+  async getRentalListByUserIdPipeline({
+    user_id,
+    start_station,
+    end_station,
+    status
+  }: {
+    user_id: ObjectId
+    start_station?: ObjectId
+    end_station?: ObjectId
+    status?: RentalStatus
+  }) {
+    const matchQuery: FilterQuery<Rental> = {
+      user_id
+    }
+    if (start_station) matchQuery.start_station = toObjectId(start_station)
+    if (end_station) matchQuery.end_station = toObjectId(end_station)
+    if (status) matchQuery.status = status
+
+    return this.getRentalListPipelineTemplate(matchQuery)
   }
 
   generateDuration(start: Date, end: Date) {

@@ -1,9 +1,4 @@
-import type { ObjectId } from 'mongodb'
-
-export type ReserveBikeReqBody = {
-  bike_id: ObjectId
-  start_time: string
-}
+import { ReservationOptions } from '~/constants/enums'
 
 export type CancelReservationReqBody = {
   reason: string
@@ -25,6 +20,17 @@ export type DispatchBikeReqBody = {
 
 export type ConfirmReservationByStaffReqBody = {
   reason: string
+}
+
+export type ReserveBikeReqBody = {
+  reservation_option: ReservationOptions
+  bike_id?: string
+  start_time: string
+  slot_start?: string
+  slot_end?: string
+  days_of_week?: number[]
+  recurrence_end_date?: string
+  subscription_id?: string
 }
 
 
