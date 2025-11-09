@@ -1,8 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
-import { FlatList, StatusBar, Text, View } from "react-native";
+import { FlatList, StatusBar, Text, View, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { MyWalletNavigationProp } from "../types/navigation";
+import { LoadingScreen } from "../components/LoadingScreen";
 import { LoadingSpinner } from "../components/wallet/loading-spinner";
 import { QRModal } from "../components/wallet/qr-modal";
 import { RefundDetailModal } from "../components/wallet/refund-detail-modal";
@@ -21,6 +22,7 @@ import { TAB_TYPES } from "../utils/wallet/constants";
 function MyWalletScreen() {
   const navigation = useNavigation<MyWalletNavigationProp>();
   const [showQR, setShowQR] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"transactions" | "withdrawals" | "refunds">("transactions");
   const [showTransactionDetail, setShowTransactionDetail] = useState(false);
   const [showWithdrawDetail, setShowWithdrawDetail] = useState(false);
@@ -36,6 +38,13 @@ function MyWalletScreen() {
     wallet.getMyWallet();
     wallet.getMyTransaction();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await wallet.getMyWallet();
+    await wallet.getMyTransaction();
+    setRefreshing(false);
+  };
 
   const handleTopUp = () => {
     setShowQR(true);
@@ -254,6 +263,14 @@ function MyWalletScreen() {
           }
         }}
         onEndReachedThreshold={0.3}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#0066FF"]}
+            tintColor="#0066FF"
+          />
+        }
       />
       <QRModal
         visible={showQR}

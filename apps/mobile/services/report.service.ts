@@ -86,7 +86,6 @@ export const reportService = {
     const response = await fetchHttpClient.post(REPORT_ENDPOINTS.BASE, payload);
     return response;
   },
-
   getUserReports: async ({
     page,
     limit,
@@ -104,7 +103,6 @@ export const reportService = {
     );
     return response;
   },
-
   getReportById: async (
     id: string
   ): Promise<AxiosResponse<DetailApiResponse<Report>>> => {

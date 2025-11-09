@@ -10,6 +10,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -21,8 +23,16 @@ import type { SupportScreenNavigationProp } from "../types/navigation";
 function SupportScreen() {
   const navigation = useNavigation<SupportScreenNavigationProp>();
   const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = React.useState(false);
   const { userReports, isLoadingUserReports, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useReportActions({ limit: 5 });
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -81,7 +91,10 @@ function SupportScreen() {
   };
 
   const renderReportCard = ({ item }: { item: Report }) => (
-    <View style={styles.reportCard}>
+    <TouchableOpacity 
+      onPress={() => (navigation as any).navigate("ReportDetail", { reportId: item._id })}
+    >
+      <View style={styles.reportCard}>
       <View style={styles.cardHeader}>
         <View style={styles.typeContainer}>
           <Ionicons name="document-text" size={20} color="#0066FF" />
@@ -114,7 +127,8 @@ function SupportScreen() {
           </Text>
         </View>
       )}
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 
   if (isLoadingUserReports) {
@@ -140,7 +154,7 @@ function SupportScreen() {
       </LinearGradient>
 
       <View style={styles.content}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.createReportButton}
           onPress={() => {
             (navigation as any).navigate("Report");
@@ -148,7 +162,7 @@ function SupportScreen() {
         >
           <Ionicons name="add" size={20} color="#fff" />
           <Text style={styles.createReportButtonText}>Tạo báo cáo mới</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <Text style={styles.sectionTitle}>Lịch sử báo cáo</Text>
 
@@ -165,9 +179,18 @@ function SupportScreen() {
               }
             }}
             onEndReachedThreshold={0.5}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#0066FF"]}
+                tintColor="#0066FF"
+              />
+            }
             ListFooterComponent={
               isFetchingNextPage ? (
                 <View style={styles.loadingMore}>
+                  <ActivityIndicator size="small" color="#0066FF" />
                   <Text style={styles.loadingMoreText}>Đang tải thêm...</Text>
                 </View>
               ) : null
@@ -183,6 +206,8 @@ function SupportScreen() {
           </View>
         )}
       </View>
+
+      {/* Modal detail view removed - using separate screen */}
     </View>
   );
 }
@@ -325,6 +350,9 @@ const styles = StyleSheet.create({
   loadingMore: {
     paddingVertical: 16,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
   },
   loadingMoreText: {
     fontSize: 14,

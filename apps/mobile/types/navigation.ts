@@ -38,6 +38,7 @@ export type RootStackParamList = {
   Withdraw: undefined;
   RefundDetail: { refundId: string };
   Support: undefined;
+  ReportDetail: { reportId: string };
   Report: {
     bike_id?: string;
     station_id?: string;
@@ -94,6 +95,14 @@ export type ReservationDetailRouteProp = RouteProp<
 export type SupportScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Support"
+>;
+export type ReportDetailRouteProp = RouteProp<
+  RootStackParamList,
+  "ReportDetail"
+>;
+export type ReportDetailNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ReportDetail"
 >;
 export type ReportScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
