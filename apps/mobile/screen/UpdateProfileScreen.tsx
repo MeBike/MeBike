@@ -141,7 +141,7 @@ function UpdateProfileScreen() {
     if (fullname !== (user?.fullname || "")) changedData.fullname = fullname;
     if (username !== (user?.username || "")) changedData.username = username;
     if (phone !== (user?.phone_number || "")) changedData.phone_number = phone;
-    if (location !== (user?.location || "")) changedData.locatin = location;
+    if (location !== (user?.location || "")) changedData.location = location;
     if (avatar !== (user?.avatar || "")) changedData.avatar = avatar;
 
     if (Object.keys(changedData).length === 0) {
