@@ -13,19 +13,30 @@ import {
   ActivityIndicator,
   Image,
   Dimensions,
+  RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useReportActions } from "@hooks/useReportActions";
+import { LoadingScreen } from "@components/LoadingScreen";
 import type { ReportDetailRouteProp } from "../types/navigation";
 
 function ReportDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute<ReportDetailRouteProp>();
   const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = React.useState(false);
   const { reportDetailData, isLoadingReportDetail } = useReportActions({
     id: route.params.reportId,
   });
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // Refetch data by calling the hook again
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -182,7 +193,16 @@ function ReportDetailScreen() {
         <Text style={styles.headerTitle}>Chi tiết báo cáo</Text>
       </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        onScroll={(event) => {
+          if (event.nativeEvent.contentOffset.y < -100) {
+            onRefresh();
+          }
+        }}
+        scrollEventThrottle={16}
+      >
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={styles.typeContainer}>

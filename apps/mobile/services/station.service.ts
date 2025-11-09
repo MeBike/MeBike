@@ -37,10 +37,6 @@ export const stationService = {
   getAllStations: async (): Promise<AxiosResponse<ApiResponse<StationType[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<StationType[]>>(
       STATION_ENDPOINTS.ALL,
-      {
-        page : 1,
-        limit : 14,
-      }
     );
     return response;
   },
