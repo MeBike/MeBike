@@ -641,8 +641,8 @@ class RentalsService {
     const endDate = to ? new Date(to) : getLocalTime()
 
     const matchStage: any = {
-      start_time: { $gte: startDate },
-      end_time: { $lte: endDate },
+      start_time: { $lte: endDate },
+      end_time: { $gte: startDate },
       status: RentalStatus.Completed
     }
 
@@ -667,8 +667,8 @@ class RentalsService {
             {
               $group: {
                 _id: '$start_station',
-                totalUsageHours: { $sum: '$durationHours' },
-                totalRentals: { $sum: 1 }
+                totalRentals: { $sum: 1 },
+                totalUsageHours: { $sum: '$durationHours' }
               }
             }
           ],
@@ -684,18 +684,46 @@ class RentalsService {
       },
       {
         $project: {
-          all: { $concatArrays: ['$rentals', '$returns'] }
+          combined: {
+            $concatArrays: [
+              {
+                $map: {
+                  input: '$rentals',
+                  as: 'r',
+                  in: {
+                    _id: '$$r._id',
+                    totalRentals: '$$r.totalRentals',
+                    totalUsageHours: '$$r.totalUsageHours',
+                    totalReturns: 0
+                  }
+                }
+              },
+              {
+                $map: {
+                  input: '$returns',
+                  as: 'r',
+                  in: {
+                    _id: '$$r._id',
+                    totalRentals: 0,
+                    totalUsageHours: 0,
+                    totalReturns: '$$r.totalReturns'
+                  }
+                }
+              }
+            ]
+          }
         }
       },
-      { $unwind: '$all' },
+      { $unwind: '$combined' },
       {
         $group: {
-          _id: '$all._id',
-          totalRentals: { $sum: '$all.totalRentals' },
-          totalReturns: { $sum: '$all.totalReturns' },
-          totalUsageHours: { $sum: '$all.totalUsageHours' }
+          _id: '$combined._id',
+          totalRentals: { $sum: '$combined.totalRentals' },
+          totalReturns: { $sum: '$combined.totalReturns' },
+          totalUsageHours: { $sum: '$combined.totalUsageHours' }
         }
       },
+
       {
         $lookup: {
           from: 'stations',
@@ -704,7 +732,8 @@ class RentalsService {
           as: 'station'
         }
       },
-      { $unwind: '$station' },
+      { $unwind: { path: '$station', preserveNullAndEmptyArrays: true } },
+
       {
         $lookup: {
           from: 'bikes',
@@ -712,56 +741,52 @@ class RentalsService {
           pipeline: [
             {
               $match: {
-                $expr: {
-                  $eq: ['$station_id', '$$stationId']
-                }
+                $expr: { $eq: ['$station_id', '$$stationId'] },
               }
             },
-            { $count: 'totalBikes' }
+            { $count: 'count' }
           ],
-          as: 'bike_stats'
+          as: 'bikeCount'
         }
       },
       {
         $addFields: {
-          totalBikes: { $ifNull: [{ $arrayElemAt: ['$bike_stats.totalBikes', 0] }, 0] }
+          totalBikes: { $ifNull: [{ $arrayElemAt: ['$bikeCount.count', 0] }, 0] }
         }
       },
+
       {
         $addFields: {
           totalAvailableHours: {
-            $multiply: [
-              '$totalBikes',
-              {
-                $divide: [{ $subtract: [endDate, startDate] }, 1000 * 60 * 60]
-              }
-            ]
+            $multiply: ['$totalBikes', { $divide: [{ $subtract: [endDate, startDate] }, 3600000] }]
           }
         }
       },
+
       {
         $addFields: {
           usageRate: {
             $cond: [
-              { $eq: ['$totalAvailableHours', 0] },
+              { $lte: ['$totalAvailableHours', 0.001] },
               0,
               {
-                $divide: ['$totalUsageHours', '$totalAvailableHours']
+                $min: [1, { $round: [{ $divide: ['$totalUsageHours', '$totalAvailableHours'] }, 4] }]
               }
             ]
           }
         }
       },
+
       {
         $project: {
           _id: 0,
-          station: '$station.name',
+          station: { $ifNull: ['$station.name', 'Unknown'] },
           totalBikes: 1,
           totalRentals: 1,
           totalReturns: 1,
-          totalUsageHours: 1,
-          totalAvailableHours: 1,
-          usageRate: { $round: ['$usageRate', 2] }
+          totalUsageHours: { $round: ['$totalUsageHours', 2] },
+          totalAvailableHours: { $round: ['$totalAvailableHours', 2] },
+          usageRate: 1
         }
       },
       { $sort: { station: 1 } }
