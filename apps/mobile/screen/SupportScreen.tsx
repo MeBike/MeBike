@@ -39,6 +39,8 @@ function SupportScreen() {
     setRefreshing(false);
   }, [refetchUserReports]);
 
+
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Pending":
