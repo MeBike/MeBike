@@ -6,14 +6,16 @@ import databaseService from '~/services/database.services'
 import { ErrorWithStatus } from '~/models/errors'
 import { FixedSlotStatus, Role } from '~/constants/enums'
 import { sendPaginatedAggregationResponse } from '~/utils/pagination.helper'
-import { fixedSlotTemplateService } from '~/services/fixed-slot.services'
 import HTTP_STATUS from '~/constants/http-status'
+import { fixedSlotTemplateService } from '~/services/fixed-slot.services'
 
 export const createFixedSlotTemplateController = async (req: Request, res: Response) => {
   const { user_id } = req.decoded_authorization as TokenPayLoad
   const result = await fixedSlotTemplateService.create({
     user_id: toObjectId(user_id),
-    ...req.body
+    station_id: toObjectId(req.body.station_id),
+    slot_start: req.body.slot_start,
+    days_of_week: req.body.days_of_week
   })
 
   res.json({
@@ -55,7 +57,11 @@ export const getFixedSlotTemplateListController = async (req: Request, res: Resp
 
 export const updateFixedSlotTemplateController = async (req: Request, res: Response) => {
   const template = req.fixedSlotTemplate!
-  const result = await fixedSlotTemplateService.update(template._id!, req.body)
+  const updates: any = {}
+  if (req.body.slot_start) updates.slot_start = req.body.slot_start
+  if (req.body.days_of_week) updates.days_of_week = req.body.days_of_week
+
+  const result = await fixedSlotTemplateService.update(template._id!, updates)
 
   res.json({
     message: RESERVATIONS_MESSAGE.FS_TEMPLATE_UPDATE_SUCCESS,
