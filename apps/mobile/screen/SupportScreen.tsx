@@ -81,7 +81,10 @@ function SupportScreen() {
   };
 
   const renderReportCard = ({ item }: { item: Report }) => (
-    <View style={styles.reportCard}>
+    <TouchableOpacity 
+      onPress={() => (navigation as any).navigate("ReportDetail", { reportId: item._id })}
+    >
+      <View style={styles.reportCard}>
       <View style={styles.cardHeader}>
         <View style={styles.typeContainer}>
           <Ionicons name="document-text" size={20} color="#0066FF" />
@@ -114,7 +117,8 @@ function SupportScreen() {
           </Text>
         </View>
       )}
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 
   if (isLoadingUserReports) {
@@ -140,7 +144,7 @@ function SupportScreen() {
       </LinearGradient>
 
       <View style={styles.content}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.createReportButton}
           onPress={() => {
             (navigation as any).navigate("Report");
@@ -148,7 +152,7 @@ function SupportScreen() {
         >
           <Ionicons name="add" size={20} color="#fff" />
           <Text style={styles.createReportButtonText}>Tạo báo cáo mới</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <Text style={styles.sectionTitle}>Lịch sử báo cáo</Text>
 
@@ -183,6 +187,8 @@ function SupportScreen() {
           </View>
         )}
       </View>
+
+      {/* Modal detail view removed - using separate screen */}
     </View>
   );
 }
