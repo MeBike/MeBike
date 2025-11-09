@@ -41,7 +41,9 @@ export const checkUserWalletBeforeSubscribe = async (req: Request, res: Response
       })
     }
 
-    if (findWallet.balance < Decimal128.fromString(packagePriceString)) {
+    const userBalance = BigInt(findWallet.balance.toString())
+    const price = BigInt(packagePriceString)
+    if (userBalance < price) {
       throw new ErrorWithStatus({
         message: RESERVATIONS_MESSAGE.NOT_ENOUGH_BALANCE_TO_SUBSCRIBE.replace('%s', packageName).replace(
           '%s',

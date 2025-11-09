@@ -430,7 +430,9 @@ export const checkUserWalletBeforeRentOrReserve = async (req: Request, res: Resp
       })
     }
 
-    if (findWallet.balance < minWalletBalanceToRent) {
+    const userBalance = BigInt(findWallet.balance.toString())
+    const minBalance = BigInt(minWalletBalanceToRent.toString())
+    if (userBalance < minBalance) {
       throw new ErrorWithStatus({
         message: RENTALS_MESSAGE.NOT_ENOUGH_BALANCE_TO_RENT.replace('%s', minWalletBalanceToRent.toString()),
         status: HTTP_STATUS.BAD_REQUEST
