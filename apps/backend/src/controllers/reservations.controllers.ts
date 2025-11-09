@@ -17,7 +17,7 @@ import { TokenPayLoad } from '~/models/requests/users.requests'
 import Reservation from '~/models/schemas/reservation.schema'
 import Station from '~/models/schemas/station.schema'
 import databaseService from '~/services/database.services'
-import fixedSlotService from '~/services/fixed-slot.services'
+import { fixedSlotTemplateService } from '~/services/fixed-slot.services'
 import reservationsService from '~/services/reservations.services'
 import { buildAdminReservationFilter } from '~/utils/filters.helper'
 import { sendPaginatedResponse } from '~/utils/pagination.helper'
@@ -65,7 +65,7 @@ export async function reserveBikeController(
     })
   } 
   else if (option === ReservationOptions.FIXED_SLOT) {
-    result = await fixedSlotService.createTemplate({
+    result = await fixedSlotTemplateService.create({
       user_id: userId,
       station_id: station._id as ObjectId,
       slot_start: req.body.slot_start!,

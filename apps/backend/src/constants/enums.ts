@@ -180,6 +180,7 @@ export enum SubscriptionStatus {
 
 export enum FixedSlotStatus {
   ACTIVE = 'ĐANG HOẠT ĐỘNG',
+  PAUSED = 'TẠM DỪNG',
   EXPIRED = 'ĐÃ HẾT HẠN',
   CANCELLED = 'ĐÃ HUỶ'
 }
