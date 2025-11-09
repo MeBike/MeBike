@@ -183,12 +183,37 @@ export function useReservationActions({
             error,
             "Không thể đặt xe, vui lòng thử lại sau.",
           );
-          Alert.alert("Lỗi đặt xe", message);
+          
+          // Check if error is due to insufficient balance
+          const isInsufficientBalance = message.includes("không đủ") || message.includes("insufficient");
+          
+          if (isInsufficientBalance) {
+            Alert.alert(
+              "Không đủ tiền",
+              message,
+              [
+                {
+                  text: "Hủy",
+                  onPress: () => {},
+                  style: "cancel",
+                },
+                {
+                  text: "Nạp tiền ngay",
+                  onPress: () => {
+                    navigation.navigate("MyWallet" as never);
+                  },
+                },
+              ]
+            );
+          } else {
+            Alert.alert("Lỗi đặt xe", message);
+          }
+          
           callbacks?.onError?.(message);
         },
       });
     },
-    [createReservationMutation, ensureAuthenticated, queryClient],
+    [createReservationMutation, ensureAuthenticated, queryClient, navigation],
   );
 
   const cancelReservation = useCallback(
