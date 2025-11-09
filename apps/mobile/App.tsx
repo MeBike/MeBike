@@ -13,6 +13,7 @@ import type { RootStackParamList } from "./types/navigation";
 import BookingHistoryDetail from "./screen/BookingHistoryDetail";
 import BookingHistoryScreen from "./screen/BookingHistoryScreen";
 import ChangePasswordScreen from "./screen/ChangePasswordScreen";
+import EmailVerificationScreen from "./screen/EmailVerification";
 import ForgotPasswordScreen from "./screen/ForgotPassword";
 import HomeScreen from "./screen/Home";
 import IntroScreen from "./screen/Intro";
@@ -23,6 +24,8 @@ import RegisterScreen from "./screen/Register";
 import ReportScreen from "./screen/ReportScreen";
 import ReservationDetailScreen from "./screen/reservation-detail-screen";
 import ReservationScreen from "./screen/reservation-screen";
+import ResetPasswordOTPScreen from "./screen/ResetPasswordOTP";
+import ResetPasswordFormScreen from "./screen/ResetPasswordForm";
 import StationDetailScreen from "./screen/StationDetail";
 import SupportScreen from "./screen/SupportScreen";
 import UpdateProfileScreen from "./screen/UpdateProfileScreen";
@@ -141,6 +144,11 @@ export default function App() {
               options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
+              name="EmailVerification"
+              component={EmailVerificationScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
               name="StationDetail"
               component={StationDetailScreen}
               options={{ headerShown: false, gestureEnabled: false }}
@@ -163,6 +171,16 @@ export default function App() {
             <Stack.Screen
               name="ForgotPassword"
               component={ForgotPasswordScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="ResetPasswordOTP"
+              component={ResetPasswordOTPScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="ResetPasswordForm"
+              component={ResetPasswordFormScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen

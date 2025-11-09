@@ -50,7 +50,8 @@ export class FetchHttpClient {
           '/users/verify-forgot-password',
           '/users/reset-password',
           '/users/resend-verify-email',
-          '/users/refresh-token'
+          '/users/refresh-token',
+          '/users/change-password',
         ];
         
         const shouldSkipTokenRefresh = noAuthRetryEndpoints.some(endpoint => 

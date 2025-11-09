@@ -57,7 +57,25 @@ export class FetchHttpClient {
           error.response?.data,
         );
         const originalRequest = error.config;
-        if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
+
+        // Các endpoint không cần retry token refresh
+        const noAuthRetryEndpoints = [
+          "/users/verify-email",
+          "/users/verify-forgot-password",
+          "/users/reset-password",
+          "/users/resend-verify-email",
+          "/users/refresh-token",
+          "/users/change-password",
+        ];
+
+        const shouldSkipTokenRefresh = noAuthRetryEndpoints.some(
+          (endpoint) => originalRequest?.url?.includes(endpoint),
+        );
+
+        if (
+          error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
+          !shouldSkipTokenRefresh
+        ) {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });

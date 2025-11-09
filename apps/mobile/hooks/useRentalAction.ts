@@ -135,15 +135,39 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string , station_i
               queryKey: ["station"],
             });
           } else {
-            Alert.alert("Error", "Failed to end the rental.");
+            Alert.alert("Error", "Failed to rent the bike.");
           }
         },
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            "An error occurred while ending the rental."
+            "An error occurred while renting the bike."
           );
-          console.log(errorMessage);
+          
+          // Check if error is due to insufficient balance
+          const isInsufficientBalance = errorMessage.includes("không đủ") || errorMessage.includes("insufficient");
+          
+          if (isInsufficientBalance) {
+            Alert.alert(
+              "Không đủ tiền",
+              errorMessage,
+              [
+                {
+                  text: "Hủy",
+                  onPress: () => {},
+                  style: "cancel",
+                },
+                {
+                  text: "Nạp tiền ngay",
+                  onPress: () => {
+                    navigation.navigate("MyWallet" as never);
+                  },
+                },
+              ]
+            );
+          } else {
+            Alert.alert("Lỗi", errorMessage);
+          }
         },
       });
     },

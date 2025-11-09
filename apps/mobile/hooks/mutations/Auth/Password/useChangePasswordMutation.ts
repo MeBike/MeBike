@@ -7,5 +7,6 @@ import { authService } from "@services/auth.service";
 export function useChangePasswordMutation() {
   return useMutation({
     mutationFn: (data: ChangePasswordSchemaFormData) => authService.changePassword(data),
+    retry: 0,
   });
 }
