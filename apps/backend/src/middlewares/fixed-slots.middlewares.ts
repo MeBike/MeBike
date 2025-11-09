@@ -10,7 +10,7 @@ import { ErrorWithStatus } from '~/models/errors'
 import HTTP_STATUS from '~/constants/http-status'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import FixedSlotTemplate from '~/models/schemas/fixed-slot.schema'
-import { getLocalTime } from '~/utils/date-time'
+import { fromHoursToMs, getLocalTime } from '~/utils/date-time'
 
 interface FixedSlotTemplateParam {
   id: string
@@ -127,7 +127,18 @@ export const createFixedSlotTemplateValidator = validate(
       },
       start_date: {
         notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_START_DATE },
-        isISO8601: { errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_START_DATE }
+        isISO8601: { errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_START_DATE },
+        custom: {
+          options: (value) => {
+            if (new Date(value) < new Date(getLocalTime().getTime() + fromHoursToMs(24))) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.FS_START_DATE_MUST_AFTER_24H,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+            return true
+          }
+        }
       },
       end_date: {
         notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_RECURRENCE_END_DATE },

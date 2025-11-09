@@ -89,7 +89,7 @@ export const generateFixedSlotWorker = new Worker(
   async (job) => {
     const startTime = Date.now()
     const today = getLocalTime()
-    today.setHours(0, 0, 0, 0)
+    today.setUTCHours(0, 0, 0, 0)
 
     console.log(`[FixedSlot] Starting generation for ${today.toISOString()}`)
 

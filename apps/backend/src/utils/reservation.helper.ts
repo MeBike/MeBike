@@ -1,3 +1,7 @@
+import HTTP_STATUS from "~/constants/http-status"
+import { RESERVATIONS_MESSAGE } from "~/constants/messages"
+import { ErrorWithStatus } from "~/models/errors"
+
 export const generateEndTime = (startTime: Date | string, holdHours = 1): Date => {
   const start = new Date(startTime)
   const holdMs = holdHours * 60 * 60 * 1000
@@ -24,7 +28,10 @@ export const applySlotToDate = (date: Date, slotStart: string, slotEnd: string):
   const end = new Date(start)
   end.setHours(eh, em, 0, 0)
 
-  if (end <= start) throw new Error('slot_end phải lớn hơn slot_start')
+  if (end <= start) throw new ErrorWithStatus({
+    message: RESERVATIONS_MESSAGE.FS_END_SLOT_AFTER_START,
+    status: HTTP_STATUS.BAD_REQUEST
+  })
   return { start, end }
 }
 
