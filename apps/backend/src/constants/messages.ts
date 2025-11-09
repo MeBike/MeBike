@@ -357,6 +357,63 @@ export const RESERVATIONS_MESSAGE = {
   REQUIRED_DESTINATION_STATION_ID: 'Vui lòng cung cấp Id trạm đích',
   REQUIRED_BIKE_LIST: 'Danh sách xe cần điều phối không được để trống',
   REQUIRED_CONFIRM_REASON: 'Vui lòng nhập nguyên nhân xác nhận phiên đặt trước này',
+  REQUIRED_OPTIONS: 'Loại đặt chỗ là bắt buộc',
+  // Fixed slot (FS)
+  FS_REQUIRED_SLOT_START: 'Vui lòng nhập thời gian bắt đầu khung giờ (slot_start)',
+  FS_REQUIRED_SLOT_END: 'Thiếu thời gian kết thúc khung giờ (slot_end)',
+  FS_REQUIRED_DAYS_OF_WEEK: 'Thiếu danh sách ngày trong tuần (days_of_week)',
+  FS_REQUIRED_RECURRENCE_END_DATE: 'Thiếu ngày kết thúc lặp lại (recurrence_end_date)',
+  FS_TEMPLATE_CREATE_SUCCESS: 'Tạo mẫu khung giờ cố định thành công',
+  FS_TEMPLATE_GET_DETAIL_SUCCESS: 'Xem chi tiết mẫu khung giờ thành công',
+  FS_TEMPLATE_LIST_SUCCESS: 'Lấy danh sách mẫu khung giờ thành công',
+  FS_TEMPLATE_UPDATE_SUCCESS: 'Cập nhật mẫu khung giờ thành công',
+  FS_TEMPLATE_PAUSE_SUCCESS: 'Tạm dừng mẫu khung giờ thành công',
+  FS_TEMPLATE_RESUME_SUCCESS: 'Kích hoạt lại mẫu khung giờ thành công',
+  FS_TEMPLATE_CANCEL_SUCCESS: 'Hủy mẫu khung giờ thành công',
+
+  FS_TEMPLATE_NOT_FOUND: 'Không tìm thấy mẫu khung giờ cố định',
+  FS_TEMPLATE_CANNOT_OPERATE_OTHER: 'Bạn không thể thao tác mẫu của người khác',
+  FS_TEMPLATE_MUST_BE_ACTIVE_TO_PAUSE: 'Chỉ có thể tạm dừng mẫu đang hoạt động',
+  FS_TEMPLATE_MUST_BE_PAUSED_TO_RESUME: 'Chỉ có thể kích hoạt lại mẫu đang tạm dừng',
+  FS_TEMPLATE_CANNOT_MODIFY_AFTER_START: 'Không thể chỉnh sửa mẫu sau khi đã bắt đầu',
+  FS_INVALID_SLOT_TIME: 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu',
+  FS_INVALID_DAYS_OF_WEEK: 'days_of_week chỉ chứa số từ 0 đến 6',
+  FS_END_DATE_BEFORE_START: 'Ngày kết thúc phải lớn hơn ngày bắt đầu',
+
+  FS_REQUIRED_STATION_ID: 'Vui lòng nhập ID trạm',
+  FS_INVALID_SLOT_START_FORMAT: 'Thời gian bắt đầu slot phải theo định dạng HH:MM',
+  FS_INVALID_SLOT_END_FORMAT: 'Thời gian kết thúc slot phải theo định dạng HH:MM',
+  FS_REQUIRED_START_DATE: 'Vui lòng nhập ngày bắt đầu',
+  FS_INVALID_START_DATE: 'Ngày bắt đầu không hợp lệ',
+  FS_REQUIRED_END_DATE: 'Vui lòng nhập ngày kết thúc',
+  FS_INVALID_END_DATE: 'Ngày kết thúc không hợp lệ',
+  FS_START_DATE_MUST_AFTER_24H: 'Ngày bắt đầu phải cách hiện tại 24h',
+  FS_END_SLOT_AFTER_START: 'Thời gian kết thúc slot phải lớn hơn thời gian bắt đầu',
+  // Subscription (SUB)
+  SUB_REQUIRED_SUBSCRIPTION_ID: 'Vui lòng nhập ID gói đăng ký (subscription_id)',
+  SUBSCRIPTION_NOT_FOUND: 'Không tìm thấy gói đăng ký',
+  SUB_REQUIRED_PACKAGE_NAME: 'Vui lòng nhập tên gói',
+  SUB_CREATE_SUCCESS: 'Đăng ký gói tháng thành công',
+  SUB_ACTIVATE_SUCCESS: 'Kích hoạt gói tháng thành công',
+  SUB_USE_SUCCESS: 'Sử dụng lượt đặt từ gói tháng thành công',
+  SUB_EXPIRE_SUCCESS: 'Gói tháng đã được cập nhật trạng thái hết hạn',
+  SUB_AUTO_ACTIVATE_SCHEDULED: 'Gói sẽ tự động kích hoạt sau 10 ngày nếu chưa sử dụng',
+  SUB_ALREADY_ACTIVE: 'Gói đã được kích hoạt',
+  SUB_ALREADY_EXPIRED: 'Gói đã hết hạn',
+  SUB_ACTIVATION_FAILED: 'Kích hoạt gói thất bại',
+  SUB_USE_LIMIT_EXCEEDED: 'Đã dùng hết số lượt đặt trong tháng',
+  SUB_NOT_FOUND_OR_ACTIVATED: 'Gói không tồn tại hoặc chưa được kích hoạt',
+  SUB_NOT_ACTIVATED: 'Gói chưa được kích hoạt',
+  SUB_INVALID_PACKAGE: 'Gói đăng ký không hợp lệ',
+  SUB_USER_HAS_ACTIVE: 'Bạn đã có gói đang hoạt động',
+  SUB_PACKAGE_NOT_FOUND: 'Gói đăng ký không tồn tại',
+  SUB_CREATE_FAILED: 'Đăng ký gói thất bại',
+  SUB_ACTIVATE_TOO_EARLY: 'Gói chỉ có thể kích hoạt sau khi đăng ký ít nhất 1 ngày',
+  SUB_ALREADY_HAS_PENDING: 'Bạn đã có gói đang chờ kích hoạt',
+  NOT_ENOUGH_BALANCE_TO_SUBSCRIBE: 'Tài khoản của bạn không đủ để đăng kí gói tháng %s (giá gói: %s)',
+  SUB_MUST_BE_PENDING_TO_ACTIVATE: 'Chỉ có thể kích hoạt gói đang ở trạng thái ĐANG CHỜ XỬ LÍ',
+  SUB_GET_DETAIL_SUCCESS: 'Xem chi tiết gói đăng kí thành công',
+  SUB_CANNOT_OPERATE_OTHER_SUBSCRIPTION: 'Không thể thao tác với gói của người khác (chỉ dành cho nhân viên và quản trị viên)',
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
@@ -375,6 +432,7 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_END_DATE: 'Ngày kết thúc không hợp lệ: %s',
   START_DATE_AFTER_END_DATE: 'Ngày bắt đầu không được phép lớn hơn ngày kết thúc',
   INVALID_GROUP_BY: 'groupBy phải là một trong: %s',
+  INVALID_OPTIONS: 'Loại đặt chỗ không hợp lệ',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',
@@ -384,7 +442,7 @@ export const RESERVATIONS_MESSAGE = {
   DESTINATION_STATION_NOT_FOUND: 'Không tìm thấy trạm đích với Id %s',
   BIKE_NOT_FOUND_IN_LIST: 'Danh sách chứa Id xe không tồn tại',
   // Unavailable object
-  UNAVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
+  UNAVAILABLE_BIKE: 'Xe không khả dụng',
   BIKE_NOT_AVAILABLE_FOR_DISPATCH: 'Xe (Id: %s) không có sẵn để điều phối (trạng thái: %s)',
   // Not allowed action
   CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền huỷ phiên đặt trước của người khác',
@@ -402,12 +460,14 @@ export const RESERVATIONS_MESSAGE = {
   // Notification
   NOTIFY_EXPIRED_RESERVATION: 'Thông báo được gửi cho các phiên đặt chỗ sắp hết hạn',
   // Payment
-  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước cho xe %s',
-  REFUND_DESCRIPTION: 'Hoàn tiền cho phiên đặt trước của xe %s',
+  PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước (ID: %s)',
+  REFUND_DESCRIPTION: 'Hoàn tiền cho phiên đặt trước (ID: %s)',
+  SUBSCRIPTION_PAYMENT_DESCRIPTION: 'Thanh toán gói đăng kí tháng (ID: %s)',
+
   // Quota
   QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước',
   DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',
-  BIKE_NOT_AT_SOURCE_STATION: 'Xe (Id: %s) không nằm ở trạm nguồn đã khai báo',
+  BIKE_NOT_AT_SOURCE_STATION: 'Xe (ID: %s) không nằm ở trạm nguồn đã khai báo',
   // Report
   GET_REPORT_SUCCESS: 'Lấy báo cáo đặt trước theo %s thành công',
   REPORT_PERIOD_DEFAULT: '12 tháng gần nhất',
@@ -426,6 +486,7 @@ export const RESERVATIONS_MESSAGE = {
   // Email Messages
   EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn',
   EMAIL_SUBJECT_SUCCESS_RESERVING: 'Xác nhận đặt trước thành công',
+  EMAIL_SUBJECT_SUCCESS_SUBSCRIBING: 'Đăng kí gói tháng thành công',
   // Status
   RESERVATION_NOT_PENDING: 'Phiên đặt trước phải ở trạng thái "ĐANG CHỜ XỬ LÍ"'
 } as const
@@ -584,7 +645,7 @@ export const SOS_MESSAGE = {
   INVALID_NOTE_LENGTH: 'Độ dài của ghi chú không được vượt quá 500 kí tự',
   INVALID_SOLVABLE: 'Khả năng xử lí sự cố phải là đúng hoặc sai',
   INVALID_PHOTO: 'Mỗi ảnh phải là kiểu chuỗi hợp lệ',
-  INVALID_PHOTO_FORMAT: 'Mỗi ảnh phải là Base64 hoặc URL hợp lệ (jpg, png, webp)',
+  INVALID_PHOTO_URL: 'Mỗi ảnh phải là 1 URL hợp lệ',
   INVALID_PHOTOS_ARRAY: 'Danh sách ảnh phải là 1 mảng từ 1-5 ảnh',
   INVALID_STATUS: 'Trạng thái không hợp lệ',
   SOS_DISPATCHED_SUCCESS: 'Đã phân đội xử lí cho yêu cầu cứu hộ',

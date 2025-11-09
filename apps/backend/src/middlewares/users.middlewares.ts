@@ -19,6 +19,7 @@ import databaseService from "~/services/database.services";
 import usersService from "~/services/users.services";
 import { verifyToken } from "~/utils/jwt";
 import { validate } from "~/utils/validation";
+import { toObjectId } from "~/utils/string";
 
 const fullNameSchema: ParamSchema = {
   notEmpty: {
@@ -928,3 +929,27 @@ export const adminCreateUserValidator = validate(
     ['body']
   )
 )
+
+export const checkUserExist = async(req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {userId} = req.params
+    if(!userId){
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_ID_IS_REQUIRED,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+    const user = await databaseService.users.findOne({_id: toObjectId(userId)})
+    if(!user){
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    req.user = user
+    next()
+  } catch (error) {
+    next(error)
+  }
+}

@@ -26,6 +26,9 @@ import ratingRouter from './routes/rating.routes'
 import { initQueue } from './lib/queue'
 import sosRouter from './routes/sos.routes'
 import dashboardRouter from './routes/dashboard.routes'
+import subscriptionRouter from './routes/subscriptions.routes'
+import fixedSlotTemplateRouter from './routes/fixed-slots.routes'
+import { generateFixedSlotReservation } from './utils/cron/fixed-slots.services'
 
 const port = process.env.PORT || 4000
 
@@ -39,9 +42,11 @@ databaseService.connect().then(async () => {
   databaseService.indexBikes()
   databaseService.indexStations()
   databaseService.indexSuppliers()
-
+  databaseService.indexReservation()
+  databaseService.indexFixedSlot()
+  databaseService.indexSubscription()
   // cron-job
-  // warningExpiryReservation.start()
+  generateFixedSlotReservation.start()
   // bullmq
   initQueue()
 })
@@ -63,6 +68,8 @@ app.use('/reservations', reserveRouter)
 app.use('/ratings', ratingRouter)
 app.use('/sos', sosRouter)
 app.use('/dashboard', dashboardRouter)
+app.use('/subscriptions', subscriptionRouter)
+app.use('/fixed-slots', fixedSlotTemplateRouter)
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 

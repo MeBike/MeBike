@@ -1,6 +1,6 @@
 import { Decimal128, ObjectId } from 'mongodb'
 
-import { BikeStatus, RentalStatus, ReservationStatus, Role, SupplierStatus, UserVerifyStatus, WalletStatus } from '~/constants/enums'
+import { BikeStatus, RentalStatus, ReservationOptions, ReservationStatus, Role, SupplierStatus, UserVerifyStatus, WalletStatus } from '~/constants/enums'
 import databaseService from '~/services/database.services'
 import { getLocalTime } from '~/utils/date-time'
 import Bike from '~/models/schemas/bike.schema'
@@ -246,13 +246,14 @@ async function seedDatabase() {
         start_time: getLocalTime(),
         end_time: new Date(getLocalTime().getTime() + 120 * 60 * 1000), // 2 hours from now
         prepaid: Decimal128.fromString('0'),
-        status: ReservationStatus.Pending
+        status: ReservationStatus.Pending,
+        reservation_option: ReservationOptions.ONE_TIME
       })
       await databaseService.reservations.insertOne(reservation)
       const reservedRental = new Rental({
         _id: reservation._id,
         user_id: reservation.user_id,
-        bike_id: reservation.bike_id,
+        bike_id: reservation.bike_id!,
         start_station: reservation.station_id!,
         start_time: reservation.start_time,
         status: RentalStatus.Reserved

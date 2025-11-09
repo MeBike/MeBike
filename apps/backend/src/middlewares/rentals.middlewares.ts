@@ -1,6 +1,6 @@
 import { checkSchema } from 'express-validator'
 
-import { BikeStatus, RentalStatus } from '~/constants/enums'
+import { BikeStatus, RentalStatus, ReservationOptions } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RENTALS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -415,6 +415,12 @@ export const cancelRentalValidator = validate(
 export const checkUserWalletBeforeRentOrReserve = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { user_id } = req.decoded_authorization as TokenPayLoad
+    const option = req.body.reservation_option as ReservationOptions
+
+    if (option !== ReservationOptions.ONE_TIME) {
+      return next()
+    }
+
     const minWalletBalanceToRent = Decimal128.fromString(process.env.MIN_WALLET_BALANCE_TO_RENT || '2000')
     const findWallet = await databaseService.wallets.findOne({ user_id: toObjectId(user_id) })
     if (!findWallet) {
@@ -424,7 +430,9 @@ export const checkUserWalletBeforeRentOrReserve = async (req: Request, res: Resp
       })
     }
 
-    if (findWallet.balance < minWalletBalanceToRent) {
+    const userBalance = BigInt(findWallet.balance.toString())
+    const minBalance = BigInt(minWalletBalanceToRent.toString())
+    if (userBalance < minBalance) {
       throw new ErrorWithStatus({
         message: RENTALS_MESSAGE.NOT_ENOUGH_BALANCE_TO_RENT.replace('%s', minWalletBalanceToRent.toString()),
         status: HTTP_STATUS.BAD_REQUEST
