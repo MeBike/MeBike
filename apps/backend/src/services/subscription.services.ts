@@ -1,5 +1,5 @@
 // src/services/subscription.service.ts
-import { Decimal128, ObjectId } from 'mongodb'
+import { Decimal128, Document, ObjectId } from 'mongodb'
 import { formatUTCDateToVietnamese, fromDaysToMs, fromHoursToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import Subscription from '~/models/schemas/subscription.schema'
@@ -15,6 +15,8 @@ import HTTP_STATUS from '~/constants/http-status'
 import walletService from './wallets.services'
 import reservationsService from './reservations.services'
 import User from '~/models/schemas/user.schema'
+import { FilterQuery } from 'mongoose'
+import { toObjectId } from '~/utils/string'
 
 interface CreateSubscriptionParams {
   user_id: ObjectId
@@ -49,7 +51,7 @@ class SubscriptionService {
       {
         user_id: sub.user_id.toString(),
         package_name: sub.package_name,
-        max_reservations_per_month: sub.max_reservations_per_month?.toString() ?? null, 
+        max_reservations_per_month: sub.max_reservations_per_month?.toString() ?? null,
         price: sub.price.toString(),
         created_at: now
       },
@@ -150,13 +152,28 @@ class SubscriptionService {
     console.log(`[Subscription] Expired ${subscription_id}`)
   }
 
-  async getActiveByUser(user_id: ObjectId) {
-    const now = getLocalTime()
-    return await databaseService.subscriptions.findOne({
-      user_id,
-      status: SubscriptionStatus.ACTIVE,
-      expires_at: { $gte: now }
-    })
+  async getDetail(subscription: Subscription) {
+    const user = await databaseService.users.findOne({ _id: subscription.user_id })
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.USER_NOT_FOUND.replace('%s', subscription.user_id.toString()),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const price = parseFloat(subscription.price.toString())
+    return {
+      subscription: {
+        ...subscription,
+        price,
+        created_at: subscription.created_at,
+        updated_at: subscription.updated_at
+      },
+      user: {
+        fullname: user.fullname,
+        email: user.email
+      }
+    }
   }
 
   async sendSuccessSubscribingEmail(data: any, toUser: User) {
@@ -168,6 +185,44 @@ class SubscriptionService {
       data,
       toUser
     )
+  }
+
+  async getSubscriptionListPipeline(matchQuery: FilterQuery<Subscription>) {
+    const pipeline: Document[] = [
+      { $match: matchQuery },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'userInfo'
+        }
+      },
+      { $unwind: '$userInfo' },
+      {
+        $project: {
+          _id: 1,
+          user: {
+            _id: '$userInfo._id',
+            fullname: '$userInfo.fullname'
+          },
+          package_name: 1,
+          activated_at: 1,
+          expires_at: 1,
+          max_reservations_per_month: 1,
+          used_reservations: 1,
+          price: { $toDouble: { $ifNull: ['$price', '0'] } },
+          status: 1,
+          created_at: 1,
+          updated_at: 1
+        }
+      },
+      {
+        $sort: { created_at: -1 }
+      }
+    ]
+
+    return pipeline
   }
 }
 

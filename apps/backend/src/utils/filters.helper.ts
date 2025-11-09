@@ -1,6 +1,6 @@
 import { Request } from 'express'
 import { Filter, ObjectId } from 'mongodb'
-import { ReservationStatus } from '~/constants/enums'
+import { ReservationStatus, SubscriptionStatus } from '~/constants/enums'
 import { toObjectId } from './string'
 import { RESERVATIONS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -59,3 +59,20 @@ export function buildAdminReservationFilter(query: Request['query']): Filter<Res
 
   return filter
 }
+
+export function buildAdminSubscriptionFilter(query: any) {
+  const filter: any = {}
+
+  if (query.user_id) filter.user_id = toObjectId(query.user_id)
+  if (query.package_name) filter.package_name = query.package_name
+  if (query.status && Object.values(SubscriptionStatus).includes(query.status))
+    filter.status = query.status
+  if (query.start_date || query.end_date) {
+    filter.created_at = {}
+    if (query.start_date) filter.created_at.$gte = new Date(query.start_date)
+    if (query.end_date) filter.created_at.$lte = new Date(query.end_date)
+  }
+
+  return filter
+}
+

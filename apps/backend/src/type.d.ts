@@ -6,6 +6,7 @@ import Reservation from "./models/schemas/reservation.schema";
 import type Station from "./models/schemas/station.schema";
 import type User from "./models/schemas/user.schema";
 import SosAlert from "./models/schemas/sos-alert.schema";
+import Subscription from "./models/schemas/subscription.schema";
 
 declare module "express" {
   interface Request {
@@ -22,5 +23,6 @@ declare module "express" {
     dispatch_bike_ids?: ObjectId[];
     dispatched_bikes?: Bike[]
     sos_alert?: SosAlert
+    subscription?: Subscription
   };
 }

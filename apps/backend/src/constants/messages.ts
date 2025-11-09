@@ -385,7 +385,9 @@ export const RESERVATIONS_MESSAGE = {
   SUB_ACTIVATE_TOO_EARLY: 'Gói chỉ có thể kích hoạt sau khi đăng ký ít nhất 1 ngày',
   SUB_ALREADY_HAS_PENDING: 'Bạn đã có gói đang chờ kích hoạt',
   NOT_ENOUGH_BALANCE_TO_SUBSCRIBE: 'Tài khoản của bạn không đủ để đăng kí gói tháng %s (giá gói: %s)',
-  
+  SUB_MUST_BE_PENDING_TO_ACTIVATE: 'Chỉ có thể kích hoạt gói đang ở trạng thái ĐANG CHỜ XỬ LÍ',
+  SUB_GET_DETAIL_SUCCESS: 'Xem chi tiết gói đăng kí thành công',
+  SUB_CANNOT_OPERATE_OTHER_SUBSCRIPTION: 'Không thể thao tác với gói của người khác (chỉ dành cho nhân viên và quản trị viên)',
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',

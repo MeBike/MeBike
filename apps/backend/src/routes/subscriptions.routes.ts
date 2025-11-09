@@ -1,7 +1,7 @@
 import { filterMiddleware } from '~/middlewares/common.middlewares';
 import { Router } from "express"
-import { activateSubscriptionController, createSubscriptionController } from "~/controllers/subscriptions.controllers"
-import { checkUserWalletBeforeSubscribe, createSubscriptionValidator, isPendingOrActiveSubscriptionExist } from "~/middlewares/subscriptions.middlewares"
+import { activateSubscriptionController, createSubscriptionController, getSubscriptionByIdController, getSubscriptionListController } from "~/controllers/subscriptions.controllers"
+import { activateValidator, checkUserWalletBeforeSubscribe, createSubscriptionValidator, getSubscriptionByIdValidator, isPendingOrActiveSubscriptionExist } from "~/middlewares/subscriptions.middlewares"
 import { accessTokenValidator, verifiedUserValidator } from "~/middlewares/users.middlewares"
 import { wrapAsync } from "~/utils/handler"
 import { CreateSubscriptionReqBody } from '~/models/requests/subscriptions.requests';
@@ -22,8 +22,21 @@ subscriptionRouter.post(
 subscriptionRouter.post(
   '/:id/activate',
   accessTokenValidator,
-  createSubscriptionValidator,
+  activateValidator,
   wrapAsync(activateSubscriptionController)
+)
+
+subscriptionRouter.get(
+  '/:id',
+  accessTokenValidator,
+  getSubscriptionByIdValidator,
+  wrapAsync(getSubscriptionByIdController)
+)
+
+subscriptionRouter.get(
+  '/',
+  accessTokenValidator,
+  wrapAsync(getSubscriptionListController)
 )
 
 export default subscriptionRouter

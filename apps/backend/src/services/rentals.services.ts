@@ -7,7 +7,6 @@ import {
   GroupByOptions,
   RentalStatus,
   ReservationStatus,
-  Role,
   SosAlertStatus,
   SummaryPeriodType,
   TrendValue
