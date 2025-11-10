@@ -165,6 +165,7 @@ export function useReservationActions({
       const payload = {
         bike_id: bikeId,
         start_time: startISO,
+        reservation_option: 'ONE_TIME'
       };
 
       createReservationMutation.mutate(payload, {
