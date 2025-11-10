@@ -17,5 +17,6 @@ export const useGetNewRegistrationStatsQuery = () => {
   return useQuery({
     queryKey: ["user", "new-registration-stats"],
     queryFn: () => fetchNewRegistrationStats(),
+    enabled: false,
   });
 };

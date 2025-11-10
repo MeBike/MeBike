@@ -1,235 +1,89 @@
 "use client";
-
-import { useState } from "react";
-import { RentalTable } from "@/components/rentals/rental-table";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState, useEffect } from "react";
 import { RentalFilters } from "@/components/rentals/rental-filters";
-import { RentalStats } from "@/components/rentals/rental-stats";
 import { Button } from "@/components/ui/button";
-import type { Rental, RentalStatus, PaymentStatus } from "@custom-types";
-import { Plus, Download } from "lucide-react";
-const mockRentals: Rental[] = [
-  {
-    _id: "1",
-    rental_code: "RNT-2024-001",
-    customer_id: "c1",
-    customer_name: "Nguyễn Văn An",
-    customer_phone: "0901234567",
-    customer_email: "nguyenvanan@email.com",
-    bike_id: "1",
-    bike_name: "Giant Talon 3",
-    bike_type: "Xe đạp địa hình",
-    start_date: "2024-06-10T08:00:00Z",
-    end_date: "2024-06-10T18:00:00Z",
-    rental_hours: 10,
-    rental_days: 0,
-    price_per_hour: 50000,
-    price_per_day: 300000,
-    total_amount: 500000,
-    deposit_amount: 200000,
-    payment_status: "paid",
-    payment_method: "card",
-    status: "active",
-    staff_id: "s1",
-    staff_name: "Trần Thị Bình",
-    created_at: "2024-06-10T07:30:00Z",
-    updated_at: "2024-06-10T07:30:00Z",
-  },
-  {
-    _id: "2",
-    rental_code: "RNT-2024-002",
-    customer_id: "c2",
-    customer_name: "Lê Thị Mai",
-    customer_phone: "0912345678",
-    customer_email: "lethimai@email.com",
-    bike_id: "2",
-    bike_name: "Trek FX 3",
-    bike_type: "Xe đạp hybrid",
-    start_date: "2024-06-09T09:00:00Z",
-    end_date: "2024-06-11T09:00:00Z",
-    actual_return_date: "2024-06-11T08:30:00Z",
-    rental_hours: 0,
-    rental_days: 2,
-    price_per_hour: 45000,
-    price_per_day: 250000,
-    total_amount: 500000,
-    deposit_amount: 150000,
-    payment_status: "paid",
-    payment_method: "momo",
-    status: "completed",
-    staff_id: "s1",
-    staff_name: "Trần Thị Bình",
-    created_at: "2024-06-09T08:30:00Z",
-    updated_at: "2024-06-11T08:30:00Z",
-  },
-  {
-    _id: "3",
-    rental_code: "RNT-2024-003",
-    customer_id: "c3",
-    customer_name: "Phạm Minh Tuấn",
-    customer_phone: "0923456789",
-    customer_email: "phamminhtuan@email.com",
-    bike_id: "3",
-    bike_name: "VinFast Klara S",
-    bike_type: "Xe đạp điện",
-    start_date: "2024-06-10T14:00:00Z",
-    end_date: "2024-06-10T20:00:00Z",
-    rental_hours: 6,
-    rental_days: 0,
-    price_per_hour: 80000,
-    price_per_day: 500000,
-    total_amount: 480000,
-    deposit_amount: 300000,
-    payment_status: "pending",
-    payment_method: "cash",
-    status: "pending",
-    staff_id: "s2",
-    staff_name: "Hoàng Văn Cường",
-    created_at: "2024-06-10T13:45:00Z",
-    updated_at: "2024-06-10T13:45:00Z",
-  },
-  {
-    _id: "4",
-    rental_code: "RNT-2024-004",
-    customer_id: "c4",
-    customer_name: "Võ Thị Hương",
-    customer_phone: "0934567890",
-    customer_email: "vothihuong@email.com",
-    bike_id: "5",
-    bike_name: "Cannondale CAAD13",
-    bike_type: "Xe đạp đường trường",
-    start_date: "2024-06-08T07:00:00Z",
-    end_date: "2024-06-09T19:00:00Z",
-    rental_hours: 0,
-    rental_days: 1,
-    price_per_hour: 70000,
-    price_per_day: 400000,
-    total_amount: 400000,
-    deposit_amount: 200000,
-    payment_status: "paid",
-    payment_method: "transfer",
-    status: "overdue",
-    notes: "Khách hàng chưa trả xe",
-    staff_id: "s1",
-    staff_name: "Trần Thị Bình",
-    created_at: "2024-06-08T06:30:00Z",
-    updated_at: "2024-06-09T19:00:00Z",
-  },
-  {
-    _id: "5",
-    rental_code: "RNT-2024-005",
-    customer_id: "c5",
-    customer_name: "Đặng Quốc Bảo",
-    customer_phone: "0945678901",
-    customer_email: "dangquocbao@email.com",
-    bike_id: "6",
-    bike_name: "Merida Big Nine",
-    bike_type: "Xe đạp địa hình",
-    start_date: "2024-06-07T10:00:00Z",
-    end_date: "2024-06-07T16:00:00Z",
-    actual_return_date: "2024-06-07T15:45:00Z",
-    rental_hours: 6,
-    rental_days: 0,
-    price_per_hour: 55000,
-    price_per_day: 320000,
-    total_amount: 330000,
-    deposit_amount: 150000,
-    payment_status: "paid",
-    payment_method: "zalopay",
-    status: "completed",
-    staff_id: "s2",
-    staff_name: "Hoàng Văn Cường",
-    created_at: "2024-06-07T09:30:00Z",
-    updated_at: "2024-06-07T15:45:00Z",
-  },
-  {
-    _id: "6",
-    rental_code: "RNT-2024-006",
-    customer_id: "c6",
-    customer_name: "Bùi Thị Lan",
-    customer_phone: "0956789012",
-    customer_email: "buithilan@email.com",
-    bike_id: "4",
-    bike_name: "Specialized Sirrus",
-    bike_type: "Xe đạp thành phố",
-    start_date: "2024-06-09T11:00:00Z",
-    end_date: "2024-06-09T15:00:00Z",
-    rental_hours: 4,
-    rental_days: 0,
-    price_per_hour: 40000,
-    price_per_day: 220000,
-    total_amount: 160000,
-    deposit_amount: 100000,
-    payment_status: "refunded",
-    payment_method: "card",
-    status: "cancelled",
-    notes: "Khách hàng hủy do thời tiết xấu",
-    staff_id: "s1",
-    staff_name: "Trần Thị Bình",
-    created_at: "2024-06-09T10:45:00Z",
-    updated_at: "2024-06-09T11:15:00Z",
-  },
-];
-  
+import type { RentalStatus } from "@custom-types";
+import { Plus } from "lucide-react";
+import { useRentalsActions } from "@/hooks/use-rental";
+import { useStationActions } from "@/hooks/useStationAction";
+import { DataTable } from "@/components/TableCustom";
+import { PaginationDemo } from "@/components/PaginationCustomer";
+import { rentalColumn } from "@/columns/rental-columns";
+import {
+  updateRentalSchema,
+  type UpdateRentalSchema,
+} from "@schemas/rentalSchema";
 export default function RentalsPage() {
+  const [page, setPage] = useState<number>(1);
+  const [limit] = useState<number>(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RentalStatus | "all">("all");
-  const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | "all">(
-    "all"
-  );
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-
-  const filteredRentals = mockRentals.filter((rental) => {
-    const matchesSearch =
-      rental.rental_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rental.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rental.customer_phone.includes(searchQuery);
-
-    const matchesStatus =
-      statusFilter === "all" || rental.status === statusFilter;
-    const matchesPayment =
-      paymentFilter === "all" || rental.payment_status === paymentFilter;
-
-    const matchesDateFrom =
-      !dateFrom || new Date(rental.start_date) >= new Date(dateFrom);
-    const matchesDateTo =
-      !dateTo || new Date(rental.start_date) <= new Date(dateTo);
-
-    return (
-      matchesSearch &&
-      matchesStatus &&
-      matchesPayment &&
-      matchesDateFrom &&
-      matchesDateTo
-    );
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedRentalId, setSelectedRentalId] = useState<string>("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<UpdateRentalSchema>({
+    resolver: zodResolver(updateRentalSchema),
+    defaultValues: {
+      status: "ĐANG THUÊ",
+      end_station: "",
+      end_time: "",
+      reason: "",
+      total_price: 0,
+    },
   });
+  const {
+    allRentalsData,
+    pagination,
+    detailData,
+    getDetailRental,
+  } = useRentalsActions({
+    hasToken: true,
+    limit,
+    page,
+    bike_id: selectedRentalId,
+    status:
+      statusFilter !== "all"
+        ? statusFilter === "active"
+          ? "ĐANG THUÊ"
+          : statusFilter === "completed"
+            ? "HOÀN THÀNH"
+            : statusFilter === "cancelled"
+              ? "ĐÃ HỦY"
+              : statusFilter === "reserved"
+                ? "ĐÃ ĐẶT TRƯỚC"
+                : undefined
+        : undefined,
+  });
+
+  const { stations, getAllStations } = useStationActions({
+    hasToken: true,
+    page: 1,
+    limit: 100,
+  });
+  useEffect(() => {
+    getAllStations();
+  }, [getAllStations]);
+
+  const rentals = allRentalsData || [];
 
   const handleReset = () => {
     setSearchQuery("");
     setStatusFilter("all");
-    setPaymentFilter("all");
-    setDateFrom("");
-    setDateTo("");
   };
 
-  const stats = {
-    pending: mockRentals.filter((r) => r.status === "pending").length,
-    active: mockRentals.filter((r) => r.status === "active").length,
-    completed: mockRentals.filter((r) => r.status === "completed").length,
-    cancelled: mockRentals.filter((r) => r.status === "cancelled").length,
-    overdue: mockRentals.filter((r) => r.status === "overdue").length,
-    todayRevenue: mockRentals
-      .filter(
-        (r) =>
-          r.payment_status === "paid" &&
-          new Date(r.created_at).toDateString() === new Date().toDateString()
-      )
-      .reduce((sum, r) => sum + r.total_amount, 0),
-    totalRevenue: mockRentals
-      .filter((r) => r.payment_status === "paid")
-      .reduce((sum, r) => sum + r.total_amount, 0),
+  const handleUpdateRental = (data: UpdateRentalSchema) => {
+    // Assuming updateRental is available from useRentalsActions
+    // For now, just log the data
+    console.log("Update rental:", data);
+    setIsUpdateModalOpen(false);
   };
-
   return (
     <div>
       <div className="space-y-6">
@@ -244,19 +98,13 @@ export default function RentalsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Xuất Excel
-            </Button>
+            
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               Tạo đơn mới
             </Button>
           </div>
         </div>
-
-        {/* Stats */}
-        <RentalStats stats={stats} />
 
         {/* Filters */}
         <RentalFilters
@@ -268,11 +116,8 @@ export default function RentalsPage() {
         />
 
         {/* Results */}
-        <div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Hiển thị {filteredRentals.length} / {mockRentals.length} đơn thuê
-          </p>
-          <RentalTable
+        <div className="w-full rounded-lg space-y-4  flex flex-col">
+          {/* <RentalTable
             rentals={filteredRentals}
             onView={(rental) => console.log("[v0] View rental:", rental._id)}
             onEdit={(rental) => console.log("[v0] Edit rental:", rental._id)}
@@ -282,8 +127,582 @@ export default function RentalsPage() {
             onCancel={(rental) =>
               console.log("[v0] Cancel rental:", rental._id)
             }
+          /> */}
+          <DataTable
+          title="Danh sách đơn thuê"
+            columns={rentalColumn({
+              onView: ({ id }) => {
+                setSelectedRentalId(id);
+                getDetailRental();
+                setIsDetailModalOpen(true);
+              },
+              onEdit: ({ data }) => {
+                setSelectedRentalId(data._id);
+                getDetailRental();
+                reset({
+                  status: data.status as
+                    | "ĐANG THUÊ"
+                    | "HOÀN THÀNH"
+                    | "ĐÃ HỦY"
+                    | "ĐÃ ĐẶT TRƯỚC",
+                  end_station: data.end_station || "",
+                  end_time: data.end_time
+                    ? new Date(data.end_time).toISOString().slice(0, 16)
+                    : "",
+                  reason: "",
+                  total_price: data.total_price,
+                });
+                setIsUpdateModalOpen(true);
+              },
+            })}
+            data={rentals}
+          />
+          <PaginationDemo
+            currentPage={pagination?.currentPage ?? 1}
+            onPageChange={setPage}
+            totalPages={pagination?.totalPages ?? 1}
           />
         </div>
+
+        <p className="text-sm text-muted-foreground">
+          Trang {pagination?.currentPage} / {pagination?.totalPages} đơn thuê
+        </p>
+
+        {/* {isCreateModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Tạo đơn thuê mới
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    Khách hàng
+                  </label>
+                  <select
+                    value={newRental.customer_id}
+                    onChange={(e) =>
+                      setNewRental({
+                        ...newRental,
+                        customer_id: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                  >
+                    <option value="">Chọn khách hàng</option>
+                    <option value="c1">Nguyễn Văn An</option>
+                    <option value="c2">Lê Thị Mai</option>
+                    <option value="c3">Phạm Minh Tuấn</option>
+                    <option value="c4">Võ Thị Hương</option>
+                    <option value="c5">Đặng Quốc Bảo</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    Xe đạp
+                  </label>
+                  <select
+                    value={newRental.bike_id}
+                    onChange={(e) =>
+                      setNewRental({ ...newRental, bike_id: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                  >
+                    <option value="">Chọn xe đạp</option>
+                    <option value="1">Giant Talon 3</option>
+                    <option value="2">Trek FX 3</option>
+                    <option value="3">VinFast Klara S</option>
+                    <option value="4">Specialized Sirrus</option>
+                    <option value="5">Cannondale CAAD13</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    Loại thuê
+                  </label>
+                  <select
+                    value={newRental.rental_type}
+                    onChange={(e) =>
+                      setNewRental({
+                        ...newRental,
+                        rental_type: e.target.value as "hours" | "days",
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                  >
+                    <option value="hours">Theo giờ</option>
+                    <option value="days">Theo ngày</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    Ngày bắt đầu
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newRental.start_date}
+                    onChange={(e) =>
+                      setNewRental({ ...newRental, start_date: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    Ngày kết thúc
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newRental.end_date}
+                    onChange={(e) =>
+                      setNewRental({ ...newRental, end_date: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    Phương thức thanh toán
+                  </label>
+                  <select
+                    value={newRental.payment_method}
+                    onChange={(e) =>
+                      setNewRental({
+                        ...newRental,
+                        payment_method: e.target.value as any,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                  >
+                    <option value="card">Thẻ tín dụng</option>
+                    <option value="cash">Tiền mặt</option>
+                    <option value="momo">Momo</option>
+                    <option value="zalopay">ZaloPay</option>
+                    <option value="transfer">Chuyển khoản</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="flex-1"
+                >
+                  Hủy
+                </Button>
+                <Button onClick={handleCreateRental} className="flex-1">
+                  Tạo đơn thuê
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* Detail Modal */}
+        {isDetailModalOpen && detailData && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-foreground">
+                  Chi tiết đơn thuê
+                </h2>
+                <button
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Row 1 */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Mã đơn thuê
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?._id}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạng thái
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.status}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 2 - User Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Tên người dùng
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.user?.fullname}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Email
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {detailData.result?.user?.email}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 3 - User Contact */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Số điện thoại
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.user?.phone_number}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạng thái xác minh
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.user?.verify}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 4 - Bike Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Mã xe đạp
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.bike?._id}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Chip ID
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.bike?.chip_id}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 5 - Bike Status */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạng thái xe
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.bike?.status}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Nhà cung cấp
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.bike?.supplier_id}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 6 - Start Station */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạm bắt đầu
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.start_station?.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {detailData.result?.start_station?.address}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Tọa độ trạm bắt đầu
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {detailData.result?.start_station?.latitude},{" "}
+                      {detailData.result?.start_station?.longitude}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 7 - End Station */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạm kết thúc
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.end_station?.name || "Chưa trả"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {detailData.result?.end_station?.address || ""}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Tọa độ trạm kết thúc
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {detailData.result?.end_station
+                        ? `${detailData.result.end_station.latitude}, ${detailData.result.end_station.longitude}`
+                        : "Chưa trả"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 8 - Times */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Thời gian bắt đầu
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {new Date(detailData.result?.start_time).toLocaleString(
+                        "vi-VN"
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Thời gian kết thúc
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {detailData.result?.end_time
+                        ? new Date(detailData.result.end_time).toLocaleString(
+                            "vi-VN"
+                          )
+                        : "Chưa trả"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 9 - Duration & Price */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Thời lượng (phút)
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.duration}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Tổng tiền
+                    </label>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?.total_price?.toLocaleString("vi-VN")}{" "}
+                      VND
+                    </p>
+                  </div>
+                </div>
+
+                {/* Row 10 - Timestamps */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Ngày tạo
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {new Date(detailData.result?.created_at).toLocaleString(
+                        "vi-VN"
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Cập nhật lần cuối
+                    </label>
+                    <p className="text-foreground text-sm">
+                      {new Date(detailData.result?.updated_at).toLocaleString(
+                        "vi-VN"
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDetailModalOpen(false)}
+                  className="flex-1"
+                >
+                  Đóng
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsDetailModalOpen(false);
+                    setIsUpdateModalOpen(true);
+                  }}
+                  className="flex-1"
+                >
+                  Cập nhật
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Update Modal */}
+        {isUpdateModalOpen && detailData && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Cập nhật đơn thuê
+              </h2>
+
+              <form
+                onSubmit={handleSubmit(handleUpdateRental)}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạng thái
+                    </label>
+                    <select
+                      {...register("status")}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    >
+                      {detailData.result?.status === "ĐANG THUÊ" && (
+                        <>
+                          <option value="ĐANG THUÊ">ĐANG THUÊ</option>
+                          <option value="ĐÃ HOÀN THÀNH">ĐÃ HOÀN THÀNH</option>
+                          <option value="ĐÃ HỦY">ĐÃ HỦY</option>
+                        </>
+                      )}
+                      {detailData.result?.status === "ĐÃ HOÀN THÀNH" && (
+                        <>
+                          <option value="ĐÃ HOÀN THÀNH">ĐÃ HOÀN THÀNH</option>
+                          <option value="ĐÃ HỦY">ĐÃ HỦY</option>
+                        </>
+                      )}
+                      {detailData.result?.status === "ĐÃ HỦY" && (
+                        <option value="ĐÃ HỦY">ĐÃ HỦY</option>
+                      )}
+                    </select>
+                    {errors.status && (
+                      <p className="text-red-500 text-sm">
+                        {errors.status.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Trạm kết thúc
+                    </label>
+                    <select
+                      {...register("end_station")}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    >
+                      <option value="">Chọn trạm</option>
+                      {stations.map((station) => (
+                        <option key={station._id} value={station._id}>
+                          {station.name} - {station.address}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.end_station && (
+                      <p className="text-red-500 text-sm">
+                        {errors.end_station.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Thời gian kết thúc
+                    </label>
+                    <input
+                      type="datetime-local"
+                      {...register("end_time")}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errors.end_time && (
+                      <p className="text-red-500 text-sm">
+                        {errors.end_time.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Tổng tiền
+                    </label>
+                    <input
+                      type="number"
+                      {...register("total_price", { valueAsNumber: true })}
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    />
+                    {errors.total_price && (
+                      <p className="text-red-500 text-sm">
+                        {errors.total_price.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Lý do
+                  </label>
+                  <textarea
+                    {...register("reason")}
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                    rows={3}
+                  />
+                  {errors.reason && (
+                    <p className="text-red-500 text-sm">
+                      {errors.reason.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsUpdateModalOpen(false)}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    {isSubmitting ? "Đang cập nhật..." : "Cập nhật"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

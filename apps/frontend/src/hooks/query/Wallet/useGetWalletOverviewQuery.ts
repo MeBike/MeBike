@@ -15,6 +15,7 @@ export const useGetWalletOverviewQuery = () => {
   return useQuery({
     queryKey: ["wallet-overview"],
     queryFn: fetchWalletOverview,
+    enabled: false,
     staleTime: 5 * 60 * 1000,
   });
 }

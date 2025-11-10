@@ -15,5 +15,6 @@ export const useGetStatisticsBikeQuery = () => {
   return useQuery({
     queryKey: ["bikes", "status"],
     queryFn: () => getStatisticsBikeAdmin(),
+    enabled: false,
   });
 };

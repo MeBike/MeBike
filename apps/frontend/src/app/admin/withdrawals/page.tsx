@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import type { WithdrawStatus, WithdrawRequest } from "@custom-types";
-import { Download } from "lucide-react";
 import { useWithdrawAction } from "@/hooks/use-withdraw";
 import { withdrawColumn } from "@/columns/withdraw-column";
 import { PaginationDemo } from "@/components/PaginationCustomer";
@@ -128,10 +127,7 @@ export default function RefundPage() {
               Xem và xử lý các yêu cầu hoàn tiền từ người dùng
             </p>
           </div>
-          <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Xuất Excel
-          </Button>
+          
         </div>
 
         {overviewResponse && (
@@ -167,6 +163,7 @@ export default function RefundPage() {
         </div>
         <div className="w-full rounded-lg space-y-4  flex flex-col">
           <DataTable
+            title="Danh sách đơn rút tiền"
             columns={withdrawColumn({
               onView: ({ id }) => {
                 setSelectedID(id);

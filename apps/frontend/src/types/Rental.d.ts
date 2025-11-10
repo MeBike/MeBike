@@ -15,6 +15,9 @@ export type RentingHistory = {
   status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
   created_at: string;
   updated_at: string;
+  user: {
+    fullname: string;
+  }
 };
 export type RentalDetail = {
   _id: string;
