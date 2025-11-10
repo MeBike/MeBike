@@ -23,7 +23,7 @@ import {
 import { isAdminAndStaffValidator, isAdminValidator } from '~/middlewares/admin.middlewares'
 import {
   cancelRentalValidator,
-  checkUserWalletBeforeRentOrReserve,
+  checkUserWalletBeforeRent,
   createRentalSessionByStaffValidator,
   createRentalSessionValidator,
   endRentalByAdminOrStaffValidator,
@@ -117,8 +117,8 @@ rentalsRouter
   .post(
     accessTokenValidator,
     verifiedUserValidator,
-    checkUserWalletBeforeRentOrReserve,
-    filterMiddleware<CreateRentalReqBody>(['bike_id']),
+    checkUserWalletBeforeRent,
+    filterMiddleware<CreateRentalReqBody>(['bike_id', 'subscription_id']),
     createRentalSessionValidator,
     wrapAsync(createRentalSessionController)
   )

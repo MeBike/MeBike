@@ -1,4 +1,3 @@
-// src/routes/fixed-slot-template.routes.ts
 import { Router } from 'express'
 import {
   cancelFixedSlotTemplateController,
@@ -9,6 +8,7 @@ import {
   resumeFixedSlotTemplateController,
   updateFixedSlotTemplateController
 } from '~/controllers/fixed-slots.controllers'
+import { filterMiddleware } from '~/middlewares/common.middlewares'
 import {
   cancelFixedSlotTemplateValidator,
   createFixedSlotTemplateValidator,
@@ -20,6 +20,7 @@ import {
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 
 import { verifiedUserValidator } from '~/middlewares/users.middlewares'
+import { createFixedSlotTemplateReqBody } from '~/models/requests/fixed-slots.requests'
 import { wrapAsync } from '~/utils/handler'
 
 const fixedSlotTemplateRouter = Router()
@@ -63,6 +64,7 @@ fixedSlotTemplateRouter
   .post(
     accessTokenValidator,
     verifiedUserValidator,
+    filterMiddleware<createFixedSlotTemplateReqBody>(['selected_dates', 'slot_start', 'station_id']),
     createFixedSlotTemplateValidator,
     wrapAsync(createFixedSlotTemplateController)
   )

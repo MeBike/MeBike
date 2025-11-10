@@ -1,8 +1,8 @@
 import { checkSchema } from 'express-validator'
 
-import { BikeStatus, RentalStatus, ReservationOptions } from '~/constants/enums'
+import { BikeStatus, RentalStatus, ReservationOptions, SubscriptionStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
-import { RENTALS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
+import { RENTALS_MESSAGE, RESERVATIONS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import databaseService from '~/services/database.services'
 import { validate } from '~/utils/validation'
@@ -10,7 +10,7 @@ import { isAvailability } from './bikes.middlewares'
 import { toObjectId } from '~/utils/string'
 import { NextFunction, Request, Response } from 'express'
 import { TokenPayLoad } from '~/models/requests/users.requests'
-import { Decimal128 } from 'mongodb'
+import { Decimal128, ObjectId } from 'mongodb'
 
 const createRentalValidator = (includeUserIdField = false) => {
   const baseSchema: any = {
@@ -25,7 +25,7 @@ const createRentalValidator = (includeUserIdField = false) => {
         bail: true
       },
       custom: {
-        options: async (value: string, { req }:{req: Request}) => {
+        options: async (value: string, { req }: { req: Request }) => {
           const bikeId = toObjectId(value)
           const bike = await databaseService.bikes.findOne({ _id: bikeId })
           if (!bike) {
@@ -56,10 +56,47 @@ const createRentalValidator = (includeUserIdField = false) => {
           return true
         }
       }
+    },
+    subscription_id: {
+      in: ['body'],
+      optional: true,
+      custom: {
+        options: async (value: string, { req }: { req: Request }) => {
+          if (!value) {
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.SUB_REQUIRED_SUBSCRIPTION_ID,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+          if (!/^[a-fA-F0-9]{24}$/.test(value)) {
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'subscription_id'),
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+          const subscription = await databaseService.subscriptions.findOne({
+            _id: toObjectId(value),
+            status: {
+              $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE]
+            }
+          })
+
+          if (!subscription) {
+            throw new ErrorWithStatus({
+              message: RESERVATIONS_MESSAGE.SUBSCRIPTION_NOT_FOUND,
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+          req.subscription = subscription
+          return true
+        }
+      }
     }
   }
 
-  if(includeUserIdField){
+  if (includeUserIdField) {
     baseSchema.user_id = {
       in: ['body'],
       notEmpty: {
@@ -71,11 +108,11 @@ const createRentalValidator = (includeUserIdField = false) => {
         bail: true
       },
       custom: {
-        options: async(value: string, {req}:{req: Request}) => {
-          const user = await databaseService.users.findOne({_id: toObjectId(value)})
-          if(!user){
+        options: async (value: string, { req }: { req: Request }) => {
+          const user = await databaseService.users.findOne({ _id: toObjectId(value) })
+          if (!user) {
             throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.USER_NOT_FOUND.replace("%s", value),
+              message: RENTALS_MESSAGE.USER_NOT_FOUND.replace('%s', value),
               status: HTTP_STATUS.NOT_FOUND
             })
           }
@@ -412,12 +449,24 @@ export const cancelRentalValidator = validate(
   )
 )
 
-export const checkUserWalletBeforeRentOrReserve = async (req: Request, res: Response, next: NextFunction) => {
+export const checkUserWalletBeforeRent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { user_id } = req.decoded_authorization as TokenPayLoad
-    const option = req.body.reservation_option as ReservationOptions
+    const subId = req.body.subscription_id as string
 
-    if (option !== ReservationOptions.ONE_TIME) {
+    if (subId) {
+      const sub = await databaseService.subscriptions.findOne({
+        _id: toObjectId(subId),
+        user_id: toObjectId(user_id),
+        status: SubscriptionStatus.ACTIVE
+      })
+      
+      if (!sub || (sub.max_usages != null && sub.usage_count >= sub.max_usages)) {
+        throw new ErrorWithStatus({
+          message: RESERVATIONS_MESSAGE.SUB_USE_LIMIT_EXCEEDED,
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
       return next()
     }
 

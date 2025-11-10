@@ -8,6 +8,7 @@ import {
   RentalStatus,
   ReservationStatus,
   SosAlertStatus,
+  SubscriptionStatus,
   SummaryPeriodType,
   TrendValue
 } from '~/constants/enums'
@@ -30,18 +31,23 @@ import Bike from '~/models/schemas/bike.schema'
 import iotService from './iot.services'
 import { IotBookingCommand } from '@mebike/shared/sdk/iot-service'
 import { FilterQuery } from 'mongoose'
+import subscriptionService from './subscription.services'
+import Subscription from '~/models/schemas/subscription.schema'
 
 const PENALTY_HOURS = parseInt(process.env.RENTAL_PENALTY_HOURS || '24', 10)
 const PENALTY_AMOUNT = parseInt(process.env.RENTAL_PENALTY_AMOUNT || '50000', 10)
+const HOURS_PER_USED = parseInt(process.env.SUB_HOURS_PER_USED || '10', 10)
 class RentalsService {
   async createRentalSession({
     user_id,
     start_station,
-    bike
+    bike,
+    subscription_id
   }: {
     user_id: ObjectId | string
     start_station: ObjectId
     bike: Bike
+    subscription_id?: ObjectId
   }) {
     const now = getLocalTime()
     const session = databaseService.getClient().startSession()
@@ -53,7 +59,8 @@ class RentalsService {
         start_station,
         bike_id,
         start_time: now,
-        status: RentalStatus.Rented
+        status: RentalStatus.Rented,
+        subscription_id
       })
 
       await session.withTransaction(async () => {
@@ -111,7 +118,7 @@ class RentalsService {
 
       return {
         ...endedRental,
-        total_price: Number.parseFloat(endedRental.total_price.toString())
+        total_price: Number.parseFloat(endedRental.total_price?.toString() || '0')
       }
     } catch (error) {
       throw error
@@ -162,7 +169,7 @@ class RentalsService {
 
       return {
         ...endedRental,
-        total_price: Number.parseFloat(endedRental.total_price.toString())
+        total_price: Number.parseFloat(endedRental.total_price?.toString() || '0')
       }
     } catch (error) {
       throw error
@@ -181,16 +188,74 @@ class RentalsService {
   ): Promise<{ rental: Rental; logData?: any }> {
     const now = getLocalTime()
     const result: any = {}
-    const endBikeStatus = BikeStatus.Available
+    const durationMinutes = this.generateDuration(rental.start_time, effective_end_time)
+    const durationHours = durationMinutes / 60
+    let totalPrice = 0
 
     const sosAlert = await databaseService.sos_alerts.findOne({
       rental_id: rental._id,
       status: SosAlertStatus.UNSOLVABLE
     })
-    const duration = this.generateDuration(rental.start_time, effective_end_time)
-    let totalPrice = 0
     if (!sosAlert) {
-      totalPrice = this.generateTotalPrice(duration)
+      const subscription = await databaseService.subscriptions.findOne({
+        _id: rental.subscription_id,
+        user_id,
+        status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
+      })
+
+      if (subscription) {
+        let usageToAdd = 0
+        let extraHours = 0
+
+        // TÍNH SỐ LẦN DÙNG
+        const requiredUsages = Math.max(1, Math.ceil(durationHours / HOURS_PER_USED))
+        const totalHoursCoveredByUsages = requiredUsages * HOURS_PER_USED
+        extraHours = Math.max(0, durationHours - totalHoursCoveredByUsages)
+
+        // GÓI UNLIMITED
+        if (subscription.max_usages == null) {
+          usageToAdd = requiredUsages
+          totalPrice = 0
+        }
+        // GÓI CÓ GIỚI HẠN
+        else {
+          const availableUsages = subscription.max_usages - subscription.usage_count
+          if (availableUsages >= requiredUsages) {
+            // Còn đủ lượt -> dùng hết
+            usageToAdd = requiredUsages
+            totalPrice = 0
+          } else {
+            // Không đủ lượt -> dùng hết lượt còn lại, phần dư tính tiền
+            usageToAdd = availableUsages
+            const hoursCovered = availableUsages * HOURS_PER_USED
+            extraHours = durationHours - hoursCovered
+            const extraMinutes = Math.ceil(extraHours * 60)
+            totalPrice = this.generateTotalPrice(extraMinutes)
+
+            result.extra_hours = parseFloat(extraHours.toFixed(2))
+          }
+        }
+
+        // CẬP NHẬT usage_count
+        if (usageToAdd > 0) {
+          await databaseService.subscriptions.updateOne(
+            { _id: subscription._id },
+            { $inc: { usage_count: usageToAdd }, $set: { updated_at: now } },
+            { session }
+          )
+        }
+
+        result.duration_hours = parseFloat(durationHours.toFixed(2))
+        result.usage_counts = usageToAdd
+        // Kích hoạt nếu dùng lần đầu
+        if (subscription.status === SubscriptionStatus.PENDING) {
+          await subscriptionService.activate(subscription._id)
+        }
+      } else {
+        // Không có gói -> tính tiền lẻ
+        totalPrice = this.generateTotalPrice(durationMinutes)
+      }
+
       const reservation = await databaseService.reservations.findOneAndUpdate(
         { _id: rental._id },
         {
@@ -209,12 +274,11 @@ class RentalsService {
         result.prepaid = parseFloat(reservation.prepaid.toString())
       }
 
-      const hours = duration / 60
-      if (hours > PENALTY_HOURS) {
+      if (durationHours > PENALTY_HOURS) {
         result.penalty_amount = PENALTY_AMOUNT
         totalPrice += PENALTY_AMOUNT
         console.log(
-          `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${hours.toFixed(2)}h)`
+          `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${durationHours.toFixed(2)}h)`
         )
       }
     } else {
@@ -226,7 +290,7 @@ class RentalsService {
     const updatedData: any = {
       end_station: end_station_id,
       end_time: effective_end_time,
-      duration: new Int32(duration),
+      duration: new Int32(durationMinutes),
       total_price: decimalTotalPrice,
       status: RentalStatus.Completed,
       updated_at: now
@@ -571,7 +635,7 @@ class RentalsService {
         }
 
         result = rentalResult
-        total_price = Number(rentalResult.total_price.toString() || '0')
+        total_price = Number(rentalResult.total_price?.toString() || '0')
       })
       return {
         ...(result as any),
@@ -741,7 +805,7 @@ class RentalsService {
           pipeline: [
             {
               $match: {
-                $expr: { $eq: ['$station_id', '$$stationId'] },
+                $expr: { $eq: ['$station_id', '$$stationId'] }
               }
             },
             { $count: 'count' }

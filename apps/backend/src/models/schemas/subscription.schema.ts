@@ -8,8 +8,8 @@ type SubscriptionType = {
   package_name: SubscriptionPackage; // e.g., "Tháng cơ bản", "Tháng không giới hạn"
   activated_at?: Date;
   expires_at?: Date;
-  max_reservations_per_month?: number | null; // null = unlimited
-  used_reservations?: number;
+  max_usages?: number | null; // null = unlimited
+  usage_count?: number;
   price: Decimal128;
   status?: SubscriptionStatus;
   created_at?: Date;
@@ -22,8 +22,8 @@ export default class Subscription {
   package_name: SubscriptionPackage;
   activated_at?: Date;
   expires_at?: Date;
-  max_reservations_per_month?: number;
-  used_reservations: number;
+  max_usages?: number;
+  usage_count: number;
   price: Decimal128;
   status: SubscriptionStatus;
   created_at?: Date;
@@ -36,9 +36,9 @@ export default class Subscription {
     this.package_name = sub.package_name ?? SubscriptionPackage.BASIC;
     this.activated_at = sub.activated_at ?? undefined;
     this.expires_at = sub.expires_at ?? undefined;
-    this.max_reservations_per_month =
-      sub.max_reservations_per_month === null ? undefined : sub.max_reservations_per_month ?? undefined
-    this.used_reservations = sub.used_reservations ?? 0;
+    this.max_usages =
+      sub.max_usages === null ? undefined : sub.max_usages ?? undefined
+    this.usage_count = sub.usage_count ?? 0;
     this.price = sub.price instanceof Decimal128 ? sub.price : Decimal128.fromString(String(sub.price));
     this.status = sub.status ?? SubscriptionStatus.PENDING;
     this.created_at = sub.created_at || now;

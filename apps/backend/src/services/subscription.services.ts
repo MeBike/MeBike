@@ -1,6 +1,5 @@
-// src/services/subscription.service.ts
 import { Decimal128, Document, ObjectId } from 'mongodb'
-import { formatUTCDateToVietnamese, fromDaysToMs, fromHoursToMs, getLocalTime } from '~/utils/date-time'
+import { formatUTCDateToVietnamese, fromDaysToMs, getLocalTime } from '~/utils/date-time'
 import databaseService from './database.services'
 import Subscription from '~/models/schemas/subscription.schema'
 import { SubscriptionPackage, SubscriptionStatus } from '~/constants/enums'
@@ -16,13 +15,12 @@ import walletService from './wallets.services'
 import reservationsService from './reservations.services'
 import User from '~/models/schemas/user.schema'
 import { FilterQuery } from 'mongoose'
-import { toObjectId } from '~/utils/string'
 
 interface CreateSubscriptionParams {
   user_id: ObjectId
   package_name: SubscriptionPackage
   price: string | Decimal128
-  max_reservations_per_month?: number | null
+  max_usages?: number | null
 }
 
 class SubscriptionService {
@@ -33,8 +31,8 @@ class SubscriptionService {
     const sub = new Subscription({
       user_id: params.user_id,
       package_name: params.package_name,
-      max_reservations_per_month: params.max_reservations_per_month,
-      used_reservations: 0,
+      max_usages: params.max_usages,
+      usage_count: 0,
       price,
       created_at: now
     })
@@ -51,7 +49,7 @@ class SubscriptionService {
       {
         user_id: sub.user_id.toString(),
         package_name: sub.package_name,
-        max_reservations_per_month: sub.max_reservations_per_month?.toString() ?? null,
+        max_usages: sub.max_usages?.toString() ?? null,
         price: sub.price.toString(),
         created_at: now
       },
@@ -126,7 +124,7 @@ class SubscriptionService {
       })
     }
 
-    if (sub.max_reservations_per_month != null && sub.used_reservations >= sub.max_reservations_per_month) {
+    if (sub.max_usages != null && sub.usage_count >= sub.max_usages) {
       throw new ErrorWithStatus({
         message: RESERVATIONS_MESSAGE.SUB_USE_LIMIT_EXCEEDED,
         status: HTTP_STATUS.BAD_REQUEST
@@ -135,7 +133,7 @@ class SubscriptionService {
 
     await databaseService.subscriptions.updateOne(
       { _id: subscription_id },
-      { $inc: { used_reservations: 1 }, $set: { updated_at: now } }
+      { $inc: { usage_count: 1 }, $set: { updated_at: now } }
     )
 
     // Nếu là lần đầu dùng -> kích hoạt ngay
@@ -209,8 +207,8 @@ class SubscriptionService {
           package_name: 1,
           activated_at: 1,
           expires_at: 1,
-          max_reservations_per_month: 1,
-          used_reservations: 1,
+          max_usages: 1,
+          used_reservationsusage_count: 1,
           price: { $toDouble: { $ifNull: ['$price', '0'] } },
           status: 1,
           created_at: 1,

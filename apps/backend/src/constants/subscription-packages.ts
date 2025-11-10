@@ -1,17 +1,17 @@
 import { SubscriptionPackage } from './enums'
 
-export const PACKAGE_CONFIG: Record<SubscriptionPackage, { price: string; max_reservations_per_month: number | null }> =
+export const PACKAGE_CONFIG: Record<SubscriptionPackage, { price: string; max_usages: number | null }> =
   {
     [SubscriptionPackage.BASIC]: {
-      price: '99000',
-      max_reservations_per_month: 30
+      price: '119000',
+      max_usages: 30
     },
     [SubscriptionPackage.PREMIUM]: {
       price: '199000',
-      max_reservations_per_month: 60
+      max_usages: 60
     },
     [SubscriptionPackage.UNLIMITED]: {
       price: '299000',
-      max_reservations_per_month: null
+      max_usages: null
     }
   }

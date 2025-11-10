@@ -1,7 +1,8 @@
-import { GroupByOptions, ReservationOptions, ReservationStatus, Role } from './../constants/enums'
+import { Decimal128 } from 'mongodb'
+import { GroupByOptions, ReservationOptions, ReservationStatus, Role, SubscriptionStatus } from './../constants/enums'
 import { checkSchema, ParamSchema } from 'express-validator'
 import HTTP_STATUS from '~/constants/http-status'
-import { RESERVATIONS_MESSAGE } from '~/constants/messages'
+import { RENTALS_MESSAGE, RESERVATIONS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import databaseService from '~/services/database.services'
 import { toObjectId } from '~/utils/string'
@@ -154,20 +155,6 @@ export const reserveBikeValidator = validate(
           }
         }
       },
-      slot_end: {
-        optional: true,
-        custom: {
-          options: (value, { req }) => {
-            if (req.body.reservation_option === ReservationOptions.FIXED_SLOT && !value) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_REQUIRED_SLOT_END,
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
-            return true
-          }
-        }
-      },
       days_of_week: {
         optional: true,
         custom: {
@@ -179,20 +166,6 @@ export const reserveBikeValidator = validate(
                   status: HTTP_STATUS.BAD_REQUEST
                 })
               }
-            }
-            return true
-          }
-        }
-      },
-      recurrence_end_date: {
-        optional: true,
-        custom: {
-          options: (value, { req }) => {
-            if (req.body.reservation_option === ReservationOptions.FIXED_SLOT && !value) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_REQUIRED_RECURRENCE_END_DATE,
-                status: HTTP_STATUS.BAD_REQUEST
-              })
             }
             return true
           }
@@ -219,7 +192,13 @@ export const reserveBikeValidator = validate(
                 })
               }
 
-              const subscription = await databaseService.subscriptions.findOne({ _id: toObjectId(value) })
+              const subscription = await databaseService.subscriptions.findOne({
+                _id: toObjectId(value),
+                status: {
+                  $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE]
+                }
+              })
+              
               if (!subscription) {
                 throw new ErrorWithStatus({
                   message: RESERVATIONS_MESSAGE.SUBSCRIPTION_NOT_FOUND,
@@ -596,3 +575,36 @@ export const getReservationDetailValidator = validate(
     }
   })
 )
+
+export const checkUserWalletBeforeReserve = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayLoad
+    const option = req.body.reservation_option as ReservationOptions
+
+    if (option !== ReservationOptions.ONE_TIME) {
+      return next()
+    }
+
+    const minWalletBalanceToRent = Decimal128.fromString(process.env.MIN_WALLET_BALANCE_TO_RENT || '2000')
+    const findWallet = await databaseService.wallets.findOne({ user_id: toObjectId(user_id) })
+    if (!findWallet) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const userBalance = BigInt(findWallet.balance.toString())
+    const minBalance = BigInt(minWalletBalanceToRent.toString())
+    if (userBalance < minBalance) {
+      throw new ErrorWithStatus({
+        message: RENTALS_MESSAGE.NOT_ENOUGH_BALANCE_TO_RENT.replace('%s', minWalletBalanceToRent.toString()),
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    next()
+  } catch (error) {
+    next(error)
+  }
+}

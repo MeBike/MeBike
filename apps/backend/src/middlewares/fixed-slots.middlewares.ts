@@ -1,20 +1,14 @@
-// src/middlewares/fixed-slot-template.middlewares.ts
 import { checkSchema } from 'express-validator'
-import { validate } from '~/utils/validation'
-import { RESERVATIONS_MESSAGE } from '~/constants/messages'
+import { uniqueDates, validate } from '~/utils/validation'
+import { RESERVATIONS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
 import { toObjectId } from '~/utils/string'
-import { Request } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { FixedSlotStatus, Role } from '~/constants/enums'
 import databaseService from '~/services/database.services'
 import { ErrorWithStatus } from '~/models/errors'
 import HTTP_STATUS from '~/constants/http-status'
 import { TokenPayLoad } from '~/models/requests/users.requests'
-import FixedSlotTemplate from '~/models/schemas/fixed-slot.schema'
-import { fromHoursToMs, getLocalTime } from '~/utils/date-time'
-
-interface FixedSlotTemplateParam {
-  id: string
-}
+import { getLocalTime } from '~/utils/date-time'
 
 const makeFixedSlotTemplateIdRule = (options?: { mustBeStatus?: FixedSlotStatus }) => ({
   in: ['params'] as const,
@@ -70,13 +64,29 @@ export const createFixedSlotTemplateValidator = validate(
         notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_STATION_ID },
         isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_STATION_ID },
         custom: {
-          options: async (value) => {
+          options: async (value, { req }) => {
             const station = await databaseService.stations.findOne({ _id: toObjectId(value) })
-            if (!station)
+            if (!station) {
               throw new ErrorWithStatus({
                 message: RESERVATIONS_MESSAGE.STATION_NOT_FOUND.replace('%s', value),
                 status: HTTP_STATUS.NOT_FOUND
               })
+            }
+
+            const { user_id } = req.decoded_authorization as TokenPayLoad
+
+            const userTemplate = await databaseService.fixedSlotTemplates.findOne({
+              user_id: toObjectId(user_id),
+              station_id: toObjectId(value),
+              status: { $in: [FixedSlotStatus.ACTIVE, FixedSlotStatus.PAUSED] }
+            })
+
+            if (userTemplate) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.FS_USER_ALREADY_HAD_TEMPLATE_IN_STATION,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
             return true
           }
         }
@@ -89,68 +99,29 @@ export const createFixedSlotTemplateValidator = validate(
           errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_SLOT_START_FORMAT
         }
       },
-      slot_end: {
-        notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_SLOT_END },
-        isString: true,
-        matches: {
-          options: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/],
-          errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_SLOT_END_FORMAT
-        },
+      selected_dates: {
+        notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_ONE_DATE_AT_LEAST },
+        isArray: { options: { min: 1 } },
         custom: {
-          options: (value, { req }) => {
-            const [sh, sm] = (req.body.slot_start || '').split(':').map(Number)
-            const [eh, em] = value.split(':').map(Number)
-            if (eh * 60 + em <= sh * 60 + sm) {
+          options: (value: string[], {req}) => {
+            const unique = uniqueDates(value)
+
+            const invalid = unique.some((date) => !/^\d{4}-\d{2}-\d{2}$/.test(date))
+            if (invalid)
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_INVALID_SLOT_TIME,
+                message: RESERVATIONS_MESSAGE.FS_INVALID_DATE,
                 status: HTTP_STATUS.BAD_REQUEST
               })
-            }
-            return true
-          }
-        }
-      },
-      days_of_week: {
-        notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_DAYS_OF_WEEK },
-        isArray: true,
-        custom: {
-          options: (value: number[]) => {
-            if (!value.every((d) => d >= 0 && d <= 6)) {
+
+            const today = getLocalTime()
+            today.setUTCHours(0, 0, 0, 0)
+            const past = unique.some((date) => new Date(date) < today)
+            if (past)
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_INVALID_DAYS_OF_WEEK,
+                message: RESERVATIONS_MESSAGE.FS_PAST_DATE_NOT_ALLOWED,
                 status: HTTP_STATUS.BAD_REQUEST
               })
-            }
-            return true
-          }
-        }
-      },
-      start_date: {
-        notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_START_DATE },
-        isISO8601: { errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_START_DATE },
-        custom: {
-          options: (value) => {
-            if (new Date(value) < new Date(getLocalTime().getTime() + fromHoursToMs(24))) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_START_DATE_MUST_AFTER_24H,
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
-            return true
-          }
-        }
-      },
-      end_date: {
-        notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_RECURRENCE_END_DATE },
-        isISO8601: { errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_END_DATE },
-        custom: {
-          options: (value, { req }) => {
-            if (new Date(value) <= new Date(req.body.start_date)) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_END_DATE_BEFORE_START,
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
+
             return true
           }
         }
@@ -164,6 +135,7 @@ export const getFixedSlotTemplateByIdValidator = validate(
   checkSchema({ id: makeFixedSlotTemplateIdRule() as any }, ['params'])
 )
 
+// UPDATE: Chỉ cho phép sửa slot_start, selected_dates (khi ACTIVE)
 export const updateFixedSlotTemplateValidator = validate(
   checkSchema(
     {
@@ -176,62 +148,28 @@ export const updateFixedSlotTemplateValidator = validate(
           errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_SLOT_START_FORMAT
         }
       },
-      slot_end: {
-        optional: true,
-        isString: true,
-        matches: {
-          options: [/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/],
-          errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_SLOT_END_FORMAT
-        },
-        custom: {
-          options: (value, { req }) => {
-            const [sh, sm] = (req.body.slot_start || '').split(':').map(Number)
-            const [eh, em] = value.split(':').map(Number)
-            if (eh * 60 + em <= sh * 60 + sm) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_INVALID_SLOT_TIME,
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
-            return true
-          }
-        }
-      },
-      days_of_week: {
+      selected_dates: {
         optional: true,
         isArray: true,
         custom: {
-          options: (value: number[]) => {
-            if (!value.every((d) => d >= 0 && d <= 6)) {
-              throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_INVALID_DAYS_OF_WEEK,
-                status: HTTP_STATUS.BAD_REQUEST
-              })
-            }
-            return true
-          }
-        }
-      },
-      end_date: {
-        optional: true,
-        custom: {
-          options: async (value, { req }) => {
-            const now = getLocalTime()
-            const template = req.fixedSlotTemplate as FixedSlotTemplate
+          options: (value: string[]) => {
+            const unique = uniqueDates(value)
 
-            if (new Date(value) < template.start_date) {
+            const invalid = unique.some((date) => !/^\d{4}-\d{2}-\d{2}$/.test(date))
+            if (invalid)
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_END_DATE_BEFORE_START,
+                message: RESERVATIONS_MESSAGE.FS_INVALID_DATE,
                 status: HTTP_STATUS.BAD_REQUEST
               })
-            }
 
-            if (now > template.start_date) {
+            const today = getLocalTime()
+            today.setUTCHours(0, 0, 0, 0)
+            const past = unique.some((date) => new Date(date) < today)
+            if (past)
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_TEMPLATE_CANNOT_MODIFY_AFTER_START,
+                message: RESERVATIONS_MESSAGE.FS_PAST_DATE_NOT_ALLOWED,
                 status: HTTP_STATUS.BAD_REQUEST
               })
-            }
 
             return true
           }
@@ -253,3 +191,32 @@ export const resumeFixedSlotTemplateValidator = validate(
 export const cancelFixedSlotTemplateValidator = validate(
   checkSchema({ id: makeFixedSlotTemplateIdRule() as any }, ['params'])
 )
+
+export const checkUserTemplateExistInStation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayLoad
+    const user = await databaseService.users.findOne({ _id: toObjectId(user_id) })
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const userTemplate = await databaseService.fixedSlotTemplates.findOne({
+      user_id: toObjectId(user_id),
+      status: { $in: [FixedSlotStatus.ACTIVE, FixedSlotStatus.PAUSED] }
+    })
+
+    if (userTemplate) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.FS_USER_ALREADY_HAD_TEMPLATE_IN_STATION,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    next()
+  } catch (error) {
+    next(error)
+  }
+}

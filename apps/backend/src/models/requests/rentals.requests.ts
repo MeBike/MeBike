@@ -2,7 +2,8 @@ import type { ObjectId } from 'mongodb'
 import { BikeStatus, RentalStatus } from '~/constants/enums'
 
 export type CreateRentalReqBody = {
-  bike_id: string
+  bike_id: string,
+  subscription_id?: string
 }
 
 export interface CreateRentalByStaffReqBody extends CreateRentalReqBody {
