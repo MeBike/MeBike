@@ -1,6 +1,7 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   RefreshControl,
@@ -8,6 +9,7 @@ import {
   StatusBar,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -28,6 +30,8 @@ import { useSubscribeMutation } from "@hooks/mutations/Subscription/useSubscribe
 import { useAuth } from "@providers/auth-providers";
 
 const PAGE_SIZE = 20;
+const SECTION_STORAGE_KEY = "subscription_active_section";
+type SectionKey = "plans" | "history";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   const axiosError = error as {
@@ -50,6 +54,7 @@ export default function SubscriptionScreen() {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [activeSection, setActiveSection] = useState<SectionKey>("plans");
 
   const {
     data,
@@ -66,6 +71,34 @@ export default function SubscriptionScreen() {
   const activateMutation = useActivateSubscriptionMutation();
 
   const canSubscribe = !pendingSubscription && !activeSubscription;
+
+  useEffect(() => {
+    const loadSection = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(SECTION_STORAGE_KEY);
+        if (saved === "plans" || saved === "history") {
+          setActiveSection(saved);
+        }
+      }
+      catch (error) {
+        console.log("Failed to load subscription section preference", error);
+      }
+      finally {
+      }
+    };
+
+    loadSection();
+  }, []);
+
+  const handleSectionChange = useCallback(async (section: SectionKey) => {
+    setActiveSection(section);
+    try {
+      await AsyncStorage.setItem(SECTION_STORAGE_KEY, section);
+    }
+    catch (error) {
+      console.log("Failed to persist subscription section preference", error);
+    }
+  }, []);
 
   const handleSubscribe = useCallback(
     (packageName: SubscriptionPackage) => {
@@ -157,38 +190,61 @@ export default function SubscriptionScreen() {
           activating={activateMutation.isPending}
         />
 
-        <Text style={styles.sectionLabel}>Chọn gói phù hợp</Text>
-        {packageCards.map((pkg) => (
-          <SubscriptionPackageCard
-            key={pkg.id}
-            info={pkg}
-            disabled={!canSubscribe}
-            isCurrent={pkg.id === activeSubscription?.package_name || pkg.id === pendingSubscription?.package_name}
-            loading={subscribeMutation.isPending}
-            onSubscribe={() => handleSubscribe(pkg.id)}
+        <View style={styles.segmentedControl}>
+          <SegmentButton
+            label="Gói tháng"
+            isActive={activeSection === "plans"}
+            onPress={() => handleSectionChange("plans")}
           />
-        ))}
-
-        <View style={styles.historyHeader}>
-          <Text style={styles.sectionLabel}>Lịch sử gói của bạn</Text>
-          <Text style={styles.historyCount}>{subscriptions.length} gói</Text>
+          <SegmentButton
+            label="Lịch sử"
+            isActive={activeSection === "history"}
+            onPress={() => handleSectionChange("history")}
+          />
         </View>
 
-        {isLoading && <Text style={styles.hintText}>Đang tải lịch sử...</Text>}
-        {!isLoading && subscriptions.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>Chưa có gói nào</Text>
-            <Text style={styles.emptySubtitle}>Khi đăng ký gói, bạn sẽ thấy lịch sử tại đây.</Text>
-          </View>
+        {activeSection === "plans" && (
+          <>
+            <Text style={styles.sectionLabel}>Chọn gói phù hợp</Text>
+            {packageCards.map((pkg) => (
+              <SubscriptionPackageCard
+                key={pkg.id}
+                info={pkg}
+                disabled={!canSubscribe}
+                isCurrent={
+                  pkg.id === activeSubscription?.package_name || pkg.id === pendingSubscription?.package_name
+                }
+                loading={subscribeMutation.isPending}
+                onSubscribe={() => handleSubscribe(pkg.id)}
+              />
+            ))}
+          </>
         )}
 
-        {subscriptions.map((subscription: SubscriptionListItem) => (
-          <SubscriptionHistoryItem
-            key={subscription._id}
-            subscription={subscription}
-            onPress={(item) => setSelectedId(item._id)}
-          />
-        ))}
+        {activeSection === "history" && (
+          <>
+            <View style={styles.historyHeader}>
+              <Text style={styles.sectionLabel}>Lịch sử gói của bạn</Text>
+              <Text style={styles.historyCount}>{subscriptions.length} gói</Text>
+            </View>
+
+            {isLoading && <Text style={styles.hintText}>Đang tải lịch sử...</Text>}
+            {!isLoading && subscriptions.length === 0 && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyTitle}>Chưa có gói nào</Text>
+                <Text style={styles.emptySubtitle}>Khi đăng ký gói, bạn sẽ thấy lịch sử tại đây.</Text>
+              </View>
+            )}
+
+            {subscriptions.map((subscription: SubscriptionListItem) => (
+              <SubscriptionHistoryItem
+                key={subscription._id}
+                subscription={subscription}
+                onPress={(item) => setSelectedId(item._id)}
+              />
+            ))}
+          </>
+        )}
       </ScrollView>
 
       <SubscriptionDetailModal visible={Boolean(selectedId)} subscriptionId={selectedId} onClose={() => setSelectedId(undefined)} />
@@ -226,6 +282,34 @@ const styles = StyleSheet.create({
     color: "#111827",
     marginVertical: 12,
   },
+  segmentedControl: {
+    flexDirection: "row",
+    backgroundColor: "#E5E7EB",
+    borderRadius: 999,
+    padding: 4,
+    gap: 4,
+    marginTop: 12,
+  },
+  segmentButton: {
+    flex: 1,
+    borderRadius: 999,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  segmentButtonActive: {
+    backgroundColor: "white",
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  segmentButtonText: {
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  segmentButtonTextActive: {
+    color: "#111827",
+  },
   historyHeader: {
     marginTop: 12,
     marginBottom: 8,
@@ -258,3 +342,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 });
+
+type SegmentButtonProps = {
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
+};
+
+function SegmentButton({ label, isActive, onPress }: SegmentButtonProps) {
+  return (
+    <TouchableOpacity
+      style={[styles.segmentButton, isActive && styles.segmentButtonActive]}
+      onPress={onPress}
+      activeOpacity={0.85}
+    >
+      <Text style={[styles.segmentButtonText, isActive && styles.segmentButtonTextActive]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
