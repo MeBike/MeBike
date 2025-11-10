@@ -1,5 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
@@ -10,6 +11,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -54,6 +56,12 @@ function ForgotPasswordScreen() {
           colors={[BikeColors.primary, BikeColors.secondary]}
           style={styles.header}
         >
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          >
+            <IconSymbol name="chevron.left" size={24} color="white" />
+          </TouchableOpacity>
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>Đổi mật khẩu</Text>
             <Text style={styles.headerSubtitle}>
@@ -63,7 +71,7 @@ function ForgotPasswordScreen() {
         </LinearGradient>
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
-            <IconSymbol
+            <Ionicons
               name="mail"
               size={20}
               color={BikeColors.textSecondary}
@@ -99,6 +107,11 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 40,
     paddingHorizontal: 20,
+    position: "relative",
+  },
+  backButton: {
+    padding: 8,
+    marginBottom: 12,
   },
   headerContent: {
     alignItems: "center",

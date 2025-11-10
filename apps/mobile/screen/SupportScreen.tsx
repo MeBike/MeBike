@@ -24,15 +24,22 @@ function SupportScreen() {
   const navigation = useNavigation<SupportScreenNavigationProp>();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = React.useState(false);
-  const { userReports, isLoadingUserReports, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useReportActions({ limit: 5 });
+  const {
+    userReports,
+    isLoadingUserReports,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetchUserReports,
+  } = useReportActions({ limit: 5 });
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 500);
-  }, []);
+    await refetchUserReports();
+    setRefreshing(false);
+  }, [refetchUserReports]);
+
+
 
   const getStatusColor = (status: string) => {
     switch (status) {

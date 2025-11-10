@@ -26,17 +26,16 @@ function ReportDetailScreen() {
   const route = useRoute<ReportDetailRouteProp>();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = React.useState(false);
-  const { reportDetailData, isLoadingReportDetail } = useReportActions({
-    id: route.params.reportId,
-  });
+  const { reportDetailData, isLoadingReportDetail, refetchReportDetail } =
+    useReportActions({
+      id: route.params.reportId,
+    });
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    // Refetch data by calling the hook again
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 500);
-  }, []);
+    await refetchReportDetail();
+    setRefreshing(false);
+  }, [refetchReportDetail]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
