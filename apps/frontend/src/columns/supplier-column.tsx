@@ -35,7 +35,7 @@ export const columns = ({
   {
     accessorKey: "contract_fee",
     header: "Phí hợp đồng",
-    cell: ({ row }) => `${row.original.contract_fee} VND`,
+    cell: ({ row }) => `${row.original.contract_fee}`,
   },
   {
     accessorKey: "status",

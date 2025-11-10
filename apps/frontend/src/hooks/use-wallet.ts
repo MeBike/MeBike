@@ -56,7 +56,13 @@ export function useWalletActions(
     page: 1,
     limit: 5,
   });
-  const { data: walletOverview } = useGetWalletOverviewQuery();
+  const { data: walletOverview , refetch : isRefetchingWalletOverview} = useGetWalletOverviewQuery();
+  const useGetWalletOverview = useCallback(async () => {
+    if (!hasToken) {
+      return;
+    }
+    isRefetchingWalletOverview();
+  }, [isRefetchingWalletOverview, hasToken]);
   const useTopUpWallet = useTopUpWalletMutation();
   const useDebitWallet = useDebitWalletMutation();
   const {
@@ -187,5 +193,6 @@ export function useWalletActions(
     getDetailWallet,
     isLoadingDetailWallet,
     updateStatusWallet,
+    useGetWalletOverview,
   };
 }

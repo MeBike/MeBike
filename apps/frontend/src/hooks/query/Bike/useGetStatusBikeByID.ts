@@ -5,5 +5,6 @@ export const useGetStatusBikeIDQuery = (id: string) => {
         queryKey: ["bikes", "status", id],
         queryFn: () => bikeService.getStatusBikeByIdAdmin(id),
         enabled: !!id,
+        
     })
 }

@@ -211,7 +211,6 @@ function ProfileScreen() {
               shadowColor: "#000",
               shadowOpacity: 0.14,
               shadowRadius: 10,
-
             }}
           />
 
@@ -236,9 +235,7 @@ function ProfileScreen() {
             }}
             numberOfLines={1}
           >
-            Thành viên từ
-            {" "}
-            {formatDate(profile.created_at)}
+            Thành viên từ {formatDate(profile.created_at)}
           </Text>
           <View
             style={{
@@ -298,15 +295,25 @@ function ProfileScreen() {
               <View style={styles.verificationStatusRow}>
                 <View style={styles.verificationStatusLeft}>
                   <Ionicons
-                    name={profile.verify === "VERIFIED" ? "checkmark-circle" : "mail"}
+                    name={
+                      profile.verify === "VERIFIED"
+                        ? "checkmark-circle"
+                        : "mail"
+                    }
                     size={24}
-                    color={profile.verify === "VERIFIED" ? "#10B981" : "#FFA500"}
+                    color={
+                      profile.verify === "VERIFIED" ? "#10B981" : "#FFA500"
+                    }
                   />
                   <View style={styles.verificationStatusContent}>
                     <Text style={styles.verificationStatusTitle}>
-                      {profile.verify === "VERIFIED" ? "Email Verified" : "Email Chưa Xác Thực"}
+                      {profile.verify === "VERIFIED"
+                        ? "Email Verified"
+                        : "Email Chưa Xác Thực"}
                     </Text>
-                    <Text style={styles.verificationStatusEmail}>{profile.email}</Text>
+                    <Text style={styles.verificationStatusEmail}>
+                      {profile.email}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -320,7 +327,9 @@ function ProfileScreen() {
                       onPress={() => setIsVerifyEmailModalOpen(true)}
                     >
                       <Ionicons name="key" size={16} color="white" />
-                      <Text style={styles.verificationButtonText}>Xác thực</Text>
+                      <Text style={styles.verificationButtonText}>
+                        Xác thực
+                      </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -344,7 +353,9 @@ function ProfileScreen() {
                     disabled
                   >
                     <Ionicons name="checkmark-circle" size={16} color="white" />
-                    <Text style={styles.verificationButtonText}>Đã xác thực</Text>
+                    <Text style={styles.verificationButtonText}>
+                      Đã xác thực
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -357,31 +368,31 @@ function ProfileScreen() {
               "person-outline",
               "Thông tin cá nhân",
               "Quản lý thông tin cá nhân của bạn",
-              handleUpdateProfile,
+              handleUpdateProfile
             )}
             {renderMenuOption(
               "lock-closed",
               "Đổi mật khẩu",
               "Cập nhật mật khẩu của bạn",
-              handleChangePassword,
+              handleChangePassword
             )}
             {renderMenuOption(
               "help-circle",
-              "Báo cáo sự cố & Hỗ trợ",
+              "Báo cáo sự cố xe đạp",
               "Liên hệ với đội hỗ trợ",
-              handleSupport,
+              handleSupport
             )}
             {renderMenuOption(
               "wallet",
               "Ví điện tử",
               "Quản lý ví điện tử của bạn",
-              handleWallet,
+              handleWallet
             )}
             {renderMenuOption(
               "calendar",
               "Đặt trước của tôi",
               "Theo dõi các lượt đặt trước",
-              handleReservations,
+              handleReservations
             )}
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>

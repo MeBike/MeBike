@@ -72,13 +72,6 @@ export default function BikesPage() {
 
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center gap-4">
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo ID xe hoặc Chip ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground"
-            />
             <select
               value={statusFilter}
               onChange={(e) =>
@@ -107,6 +100,7 @@ export default function BikesPage() {
         </div>
         <div className="w-full rounded-lg space-y-4  flex flex-col">
           <DataTable
+            title="Danh sách xe"
             columns={bikeColumn({
               onView: ({ id }: { id: string }) => {
                 handleViewDetails(id);

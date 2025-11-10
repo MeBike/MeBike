@@ -85,7 +85,7 @@ export function RentalStats({ stats }: RentalStatsProps) {
           <div>
             <p className="text-sm text-muted-foreground">Doanh thu hôm nay</p>
             <p className="text-3xl font-bold text-primary mt-1">
-              {stats.todayRevenue.toLocaleString()}đ
+              {stats.todayRevenue.toLocaleString() + " VND"}
             </p>
           </div>
           <div className="p-3 bg-primary/10 rounded-lg">
@@ -101,7 +101,7 @@ export function RentalStats({ stats }: RentalStatsProps) {
               Tổng doanh thu tháng này
             </p>
             <p className="text-3xl font-bold text-accent mt-1">
-              {stats.totalRevenue.toLocaleString()}đ
+              {stats.totalRevenue.toLocaleString() + " VND"}
             </p>
           </div>
           <div className="p-3 bg-accent/10 rounded-lg">

@@ -143,7 +143,14 @@ export const useUserActions = ({
     }
     refetchTopRenter();
   }, [hasToken, router, refetchTopRenter]);
-  const { data: dashboardStatsData } = useGetDashboardStatsQuery();
+  const { data: dashboardStatsData , refetch : refetchDashboardStats } = useGetDashboardStatsQuery();
+  const getRefetchDashboardStats = useCallback(() => {
+    if (!hasToken) {
+      router.push("/login");
+      return;
+    }
+    refetchDashboardStats();
+  }, [hasToken, router, refetchDashboardStats]);
   const getSearchUsers = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -326,5 +333,6 @@ export const useUserActions = ({
     dashboardStatsData,
     resetPassword,
     updateProfileUser,
+    getRefetchDashboardStats,
   };
 };

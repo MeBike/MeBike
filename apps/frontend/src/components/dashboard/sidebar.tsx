@@ -12,7 +12,6 @@ import {
   Wallet,
   Truck,
   Download,
-  RotateCcw,
   MapIcon,
   FileCheck2,
 } from "lucide-react";
@@ -35,7 +34,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       title: "Tổng quan",
       icon: LayoutDashboard,
       href: baseUrl,
-      roles: ["STAFF", "ADMIN"],
+      roles: ["ADMIN"],
     },
     {
       title: "Quản lý người dùng",
@@ -110,12 +109,6 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       roles: ["ADMIN"],
     },
     {
-      title: "Hoàn tiền",
-      icon: RotateCcw,
-      href: "/admin/refunds",
-      roles: ["ADMIN"],
-    },
-    {
       title: "Rút tiền",
       icon: Download,
       href: "/admin/withdrawals",
@@ -150,6 +143,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       icon: Users,
       href: "/sos/profile",
       roles: ["SOS"],
+    },
+    {
+      title: "Hồ sơ cá nhân",
+      icon: Users,
+      href: "/staff/profile",
+      roles: ["STAFF"],
     },
   ];
 };

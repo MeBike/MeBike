@@ -242,6 +242,7 @@ export default function BikesPage() {
           {/* Table */}
           <div className="w-full rounded-lg space-y-4  flex flex-col">
             <DataTable
+              title="Danh sách xe đạp"
               columns={bikeColumn({
                 onView: ({ id }: { id: string }) => {
                   handleViewDetails(id);

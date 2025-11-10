@@ -1,6 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Alert,
   Animated,
@@ -28,7 +29,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
-  const rotateAnim = new Animated.Value(0);
+  const rotateAnim = useRef(new Animated.Value(0)).current;
   const { logIn, isLoggingIn, isLoading, forgotPassword, isLoadingForgottingPassword } = useAuth();
 
   useEffect(() => {
@@ -44,23 +45,7 @@ export default function LoginScreen() {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
       return;
     }
-    // if (backendStatus === "offline") {
-    //   Alert.alert("Lỗi kết nối", "Không thể kết nối đến server. Vui lòng kiểm tra:\n\n1. Server backend có đang chạy?\n2. URL API có đúng không?\n3. Kết nối mạng", [
-    //     {
-    //       text: "Thử lại",
-    //       onPress: async () => {
-    //         setBackendStatus("checking");
-    //         const isOnline = await testBackendConnection();
-    //         setBackendStatus(isOnline ? "online" : "offline");
-    //       },
-    //     },
-    //     {
-    //       text: "Demo Mode",
-    //       onPress: () => navigation.navigate("StationSelect"),
-    //     },
-    //   ]);
-    //   return;
-    // }
+    
     try {
       Animated.loop(
         Animated.timing(rotateAnim, {
@@ -71,11 +56,6 @@ export default function LoginScreen() {
       ).start();
 
       await logIn({ email, password });
-      // setTimeout(() => {
-      //   rotateAnim.stopAnimation();
-      //   rotateAnim.setValue(0);
-      //   navigation.navigate("Main");
-      // }, 500);
     }
     catch (error) {
       rotateAnim.stopAnimation();
@@ -194,22 +174,24 @@ export default function LoginScreen() {
           <Pressable
             style={[styles.loginButton, isLoggingIn && styles.disabledButton]}
             onPress={handleEmailLogin}
-            disabled={isLoggingIn && isLoading}
+            disabled={isLoggingIn}
           >
-            <Animated.View
-              style={{
-                transform: [{
-                  rotate: rotateAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ["0deg", "360deg"],
-                  }),
-                }],
-              }}
-            >
-              <Text style={styles.loginButtonText}>
-                {isLoggingIn ? "Đang đăng nhập..." : "Đăng nhập"}
-              </Text>
-            </Animated.View>
+            {isLoggingIn ? (
+              <Animated.View
+                style={{
+                  transform: [{
+                    rotate: rotateAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ["0deg", "360deg"],
+                    }),
+                  }],
+                }}
+              >
+                <Ionicons name="reload" size={20} color="white" />
+              </Animated.View>
+            ) : (
+              <Text style={styles.loginButtonText}>Đăng nhập</Text>
+            )}
           </Pressable>
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Chưa có tài khoản? </Text>

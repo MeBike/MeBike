@@ -25,7 +25,7 @@ export function WalletStats({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {totalBalance.toLocaleString("vi-VN")}₫
+            {totalBalance.toLocaleString("vi-VN") + " VND"}
           </div>
           <p className="text-xs text-muted-foreground">Tất cả user</p>
         </CardContent>
@@ -38,7 +38,7 @@ export function WalletStats({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-green-600">
-            {totalDeposited.toLocaleString("vi-VN")}₫
+            {totalDeposited.toLocaleString("vi-VN") + " VND"}
           </div>
           <p className="text-xs text-muted-foreground">Trong hệ thống</p>
         </CardContent>
@@ -51,7 +51,7 @@ export function WalletStats({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-red-600">
-            {totalWithdrawn.toLocaleString("vi-VN")}₫
+            {totalWithdrawn.toLocaleString("vi-VN") + " VND"}
           </div>
           <p className="text-xs text-muted-foreground">Đã trừ</p>
         </CardContent>
