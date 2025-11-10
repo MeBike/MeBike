@@ -8,7 +8,7 @@ import type { DetailUser } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Save, X, Mail } from "lucide-react";
+import { Camera, Save, X, Mail, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@radix-ui/react-progress";
@@ -17,6 +17,53 @@ import Image from "next/image";
 import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
 import Link from "next/link";
 import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
+import { uploadImageToFirebase } from "@/lib/firebase";
+
+// Compress image function
+const compressImage = async (file: File): Promise<File> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const imgElement = document.createElement("img");
+      imgElement.src = event.target?.result as string;
+      imgElement.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = imgElement.naturalWidth;
+        let height = imgElement.naturalHeight;
+
+        // Max dimensions
+        const maxWidth = 800;
+        const maxHeight = 800;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(imgElement, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            resolve(new File([blob!], file.name, { type: "image/jpeg", lastModified: Date.now() }));
+          },
+          "image/jpeg",
+          0.7
+        );
+      };
+    };
+  });
+};
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -25,8 +72,10 @@ export default function ProfilePage() {
     () => user || ({} as DetailUser)
   );
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { resendVerifyEmail, verifyEmail } = useAuthActions();
   useEffect(() => {
     if (user) {
@@ -46,40 +95,81 @@ export default function ProfilePage() {
   const handleInputChange = (field: keyof DetailUser, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+  
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Lưu file để upload sau khi Save
+      setFormData((prev) => ({ ...prev, avatarFile: file as any }));
+      
+      // Tạo preview ngay lập tức
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        setAvatarPreview(base64);
       };
       reader.readAsDataURL(file);
     }
   };
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!user) return;
-    const fields: (keyof UpdateProfileSchemaFormData)[] = [
+    
+    setIsSaving(true);
+    
+    const updatedData: Partial<UpdateProfileSchemaFormData> = {};
+    
+    // Kiểm tra các field text
+    const textFields: (keyof UpdateProfileSchemaFormData)[] = [
       "fullname",
       "username",
       "phone_number",
       "location",
     ];
 
-    const updatedData = fields.reduce((acc, field) => {
-      const newValue = formData[field];
+    textFields.forEach((field) => {
+      const newValue = formData[field as keyof DetailUser];
       const oldValue = user[field as keyof DetailUser] ?? "";
 
       if (newValue !== oldValue) {
-        acc[field] = newValue || "";
+        updatedData[field] = newValue || "";
       }
-      return acc;
-    }, {} as UpdateProfileSchemaFormData);
+    });
+
+    // Upload ảnh lên Firebase khi Save (nếu có file mới)
+    if ((formData as any).avatarFile) {
+      try {
+        setIsUploadingAvatar(true);
+        // Compress ảnh trước khi upload
+        const compressedFile = await compressImage((formData as any).avatarFile);
+        const imageUrl = await uploadImageToFirebase(compressedFile, "avatars");
+        updatedData.avatar = imageUrl;
+      } catch (error) {
+        console.error("Error uploading avatar:", error);
+        alert("Lỗi khi tải ảnh lên. Vui lòng thử lại.");
+        setIsSaving(false);
+        setIsUploadingAvatar(false);
+        return;
+      } finally {
+        setIsUploadingAvatar(false);
+      }
+    } else if (formData.avatar !== user.avatar && !avatarPreview.startsWith("data:")) {
+      // Avatar đã thay đổi và đã là URL Firebase
+      updatedData.avatar = formData.avatar;
+    }
 
     // Nếu có field nào thay đổi mới gọi API
     if (Object.keys(updatedData).length > 0) {
-      updateProfile(updatedData);
+      try {
+        await updateProfile(updatedData);
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        alert("Lỗi khi cập nhật hồ sơ. Vui lòng thử lại.");
+        setIsSaving(false);
+        return;
+      }
     }
 
+    setIsSaving(false);
     setIsEditing(false);
   };
 
@@ -139,9 +229,19 @@ export default function ProfilePage() {
               <Button
                 onClick={() => handleSave()}
                 className="bg-primary hover:bg-primary/90 gap-2 cursor-pointer"
+                disabled={isSaving}
               >
-                <Save className="w-4 h-4" />
-                Lưu thay đổi
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Lưu thay đổi
+                  </>
+                )}
               </Button>
             </div>
           )}
@@ -151,7 +251,7 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 bg-muted">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 bg-muted flex items-center justify-center">
                   <Image
                     src={avatarPreview || "/placeholder.svg"}
                     alt="Avatar"
@@ -159,6 +259,8 @@ export default function ProfilePage() {
                     width={128}
                     height={128}
                     priority
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAA4ADgDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8VAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k="
                   />
                 </div>
                 {isEditing && (
@@ -166,13 +268,18 @@ export default function ProfilePage() {
                     htmlFor="avatar-upload"
                     className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                   >
-                    <Camera className="w-8 h-8 text-white" />
+                    {isUploadingAvatar ? (
+                      <Loader2 className="w-8 h-8 text-white animate-spin" />
+                    ) : (
+                      <Camera className="w-8 h-8 text-white" />
+                    )}
                     <input
                       id="avatar-upload"
                       type="file"
                       accept="image/*"
                       className="hidden"
                       onChange={handleAvatarChange}
+                      disabled={isUploadingAvatar}
                     />
                   </label>
                 )}

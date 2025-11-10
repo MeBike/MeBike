@@ -51,7 +51,7 @@ export default function StationsPage() {
             </p>
           </div>
         </div>
-        <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+        {/* <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center gap-4">
             <input
               type="text"
@@ -64,11 +64,12 @@ export default function StationsPage() {
               Đặt lại
             </Button>
           </div>
-        </div>
+        </div> */}
 
         <div className="w-full rounded-lg space-y-4 flex flex-col">
           <div>
             <DataTable
+              title="Danh sách trạm"
               columns={stationColumns()}
               data={stations ?? []}
             />

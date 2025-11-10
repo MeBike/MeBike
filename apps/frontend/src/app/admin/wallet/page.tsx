@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { WalletStats } from "@/components/wallet/wallet-stats";
 import { TransactionHistory } from "@components/wallet/transaction-history";
 import { WalletTransactionModal } from "@/components/wallet/wallet-transaction-modal";
@@ -34,8 +34,12 @@ export default function WalletPage() {
      walletOverview,
      detailWallet,
      isLoadingDetailWallet,
-     updateStatusWallet
+     updateStatusWallet,
+     useGetWalletOverview,
    } = useWalletActions(true, page, limit, selectedUserId);
+  useEffect(() => { 
+    useGetWalletOverview();
+  }, [useGetWalletOverview]);
   const handleDeposit = (
     userId: string,
     amount: number,

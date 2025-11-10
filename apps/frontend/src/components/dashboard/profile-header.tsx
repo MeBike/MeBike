@@ -6,9 +6,10 @@ import { Mail, MapPin, Phone, User, Calendar } from "lucide-react";
 
 interface ProfileHeaderProps {
   user: DetailUser;
+  avatarPreview?: string;
 }
 
-export function ProfileHeader({ user }: ProfileHeaderProps) {
+export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case "admin":
@@ -42,7 +43,7 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
       <div className="flex flex-col md:flex-row gap-6">
         <Avatar className="w-24 h-24 border-4 border-primary/20">
           <AvatarImage
-            src={user.avatar || "/placeholder.svg"}
+            src={avatarPreview || user.avatar || "/placeholder.svg"}
             alt={user.fullname}
           />
           <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">

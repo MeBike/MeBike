@@ -22,7 +22,6 @@ export default function CustomersPage() {
     users,
     getAllUsers,
     isLoading,
-    getAllStatistics,
     isLoadingStatistics,
     getSearchUsers,
     isFetching,
@@ -40,10 +39,6 @@ export default function CustomersPage() {
     id: selectedUserId || "",
   });
 
-  useEffect(() => {
-    getAllUsers();
-    getAllStatistics();
-  }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getAllStatistics, currentPage]);
   const handleReset = () => {
     setSearchQuery("");
     setVerifyFilter("all");

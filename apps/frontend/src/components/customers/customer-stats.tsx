@@ -70,7 +70,7 @@ export function CustomerStats({ stats }: { stats: DashboardUserStats })  {
               Tổng doanh thu từ khách hàng
             </p>
             <p className="text-3xl font-bold text-accent mt-1">
-              {stats.totalRevenue || 0}
+              {stats.totalRevenue.toLocaleString("vi-VN") + " VND" || 0}
             </p>
           </div>
           <div className="p-3 bg-accent/10 rounded-lg">
@@ -86,7 +86,7 @@ export function CustomerStats({ stats }: { stats: DashboardUserStats })  {
               Chi tiêu trung bình/khách
             </p>
             <p className="text-3xl font-bold text-purple-500 mt-1">
-              {stats.averageSpending || 0}
+              {stats.averageSpending.toLocaleString("vi-VN") + " VND" || 0}
             </p>
           </div>
           <div className="p-3 bg-purple-500/10 rounded-lg">

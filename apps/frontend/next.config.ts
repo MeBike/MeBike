@@ -3,7 +3,20 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ["tngo.vn", "media.bongda.com.vn"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.googleapis.com",
+      },
+      {
+        protocol: "https",
+        hostname: "tngo.vn",
+      },
+      {
+        protocol: "https",
+        hostname: "media.bongda.com.vn",
+      },
+    ],
   },
 };
 

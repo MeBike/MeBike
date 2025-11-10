@@ -71,6 +71,7 @@ export default function CustomersPage() {
     dashboardStatsData,
     resetPassword,
     updateProfileUser,
+    getRefetchDashboardStats,
   } = useUserActions({
     hasToken: true,
     limit: limit,
@@ -84,6 +85,7 @@ export default function CustomersPage() {
   useEffect(() => {
     getAllUsers();
     getAllStatistics();
+    getRefetchDashboardStats();
   }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getAllStatistics, currentPage]);
   const handleReset = () => {
     setSearchQuery("");

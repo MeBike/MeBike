@@ -32,7 +32,7 @@ export function EmailVerificationForm({
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showLoading, setShowLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seco6nds
+  const [timeLeft, setTimeLeft] = useState(600); 
   const [isTimeExpired, setIsTimeExpired] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -112,7 +112,7 @@ export function EmailVerificationForm({
     try {
       await resendVerifyEmail();
       // Reset timer and state
-      setTimeLeft(300);
+      setTimeLeft(600);
       setIsTimeExpired(false);
       setOtp(["", "", "", "", "", ""]);
       setError("");

@@ -113,7 +113,7 @@ export function RefundStats({ stats }: RefundStatsProps) {
                 {Number(
                   stats.totalCompletedRefundAmount.$numberDecimal
                 ).toLocaleString("vi-VN")}
-                {" đ"}
+              
               </p>
             </div>
             <div className="p-3 bg-accent/10 rounded-lg">

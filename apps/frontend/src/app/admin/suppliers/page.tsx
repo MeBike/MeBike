@@ -27,6 +27,22 @@ export default function SuppliersPage() {
     register: create,
     handleSubmit,
     formState: { errors },
+    reset: resetForm,
+  } = useForm<CreateSupplierSchema>({
+    resolver: zodResolver(createSupplierSchema),
+    defaultValues: {
+      name: "",
+      address: "",
+      phone_number: "",
+      contract_fee: "",
+    },
+  });
+  
+  const {
+    register: editRegister,
+    handleSubmit: handleEditSubmit,
+    formState: { errors: editErrors },
+    reset: resetEditForm,
   } = useForm<CreateSupplierSchema>({
     resolver: zodResolver(createSupplierSchema),
     defaultValues: {
@@ -41,13 +57,6 @@ export default function SuppliersPage() {
   const [statusFilter, setStatusFilter] = useState<
     "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
   >("");
-  const [formData, setFormData] = useState({
-    name: "",
-    address: "",
-    phone_number: "",
-    contract_fee: "",
-    status: "HOẠT ĐỘNG" as "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG",
-  });
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
   const { useGetAllBikeQuery } = useBikeActions(true);
@@ -88,20 +97,16 @@ export default function SuppliersPage() {
       phone_number: data.phone_number,
       contract_fee: data.contract_fee,
     });
+    resetForm();
     setIsModalOpen(false);
   };
+
   const handleChangeStatusFilter = (
     status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
   ) => {
     setStatusFilter(status);
   };
-  useEffect(() => {
-    getBikeStatsSupplier();
-    getAllStatsSupplier();
-  }, [selectedSupplier, getAllStatsSupplier, getBikeStatsSupplier]);
-  useEffect(() => {
-    getAllStatsSupplier();
-  }, [getAllStatsSupplier]);
+
   const handleViewSupplier = (supplier: Supplier) => {
     if (!supplier) return;
     if (selectedSupplier?._id === supplier._id && !isDetailModalOpen) {
@@ -114,13 +119,14 @@ export default function SuppliersPage() {
   };
 
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  
   // Khi supplier thay đổi, bắt đầu fetch
   useEffect(() => {
     if (!selectedSupplier) return;
     setIsLoadingDetail(true);
     getBikeStatsSupplier();
     getAllStatsSupplier();
-  }, [selectedSupplier , getAllStatsSupplier, getBikeStatsSupplier]);
+  }, [selectedSupplier, getAllStatsSupplier, getBikeStatsSupplier]);
 
   // Khi dữ liệu đủ (không loading nữa), mở modal
   useEffect(() => {
@@ -142,24 +148,18 @@ export default function SuppliersPage() {
     allStatsSupplier,
   ]);
 
-  const handleUpdateSupplier = () => {
+  const handleUpdateSupplier = (data: CreateSupplierSchema) => {
     if (!editingSupplier) return;
     getUpdateSupplier({
       id: editingSupplier._id,
       data: {
-        name: formData.name,
-        address: formData.address,
-        phone_number: formData.phone_number,
-        contract_fee: formData.contract_fee,
+        name: data.name,
+        address: data.address,
+        phone_number: data.phone_number,
+        contract_fee: data.contract_fee,
       },
     });
-    setFormData({
-      name: "",
-      address: "",
-      phone_number: "",
-      contract_fee: "",
-      status: "HOẠT ĐỘNG",
-    });
+    resetEditForm();
     setIsEditModalOpen(false);
     setEditingSupplier(null);
   };
@@ -257,12 +257,11 @@ export default function SuppliersPage() {
                 onChangeStatus: changeStatusSupplier,
                 onEdit: (supplier: Supplier) => {
                   setEditingSupplier(supplier);
-                  setFormData({
+                  resetEditForm({
                     name: supplier.name,
                     address: supplier.contact_info.address,
                     phone_number: supplier.contact_info.phone_number,
                     contract_fee: supplier.contract_fee,
-                    status: supplier.status,
                   });
                   setIsEditModalOpen(true);
                 },
@@ -407,15 +406,23 @@ export default function SuppliersPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-1">
-                        Phí hợp đồng
+                        Phí hợp đồng (0-1)
                       </label>
                       <Input
                         type="number"
                         id="contract_fee"
+                        step="0.01"
+                        min="0"
+                        max="1"
                         {...create("contract_fee")}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                        placeholder="Nhập phí hợp đồng"
+                        placeholder="Nhập phí hợp đồng (ví dụ: 0.1)"
                       />
+                      {errors.contract_fee && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {errors.contract_fee.message}
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-3 pt-4">
                       <Button
@@ -581,102 +588,110 @@ export default function SuppliersPage() {
           )}
           {isEditModalOpen && editingSupplier && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-foreground">
-                    Chỉnh sửa nhà cung cấp
-                  </h2>
-                  <button
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="p-1 hover:bg-muted rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5 text-muted-foreground" />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Tên nhà cung cấp
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                      placeholder="Nhập tên nhà cung cấp"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Địa chỉ
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.address}
-                      onChange={(e) =>
-                        setFormData({ ...formData, address: e.target.value })
-                      }
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                      placeholder="Nhập địa chỉ"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Số điện thoại
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.phone_number}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          phone_number: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                      placeholder="Nhập số điện thoại"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-1">
-                      Phí hợp đồng
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.contract_fee}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          contract_fee: e.target.value,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-                      placeholder="Nhập phí hợp đồng"
-                    />
-                  </div>
-
-
-
-                  <div className="flex gap-3 pt-4">
-                    <Button
-                      variant="outline"
+              <form
+                onSubmit={handleEditSubmit(handleUpdateSupplier)}
+                className="absolute inset-0 bg-black/50 flex items-center justify-center z-50"
+              >
+                <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-foreground">
+                      Chỉnh sửa nhà cung cấp
+                    </h2>
+                    <button
                       onClick={() => setIsEditModalOpen(false)}
-                      className="flex-1"
+                      className="p-1 hover:bg-muted rounded-lg transition-colors"
                     >
-                      Hủy
-                    </Button>
-                    <Button onClick={handleUpdateSupplier} className="flex-1">
-                      Cập nhật
-                    </Button>
+                      <X className="w-5 h-5 text-muted-foreground" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">
+                        Tên nhà cung cấp
+                      </label>
+                      <Input
+                        {...editRegister("name")}
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                        placeholder="Nhập tên nhà cung cấp"
+                      />
+                      {editErrors.name && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {editErrors.name.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">
+                        Địa chỉ
+                      </label>
+                      <Input
+                        type="text"
+                        {...editRegister("address")}
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                        placeholder="Nhập địa chỉ"
+                      />
+                      {editErrors.address && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {editErrors.address.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">
+                        Số điện thoại
+                      </label>
+                      <Input
+                        type="text"
+                        {...editRegister("phone_number")}
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                        placeholder="Nhập số điện thoại"
+                      />
+                      {editErrors.phone_number && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {editErrors.phone_number.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-1">
+                        Phí hợp đồng (0-1)
+                      </label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="1"
+                        {...editRegister("contract_fee")}
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+                        placeholder="Nhập phí hợp đồng (ví dụ: 0.1)"
+                      />
+                      {editErrors.contract_fee && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {editErrors.contract_fee.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditModalOpen(false)}
+                        className="flex-1"
+                        type="button"
+                      >
+                        Hủy
+                      </Button>
+                      <Button type="submit" className="flex-1">
+                        Cập nhật
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </form>
             </div>
           )}
         </div>

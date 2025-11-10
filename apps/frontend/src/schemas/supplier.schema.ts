@@ -7,6 +7,10 @@ export const createSupplierSchema = z.object({
     .min(1, { message: "Số điện thoại không được để trống" }),
   contract_fee: z
     .string()
-    .min(1, { message: "Phí hợp đồng không được để trống" }),
+    .min(1, { message: "Phí hợp đồng không được để trống" })
+    .refine((val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num >= 0 && num <= 1;
+    }, { message: "Phí hợp đồng phải từ 0 tới 1" }),
 });
 export type CreateSupplierSchema = z.infer<typeof createSupplierSchema>;
