@@ -108,6 +108,10 @@ function ProfileScreen() {
     navigation.navigate("Reservations" as never);
   };
 
+  const handleSubscriptions = () => {
+    navigation.navigate("Subscriptions" as never);
+  };
+
   const handleResendOtp = async () => {
     if (profile.verify === "VERIFIED") {
       Alert.alert("Info", "Email của bạn đã được xác thực.");
@@ -387,6 +391,12 @@ function ProfileScreen() {
               "Ví điện tử",
               "Quản lý ví điện tử của bạn",
               handleWallet
+            )}
+            {renderMenuOption(
+              "ribbon",
+              "Gói tháng",
+              "Ưu đãi và lịch sử gói",
+              handleSubscriptions
             )}
             {renderMenuOption(
               "calendar",
