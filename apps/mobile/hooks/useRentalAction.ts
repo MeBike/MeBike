@@ -186,5 +186,6 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string , station_i
     isEndCurrentRentalLoading: usePutEndRental.isPending,
     postRent,
     isPostRentLoading: usePostRent.isPending,
+    refetchingAllRentals: useGetAllRentals.refetch,
   };
 }

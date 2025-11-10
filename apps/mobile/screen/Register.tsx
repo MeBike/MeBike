@@ -175,7 +175,6 @@ export default function RegisterScreen() {
       phone_number: phone || undefined,
     }).then(() => {
       clearForm();
-      // Chuyển sang trang verify email thay vì Main
       navigation.navigate("EmailVerification", { email });
     }).catch((error) => {
       console.log("Register error:", error);

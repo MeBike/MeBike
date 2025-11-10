@@ -168,6 +168,7 @@ export default function SOSPage() {
             <>
               <div className="bg-card border border-border rounded-lg overflow-hidden">
                 <DataTable
+                  title="Danh sách đơn cứu hộ"
                   columns={sosColumns({
                     onView: (sos: SOS) => {
                       setSelectedSOSId(sos._id);
@@ -617,7 +618,7 @@ export default function SOSPage() {
                     <option value="">-- Chọn đơn thuê --</option>
                     {allRentalsData?.map((rental: RentingHistory) => (
                       <option key={rental._id} value={rental._id}>
-                        {rental._id} - Bike {rental.bike_id}
+                        {rental._id} -{rental.user.fullname}
                       </option>
                     ))}
                   </select>

@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useRentalsActions } from "@hooks/useRentalAction";
@@ -21,15 +22,20 @@ import type { RentingHistory } from "../types/RentalTypes";
 function BookingHistoryScreen() {
   const navigator = useNavigation();
   const insets = useSafeAreaInsets();
-  const { rentalsData, isGetAllRentalsFetching, getAllRentals } = useRentalsActions(true);
+  const {
+    rentalsData,
+    isGetAllRentalsFetching,
+    getAllRentals,
+    refetchingAllRentals,
+  } = useRentalsActions(true);
   const [bookings, setBookings] = useState<RentingHistory[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  const onRefresh = async () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await getAllRentals();
+    await refetchingAllRentals();
     setRefreshing(false);
-  };
+  }, [refetchingAllRentals]);
 
   useEffect(() => {
     if (rentalsData && !isGetAllRentalsFetching) {

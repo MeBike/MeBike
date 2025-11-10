@@ -23,8 +23,8 @@ export const rentalColumn = ({
   },
   {
     accessorKey: "user_id",
-    header: "Mã người dùng",
-    cell: ({ row }) => row.original.user_id,
+    header: "Tên người dùng",
+    cell: ({ row }) => row.original.user.fullname,
   },
   {
     accessorKey: "bike_id",

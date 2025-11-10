@@ -82,7 +82,8 @@ export const profileUpdateSchema = z.object({
       message: "Số điện thoại không hợp lệ",
     })
     .optional()
-    .or(z.literal("")),  
+    .or(z.literal("")),
+  avatar : z.string().url({ message: "Avatar phải là một URL hợp lệ" }).optional(),  
 });
 export const resetPasswordSchema = z.object({
   password: z

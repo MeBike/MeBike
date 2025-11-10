@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import type {
   RentalStatus,
 } from "@custom-types";
-import { Plus, Download } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRentalsActions } from "@/hooks/use-rental";
 import { useStationActions } from "@/hooks/useStationAction";
 import { DataTable } from "@/components/TableCustom";
@@ -134,10 +134,6 @@ export default function RentalsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Xuất Excel
-            </Button>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               Tạo đơn mới

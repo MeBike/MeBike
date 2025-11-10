@@ -4,7 +4,8 @@ import { useCreateReport } from "@hooks/mutations/Report/useCreateReport";
 import { reportService } from "@services/report.service";
 import type { CreateReportData, Report } from "@services/report.service";
 import { useCallback } from "react";
-export function useReportActions({ page, limit }: { page?: number; limit?: number }) {
+import { useGetReportById } from "./query/Report/useGetReportById";
+export function useReportActions({ page, limit , id}: { page?: number; limit?: number; id?: string }) {
   const createReportMutation = useCreateReport();
   const {
     data: userReportsData,
@@ -26,7 +27,6 @@ export function useReportActions({ page, limit }: { page?: number; limit?: numbe
       return undefined;
     },
   });
-
   const createReport = (
     data: CreateReportData,
     options?: {
@@ -44,7 +44,7 @@ export function useReportActions({ page, limit }: { page?: number; limit?: numbe
   };
 
   const userReports = userReportsData?.pages.flatMap(page => page.data.data) || [];
-
+  const {data: reportDetailData , isLoading: isLoadingReportDetail , refetch: refetchReportDetail } = useGetReportById(id || "");
   return {
     userReports,
     isLoadingUserReports,
@@ -54,5 +54,8 @@ export function useReportActions({ page, limit }: { page?: number; limit?: numbe
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    reportDetailData: reportDetailData?.data,
+    isLoadingReportDetail,
+    refetchReportDetail,
   };
 }

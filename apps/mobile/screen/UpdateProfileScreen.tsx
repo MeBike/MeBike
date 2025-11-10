@@ -12,10 +12,45 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 
 import { useAuth } from "@providers/auth-providers";
+import { uploadImageToFirebase } from "@lib/imageUpload";
+
+// TomTom API
+const TOMTOM_API_KEY = process.env.EXPO_PUBLIC_TOMTOM_API_KEY;
+
+const fetchTomTomReverseGeocode = async (
+  latitude: string,
+  longitude: string
+) => {
+  try {
+    const url = `https://api.tomtom.com/search/2/reverseGeocode/${latitude},${longitude}.JSON?key=${TOMTOM_API_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data?.addresses?.[0]?.address?.freeformAddress || "";
+  } catch (e) {
+    return "";
+  }
+};
+
+const fetchTomTomAddressSuggest = async (addressText: string) => {
+  try {
+    const url = `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(addressText)}.JSON?key=${TOMTOM_API_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results.map((r: any) => ({
+      address: r.address.freeformAddress,
+      latitude: r.position.lat,
+      longitude: r.position.lon,
+    }));
+  } catch (e) {
+    return [];
+  }
+};
 
 function UpdateProfileScreen() {
   const navigation = useNavigation();
@@ -27,9 +62,69 @@ function UpdateProfileScreen() {
   const [phone, setPhone] = useState(user?.phone_number || "");
   const [location, setLocation] = useState(user?.location || "");
   const [avatar, setAvatar] = useState(user?.avatar || "");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const handleEditPress = () => {
     setIsEditing(true);
+  };
+
+  const handleLocationChange = async (text: string) => {
+    setLocation(text);
+    if (typingTimeout) clearTimeout(typingTimeout);
+    
+    if (text.length > 3) {
+      const timeout = setTimeout(async () => {
+        try {
+          const sugg = await fetchTomTomAddressSuggest(text);
+          setAddressSuggestions(sugg);
+        } catch (error) {
+          console.error("Error fetching address:", error);
+        }
+      }, 500);
+      setTypingTimeout(timeout);
+    } else {
+      setAddressSuggestions([]);
+    }
+  };
+
+  const handleSelectSuggestion = async (item: any) => {
+    setLocation(item.address);
+    setAddressSuggestions([]);
+    
+    const address = await fetchTomTomReverseGeocode(
+      item.latitude.toString(),
+      item.longitude.toString()
+    );
+    
+    if (address) {
+      setLocation(address);
+    }
+  };
+
+  const handlePickAvatar = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setIsUploadingAvatar(true);
+        const uploadedUrl = await uploadImageToFirebase(result.assets[0]);
+        setAvatar(uploadedUrl);
+        setIsUploadingAvatar(false);
+        Alert.alert("Thành công", "Ảnh đã được upload!");
+      }
+    }
+    catch (error) {
+      setIsUploadingAvatar(false);
+      Alert.alert("Lỗi", "Upload ảnh thất bại. Vui lòng thử lại.");
+      console.log("Upload error:", error);
+    }
   };
 
   const handleSave = async () => {
@@ -61,7 +156,8 @@ function UpdateProfileScreen() {
       Alert.alert("Thành công", "Cập nhật thông tin thành công!");
     }
     catch (e) {
-      Alert.alert("Lỗi", "Cập nhật thất bại. Vui lòng thử lại.");
+      const errorMsg = e instanceof Error ? e.message : "Cập nhật thất bại. Vui lòng thử lại.";
+      Alert.alert("Lỗi", errorMsg);
     }
   };
 
@@ -99,8 +195,16 @@ function UpdateProfileScreen() {
             style={styles.avatar}
           />
           {isEditing && (
-            <TouchableOpacity style={styles.cameraButton}>
-              <Ionicons name="camera" size={20} color="#fff" />
+            <TouchableOpacity 
+              style={styles.cameraButton}
+              onPress={handlePickAvatar}
+              disabled={isUploadingAvatar}
+            >
+              {isUploadingAvatar ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons name="camera" size={20} color="#fff" />
+              )}
             </TouchableOpacity>
           )}
         </View>
@@ -195,42 +299,53 @@ function UpdateProfileScreen() {
           {/* Location */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Địa chỉ</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="location"
-                size={18}
-                color="#0066FF"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, !isEditing && styles.inputDisabled]}
-                placeholder="Nhập địa chỉ"
-                placeholderTextColor="#ccc"
-                value={location}
-                onChangeText={setLocation}
-                editable={isEditing}
-              />
-            </View>
-          </View>
-
-          {/* Avatar URL */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Avatar URL</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="image"
-                size={18}
-                color="#0066FF"
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, !isEditing && styles.inputDisabled]}
-                placeholder="Nhập URL avatar"
-                placeholderTextColor="#ccc"
-                value={avatar}
-                onChangeText={setAvatar}
-                editable={isEditing}
-              />
+            <View>
+              <View style={styles.inputWrapper}>
+                <Ionicons
+                  name="location"
+                  size={18}
+                  color="#0066FF"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={[styles.input, !isEditing && styles.inputDisabled]}
+                  placeholder="Nhập địa chỉ"
+                  placeholderTextColor="#ccc"
+                  value={location}
+                  onChangeText={handleLocationChange}
+                  editable={isEditing}
+                />
+              </View>
+              {addressSuggestions.length > 0 && (
+                <View
+                  style={{
+                    backgroundColor: "#fff",
+                    borderRadius: 8,
+                    marginTop: 8,
+                    maxHeight: 180,
+                    borderColor: "#d0d7de",
+                    borderWidth: 1,
+                    overflow: "hidden",
+                  }}
+                >
+                  {addressSuggestions.map((item, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      style={{
+                        padding: 10,
+                        borderBottomColor: idx === addressSuggestions.length - 1 ? "transparent" : "#eee",
+                        borderBottomWidth: idx === addressSuggestions.length - 1 ? 0 : 1,
+                      }}
+                      onPress={() => handleSelectSuggestion(item)}
+                    >
+                      <Text style={{ color: "#0066FF" }}>{item.address}</Text>
+                      <Text style={{ fontSize: 12, color: "#888" }}>
+                        ({item.latitude}, {item.longitude})
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
           </View>
         </View>
