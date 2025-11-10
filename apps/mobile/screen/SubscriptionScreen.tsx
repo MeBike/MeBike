@@ -8,8 +8,6 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,9 +18,11 @@ import type {
 } from "@/types/subscription-types";
 
 import { SubscriptionDetailModal } from "@components/subscription/subscription-detail-modal";
-import { SubscriptionHistoryItem } from "@components/subscription/subscription-history-item";
-import { SubscriptionPackageCard } from "@components/subscription/subscription-package-card";
+import { SubscriptionHeader } from "@components/subscription/subscription-header";
+import { SubscriptionPlansSection } from "@components/subscription/subscription-plans-section";
+import { SubscriptionHistorySection } from "@components/subscription/subscription-history-section";
 import { SubscriptionSummary } from "@components/subscription/subscription-summary";
+import { SubscriptionToggle, type SubscriptionSectionKey } from "@components/subscription/subscription-toggle";
 import { SUBSCRIPTION_PACKAGES } from "@constants/subscriptionPackages";
 import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 import { useActivateSubscriptionMutation } from "@hooks/mutations/Subscription/useActivateSubscriptionMutation";
@@ -31,7 +31,6 @@ import { useAuth } from "@providers/auth-providers";
 
 const PAGE_SIZE = 20;
 const SECTION_STORAGE_KEY = "subscription_active_section";
-type SectionKey = "plans" | "history";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   const axiosError = error as {
@@ -54,7 +53,8 @@ export default function SubscriptionScreen() {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
   const [selectedId, setSelectedId] = useState<string | undefined>();
-  const [activeSection, setActiveSection] = useState<SectionKey>("plans");
+  const [activeSection, setActiveSection] = useState<SubscriptionSectionKey>("plans");
+  const [subscribingPackage, setSubscribingPackage] = useState<SubscriptionPackage | null>(null);
 
   const {
     data,
@@ -90,7 +90,7 @@ export default function SubscriptionScreen() {
     loadSection();
   }, []);
 
-  const handleSectionChange = useCallback(async (section: SectionKey) => {
+  const handleSectionChange = useCallback(async (section: SubscriptionSectionKey) => {
     setActiveSection(section);
     try {
       await AsyncStorage.setItem(SECTION_STORAGE_KEY, section);
@@ -118,6 +118,7 @@ export default function SubscriptionScreen() {
           {
             text: "Đồng ý",
             onPress: () => {
+              setSubscribingPackage(packageName);
               subscribeMutation.mutate(
                 { package_name: packageName },
                 {
@@ -128,6 +129,9 @@ export default function SubscriptionScreen() {
                   onError: (error) => {
                     Alert.alert("Không thể đăng ký", getErrorMessage(error, "Vui lòng thử lại sau"));
                   },
+                  onSettled: () => {
+                    setSubscribingPackage(null);
+                  }
                 },
               );
             },
@@ -170,92 +174,62 @@ export default function SubscriptionScreen() {
   const packageCards = useMemo(() => Object.values(SUBSCRIPTION_PACKAGES), []);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.contentContainer}
-        refreshControl={refreshControl}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <Text style={styles.heading}>Gói thành viên</Text>
-          <Text style={styles.subheading}>Tối ưu chi phí và giữ xe dễ dàng hơn</Text>
-        </View>
-
-        <SubscriptionSummary
-          activeSubscription={activeSubscription}
-          pendingSubscription={pendingSubscription}
-          onActivatePending={pendingSubscription ? handleActivate : undefined}
-          activating={activateMutation.isPending}
-        />
-
-        <View style={styles.segmentedControl}>
-          <SegmentButton
-            label="Gói tháng"
-            isActive={activeSection === "plans"}
-            onPress={() => handleSectionChange("plans")}
+    <View style={styles.screen}>
+      <StatusBar barStyle="light-content" />
+      <SubscriptionHeader />
+      <SafeAreaView style={styles.contentSafeArea} edges={['left','right','bottom']}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.contentContainer}
+          refreshControl={refreshControl}
+          showsVerticalScrollIndicator={false}
+        >
+          <SubscriptionSummary
+            activeSubscription={activeSubscription}
+            pendingSubscription={pendingSubscription}
+            onActivatePending={pendingSubscription ? handleActivate : undefined}
+            activating={activateMutation.isPending}
           />
-          <SegmentButton
-            label="Lịch sử"
-            isActive={activeSection === "history"}
-            onPress={() => handleSectionChange("history")}
-          />
-        </View>
 
-        {activeSection === "plans" && (
-          <>
-            <Text style={styles.sectionLabel}>Chọn gói phù hợp</Text>
-            {packageCards.map((pkg) => (
-              <SubscriptionPackageCard
-                key={pkg.id}
-                info={pkg}
-                disabled={!canSubscribe}
-                isCurrent={
-                  pkg.id === activeSubscription?.package_name || pkg.id === pendingSubscription?.package_name
-                }
-                loading={subscribeMutation.isPending}
-                onSubscribe={() => handleSubscribe(pkg.id)}
-              />
-            ))}
-          </>
-        )}
+          <SubscriptionToggle active={activeSection} onChange={handleSectionChange} />
 
-        {activeSection === "history" && (
-          <>
-            <View style={styles.historyHeader}>
-              <Text style={styles.sectionLabel}>Lịch sử gói của bạn</Text>
-              <Text style={styles.historyCount}>{subscriptions.length} gói</Text>
-            </View>
+          {activeSection === "plans" && (
+            <SubscriptionPlansSection
+              packages={packageCards}
+              activeSubscription={activeSubscription}
+              pendingSubscription={pendingSubscription}
+              canSubscribe={canSubscribe}
+              isLoading={(pkg) => subscribingPackage === pkg && subscribeMutation.isPending}
+              onSubscribe={handleSubscribe}
+            />
+          )}
 
-            {isLoading && <Text style={styles.hintText}>Đang tải lịch sử...</Text>}
-            {!isLoading && subscriptions.length === 0 && (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyTitle}>Chưa có gói nào</Text>
-                <Text style={styles.emptySubtitle}>Khi đăng ký gói, bạn sẽ thấy lịch sử tại đây.</Text>
-              </View>
-            )}
-
-            {subscriptions.map((subscription: SubscriptionListItem) => (
-              <SubscriptionHistoryItem
-                key={subscription._id}
-                subscription={subscription}
-                onPress={(item) => setSelectedId(item._id)}
-              />
-            ))}
-          </>
-        )}
-      </ScrollView>
+          {activeSection === "history" && (
+            <SubscriptionHistorySection
+              subscriptions={subscriptions}
+              isLoading={isLoading}
+              onSelect={setSelectedId}
+            />
+          )}
+        </ScrollView>
+      </SafeAreaView>
 
       <SubscriptionDetailModal visible={Boolean(selectedId)} subscriptionId={selectedId} onClose={() => setSelectedId(undefined)} />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  screen: {
     flex: 1,
     backgroundColor: "#F5F7FB",
+  },
+  contentSafeArea: {
+    flex: 1,
+    backgroundColor: "#F5F7FB",
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingTop: 20,
   },
   container: {
     flex: 1,
@@ -264,99 +238,4 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
-  header: {
-    marginBottom: 16,
-  },
-  heading: {
-    fontSize: 26,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  subheading: {
-    color: "#6B7280",
-    marginTop: 4,
-  },
-  sectionLabel: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
-    marginVertical: 12,
-  },
-  segmentedControl: {
-    flexDirection: "row",
-    backgroundColor: "#E5E7EB",
-    borderRadius: 999,
-    padding: 4,
-    gap: 4,
-    marginTop: 12,
-  },
-  segmentButton: {
-    flex: 1,
-    borderRadius: 999,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  segmentButtonActive: {
-    backgroundColor: "white",
-    elevation: 1,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-  },
-  segmentButtonText: {
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  segmentButtonTextActive: {
-    color: "#111827",
-  },
-  historyHeader: {
-    marginTop: 12,
-    marginBottom: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  historyCount: {
-    color: "#6B7280",
-  },
-  emptyState: {
-    backgroundColor: "white",
-    borderRadius: 18,
-    padding: 20,
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  emptySubtitle: {
-    textAlign: "center",
-    color: "#6B7280",
-    marginTop: 6,
-  },
-  hintText: {
-    color: "#6B7280",
-    marginBottom: 12,
-  },
 });
-
-type SegmentButtonProps = {
-  label: string;
-  isActive: boolean;
-  onPress: () => void;
-};
-
-function SegmentButton({ label, isActive, onPress }: SegmentButtonProps) {
-  return (
-    <TouchableOpacity
-      style={[styles.segmentButton, isActive && styles.segmentButtonActive]}
-      onPress={onPress}
-      activeOpacity={0.85}
-    >
-      <Text style={[styles.segmentButtonText, isActive && styles.segmentButtonTextActive]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
