@@ -499,7 +499,8 @@ export default function StationDetailScreen() {
               onPress={() => handleReservationOptionChange("MỘT LẦN")}
               activeOpacity={0.9}
             >
-              <Text style={[styles.optionButtonText, reservationOption === "MỘT LẦN" && styles.optionButtonTextActive]}>Đặt 1 lần</Text>
+              <Text style={[styles.optionButtonText, reservationOption === "MỘT LẦN" && styles.optionButtonTextActive]}>Trừ ví</Text>
+              <Text style={[styles.optionButtonSubText, reservationOption === "MỘT LẦN" && styles.optionButtonTextActive]}>Đặt 1 lần</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.optionButton, reservationOption === "GÓI THÁNG" && styles.optionButtonActive, !activeSubscription && styles.optionButtonDisabled]}
@@ -508,6 +509,7 @@ export default function StationDetailScreen() {
               disabled={!activeSubscription}
             >
               <Text style={[styles.optionButtonText, reservationOption === "GÓI THÁNG" && styles.optionButtonTextActive]}>Dùng gói tháng</Text>
+              <Text style={[styles.optionButtonSubText, reservationOption === "GÓI THÁNG" && styles.optionButtonTextActive]}>Trừ lượt còn lại</Text>
             </TouchableOpacity>
           </View>
           {!activeSubscription && (
@@ -775,6 +777,10 @@ const styles = StyleSheet.create({
   },
   optionButtonTextActive: {
     color: "#fff",
+  },
+  optionButtonSubText: {
+    fontSize: 11,
+    color: BikeColors.onSurfaceVariant,
   },
   subscriptionHint: {
     fontSize: 12,
