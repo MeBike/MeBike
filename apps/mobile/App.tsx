@@ -23,6 +23,7 @@ import ProfileScreen from "./screen/ProfileScreen";
 import RegisterScreen from "./screen/Register";
 import ReportScreen from "./screen/ReportScreen";
 import ReportDetailScreen from "./screen/ReportDetailScreen";
+import SubscriptionScreen from "./screen/SubscriptionScreen";
 import ReservationDetailScreen from "./screen/reservation-detail-screen";
 import ReservationScreen from "./screen/reservation-screen";
 import ResetPasswordOTPScreen from "./screen/ResetPasswordOTP";
@@ -192,6 +193,11 @@ export default function App() {
             <Stack.Screen
               name="MyWallet"
               component={MyWalletScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="Subscriptions"
+              component={SubscriptionScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen

@@ -27,6 +27,7 @@ export type RootStackParamList = {
   ResetPasswordForm: { email: string; otp: string };
   UpdateProfile: undefined;
   MyWallet: undefined;
+  Subscriptions: undefined;
   Xe: undefined;
   Reservations: undefined;
   ReservationDetail: {
@@ -78,6 +79,10 @@ export type UpdateProfileNavigationProp = NativeStackNavigationProp<
 export type MyWalletNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "MyWallet"
+>;
+export type SubscriptionsNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Subscriptions"
 >;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, "StationDetail">;
 export type ReservationsScreenNavigationProp = NativeStackNavigationProp<
