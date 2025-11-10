@@ -16,8 +16,8 @@ export type SubscriptionRecord = {
   package_name: SubscriptionPackage;
   activated_at?: string | null;
   expires_at?: string | null;
-  max_reservations_per_month?: number | null;
-  used_reservations: number;
+  max_usages?: number | null;
+  usage_count: number;
   price: MongoDecimal;
   status: SubscriptionStatus;
   created_at?: string;
@@ -33,8 +33,8 @@ export type SubscriptionListItem = {
   package_name: SubscriptionPackage;
   activated_at?: string | null;
   expires_at?: string | null;
-  max_reservations_per_month?: number | null;
-  used_reservations: number;
+  max_usages?: number | null;
+  usage_count: number;
   price: number;
   status: SubscriptionStatus;
   created_at?: string;

@@ -14,7 +14,7 @@ export const SUBSCRIPTION_PACKAGES: Record<SubscriptionPackage, SubscriptionPack
   basic: {
     id: "basic",
     title: "Gói Cơ Bản",
-    price: 99000,
+    price: 119000,
     monthlyLimit: 30,
     accent: "#2563EB",
     gradient: ["#2563EB", "#38BDF8"],

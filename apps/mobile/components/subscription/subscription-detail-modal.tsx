@@ -43,7 +43,7 @@ export function SubscriptionDetailModal({ visible, subscriptionId, onClose }: Pr
                 <InfoRow label="Ngày hết hạn" value={formatDate(data.subscription.expires_at)} />
                 <InfoRow
                   label="Lượt đã dùng"
-                  value={`${data.subscription.used_reservations}/${data.subscription.max_reservations_per_month ?? "∞"}`}
+                  value={`${data.subscription.usage_count}/${data.subscription.max_usages ?? "∞"}`}
                 />
               </View>
               <View style={styles.section}>

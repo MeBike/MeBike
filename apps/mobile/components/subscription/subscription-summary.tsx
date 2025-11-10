@@ -30,8 +30,8 @@ export function SubscriptionSummary({
 
   const description = (() => {
     if (hasActive && activeSubscription) {
-      const limit = activeSubscription.max_reservations_per_month;
-      const used = activeSubscription.used_reservations;
+      const limit = activeSubscription.max_usages;
+      const used = activeSubscription.usage_count;
       const quota = limit ? `${used}/${limit} lượt` : `${used} lượt đã dùng`;
       return `Hạn: ${formatDate(activeSubscription.expires_at)} • ${quota}`;
     }
