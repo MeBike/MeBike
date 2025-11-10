@@ -8,6 +8,7 @@ import { formatUTCDateToVietnamese, getLocalTime } from '~/utils/date-time'
 import { applySlotToDate } from '~/utils/reservation.helper'
 import subscriptionService from '~/services/subscription.services'
 import { fixedSlotTemplateService } from '~/services/fixed-slot.services'
+import { RESERVATIONS_MESSAGE } from '~/constants/messages'
 
 export const reservationNotifyQueue = new Queue('reservation-notify', { connection })
 export const reservationExpireQueue = new Queue('reservation-expire', { connection })
@@ -90,8 +91,9 @@ export const generateFixedSlotWorker = new Worker(
     const startTime = Date.now()
     const today = getLocalTime()
     today.setUTCHours(0, 0, 0, 0)
+    const todayStr = today.toISOString().split('T')[0]
 
-    console.log(`[FixedSlot] Starting generation for ${today.toISOString()}`)
+    console.log(`[FixedSlot] Starting generation for ${todayStr}`)
 
     const templates = await fixedSlotTemplateService.getActiveTemplatesWithDetails()
     if (templates.length === 0) {
@@ -105,7 +107,7 @@ export const generateFixedSlotWorker = new Worker(
 
     for (const template of templates) {
       try {
-        if (!template.days_of_week.includes(today.getDay())) continue
+        if (!template.selected_dates.includes(todayStr)) continue
 
         const {start, end} = applySlotToDate(today, template.slot_start)
 
@@ -146,7 +148,7 @@ export const generateFixedSlotWorker = new Worker(
         // Gửi email: Thành công
         await emailQueue.add('success', {
           template: 'success-reservation.html',
-          subject: 'Đặt xe tự động thành công',
+          subject: RESERVATIONS_MESSAGE.EMAIL_SUBJECT_SUCCESS_RESERVING,
           data: {
             ...reservation,
             station_name: template.station.name,

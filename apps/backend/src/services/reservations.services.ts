@@ -275,7 +275,7 @@ class ReservationsService {
         const updatedData: Partial<Reservation> = {
           status: ReservationStatus.Cancelled
         }
-        if (reservation.created_at && this.isRefundable(reservation.created_at)) {
+      if (!reservation.subscription_id && reservation.created_at && this.isRefundable(reservation.created_at)) {
           isRefund = true
           refundAmount = parseFloat(reservation.prepaid.toString())
         }
@@ -398,6 +398,7 @@ class ReservationsService {
         const updatedData: any = {
           start_time: now,
           status: RentalStatus.Rented,
+          fixed_slot_template_id: reservation.fixed_slot_template_id,
           subscription_id: reservation.subscription_id
         }
 

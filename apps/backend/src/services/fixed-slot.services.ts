@@ -8,7 +8,7 @@ interface CreateFixedSlotTemplateParams {
   user_id: ObjectId
   station_id: ObjectId
   slot_start: string
-  days_of_week: number[]
+  selected_dates: string[]
 }
 
 class FixedSlotTemplateService {
@@ -17,7 +17,7 @@ class FixedSlotTemplateService {
       user_id: params.user_id,
       station_id: params.station_id,
       slot_start: params.slot_start,
-      days_of_week: params.days_of_week,
+      selected_dates: params.selected_dates,
       status: FixedSlotStatus.ACTIVE
     })
 
@@ -64,7 +64,7 @@ class FixedSlotTemplateService {
           _id: 1,
           station_name: '$station.name',
           slot_start: 1,
-          days_of_week: 1,
+          selected_dates: 1,
           status: 1,
           created_at: 1,
           user: { fullname: 1, email: 1 }
@@ -111,7 +111,7 @@ class FixedSlotTemplateService {
           user_id: 1,
           station_id: 1,
           slot_start: 1,
-          days_of_week: 1,
+          selected_dates: 1,
           'user.fullname': 1,
           'user.email': 1,
           'station.name': 1

@@ -192,6 +192,65 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
 </body>
 </html>
 `,
+'no-bike-available.html': (data) => `
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Không Có Xe Khả Dụng - MeBike</title>
+</head>
+<body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+    <div style="max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;">
+        <h1 style="color: ${MBIKE_PRIMARY_COLOR}; text-align: center; margin-bottom: 20px;">MeBike</h1>
+        
+        <h2 style="font-size: 18px; color: #333333; margin-top: 0;">Xin chào ${data.fullname},</h2>
+        
+        <p style="color: #333333; line-height: 1.5;">
+            Rất tiếc! Hiện tại <strong>không có xe khả dụng</strong> cho khung giờ cố định bạn đã đăng ký.
+        </p>
+
+        <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
+            <p style="font-size: 16px; font-weight: bold; margin: 0;">
+                Không có xe tại <strong>${data.station_name}</strong> cho khung giờ <strong>${data.slot_time}</strong> ngày <strong>${data.date}</strong>.
+            </p>
+        </div>
+
+        <table style="width: 100%; margin: 20px 0; font-size: 15px; color: #333333;">
+            <tr>
+                <td style="padding: 8px 0; font-weight: bold; width: 40%;">Trạm xe:</td>
+                <td style="padding: 8px 0;">${data.station_name}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Khung giờ:</td>
+                <td style="padding: 8px 0;">${data.slot_time}</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; font-weight: bold;">Ngày:</td>
+                <td style="padding: 8px 0;">${data.date}</td>
+            </tr>
+        </table>
+
+        <p style="color: #333333; line-height: 1.5;">
+            Bạn có thể thử chọn <strong>khung giờ khác</strong> hoặc <strong>liên hệ đội ngũ MeBike</strong> để được hỗ trợ sắp xếp lại lịch.
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.callBackUrl || '#'}" 
+               style="background: ${MBIKE_PRIMARY_COLOR}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px;">
+               Chọn Lại Khung Giờ
+            </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">
+            <strong>Mẹo:</strong> Truy cập ứng dụng MeBike để xem trạm xe gần nhất còn xe khả dụng.<br><br>
+            Trân trọng,<br><strong>Đội ngũ MeBike</strong>
+        </p>
+    </div>
+</body>
+</html>
+`,
+
 'success-subscription.html': (data) => `
 <!DOCTYPE html>
 <html lang="vi">

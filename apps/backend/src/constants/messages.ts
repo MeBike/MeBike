@@ -370,6 +370,7 @@ export const RESERVATIONS_MESSAGE = {
   FS_TEMPLATE_PAUSE_SUCCESS: 'Tạm dừng mẫu khung giờ thành công',
   FS_TEMPLATE_RESUME_SUCCESS: 'Kích hoạt lại mẫu khung giờ thành công',
   FS_TEMPLATE_CANCEL_SUCCESS: 'Hủy mẫu khung giờ thành công',
+  FS_REQUIRED_ONE_DATE_AT_LEAST: 'Vui lòng chọn ít nhất 1 ngày',
 
   FS_TEMPLATE_NOT_FOUND: 'Không tìm thấy mẫu khung giờ cố định',
   FS_TEMPLATE_CANNOT_OPERATE_OTHER: 'Bạn không thể thao tác mẫu của người khác',
@@ -377,8 +378,9 @@ export const RESERVATIONS_MESSAGE = {
   FS_TEMPLATE_MUST_BE_PAUSED_TO_RESUME: 'Chỉ có thể kích hoạt lại mẫu đang tạm dừng',
   FS_TEMPLATE_CANNOT_MODIFY_AFTER_START: 'Không thể chỉnh sửa mẫu sau khi đã bắt đầu',
   FS_INVALID_SLOT_TIME: 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu',
-  FS_INVALID_DAYS_OF_WEEK: 'days_of_week chỉ chứa số từ 0 đến 6',
+  FS_INVALID_DATE: 'Ngày phải có định dạng YYYY-MM-DD',
   FS_END_DATE_BEFORE_START: 'Ngày kết thúc phải lớn hơn ngày bắt đầu',
+  FS_PAST_DATE_NOT_ALLOWED: 'Không được chọn ngày trong quá khứ',
 
   FS_REQUIRED_STATION_ID: 'Vui lòng nhập ID trạm',
   FS_INVALID_SLOT_START_FORMAT: 'Thời gian bắt đầu slot phải theo định dạng HH:MM',
@@ -389,6 +391,7 @@ export const RESERVATIONS_MESSAGE = {
   FS_INVALID_END_DATE: 'Ngày kết thúc không hợp lệ',
   FS_START_DATE_MUST_AFTER_24H: 'Ngày bắt đầu phải cách hiện tại 24h',
   FS_END_SLOT_AFTER_START: 'Thời gian kết thúc slot phải lớn hơn thời gian bắt đầu',
+  FS_USER_ALREADY_HAD_TEMPLATE_IN_STATION: 'Người dùng đã có một khung lịch đang hoạt động hay tạm dừng tại trạm này',
   // Subscription (SUB)
   SUB_REQUIRED_SUBSCRIPTION_ID: 'Vui lòng nhập ID gói đăng ký (subscription_id)',
   SUBSCRIPTION_NOT_FOUND: 'Không tìm thấy gói đăng ký',

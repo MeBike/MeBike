@@ -25,3 +25,7 @@ export function validate(validation: RunnableValidationChains<ValidationChain>) 
     next(entityError);
   };
 }
+
+export const uniqueDates = (dates: string[]): string[] => {
+  return Array.from(new Set(dates))
+}

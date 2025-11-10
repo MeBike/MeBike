@@ -1,13 +1,14 @@
 import { checkSchema } from 'express-validator'
-import { validate } from '~/utils/validation'
-import { RESERVATIONS_MESSAGE } from '~/constants/messages'
+import { uniqueDates, validate } from '~/utils/validation'
+import { RESERVATIONS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
 import { toObjectId } from '~/utils/string'
-import { Request } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { FixedSlotStatus, Role } from '~/constants/enums'
 import databaseService from '~/services/database.services'
 import { ErrorWithStatus } from '~/models/errors'
 import HTTP_STATUS from '~/constants/http-status'
 import { TokenPayLoad } from '~/models/requests/users.requests'
+import { getLocalTime } from '~/utils/date-time'
 
 const makeFixedSlotTemplateIdRule = (options?: { mustBeStatus?: FixedSlotStatus }) => ({
   in: ['params'] as const,
@@ -56,7 +57,6 @@ const makeFixedSlotTemplateIdRule = (options?: { mustBeStatus?: FixedSlotStatus 
   }
 })
 
-// CREATE: station_id, slot_start, days_of_week
 export const createFixedSlotTemplateValidator = validate(
   checkSchema(
     {
@@ -64,13 +64,29 @@ export const createFixedSlotTemplateValidator = validate(
         notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_STATION_ID },
         isMongoId: { errorMessage: RESERVATIONS_MESSAGE.INVALID_STATION_ID },
         custom: {
-          options: async (value) => {
+          options: async (value, { req }) => {
             const station = await databaseService.stations.findOne({ _id: toObjectId(value) })
-            if (!station)
+            if (!station) {
               throw new ErrorWithStatus({
                 message: RESERVATIONS_MESSAGE.STATION_NOT_FOUND.replace('%s', value),
                 status: HTTP_STATUS.NOT_FOUND
               })
+            }
+
+            const { user_id } = req.decoded_authorization as TokenPayLoad
+
+            const userTemplate = await databaseService.fixedSlotTemplates.findOne({
+              user_id: toObjectId(user_id),
+              station_id: toObjectId(value),
+              status: { $in: [FixedSlotStatus.ACTIVE, FixedSlotStatus.PAUSED] }
+            })
+
+            if (userTemplate) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.FS_USER_ALREADY_HAD_TEMPLATE_IN_STATION,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
             return true
           }
         }
@@ -83,17 +99,29 @@ export const createFixedSlotTemplateValidator = validate(
           errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_SLOT_START_FORMAT
         }
       },
-      days_of_week: {
-        notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_DAYS_OF_WEEK },
+      selected_dates: {
+        notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_ONE_DATE_AT_LEAST },
         isArray: { options: { min: 1 } },
         custom: {
-          options: (value: number[]) => {
-            if (!value.every((d) => d >= 0 && d <= 6)) {
+          options: (value: string[], {req}) => {
+            const unique = uniqueDates(value)
+
+            const invalid = unique.some((date) => !/^\d{4}-\d{2}-\d{2}$/.test(date))
+            if (invalid)
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_INVALID_DAYS_OF_WEEK,
+                message: RESERVATIONS_MESSAGE.FS_INVALID_DATE,
                 status: HTTP_STATUS.BAD_REQUEST
               })
-            }
+
+            const today = getLocalTime()
+            today.setUTCHours(0, 0, 0, 0)
+            const past = unique.some((date) => new Date(date) < today)
+            if (past)
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.FS_PAST_DATE_NOT_ALLOWED,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+
             return true
           }
         }
@@ -107,7 +135,7 @@ export const getFixedSlotTemplateByIdValidator = validate(
   checkSchema({ id: makeFixedSlotTemplateIdRule() as any }, ['params'])
 )
 
-// UPDATE: Chỉ cho phép sửa slot_start, days_of_week (khi ACTIVE)
+// UPDATE: Chỉ cho phép sửa slot_start, selected_dates (khi ACTIVE)
 export const updateFixedSlotTemplateValidator = validate(
   checkSchema(
     {
@@ -120,17 +148,29 @@ export const updateFixedSlotTemplateValidator = validate(
           errorMessage: RESERVATIONS_MESSAGE.FS_INVALID_SLOT_START_FORMAT
         }
       },
-      days_of_week: {
+      selected_dates: {
         optional: true,
         isArray: true,
         custom: {
-          options: (value: number[]) => {
-            if (!value.every((d) => d >= 0 && d <= 6)) {
+          options: (value: string[]) => {
+            const unique = uniqueDates(value)
+
+            const invalid = unique.some((date) => !/^\d{4}-\d{2}-\d{2}$/.test(date))
+            if (invalid)
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_INVALID_DAYS_OF_WEEK,
+                message: RESERVATIONS_MESSAGE.FS_INVALID_DATE,
                 status: HTTP_STATUS.BAD_REQUEST
               })
-            }
+
+            const today = getLocalTime()
+            today.setUTCHours(0, 0, 0, 0)
+            const past = unique.some((date) => new Date(date) < today)
+            if (past)
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.FS_PAST_DATE_NOT_ALLOWED,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+
             return true
           }
         }
@@ -151,3 +191,32 @@ export const resumeFixedSlotTemplateValidator = validate(
 export const cancelFixedSlotTemplateValidator = validate(
   checkSchema({ id: makeFixedSlotTemplateIdRule() as any }, ['params'])
 )
+
+export const checkUserTemplateExistInStation = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayLoad
+    const user = await databaseService.users.findOne({ _id: toObjectId(user_id) })
+    if (!user) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const userTemplate = await databaseService.fixedSlotTemplates.findOne({
+      user_id: toObjectId(user_id),
+      status: { $in: [FixedSlotStatus.ACTIVE, FixedSlotStatus.PAUSED] }
+    })
+
+    if (userTemplate) {
+      throw new ErrorWithStatus({
+        message: RESERVATIONS_MESSAGE.FS_USER_ALREADY_HAD_TEMPLATE_IN_STATION,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    next()
+  } catch (error) {
+    next(error)
+  }
+}
