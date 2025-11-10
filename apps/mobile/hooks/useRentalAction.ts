@@ -74,6 +74,9 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string , station_i
           queryClient.invalidateQueries({
             queryKey: ["station"],
           });
+          queryClient.invalidateQueries({
+            queryKey: ["subscriptions"],
+          });
         }
         else {
           Alert.alert("Error", "Failed to end the rental.");

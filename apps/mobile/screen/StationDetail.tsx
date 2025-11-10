@@ -9,7 +9,7 @@ import { useAuth } from "@providers/auth-providers";
 import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -30,6 +30,9 @@ import type {
   StationDetailScreenNavigationProp,
 } from "../types/navigation";
 import type { StationType } from "../types/StationType";
+import type { SubscriptionListItem } from "@/types/subscription-types";
+
+import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
@@ -38,6 +41,7 @@ const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
 const MAP_HEIGHT = 300;
+type ReservationMode = "MỘT LẦN" | "GÓI THÁNG";
 
 function BikeDetailCard({
   bike,
@@ -110,6 +114,7 @@ export default function StationDetailScreen() {
   const [pendingBikeId, setPendingBikeId] = useState<string | null>(null);
   const [iosPickerVisible, setIOSPickerVisible] = useState(false);
   const [iosPickerDate, setIOSPickerDate] = useState<Date>(new Date());
+  const [reservationOption, setReservationOption] = useState<ReservationMode>("MỘT LẦN");
 
   const { createReservation } = useReservationActions({
     hasToken: Boolean(user?._id),
@@ -140,6 +145,21 @@ export default function StationDetailScreen() {
     selectedBike?._id,
     stationId,
   );
+
+  const { data: mySubscriptions } = useGetSubscriptionsQuery({ page: 1, limit: 5 }, Boolean(user?._id));
+  const activeSubscription = useMemo<SubscriptionListItem | null>(
+    () => mySubscriptions?.data.find((subscription) => subscription.status === "ĐANG HOẠT ĐỘNG") ?? null,
+    [mySubscriptions],
+  );
+  const subscriptionQuotaText = useMemo(() => {
+    if (!activeSubscription)
+      return "Chưa có gói hoạt động";
+    if (activeSubscription.max_usages != null) {
+      const remaining = Math.max(0, activeSubscription.max_usages - activeSubscription.usage_count);
+      return `${remaining} lượt còn lại`;
+    }
+    return "Không giới hạn";
+  }, [activeSubscription]);
 
   useEffect(() => {
     if (stationId) {
@@ -198,17 +218,43 @@ export default function StationDetailScreen() {
     setPendingBikeId(bike._id);
     setIOSPickerVisible(false);
     createReservation(bike._id, date.toISOString(), {
-      onSuccess: () => {
-        getBikes();
-        getStationByID();
-        setPendingBikeId(null);
+      reservationOption,
+      subscriptionId: reservationOption === "GÓI THÁNG" ? activeSubscription?._id : undefined,
+      callbacks: {
+        onSuccess: () => {
+          getBikes();
+          getStationByID();
+          setPendingBikeId(null);
+        },
+        onError: () => setPendingBikeId(null),
       },
-      onError: () => setPendingBikeId(null),
     });
-  }, [createReservation, getBikes, getStationByID]);
+  }, [createReservation, reservationOption, activeSubscription, getBikes, getStationByID]);
+
+  const handleReservationOptionChange = useCallback((option: ReservationMode) => {
+    if (option === "GÓI THÁNG" && !activeSubscription) {
+      Alert.alert(
+        "Chưa có gói tháng",
+        "Bạn cần có gói tháng đang hoạt động để sử dụng lựa chọn này.",
+        [
+          { text: "Đóng", style: "cancel" },
+          {
+            text: "Xem gói",
+            onPress: () => navigation.navigate("Subscriptions" as never),
+          },
+        ],
+      );
+      return;
+    }
+    setReservationOption(option);
+  }, [activeSubscription, navigation]);
 
   const handleReservePress = useCallback((bike: Bike) => {
     if (!validateReservationEligibility(bike)) {
+      return;
+    }
+    if (reservationOption === "GÓI THÁNG" && !activeSubscription) {
+      Alert.alert("Chưa có gói tháng", "Vui lòng đăng ký gói tháng để sử dụng tuỳ chọn này.");
       return;
     }
 
@@ -251,7 +297,7 @@ export default function StationDetailScreen() {
       setIOSPickerDate(initialDate);
       setIOSPickerVisible(true);
     }
-  }, [validateReservationEligibility, handleConfirmReservation]);
+  }, [validateReservationEligibility, handleConfirmReservation, reservationOption, activeSubscription]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -438,6 +484,40 @@ export default function StationDetailScreen() {
               <Text style={styles.statusText}>Hoạt động</Text>
             </View>
           </View>
+        </View>
+
+        <View style={styles.reservationOptionCard}>
+          <View style={styles.reservationOptionHeader}>
+            <Text style={styles.reservationOptionTitle}>Hình thức đặt xe</Text>
+            {reservationOption === "GÓI THÁNG" && activeSubscription && (
+              <Text style={styles.reservationOptionMeta}>{subscriptionQuotaText}</Text>
+            )}
+          </View>
+          <View style={styles.reservationOptionToggle}>
+            <TouchableOpacity
+              style={[styles.optionButton, reservationOption === "MỘT LẦN" && styles.optionButtonActive]}
+              onPress={() => handleReservationOptionChange("MỘT LẦN")}
+              activeOpacity={0.9}
+            >
+              <Text style={[styles.optionButtonText, reservationOption === "MỘT LẦN" && styles.optionButtonTextActive]}>Trừ ví</Text>
+              <Text style={[styles.optionButtonSubText, reservationOption === "MỘT LẦN" && styles.optionButtonTextActive]}>Đặt 1 lần</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.optionButton, reservationOption === "GÓI THÁNG" && styles.optionButtonActive, !activeSubscription && styles.optionButtonDisabled]}
+              onPress={() => handleReservationOptionChange("GÓI THÁNG")}
+              activeOpacity={0.9}
+              disabled={!activeSubscription}
+            >
+              <Text style={[styles.optionButtonText, reservationOption === "GÓI THÁNG" && styles.optionButtonTextActive]}>Dùng gói tháng</Text>
+              <Text style={[styles.optionButtonSubText, reservationOption === "GÓI THÁNG" && styles.optionButtonTextActive]}>Trừ lượt còn lại</Text>
+            </TouchableOpacity>
+          </View>
+          {!activeSubscription && (
+            <Text style={styles.subscriptionHint}>
+              Bạn chưa có gói tháng hoạt động.
+              <Text style={styles.subscriptionLink} onPress={() => navigation.navigate("Subscriptions" as never)}> Đăng ký ngay</Text>
+            </Text>
+          )}
         </View>
 
         <View style={styles.statsContainer}>
@@ -643,6 +723,72 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
+  },
+  reservationOptionCard: {
+    backgroundColor: BikeColors.surface,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    shadowColor: BikeColors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  reservationOptionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  reservationOptionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: BikeColors.onSurface,
+  },
+  reservationOptionMeta: {
+    fontSize: 13,
+    color: BikeColors.primary,
+    fontWeight: "600",
+  },
+  reservationOptionToggle: {
+    flexDirection: "row",
+    backgroundColor: BikeColors.surfaceVariant,
+    borderRadius: 999,
+    padding: 4,
+    gap: 8,
+  },
+  optionButton: {
+    flex: 1,
+    borderRadius: 999,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  optionButtonActive: {
+    backgroundColor: BikeColors.primary,
+  },
+  optionButtonDisabled: {
+    opacity: 0.5,
+  },
+  optionButtonText: {
+    fontWeight: "600",
+    color: BikeColors.onSurfaceVariant,
+  },
+  optionButtonTextActive: {
+    color: "#fff",
+  },
+  optionButtonSubText: {
+    fontSize: 11,
+    color: BikeColors.onSurfaceVariant,
+  },
+  subscriptionHint: {
+    fontSize: 12,
+    color: BikeColors.onSurfaceVariant,
+  },
+  subscriptionLink: {
+    color: BikeColors.primary,
+    fontWeight: "600",
   },
   stationHeader: {
     flexDirection: "row",
