@@ -200,11 +200,10 @@ class RentalsService {
       const subscription = await databaseService.subscriptions.findOne({
         _id: rental.subscription_id,
         user_id,
-        status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] },
+        status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
       })
 
       if (subscription) {
-        let totalPriceValue = 0
         let usageToAdd = 0
         let extraHours = 0
 
@@ -216,7 +215,7 @@ class RentalsService {
         // GÓI UNLIMITED
         if (subscription.max_usages == null) {
           usageToAdd = requiredUsages
-          totalPriceValue = 0
+          totalPrice = 0
         }
         // GÓI CÓ GIỚI HẠN
         else {
@@ -224,14 +223,16 @@ class RentalsService {
           if (availableUsages >= requiredUsages) {
             // Còn đủ lượt -> dùng hết
             usageToAdd = requiredUsages
-            totalPriceValue = 0
+            totalPrice = 0
           } else {
             // Không đủ lượt -> dùng hết lượt còn lại, phần dư tính tiền
             usageToAdd = availableUsages
             const hoursCovered = availableUsages * HOURS_PER_USED
             extraHours = durationHours - hoursCovered
             const extraMinutes = Math.ceil(extraHours * 60)
-            totalPriceValue = this.generateTotalPrice(extraMinutes)
+            totalPrice = this.generateTotalPrice(extraMinutes)
+
+            result.extra_hours = parseFloat(extraHours.toFixed(2))
           }
         }
 
@@ -244,7 +245,8 @@ class RentalsService {
           )
         }
 
-        totalPrice = totalPriceValue
+        result.duration_hours = parseFloat(durationHours.toFixed(2))
+        result.usage_counts = usageToAdd
         // Kích hoạt nếu dùng lần đầu
         if (subscription.status === SubscriptionStatus.PENDING) {
           await subscriptionService.activate(subscription._id)
@@ -273,6 +275,7 @@ class RentalsService {
       }
 
       if (durationHours > PENALTY_HOURS) {
+        result.penalty_amount = PENALTY_AMOUNT
         totalPrice += PENALTY_AMOUNT
         console.log(
           `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${durationHours.toFixed(2)}h)`

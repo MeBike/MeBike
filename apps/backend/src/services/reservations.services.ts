@@ -93,7 +93,10 @@ class ReservationsService {
     )
     await iotService.sendReservationCommand(bike_id.toString(), IotReservationCommand.reserve)
 
-    return reservation
+    return {
+      ...reservation,
+      prepaid: parseFloat(reservation.prepaid.toString())
+    }
   }
 
   // 2. Đặt bằng KHUNG GIỜ CỐ ĐỊNH
@@ -154,7 +157,10 @@ class ReservationsService {
     )
     await iotService.sendReservationCommand(bike_id.toString(), IotReservationCommand.reserve)
 
-    return reservation
+    return {
+      ...reservation,
+      prepaid: parseFloat(reservation.prepaid.toString())
+    }
   }
 
   // 3. Đặt bằng GÓI_THÁNG
@@ -191,7 +197,10 @@ class ReservationsService {
     await this.scheduleJobs(reservation, bike_id)
     await iotService.sendReservationCommand(bike_id.toString(), IotReservationCommand.reserve)
 
-    return reservation
+    return {
+      ...reservation,
+      prepaid: parseFloat(reservation.prepaid.toString())
+    }
   }
 
   // Helper chung
@@ -275,7 +284,7 @@ class ReservationsService {
         const updatedData: Partial<Reservation> = {
           status: ReservationStatus.Cancelled
         }
-      if (!reservation.subscription_id && reservation.created_at && this.isRefundable(reservation.created_at)) {
+        if (!reservation.subscription_id && reservation.created_at && this.isRefundable(reservation.created_at)) {
           isRefund = true
           refundAmount = parseFloat(reservation.prepaid.toString())
         }
@@ -348,6 +357,7 @@ class ReservationsService {
       if (reservationResult) {
         return {
           ...(reservationResult as any),
+          prepaid: parseFloat((reservationResult as any).prepaid.toString() || '0'),
           is_refund: isRefund,
           refund_amount: refundAmount
         }
@@ -397,9 +407,14 @@ class ReservationsService {
 
         const updatedData: any = {
           start_time: now,
-          status: RentalStatus.Rented,
-          fixed_slot_template_id: reservation.fixed_slot_template_id,
-          subscription_id: reservation.subscription_id
+          status: RentalStatus.Rented
+        }
+
+        if (reservation.fixed_slot_template_id) {
+          updatedData.fixed_slot_template_id = reservation.fixed_slot_template_id
+        }
+        if (reservation.subscription_id) {
+          updatedData.subscription_id = reservation.subscription_id
         }
 
         const [rentalUpdateResult] = await Promise.all([
@@ -452,7 +467,10 @@ class ReservationsService {
         void iotService.sendBookingCommand(bike.chip_id, IotBookingCommand.claim)
       }
 
-      return result
+      return {
+        ...(result as any),
+        total_price: parseFloat((result as any).total_price?.toString() || '0')
+      }
     } catch (error) {
       throw error
     } finally {

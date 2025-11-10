@@ -457,11 +457,17 @@ export const checkUserWalletBeforeRent = async (req: Request, res: Response, nex
     if (subId) {
       const sub = await databaseService.subscriptions.findOne({
         _id: toObjectId(subId),
+        user_id: toObjectId(user_id),
         status: SubscriptionStatus.ACTIVE
       })
-      if (sub && (sub.max_usages == null || sub.usage_count < sub.max_usages)) {
-        return next()
+      
+      if (!sub || (sub.max_usages != null && sub.usage_count >= sub.max_usages)) {
+        throw new ErrorWithStatus({
+          message: RESERVATIONS_MESSAGE.SUB_USE_LIMIT_EXCEEDED,
+          status: HTTP_STATUS.NOT_FOUND
+        })
       }
+      return next()
     }
 
     const minWalletBalanceToRent = Decimal128.fromString(process.env.MIN_WALLET_BALANCE_TO_RENT || '2000')
