@@ -209,7 +209,7 @@ class ReservationsService {
     rental: Rental,
     bike_id: ObjectId,
     station_id: ObjectId,
-    user_id: ObjectId
+    user_id: ObjectId,
   ) {
     const session = databaseService.getClient().startSession()
     try {
@@ -223,6 +223,10 @@ class ReservationsService {
             { session }
           )
         ])
+
+        if (reservation.subscription_id) {
+          await subscriptionService.useOne(reservation.subscription_id, user_id, session)
+        }
       })
       await reservationConfirmEmailQueue.add(
         'send-confirm-email',

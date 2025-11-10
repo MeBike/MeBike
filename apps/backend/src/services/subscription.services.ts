@@ -14,7 +14,7 @@ import HTTP_STATUS from '~/constants/http-status'
 import walletService from './wallets.services'
 import reservationsService from './reservations.services'
 import User from '~/models/schemas/user.schema'
-import { FilterQuery } from 'mongoose'
+import { ClientSession, FilterQuery } from 'mongoose'
 
 interface CreateSubscriptionParams {
   user_id: ObjectId
@@ -104,18 +104,23 @@ class SubscriptionService {
     console.log(`[Subscription] Activated ${subscription_id}`)
   }
 
-  async useOne(subscription_id: ObjectId) {
-    const sub = await databaseService.subscriptions.findOne({
-      _id: subscription_id,
-      status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
-    })
+  async useOne(subscription_id: ObjectId, user_id: ObjectId, session?: ClientSession) {
+    const now = getLocalTime()
+    const sub = await databaseService.subscriptions.findOneAndUpdate(
+      {
+        _id: subscription_id,
+        user_id,
+        status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
+      },
+      { $inc: { usage_count: 1 }, $set: { updated_at: now } },
+      { returnDocument: 'after', session }
+    )
     if (!sub)
       throw new ErrorWithStatus({
         message: RESERVATIONS_MESSAGE.SUBSCRIPTION_NOT_FOUND,
         status: HTTP_STATUS.BAD_REQUEST
       })
 
-    const now = getLocalTime()
     if (sub.expires_at && now > sub.expires_at) {
       await this.expire(subscription_id)
       throw new ErrorWithStatus({
@@ -124,21 +129,20 @@ class SubscriptionService {
       })
     }
 
-    if (sub.max_usages != null && sub.usage_count >= sub.max_usages) {
+    if (sub.max_usages != null && sub.usage_count > sub.max_usages) {
       throw new ErrorWithStatus({
         message: RESERVATIONS_MESSAGE.SUB_USE_LIMIT_EXCEEDED,
         status: HTTP_STATUS.BAD_REQUEST
       })
     }
 
-    await databaseService.subscriptions.updateOne(
-      { _id: subscription_id },
-      { $inc: { usage_count: 1 }, $set: { updated_at: now } }
-    )
-
     // Nếu là lần đầu dùng -> kích hoạt ngay
     if (sub.status === SubscriptionStatus.PENDING) {
-      await this.activate(subscription_id)
+      await databaseService.subscriptions.updateOne(
+        { _id: subscription_id },
+        { $set: { status: SubscriptionStatus.ACTIVE, updated_at: now } },
+        { session }
+      )
     }
   }
 

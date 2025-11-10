@@ -6,6 +6,7 @@ import {
   BikeStatus,
   GroupByOptions,
   RentalStatus,
+  ReservationOptions,
   ReservationStatus,
   SosAlertStatus,
   SubscriptionStatus,
@@ -203,14 +204,15 @@ class RentalsService {
         status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
       })
 
+      const reserve = await databaseService.reservations.findOne({ _id: rental._id },{projection: {reservation_option: 1}})
+
       if (subscription) {
         let usageToAdd = 0
         let extraHours = 0
 
+        const addedUsage = reserve?.reservation_option === ReservationOptions.SUBSCRIPTION ? 1 : 0
         // TÍNH SỐ LẦN DÙNG
         const requiredUsages = Math.max(1, Math.ceil(durationHours / HOURS_PER_USED))
-        const totalHoursCoveredByUsages = requiredUsages * HOURS_PER_USED
-        extraHours = Math.max(0, durationHours - totalHoursCoveredByUsages)
 
         // GÓI UNLIMITED
         if (subscription.max_usages == null) {
@@ -219,14 +221,14 @@ class RentalsService {
         }
         // GÓI CÓ GIỚI HẠN
         else {
-          const availableUsages = subscription.max_usages - subscription.usage_count
+          const availableUsages = subscription.max_usages - subscription.usage_count + addedUsage
           if (availableUsages >= requiredUsages) {
             // Còn đủ lượt -> dùng hết
-            usageToAdd = requiredUsages
+            usageToAdd = requiredUsages - addedUsage
             totalPrice = 0
           } else {
             // Không đủ lượt -> dùng hết lượt còn lại, phần dư tính tiền
-            usageToAdd = availableUsages
+            usageToAdd = availableUsages - addedUsage
             const hoursCovered = availableUsages * HOURS_PER_USED
             extraHours = durationHours - hoursCovered
             const extraMinutes = Math.ceil(extraHours * 60)
@@ -246,7 +248,7 @@ class RentalsService {
         }
 
         result.duration_hours = parseFloat(durationHours.toFixed(2))
-        result.usage_counts = usageToAdd
+        result.total_sub_usages = usageToAdd + addedUsage
         // Kích hoạt nếu dùng lần đầu
         if (subscription.status === SubscriptionStatus.PENDING) {
           await subscriptionService.activate(subscription._id)
