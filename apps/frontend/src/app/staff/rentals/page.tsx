@@ -3,10 +3,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useEffect } from "react";
 import { RentalFilters } from "@/components/rentals/rental-filters";
-import { RentalStats } from "@/components/rentals/rental-stats";
 import { Button } from "@/components/ui/button";
 import type { RentalStatus } from "@custom-types";
-import { Plus, Download } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRentalsActions } from "@/hooks/use-rental";
 import { useStationActions } from "@/hooks/useStationAction";
 import { DataTable } from "@/components/TableCustom";
@@ -79,8 +78,12 @@ export default function RentalsPage() {
     setStatusFilter("all");
   };
 
-
-//
+  const handleUpdateRental = (data: UpdateRentalSchema) => {
+    // Assuming updateRental is available from useRentalsActions
+    // For now, just log the data
+    console.log("Update rental:", data);
+    setIsUpdateModalOpen(false);
+  };
   return (
     <div>
       <div className="space-y-6">
@@ -126,6 +129,7 @@ export default function RentalsPage() {
             }
           /> */}
           <DataTable
+          title="Danh sách đơn thuê"
             columns={rentalColumn({
               onView: ({ id }) => {
                 setSelectedRentalId(id);

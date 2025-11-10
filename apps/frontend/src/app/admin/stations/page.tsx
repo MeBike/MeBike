@@ -280,6 +280,7 @@ export default function StationsPage() {
         <div className="w-full rounded-lg space-y-4 flex flex-col">
           <div>
             <DataTable
+              title="Danh sách trạm xe"
               columns={stationColumns({
                 onDelete: ({ id }) => deleteStation(id),
                 onEdit: ({ id }) => {

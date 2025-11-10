@@ -12,7 +12,6 @@ import {
   Wallet,
   Truck,
   Download,
-  RotateCcw,
   MapIcon,
   FileCheck2,
 } from "lucide-react";
@@ -35,7 +34,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       title: "Tổng quan",
       icon: LayoutDashboard,
       href: baseUrl,
-      roles: ["STAFF", "ADMIN"],
+      roles: ["ADMIN"],
     },
     {
       title: "Quản lý người dùng",

@@ -19,6 +19,8 @@ import Link from "next/link";
 import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 import { uploadImageToFirebase } from "@/lib/firebase";
 
+type FormDataWithAvatar = DetailUser & { avatarFile?: File };
+
 // Compress image function
 const compressImage = async (file: File): Promise<File> => {
   return new Promise((resolve) => {
@@ -68,7 +70,7 @@ export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [data, setData] = useState<DetailUser | null>(null);
-  const [formData, setFormData] = useState<DetailUser>(
+  const [formData, setFormData] = useState<FormDataWithAvatar>(
     () => user || ({} as DetailUser)
   );
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
@@ -100,8 +102,8 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (file) {
       // Lưu file để upload sau khi Save
-      setFormData((prev) => ({ ...prev, avatarFile: file as any }));
-      
+      setFormData((prev) => ({ ...prev, avatarFile: file }));
+
       // Tạo preview ngay lập tức
       const reader = new FileReader();
       reader.onload = () => {
@@ -136,11 +138,11 @@ export default function ProfilePage() {
     });
 
     // Upload ảnh lên Firebase khi Save (nếu có file mới)
-    if ((formData as any).avatarFile) {
+    if (formData.avatarFile) {
       try {
         setIsUploadingAvatar(true);
         // Compress ảnh trước khi upload
-        const compressedFile = await compressImage((formData as any).avatarFile);
+        const compressedFile = await compressImage(formData.avatarFile);
         const imageUrl = await uploadImageToFirebase(compressedFile, "avatars");
         updatedData.avatar = imageUrl;
       } catch (error) {

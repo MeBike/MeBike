@@ -165,8 +165,8 @@ export default function SuppliersPage() {
   };
   return (
     <div>
-      {isLoadingGetAllSuppliers &&
-      isLoadingBike &&
+      {isLoadingGetAllSuppliers ||
+      isLoadingBike ||
       isLoadingBikeStatsSupplier ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
           <Loader2 className="animate-spin w-16 h-16 text-primary" />
@@ -251,6 +251,7 @@ export default function SuppliersPage() {
 
           <div className="w-full rounded-lg space-y-4  flex flex-col">
             <DataTable
+              title="Danh sách nhà cung cấp"
               columns={columns({
                 onView: handleViewSupplier,
                 setIsDetailModalOpen,

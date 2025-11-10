@@ -35,11 +35,7 @@ export default function WalletPage() {
      detailWallet,
      isLoadingDetailWallet,
      updateStatusWallet,
-     useGetWalletOverview,
    } = useWalletActions(true, page, limit, selectedUserId);
-  useEffect(() => { 
-    useGetWalletOverview();
-  }, [useGetWalletOverview]);
   const handleDeposit = (
     userId: string,
     amount: number,

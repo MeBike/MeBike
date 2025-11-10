@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useStationActions } from "@/hooks/useStationAction";
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
 import { DataTable } from "@/components/TableCustom";
@@ -21,7 +20,7 @@ export default function StationsPage() {
     limit: limit,
   });
 
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [searchQuery, setSearchQuery] = useState("");
 
   // LOAD DATA
   useEffect(() => {

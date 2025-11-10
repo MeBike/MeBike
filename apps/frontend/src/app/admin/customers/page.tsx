@@ -86,7 +86,7 @@ export default function CustomersPage() {
     getAllUsers();
     getAllStatistics();
     getRefetchDashboardStats();
-  }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getAllStatistics, currentPage]);
+  }, [searchQuery, verifyFilter, roleFilter, getAllUsers, getAllStatistics, currentPage, getRefetchDashboardStats]);
   const handleReset = () => {
     setSearchQuery("");
     setVerifyFilter("all");
@@ -195,17 +195,6 @@ export default function CustomersPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Tìm kiếm</label>
-              <input
-                type="text"
-                placeholder="Tên, email, SĐT, username..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              />
-            </div>
-
-            <div className="space-y-2">
               <label className="text-sm font-medium">Trạng thái xác thực</label>
               <select
                 value={verifyFilter}
@@ -247,6 +236,7 @@ export default function CustomersPage() {
             {paginationUser?.totalPages ?? 1} trang
           </p>
           <DataTable
+            title="Danh sách người dùng"
             columns={userColumns({
               onView: (user) => {
                 setSelectedUserId(user.id);

@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Camera, Save, X, Mail, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
-import { Progress } from "@radix-ui/react-progress";
+import { Progress } from "@/components/ui/progress";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import Image from "next/image";
 import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
 import Link from "next/link";
 import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 import { uploadImageToFirebase } from "@/lib/firebase";
+
+type FormDataWithAvatar = DetailUser & { avatarFile?: File };
 
 // Compress image function
 const compressImage = async (file: File): Promise<File> => {
@@ -67,7 +69,7 @@ export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [data, setData] = useState<DetailUser | null>(null);
-  const [formData, setFormData] = useState<DetailUser>(
+  const [formData, setFormData] = useState<FormDataWithAvatar>(
     () => user || ({} as DetailUser)
   );
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
@@ -98,8 +100,8 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (file) {
       // Lưu file để upload sau khi Save
-      setFormData((prev) => ({ ...prev, avatarFile: file as any }));
-      
+      setFormData((prev) => ({ ...prev, avatarFile: file }));
+
       // Tạo preview ngay lập tức
       const reader = new FileReader();
       reader.onload = () => {
@@ -132,11 +134,11 @@ export default function ProfilePage() {
     }, {} as UpdateProfileSchemaFormData);
 
     // Upload ảnh lên Firebase khi Save (nếu có file mới)
-    if ((formData as any).avatarFile) {
+    if (formData.avatarFile) {
       try {
         setIsUploadingAvatar(true);
         // Compress ảnh trước khi upload
-        const compressedFile = await compressImage((formData as any).avatarFile);
+        const compressedFile = await compressImage(formData.avatarFile);
         const imageUrl = await uploadImageToFirebase(compressedFile, "avatars");
         updatedData.avatar = imageUrl;
       } catch (error) {
@@ -465,7 +467,7 @@ export default function ProfilePage() {
                   Cập nhật mật khẩu của bạn
                 </p>
               </div>
-              <Link href="/user/profile/change-password">
+              <Link href="/staff/profile/change-password">
                 <Button variant="outline" className="cursor-pointer">
                   Thay đổi
                 </Button>

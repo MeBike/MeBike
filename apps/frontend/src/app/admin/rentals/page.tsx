@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import type {
   RentalStatus,
 } from "@custom-types";
-import { Plus, Download } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRentalsActions } from "@/hooks/use-rental";
 import { useStationActions } from "@/hooks/useStationAction";
 import { DataTable } from "@/components/TableCustom";
