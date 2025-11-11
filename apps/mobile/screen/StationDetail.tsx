@@ -3,19 +3,16 @@ import StationMap2D from "@components/StationMap2D";
 import { Ionicons } from "@expo/vector-icons";
 import { useBikeActions } from "@hooks/useBikeAction";
 import { useRentalsActions } from "@hooks/useRentalAction";
-import { useReservationActions } from "@hooks/useReservationActions";
 import { useStationActions } from "@hooks/useStationAction";
 import { useAuth } from "@providers/auth-providers";
-import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Dimensions,
   Modal,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -30,9 +27,6 @@ import type {
   StationDetailScreenNavigationProp,
 } from "../types/navigation";
 import type { StationType } from "../types/StationType";
-import type { SubscriptionListItem } from "@/types/subscription-types";
-
-import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
@@ -41,8 +35,6 @@ const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
 const MAP_HEIGHT = 300;
-type ReservationMode = "MỘT LẦN" | "GÓI THÁNG";
-
 function BikeDetailCard({
   bike,
   onClose,
@@ -110,16 +102,6 @@ export default function StationDetailScreen() {
   const [bikeId, setBikeID] = useState<string | undefined>(undefined);
   const [selectedBike, setSelectedBike] = useState<any | null>(null);
   const [selectedDetailBike, setSelectedDetailBike] = useState<Bike | null>(null);
-  const [bikeToReserve, setBikeToReserve] = useState<Bike | null>(null);
-  const [pendingBikeId, setPendingBikeId] = useState<string | null>(null);
-  const [iosPickerVisible, setIOSPickerVisible] = useState(false);
-  const [iosPickerDate, setIOSPickerDate] = useState<Date>(new Date());
-  const [reservationOption, setReservationOption] = useState<ReservationMode>("MỘT LẦN");
-
-  const { createReservation } = useReservationActions({
-    hasToken: Boolean(user?._id),
-    autoFetch: false,
-  });
 
   const {
     getStationByID,
@@ -145,21 +127,6 @@ export default function StationDetailScreen() {
     selectedBike?._id,
     stationId,
   );
-
-  const { data: mySubscriptions } = useGetSubscriptionsQuery({ page: 1, limit: 5 }, Boolean(user?._id));
-  const activeSubscription = useMemo<SubscriptionListItem | null>(
-    () => mySubscriptions?.data.find((subscription) => subscription.status === "ĐANG HOẠT ĐỘNG") ?? null,
-    [mySubscriptions],
-  );
-  const subscriptionQuotaText = useMemo(() => {
-    if (!activeSubscription)
-      return "Chưa có gói hoạt động";
-    if (activeSubscription.max_usages != null) {
-      const remaining = Math.max(0, activeSubscription.max_usages - activeSubscription.usage_count);
-      return `${remaining} lượt còn lại`;
-    }
-    return "Không giới hạn";
-  }, [activeSubscription]);
 
   useEffect(() => {
     if (stationId) {
@@ -209,95 +176,21 @@ export default function StationDetailScreen() {
     return true;
   }, [navigation, user]);
 
-  const handleDismissPicker = useCallback(() => {
-    setIOSPickerVisible(false);
-    setBikeToReserve(null);
-  }, []);
-
-  const handleConfirmReservation = useCallback((date: Date, bike: Bike) => {
-    setPendingBikeId(bike._id);
-    setIOSPickerVisible(false);
-    createReservation(bike._id, date.toISOString(), {
-      reservationOption,
-      subscriptionId: reservationOption === "GÓI THÁNG" ? activeSubscription?._id : undefined,
-      callbacks: {
-        onSuccess: () => {
-          getBikes();
-          getStationByID();
-          setPendingBikeId(null);
-        },
-        onError: () => setPendingBikeId(null),
-      },
-    });
-  }, [createReservation, reservationOption, activeSubscription, getBikes, getStationByID]);
-
-  const handleReservationOptionChange = useCallback((option: ReservationMode) => {
-    if (option === "GÓI THÁNG" && !activeSubscription) {
-      Alert.alert(
-        "Chưa có gói tháng",
-        "Bạn cần có gói tháng đang hoạt động để sử dụng lựa chọn này.",
-        [
-          { text: "Đóng", style: "cancel" },
-          {
-            text: "Xem gói",
-            onPress: () => navigation.navigate("Subscriptions" as never),
-          },
-        ],
-      );
-      return;
-    }
-    setReservationOption(option);
-  }, [activeSubscription, navigation]);
-
   const handleReservePress = useCallback((bike: Bike) => {
     if (!validateReservationEligibility(bike)) {
       return;
     }
-    if (reservationOption === "GÓI THÁNG" && !activeSubscription) {
-      Alert.alert("Chưa có gói tháng", "Vui lòng đăng ký gói tháng để sử dụng tuỳ chọn này.");
-      return;
-    }
-
-    const initialDate = new Date(Date.now() + 2 * 60 * 1000);
-    setBikeToReserve(bike);
-    if (Platform.OS === "android") {
-      DateTimePickerAndroid.open({
-        mode: "date",
-        value: initialDate,
-        minimumDate: new Date(),
-        onChange: (event, selectedDate) => {
-          if (event.type !== "set" || !selectedDate) {
-            setBikeToReserve(null);
-            return;
-          }
-          const datePart = selectedDate;
-          DateTimePickerAndroid.open({
-            mode: "time",
-            value: selectedDate,
-            is24Hour: true,
-            onChange: (timeEvent, selectedTime) => {
-              if (timeEvent.type !== "set" || !selectedTime) {
-                setBikeToReserve(null);
-                return;
-              }
-              const finalDate = new Date(
-                datePart.getFullYear(),
-                datePart.getMonth(),
-                datePart.getDate(),
-                selectedTime.getHours(),
-                selectedTime.getMinutes(),
-              );
-              handleConfirmReservation(finalDate, bike);
-            },
-          });
-        },
-      });
-    }
-    else {
-      setIOSPickerDate(initialDate);
-      setIOSPickerVisible(true);
-    }
-  }, [validateReservationEligibility, handleConfirmReservation, reservationOption, activeSubscription]);
+    const bikeLabel = bike.chip_id
+      ? `Chip #${bike.chip_id}`
+      : `#${bike._id.slice(-4)}`;
+    navigation.navigate("ReservationFlow", {
+      stationId,
+      stationName: station?.name,
+      stationAddress: station?.address,
+      bikeId: bike._id,
+      bikeName: bikeLabel,
+    });
+  }, [navigation, stationId, validateReservationEligibility, station]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -397,45 +290,6 @@ export default function StationDetailScreen() {
 
   return (
     <View style={styles.container}>
-      {Platform.OS === "ios" && (
-        <Modal
-          visible={iosPickerVisible}
-          transparent
-          animationType="slide"
-          onRequestClose={handleDismissPicker}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.iosPickerContainer}>
-              <DateTimePicker
-                mode="datetime"
-                display="spinner"
-                value={iosPickerDate}
-                minimumDate={new Date()}
-                onChange={(_, selectedDate) => {
-                  if (selectedDate) {
-                    setIOSPickerDate(selectedDate);
-                  }
-                }}
-                style={styles.iosDateTimePicker}
-              />
-              <View style={styles.iosPickerActions}>
-                <TouchableOpacity
-                  style={[styles.iosPickerButton, styles.iosPickerCancel]}
-                  onPress={handleDismissPicker}
-                >
-                  <Text style={styles.iosPickerCancelText}>Hủy</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.iosPickerButton, styles.iosPickerConfirm]}
-                  onPress={() => bikeToReserve && handleConfirmReservation(iosPickerDate, bikeToReserve)}
-                >
-                  <Text style={styles.iosPickerConfirmText}>Xác nhận</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
       <Modal
         visible={!!selectedDetailBike}
         transparent={true}
@@ -486,39 +340,23 @@ export default function StationDetailScreen() {
           </View>
         </View>
 
-        <View style={styles.reservationOptionCard}>
-          <View style={styles.reservationOptionHeader}>
-            <Text style={styles.reservationOptionTitle}>Hình thức đặt xe</Text>
-            {reservationOption === "GÓI THÁNG" && activeSubscription && (
-              <Text style={styles.reservationOptionMeta}>{subscriptionQuotaText}</Text>
-            )}
-          </View>
-          <View style={styles.reservationOptionToggle}>
-            <TouchableOpacity
-              style={[styles.optionButton, reservationOption === "MỘT LẦN" && styles.optionButtonActive]}
-              onPress={() => handleReservationOptionChange("MỘT LẦN")}
-              activeOpacity={0.9}
-            >
-              <Text style={[styles.optionButtonText, reservationOption === "MỘT LẦN" && styles.optionButtonTextActive]}>Trừ ví</Text>
-              <Text style={[styles.optionButtonSubText, reservationOption === "MỘT LẦN" && styles.optionButtonTextActive]}>Đặt 1 lần</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.optionButton, reservationOption === "GÓI THÁNG" && styles.optionButtonActive, !activeSubscription && styles.optionButtonDisabled]}
-              onPress={() => handleReservationOptionChange("GÓI THÁNG")}
-              activeOpacity={0.9}
-              disabled={!activeSubscription}
-            >
-              <Text style={[styles.optionButtonText, reservationOption === "GÓI THÁNG" && styles.optionButtonTextActive]}>Dùng gói tháng</Text>
-              <Text style={[styles.optionButtonSubText, reservationOption === "GÓI THÁNG" && styles.optionButtonTextActive]}>Trừ lượt còn lại</Text>
-            </TouchableOpacity>
-          </View>
-          {!activeSubscription && (
-            <Text style={styles.subscriptionHint}>
-              Bạn chưa có gói tháng hoạt động.
-              <Text style={styles.subscriptionLink} onPress={() => navigation.navigate("Subscriptions" as never)}> Đăng ký ngay</Text>
+        <TouchableOpacity
+          style={styles.fixedSlotBanner}
+          onPress={() =>
+            navigation.navigate("FixedSlotTemplates", {
+              stationId,
+              stationName: station.name,
+            })}
+          activeOpacity={0.85}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.fixedSlotTitle}>Khung giờ cố định</Text>
+            <Text style={styles.fixedSlotSubtitle}>
+              Tạo hoặc quản lý khung giờ để giữ xe nhanh hơn.
             </Text>
-          )}
-        </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#fff" />
+        </TouchableOpacity>
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
@@ -610,37 +448,19 @@ export default function StationDetailScreen() {
 
                     {isAvailable && (
                       <TouchableOpacity
-                        style={[
-                          styles.reserveButton,
-                          pendingBikeId === bike._id
-                          && styles.reserveButtonDisabled,
-                        ]}
+                        style={styles.reserveButton}
                         onPress={() => handleReservePress(bike)}
-                        disabled={pendingBikeId === bike._id}
                         activeOpacity={0.8}
                       >
-                        {pendingBikeId === bike._id
-                          ? (
-                              <ActivityIndicator size="small" color="#fff" />
-                            )
-                          : (
-                              <View
-                                style={{
-                                  flexDirection: "row",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Ionicons
-                                  name="calendar-outline"
-                                  size={16}
-                                  color="#fff"
-                                  style={{ marginRight: 6 }}
-                                />
-                                <Text style={styles.reserveButtonText}>
-                                  Đặt xe
-                                </Text>
-                              </View>
-                            )}
+                        <Ionicons
+                          name="calendar-outline"
+                          size={16}
+                          color="#fff"
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text style={styles.reserveButtonText}>
+                          Đặt xe
+                        </Text>
                       </TouchableOpacity>
                     )}
 
@@ -724,71 +544,25 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  reservationOptionCard: {
-    backgroundColor: BikeColors.surface,
+  fixedSlotBanner: {
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
-    gap: 12,
-    shadowColor: BikeColors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  reservationOptionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  reservationOptionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: BikeColors.onSurface,
-  },
-  reservationOptionMeta: {
-    fontSize: 13,
-    color: BikeColors.primary,
-    fontWeight: "600",
-  },
-  reservationOptionToggle: {
-    flexDirection: "row",
-    backgroundColor: BikeColors.surfaceVariant,
-    borderRadius: 999,
-    padding: 4,
-    gap: 8,
-  },
-  optionButton: {
-    flex: 1,
-    borderRadius: 999,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  optionButtonActive: {
     backgroundColor: BikeColors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
-  optionButtonDisabled: {
-    opacity: 0.5,
-  },
-  optionButtonText: {
-    fontWeight: "600",
-    color: BikeColors.onSurfaceVariant,
-  },
-  optionButtonTextActive: {
+  fixedSlotTitle: {
     color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
-  optionButtonSubText: {
-    fontSize: 11,
-    color: BikeColors.onSurfaceVariant,
-  },
-  subscriptionHint: {
-    fontSize: 12,
-    color: BikeColors.onSurfaceVariant,
-  },
-  subscriptionLink: {
-    color: BikeColors.primary,
-    fontWeight: "600",
+  fixedSlotSubtitle: {
+    color: "rgba(255,255,255,0.85)",
+    marginTop: 4,
+    fontSize: 13,
   },
   stationHeader: {
     flexDirection: "row",
@@ -1005,9 +779,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignSelf: "flex-end",
   },
-  reserveButtonDisabled: {
-    opacity: 0.6,
-  },
   reserveButtonText: {
     color: BikeColors.onPrimary,
     fontWeight: "600",
@@ -1064,40 +835,6 @@ const styles = StyleSheet.create({
   loadMoreButtonText: {
     color: BikeColors.onPrimary,
     fontSize: 16,
-    fontWeight: "600",
-  },
-  iosPickerContainer: {
-    width: "85%",
-    backgroundColor: BikeColors.background,
-    borderRadius: 16,
-    padding: 16,
-  },
-  iosDateTimePicker: {
-    width: "100%",
-  },
-  iosPickerActions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 12,
-    marginTop: 12,
-  },
-  iosPickerButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  iosPickerCancel: {
-    backgroundColor: BikeColors.surfaceVariant,
-  },
-  iosPickerConfirm: {
-    backgroundColor: BikeColors.primary,
-  },
-  iosPickerCancelText: {
-    color: BikeColors.onSurface,
-    fontWeight: "600",
-  },
-  iosPickerConfirmText: {
-    color: BikeColors.onPrimary,
     fontWeight: "600",
   },
   modalOverlay: {

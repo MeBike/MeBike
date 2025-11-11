@@ -26,6 +26,7 @@ import ReportDetailScreen from "./screen/ReportDetailScreen";
 import SubscriptionScreen from "./screen/SubscriptionScreen";
 import ReservationDetailScreen from "./screen/reservation-detail-screen";
 import ReservationScreen from "./screen/reservation-screen";
+import ReservationFlowScreen from "./screen/ReservationFlowScreen";
 import ResetPasswordOTPScreen from "./screen/ResetPasswordOTP";
 import ResetPasswordFormScreen from "./screen/ResetPasswordForm";
 import StationDetailScreen from "./screen/StationDetail";
@@ -33,6 +34,9 @@ import SupportScreen from "./screen/SupportScreen";
 import UpdateProfileScreen from "./screen/UpdateProfileScreen";
 import WithdrawScreen from "./screen/withdraw-screen";
 import StationSelectScreen from "./styles/StationSelect";
+import FixedSlotTemplatesScreen from "./screen/FixedSlotTemplatesScreen";
+import FixedSlotDetailScreen from "./screen/FixedSlotDetailScreen";
+import FixedSlotEditorScreen from "./screen/FixedSlotEditorScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
@@ -208,6 +212,26 @@ export default function App() {
             <Stack.Screen
               name="ReservationDetail"
               component={ReservationDetailScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="ReservationFlow"
+              component={ReservationFlowScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="FixedSlotTemplates"
+              component={FixedSlotTemplatesScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="FixedSlotDetail"
+              component={FixedSlotDetailScreen}
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="FixedSlotEditor"
+              component={FixedSlotEditorScreen}
               options={{ headerShown: false, gestureEnabled: false }}
             />
             <Stack.Screen
