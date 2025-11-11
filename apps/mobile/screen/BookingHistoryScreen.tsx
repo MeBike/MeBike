@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useRentalsActions } from "@hooks/useRentalAction";
 import { LoadingScreen } from "@components/LoadingScreen";
+import { formatVietnamDateTime } from "@utils/date";
 import type { RentingHistory } from "../types/RentalTypes";
 
 function BookingHistoryScreen() {
@@ -72,13 +73,7 @@ function BookingHistoryScreen() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.toLocaleDateString("vi-VN")} - ${date.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
-  };
+  const formatDate = (dateString: string) => formatVietnamDateTime(dateString);
 
   const formatDuration = (duration: number, hasEnded: boolean) => {
     if (!duration || duration <= 0) {
@@ -135,20 +130,25 @@ function BookingHistoryScreen() {
         <View style={styles.detailRow}>
           <Ionicons name="pricetag" size={16} color="#0066FF" />
           <Text style={[styles.detailText, styles.priceText]}>
-            {item.total_price.toLocaleString("vi-VN")}
-            {" "}
-            đ
+            {item.total_price.toLocaleString("vi-VN")} đ
           </Text>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.detailButton} onPress={() => { (navigator as any).navigate("BookingHistoryDetail", { bookingId: item._id }); }}>
+      <TouchableOpacity
+        style={styles.detailButton}
+        onPress={() => {
+          (navigator as any).navigate("BookingHistoryDetail", {
+            bookingId: item._id,
+          });
+        }}
+      >
         <Text style={styles.detailButtonText}>Xem chi tiết</Text>
         <Ionicons name="chevron-forward" size={16} color="#0066FF" />
       </TouchableOpacity>
     </View>
   );
-  if(bookings === null ||  isGetAllRentalsFetching){
+  if (bookings === null || isGetAllRentalsFetching) {
     return <LoadingScreen />;
   }
   return (
@@ -167,40 +167,36 @@ function BookingHistoryScreen() {
         </Text>
       </LinearGradient>
 
-      {isGetAllRentalsFetching
-        ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#0066FF" />
-              <Text style={styles.loadingText}>Đang tải...</Text>
-            </View>
-          )
-        : bookings.length > 0
-          ? (
-              <FlatList
-                data={bookings}
-                renderItem={renderBookingCard}
-                keyExtractor={item => item._id}
-                contentContainerStyle={styles.listContent}
-                scrollEnabled={true}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                    colors={['#0066FF']}
-                    tintColor="#0066FF"
-                  />
-                }
-              />
-            )
-          : (
-              <View style={styles.emptyContainer}>
-                <Ionicons name="document-text-outline" size={64} color="#ccc" />
-                <Text style={styles.emptyText}>Chưa có lịch sử thuê xe</Text>
-                <Text style={styles.emptySubtext}>
-                  Khi bạn thuê xe, lịch sử sẽ hiển thị ở đây
-                </Text>
-              </View>
-            )}
+      {isGetAllRentalsFetching ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0066FF" />
+          <Text style={styles.loadingText}>Đang tải...</Text>
+        </View>
+      ) : bookings.length > 0 ? (
+        <FlatList
+          data={bookings}
+          renderItem={renderBookingCard}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.listContent}
+          scrollEnabled={true}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#0066FF"]}
+              tintColor="#0066FF"
+            />
+          }
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="document-text-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyText}>Chưa có lịch sử thuê xe</Text>
+          <Text style={styles.emptySubtext}>
+            Khi bạn thuê xe, lịch sử sẽ hiển thị ở đây
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
