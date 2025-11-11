@@ -1,40 +1,35 @@
-FROM node:24.11.0-bookworm-slim AS deps
-
+FROM node:24.11.0-bookworm-slim AS base
+WORKDIR /repo
 RUN corepack enable && corepack prepare pnpm@10.21.0 --activate
 
-WORKDIR /repo
+FROM base AS pruner
+COPY . .
+RUN pnpm dlx turbo@2.5.8 prune --scope iot-service --docker
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/iot-service/package.json apps/iot-service/package.json
-COPY packages/shared/package.json packages/shared/package.json
-COPY packages/tsconfig/package.json packages/tsconfig/package.json
-
-RUN pnpm fetch --frozen-lockfile
-
-COPY packages/shared ./packages/shared
-COPY packages/tsconfig ./packages/tsconfig
-COPY apps/iot-service ./apps/iot-service
-
+FROM base AS deps
+COPY --from=pruner /repo/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=pruner /repo/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=pruner /repo/out/json/ .
+RUN rm -rf apps/backend
 RUN pnpm install --frozen-lockfile --filter @mebike/tsconfig --filter @mebike/shared... --filter iot-service...
 
+FROM deps AS builder
+COPY --from=pruner /repo/out/full/ .
+RUN rm -rf apps/backend
 RUN pnpm --filter @mebike/shared build \
  && pnpm --filter iot-service build
 
-FROM node:24.11.0-bookworm-slim AS runner
+FROM base AS runner
 ENV NODE_ENV=production
 WORKDIR /app
-
-RUN corepack enable && corepack prepare pnpm@10.6.3 --activate
-
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/iot-service/package.json apps/iot-service/package.json
-COPY packages/shared/package.json packages/shared/package.json
-COPY packages/tsconfig/package.json packages/tsconfig/package.json
-
+COPY --from=pruner /repo/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=pruner /repo/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=pruner /repo/out/json/ .
+RUN rm -rf apps/backend
 RUN pnpm install --frozen-lockfile --prod --filter @mebike/tsconfig --filter @mebike/shared... --filter iot-service...
 
-COPY --from=deps /repo/packages/shared/dist /app/packages/shared/dist
-COPY --from=deps /repo/apps/iot-service/dist /app/apps/iot-service/dist
+COPY --from=builder /repo/packages/shared/dist ./packages/shared/dist
+COPY --from=builder /repo/apps/iot-service/dist ./apps/iot-service/dist
 
 EXPOSE 3000
 CMD ["node", "apps/iot-service/dist/index.js"]
