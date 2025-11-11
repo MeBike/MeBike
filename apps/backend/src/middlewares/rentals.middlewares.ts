@@ -464,7 +464,7 @@ export const checkUserWalletBeforeRent = async (req: Request, res: Response, nex
       if (!sub || (sub.max_usages != null && sub.usage_count >= sub.max_usages)) {
         throw new ErrorWithStatus({
           message: RESERVATIONS_MESSAGE.SUB_USE_LIMIT_EXCEEDED,
-          status: HTTP_STATUS.NOT_FOUND
+          status: HTTP_STATUS.BAD_REQUEST
         })
       }
       return next()
