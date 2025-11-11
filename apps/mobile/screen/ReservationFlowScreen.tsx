@@ -17,11 +17,11 @@ import {
 import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ReservationInfoCard } from "@components/reservation-flow/ReservationInfoCard";
+import { ReservationInfoCard } from "../components/reservation-flow/ReservationInfoCard";
 import {
   ReservationMode,
   ReservationModeToggle,
-} from "@components/reservation-flow/ReservationModeToggle";
+} from "../components/reservation-flow/ReservationModeToggle";
 import { BikeColors } from "@constants/BikeColors";
 import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 import { useReservationActions } from "@hooks/useReservationActions";
