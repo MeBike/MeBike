@@ -69,7 +69,7 @@ class SubscriptionService {
     return { _id: insertedId, ...sub }
   }
 
-  async activate(subscription_id: ObjectId) {
+  async activate(subscription_id: ObjectId, session?: ClientSession) {
     const sub = await databaseService.subscriptions.findOne({
       _id: subscription_id,
       status: SubscriptionStatus.PENDING
@@ -91,7 +91,8 @@ class SubscriptionService {
           expires_at,
           updated_at: now
         }
-      }
+      },
+      { session }
     )
 
     // Lên lịch hết hạn
@@ -138,11 +139,7 @@ class SubscriptionService {
 
     // Nếu là lần đầu dùng -> kích hoạt ngay
     if (sub.status === SubscriptionStatus.PENDING) {
-      await databaseService.subscriptions.updateOne(
-        { _id: subscription_id },
-        { $set: { status: SubscriptionStatus.ACTIVE, updated_at: now } },
-        { session }
-      )
+      await this.activate(subscription_id, session)
     }
   }
 

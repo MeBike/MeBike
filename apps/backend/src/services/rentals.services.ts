@@ -55,8 +55,9 @@ class RentalsService {
 
     try {
       const bike_id = bike._id as ObjectId
+      const objUserId = toObjectId(user_id)
       const rental = new Rental({
-        user_id: toObjectId(user_id),
+        user_id: objUserId,
         start_station,
         bike_id,
         start_time: now,
@@ -78,6 +79,10 @@ class RentalsService {
             { session }
           )
         ])
+
+        if (subscription_id) {
+          await subscriptionService.useOne(subscription_id, objUserId, session)
+        }
       })
 
       void iotService.sendBookingCommand(bike.chip_id ?? bike_id.toString(), IotBookingCommand.book)
@@ -204,13 +209,11 @@ class RentalsService {
         status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
       })
 
-      const reserve = await databaseService.reservations.findOne({ _id: rental._id },{projection: {reservation_option: 1}})
-
       if (subscription) {
         let usageToAdd = 0
         let extraHours = 0
 
-        const addedUsage = reserve?.reservation_option === ReservationOptions.SUBSCRIPTION ? 1 : 0
+        const addedUsage = 1 // 1 lượt đã cộng khi createRental or reserveBike
         // TÍNH SỐ LẦN DÙNG
         const requiredUsages = Math.max(1, Math.ceil(durationHours / HOURS_PER_USED))
 
@@ -249,10 +252,6 @@ class RentalsService {
 
         result.duration_hours = parseFloat(durationHours.toFixed(2))
         result.total_sub_usages = usageToAdd + addedUsage
-        // Kích hoạt nếu dùng lần đầu
-        if (subscription.status === SubscriptionStatus.PENDING) {
-          await subscriptionService.activate(subscription._id)
-        }
       } else {
         // Không có gói -> tính tiền lẻ
         totalPrice = this.generateTotalPrice(durationMinutes)

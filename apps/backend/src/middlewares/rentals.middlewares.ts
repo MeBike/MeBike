@@ -458,13 +458,13 @@ export const checkUserWalletBeforeRent = async (req: Request, res: Response, nex
       const sub = await databaseService.subscriptions.findOne({
         _id: toObjectId(subId),
         user_id: toObjectId(user_id),
-        status: SubscriptionStatus.ACTIVE
+        status: {$in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE]}
       })
       
       if (!sub || (sub.max_usages != null && sub.usage_count >= sub.max_usages)) {
         throw new ErrorWithStatus({
           message: RESERVATIONS_MESSAGE.SUB_USE_LIMIT_EXCEEDED,
-          status: HTTP_STATUS.NOT_FOUND
+          status: HTTP_STATUS.BAD_REQUEST
         })
       }
       return next()
