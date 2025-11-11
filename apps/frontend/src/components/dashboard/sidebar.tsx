@@ -18,8 +18,11 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { getRefreshToken } from "@/utils/tokenManager";
+<<<<<<< Updated upstream
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
+=======
+>>>>>>> Stashed changes
 
 // Define menu items (giữ nguyên hàm này theo code bạn)
 const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
@@ -42,6 +45,18 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       href: `${baseUrl}/customers`,
       roles: ["STAFF", "ADMIN"],
     },
+    // {
+    //   title: "Đơn thuê xe",
+    //   icon: FileText,
+    //   href: `${baseUrl}/rentals`,
+    //   roles: ["STAFF", "ADMIN"],
+    // },
+    {
+      title: "Quản lý người dùng",
+      icon: Users,
+      href: `${baseUrl}/customers`,
+      roles: ["STAFF", "ADMIN"],
+    },
     {
       title: "Quản lý xe đạp",
       icon: Bike,
@@ -52,6 +67,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       title: "Đơn thuê xe",
       icon: FileText,
       href: `${baseUrl}/rentals`,
+<<<<<<< Updated upstream
       roles: ["STAFF", "ADMIN"],
     },
     // {
@@ -71,6 +87,27 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       icon: Users,
       href: "/user",
       roles: ["USER"],
+=======
+      roles: ["STAFF", "ADMIN"],  
+    },
+    // {
+    //   title: "Khách hàng",
+    //   icon: Users,
+    //   href: `${baseUrl}/customers`,
+    //   roles: ["STAFF", "ADMIN"],
+    // },
+    {
+      title: "Báo cáo & Thống kê",
+      icon: BarChart3,
+      href: "/admin/reports",
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Cài đặt",
+      icon: Settings,
+      href: "/admin/settings",
+      roles: ["ADMIN"],
+>>>>>>> Stashed changes
     },
     {
       title: "Hồ sơ cá nhân",
@@ -154,8 +191,13 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
 };
 
 export function Sidebar() {
+<<<<<<< Updated upstream
   const [collapsed] = useState(false);
   const { user, logOut, isAuthenticated } = useAuth();
+=======
+  const [collapsed, setCollapsed] = useState(false);
+  const {user,logOut} = useAuth();
+>>>>>>> Stashed changes
   const pathname = usePathname();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -166,8 +208,13 @@ export function Sidebar() {
       logOut(refreshToken);
       console.log(user?.email + " đã đăng xuất " + isAuthenticated);
     }
+<<<<<<< Updated upstream
   };
 
+=======
+  }
+  console.log("Current role:", user?.role);
+>>>>>>> Stashed changes
   const menuItems = getMenuItems(user?.role as "STAFF" | "ADMIN" | "USER");
   const filteredMenuItems = menuItems.filter((item) =>
     item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER")
@@ -211,6 +258,10 @@ export function Sidebar() {
             </div>
           )}
         </div>
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-2">
             {filteredMenuItems.map((item) => {
@@ -247,6 +298,7 @@ export function Sidebar() {
         </nav>
 
         <div className="border-t border-sidebar-border p-2">
+<<<<<<< Updated upstream
           {/* <button
             type="button"
             onClick={() =>
@@ -256,6 +308,11 @@ export function Sidebar() {
             }
             className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
             disabled={isPending}
+=======
+          <Link
+            href={`${user?.role === "ADMIN" ? "/admin" : "/staff"}/profile`}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+>>>>>>> Stashed changes
           >
             <User className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">Hồ sơ</span>}

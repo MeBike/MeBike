@@ -15,6 +15,11 @@ import { Separator } from "@components/ui/separator";
 import { Bike, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import React from "react";
 import { useAuth } from "@providers/auth-providers";
+<<<<<<< Updated upstream
+=======
+import { set } from "react-hook-form";
+
+>>>>>>> Stashed changes
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { user, logIn, isLoggingIn, isLoading } = useAuth();
@@ -39,6 +44,7 @@ const Login = () => {
       return;
     }
   }, [user, isNavigating, router]);
+<<<<<<< Updated upstream
   const resetFormData = () => {
     setEmail("");
     setPassword("");
@@ -55,6 +61,20 @@ const Login = () => {
       setIsNavigating(false);
     }
   };
+=======
+
+const handleLogin = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (isLoggingIn || isLoading || isNavigating) return;
+  setIsNavigating(true);
+  logIn({ email, password }, (success) => {
+    // Nếu login fail (không redirect được) mới set lại false
+    if (!success) setIsNavigating(false);
+    // Nếu success, chờ useEffect điều hướng rồi mới set lại false!
+  });
+};
+
+>>>>>>> Stashed changes
 
   return (
     <div

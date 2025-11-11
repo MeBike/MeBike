@@ -14,7 +14,6 @@ export default function BikesPage() {
   const [id, setId] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
-  const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const {
     data,
@@ -90,7 +89,6 @@ export default function BikesPage() {
             <Button
               variant="outline"
               onClick={() => {
-                setSearchQuery("");
                 setStatusFilter("all");
               }}
             >
