@@ -162,6 +162,8 @@ components:
       $ref: './components/schemas/GetDashboardStationsResponse.yaml'
     AllStationsRevenueResponse:
       $ref: './components/schemas/AllStationsRevenueResponse.yaml'
+    CreateRatingResponse:
+      $ref: './components/schemas/CreateRatingResponse.yaml'
 
     # --- Model Schemas ---
     User:

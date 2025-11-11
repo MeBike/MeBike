@@ -4965,8 +4965,8 @@
         "tags": [
           "Ratings"
         ],
-        "summary": "Get my ratings",
-        "description": "Retrieves a paginated list of ratings submitted by the currently authenticated user.",
+        "summary": "Get all ratings (Admin only)",
+        "description": "Retrieves a paginated list of all ratings in the system.\nAllows filtering by user, rating score, or rating reasons.\n**Requires Admin privileges.**\n",
         "security": [
           {
             "BearerAuth": []
@@ -4978,11 +4978,45 @@
           },
           {
             "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "description": "Filter ratings by a specific User ID.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "name": "rating",
+            "in": "query",
+            "required": false,
+            "description": "Filter ratings by a specific score (1-5).",
+            "schema": {
+              "$ref": "#/components/schemas/Rating/properties/rating"
+            }
+          },
+          {
+            "name": "reason_ids",
+            "in": "query",
+            "required": false,
+            "description": "Filter ratings that include any of the specified Reason IDs. (Provide multiple times: reason_ids=id1&reason_ids=id2)",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "mongoId"
+              }
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "A paginated list of the user's ratings.",
+            "description": "A paginated list of ratings.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5008,17 +5042,37 @@
           },
           "401": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/ratings/{rentalId}": {
+    "/ratings/{rental_id}": {
       "post": {
         "tags": [
           "Ratings"
         ],
         "summary": "Create a new rating for a rental",
-        "description": "Allows a user to submit a rating (score and comment) for a completed rental session.",
+        "description": "Allows a user to submit a rating for a completed rental session.\n- A rental can only be rated once.\n- The rental must be in 'Completed' status.\n- Rating must be submitted within 7 days of completing the rental.\n",
         "security": [
           {
             "BearerAuth": []
@@ -5026,10 +5080,10 @@
         ],
         "parameters": [
           {
-            "name": "rentalId",
+            "name": "rental_id",
             "in": "path",
             "required": true,
-            "description": "The ID of the rental session to be rated.",
+            "description": "The ID of the completed rental session to be rated.",
             "schema": {
               "type": "string",
               "format": "mongoId"
@@ -5047,18 +5101,18 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Rating created successfully.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
+                  "$ref": "#/components/schemas/CreateRatingResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Bad Request (e.g., rental already rated, rental not completed).",
+            "description": "Bad Request. Possible reasons: RATING_EXISTED, CANNOT_RATE_UNCOMPLETED_RENTAL, RATING_EXPIRED.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5070,8 +5124,8 @@
           "401": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
           },
-          "403": {
-            "description": "Forbidden (user did not rent this bike).",
+          "404": {
+            "description": "Not Found. Possible reasons: RENTAL_ID_NOT_FOUND, REASON_ID_NOT_FOUND.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5081,10 +5135,22 @@
             }
           },
           "422": {
-            "$ref": "#/components/schemas/ErrorValidationResponse"
+            "description": "Validation error (e.g., missing rating, invalid reason_ids array, comment too long).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/schemas/ErrorServerResponse"
           }
         }
-      },
+      }
+    },
+    "/ratings/{rentalId}": {
       "get": {
         "tags": [
           "Ratings"
@@ -6051,21 +6117,32 @@
       "CreateRatingReqBody": {
         "type": "object",
         "required": [
-          "score"
+          "rating",
+          "reason_ids"
         ],
         "properties": {
-          "score": {
-            "type": "number",
+          "rating": {
+            "type": "integer",
             "description": "The rating score from 1 to 5.",
             "minimum": 1,
             "maximum": 5,
-            "example": 5
+            "example": 4
+          },
+          "reason_ids": {
+            "type": "array",
+            "description": "An array of MongoIDs for the rating reasons.",
+            "items": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "69f1b2ae63beb4054de09d11"
+            }
           },
           "comment": {
             "type": "string",
             "nullable": true,
-            "description": "An optional comment for the rating.",
-            "example": "Xe đạp còn mới, chạy tốt."
+            "maxLength": 500,
+            "description": "An optional comment for the rating (max 500 characters).",
+            "example": "Xe chạy tốt nhưng hơi bẩn."
           }
         }
       },
@@ -6429,6 +6506,29 @@
             "description": "Danh sách thống kê chi tiết của từng trạm, sắp xếp theo doanh thu giảm dần.",
             "items": {
               "$ref": "#/components/schemas/StationRevenueItem"
+            }
+          }
+        }
+      },
+      "CreateRatingResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Tạo đánh giá thành công"
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "acknowledged": {
+                "type": "boolean",
+                "example": true
+              },
+              "insertedId": {
+                "type": "string",
+                "format": "mongoId",
+                "example": "69f1b2ae63beb4054de09d22"
+              }
             }
           }
         }
@@ -7117,16 +7217,12 @@
             "type": "string",
             "format": "mongoId"
           },
-          "bike_id": {
-            "type": "string",
-            "format": "mongoId"
-          },
           "rental_id": {
             "type": "string",
             "format": "mongoId"
           },
-          "score": {
-            "type": "number",
+          "rating": {
+            "type": "integer",
             "description": "The rating score from 1 to 5.",
             "enum": [
               1,
@@ -7135,12 +7231,20 @@
               4,
               5
             ],
-            "example": 5
+            "example": 4
+          },
+          "reason_ids": {
+            "type": "array",
+            "description": "An array of MongoIDs for the rating reasons.",
+            "items": {
+              "type": "string",
+              "format": "mongoId"
+            }
           },
           "comment": {
             "type": "string",
             "nullable": true,
-            "example": "Xe chạy rất êm!"
+            "example": "Xe chạy tốt nhưng hơi bẩn."
           },
           "created_at": {
             "type": "string",

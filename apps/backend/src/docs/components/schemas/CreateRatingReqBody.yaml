@@ -1,15 +1,24 @@
 type: object
 required:
-  - score
+  - rating
+  - reason_ids
 properties:
-  score:
-    type: number
+  rating:
+    type: integer
     description: "The rating score from 1 to 5."
     minimum: 1
     maximum: 5
-    example: 5
+    example: 4
+  reason_ids:
+    type: array
+    description: "An array of MongoIDs for the rating reasons."
+    items:
+      type: string
+      format: mongoId
+      example: "69f1b2ae63beb4054de09d11"
   comment:
     type: string
     nullable: true
-    description: "An optional comment for the rating."
-    example: "Xe đạp còn mới, chạy tốt."
+    maxLength: 500
+    description: "An optional comment for the rating (max 500 characters)."
+    example: "Xe chạy tốt nhưng hơi bẩn."
