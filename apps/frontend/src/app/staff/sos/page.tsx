@@ -15,6 +15,41 @@ import { useRentalsActions } from "@/hooks/use-rental";
 import { useUserActions } from "@/hooks/use-user";
 import type { DetailUser } from "@/services/auth.service";
 import type { RentingHistory } from "@/types/Rental";
+
+// TomTom API
+const TOMTOM_API_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
+
+interface TomTomResult {
+  address: {
+    freeformAddress: string;
+  };
+  position: {
+    lat: number;
+    lon: number;
+  };
+}
+
+interface AddressSuggestion {
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+const fetchTomTomAddressSuggest = async (addressText: string): Promise<AddressSuggestion[]> => {
+  try {
+    const url = `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(addressText)}.JSON?key=${TOMTOM_API_KEY}`;
+    const response = await fetch(url);
+    const data = await response.json() as { results: TomTomResult[] };
+    return data.results.map((r: TomTomResult) => ({
+      address: r.address.freeformAddress,
+      latitude: r.position.lat,
+      longitude: r.position.lon,
+    }));
+  } catch {
+    return [];
+  }
+};
+
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -26,7 +61,12 @@ export default function SOSPage() {
   const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">("info");
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const { allRentalsData } = useRentalsActions({ hasToken: true });
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [addressInput, setAddressInput] = useState("");
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: string; lon: string } | null>(null);
+  
+  const { allRentalsData } = useRentalsActions({ hasToken: true , page  :1, limit:1000 });
   const { users } = useUserActions({ hasToken: true });
   
   // Filter SOS agents (users with SOS role)
@@ -58,9 +98,41 @@ export default function SOSPage() {
       await createSOS(data);
       reset();
       setIsCreateModalOpen(false);
+      setAddressSuggestions([]);
+      setAddressInput("");
+      setSelectedCoordinates(null);
     } catch (error) {
       console.error("Error creating SOS:", error);
     }
+  };
+
+  const handleAddressChange = async (text: string) => {
+    setAddressInput(text);
+    if (typingTimeout) clearTimeout(typingTimeout);
+    
+    if (text.length > 3) {
+      const timeout = setTimeout(async () => {
+        try {
+          const sugg = await fetchTomTomAddressSuggest(text);
+          setAddressSuggestions(sugg);
+        } catch (error) {
+          console.error("Error fetching address:", error);
+        }
+      }, 500);
+      setTypingTimeout(timeout);
+    } else {
+      setAddressSuggestions([]);
+      setSelectedCoordinates(null);
+    }
+  };
+
+  const handleSelectAddress = (suggestion: AddressSuggestion) => {
+    setAddressInput(suggestion.address);
+    setSelectedCoordinates({
+      lat: suggestion.latitude.toString(),
+      lon: suggestion.longitude.toString(),
+    });
+    setAddressSuggestions([]);
   };
   useEffect(() => {
     refetchSOSRequest();
@@ -608,8 +680,8 @@ export default function SOSPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Chọn đơn thuê *
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    <span className="text-red-500">*</span> Chọn đơn thuê
                   </label>
                   <select
                     {...register("rental_id")}
@@ -630,8 +702,8 @@ export default function SOSPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Chọn nhân viên SOS *
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    <span className="text-red-500">*</span> Chọn nhân viên SOS
                   </label>
                   <select
                     {...register("agent_id")}
@@ -653,8 +725,8 @@ export default function SOSPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Mô tả vấn đề *
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  <span className="text-red-500">*</span> Mô tả vấn đề
                 </label>
                 <textarea
                   placeholder="Nhập mô tả vấn đề (tối thiểu 10 ký tự)"
@@ -669,16 +741,57 @@ export default function SOSPage() {
                 )}
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  <span className="text-red-500">*</span> Địa chỉ
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Nhập địa chỉ để tìm vị trí"
+                    value={addressInput}
+                    onChange={(e) => handleAddressChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                  />
+                  {addressSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                      {addressSuggestions.map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSelectAddress(suggestion)}
+                          className="w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b border-border last:border-b-0"
+                        >
+                          <p className="text-sm text-foreground">
+                            {suggestion.address}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            ({suggestion.latitude}, {suggestion.longitude})
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {selectedCoordinates && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ Tọa độ: {selectedCoordinates.lat}, {selectedCoordinates.lon}
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Kinh độ (Longitude) *
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    <span className="text-red-500">*</span> Kinh độ (Longitude)
                   </label>
                   <input
                     type="text"
-                    placeholder="Nhập kinh độ"
+                    placeholder={selectedCoordinates?.lon || "Sẽ tự động điền"}
+                    value={selectedCoordinates?.lon || ""}
+                    readOnly
                     {...register("longitude")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                    className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground opacity-70 cursor-not-allowed"
                   />
                   {errors.longitude && (
                     <p className="text-xs text-red-500 mt-1">
@@ -688,14 +801,16 @@ export default function SOSPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Vĩ độ (Latitude) *
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    <span className="text-red-500">*</span> Vĩ độ (Latitude)
                   </label>
                   <input
                     type="text"
-                    placeholder="Nhập vĩ độ"
+                    placeholder={selectedCoordinates?.lat || "Sẽ tự động điền"}
+                    value={selectedCoordinates?.lat || ""}
+                    readOnly
                     {...register("latitude")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                    className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground opacity-70 cursor-not-allowed"
                   />
                   {errors.latitude && (
                     <p className="text-xs text-red-500 mt-1">
@@ -706,8 +821,8 @@ export default function SOSPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">
-                  Ghi chú *
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  <span className="text-red-500">*</span> Ghi chú
                 </label>
                 <textarea
                   placeholder="Nhập ghi chú (tối thiểu 10 ký tự)"
