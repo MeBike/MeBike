@@ -1,0 +1,42 @@
+type: object
+description: "Thống kê doanh thu chi tiết cho một trạm."
+properties:
+  _id:
+    type: string
+    format: mongoId
+  name:
+    type: string
+    example: "Ga Bến Thành"
+  address:
+    type: string
+    example: "Quận 1, TP.HCM"
+  totalRentals:
+    type: integer
+    example: 150
+  totalRevenue:
+    type: number
+    format: double
+    description: "Tổng doanh thu (dạng số)."
+    example: 7500000
+  totalRevenueFormatted:
+    type: string
+    description: "Tổng doanh thu (đã định dạng tiền tệ)."
+    example: "7.500.000 VND"
+  totalDuration:
+    type: number
+    format: double
+    description: "Tổng thời lượng thuê (phút)."
+    example: 4500
+  totalDurationFormatted:
+    type: string
+    description: "Tổng thời lượng thuê (đã định dạng giờ/phút)."
+    example: "75 giờ 0 phút"
+  avgDuration:
+    type: number
+    format: double
+    description: "Thời lượng thuê trung bình (phút)."
+    example: 30
+  avgDurationFormatted:
+    type: string
+    description: "Thời lượng thuê trung bình (đã định dạng giờ/phút)."
+    example: "30 phút"

@@ -1,0 +1,21 @@
+type: object
+description: "Đối tượng trả về chứa thống kê doanh thu của tất cả các trạm."
+properties:
+  period:
+    type: object
+    properties:
+      from:
+        type: string
+        format: date-time
+        description: "Ngày bắt đầu của kỳ thống kê."
+      to:
+        type: string
+        format: date-time
+        description: "Ngày kết thúc của kỳ thống kê."
+  summary:
+    $ref: './AllStationsRevenueSummary.yaml'
+  stations:
+    type: array
+    description: "Danh sách thống kê chi tiết của từng trạm, sắp xếp theo doanh thu giảm dần."
+    items:
+      $ref: './StationRevenueItem.yaml'

@@ -160,6 +160,8 @@ components:
       $ref: './components/schemas/GetBikeRentalHistoryResponse.yaml'
     GetDashboardStationsResponse:
       $ref: './components/schemas/GetDashboardStationsResponse.yaml'
+    AllStationsRevenueResponse:
+      $ref: './components/schemas/AllStationsRevenueResponse.yaml'
 
     # --- Model Schemas ---
     User:
@@ -238,6 +240,10 @@ components:
       $ref: './components/schemas/VipCustomerStat.yaml'
     AdminUserDashboardStats:
       $ref: './components/schemas/AdminUserDashboardStats.yaml'
+    StationRevenueItem:
+      $ref: './components/schemas/StationRevenueItem.yaml'
+    AllStationsRevenueSummary:
+      $ref: './components/schemas/AllStationsRevenueSummary.yaml'
 
   securitySchemes:
     BearerAuth:

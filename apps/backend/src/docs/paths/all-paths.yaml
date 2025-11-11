@@ -2916,6 +2916,59 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/stations/revenue:
+  get:
+    tags: [Stations]
+    summary: Get revenue statistics for all stations (Admin only)
+    description: |
+      Retrieves revenue statistics (total rentals, revenue, duration) for all stations, grouped by station, within a given time period.
+      Results are sorted by total revenue (descending).
+      **Requires Admin privileges.**
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: from
+        in: query
+        required: false
+        description: "Start date (dd-mm-yyyy hoặc ISO 8601). Mặc định: '2025-01-01'."
+        schema:
+          type: string
+          example: "01-10-2025"
+      - name: to
+        in: query
+        required: false
+        description: "End date (dd-mm-yyyy hoặc ISO 8601). Mặc định: hôm nay."
+        schema:
+          type: string
+          example: "31-10-2025"
+    responses:
+      '200':
+        description: "Station revenue statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê trạm thành công"
+                result:
+                  $ref: '../components/schemas/AllStationsRevenueResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Ratings API
 # ===================================================================

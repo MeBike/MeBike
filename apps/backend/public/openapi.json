@@ -4880,6 +4880,86 @@
         }
       }
     },
+    "/stations/revenue": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get revenue statistics for all stations (Admin only)",
+        "description": "Retrieves revenue statistics (total rentals, revenue, duration) for all stations, grouped by station, within a given time period.\nResults are sorted by total revenue (descending).\n**Requires Admin privileges.**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Start date (dd-mm-yyyy hoặc ISO 8601). Mặc định: '2025-01-01'.",
+            "schema": {
+              "type": "string",
+              "example": "01-10-2025"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "End date (dd-mm-yyyy hoặc ISO 8601). Mặc định: hôm nay.",
+            "schema": {
+              "type": "string",
+              "example": "31-10-2025"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station revenue statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê trạm thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/AllStationsRevenueResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ratings": {
       "get": {
         "tags": [
@@ -6322,6 +6402,37 @@
           }
         }
       },
+      "AllStationsRevenueResponse": {
+        "type": "object",
+        "description": "Đối tượng trả về chứa thống kê doanh thu của tất cả các trạm.",
+        "properties": {
+          "period": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày bắt đầu của kỳ thống kê."
+              },
+              "to": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày kết thúc của kỳ thống kê."
+              }
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AllStationsRevenueSummary"
+          },
+          "stations": {
+            "type": "array",
+            "description": "Danh sách thống kê chi tiết của từng trạm, sắp xếp theo doanh thu giảm dần.",
+            "items": {
+              "$ref": "#/components/schemas/StationRevenueItem"
+            }
+          }
+        }
+      },
       "User": {
         "type": "object",
         "description": "Represents a user object.",
@@ -7560,6 +7671,99 @@
             "format": "float",
             "description": "Chi tiêu trung bình trên mỗi khách hàng (Tổng doanh thu / Tổng khách hàng).",
             "example": 60000.5
+          }
+        }
+      },
+      "StationRevenueItem": {
+        "type": "object",
+        "description": "Thống kê doanh thu chi tiết cho một trạm.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "name": {
+            "type": "string",
+            "example": "Ga Bến Thành"
+          },
+          "address": {
+            "type": "string",
+            "example": "Quận 1, TP.HCM"
+          },
+          "totalRentals": {
+            "type": "integer",
+            "example": 150
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu (dạng số).",
+            "example": 7500000
+          },
+          "totalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu (đã định dạng tiền tệ).",
+            "example": "7.500.000 VND"
+          },
+          "totalDuration": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng thời lượng thuê (phút).",
+            "example": 4500
+          },
+          "totalDurationFormatted": {
+            "type": "string",
+            "description": "Tổng thời lượng thuê (đã định dạng giờ/phút).",
+            "example": "75 giờ 0 phút"
+          },
+          "avgDuration": {
+            "type": "number",
+            "format": "double",
+            "description": "Thời lượng thuê trung bình (phút).",
+            "example": 30
+          },
+          "avgDurationFormatted": {
+            "type": "string",
+            "description": "Thời lượng thuê trung bình (đã định dạng giờ/phút).",
+            "example": "30 phút"
+          }
+        }
+      },
+      "AllStationsRevenueSummary": {
+        "type": "object",
+        "description": "Tóm tắt doanh thu từ tất cả các trạm trong kỳ.",
+        "properties": {
+          "totalStations": {
+            "type": "integer",
+            "description": "Tổng số trạm có doanh thu trong kỳ.",
+            "example": 10
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu từ tất cả các trạm (dạng số).",
+            "example": 50000000
+          },
+          "totalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu (đã định dạng tiền tệ).",
+            "example": "50.000.000 VND"
+          },
+          "totalRentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê từ tất cả các trạm.",
+            "example": 1230
+          },
+          "avgRevenuePerStation": {
+            "type": "number",
+            "format": "double",
+            "description": "Doanh thu trung bình mỗi trạm (dạng số).",
+            "example": 5000000
+          },
+          "avgRevenuePerStationFormatted": {
+            "type": "string",
+            "description": "Doanh thu trung bình mỗi trạm (đã định dạng tiền tệ).",
+            "example": "5.000.000 VND"
           }
         }
       }
