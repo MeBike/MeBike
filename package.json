@@ -2,7 +2,7 @@
   "name": "mebike",
   "type": "module",
   "version": "1.0.0",
-  "packageManager": "pnpm@10.6.3",
+  "packageManager": "pnpm@10.21.0",
   "description": "Project for  MeBike",
   "author": "",
   "license": "ISC",
@@ -17,7 +17,11 @@
     "lint:fix": "turbo run lint -- --fix",
     "build": "turbo run build",
     "test": "turbo run test",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "docker:build:backend": "docker build -f apps/backend/Dockerfile -t mebike-backend:latest .",
+    "docker:build:iot-service": "docker build -f apps/iot-service/Dockerfile -t mebike-iot-service:latest .",
+    "docker:run:backend": "docker run --rm -p 4000:4000 --env-file apps/backend/.env mebike-backend:latest",
+    "docker:run:iot-service": "docker run --rm -p 3000:3000 --env-file apps/iot-service/.env mebike-iot-service:latest"
   },
   "devDependencies": {
     "@mebike/tsconfig": "workspace:*",

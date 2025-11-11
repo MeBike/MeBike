@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { Alert } from "react-native";
 
 import type { Reservation } from "../types/reservation-types";
+import type { ReservationOption } from "@services/reservation.service";
 
 import { useCancelReservationMutation } from "./mutations/Reservation/useCancelReservationMutation";
 import { useConfirmReservationMutation } from "./mutations/Reservation/useConfirmReservationMutation";
@@ -155,11 +156,11 @@ export function useReservationActions({
     await refetchReservationDetail();
   }, [ensureAuthenticated, refetchReservationDetail, reservationId]);
 
-  type CreateReservationOptions = {
-    reservationOption?: "MỘT LẦN" | "GÓI THÁNG";
-    subscriptionId?: string;
-    callbacks?: MutationCallbacks;
-  };
+type CreateReservationOptions = {
+  reservationOption?: ReservationOption;
+  subscriptionId?: string;
+  callbacks?: MutationCallbacks;
+};
 
   const createReservation = useCallback(
     (bikeId: string, startTime?: string, options?: CreateReservationOptions) => {
