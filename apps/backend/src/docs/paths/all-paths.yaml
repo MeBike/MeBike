@@ -3152,6 +3152,45 @@
       '404':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/ratings/rating-reasons:
+  get:
+    tags: [Ratings]
+    summary: Get all rating reasons
+    description: |
+      Retrieves a list of predefined reasons used for ratings.
+      Allows optional filtering by 'type' (e.g., POSITIVE/NEGATIVE) or 'applies_to' (e.g., BIKE/STATION).
+      Requires authentication.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: type
+        in: query
+        required: false
+        description: "Filter reasons by type (POSITIVE or NEGATIVE)."
+        schema:
+          $ref: '../components/schemas/RatingReason.yaml#/properties/type'
+      - name: applies_to
+        in: query
+        required: false
+        description: "Filter reasons by what they apply to (BIKE, STATION, APP, OTHER)."
+        schema:
+          $ref: '../components/schemas/RatingReason.yaml#/properties/applies_to'
+    responses:
+      '200':
+        description: "A list of rating reasons."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetRatingReasonsResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "User from token not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Dashboard API
 # ===================================================================

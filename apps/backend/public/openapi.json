@@ -5251,6 +5251,65 @@
         }
       }
     },
+    "/ratings/rating-reasons": {
+      "get": {
+        "tags": [
+          "Ratings"
+        ],
+        "summary": "Get all rating reasons",
+        "description": "Retrieves a list of predefined reasons used for ratings.\nAllows optional filtering by 'type' (e.g., POSITIVE/NEGATIVE) or 'applies_to' (e.g., BIKE/STATION).\nRequires authentication.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Filter reasons by type (POSITIVE or NEGATIVE).",
+            "schema": {
+              "$ref": "#/components/schemas/RatingReason/properties/type"
+            }
+          },
+          {
+            "name": "applies_to",
+            "in": "query",
+            "required": false,
+            "description": "Filter reasons by what they apply to (BIKE, STATION, APP, OTHER).",
+            "schema": {
+              "$ref": "#/components/schemas/RatingReason/properties/applies_to"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of rating reasons.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetRatingReasonsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "description": "User from token not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/dashboard/stats": {
       "get": {
         "tags": [
@@ -6529,6 +6588,22 @@
                 "format": "mongoId",
                 "example": "69f1b2ae63beb4054de09d22"
               }
+            }
+          }
+        }
+      },
+      "GetRatingReasonsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Lấy danh sách lý do đánh giá thành công"
+          },
+          "result": {
+            "type": "array",
+            "description": "Danh sách các lý do đánh giá.",
+            "items": {
+              "$ref": "#/components/schemas/RatingReason"
             }
           }
         }
@@ -7868,6 +7943,40 @@
             "type": "string",
             "description": "Doanh thu trung bình mỗi trạm (đã định dạng tiền tệ).",
             "example": "5.000.000 VND"
+          }
+        }
+      },
+      "RatingReason": {
+        "type": "object",
+        "description": "Đại diện cho một lý do đánh giá (ví dụ: 'Xe sạch', 'Ứng dụng lỗi').",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Nội dung của lý do.",
+            "example": "Xe sạch sẽ"
+          },
+          "type": {
+            "type": "string",
+            "description": "Loại lý do (Vấn đề hay Khen ngợi).",
+            "enum": [
+              "Vấn đề",
+              "Khen ngợi"
+            ],
+            "example": "Khen ngợi"
+          },
+          "applies_to": {
+            "type": "string",
+            "description": "Lý do này áp dụng cho đối tượng nào.",
+            "enum": [
+              "bike",
+              "station",
+              "app"
+            ],
+            "example": "bike"
           }
         }
       }
