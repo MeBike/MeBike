@@ -45,7 +45,6 @@ export default function FixedSlotEditorScreen() {
   const insets = useSafeAreaInsets();
 
   const [stationId, setStationId] = useState(initialStationId ?? "");
-  const [isStationEditable, setIsStationEditable] = useState(!initialStationId);
   const [slotStart, setSlotStart] = useState(formatTime(new Date()));
   const [selectedDates, setSelectedDates] = useState<string[]>([]);
   const [iosPickerVisible, setIosPickerVisible] = useState(false);
@@ -139,36 +138,31 @@ export default function FixedSlotEditorScreen() {
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 40 }}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Trạm áp dụng</Text>
-          {isStationEditable
-            ? (
-                <>
-                  <TextInput
-                    style={styles.input}
-                    value={stationId}
-                    onChangeText={setStationId}
-                    placeholder="Nhập ID trạm"
-                  />
-                  {stationName && (
-                    <Text style={styles.helperText}>
-                      Gợi ý: {stationName}
-                      {stationId ? ` (ID: ${stationId})` : ""}
-                    </Text>
-                  )}
-                </>
-              )
-            : (
-                <View style={styles.stationSummary}>
-                  <Text style={styles.stationSummaryTitle}>
-                    {stationName ?? "Trạm đã chọn"}
-                  </Text>
-                  <Text style={styles.stationSummarySubtitle}>
-                    Mã trạm: {stationId}
-                  </Text>
-                  <TouchableOpacity onPress={() => setIsStationEditable(true)}>
-                    <Text style={styles.changeStationLink}>Chọn trạm khác</Text>
-                  </TouchableOpacity>
-                </View>
+          {initialStationId ? (
+            <View style={styles.stationSummary}>
+              <Text style={styles.stationSummaryTitle}>
+                {stationName ?? "Trạm đã chọn"}
+              </Text>
+              <Text style={styles.stationSummarySubtitle}>
+                Mã trạm: {stationId}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <TextInput
+                style={styles.input}
+                value={stationId}
+                onChangeText={setStationId}
+                placeholder="Nhập ID trạm"
+              />
+              {stationName && (
+                <Text style={styles.helperText}>
+                  Gợi ý: {stationName}
+                  {stationId ? ` (ID: ${stationId})` : ""}
+                </Text>
               )}
+            </>
+          )}
         </View>
 
         <View style={styles.inputGroup}>

@@ -17,19 +17,16 @@ import {
 import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { FixedSlotTemplateCard } from "@components/reservation-flow/FixedSlotTemplateCard";
 import { ReservationInfoCard } from "@components/reservation-flow/ReservationInfoCard";
 import {
   ReservationMode,
   ReservationModeToggle,
 } from "@components/reservation-flow/ReservationModeToggle";
 import { BikeColors } from "@constants/BikeColors";
-import { useFixedSlotTemplatesQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplatesQuery";
 import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 import { useReservationActions } from "@hooks/useReservationActions";
 import { useAuth } from "@providers/auth-providers";
 
-import type { FixedSlotTemplateListItem } from "@/types/fixed-slot-types";
 import type {
   ReservationFlowNavigationProp,
   ReservationFlowRouteProp,
@@ -44,7 +41,6 @@ const MODE_OPTIONS: Array<{
 }> = [
   { key: "MỘT LẦN", title: "Đặt 1 lần", subtitle: "Trừ tiền ví" },
   { key: "GÓI THÁNG", title: "Dùng gói tháng", subtitle: "Trừ lượt đã mua" },
-  { key: "KHUNG GIỜ CỐ ĐỊNH", title: "Khung giờ cố định", subtitle: "Theo mẫu có sẵn" },
 ];
 
 function formatVietnamTime(date: Date) {
@@ -77,7 +73,6 @@ export default function ReservationFlowScreen() {
   const [mode, setMode] = useState<ReservationMode>("MỘT LẦN");
   const [scheduledAt, setScheduledAt] = useState<Date>(() => new Date(Date.now() + 5 * 60 * 1000));
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [iosPickerVisible, setIosPickerVisible] = useState(false);
   const [iosPickerValue, setIosPickerValue] = useState<Date>(scheduledAt);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,12 +98,6 @@ export default function ReservationFlowScreen() {
     }
   }, [activeSubscriptions, selectedSubscriptionId]);
 
-  const { data: fixedSlotResponse } = useFixedSlotTemplatesQuery(
-    { page: 1, limit: 10, station_id: stationId },
-    hasToken,
-  );
-  const fixedSlotTemplates = fixedSlotResponse?.data ?? [];
-
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((value) => {
@@ -118,12 +107,6 @@ export default function ReservationFlowScreen() {
       })
       .catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (!selectedTemplateId && fixedSlotTemplates.length > 0) {
-      setSelectedTemplateId(fixedSlotTemplates[0]._id);
-    }
-  }, [selectedTemplateId, fixedSlotTemplates]);
 
   const handleModeChange = useCallback((nextMode: ReservationMode) => {
     setMode(nextMode);
@@ -175,11 +158,6 @@ export default function ReservationFlowScreen() {
     [activeSubscriptions, selectedSubscriptionId],
   );
 
-  const selectedTemplate: FixedSlotTemplateListItem | undefined = useMemo(
-    () => fixedSlotTemplates.find((item) => item._id === selectedTemplateId),
-    [fixedSlotTemplates, selectedTemplateId],
-  );
-
   const handleSubmit = useCallback(() => {
     if (!bikeId) {
       Alert.alert("Chưa chọn xe", "Vui lòng quay lại để chọn xe trước khi đặt.");
@@ -197,16 +175,10 @@ export default function ReservationFlowScreen() {
       return;
     }
 
-    if (mode === "KHUNG GIỜ CỐ ĐỊNH" && !selectedTemplate?._id) {
-      Alert.alert("Thiếu khung giờ", "Vui lòng chọn một mẫu khung giờ trước khi đặt.");
-      return;
-    }
-
     setIsSubmitting(true);
     createReservation(bikeId, scheduledAt.toISOString(), {
       reservationOption: mode,
       subscriptionId: mode === "GÓI THÁNG" ? selectedSubscription?._id : undefined,
-      fixedSlotTemplateId: mode === "KHUNG GIỜ CỐ ĐỊNH" ? selectedTemplate?._id : undefined,
       callbacks: {
         onSuccess: () => {
           setIsSubmitting(false);
@@ -221,7 +193,6 @@ export default function ReservationFlowScreen() {
     mode,
     scheduledAt,
     selectedSubscription,
-    selectedTemplate,
     navigation,
     hasToken,
   ]);
@@ -342,45 +313,6 @@ export default function ReservationFlowScreen() {
           </View>
         )}
 
-        {mode === "KHUNG GIỜ CỐ ĐỊNH" && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Khung giờ cố định</Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate("FixedSlotTemplates", { stationId, stationName })}
-              >
-                <Text style={styles.linkText}>Quản lý</Text>
-              </TouchableOpacity>
-            </View>
-            {fixedSlotTemplates.length === 0
-              ? (
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyTitle}>Chưa có khung giờ</Text>
-                    <Text style={styles.emptySubtitle}>
-                      Tạo khung giờ cố định để giữ xe nhanh hơn.
-                    </Text>
-                    <TouchableOpacity
-                      style={styles.primaryLinkButton}
-                      onPress={() => navigation.navigate("FixedSlotEditor", { stationId, stationName })}
-                    >
-                      <Text style={styles.primaryLinkText}>Tạo khung giờ</Text>
-                    </TouchableOpacity>
-                  </View>
-                )
-              : (
-                  <View style={{ gap: 12 }}>
-                    {fixedSlotTemplates.map((template) => (
-                      <FixedSlotTemplateCard
-                        key={template._id}
-                        template={template}
-                        isSelected={template._id === selectedTemplateId}
-                        onSelect={() => setSelectedTemplateId(template._id)}
-                      />
-                    ))}
-                  </View>
-                )}
-          </View>
-        )}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -390,17 +322,13 @@ export default function ReservationFlowScreen() {
           disabled={isSubmitting}
           activeOpacity={0.9}
         >
-          {isSubmitting
-            ? <ActivityIndicator color="#fff" />
-            : (
-                <Text style={styles.primaryButtonText}>
-                  {mode === "GÓI THÁNG"
-                    ? "Dùng gói tháng"
-                    : mode === "KHUNG GIỜ CỐ ĐỊNH"
-                      ? "Đặt theo khung giờ"
-                      : "Đặt 1 lần"}
-                </Text>
-              )}
+          {isSubmitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.primaryButtonText}>
+              {mode === "GÓI THÁNG" ? "Dùng gói tháng" : "Đặt 1 lần"}
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -492,11 +420,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     gap: 12,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
@@ -546,34 +469,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: BikeColors.textSecondary,
     marginTop: 4,
-  },
-  emptyState: {
-    borderRadius: 20,
-    padding: 24,
-    backgroundColor: BikeColors.surface,
-    alignItems: "center",
-    gap: 8,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: BikeColors.textPrimary,
-  },
-  emptySubtitle: {
-    textAlign: "center",
-    fontSize: 14,
-    color: BikeColors.textSecondary,
-  },
-  primaryLinkButton: {
-    marginTop: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 16,
-    backgroundColor: BikeColors.primary,
-  },
-  primaryLinkText: {
-    color: "#fff",
-    fontWeight: "600",
   },
   footer: {
     padding: 20,

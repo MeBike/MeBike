@@ -22,7 +22,7 @@ type PaginatedParams = {
   limit?: number;
 };
 
-export type ReservationOption = "MỘT LẦN" | "GÓI THÁNG" | "KHUNG GIỜ CỐ ĐỊNH";
+export type ReservationOption = "MỘT LẦN" | "GÓI THÁNG";
 
 export type CreateReservationPayload = {
   bike_id: string;

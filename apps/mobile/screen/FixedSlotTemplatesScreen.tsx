@@ -149,7 +149,7 @@ export default function FixedSlotTemplatesScreen() {
 
       <FlatList
         data={data?.data ?? []}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item, index) => `${item._id}-${index}`}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} />

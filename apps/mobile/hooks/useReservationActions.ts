@@ -159,7 +159,6 @@ export function useReservationActions({
 type CreateReservationOptions = {
   reservationOption?: ReservationOption;
   subscriptionId?: string;
-  fixedSlotTemplateId?: string;
   callbacks?: MutationCallbacks;
 };
 
@@ -177,9 +176,6 @@ type CreateReservationOptions = {
         reservation_option: reservationOption,
         ...(reservationOption === "GÓI THÁNG" && options?.subscriptionId
           ? { subscription_id: options.subscriptionId }
-          : {}),
-        ...(reservationOption === "KHUNG GIỜ CỐ ĐỊNH" && options?.fixedSlotTemplateId
-          ? { fixed_slot_template_id: options.fixedSlotTemplateId }
           : {}),
       };
 

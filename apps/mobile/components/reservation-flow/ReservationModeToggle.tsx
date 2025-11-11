@@ -8,7 +8,7 @@ import {
 
 import { BikeColors } from "@constants/BikeColors";
 
-export type ReservationMode = "MỘT LẦN" | "GÓI THÁNG" | "KHUNG GIỜ CỐ ĐỊNH";
+export type ReservationMode = "MỘT LẦN" | "GÓI THÁNG";
 
 type ModeOption = {
   key: ReservationMode;

@@ -78,12 +78,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       href: "/user/profile",
       roles: ["USER"],
     },
-    {
-      title: "Lịch sử giao dịch",
-      icon: History,
-      href: "/user/booking-history",
-      roles: ["USER"],
-    },
+    // {
+    //   title: "Lịch sử giao dịch",
+    //   icon: History,
+    //   href: "/user/booking-history",
+    //   roles: ["USER"],
+    // },
     {
       title: "Quản lý ví",
       icon: Wallet,
