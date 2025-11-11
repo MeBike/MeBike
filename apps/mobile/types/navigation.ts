@@ -34,6 +34,25 @@ export type RootStackParamList = {
     reservationId: string;
     reservation?: Reservation;
   };
+  ReservationFlow: {
+    stationId: string;
+    stationName?: string;
+    stationAddress?: string;
+    bikeId?: string;
+    bikeName?: string;
+  };
+  FixedSlotTemplates: {
+    stationId?: string;
+    stationName?: string;
+  };
+  FixedSlotDetail: {
+    templateId: string;
+  };
+  FixedSlotEditor: {
+    stationId?: string;
+    stationName?: string;
+    templateId?: string;
+  };
   TransactionDetail: { transactionId: string };
   WithdrawDetail: { withdrawId: string };
   Withdraw: undefined;
@@ -93,9 +112,41 @@ export type ReservationDetailNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "ReservationDetail"
 >;
+export type ReservationFlowNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ReservationFlow"
+>;
+export type FixedSlotTemplatesNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "FixedSlotTemplates"
+>;
+export type FixedSlotDetailNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "FixedSlotDetail"
+>;
+export type FixedSlotEditorNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "FixedSlotEditor"
+>;
 export type ReservationDetailRouteProp = RouteProp<
   RootStackParamList,
   "ReservationDetail"
+>;
+export type ReservationFlowRouteProp = RouteProp<
+  RootStackParamList,
+  "ReservationFlow"
+>;
+export type FixedSlotDetailRouteProp = RouteProp<
+  RootStackParamList,
+  "FixedSlotDetail"
+>;
+export type FixedSlotEditorRouteProp = RouteProp<
+  RootStackParamList,
+  "FixedSlotEditor"
+>;
+export type FixedSlotTemplatesRouteProp = RouteProp<
+  RootStackParamList,
+  "FixedSlotTemplates"
 >;
 export type SupportScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
