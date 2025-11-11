@@ -1,10 +1,13 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw, Wallet2 } from "lucide-react";
 import { Wallet } from "@/services/wallet.service";
+import { formatDateUTC } from "@/utils/formatDateTime";
 export const getStatusColor = (status: Wallet["status"]) => {
   switch (status) {
     case "ĐANG HOẠT ĐỘNG":
       return "bg-green-100 text-green-800";
+    case "ĐÃ BỊ ĐÓNG BĂNG":
+      return "bg-red-100 text-red-800";
     default:
       return "bg-gray-100 text-gray-800";
   }
@@ -56,7 +59,7 @@ export const walletColumn = ({
     header: "Trạng thái",
     cell: ({ row }) => (
       <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(row.original.status as Wallet["status"])}`}
+        className={`inline-block px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${getStatusColor(row.original.status as Wallet["status"])}`}
       >
         {row.original.status}
       </span>
@@ -67,7 +70,7 @@ export const walletColumn = ({
     header: "Ngày tạo",
     cell: ({ row }) => {
       return (
-        new Date(row.original.created_at).toLocaleDateString("vi-VN") ||
+        formatDateUTC(row.original.created_at) ||
         "Không có"
       );
     },
@@ -77,7 +80,7 @@ export const walletColumn = ({
     header: "Cập nhật lần cuối",
     cell: ({ row }) => {
       return (
-        new Date(row.original.updated_at).toLocaleDateString("vi-VN") ||
+        formatDateUTC(row.original.updated_at) ||
         "Không có"
       );
     },
