@@ -19,17 +19,33 @@ import type { RentingHistory } from "@/types/Rental";
 // TomTom API
 const TOMTOM_API_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
 
-const fetchTomTomAddressSuggest = async (addressText: string) => {
+interface TomTomResult {
+  address: {
+    freeformAddress: string;
+  };
+  position: {
+    lat: number;
+    lon: number;
+  };
+}
+
+interface AddressSuggestion {
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+const fetchTomTomAddressSuggest = async (addressText: string): Promise<AddressSuggestion[]> => {
   try {
     const url = `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(addressText)}.JSON?key=${TOMTOM_API_KEY}`;
     const response = await fetch(url);
-    const data = await response.json();
-    return data.results.map((r: any) => ({
+    const data = await response.json() as { results: TomTomResult[] };
+    return data.results.map((r: TomTomResult) => ({
       address: r.address.freeformAddress,
       latitude: r.position.lat,
       longitude: r.position.lon,
     }));
-  } catch (e) {
+  } catch {
     return [];
   }
 };
@@ -45,7 +61,7 @@ export default function SOSPage() {
   const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">("info");
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [addressInput, setAddressInput] = useState("");
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
   const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: string; lon: string } | null>(null);
@@ -110,7 +126,7 @@ export default function SOSPage() {
     }
   };
 
-  const handleSelectAddress = (suggestion: any) => {
+  const handleSelectAddress = (suggestion: AddressSuggestion) => {
     setAddressInput(suggestion.address);
     setSelectedCoordinates({
       lat: suggestion.latitude.toString(),
