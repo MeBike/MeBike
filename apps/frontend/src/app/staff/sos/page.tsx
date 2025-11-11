@@ -89,6 +89,7 @@ export default function SOSPage() {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm<CreateSOSSchema>({
     resolver: zodResolver(createSOSSchema),
   });
@@ -132,6 +133,8 @@ export default function SOSPage() {
       lat: suggestion.latitude.toString(),
       lon: suggestion.longitude.toString(),
     });
+    setValue("latitude", suggestion.latitude.toString());
+    setValue("longitude", suggestion.longitude.toString());
     setAddressSuggestions([]);
   };
   useEffect(() => {

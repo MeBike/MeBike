@@ -83,6 +83,7 @@ export default function RefundPage() {
   );
   const handleSaveStatus = async () => {
     if (!selectedRequest?._id) return;
+    console.log("reason", reason);
     await updateWithdrawRequest({
       newStatus: newStatus,
       reason: reason,

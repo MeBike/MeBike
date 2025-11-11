@@ -96,26 +96,26 @@ export const reportColumns = ({
       return new Date(date).toLocaleDateString("vi-VN");
     },
   },
-  {
-    id: "actions",
-    header: "Thao tác",
-    cell: ({ row }) => {
-      const report = row.original;
-      const status = row.getValue("status") as string;
-      return (
-        <div className="flex gap-2">
-          {/* <Button variant="ghost" size="sm" onClick={() => onView(report)}>
-            <Eye className="h-4 w-4 mr-1" />
-            Xem
-          </Button> */}
-          {status !== "ĐÃ GIẢI QUYẾT" &&  status !== "ĐÃ HỦY" && (
-            <Button variant="ghost" size="sm" onClick={() => onUpdate(report)}>
-              <Edit className="h-4 w-4 mr-1" />
-              Cập nhật
-            </Button>
-          )}
-        </div>
-      );
-    },
-  },
+  // {
+  //   id: "actions",
+  //   header: "Thao tác",
+  //   cell: ({ row }) => {
+  //     const report = row.original;
+  //     const status = row.getValue("status") as string;
+  //     return (
+  //       <div className="flex gap-2">
+  //         {/* <Button variant="ghost" size="sm" onClick={() => onView(report)}>
+  //           <Eye className="h-4 w-4 mr-1" />
+  //           Xem
+  //         </Button> */}
+  //         {status !== "ĐÃ GIẢI QUYẾT" &&  status !== "ĐÃ HỦY" && (
+  //           <Button variant="ghost" size="sm" onClick={() => onUpdate(report)}>
+  //             <Edit className="h-4 w-4 mr-1" />
+  //             Cập nhật
+  //           </Button>
+  //         )}
+  //       </div>
+  //     );
+  //   },
+  // },
 ];
