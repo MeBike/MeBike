@@ -39,7 +39,7 @@ export async function createRentalSessionController(
     user_id,
     start_station: station._id as ObjectId,
     bike,
-    subscription_id: subscription._id as ObjectId
+    subscription_id: subscription?._id as ObjectId | undefined
   })
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,
