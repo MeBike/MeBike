@@ -44,6 +44,7 @@ export function useRatingActions({
           onSuccess: () => {
             Alert.alert("Cảm ơn bạn!", "Đánh giá của bạn đã được ghi nhận.");
             queryClient.invalidateQueries({ queryKey: ["rating", "reasons"] });
+            queryClient.invalidateQueries({ queryKey: ["rating", "detail", rentalId] });
             callbacks?.onSuccess?.();
           },
           onError: (error) => {

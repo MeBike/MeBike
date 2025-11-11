@@ -68,7 +68,7 @@ class RatingService {
             from: 'rating_reasons',
             localField: 'reason_ids',
             foreignField: '_id',
-            as: 'reasons'
+            as: 'reason_details'
           }
         },
         {
@@ -77,10 +77,22 @@ class RatingService {
             user_id: 1,
             rental_id: 1,
             rating: 1,
+            reason_ids: 1,
             comment: 1,
             created_at: 1,
             updated_at: 1,
-            reasons: '$reasons.messages'
+            reason_details: {
+              $map: {
+                input: '$reason_details',
+                as: 'reason',
+                in: {
+                  _id: '$$reason._id',
+                  type: '$$reason.type',
+                  applies_to: '$$reason.applies_to',
+                  messages: '$$reason.messages'
+                }
+              }
+            }
           }
         }
       ])
