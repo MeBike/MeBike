@@ -1,33 +1,58 @@
+
+
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import {
   Alert,
-  Button,
   Linking,
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  AppState,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../types/navigation";
 
 function QRScannerScreen() {
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, requestPermission, getPermission] = useCameraPermissions();
+  const [isGranted, setIsGranted] = useState(permission?.granted ?? false);
   const [scanned, setScanned] = useState(false);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
+  const appState = useRef(AppState.currentState);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
-    if (permission && !permission.granted && permission.canAskAgain) {
-      requestPermission();
-    }
-  }, [permission]);
+    setIsGranted(permission?.granted ?? false);
+  }, [permission?.granted]);
+
+  const handleAppCameToForeground = useCallback(async () => {
+    console.log("Re-checking permissions...");
+    const { status } = await getPermission();
+    setIsGranted(status === "granted");
+  }, [getPermission]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === "active"
+      ) {
+        handleAppCameToForeground();
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleAppCameToForeground]);
 
   if (!permission) {
     return (
@@ -37,14 +62,16 @@ function QRScannerScreen() {
     );
   }
 
-  if (!permission.granted) {
+  if (!isGranted) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.permissionContainer}>
           <Text style={styles.message}>
             Chúng tôi cần quyền truy cập camera để quét mã QR.
           </Text>
-          <Button onPress={requestPermission} title="Cấp quyền truy cập" />
+          <TouchableOpacity style={styles.actionButton} onPress={requestPermission}>
+            <Text style={styles.actionButtonText}>Cấp quyền truy cập</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => navigation.goBack()}
@@ -60,6 +87,10 @@ function QRScannerScreen() {
         </View>
       </SafeAreaView>
     );
+  }
+
+  if (!isFocused) {
+    return null;
   }
 
   const handleBarcodeScanned = ({ type, data }: { type: string; data: string }) => {
@@ -139,13 +170,28 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     marginTop: 10,
-    padding: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     backgroundColor: '#0066FF',
-    borderRadius: 5,
+    borderRadius: 8,
   },
   settingsButtonText: {
     color: 'white',
     fontSize: 16,
+  },
+  actionButton: {
+    marginTop: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: '#0066FF',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   topOverlay: {
     flex: 1,
