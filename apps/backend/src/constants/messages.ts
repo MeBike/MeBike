@@ -627,7 +627,8 @@ export const RATING_MESSAGE = {
   RENTAL_ID_INVALID: 'ID phiên thuê không hợp lệ',
   CANNOT_RATE_UNCOMPLETED_RENTAL: 'Chỉ có thể đánh giá các phiên thuê đã hoàn thành',
   RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này',
-  CANNOT_RATE_OTHERS_RENTAL: 'Không thể đánh giá phiên thuê của người khác'
+  CANNOT_RATE_OTHERS_RENTAL: 'Không thể đánh giá phiên thuê của người khác',
+  ALREADY_RATED: 'Bạn đã đánh giá phiên thuê này trước đó'
 }
 
 export const SOS_MESSAGE = {

@@ -92,6 +92,17 @@ export const createRatingValidator = validate(
             })
           }
 
+          const existRating = await databaseService.ratings.findOne({
+            rental_id: new ObjectId(value),
+            user_id: new ObjectId(user_id)
+          })
+          if (existRating) {
+            throw new ErrorWithStatus({
+              message: RATING_MESSAGE.ALREADY_RATED,
+              status: HTTP_STATUS.FORBIDDEN
+            })
+          }
+
           const now = new Date()
 
           // chỉ được đánh giá sau 7 ngày kể từ khi hoàn thành
