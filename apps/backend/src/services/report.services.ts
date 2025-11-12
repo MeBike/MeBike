@@ -125,7 +125,7 @@ class ReportService {
       if (findStaff.role !== Role.Sos && priority === ReportPriority.URGENT) {
         throw new ErrorWithStatus({
           message: REPORTS_MESSAGES.STAFF_INVALID,
-          status: HTTP_STATUS.NOT_FOUND
+          status: HTTP_STATUS.BAD_REQUEST
         })
       }
       if (findStaff.role !== Role.Sos && findStaff.role !== Role.Staff) {

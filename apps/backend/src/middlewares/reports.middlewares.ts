@@ -382,6 +382,18 @@ export const staffUpdateReportValidator = validate(
       },
       isString: {
         errorMessage: REPORTS_MESSAGES.REASON_INVALID
+      },
+      custom: {
+        options: (value, { req }) => {
+          if (req.body.newStatus === ReportStatus.CannotResolved && !value) {
+            throw new ErrorWithStatus({
+              status: HTTP_STATUS.BAD_REQUEST,
+              message: REPORTS_MESSAGES.REASON_IS_REQUIRED
+            })
+          }
+
+          return true
+        }
       }
     },
     files: {
