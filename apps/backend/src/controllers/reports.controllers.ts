@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from 'express'
 import type { ParamsDictionary } from 'express-serve-static-core'
-import type { Filter } from 'mongodb'
+import type { Filter, Sort } from 'mongodb'
 
 import { ObjectId } from 'mongodb'
 
-import type { ReportStatus, ReportTypeEnum } from '~/constants/enums'
+import { ReportStatus, ReportTypeEnum, Role } from '~/constants/enums'
 import type { CreateReportReqBody } from '~/models/requests/reports.requests'
 import type Report from '~/models/schemas/report.schema'
 
@@ -49,14 +49,75 @@ export async function updateReportStatusController(req: Request<ParamsDictionary
   })
 }
 
+export async function staffUpdateReportStatusController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const { reportID } = req.params
+  const newStatus = req.body.newStatus
+  const reason = req.body.reason || ''
+  const files = req.body.files || []
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+
+  const result = await reportService.staffUpdateReportStatus({
+    reportID: reportID.toString(),
+    newStatus,
+    reason,
+    staffID: user_id.toString(),
+    files
+  })
+
+  res.json({
+    message: REPORTS_MESSAGES.UPDATE_SUCCESS,
+    result
+  })
+}
+
 export async function getByIdController(req: Request<ParamsDictionary, any, any>, res: Response) {
   const reportID = req.params.reportID
+  const { user_id } = req.decoded_authorization as TokenPayLoad
 
   const result = await databaseService.reports.findOne({ _id: new ObjectId(reportID) })
   if (!result) {
     throw new ErrorWithStatus({
       message: REPORTS_MESSAGES.REPORT_NOT_FOUND.replace('%s', reportID),
       status: HTTP_STATUS.NOT_FOUND
+    })
+  }
+
+  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+  if (
+    result.user_id?.toString() !== user_id.toString() &&
+    user?.role !== Role.Admin &&
+    user?.role !== Role.Staff &&
+    user?.role !== Role.Sos
+  ) {
+    throw new ErrorWithStatus({
+      message: REPORTS_MESSAGES.ACCESS_DENIED,
+      status: HTTP_STATUS.UNAUTHORIZED
+    })
+  }
+
+  res.json({
+    message: REPORTS_MESSAGES.GET_BY_ID_SUCCESS.replace('%s', reportID),
+    result
+  })
+}
+
+export async function staffGetByIdController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const reportID = req.params.reportID
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+
+  const result = await databaseService.reports.findOne({ _id: new ObjectId(reportID) })
+  if (!result) {
+    throw new ErrorWithStatus({
+      message: REPORTS_MESSAGES.REPORT_NOT_FOUND.replace('%s', reportID),
+      status: HTTP_STATUS.NOT_FOUND
+    })
+  }
+
+  const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+  if (user?.role !== Role.Sos && user?.role !== Role.Staff) {
+    throw new ErrorWithStatus({
+      message: REPORTS_MESSAGES.ACCESS_DENIED,
+      status: HTTP_STATUS.UNAUTHORIZED
     })
   }
 
@@ -103,6 +164,26 @@ export async function getAllReportController(req: Request<any, any, any>, res: R
   }
 
   await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter)
+}
+
+export async function getAllInProgressReportController(req: Request<any, any, any>, res: Response, next: NextFunction) {
+  const filter: Filter<Report> = {}
+  filter.status = ReportStatus.InProgress
+
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  filter.assignee_id = new ObjectId(user_id)
+
+  if (req.query.date) {
+    const start = new Date(req.query.date as string)
+    const end = new Date(start)
+    end.setUTCHours(23, 59, 59, 999)
+
+    filter.created_at = { $gte: start, $lte: end }
+  }
+
+  const sortOptions: Sort = { type: 1, created_at: -1 }
+
+  await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter, {}, sortOptions)
 }
 
 export async function getReportOverviewController(req: Request<any, any, any>, res: Response) {

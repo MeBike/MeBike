@@ -302,3 +302,37 @@ export const isStaffOrSosAgentValidator = async (req: Request, res: Response, ne
     res.status(status).json({ message })
   }
 }
+
+export const isStaffValidator = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayLoad
+    const user = await databaseService.users.findOne({ _id: toObjectId(user_id) })
+    if (user === null) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (![Role.Staff].includes(user.role)) {
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.ACCESS_DENIED_STAFF_AND_SOS_ONLY,
+        status: HTTP_STATUS.FORBIDDEN
+      })
+    }
+
+    req.user = user
+    next()
+  } catch (error) {
+    let status: number = HTTP_STATUS.INTERNAL_SERVER_ERROR
+    let message = 'Internal Server Error'
+
+    if (error instanceof ErrorWithStatus) {
+      status = error.status
+      message = error.message
+    } else if (error instanceof Error) {
+      message = error.message
+    }
+    res.status(status).json({ message })
+  }
+}

@@ -5,6 +5,7 @@ import { ReportPriority, ReportStatus, ReportTypeEnum } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { REPORTS_MESSAGES, USERS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
+import { TokenPayLoad } from '~/models/requests/users.requests'
 import databaseService from '~/services/database.services'
 import { validate } from '~/utils/validation'
 
@@ -260,8 +261,9 @@ export const updateReportValidator = validate(
 
           const allowedStatuses: Record<ReportStatus, ReportStatus[]> = {
             [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
-            [ReportStatus.InProgress]: [ReportStatus.Resolved],
+            [ReportStatus.InProgress]: [ReportStatus.Resolved, ReportStatus.CannotResolved],
             [ReportStatus.Resolved]: [],
+            [ReportStatus.CannotResolved]: [],
             [ReportStatus.Cancel]: []
           }
 
@@ -288,6 +290,110 @@ export const updateReportValidator = validate(
       isIn: {
         options: [Object.values(ReportPriority)],
         errorMessage: REPORTS_MESSAGES.INVALID_PRIORITY
+      }
+    }
+  })
+)
+
+export const staffUpdateReportValidator = validate(
+  checkSchema({
+    reportID: {
+      in: 'params',
+      trim: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.REPORT_ID_IS_REQUIRED
+      },
+      isMongoId: {
+        errorMessage: REPORTS_MESSAGES.INVALID_REPORT_ID
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const report = await databaseService.reports.findOne({
+            _id: new ObjectId(value)
+          })
+          if (!report) {
+            throw new ErrorWithStatus({
+              status: HTTP_STATUS.NOT_FOUND,
+              message: REPORTS_MESSAGES.REPORT_NOT_FOUND.replace('%s', value)
+            })
+          }
+
+          const { user_id } = req.decoded_authorization as TokenPayLoad
+          if (report.status !== ReportStatus.InProgress || report.assignee_id?.toString() !== user_id) {
+            throw new ErrorWithStatus({
+              status: HTTP_STATUS.BAD_REQUEST,
+              message: REPORTS_MESSAGES.STAFF_NOT_ASSIGNED
+            })
+          }
+
+          return true
+        }
+      }
+    },
+    newStatus: {
+      in: 'body',
+      trim: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.STATUS_IS_REQUIRED
+      },
+      isIn: {
+        options: [Object.values(ReportStatus)],
+        errorMessage: REPORTS_MESSAGES.INVALID_NEW_STATUS
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const report = await databaseService.reports.findOne({
+            _id: new ObjectId(req.params?.reportID)
+          })
+
+          if (!report) {
+            throw new ErrorWithStatus({
+              status: HTTP_STATUS.NOT_FOUND,
+              message: REPORTS_MESSAGES.REPORT_NOT_FOUND.replace('%s', value)
+            })
+          }
+
+          const allowedStatuses: Record<ReportStatus, ReportStatus[]> = {
+            [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
+            [ReportStatus.InProgress]: [ReportStatus.Resolved, ReportStatus.CannotResolved],
+            [ReportStatus.Resolved]: [],
+            [ReportStatus.CannotResolved]: [],
+            [ReportStatus.Cancel]: []
+          }
+
+          const currentStatus = report.status as ReportStatus
+
+          if (!allowedStatuses[currentStatus]?.includes(value)) {
+            throw new ErrorWithStatus({
+              status: HTTP_STATUS.BAD_REQUEST,
+              message: REPORTS_MESSAGES.INVALID_NEW_STATUS
+            })
+          }
+
+          return true
+        }
+      }
+    },
+    reason: {
+      in: ['body'],
+      trim: true,
+      notEmpty: {
+        errorMessage: REPORTS_MESSAGES.REASON_IS_REQUIRED
+      },
+      isString: {
+        errorMessage: REPORTS_MESSAGES.REASON_INVALID
+      }
+    },
+    files: {
+      in: ['body'],
+      isArray: {
+        errorMessage: REPORTS_MESSAGES.FILES_MUST_BE_ARRAY
+      }
+    },
+    'files.*': {
+      in: ['body'],
+      isURL: {
+        errorMessage: REPORTS_MESSAGES.FILE_MUST_BE_URL
       }
     }
   })

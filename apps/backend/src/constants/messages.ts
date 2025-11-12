@@ -155,7 +155,14 @@ export const REPORTS_MESSAGES = {
   FILES_MUST_BE_ARRAY: 'Files phải là một mảng các chuỗi URL.',
   FILE_MUST_BE_URL: 'Mỗi file phải là một URL hợp lệ.',
   GET_REPORT_OVERVIEW_SUCCESS: 'Lấy tổng quan báo cáo thành công',
-  STAFF_NOT_FOUND: 'Không tìm thấy nhân viên với ID %s'
+  STAFF_NOT_FOUND: 'Không tìm thấy nhân viên với ID %s',
+  STAFF_INVALID: 'Phải là nhân viên SOS',
+  REPORT_NOT_IN_PROGRESS: 'Báo cáo không ở trạng thái đang thực hiện',
+  STAFF_NOT_ASSIGNED: 'Nhân viên không được giao cho báo cáo',
+  REASON_IS_REQUIRED: 'Lý do từ chối là bắt buộc',
+  REASON_INVALID: 'Lý do từ chối không hợp lệ',
+  ACCESS_DENIED: 'Truy cập bị từ chối',
+  ASSIGNEE_INVALID: 'Phải là nhân viên SOS hoặc nhân viên'
 }
 
 export const SUPPLIER_MESSAGE = {
