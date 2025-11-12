@@ -265,10 +265,13 @@ function BikeDetailScreen() {
       setSelectedSubscriptionId(null);
       return;
     }
-    if (paymentMode === "subscription" && !selectedSubscriptionId) {
-      setSelectedSubscriptionId(activeSubscriptions[0]?._id ?? null);
+    if (paymentMode === "subscription") {
+      const stillValid = activeSubscriptions.some((subscription) => subscription._id === selectedSubscriptionId);
+      if (!stillValid) {
+        setSelectedSubscriptionId(activeSubscriptions[0]?._id ?? null);
+      }
     }
-  }, [activeSubscriptions, canUseSubscription, paymentMode, selectedSubscriptionId]);
+  }, [activeSubscriptions, canUseSubscription, paymentMode]);
 
   const walletBalance = myWallet
     ? Number(myWallet.balance.$numberDecimal || 0)
