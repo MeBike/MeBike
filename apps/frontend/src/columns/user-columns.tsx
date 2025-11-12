@@ -92,6 +92,20 @@ export const userColumns = (
     ),
   },
   {
+    accessorKey: "created_at",
+    header: "Ngày tạo",
+    cell: ({ row }) => {
+      return formatDateUTC(row.original.created_at);
+    },
+  },
+  {
+    accessorKey: "updated_at",
+    header: "Ngày cập nhật",
+    cell: ({ row }) => {
+      return formatDateUTC(row.original.updated_at);
+    },
+  },
+  {
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
