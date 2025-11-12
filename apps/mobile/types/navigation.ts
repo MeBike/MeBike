@@ -21,6 +21,7 @@ export type RootStackParamList = {
   TransparentModal: undefined;
   Wallet: undefined;
   BookingHistoryDetail: { bookingId: string };
+  RentalQr: { bookingId: string };
   ChangePassword: undefined;
   ForgotPassword: undefined;
   ResetPasswordOTP: { email: string };

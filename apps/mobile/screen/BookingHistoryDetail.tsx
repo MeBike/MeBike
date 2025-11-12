@@ -411,20 +411,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   endRentalButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#F44336",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
     borderRadius: 12,
     marginBottom: 24,
+    overflow: "hidden",
   },
-  endRentalButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-    marginLeft: 8,
+  endRentalButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 12,
   },
   existingRatingContainer: {
     marginTop: 12,
@@ -500,6 +497,20 @@ const styles = StyleSheet.create({
     color: "#555",
     lineHeight: 20,
   },
+  qrButtonTextWrapper: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  qrButtonTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  qrButtonSubtitle: {
+    fontSize: 12,
+    color: "#DFF3FF",
+    marginTop: 2,
+  },
 });
 
 function BookingHistoryDetail() {
@@ -511,7 +522,6 @@ function BookingHistoryDetail() {
   const { stations: data, isLoadingGetAllStations, refetch } = useStationActions(true);
   const [stations, setStations] = useState<StationType[]>(data || []);
   const [selectedStation, setSelectedStation] = useState<string>("");
-  const [showEndRentalConfirm, setShowEndRentalConfirm] = useState<boolean>(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showRatingForm, setShowRatingForm] = useState(false);
   const [ratingValue, setRatingValue] = useState<number>(0);
@@ -525,12 +535,7 @@ function BookingHistoryDetail() {
     rentalDetailData,
     isGetDetailRentalFetching,
     isGetDetailRentalError,
-    endCurrentRental,
-    isEndCurrentRentalLoading,
   } = useRentalsActions(true, bookingId, undefined, () => setShowRatingModal(true));
-  const handleEndRental = (rentalId: string) => {
-    endCurrentRental({ id: rentalId });
-  };
   useEffect(() => {
     useGetDetailRental();
     getMyWallet();
@@ -845,6 +850,7 @@ function BookingHistoryDetail() {
   }
 
   const booking = rentalResult as RentalDetail;
+  const rentalQrValue = booking?._id || bookingId;
 
   return (
     <View style={styles.container}>
@@ -1298,21 +1304,30 @@ function BookingHistoryDetail() {
         )}
 
         {booking.status === "ĐANG THUÊ" && (
-          <>
-            <TouchableOpacity
-              style={[
-                styles.endRentalButton,
-                isEndCurrentRentalLoading && { opacity: 0.6 },
-              ]}
-              // disabled={isEndCurrentRentalLoading}
-              onPress={() => handleEndRental(booking._id)}
+          <TouchableOpacity
+            style={styles.endRentalButton}
+            onPress={() =>
+              (navigation as any).navigate("RentalQr", {
+                bookingId: rentalQrValue,
+              })}
+            activeOpacity={0.9}
+          >
+            <LinearGradient
+              colors={["#0066FF", "#00B4D8"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.endRentalButtonContent}
             >
-              <Ionicons name="stop-circle" size={20} color="#fff" />
-              <Text style={styles.endRentalButtonText}>
-                Kết thúc phiên thuê
-              </Text>
-            </TouchableOpacity>
-          </>
+              <Ionicons name="qr-code" size={26} color="#fff" />
+              <View style={styles.qrButtonTextWrapper}>
+                <Text style={styles.qrButtonTitle}>Trình mã QR cho nhân viên</Text>
+                <Text style={styles.qrButtonSubtitle}>
+                  Nhân viên sẽ quét để kết thúc phiên thuê giúp bạn
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#DFF3FF" />
+            </LinearGradient>
+          </TouchableOpacity>
         )}
         <TouchableOpacity
           style={styles.supportButton}
