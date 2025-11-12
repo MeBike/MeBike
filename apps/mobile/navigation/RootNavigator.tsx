@@ -27,6 +27,7 @@ import SubscriptionScreen from "../screen/SubscriptionScreen";
 import SupportScreen from "../screen/SupportScreen";
 import UpdateProfileScreen from "../screen/UpdateProfileScreen";
 import WithdrawScreen from "../screen/withdraw-screen";
+import QRScannerScreen from "../screen/QRScannerScreen";
 import { RootStackParamList } from "../types/navigation";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -157,6 +158,11 @@ function RootNavigator() {
       <Stack.Screen
         name="Withdraw"
         component={WithdrawScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="QRScanner"
+        component={QRScannerScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
     </Stack.Navigator>

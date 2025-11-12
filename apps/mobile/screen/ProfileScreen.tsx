@@ -22,7 +22,7 @@ import { VerifyEmailModal } from "@components/VerifyEmailModal";
 
 function ProfileScreen() {
   const navigation = useNavigation();
-  const { user, logOut, verifyEmail, resendVerifyEmail } = useAuth();
+  const { user, logOut, verifyEmail, resendVerifyEmail, isCustomer } = useAuth();
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<DetailUser>(() => ({
     _id: user?._id ?? "",
@@ -187,19 +187,21 @@ function ProfileScreen() {
           }}
         >
           {/* Nút Back nổi lên trên cùng */}
-          <TouchableOpacity
-            style={{
-              position: "absolute",
-              top: insets.top + 10,
-              left: 16,
-              zIndex: 12,
-              borderRadius: 30,
-              padding: 6,
-            }}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="chevron-back" size={26} color="#fff" />
-          </TouchableOpacity>
+          {navigation.canGoBack() && (
+            <TouchableOpacity
+              style={{
+                position: "absolute",
+                top: insets.top + 10,
+                left: 16,
+                zIndex: 12,
+                borderRadius: 30,
+                padding: 6,
+              }}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="chevron-back" size={26} color="#fff" />
+            </TouchableOpacity>
+          )}
           <Image
             source={{
               uri: profile.avatar || "https://via.placeholder.com/110",
@@ -386,23 +388,27 @@ function ProfileScreen() {
               "Liên hệ với đội hỗ trợ",
               handleSupport
             )}
-            {renderMenuOption(
-              "wallet",
-              "Ví điện tử",
-              "Quản lý ví điện tử của bạn",
-              handleWallet
-            )}
-            {renderMenuOption(
-              "ribbon",
-              "Gói tháng",
-              "Ưu đãi và lịch sử gói",
-              handleSubscriptions
-            )}
-            {renderMenuOption(
-              "calendar",
-              "Đặt trước của tôi",
-              "Theo dõi các lượt đặt trước",
-              handleReservations
+            {isCustomer && (
+              <>
+                {renderMenuOption(
+                  "wallet",
+                  "Ví điện tử",
+                  "Quản lý ví điện tử của bạn",
+                  handleWallet
+                )}
+                {renderMenuOption(
+                  "ribbon",
+                  "Gói tháng",
+                  "Ưu đãi và lịch sử gói",
+                  handleSubscriptions
+                )}
+                {renderMenuOption(
+                  "calendar",
+                  "Đặt trước của tôi",
+                  "Theo dõi các lượt đặt trước",
+                  handleReservations
+                )}
+              </>
             )}
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
