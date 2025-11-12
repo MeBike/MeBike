@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
-import { useStationActions } from "@/hooks/useStationAction";
+import { useStationActions } from "@/hooks/use-station";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { stationSchema, StationSchemaFormData } from "@/schemas/stationSchema";
@@ -35,19 +35,18 @@ export default function StationsPage() {
     updateStation,
     getReservationStats,
     responseStationReservationStats,
+    responseStationBikeRevenue,
+    getStationBikeRevenue,
   } = useStationActions({
     hasToken: true,
     page: page,
     limit: limit,
     stationId: stationID,
   });
-
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // FORM CREATE
   const {
     register: createRegister,
     handleSubmit: handleCreateSubmit,
@@ -64,8 +63,6 @@ export default function StationsPage() {
       capacity: "",
     },
   });
-
-  // FORM EDIT
   const {
     register: editRegister,
     handleSubmit: handleEditSubmit,
@@ -82,8 +79,6 @@ export default function StationsPage() {
       capacity: "",
     },
   });
-
-  // LOAD DATA
   useEffect(() => {
     getAllStations();
   }, [limit, page, getAllStations]);
@@ -94,8 +89,6 @@ export default function StationsPage() {
   useEffect(() => {
     console.log(responseStationDetail);
   }, [responseStationDetail]);
-
-  // Khi mở Edit Modal, reset form với dữ liệu chi tiết
   useEffect(() => {
     if (isEditModalOpen && responseStationDetail) {
       resetEdit({

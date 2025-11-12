@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { bikeColumn } from "@/columns/bike-colums";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { useStationActions } from "@/hooks/useStationAction";
+import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/useSupplierAction";
 import { getStatusColor } from "@utils/bike-status";
 import { formatDateUTC } from "@/utils/formatDateTime";

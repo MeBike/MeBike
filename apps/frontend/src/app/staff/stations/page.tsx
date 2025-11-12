@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useStationActions } from "@/hooks/useStationAction";
+import { useStationActions } from "@/hooks/use-station";
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
