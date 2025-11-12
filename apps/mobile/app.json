@@ -39,6 +39,14 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Cho phép MeBike truy cập máy ảnh của bạn để quét mã QR."
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "fe3621a0-88f9-4578-b1a7-e989bdb70c86"

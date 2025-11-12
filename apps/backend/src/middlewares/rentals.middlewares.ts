@@ -192,6 +192,13 @@ export const endRentalByAdminOrStaffValidator = validate(
             })
           }
 
+          if(!currentRental.start_station.equals(req.body.end_station)){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.MUST_END_AT_START_STATION,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
           req.rental = currentRental
           return true
         },
@@ -216,6 +223,7 @@ export const endRentalByAdminOrStaffValidator = validate(
               status: HTTP_STATUS.NOT_FOUND
             })
           }
+
           req.station = station
           return true
         }
@@ -231,9 +239,7 @@ export const endRentalByAdminOrStaffValidator = validate(
     },
     reason: {
       in: ['body'],
-      notEmpty: {
-        errorMessage: RENTALS_MESSAGE.REQUIRED_UPDATED_REASON
-      },
+      optional: true,
       isString: {
         errorMessage: RENTALS_MESSAGE.INVALID_REASON
       },

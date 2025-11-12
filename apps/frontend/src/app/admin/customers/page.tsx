@@ -14,7 +14,7 @@ import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
 import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-
+import { formatDateUTC } from "@/utils/formatDateTime";
 export default function CustomersPage() {
   const {
     register,
@@ -468,11 +468,7 @@ export default function CustomersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.created_at
-                              ? new Date(
-                                  detailUserData?.data?.result?.created_at
-                                ).toLocaleString("vi-VN")
-                              : "-"}
+                            {formatDateUTC(detailUserData?.data?.result?.created_at) || "-"}
                           </p>
                         </div>
 
@@ -481,11 +477,7 @@ export default function CustomersPage() {
                             Lần cập nhật cuối
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.updated_at
-                              ? new Date(
-                                  detailUserData?.data?.result?.updated_at
-                                ).toLocaleString("vi-VN")
-                              : "-"}
+                            {formatDateUTC(detailUserData?.data?.result?.updated_at) || "-"}
                           </p>
                         </div>
                       </div>

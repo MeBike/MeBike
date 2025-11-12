@@ -78,7 +78,7 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
                 </div>
                 <div>
                   <p className="font-medium">
-                    {transaction.description.replace(/ [a-f0-9]{24}$/, "")}
+                    {transaction.description.replace(/ \([^)]*[a-f0-9]{24}[^)]*\)$/, "").replace(/ [a-f0-9]{24}$/, "")}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {new Date(transaction.created_at).toLocaleString()}

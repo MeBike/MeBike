@@ -29,6 +29,7 @@ export const USERS_MESSAGES = {
   LOGOUT_SUCCESS: 'Đăng xuất thành công',
   // forgot password messages
   USER_NOT_FOUND: 'Không tìm thấy người dùng',
+  USER_NOT_FOUND_WITH_NUMBER: 'Không tìm thấy người dùng với số điện thoại: %s',
   CHECK_EMAIL_TO_RESET_PASSWORD: 'Vui lòng kiểm tra email để đặt lại mật khẩu',
   // verify forgot password token messages
   FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token là bắt buộc',
@@ -275,6 +276,7 @@ export const RENTALS_MESSAGE = {
   INVALID_MEDIA_URLS: 'Danh sách media_urls không hợp lệ, phải là một mảng URL hợp lệ.',
   INVALID_URL_FORMAT: 'Định dạng URL không hợp lệ: %s.',
   INVALID_STATUS: 'Trạng thái phiên thuê không hợp lệ',
+  MUST_END_AT_START_STATION: 'Bạn phải trả xe ở trạm đã bắt đầu',
   // Not found object
   USER_NOT_FOUND: 'Không tìm thấy người dùng với Id %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe đạp với Id %s',

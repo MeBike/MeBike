@@ -64,6 +64,8 @@ export type RootStackParamList = {
     station_id?: string;
     rental_id?: string;
   };
+  QRScanner: undefined;
+  "Công cụ": undefined;
 };
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Nhà">;
 export type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;

@@ -2,7 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import type { UserRole } from "@/types";
 import type { DetailUser as ServiceDetailUser } from "@/services/auth.service";
-
+import { formatDateUTC } from "@/utils/formatDateTime";
 export const getVerifyStatusColor = (status: string) => {
   switch (status) {
     case "VERIFIED":
@@ -90,6 +90,20 @@ export const userColumns = (
         {row.original.verify}
       </span>
     ),
+  },
+  {
+    accessorKey: "created_at",
+    header: "Ngày tạo",
+    cell: ({ row }) => {
+      return formatDateUTC(row.original.created_at);
+    },
+  },
+  {
+    accessorKey: "updated_at",
+    header: "Ngày cập nhật",
+    cell: ({ row }) => {
+      return formatDateUTC(row.original.updated_at);
+    },
   },
   {
     id: "actions",
