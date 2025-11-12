@@ -1,20 +1,12 @@
-import type { Buffer } from 'node:buffer'
-
-import { v2 as cloudinary } from 'cloudinary'
 import { ObjectId } from 'mongodb'
-import process from 'node:process'
-import { Readable } from 'node:stream'
-import pLimit from 'p-limit'
 
-import type { ReportPriority } from '~/constants/enums'
 import type { CreateReportReqBody } from '~/models/requests/reports.requests'
-import type { ReportType } from '~/models/schemas/report.schema'
 
-import { ReportStatus, ReportTypeEnum } from '~/constants/enums'
+import { ReportStatus, ReportTypeEnum, ReportPriority, Role } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { REPORTS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
-import Report from '~/models/schemas/report.schema'
+import Report, { ReportType } from '~/models/schemas/report.schema'
 
 import databaseService from './database.services'
 
@@ -42,6 +34,13 @@ class ReportService {
     if (payload.rental_id) reportData.rental_id = new ObjectId(payload.rental_id)
     if (userID) reportData.user_id = new ObjectId(userID)
     if (payload.bike_id) reportData.bike_id = new ObjectId(payload.bike_id)
+    if (
+      payload.type === ReportTypeEnum.SosAccident ||
+      payload.type === ReportTypeEnum.SosHealth ||
+      payload.type === ReportTypeEnum.SosThreat
+    ) {
+      reportData.priority = ReportPriority.HIGH
+    }
 
     const result = await databaseService.reports.insertOne(new Report(reportData))
 
@@ -106,6 +105,17 @@ class ReportService {
         throw new ErrorWithStatus({
           message: REPORTS_MESSAGES.PRIORITY_IS_REQUIRED,
           status: HTTP_STATUS.BAD_REQUEST
+        })
+      }
+
+      const findStaff = await databaseService.users.findOne({
+        _id: new ObjectId(assignee_id),
+        role: Role.Staff
+      })
+      if (!findStaff) {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.STAFF_NOT_FOUND.replace('%s', assignee_id),
+          status: HTTP_STATUS.NOT_FOUND
         })
       }
 
