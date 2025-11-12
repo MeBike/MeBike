@@ -82,7 +82,13 @@ class RatingService {
       }
     ]
 
-    await sendPaginatedAggregationResponse(res, next, databaseService.ratings, query as unknown as Request['query'], pipeline)
+    await sendPaginatedAggregationResponse(
+      res,
+      next,
+      databaseService.ratings,
+      query as unknown as Request['query'],
+      pipeline
+    )
   }
 
   async getRatingById(id: string, user_id: string) {
@@ -294,6 +300,171 @@ class RatingService {
         message: RATING_MESSAGE.RATING_NOT_FOUND.replace('%s', rating_id),
         status: HTTP_STATUS.NOT_FOUND
       })
+    }
+
+    return result[0]
+  }
+
+  async getBikeRating(bike_id: string) {
+    const bikeObjectId = new ObjectId(bike_id)
+
+    const result = await databaseService.ratings
+      .aggregate([
+        {
+          $lookup: {
+            from: 'rentals',
+            localField: 'rental_id',
+            foreignField: '_id',
+            as: 'rental_info'
+          }
+        },
+        {
+          $unwind: '$rental_info'
+        },
+        {
+          $match: {
+            'rental_info.bike_id': bikeObjectId
+          }
+        },
+        {
+          $group: {
+            _id: '$rental_info.bike_id',
+            average_rating: { $avg: '$rating' },
+            total_ratings: { $sum: 1 },
+            five_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 5] }, 1, 0] }
+            },
+            four_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 4] }, 1, 0] }
+            },
+            three_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 3] }, 1, 0] }
+            },
+            two_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 2] }, 1, 0] }
+            },
+            one_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 1] }, 1, 0] }
+            }
+          }
+        }
+      ])
+      .toArray()
+
+    if (!result || result.length === 0) {
+      throw new ErrorWithStatus({
+        message: RATING_MESSAGE.RATING_NOT_FOUND.replace('%s', bike_id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return result[0]
+  }
+
+  async getStationRating(station_id: string) {
+    const stationObjectId = new ObjectId(station_id)
+
+    const result = await databaseService.ratings
+      .aggregate([
+        {
+          $lookup: {
+            from: 'rentals',
+            localField: 'rental_id',
+            foreignField: '_id',
+            as: 'rental_info'
+          }
+        },
+        {
+          $unwind: '$rental_info'
+        },
+        {
+          $match: {
+            'rental_info.start_station': stationObjectId
+          }
+        },
+        {
+          $group: {
+            _id: '$rental_info.start_station',
+            average_rating: { $avg: '$rating' },
+            total_ratings: { $sum: 1 },
+            five_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 5] }, 1, 0] }
+            },
+            four_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 4] }, 1, 0] }
+            },
+            three_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 3] }, 1, 0] }
+            },
+            two_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 2] }, 1, 0] }
+            },
+            one_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 1] }, 1, 0] }
+            }
+          }
+        }
+      ])
+      .toArray()
+
+    if (!result || result.length === 0) {
+      throw new ErrorWithStatus({
+        message: RATING_MESSAGE.STATION_RATING_NOT_FOUND.replace('%s', station_id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return result[0]
+  }
+
+  async getAppRating() {
+    const result = await databaseService.ratings
+      .aggregate([
+        {
+          $lookup: {
+            from: 'rating_reasons',
+            localField: 'reason_ids',
+            foreignField: '_id',
+            as: 'reason_details'
+          }
+        },
+        {
+          $match: {
+            'reason_details.applies_to': 'app'
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            average_rating: { $avg: '$rating' },
+            total_ratings: { $sum: 1 },
+            five_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 5] }, 1, 0] }
+            },
+            four_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 4] }, 1, 0] }
+            },
+            three_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 3] }, 1, 0] }
+            },
+            two_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 2] }, 1, 0] }
+            },
+            one_star_count: {
+              $sum: { $cond: [{ $eq: ['$rating', 1] }, 1, 0] }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 0
+          }
+        }
+      ])
+      .toArray()
+
+    if (!result || result.length === 0) {
+      return null
     }
 
     return result[0]
