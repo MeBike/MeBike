@@ -212,7 +212,7 @@ const FALLBACK_TEMPLATES: Record<string, (data: TemplateData) => string> = {
 
         <div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
             <p style="font-size: 16px; font-weight: bold; margin: 0;">
-                Không có xe tại <strong>${data.station_name}</strong> cho khung giờ <strong>${data.slot_time}</strong> ngày <strong>${data.date}</strong>.
+                Không có xe tại <strong>${data.station_name}</strong> cho khung giờ <strong>${data.slot_time} ${data.date}</strong>.
             </p>
         </div>
 

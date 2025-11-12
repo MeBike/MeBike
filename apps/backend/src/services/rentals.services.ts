@@ -205,7 +205,7 @@ class RentalsService {
     if (!sosAlert) {
       const subscription = await databaseService.subscriptions.findOne({
         _id: rental.subscription_id,
-        user_id,
+        user_id: rental.user_id,
         status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
       })
 

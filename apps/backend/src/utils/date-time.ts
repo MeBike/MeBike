@@ -39,7 +39,7 @@ export const fromDaysToMs = (value: number) => {
   return toMs(TimeType.Day, value)
 }
 
-export const formatUTCDateToVietnamese = (dateStr: string) => {
+export const generateDateTimeFields = (dateStr: string) => {
   const date = new Date(dateStr)
   const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy']
   const dayName = days[date.getUTCDay()]
@@ -51,7 +51,24 @@ export const formatUTCDateToVietnamese = (dateStr: string) => {
   const hours = date.getUTCHours().toString().padStart(2, '0')
   const minutes = date.getUTCMinutes().toString().padStart(2, '0')
 
+  return {
+    dayName,
+    day,
+    month,
+    year,
+    hours,
+    minutes
+  }
+}
+
+export const formatUTCDateToVietnamese = (dateStr: string) => {
+  const { dayName, day, month, year, hours, minutes } = generateDateTimeFields(dateStr)
   return `${dayName}, ngày ${day}/${month}/${year} lúc ${hours} giờ ${minutes} phút`
+}
+
+export const formatUTCDateToVietnameseWithoutTime = (dateStr: string) => {
+  const { dayName, day, month, year, hours, minutes } = generateDateTimeFields(dateStr)
+  return `${dayName}, ngày ${day}/${month}/${year}`
 }
 
 export const generateDateTimeWithTimeAndDate = (hourAndMinutes: string, dateStr: string) => {
