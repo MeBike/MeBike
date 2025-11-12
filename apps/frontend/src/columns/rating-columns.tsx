@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Star } from "lucide-react";
+import { formatDateOnlyVN } from "@/utils/dateFormat";
 import type { Rating } from "@/types";
 
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
@@ -52,7 +53,7 @@ export const ratingColumn = ({
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return new Date(row.original.created_at).toLocaleDateString("vi-VN");
+      return formatDateOnlyVN(row.original.created_at);
     },
   },
   {

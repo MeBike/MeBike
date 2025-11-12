@@ -5148,15 +5148,13 @@
             "$ref": "#/components/schemas/ErrorServerResponse"
           }
         }
-      }
-    },
-    "/ratings/{rentalId}": {
+      },
       "get": {
         "tags": [
           "Ratings"
         ],
         "summary": "Get rating by rental ID",
-        "description": "Retrieves the rating associated with a specific rental ID.",
+        "description": "Retrieves the rating for a specific rental ID.\n- **Users** can only retrieve their own rating.\n- **Admins** can retrieve any rating.\nIncludes the full details of the selected rating reasons.\n",
         "security": [
           {
             "BearerAuth": []
@@ -5164,7 +5162,7 @@
         ],
         "parameters": [
           {
-            "name": "rentalId",
+            "name": "rental_id",
             "in": "path",
             "required": true,
             "description": "The ID of the rental session.",
@@ -5180,7 +5178,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rating"
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy chi tiết đánh giá thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/RatingWithReasonDetails"
+                    }
+                  }
                 }
               }
             }
@@ -5188,8 +5195,25 @@
           "401": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
           },
+          "403": {
+            "description": "Forbidden (User is not an Admin and this is not their rating).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
           "404": {
-            "$ref": "#/components/schemas/ErrorStatusResponse"
+            "description": "Not Found (Rating not found or User from token not found).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -8191,6 +8215,26 @@
               "rental": {
                 "$ref": "#/components/schemas/RatingDetailRental"
               },
+              "reason_details": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RatingDetailReason"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "RatingWithReasonDetails": {
+        "type": "object",
+        "description": "Đối tượng đánh giá, bao gồm chi tiết các lý do được nhúng.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Rating"
+          },
+          {
+            "type": "object",
+            "properties": {
               "reason_details": {
                 "type": "array",
                 "items": {

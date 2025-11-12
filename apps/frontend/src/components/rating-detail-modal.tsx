@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { X, Star, User, Mail, Phone, Calendar, MapPin, Bike } from "lucide-react";
 import { ratingService } from "@/services/rating.service";
+import { formatDateVN } from "@/utils/dateFormat";
 import type { Rating } from "@/types";
 
 interface RatingDetailModalProps {
@@ -130,7 +131,7 @@ export function RatingDetailModal({ isOpen, onClose, ratingId }: RatingDetailMod
                     <div>
                       <p className="text-sm text-gray-500">Ngày đánh giá</p>
                       <p className="font-medium text-gray-900">
-                        {new Date(rating.created_at).toLocaleString("vi-VN")}
+                        {formatDateVN(rating.created_at)}
                       </p>
                     </div>
                   </div>
@@ -207,7 +208,7 @@ export function RatingDetailModal({ isOpen, onClose, ratingId }: RatingDetailMod
                         <div>
                           <p className="text-sm text-gray-500">Thời gian bắt đầu</p>
                           <p className="font-medium text-gray-900">
-                            {new Date(rating.rental.start_time).toLocaleString("vi-VN")}
+                            {formatDateVN(rating.rental.start_time)}
                           </p>
                         </div>
                       </div>
@@ -220,7 +221,7 @@ export function RatingDetailModal({ isOpen, onClose, ratingId }: RatingDetailMod
                         <div>
                           <p className="text-sm text-gray-500">Thời gian kết thúc</p>
                           <p className="font-medium text-gray-900">
-                            {new Date(rating.rental.end_time).toLocaleString("vi-VN")}
+                            {formatDateVN(rating.rental.end_time)}
                           </p>
                         </div>
                       </div>

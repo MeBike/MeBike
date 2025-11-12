@@ -3092,33 +3092,51 @@
               $ref: '../components/schemas/ErrorValidationResponse.yaml'
       '500':
         $ref: '../components/schemas/ErrorServerResponse.yaml'
-
-/ratings/{rentalId}:
   get:
     tags: [Ratings]
     summary: Get rating by rental ID
-    description: Retrieves the rating associated with a specific rental ID.
+    description: |
+      Retrieves the rating for a specific rental ID.
+      - **Users** can only retrieve their own rating.
+      - **Admins** can retrieve any rating.
+      Includes the full details of the selected rating reasons.
     security:
       - BearerAuth: []
     parameters:
-      - name: rentalId
+      - name: rental_id
         in: path
         required: true
-        description: The ID of the rental session.
+        description: "The ID of the rental session."
         schema:
           type: string
           format: mongoId
     responses:
       '200':
-        description: Rating details retrieved successfully.
+        description: "Rating details retrieved successfully."
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Rating.yaml'
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy chi tiết đánh giá thành công"
+                result:
+                  $ref: '../components/schemas/RatingWithReasonDetails.yaml'
       '401':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden (User is not an Admin and this is not their rating)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '404':
-        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+        description: "Not Found (Rating not found or User from token not found)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
 /ratings/bike/{bikeId}:
   get:

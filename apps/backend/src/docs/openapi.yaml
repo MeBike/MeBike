@@ -262,6 +262,8 @@ components:
       $ref: './components/schemas/RatingDetailReason.yaml'
     RatingDetail:
       $ref: './components/schemas/RatingDetail.yaml'
+    RatingWithReasonDetails:
+      $ref: './components/schemas/RatingWithReasonDetails.yaml'
 
   securitySchemes:
     BearerAuth:
