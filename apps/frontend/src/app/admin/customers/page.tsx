@@ -14,7 +14,7 @@ import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
 import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-
+import { formatDateUTC } from "@/utils/formatDateTime";
 export default function CustomersPage() {
   const {
     register,
@@ -225,6 +225,7 @@ export default function CustomersPage() {
                 <option value="ADMIN">Admin</option>
                 <option value="STAFF">Staff</option>
                 <option value="USER">User</option>
+                <option value="SOS">SOS</option>
               </select>
             </div>
           </div>
@@ -414,7 +415,9 @@ export default function CustomersPage() {
                                 ? "bg-red-100 text-red-800"
                                 : detailUserData?.data?.result?.role === "STAFF"
                                   ? "bg-blue-100 text-blue-800"
-                                  : "bg-green-100 text-green-800"
+                                  : detailUserData?.data?.result?.role === "SOS"
+                                    ? "bg-orange-100 text-orange-800"
+                                    : "bg-green-100 text-green-800"
                             }`}
                           >
                             {detailUserData?.data?.result?.role}
@@ -465,11 +468,7 @@ export default function CustomersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.created_at
-                              ? new Date(
-                                  detailUserData?.data?.result?.created_at
-                                ).toLocaleString("vi-VN")
-                              : "-"}
+                            {formatDateUTC(detailUserData?.data?.result?.created_at) || "-"}
                           </p>
                         </div>
 
@@ -478,11 +477,7 @@ export default function CustomersPage() {
                             Lần cập nhật cuối
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.updated_at
-                              ? new Date(
-                                  detailUserData?.data?.result?.updated_at
-                                ).toLocaleString("vi-VN")
-                              : "-"}
+                            {formatDateUTC(detailUserData?.data?.result?.updated_at) || "-"}
                           </p>
                         </div>
                       </div>
@@ -520,9 +515,33 @@ export default function CustomersPage() {
                               </p>
                             </div>
 
-                            <div className="bg-green-100 border border-green-300 rounded p-3">
-                              <p className="text-xs text-green-600">Vai trò</p>
-                              <p className="text-lg font-bold text-green-800">
+                            <div className={`border rounded p-3 ${
+                              detailUserData?.data?.result?.role === "ADMIN"
+                                ? "bg-red-100 border-red-300"
+                                : detailUserData?.data?.result?.role === "STAFF"
+                                  ? "bg-blue-100 border-blue-300"
+                                  : detailUserData?.data?.result?.role === "SOS"
+                                    ? "bg-orange-100 border-orange-300"
+                                    : "bg-green-100 border-green-300"
+                            }`}>
+                              <p className={`text-xs ${
+                                detailUserData?.data?.result?.role === "ADMIN"
+                                  ? "text-red-600"
+                                  : detailUserData?.data?.result?.role === "STAFF"
+                                    ? "text-blue-600"
+                                    : detailUserData?.data?.result?.role === "SOS"
+                                      ? "text-orange-600"
+                                      : "text-green-600"
+                              }`}>Vai trò</p>
+                              <p className={`text-lg font-bold ${
+                                detailUserData?.data?.result?.role === "ADMIN"
+                                  ? "text-red-800"
+                                  : detailUserData?.data?.result?.role === "STAFF"
+                                    ? "text-blue-800"
+                                    : detailUserData?.data?.result?.role === "SOS"
+                                      ? "text-orange-800"
+                                      : "text-green-800"
+                              }`}>
                                 {detailUserData?.data?.result?.role}
                               </p>
                             </div>
@@ -670,9 +689,10 @@ export default function CustomersPage() {
                       {...register("role")}
                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                     >
-                      <option value="USER">Nguời dùng</option>
+                      <option value="USER">Người dùng</option>
                       <option value="STAFF">Nhân viên</option>
                       <option value="ADMIN">Quản trị viên</option>
+                      <option value="SOS">SOS</option>
                     </select>
                     {errors.role && (
                       <p className="text-red-500 text-sm mt-1">

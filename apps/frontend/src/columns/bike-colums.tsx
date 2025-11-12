@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw, Pencil } from "lucide-react";
 import type { Bike, BikeStatus, Station, Supplier } from "@/types";
+import { formatDateUTC } from "@/utils/formatDateTime";
 export const getStatusColor = (status: BikeStatus) => {
   switch (status) {
     case "ĐANG ĐƯỢC THUÊ":
@@ -76,6 +77,20 @@ export const bikeColumn = (
         {row.original.status}
       </span>
     ),
+  },
+  {
+    accessorKey: "created_at",
+    header: "Ngày tạo",
+    cell: ({ row }) => {
+      return formatDateUTC(row.original.created_at);
+    },
+  },
+  {
+    accessorKey: "updated_at",
+    header: "Ngày cập nhật",
+    cell: ({ row }) => {
+      return formatDateUTC(row.original.updated_at);
+    },
   },
   {
     id: "actions",

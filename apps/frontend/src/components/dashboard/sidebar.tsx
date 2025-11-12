@@ -8,12 +8,14 @@ import {
   FileText,
   Users,
   LogOut,
-  History,
   Wallet,
   Truck,
   Download,
   MapIcon,
   FileCheck2,
+  Star,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
@@ -78,12 +80,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       href: "/user/profile",
       roles: ["USER"],
     },
-    {
-      title: "Lịch sử giao dịch",
-      icon: History,
-      href: "/user/booking-history",
-      roles: ["USER"],
-    },
+    // {
+    //   title: "Lịch sử giao dịch",
+    //   icon: History,
+    //   href: "/user/booking-history",
+    //   roles: ["USER"],
+    // },
     {
       title: "Quản lý ví",
       icon: Wallet,
@@ -127,6 +129,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       roles: ["ADMIN"],
     },
     {
+      title: "Quản lý đánh giá",
+      icon: Star,
+      href: "/admin/ratings",
+      roles: ["ADMIN"],
+    },
+    {
       title: "Quản lý đơn SOS",
       icon: FileCheck2,
       href: "/staff/sos",
@@ -155,6 +163,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
 
 export function Sidebar() {
   const [collapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logOut, isAuthenticated } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -179,19 +188,42 @@ export function Sidebar() {
     NProgress.start();
     startTransition(() => {
       router.push(href);
-      // Đảm bảo nProgress dừng đúng lúc (nếu Nextjs load nhanh, bạn có thể cần custom lại cho đúng page transition):
+      setMobileOpen(false);
       setTimeout(() => NProgress.done(), 600);
     });
   };
 
   return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+    <>
+      {/* Mobile Toggle Button */}
+      <button
+        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-sidebar border border-sidebar-border rounded-lg text-sidebar-foreground hover:bg-sidebar-accent"
+        onClick={() => setMobileOpen(!mobileOpen)}
+      >
+        {mobileOpen ? (
+          <X className="w-5 h-5" />
+        ) : (
+          <Menu className="w-5 h-5" />
+        )}
+      </button>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
       )}
-      style={{ opacity: isPending ? 0.65 : 1, transition: "opacity .2s" }}
-    >
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
+          "w-64 md:translate-x-0",
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        )}
+        style={{ opacity: isPending ? 0.65 : 1, transition: "opacity .2s" }}
+      >
       <div className="flex h-full flex-col">
         {/* Logo Section */}
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
@@ -272,6 +304,7 @@ export function Sidebar() {
           </button>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

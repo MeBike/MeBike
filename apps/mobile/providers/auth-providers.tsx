@@ -20,6 +20,8 @@ type AuthContextType = ReturnType<typeof useAuthActions> & {
   user: DetailUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isStaff: boolean;
+  isCustomer: boolean;
   actions: ReturnType<typeof useAuthActions>;
 };
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,13 +103,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [hasToken, isInitialized, queryClient]);
 
   const value: AuthContextType = React.useMemo(() => {
-    const user = userProfile as DetailUser || null;
+    const user = userProfile as DetailUser | null;
     const isAuthenticated = !!user && isSuccess && isInitialized;
+    const role = user?.role;
+
     return {
       ...actions,
       user,
       isAuthenticated,
       isLoading: isUserProfileLoading || !isInitialized,
+      isStaff: role === "STAFF",
+      isCustomer: role === "USER",
       actions,
     };
   }, [userProfile, isUserProfileLoading, isSuccess, actions, isInitialized]);

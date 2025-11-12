@@ -209,7 +209,7 @@ class SubscriptionService {
           activated_at: 1,
           expires_at: 1,
           max_usages: 1,
-          used_reservationsusage_count: 1,
+          usage_count: 1,
           price: { $toDouble: { $ifNull: ['$price', '0'] } },
           status: 1,
           created_at: 1,

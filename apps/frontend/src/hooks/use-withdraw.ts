@@ -82,7 +82,7 @@ export const useWithdrawAction = ({
   );
   const { data: overviewResponse } = useGetAllWithdrawalOverviewQuery();
   return {
-    response: data?.data,
+    response: data?.data || [],
     isLoading,
     isError,
     getAllWithdrawRequest,

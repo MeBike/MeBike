@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getRentalsByStationIdController } from "~/controllers/rentals.controllers";
-import { createStationController, deleteStationController, getNearbyStationsController, getStationAlertsController, getStationByIdController, getStationsController, getStationStatsController, updateStationController } from "~/controllers/stations.controllers";
+import { createStationController, deleteStationController, getAllStationsRevenueController, getBikeRevenueByStationController, getNearbyStationsController, getStationAlertsController, getStationByIdController, getStationsController, getStationStatsController, updateStationController } from "~/controllers/stations.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { createStationValidator, getNearbyStationsValidator, stationIdValidator, updateStationValidator } from "~/middlewares/stations.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
@@ -16,7 +16,7 @@ stationRouter.route("/:id/rentals")
  * Description: Get detailed statistics for a specific station
  * Path: /stations/:id/stats
  * Method: GET
- * Query: { from?: string, to?: string }
+ * Query: { from?: string, to?: string } - Date format: dd-mm-yyyy or ISO string
  * Headers: { Authorization: Bearer <access_token> }
  * Roles: ADMIN
  */
@@ -31,6 +31,26 @@ stationRouter.get("/:id/stats", accessTokenValidator, isAdminValidator, wrapAsyn
  * Roles: ADMIN, STAFF
  */
 stationRouter.get("/alerts", accessTokenValidator, isAdminAndStaffValidator, wrapAsync(getStationAlertsController))
+
+/**
+ * Description: Get revenue statistics for all stations
+ * Path: /stations/revenue
+ * Method: GET
+ * Query: { from?: string, to?: string } - Date format: dd-mm-yyyy or ISO string
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN
+ */
+stationRouter.get("/revenue", accessTokenValidator, isAdminValidator, wrapAsync(getAllStationsRevenueController))
+
+/**
+ * Description: Get revenue statistics for bikes at each station
+ * Path: /stations/bike-revenue
+ * Method: GET
+ * Query: { from?: string, to?: string } - Date format: dd-mm-yyyy or ISO string
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN
+ */
+stationRouter.get("/bike-revenue", accessTokenValidator, isAdminValidator, wrapAsync(getBikeRevenueByStationController))
 
 /**
  * Description: Create a new bike station

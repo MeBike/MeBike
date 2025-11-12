@@ -39,7 +39,7 @@ export async function createRentalSessionController(
     user_id,
     start_station: station._id as ObjectId,
     bike,
-    subscription_id: subscription._id as ObjectId
+    subscription_id: subscription?._id as ObjectId | undefined
   })
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,
@@ -187,13 +187,21 @@ export async function getRentalListController(req: Request, res: Response, next:
 }
 
 export async function getRentalListByUserIdController(req: Request, res: Response, next: NextFunction) {
-  const user_id = toObjectId(req.params.userId)
+  const user_id = req.user?._id as ObjectId
   const { start_station, end_station, status } = req.query
   const pipeline = await rentalsService.getRentalListByUserIdPipeline({
     user_id,
     start_station: toObjectId(start_station as string),
     end_station: toObjectId(end_station as string),
     status: status as RentalStatus
+  })
+  await sendPaginatedAggregationResponse(res, next, databaseService.rentals, req.query, pipeline)
+}
+
+export async function getActiveRentalListByPhoneNumberController(req: Request, res: Response, next: NextFunction) {
+  const user_id = req.user?._id as ObjectId
+  const pipeline = await rentalsService.getActiveRentalListByPhoneNumber({
+    user_id,
   })
   await sendPaginatedAggregationResponse(res, next, databaseService.rentals, req.query, pipeline)
 }

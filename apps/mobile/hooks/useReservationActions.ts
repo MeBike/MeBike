@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { Alert } from "react-native";
 
 import type { Reservation } from "../types/reservation-types";
+import type { ReservationOption } from "@services/reservation.service";
 
 import { useCancelReservationMutation } from "./mutations/Reservation/useCancelReservationMutation";
 import { useConfirmReservationMutation } from "./mutations/Reservation/useConfirmReservationMutation";
@@ -155,17 +156,30 @@ export function useReservationActions({
     await refetchReservationDetail();
   }, [ensureAuthenticated, refetchReservationDetail, reservationId]);
 
+type CreateReservationOptions = {
+  reservationOption?: ReservationOption;
+  subscriptionId?: string;
+  callbacks?: MutationCallbacks;
+};
+
   const createReservation = useCallback(
-    (bikeId: string, startTime?: string, callbacks?: MutationCallbacks) => {
+    (bikeId: string, startTime?: string, options?: CreateReservationOptions) => {
       if (!ensureAuthenticated())
         return;
       const startISO = startTime
         ? new Date(new Date(startTime).getTime() + SERVER_TIME_OFFSET_MS).toISOString()
         : new Date(Date.now() + SERVER_TIME_OFFSET_MS + RESERVATION_BUFFER_MS).toISOString();
+      const reservationOption = options?.reservationOption ?? "MỘT LẦN";
       const payload = {
         bike_id: bikeId,
         start_time: startISO,
+        reservation_option: reservationOption,
+        ...(reservationOption === "GÓI THÁNG" && options?.subscriptionId
+          ? { subscription_id: options.subscriptionId }
+          : {}),
       };
+
+      console.log("[Reservation] Creating reservation", payload);
 
       createReservationMutation.mutate(payload, {
         onSuccess: () => {
@@ -176,7 +190,8 @@ export function useReservationActions({
           queryClient.invalidateQueries({ queryKey: ["rentals"] });
           queryClient.invalidateQueries({ queryKey: ["all-stations"] });
           queryClient.invalidateQueries({ queryKey: ["station"] });
-          callbacks?.onSuccess?.();
+          queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+          options?.callbacks?.onSuccess?.();
         },
         onError: (error) => {
           const message = getErrorMessage(
@@ -209,7 +224,7 @@ export function useReservationActions({
             Alert.alert("Lỗi đặt xe", message);
           }
           
-          callbacks?.onError?.(message);
+          options?.callbacks?.onError?.(message);
         },
       });
     },

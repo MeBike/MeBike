@@ -4880,13 +4880,183 @@
         }
       }
     },
+    "/stations/revenue": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get revenue statistics for all stations (Admin only)",
+        "description": "Retrieves revenue statistics (total rentals, revenue, duration) for all stations, grouped by station, within a given time period.\nResults are sorted by total revenue (descending).\n**Requires Admin privileges.**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Start date (dd-mm-yyyy hoặc ISO 8601). Mặc định: '2025-01-01'.",
+            "schema": {
+              "type": "string",
+              "example": "01-10-2025"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "End date (dd-mm-yyyy hoặc ISO 8601). Mặc định: hôm nay.",
+            "schema": {
+              "type": "string",
+              "example": "31-10-2025"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station revenue statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê trạm thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/AllStationsRevenueResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stations/bike-revenue": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get bike revenue grouped by station (Admin only)",
+        "description": "Retrieves detailed revenue statistics for each bike, grouped by their home station.\n- Calculates totals for each bike (revenue, rentals, duration).\n- Calculates totals for each station (revenue, rentals).\n- Provides a grand total summary.\n- **Requires Admin privileges.**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Start date (dd-mm-yyyy hoặc ISO 8601). Mặc định: '2025-01-01'.",
+            "schema": {
+              "type": "string",
+              "example": "01-10-2025"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "End date (dd-mm-yyyy hoặc ISO 8601). Mặc định: hôm nay.",
+            "schema": {
+              "type": "string",
+              "example": "31-10-2025"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bike revenue statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê trạm thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/GetBikeRevenueResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request. Lỗi do định dạng ngày không hợp lệ (e.g., '31-02-2025') hoặc 'from' > 'to'.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ratings": {
       "get": {
         "tags": [
           "Ratings"
         ],
-        "summary": "Get my ratings",
-        "description": "Retrieves a paginated list of ratings submitted by the currently authenticated user.",
+        "summary": "Get all ratings (Admin only)",
+        "description": "Retrieves a paginated list of all ratings in the system.\nAllows filtering by user, rating score, or rating reasons.\n**Requires Admin privileges.**\n",
         "security": [
           {
             "BearerAuth": []
@@ -4898,11 +5068,45 @@
           },
           {
             "$ref": "#/components/parameters/LimitQuery"
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": false,
+            "description": "Filter ratings by a specific User ID.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          },
+          {
+            "name": "rating",
+            "in": "query",
+            "required": false,
+            "description": "Filter ratings by a specific score (1-5).",
+            "schema": {
+              "$ref": "#/components/schemas/Rating/properties/rating"
+            }
+          },
+          {
+            "name": "reason_ids",
+            "in": "query",
+            "required": false,
+            "description": "Filter ratings that include any of the specified Reason IDs. (Provide multiple times: reason_ids=id1&reason_ids=id2)",
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "mongoId"
+              }
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "A paginated list of the user's ratings.",
+            "description": "A paginated list of ratings.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4928,17 +5132,37 @@
           },
           "401": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
           }
         }
       }
     },
-    "/ratings/{rentalId}": {
+    "/ratings/{rental_id}": {
       "post": {
         "tags": [
           "Ratings"
         ],
         "summary": "Create a new rating for a rental",
-        "description": "Allows a user to submit a rating (score and comment) for a completed rental session.",
+        "description": "Allows a user to submit a rating for a completed rental session.\n- A rental can only be rated once.\n- The rental must be in 'Completed' status.\n- Rating must be submitted within 7 days of completing the rental.\n",
         "security": [
           {
             "BearerAuth": []
@@ -4946,10 +5170,10 @@
         ],
         "parameters": [
           {
-            "name": "rentalId",
+            "name": "rental_id",
             "in": "path",
             "required": true,
-            "description": "The ID of the rental session to be rated.",
+            "description": "The ID of the completed rental session to be rated.",
             "schema": {
               "type": "string",
               "format": "mongoId"
@@ -4967,18 +5191,18 @@
           }
         },
         "responses": {
-          "201": {
+          "200": {
             "description": "Rating created successfully.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MessageResponse"
+                  "$ref": "#/components/schemas/CreateRatingResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Bad Request (e.g., rental already rated, rental not completed).",
+            "description": "Bad Request. Possible reasons: RATING_EXISTED, CANNOT_RATE_UNCOMPLETED_RENTAL, RATING_EXPIRED.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4990,8 +5214,8 @@
           "401": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
           },
-          "403": {
-            "description": "Forbidden (user did not rent this bike).",
+          "404": {
+            "description": "Not Found. Possible reasons: RENTAL_ID_NOT_FOUND, REASON_ID_NOT_FOUND.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5001,7 +5225,17 @@
             }
           },
           "422": {
-            "$ref": "#/components/schemas/ErrorValidationResponse"
+            "description": "Validation error (e.g., missing rating, invalid reason_ids array, comment too long).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/schemas/ErrorServerResponse"
           }
         }
       },
@@ -5010,7 +5244,7 @@
           "Ratings"
         ],
         "summary": "Get rating by rental ID",
-        "description": "Retrieves the rating associated with a specific rental ID.",
+        "description": "Retrieves the rating for a specific rental ID.\n- **Users** can only retrieve their own rating.\n- **Admins** can retrieve any rating.\nIncludes the full details of the selected rating reasons.\n",
         "security": [
           {
             "BearerAuth": []
@@ -5018,7 +5252,7 @@
         ],
         "parameters": [
           {
-            "name": "rentalId",
+            "name": "rental_id",
             "in": "path",
             "required": true,
             "description": "The ID of the rental session.",
@@ -5034,7 +5268,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Rating"
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy chi tiết đánh giá thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/RatingWithReasonDetails"
+                    }
+                  }
                 }
               }
             }
@@ -5042,8 +5285,25 @@
           "401": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
           },
+          "403": {
+            "description": "Forbidden (User is not an Admin and this is not their rating).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
           "404": {
-            "$ref": "#/components/schemas/ErrorStatusResponse"
+            "description": "Not Found (Rating not found or User from token not found).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -5101,6 +5361,135 @@
           },
           "404": {
             "$ref": "#/components/schemas/ErrorStatusResponse"
+          }
+        }
+      }
+    },
+    "/ratings/rating-reasons": {
+      "get": {
+        "tags": [
+          "Ratings"
+        ],
+        "summary": "Get all rating reasons",
+        "description": "Retrieves a list of predefined reasons used for ratings.\nAllows optional filtering by 'type' (e.g., POSITIVE/NEGATIVE) or 'applies_to' (e.g., BIKE/STATION).\nRequires authentication.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Filter reasons by type (POSITIVE or NEGATIVE).",
+            "schema": {
+              "$ref": "#/components/schemas/RatingReason/properties/type"
+            }
+          },
+          {
+            "name": "applies_to",
+            "in": "query",
+            "required": false,
+            "description": "Filter reasons by what they apply to (BIKE, STATION, APP, OTHER).",
+            "schema": {
+              "$ref": "#/components/schemas/RatingReason/properties/applies_to"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of rating reasons.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetRatingReasonsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "404": {
+            "description": "User from token not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ratings/detail/{rating_id}": {
+      "get": {
+        "tags": [
+          "Ratings"
+        ],
+        "summary": "Get rating details by ID (Admin only)",
+        "description": "Retrieves the complete, detailed object for a single rating.\nThis includes embedded information about the user, the rental (with bike and station info), and the full details of the rating reasons.\n**Requires Admin privileges.**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "rating_id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the rating to retrieve.",
+            "schema": {
+              "type": "string",
+              "format": "mongoId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rating details retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy chi tiết đánh giá thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/RatingDetail"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found (Rating not found or Admin user not found).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -5971,21 +6360,32 @@
       "CreateRatingReqBody": {
         "type": "object",
         "required": [
-          "score"
+          "rating",
+          "reason_ids"
         ],
         "properties": {
-          "score": {
-            "type": "number",
+          "rating": {
+            "type": "integer",
             "description": "The rating score from 1 to 5.",
             "minimum": 1,
             "maximum": 5,
-            "example": 5
+            "example": 4
+          },
+          "reason_ids": {
+            "type": "array",
+            "description": "An array of MongoIDs for the rating reasons.",
+            "items": {
+              "type": "string",
+              "format": "mongoId",
+              "example": "69f1b2ae63beb4054de09d11"
+            }
           },
           "comment": {
             "type": "string",
             "nullable": true,
-            "description": "An optional comment for the rating.",
-            "example": "Xe đạp còn mới, chạy tốt."
+            "maxLength": 500,
+            "description": "An optional comment for the rating (max 500 characters).",
+            "example": "Xe chạy tốt nhưng hơi bẩn."
           }
         }
       },
@@ -6318,6 +6718,107 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DashboardStation"
+            }
+          }
+        }
+      },
+      "AllStationsRevenueResponse": {
+        "type": "object",
+        "description": "Đối tượng trả về chứa thống kê doanh thu của tất cả các trạm.",
+        "properties": {
+          "period": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày bắt đầu của kỳ thống kê."
+              },
+              "to": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày kết thúc của kỳ thống kê."
+              }
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/AllStationsRevenueSummary"
+          },
+          "stations": {
+            "type": "array",
+            "description": "Danh sách thống kê chi tiết của từng trạm, sắp xếp theo doanh thu giảm dần.",
+            "items": {
+              "$ref": "#/components/schemas/StationRevenueItem"
+            }
+          }
+        }
+      },
+      "CreateRatingResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Tạo đánh giá thành công"
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "acknowledged": {
+                "type": "boolean",
+                "example": true
+              },
+              "insertedId": {
+                "type": "string",
+                "format": "mongoId",
+                "example": "69f1b2ae63beb4054de09d22"
+              }
+            }
+          }
+        }
+      },
+      "GetRatingReasonsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Lấy danh sách lý do đánh giá thành công"
+          },
+          "result": {
+            "type": "array",
+            "description": "Danh sách các lý do đánh giá.",
+            "items": {
+              "$ref": "#/components/schemas/RatingReason"
+            }
+          }
+        }
+      },
+      "GetBikeRevenueResponse": {
+        "type": "object",
+        "description": "Đối tượng trả về chứa thống kê doanh thu theo xe, nhóm theo trạm.",
+        "properties": {
+          "period": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày bắt đầu của kỳ thống kê."
+              },
+              "to": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày kết thúc của kỳ thống kê."
+              }
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/BikeRevenueSummary"
+          },
+          "stations": {
+            "type": "array",
+            "description": "Danh sách các trạm, sắp xếp theo tổng doanh thu trạm giảm dần.",
+            "items": {
+              "$ref": "#/components/schemas/StationWithBikeRevenue"
             }
           }
         }
@@ -7006,16 +7507,12 @@
             "type": "string",
             "format": "mongoId"
           },
-          "bike_id": {
-            "type": "string",
-            "format": "mongoId"
-          },
           "rental_id": {
             "type": "string",
             "format": "mongoId"
           },
-          "score": {
-            "type": "number",
+          "rating": {
+            "type": "integer",
             "description": "The rating score from 1 to 5.",
             "enum": [
               1,
@@ -7024,12 +7521,20 @@
               4,
               5
             ],
-            "example": 5
+            "example": 4
+          },
+          "reason_ids": {
+            "type": "array",
+            "description": "An array of MongoIDs for the rating reasons.",
+            "items": {
+              "type": "string",
+              "format": "mongoId"
+            }
           },
           "comment": {
             "type": "string",
             "nullable": true,
-            "example": "Xe chạy rất êm!"
+            "example": "Xe chạy tốt nhưng hơi bẩn."
           },
           "created_at": {
             "type": "string",
@@ -7560,6 +8065,421 @@
             "format": "float",
             "description": "Chi tiêu trung bình trên mỗi khách hàng (Tổng doanh thu / Tổng khách hàng).",
             "example": 60000.5
+          }
+        }
+      },
+      "StationRevenueItem": {
+        "type": "object",
+        "description": "Thống kê doanh thu chi tiết cho một trạm.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "name": {
+            "type": "string",
+            "example": "Ga Bến Thành"
+          },
+          "address": {
+            "type": "string",
+            "example": "Quận 1, TP.HCM"
+          },
+          "totalRentals": {
+            "type": "integer",
+            "example": 150
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu (dạng số).",
+            "example": 7500000
+          },
+          "totalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu (đã định dạng tiền tệ).",
+            "example": "7.500.000 VND"
+          },
+          "totalDuration": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng thời lượng thuê (phút).",
+            "example": 4500
+          },
+          "totalDurationFormatted": {
+            "type": "string",
+            "description": "Tổng thời lượng thuê (đã định dạng giờ/phút).",
+            "example": "75 giờ 0 phút"
+          },
+          "avgDuration": {
+            "type": "number",
+            "format": "double",
+            "description": "Thời lượng thuê trung bình (phút).",
+            "example": 30
+          },
+          "avgDurationFormatted": {
+            "type": "string",
+            "description": "Thời lượng thuê trung bình (đã định dạng giờ/phút).",
+            "example": "30 phút"
+          }
+        }
+      },
+      "AllStationsRevenueSummary": {
+        "type": "object",
+        "description": "Tóm tắt doanh thu từ tất cả các trạm trong kỳ.",
+        "properties": {
+          "totalStations": {
+            "type": "integer",
+            "description": "Tổng số trạm có doanh thu trong kỳ.",
+            "example": 10
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu từ tất cả các trạm (dạng số).",
+            "example": 50000000
+          },
+          "totalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu (đã định dạng tiền tệ).",
+            "example": "50.000.000 VND"
+          },
+          "totalRentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê từ tất cả các trạm.",
+            "example": 1230
+          },
+          "avgRevenuePerStation": {
+            "type": "number",
+            "format": "double",
+            "description": "Doanh thu trung bình mỗi trạm (dạng số).",
+            "example": 5000000
+          },
+          "avgRevenuePerStationFormatted": {
+            "type": "string",
+            "description": "Doanh thu trung bình mỗi trạm (đã định dạng tiền tệ).",
+            "example": "5.000.000 VND"
+          }
+        }
+      },
+      "RatingReason": {
+        "type": "object",
+        "description": "Đại diện cho một lý do đánh giá (ví dụ: 'Xe sạch', 'Ứng dụng lỗi').",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Nội dung của lý do.",
+            "example": "Xe sạch sẽ"
+          },
+          "type": {
+            "type": "string",
+            "description": "Loại lý do (Vấn đề hay Khen ngợi).",
+            "enum": [
+              "Vấn đề",
+              "Khen ngợi"
+            ],
+            "example": "Khen ngợi"
+          },
+          "applies_to": {
+            "type": "string",
+            "description": "Lý do này áp dụng cho đối tượng nào.",
+            "enum": [
+              "bike",
+              "station",
+              "app"
+            ],
+            "example": "bike"
+          }
+        }
+      },
+      "RatingDetailUser": {
+        "type": "object",
+        "description": "Thông tin người dùng cơ bản được nhúng trong chi tiết đánh giá.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "fullname": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phone_number": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "RatingDetailStation": {
+        "type": "object",
+        "description": "Thông tin trạm cơ bản được nhúng trong chi tiết đánh giá.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        }
+      },
+      "RatingDetailBike": {
+        "type": "object",
+        "description": "Thông tin xe cơ bản được nhúng trong chi tiết đánh giá.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "qr_code": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          }
+        }
+      },
+      "RatingDetailRental": {
+        "type": "object",
+        "description": "Thông tin lượt thuê cơ bản được nhúng trong chi tiết đánh giá.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "total_price": {
+            "type": "number",
+            "format": "double"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RentalStatus"
+          },
+          "bike": {
+            "$ref": "#/components/schemas/RatingDetailBike"
+          },
+          "start_station": {
+            "$ref": "#/components/schemas/RatingDetailStation"
+          },
+          "end_station": {
+            "$ref": "#/components/schemas/RatingDetailStation"
+          }
+        }
+      },
+      "RatingDetailReason": {
+        "type": "object",
+        "description": "Thông tin chi tiết về lý do đánh giá được nhúng.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "type": {
+            "type": "string",
+            "example": "Vấn đề"
+          },
+          "applies_to": {
+            "type": "string",
+            "example": "bike"
+          },
+          "messages": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "vi": "Xe bẩn",
+              "en": "Dirty bike"
+            }
+          }
+        }
+      },
+      "RatingDetail": {
+        "type": "object",
+        "description": "Đối tượng chi tiết đầy đủ của một đánh giá, bao gồm thông tin user, rental, và reasons.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Rating"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/RatingDetailUser"
+              },
+              "rental": {
+                "$ref": "#/components/schemas/RatingDetailRental"
+              },
+              "reason_details": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RatingDetailReason"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "RatingWithReasonDetails": {
+        "type": "object",
+        "description": "Đối tượng đánh giá, bao gồm chi tiết các lý do được nhúng.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Rating"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "reason_details": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/RatingDetailReason"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "BikeRevenueItem": {
+        "type": "object",
+        "description": "Thống kê doanh thu chi tiết cho một xe đạp cụ thể.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID của xe (Bike ID)."
+          },
+          "chip_id": {
+            "type": "string",
+            "description": "Mã chip của xe (nếu có).",
+            "example": "BIKE-00123"
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu của xe này (dạng số).",
+            "example": 500000
+          },
+          "totalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu (đã định dạng tiền tệ).",
+            "example": "500.000 VND"
+          },
+          "totalRentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê của xe này.",
+            "example": 10
+          },
+          "totalDuration": {
+            "type": "integer",
+            "description": "Tổng số phút hoạt động của xe này.",
+            "example": 1500
+          }
+        }
+      },
+      "StationWithBikeRevenue": {
+        "type": "object",
+        "description": "Thống kê doanh thu của một trạm, bao gồm chi tiết từng xe tại trạm đó.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID của trạm (Station ID)."
+          },
+          "name": {
+            "type": "string",
+            "example": "Ga Bến Thành"
+          },
+          "address": {
+            "type": "string",
+            "example": "Quận 1, TP.HCM"
+          },
+          "stationTotalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu của cả trạm.",
+            "example": 15000000
+          },
+          "stationTotalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu của cả trạm (đã định dạng).",
+            "example": "15.000.000 VND"
+          },
+          "stationTotalRentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê của cả trạm.",
+            "example": 250
+          },
+          "bikes": {
+            "type": "array",
+            "description": "Danh sách xe tại trạm và doanh thu của từng xe, sắp xếp theo doanh thu xe giảm dần.",
+            "items": {
+              "$ref": "#/components/schemas/BikeRevenueItem"
+            }
+          }
+        }
+      },
+      "BikeRevenueSummary": {
+        "type": "object",
+        "description": "Tóm tắt doanh thu từ tất cả các trạm.",
+        "properties": {
+          "totalStations": {
+            "type": "integer",
+            "description": "Tổng số trạm có doanh thu trong kỳ.",
+            "example": 10
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu từ tất cả các trạm (dạng số).",
+            "example": 50000000
+          },
+          "totalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu (đã định dạng tiền tệ).",
+            "example": "50.000.000 VND"
+          },
+          "totalRentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê từ tất cả các trạm.",
+            "example": 1230
+          },
+          "avgRevenuePerStation": {
+            "type": "number",
+            "format": "double",
+            "description": "Doanh thu trung bình mỗi trạm (dạng số).",
+            "example": 5000000
+          },
+          "avgRevenuePerStationFormatted": {
+            "type": "string",
+            "description": "Doanh thu trung bình mỗi trạm (đã định dạng tiền tệ).",
+            "example": "5.000.000 VND"
           }
         }
       }

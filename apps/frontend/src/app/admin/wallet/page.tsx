@@ -35,7 +35,11 @@ export default function WalletPage() {
      detailWallet,
      isLoadingDetailWallet,
      updateStatusWallet,
+     getWalletOverview,
    } = useWalletActions(true, page, limit, selectedUserId);
+  useEffect(() => { 
+    getWalletOverview();
+  }, [getWalletOverview]);
   const handleDeposit = (
     userId: string,
     amount: number,
@@ -97,8 +101,16 @@ export default function WalletPage() {
       </div>
     );
   }
+  if(allWallets.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+        <Loader2 className="animate-spin w-16 h-16 text-primary" />
+      </div>
+    );
+  }
   return (
-    <div className="space-y-6">
+    <div className="w-full bg-background">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
           Quản lý ví người dùng
@@ -121,9 +133,9 @@ export default function WalletPage() {
         transactionCount={Number(walletOverview?.result.totalTransactions) || 0}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        <div className="xl:col-span-3">
-          <div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+        <div className="lg:col-span-2 xl:col-span-3 overflow-x-auto">
+          <div className="min-w-full">
             <DataTable
               columns={walletColumn({
                 onView: ({ id }) => {
@@ -160,7 +172,7 @@ export default function WalletPage() {
             />
           </div>
         </div>
-        <div>
+        <div className="lg:col-span-1">
           <TransactionHistory transactions={manageTransactions?.data || []} />
         </div>
       </div>
@@ -207,6 +219,7 @@ export default function WalletPage() {
         onClose={handleCloseDetailModal}
         detailTransactions={detailWallet?.data || []}
       />
+      </div>
     </div>
   );
 }

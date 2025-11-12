@@ -10,6 +10,7 @@ import { useStationActions } from "@/hooks/useStationAction";
 import { reservationColumn } from "@/columns/reservation-columns";
 import type { Reservation } from "@/types/Reservation";
 import { Loader2 } from "lucide-react";
+import { formatDateUTC } from "@/utils/formatDateTime";
 export default function ReservationsPage() {
   const { stations, getAllStations } = useStationActions({ hasToken: true });
   const [searchQuery, setSearchQuery] = useState("");
@@ -327,22 +328,14 @@ export default function ReservationsPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Ngày tạo</p>
                       <p className="text-foreground font-medium">
-                        {detailReservation?.result?.created_at
-                          ? new Date(
-                              detailReservation?.result?.created_at
-                            ).toLocaleString("vi-VN")
-                          : "-"}
+                        {formatDateUTC(detailReservation?.result?.created_at)}
                       </p>
                     </div>
 
                     <div>
                       <p className="text-sm text-muted-foreground">Lần cập nhật cuối</p>
                       <p className="text-foreground font-medium">
-                        {detailReservation?.result?.updated_at
-                          ? new Date(
-                              detailReservation?.result?.updated_at
-                            ).toLocaleString("vi-VN")
-                          : "-"}
+                        {formatDateUTC(detailReservation?.result?.updated_at)}
                       </p>
                     </div>
                   </div>

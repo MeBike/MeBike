@@ -1269,6 +1269,19 @@ class RentalsService {
     return this.getRentalListPipelineTemplate(matchQuery)
   }
 
+  async getActiveRentalListByPhoneNumber({
+    user_id,
+  }: {
+    user_id: ObjectId
+  }) {
+    const matchQuery: FilterQuery<Rental> = {
+      user_id,
+      status: RentalStatus.Rented
+    }
+
+    return this.getRentalListPipelineTemplate(matchQuery)
+  }
+
   generateDuration(start: Date, end: Date) {
     return Math.ceil((end.getTime() - start.getTime()) / 60000)
   }

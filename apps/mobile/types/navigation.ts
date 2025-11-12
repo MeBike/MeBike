@@ -21,17 +21,39 @@ export type RootStackParamList = {
   TransparentModal: undefined;
   Wallet: undefined;
   BookingHistoryDetail: { bookingId: string };
+  StaffRentalDetail: { rentalId: string };
+  RentalQr: { bookingId: string };
   ChangePassword: undefined;
   ForgotPassword: undefined;
   ResetPasswordOTP: { email: string };
   ResetPasswordForm: { email: string; otp: string };
   UpdateProfile: undefined;
   MyWallet: undefined;
+  Subscriptions: undefined;
   Xe: undefined;
   Reservations: undefined;
   ReservationDetail: {
     reservationId: string;
     reservation?: Reservation;
+  };
+  ReservationFlow: {
+    stationId: string;
+    stationName?: string;
+    stationAddress?: string;
+    bikeId?: string;
+    bikeName?: string;
+  };
+  FixedSlotTemplates: {
+    stationId?: string;
+    stationName?: string;
+  };
+  FixedSlotDetail: {
+    templateId: string;
+  };
+  FixedSlotEditor: {
+    stationId?: string;
+    stationName?: string;
+    templateId?: string;
   };
   TransactionDetail: { transactionId: string };
   WithdrawDetail: { withdrawId: string };
@@ -44,6 +66,8 @@ export type RootStackParamList = {
     station_id?: string;
     rental_id?: string;
   };
+  QRScanner: undefined;
+  "Công cụ": undefined;
 };
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Nhà">;
 export type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
@@ -79,6 +103,10 @@ export type MyWalletNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "MyWallet"
 >;
+export type SubscriptionsNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Subscriptions"
+>;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, "StationDetail">;
 export type ReservationsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -88,9 +116,41 @@ export type ReservationDetailNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "ReservationDetail"
 >;
+export type ReservationFlowNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "ReservationFlow"
+>;
+export type FixedSlotTemplatesNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "FixedSlotTemplates"
+>;
+export type FixedSlotDetailNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "FixedSlotDetail"
+>;
+export type FixedSlotEditorNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "FixedSlotEditor"
+>;
 export type ReservationDetailRouteProp = RouteProp<
   RootStackParamList,
   "ReservationDetail"
+>;
+export type ReservationFlowRouteProp = RouteProp<
+  RootStackParamList,
+  "ReservationFlow"
+>;
+export type FixedSlotDetailRouteProp = RouteProp<
+  RootStackParamList,
+  "FixedSlotDetail"
+>;
+export type FixedSlotEditorRouteProp = RouteProp<
+  RootStackParamList,
+  "FixedSlotEditor"
+>;
+export type FixedSlotTemplatesRouteProp = RouteProp<
+  RootStackParamList,
+  "FixedSlotTemplates"
 >;
 export type SupportScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,

@@ -1,0 +1,21 @@
+type: object
+description: "Đối tượng trả về chứa thống kê doanh thu theo xe, nhóm theo trạm."
+properties:
+  period:
+    type: object
+    properties:
+      from:
+        type: string
+        format: date-time
+        description: "Ngày bắt đầu của kỳ thống kê."
+      to:
+        type: string
+        format: date-time
+        description: "Ngày kết thúc của kỳ thống kê."
+  summary:
+    $ref: './BikeRevenueSummary.yaml'
+  stations:
+    type: array
+    description: "Danh sách các trạm, sắp xếp theo tổng doanh thu trạm giảm dần."
+    items:
+      $ref: './StationWithBikeRevenue.yaml'

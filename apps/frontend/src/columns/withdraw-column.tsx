@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw } from "lucide-react";
 import type { WithdrawRequest } from "@/types";
+import { formatDateUTC } from "@/utils/formatDateTime";
 import { getStatusColor } from "@/utils/refund-status";
 // export const getStatusColor = (status: WithdrawStatus) => {
 //   switch (status) {
@@ -54,6 +55,24 @@ export const withdrawColumn = ({
       >
         {row.original.status}
       </span>
+    ),
+  },
+  {
+    accessorKey: "created_at",
+    header: "Ngày tạo",
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+        {formatDateUTC(row.original.created_at) || "Không có"}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "updated_at",
+    header: "Ngày cập nhật",
+    cell: ({ row }) => (
+      <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+        {formatDateUTC(row.original.updated_at) || "Không có"}
+      </div>
     ),
   },
   {

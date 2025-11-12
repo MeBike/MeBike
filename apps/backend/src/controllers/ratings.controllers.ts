@@ -72,3 +72,13 @@ export async function getRatingReasonsController(req: Request, res: Response) {
     result
   })
 }
+
+export async function getRatingDetailController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const { rating_id } = req.params
+
+  const result = await ratingService.getRatingDetailById(rating_id)
+  res.json({
+    message: RATING_MESSAGE.GET_RATING_SUCCESS.replace('%s', rating_id),
+    result
+  })
+}
