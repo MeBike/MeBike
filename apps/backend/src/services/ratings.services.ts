@@ -352,10 +352,16 @@ class RatingService {
       .toArray()
 
     if (!result || result.length === 0) {
-      throw new ErrorWithStatus({
-        message: RATING_MESSAGE.RATING_NOT_FOUND.replace('%s', bike_id),
-        status: HTTP_STATUS.NOT_FOUND
-      })
+      return {
+        _id: bikeObjectId,
+        average_rating: 0,
+        total_ratings: 0,
+        five_star_count: 0,
+        four_star_count: 0,
+        three_star_count: 0,
+        two_star_count: 0,
+        one_star_count: 0
+      }
     }
 
     return result[0]
@@ -408,10 +414,16 @@ class RatingService {
       .toArray()
 
     if (!result || result.length === 0) {
-      throw new ErrorWithStatus({
-        message: RATING_MESSAGE.STATION_RATING_NOT_FOUND.replace('%s', station_id),
-        status: HTTP_STATUS.NOT_FOUND
-      })
+      return {
+        _id: stationObjectId,
+        average_rating: 0,
+        total_ratings: 0,
+        five_star_count: 0,
+        four_star_count: 0,
+        three_star_count: 0,
+        two_star_count: 0,
+        one_star_count: 0
+      }
     }
 
     return result[0]
@@ -464,7 +476,15 @@ class RatingService {
       .toArray()
 
     if (!result || result.length === 0) {
-      return null
+      return {
+        average_rating: 0,
+        total_ratings: 0,
+        five_star_count: 0,
+        four_star_count: 0,
+        three_star_count: 0,
+        two_star_count: 0,
+        one_star_count: 0
+      }
     }
 
     return result[0]

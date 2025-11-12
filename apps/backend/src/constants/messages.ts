@@ -624,7 +624,8 @@ export const RATING_MESSAGE = {
   GET_BIKE_RATING_SUCCESS: 'Lấy đánh giá xe đạp %s thành công',
   STATION_RATING_NOT_FOUND: 'Đánh giá trạm %s không tồn tại',
   GET_STATION_RATING_SUCCESS: 'Lấy đánh giá trạm %s thành công',
-  GET_APP_RATING_SUCCESS: 'Lấy đánh giá ứng dụng thành công'
+  GET_APP_RATING_SUCCESS: 'Lấy đánh giá ứng dụng thành công',
+  BIKE_RATING_NOT_FOUND: 'Đánh giá xe đạp %s không tồn tại'
 }
 
 export const SOS_MESSAGE = {
