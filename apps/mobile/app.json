@@ -39,6 +39,14 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow MeBike to access your camera to scan QR codes."
+        }
+      ]
+    ],
     "extra": {
       "eas": {
         "projectId": "fe3621a0-88f9-4578-b1a7-e989bdb70c86"
