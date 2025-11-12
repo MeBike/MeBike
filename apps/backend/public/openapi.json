@@ -4960,6 +4960,96 @@
         }
       }
     },
+    "/stations/bike-revenue": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get bike revenue grouped by station (Admin only)",
+        "description": "Retrieves detailed revenue statistics for each bike, grouped by their home station.\n- Calculates totals for each bike (revenue, rentals, duration).\n- Calculates totals for each station (revenue, rentals).\n- Provides a grand total summary.\n- **Requires Admin privileges.**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Start date (dd-mm-yyyy hoặc ISO 8601). Mặc định: '2025-01-01'.",
+            "schema": {
+              "type": "string",
+              "example": "01-10-2025"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "End date (dd-mm-yyyy hoặc ISO 8601). Mặc định: hôm nay.",
+            "schema": {
+              "type": "string",
+              "example": "31-10-2025"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bike revenue statistics retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy thống kê trạm thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/GetBikeRevenueResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request. Lỗi do định dạng ngày không hợp lệ (e.g., '31-02-2025') hoặc 'from' > 'to'.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ratings": {
       "get": {
         "tags": [
@@ -6702,6 +6792,37 @@
           }
         }
       },
+      "GetBikeRevenueResponse": {
+        "type": "object",
+        "description": "Đối tượng trả về chứa thống kê doanh thu theo xe, nhóm theo trạm.",
+        "properties": {
+          "period": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày bắt đầu của kỳ thống kê."
+              },
+              "to": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Ngày kết thúc của kỳ thống kê."
+              }
+            }
+          },
+          "summary": {
+            "$ref": "#/components/schemas/BikeRevenueSummary"
+          },
+          "stations": {
+            "type": "array",
+            "description": "Danh sách các trạm, sắp xếp theo tổng doanh thu trạm giảm dần.",
+            "items": {
+              "$ref": "#/components/schemas/StationWithBikeRevenue"
+            }
+          }
+        }
+      },
       "User": {
         "type": "object",
         "description": "Represents a user object.",
@@ -8244,6 +8365,123 @@
             }
           }
         ]
+      },
+      "BikeRevenueItem": {
+        "type": "object",
+        "description": "Thống kê doanh thu chi tiết cho một xe đạp cụ thể.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID của xe (Bike ID)."
+          },
+          "chip_id": {
+            "type": "string",
+            "description": "Mã chip của xe (nếu có).",
+            "example": "BIKE-00123"
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu của xe này (dạng số).",
+            "example": 500000
+          },
+          "totalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu (đã định dạng tiền tệ).",
+            "example": "500.000 VND"
+          },
+          "totalRentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê của xe này.",
+            "example": 10
+          },
+          "totalDuration": {
+            "type": "integer",
+            "description": "Tổng số phút hoạt động của xe này.",
+            "example": 1500
+          }
+        }
+      },
+      "StationWithBikeRevenue": {
+        "type": "object",
+        "description": "Thống kê doanh thu của một trạm, bao gồm chi tiết từng xe tại trạm đó.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId",
+            "description": "ID của trạm (Station ID)."
+          },
+          "name": {
+            "type": "string",
+            "example": "Ga Bến Thành"
+          },
+          "address": {
+            "type": "string",
+            "example": "Quận 1, TP.HCM"
+          },
+          "stationTotalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu của cả trạm.",
+            "example": 15000000
+          },
+          "stationTotalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu của cả trạm (đã định dạng).",
+            "example": "15.000.000 VND"
+          },
+          "stationTotalRentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê của cả trạm.",
+            "example": 250
+          },
+          "bikes": {
+            "type": "array",
+            "description": "Danh sách xe tại trạm và doanh thu của từng xe, sắp xếp theo doanh thu xe giảm dần.",
+            "items": {
+              "$ref": "#/components/schemas/BikeRevenueItem"
+            }
+          }
+        }
+      },
+      "BikeRevenueSummary": {
+        "type": "object",
+        "description": "Tóm tắt doanh thu từ tất cả các trạm.",
+        "properties": {
+          "totalStations": {
+            "type": "integer",
+            "description": "Tổng số trạm có doanh thu trong kỳ.",
+            "example": 10
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "double",
+            "description": "Tổng doanh thu từ tất cả các trạm (dạng số).",
+            "example": 50000000
+          },
+          "totalRevenueFormatted": {
+            "type": "string",
+            "description": "Tổng doanh thu (đã định dạng tiền tệ).",
+            "example": "50.000.000 VND"
+          },
+          "totalRentals": {
+            "type": "integer",
+            "description": "Tổng số lượt thuê từ tất cả các trạm.",
+            "example": 1230
+          },
+          "avgRevenuePerStation": {
+            "type": "number",
+            "format": "double",
+            "description": "Doanh thu trung bình mỗi trạm (dạng số).",
+            "example": 5000000
+          },
+          "avgRevenuePerStationFormatted": {
+            "type": "string",
+            "description": "Doanh thu trung bình mỗi trạm (đã định dạng tiền tệ).",
+            "example": "5.000.000 VND"
+          }
+        }
       }
     },
     "securitySchemes": {

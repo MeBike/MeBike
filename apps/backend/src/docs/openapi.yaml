@@ -166,6 +166,8 @@ components:
       $ref: './components/schemas/CreateRatingResponse.yaml'
     GetRatingReasonsResponse:
       $ref: './components/schemas/GetRatingReasonsResponse.yaml'
+    GetBikeRevenueResponse:
+      $ref: './components/schemas/GetBikeRevenueResponse.yaml'
 
     # --- Model Schemas ---
     User:
@@ -264,6 +266,12 @@ components:
       $ref: './components/schemas/RatingDetail.yaml'
     RatingWithReasonDetails:
       $ref: './components/schemas/RatingWithReasonDetails.yaml'
+    BikeRevenueItem:
+      $ref: './components/schemas/BikeRevenueItem.yaml'
+    StationWithBikeRevenue:
+      $ref: './components/schemas/StationWithBikeRevenue.yaml'
+    BikeRevenueSummary:
+      $ref: './components/schemas/BikeRevenueSummary.yaml'
 
   securitySchemes:
     BearerAuth:

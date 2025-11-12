@@ -2969,6 +2969,67 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/stations/bike-revenue:
+  get:
+    tags: [Stations]
+    summary: Get bike revenue grouped by station (Admin only)
+    description: |
+      Retrieves detailed revenue statistics for each bike, grouped by their home station.
+      - Calculates totals for each bike (revenue, rentals, duration).
+      - Calculates totals for each station (revenue, rentals).
+      - Provides a grand total summary.
+      - **Requires Admin privileges.**
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: from
+        in: query
+        required: false
+        description: "Start date (dd-mm-yyyy hoặc ISO 8601). Mặc định: '2025-01-01'."
+        schema:
+          type: string
+          example: "01-10-2025"
+      - name: to
+        in: query
+        required: false
+        description: "End date (dd-mm-yyyy hoặc ISO 8601). Mặc định: hôm nay."
+        schema:
+          type: string
+          example: "31-10-2025"
+    responses:
+      '200':
+        description: "Bike revenue statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê trạm thành công"
+                result:
+                  $ref: '../components/schemas/GetBikeRevenueResponse.yaml'
+      '400':
+        description: "Bad Request. Lỗi do định dạng ngày không hợp lệ (e.g., '31-02-2025') hoặc 'from' > 'to'."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Ratings API
 # ===================================================================
