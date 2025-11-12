@@ -19,10 +19,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     if (!isLoading) {
       if (!isAuthenticated) {
         if (!hasSeenIntro) {
-          navigation.navigate("Intro");
+          navigation.replace("Intro");
         }
         else {
-          navigation.navigate("Login");
+          navigation.replace("Login");
         }
       }
     }

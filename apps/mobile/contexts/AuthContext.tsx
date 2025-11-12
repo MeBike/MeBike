@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
 
       // Navigate to main app after successful login
-      navigation.navigate("Main");
+      navigation.replace("Main");
     }
     catch (error: any) {
       console.log("Google sign-in error:", error);
@@ -135,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }));
 
         // Navigate to main app after successful login
-        navigation.navigate("Main");
+        navigation.replace("Main");
       }
       else {
         throw new Error("Invalid credentials");
@@ -171,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }));
 
         // Navigate to main app after successful login
-        navigation.navigate("Main");
+        navigation.replace("Main");
       }
       else {
         throw new Error("Invalid data");
