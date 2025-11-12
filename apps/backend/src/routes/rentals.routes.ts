@@ -11,6 +11,7 @@ import {
   getDetailRentalController,
   getMyCurrentRentalsController,
   getMyDetailRentalController,
+  getMyRentalCountsController,
   getMyRentalsController,
   getRentalListByUserIdController,
   getRentalListController,
@@ -71,6 +72,8 @@ rentalsRouter
 rentalsRouter.route('/me').get(accessTokenValidator, wrapAsync(getMyRentalsController))
 
 rentalsRouter.route('/me/current').get(accessTokenValidator, wrapAsync(getMyCurrentRentalsController))
+
+rentalsRouter.route('/me/counts').get(accessTokenValidator, wrapAsync(getMyRentalCountsController))
 
 rentalsRouter
 .route('/me/:id/end')
