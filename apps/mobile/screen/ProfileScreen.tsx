@@ -361,7 +361,6 @@ function ProfileScreen() {
                   </View>
                 </View>
 
-                {/* Action Buttons */}
                 <View style={styles.verificationButtonsRow}>
                   <TouchableOpacity
                     style={[styles.verificationButton, styles.verifyButton]}

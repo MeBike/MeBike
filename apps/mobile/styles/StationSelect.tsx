@@ -126,7 +126,8 @@ export default function StationSelectScreen() {
       >
         <Text style={styles.headerTitle}>Trạm thuê xe</Text>
         <Text style={styles.headerSubtitle}>
-          Xem tất cả các lần thuê xe của bạn
+          Chọn một trạm để xem chi tiết
+ 
         </Text>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
