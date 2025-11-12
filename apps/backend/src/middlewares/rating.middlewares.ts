@@ -4,6 +4,7 @@ import { RentalStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RATING_MESSAGE, RENTALS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
+import { TokenPayLoad } from '~/models/requests/users.requests'
 import databaseService from '~/services/database.services'
 import { validate } from '~/utils/validation'
 
