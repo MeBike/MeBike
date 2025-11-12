@@ -1,18 +1,27 @@
 node_modules
-pnpm-lock.yaml.disable
-**/node_modules
+pnpm-debug.log*
+.npmrc
+
+# Build outputs
 **/dist
 **/.turbo
-**/.vite
-**/*.log
-.env
-.env.*
-apps/**/.env
-Dockerfile
-Dockerfile.*
-docker-compose*.yaml
+
+# VCS
 .git
 .gitignore
+
+# Editor/OS
 .vscode
-.idea
 .DS_Store
+
+# Unused apps for backend/iot builds
+apps/mobile
+apps/frontend
+progress
+openapi
+
+# Tests and docs (optional)
+**/tests
+**/docs
+**/.env
+.env
