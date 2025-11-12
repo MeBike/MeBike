@@ -29,6 +29,7 @@ export type RootStackParamList = {
   ResetPasswordForm: { email: string; otp: string };
   UpdateProfile: undefined;
   MyWallet: undefined;
+  Ví: undefined;
   Subscriptions: undefined;
   Xe: undefined;
   Reservations: undefined;
