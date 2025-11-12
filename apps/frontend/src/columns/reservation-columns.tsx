@@ -2,6 +2,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Edit2, Eye, RefreshCw } from "lucide-react";
 import type { Reservation } from "@/types/Reservation";
 import type { Station } from "@/types/Station";
+import { formatDateUTC } from "@/utils/formatDateTime";
 
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
@@ -73,12 +74,12 @@ export const reservationColumn = ({
     accessorKey: "start_time",
     header: "Thời gian bắt đầu",
     cell: ({ row }) =>
-      new Date(row.original.start_time).toLocaleString("vi-VN"),
+      formatDateUTC(row.original.start_time),
   },
   {
     accessorKey: "end_time",
     header: "Thời gian kết thúc",
-    cell: ({ row }) => new Date(row.original.end_time).toLocaleString("vi-VN"),
+    cell: ({ row }) => formatDateUTC(row.original.end_time),
   },
   {
     id: "actions",

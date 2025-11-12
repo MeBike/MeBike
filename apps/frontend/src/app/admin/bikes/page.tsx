@@ -12,7 +12,7 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useStationActions } from "@/hooks/useStationAction";
 import { useSupplierActions } from "@/hooks/useSupplierAction";
 import { getStatusColor } from "@utils/bike-status";
-
+import { formatDateUTC } from "@/utils/formatDateTime";
 export default function BikesPage() {
   const [detailId, setDetailId] = useState<string>("");
   const [editId, setEditId] = useState<string>("");
@@ -457,7 +457,7 @@ export default function BikesPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Ngày tạo</p>
                     <p className="text-foreground font-medium">
-                      {new Date(detailBike.created_at).toLocaleString("vi-VN")}
+                      {formatDateUTC(detailBike.created_at)}
                     </p>
                   </div>
                   <div>
@@ -465,7 +465,7 @@ export default function BikesPage() {
                       Ngày cập nhật
                     </p>
                     <p className="text-foreground font-medium">
-                      {new Date(detailBike.updated_at).toLocaleString("vi-VN")}
+                      {formatDateUTC(detailBike.updated_at)}
                     </p>
                   </div>
                 </div>
@@ -476,7 +476,9 @@ export default function BikesPage() {
                   {isFetchingRentalBikes ? (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="animate-spin w-6 h-6 text-primary" />
-                      <span className="ml-2 text-sm text-muted-foreground">Đang tải dữ liệu...</span>
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        Đang tải dữ liệu...
+                      </span>
                     </div>
                   ) : Array.isArray(bikeRentals) && bikeRentals.length > 0 ? (
                     <div className="bg-muted rounded-lg p-4">
@@ -484,39 +486,53 @@ export default function BikesPage() {
                         API: /bikes/{detailBike._id}/rental-history
                       </p> */}
                       <div className="space-y-2">
-                        {bikeRentals.map((rental: BikeRentalHistory, index: number) => (
-                          <div key={rental._id} className="flex justify-between items-center py-2 border-b border-border last:border-b-0">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-foreground font-medium">
-                                  Đơn thuê #{(index + 1).toString().padStart(3, '0')}
-                                </span>
-                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                  {rental.user.fullname || "Người dùng ẩn danh"}
-                                </span>
+                        {bikeRentals.map(
+                          (rental: BikeRentalHistory, index: number) => (
+                            <div
+                              key={rental._id}
+                              className="flex justify-between items-center py-2 border-b border-border last:border-b-0"
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-foreground font-medium">
+                                    Đơn thuê #
+                                    {(index + 1).toString().padStart(3, "0")}
+                                  </span>
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                    {rental.user.fullname ||
+                                      "Người dùng ẩn danh"}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  Từ {rental.start_station.name} →{" "}
+                                  {rental.end_station.name}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {formatDateUTC(rental.start_time)} -{" "}
+                                  {formatDateUTC(rental.end_time)}
+                                </div>
                               </div>
-                              <div className="text-xs text-muted-foreground mt-1">
-                                Từ {rental.start_station.name} → {rental.end_station.name}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {new Date(rental.start_time).toLocaleString("vi-VN")} - {new Date(rental.end_time).toLocaleString("vi-VN")}
+                              <div className="text-right">
+                                <div className="text-sm font-medium text-foreground">
+                                  {parseFloat(
+                                    rental.total_price.$numberDecimal
+                                  ).toLocaleString()}{" "}
+                                  VND
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {Math.round(rental.duration / 60)} phút
+                                </div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="text-sm font-medium text-foreground">
-                                {parseFloat(rental.total_price.$numberDecimal).toLocaleString()} VND
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {Math.round(rental.duration / 60)} phút
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     </div>
                   ) : (
                     <div className="bg-muted rounded-lg p-4 text-center">
-                      <p className="text-sm text-muted-foreground">Không có lịch sử thuê</p>
+                      <p className="text-sm text-muted-foreground">
+                        Không có lịch sử thuê
+                      </p>
                     </div>
                   )}
                 </div>

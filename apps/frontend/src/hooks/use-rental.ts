@@ -157,7 +157,13 @@ export function useRentalsActions({
       status,
     ]
   );
-  const { data: dashboardSummaryData } = useGetDashboardSummaryQuery();
+  const { data: dashboardSummaryData , refetch: refetchDashboardSummary } = useGetDashboardSummaryQuery();
+  const getDashboardSummary = useCallback(() => {
+    if(!hasToken){
+      return;
+    }
+    refetchDashboardSummary();
+  }, [hasToken, refetchDashboardSummary]);
   return {
     allRentalsData: allRentalsData?.data,
     getRentals,
@@ -176,6 +182,7 @@ export function useRentalsActions({
     detailData,
     isDetailLoading,
     dashboardSummaryData,
+    getDashboardSummary,
   };
 }
 

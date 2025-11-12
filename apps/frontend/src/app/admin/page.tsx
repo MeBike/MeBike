@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { RentalChart } from "@/components/dashboard/rental-chart";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
@@ -15,7 +16,12 @@ export default function DashboardPage() {
     newRegistrationStats,
   } = useUserActions({ hasToken: true }); 
   const { statisticData, totalRecord } = useBikeActions(true);
-  const { dashboardSummaryData } = useRentalsActions({ hasToken: true });
+  const { dashboardSummaryData, getDashboardSummary } = useRentalsActions({
+    hasToken: true,
+  });
+  useEffect(() => {
+    getDashboardSummary();
+  }, [getDashboardSummary]);
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
