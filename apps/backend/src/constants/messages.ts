@@ -29,6 +29,7 @@ export const USERS_MESSAGES = {
   LOGOUT_SUCCESS: 'Đăng xuất thành công',
   // forgot password messages
   USER_NOT_FOUND: 'Không tìm thấy người dùng',
+  USER_NOT_FOUND_WITH_NUMBER: 'Không tìm thấy người dùng với số điện thoại: %s',
   CHECK_EMAIL_TO_RESET_PASSWORD: 'Vui lòng kiểm tra email để đặt lại mật khẩu',
   // verify forgot password token messages
   FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token là bắt buộc',

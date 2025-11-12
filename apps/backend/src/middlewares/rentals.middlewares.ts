@@ -231,9 +231,7 @@ export const endRentalByAdminOrStaffValidator = validate(
     },
     reason: {
       in: ['body'],
-      notEmpty: {
-        errorMessage: RENTALS_MESSAGE.REQUIRED_UPDATED_REASON
-      },
+      optional: true,
       isString: {
         errorMessage: RENTALS_MESSAGE.INVALID_REASON
       },
