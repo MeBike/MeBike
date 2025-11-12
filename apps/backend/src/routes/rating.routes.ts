@@ -24,7 +24,7 @@ ratingRouter.post(
   wrapAsync(addNewRatingController)
 )
 // admin get all rating
-ratingRouter.get('/', accessTokenValidator, isAdminValidator, wrapAsync(getRatingController))
+ratingRouter.get('/', accessTokenValidator, wrapAsync(getRatingController))
 ratingRouter.get('/rating-reasons', accessTokenValidator, wrapAsync(getRatingReasonsController))
 /**
  * Description: Get detailed rating information by rating ID (Admin only)

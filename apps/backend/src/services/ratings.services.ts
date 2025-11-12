@@ -30,7 +30,7 @@ class RatingService {
   }
 
   async getAllRating(res: Response, next: NextFunction, query: GetRatingReqQuery) {
-    const { user_id, rating, reason_ids } = query
+    const { user_id, rating, reason_ids, bike_id } = query
     const matchFilter: any = {}
 
     if (user_id) {
@@ -41,6 +41,9 @@ class RatingService {
     }
     if (reason_ids) {
       matchFilter.reason_ids = (reason_ids as string[]).map((id) => new ObjectId(id))
+    }
+    if (bike_id) {
+      matchFilter.bike_id = new ObjectId(bike_id)
     }
 
     const pipeline = [
@@ -82,7 +85,13 @@ class RatingService {
       }
     ]
 
-    await sendPaginatedAggregationResponse(res, next, databaseService.ratings, query as unknown as Request['query'], pipeline)
+    await sendPaginatedAggregationResponse(
+      res,
+      next,
+      databaseService.ratings,
+      query as unknown as Request['query'],
+      pipeline
+    )
   }
 
   async getRatingById(id: string, user_id: string) {

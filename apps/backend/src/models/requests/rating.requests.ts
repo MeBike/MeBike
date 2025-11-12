@@ -10,4 +10,5 @@ export type GetRatingReqQuery = {
   limit?: string
   page?: string
   reason_ids?: string[]
+  bike_id?: string
 }
