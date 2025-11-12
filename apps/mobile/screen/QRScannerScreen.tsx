@@ -32,6 +32,12 @@ function QRScannerScreen() {
     setIsGranted(permission?.granted ?? false);
   }, [permission?.granted]);
 
+  useEffect(() => {
+    if (isFocused) {
+      setScanned(false);
+    }
+  }, [isFocused]);
+
   const handleAppCameToForeground = useCallback(async () => {
     console.log("Re-checking permissions...");
     const { status } = await getPermission();
@@ -89,35 +95,36 @@ function QRScannerScreen() {
     );
   }
 
-  if (!isFocused) {
-    return null;
-  }
-
-  const handleBarcodeScanned = ({ type, data }: { type: string; data: string }) => {
-    if (!scanned) {
-      setScanned(true);
-      Alert.alert(
-        "Mã QR đã quét",
-        `Loại: ${type}\nDữ liệu: ${data}`,
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              navigation.navigate('Main');
-            },
-          },
-        ],
-        { cancelable: false }
-      );
+  const handleBarcodeScanned = ({ data }: { type: string; data: string }) => {
+    if (scanned) return;
+    setScanned(true);
+    const rentalId = data?.trim();
+    if (!rentalId) {
+      Alert.alert("QR không hợp lệ", "Không tìm thấy mã thuê hợp lệ trong QR này.", [
+        {
+          text: "Quét lại",
+          onPress: () => setScanned(false),
+        },
+        {
+          text: "Đóng",
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+      return;
     }
+    navigation.navigate("StaffRentalDetail", {
+      rentalId,
+    });
   };
 
   return (
     <View style={styles.container}>
-      <CameraView
-        onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-        style={StyleSheet.absoluteFillObject}
-      />
+      {isFocused && (
+        <CameraView
+          onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
+          style={StyleSheet.absoluteFillObject}
+        />
+      )}
 
       <View style={StyleSheet.absoluteFillObject}>
         <View style={styles.topOverlay}>
