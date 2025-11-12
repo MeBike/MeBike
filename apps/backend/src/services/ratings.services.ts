@@ -1,7 +1,7 @@
 import { NextFunction, Response, Request } from 'express'
 import { CreateRatingReqBody, GetRatingReqQuery } from '~/models/requests/rating.requests'
 import databaseService from './database.services'
-import { sendPaginatedResponse } from '~/utils/pagination.helper'
+import { sendPaginatedAggregationResponse } from '~/utils/pagination.helper'
 import Rating, { RatingType } from '~/models/schemas/rating.schema'
 import { ObjectId } from 'mongodb'
 import { ErrorWithStatus } from '~/models/errors'
@@ -31,19 +31,58 @@ class RatingService {
 
   async getAllRating(res: Response, next: NextFunction, query: GetRatingReqQuery) {
     const { user_id, rating, reason_ids } = query
-    const filter: any = {}
+    const matchFilter: any = {}
 
     if (user_id) {
-      filter.user_id = user_id
+      matchFilter.user_id = new ObjectId(user_id)
     }
     if (rating) {
-      filter.rating = rating
+      matchFilter.rating = rating
     }
     if (reason_ids) {
-      filter.reason_ids = (reason_ids as string[]).map((id) => new ObjectId(id))
+      matchFilter.reason_ids = (reason_ids as string[]).map((id) => new ObjectId(id))
     }
 
-    await sendPaginatedResponse(res, next, databaseService.ratings, query as unknown as Request['query'], filter)
+    const pipeline = [
+      {
+        $match: matchFilter
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          user_id: 1,
+          rental_id: 1,
+          rating: 1,
+          reason_ids: 1,
+          comment: 1,
+          created_at: 1,
+          updated_at: 1,
+          user: {
+            fullname: '$user.fullname',
+            email: '$user.email'
+          }
+        }
+      },
+      {
+        $sort: { created_at: -1 }
+      }
+    ]
+
+    await sendPaginatedAggregationResponse(res, next, databaseService.ratings, query as unknown as Request['query'], pipeline)
   }
 
   async getRatingById(id: string, user_id: string) {

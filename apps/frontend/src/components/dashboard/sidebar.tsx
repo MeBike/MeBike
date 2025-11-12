@@ -14,6 +14,7 @@ import {
   Download,
   MapIcon,
   FileCheck2,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
@@ -124,6 +125,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       title: "Quản lý đơn báo cáo",
       icon: FileCheck2,
       href: "/admin/reports",
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Quản lý đánh giá",
+      icon: Star,
+      href: "/admin/ratings",
       roles: ["ADMIN"],
     },
     {
