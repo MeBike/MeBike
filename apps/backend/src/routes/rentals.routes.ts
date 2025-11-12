@@ -25,6 +25,7 @@ import {
 import { isAdminAndStaffValidator, isAdminValidator } from '~/middlewares/admin.middlewares'
 import {
   cancelRentalValidator,
+  checkRentalExist,
   checkUserWalletBeforeRent,
   createRentalSessionByStaffValidator,
   createRentalSessionValidator,
@@ -84,7 +85,7 @@ rentalsRouter
 .route('/me/:id/end')
 .put(accessTokenValidator, endRentalSessionValidator, wrapAsync(endRentalSessionController))
 
-rentalsRouter.route('/me/:id').get(accessTokenValidator, wrapAsync(getMyDetailRentalController))
+rentalsRouter.route('/me/:id').get(accessTokenValidator, checkRentalExist, wrapAsync(getMyDetailRentalController))
 
 rentalsRouter
 .route('/:id/end')
@@ -109,7 +110,7 @@ rentalsRouter
 // staff/admin
 rentalsRouter
   .route('/:id')
-  .get(accessTokenValidator, isAdminAndStaffValidator, wrapAsync(getDetailRentalController))
+  .get(accessTokenValidator, isAdminAndStaffValidator, checkRentalExist, wrapAsync(getDetailRentalController))
   .put(
     accessTokenValidator,
     isAdminValidator,
