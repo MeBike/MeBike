@@ -20,6 +20,7 @@ import ReservationDetailScreen from "../screen/reservation-detail-screen";
 import ReservationScreen from "../screen/reservation-screen";
 import ReservationFlowScreen from "../screen/ReservationFlowScreen";
 import RentalQrScreen from "../screen/RentalQrScreen";
+import StaffRentalDetailScreen from "../screen/StaffRentalDetailScreen";
 import ResetPasswordFormScreen from "../screen/ResetPasswordForm";
 import ResetPasswordOTPScreen from "../screen/ResetPasswordOTP";
 import StationDetailScreen from "../screen/StationDetail";
@@ -74,6 +75,11 @@ function RootNavigator() {
       <Stack.Screen
         name="BookingHistoryDetail"
         component={BookingHistoryDetail}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="StaffRentalDetail"
+        component={StaffRentalDetailScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
