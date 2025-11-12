@@ -1,8 +1,10 @@
-import { ObjectId } from 'mongodb'
-import { FixedSlotStatus, ReservationStatus } from '~/constants/enums'
+import { Decimal128, ObjectId } from 'mongodb'
+import { FixedSlotStatus, ReservationOptions, ReservationStatus, SubscriptionStatus } from '~/constants/enums'
 import FixedSlotTemplate from '~/models/schemas/fixed-slot.schema'
 import databaseService from './database.services'
-import { getLocalTime } from '~/utils/date-time'
+import { generateDateTimeWithTimeAndDate, getLocalTime } from '~/utils/date-time'
+import Reservation from '~/models/schemas/reservation.schema'
+import reservationsService from './reservations.services'
 
 interface CreateFixedSlotTemplateParams {
   user_id: ObjectId
@@ -13,16 +15,84 @@ interface CreateFixedSlotTemplateParams {
 
 class FixedSlotTemplateService {
   async create(params: CreateFixedSlotTemplateParams) {
+    const { user_id, station_id, slot_start, selected_dates } = params
+    const templateId = new ObjectId()
+
     const template = new FixedSlotTemplate({
-      user_id: params.user_id,
-      station_id: params.station_id,
-      slot_start: params.slot_start,
-      selected_dates: params.selected_dates,
-      status: FixedSlotStatus.ACTIVE
+      _id: templateId,
+      user_id,
+      station_id,
+      slot_start,
+      selected_dates
+    })
+    const prepaid = Decimal128.fromString(process.env.PREPAID_VALUE ?? '2000')
+    const sub = await databaseService.subscriptions.findOne({
+      user_id,
+      status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
     })
 
-    const { insertedId } = await databaseService.fixedSlotTemplates.insertOne(template)
-    return { ...template, _id: insertedId }
+    let remainingUsages = 0
+    let unlimited = false
+
+    if (sub) {
+      if (sub.max_usages == null) {
+        unlimited = true
+      } else {
+        remainingUsages = sub.max_usages - sub.usage_count
+      }
+    }
+
+    const usedCount = remainingUsages
+    const reservations = params.selected_dates.map((date) => {
+      const useSubscription = sub && (unlimited || remainingUsages > 0)
+      if (!unlimited && useSubscription) remainingUsages--
+
+      return new Reservation({
+        user_id,
+        station_id,
+        start_time: generateDateTimeWithTimeAndDate(slot_start, date),
+        prepaid: useSubscription ? Decimal128.fromString('0') : prepaid,
+        reservation_option: ReservationOptions.FIXED_SLOT,
+        fixed_slot_template_id: templateId,
+        subscription_id: useSubscription ? sub._id : undefined
+      })
+    })
+
+    const totalReservation = selected_dates.length
+    const totalUsage = !unlimited ? (totalReservation <= usedCount ? totalReservation : usedCount) : totalReservation
+    const totalPrepaid =
+      totalUsage < totalReservation
+        ? reservations.reduce((sum, r) => {
+            return sum + Number(r.prepaid.toString())
+          }, 0)
+        : 0
+
+    const canPay = totalPrepaid > 0 && reservationsService.isEnoughBalanceToPay(totalPrepaid, user_id)
+    const session = databaseService.getClient().startSession()
+    try {
+      await session.withTransaction(async () => {
+        await Promise.all([
+          databaseService.fixedSlotTemplates.insertOne(template, { session }),
+          databaseService.reservations.insertMany(reservations, { session })
+        ])
+
+        if (sub && totalUsage > 0) {
+          await databaseService.subscriptions.updateOne(
+            { _id: sub._id },
+            { $inc: { usage_count: totalUsage }, $set: { updated_at: getLocalTime() } },
+            { session }
+          )
+        }
+      })
+      if(canPay){
+        // TODO: handle payment
+      }
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
+    return { ...template, _id: templateId }
   }
 
   async getDetail(template: FixedSlotTemplate) {

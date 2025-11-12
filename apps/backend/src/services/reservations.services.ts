@@ -209,7 +209,7 @@ class ReservationsService {
     rental: Rental,
     bike_id: ObjectId,
     station_id: ObjectId,
-    user_id: ObjectId,
+    user_id: ObjectId
   ) {
     const session = databaseService.getClient().startSession()
     try {
@@ -1109,6 +1109,26 @@ class ReservationsService {
       console.error(RESERVATIONS_MESSAGE.ERROR_SENDING_EMAIL(userIdString), error)
       return { success: false }
     }
+  }
+
+  async isEnoughBalanceToPay(amount: number, user_id: ObjectId) {
+    const findWallet = await databaseService.wallets.findOne({ user_id })
+    if (!findWallet) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id.toString()),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const currentBalance = Number.parseFloat(findWallet.balance.toString())
+    if (currentBalance < amount) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.INSUFFICIENT_BALANCE.replace('%s', user_id.toString()),
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    return true
   }
 }
 
