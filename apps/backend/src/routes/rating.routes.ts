@@ -31,6 +31,7 @@ ratingRouter.post(
 // admin get all rating
 ratingRouter.get('/', accessTokenValidator, isAdminValidator, wrapAsync(getRatingController))
 ratingRouter.get('/rating-reasons', accessTokenValidator, wrapAsync(getRatingReasonsController))
+ratingRouter.get('/app', accessTokenValidator, isAdminValidator, wrapAsync(getAppRatingController))
 /**
  * Description: Get detailed rating information by rating ID (Admin only)
  * Path: /ratings/detail/:rating_id
@@ -54,7 +55,6 @@ ratingRouter.get(
   stationIdValidator,
   wrapAsync(getStationRatingController)
 )
-ratingRouter.get('/app', accessTokenValidator, isAdminValidator, wrapAsync(getAppRatingController))
 ratingRouter.get('/:rental_id', accessTokenValidator, wrapAsync(getRatingByIdController))
 
 export default ratingRouter
