@@ -1,5 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
+
+import type { Transaction } from "@services/wallet.service";
 
 import { useGetMyTransactionsQuery } from "./query/Wallet/useGetMyTransactionQuery";
 import { useGetMyWalletQuery } from "./query/Wallet/useGetMyWalletQuery";
@@ -57,7 +59,20 @@ export function useWalletActions(hasToken: boolean, limit: number = 5) {
       useGetMyTransaction.fetchNextPage();
     }
   };
-  const transactions = useGetMyTransaction.data?.pages.flatMap(page => page.data) || [];
+  const transactions = useMemo(() => {
+    const pages = useGetMyTransaction.data?.pages ?? [];
+    const seen = new Set<string>();
+    const deduped: Transaction[] = [];
+    pages.forEach(page => {
+      page.data.forEach((transaction) => {
+        if (!seen.has(transaction._id)) {
+          seen.add(transaction._id);
+          deduped.push(transaction);
+        }
+      });
+    });
+    return deduped;
+  }, [useGetMyTransaction.data]);
   const totalTransactions = useGetMyTransaction.data?.pages[0]?.pagination?.totalRecords || 0;
   return {
     getMyWallet,
