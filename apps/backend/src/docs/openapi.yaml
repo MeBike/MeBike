@@ -250,6 +250,18 @@ components:
       $ref: './components/schemas/AllStationsRevenueSummary.yaml'
     RatingReason:
       $ref: './components/schemas/RatingReason.yaml'
+    RatingDetailUser:
+      $ref: './components/schemas/RatingDetailUser.yaml'
+    RatingDetailStation:
+      $ref: './components/schemas/RatingDetailStation.yaml'
+    RatingDetailBike:
+      $ref: './components/schemas/RatingDetailBike.yaml'
+    RatingDetailRental:
+      $ref: './components/schemas/RatingDetailRental.yaml'
+    RatingDetailReason:
+      $ref: './components/schemas/RatingDetailReason.yaml'
+    RatingDetail:
+      $ref: './components/schemas/RatingDetail.yaml'
 
   securitySchemes:
     BearerAuth:

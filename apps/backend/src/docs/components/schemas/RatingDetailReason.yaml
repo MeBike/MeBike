@@ -1,0 +1,19 @@
+type: object
+description: "Thông tin chi tiết về lý do đánh giá được nhúng."
+properties:
+  _id:
+    type: string
+    format: mongoId
+  type:
+    type: string
+    example: "Vấn đề"
+  applies_to:
+    type: string
+    example: "bike"
+  messages:
+    type: object
+    additionalProperties:
+      type: string
+    example:
+      vi: "Xe bẩn"
+      en: "Dirty bike"
