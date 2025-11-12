@@ -7,6 +7,7 @@ import { useWalletActions } from "@hooks/useWalletAction";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -62,6 +63,7 @@ function BookingHistoryDetail() {
   const [hasRated, setHasRated] = useState(false);
   const [ratingError, setRatingError] = useState<string | null>(null);
   const [showAllReasons, setShowAllReasons] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const {
     useGetDetailRental,
     rentalDetailData,
@@ -70,6 +72,16 @@ function BookingHistoryDetail() {
   } = useRentalsActions(true, bookingId, undefined, () =>
     setShowRatingModal(true)
   );
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([useGetDetailRental(), getMyWallet(), refetch()]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [useGetDetailRental, getMyWallet, refetch]);
+
   useEffect(() => {
     useGetDetailRental();
     getMyWallet();
@@ -283,7 +295,13 @@ function BookingHistoryDetail() {
         onBackPress={() => navigation.goBack()}
       />
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
+      >
         <StatusCard status={booking.status} />
         <BikeInfoCard booking={booking} />
         <TimeInfoCard booking={booking} />
