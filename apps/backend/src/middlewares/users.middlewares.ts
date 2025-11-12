@@ -953,3 +953,37 @@ export const checkUserExist = async(req: Request, res: Response, next: NextFunct
     next(error)
   }
 }
+
+export const checkUserExistWithPhoneNumber = async(req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {number} = req.params
+    const trimNumber = number.trim()
+    if(!trimNumber){
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.PHONE_NUMBER_IS_REQUIRED,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    const isValidNumber = /^(?:\+84|0)(?:3|5|7|8|9)\d{8}$/.test(trimNumber)
+    if(!isValidNumber){
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.PHONE_NUMBER_IS_INVALID,
+        status: HTTP_STATUS.BAD_REQUEST
+      })
+    }
+
+    const user = await databaseService.users.findOne({phone_number: trimNumber})
+    if(!user){
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND_WITH_NUMBER.replace("%s", trimNumber),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    req.user = user
+    next()
+  } catch (error) {
+    next(error)
+  }
+}
