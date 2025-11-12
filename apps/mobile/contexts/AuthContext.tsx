@@ -1,10 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
-import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Alert } from "react-native";
 
 import type { AuthContextType, AuthState, User } from "@/types/AuthTypes";
+import { RootStackParamList } from "@/types/navigation";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -23,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: false,
     hasSeenIntro: false,
   });
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   useEffect(() => {
     initializeAuth();
@@ -88,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
 
       // Navigate to main app after successful login
-      router.replace("/(tabs)");
+      navigation.replace("Main");
     }
     catch (error: any) {
       console.log("Google sign-in error:", error);
@@ -132,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }));
 
         // Navigate to main app after successful login
-        router.replace("/(tabs)");
+        navigation.replace("Main");
       }
       else {
         throw new Error("Invalid credentials");
@@ -168,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }));
 
         // Navigate to main app after successful login
-        router.replace("/(tabs)");
+        navigation.replace("Main");
       }
       else {
         throw new Error("Invalid data");
