@@ -1,0 +1,28 @@
+type: object
+description: "Thống kê doanh thu chi tiết cho một xe đạp cụ thể."
+properties:
+  _id:
+    type: string
+    format: mongoId
+    description: "ID của xe (Bike ID)."
+  chip_id:
+    type: string
+    description: "Mã chip của xe (nếu có)."
+    example: "BIKE-00123"
+  totalRevenue:
+    type: number
+    format: double
+    description: "Tổng doanh thu của xe này (dạng số)."
+    example: 500000
+  totalRevenueFormatted:
+    type: string
+    description: "Tổng doanh thu (đã định dạng tiền tệ)."
+    example: "500.000 VND"
+  totalRentals:
+    type: integer
+    description: "Tổng số lượt thuê của xe này."
+    example: 10
+  totalDuration:
+    type: integer
+    description: "Tổng số phút hoạt động của xe này."
+    example: 1500

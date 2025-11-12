@@ -2969,6 +2969,67 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/stations/bike-revenue:
+  get:
+    tags: [Stations]
+    summary: Get bike revenue grouped by station (Admin only)
+    description: |
+      Retrieves detailed revenue statistics for each bike, grouped by their home station.
+      - Calculates totals for each bike (revenue, rentals, duration).
+      - Calculates totals for each station (revenue, rentals).
+      - Provides a grand total summary.
+      - **Requires Admin privileges.**
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: from
+        in: query
+        required: false
+        description: "Start date (dd-mm-yyyy hoặc ISO 8601). Mặc định: '2025-01-01'."
+        schema:
+          type: string
+          example: "01-10-2025"
+      - name: to
+        in: query
+        required: false
+        description: "End date (dd-mm-yyyy hoặc ISO 8601). Mặc định: hôm nay."
+        schema:
+          type: string
+          example: "31-10-2025"
+    responses:
+      '200':
+        description: "Bike revenue statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê trạm thành công"
+                result:
+                  $ref: '../components/schemas/GetBikeRevenueResponse.yaml'
+      '400':
+        description: "Bad Request. Lỗi do định dạng ngày không hợp lệ (e.g., '31-02-2025') hoặc 'from' > 'to'."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Ratings API
 # ===================================================================
@@ -3092,33 +3153,51 @@
               $ref: '../components/schemas/ErrorValidationResponse.yaml'
       '500':
         $ref: '../components/schemas/ErrorServerResponse.yaml'
-
-/ratings/{rentalId}:
   get:
     tags: [Ratings]
     summary: Get rating by rental ID
-    description: Retrieves the rating associated with a specific rental ID.
+    description: |
+      Retrieves the rating for a specific rental ID.
+      - **Users** can only retrieve their own rating.
+      - **Admins** can retrieve any rating.
+      Includes the full details of the selected rating reasons.
     security:
       - BearerAuth: []
     parameters:
-      - name: rentalId
+      - name: rental_id
         in: path
         required: true
-        description: The ID of the rental session.
+        description: "The ID of the rental session."
         schema:
           type: string
           format: mongoId
     responses:
       '200':
-        description: Rating details retrieved successfully.
+        description: "Rating details retrieved successfully."
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/Rating.yaml'
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy chi tiết đánh giá thành công"
+                result:
+                  $ref: '../components/schemas/RatingWithReasonDetails.yaml'
       '401':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden (User is not an Admin and this is not their rating)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '404':
-        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+        description: "Not Found (Rating not found or User from token not found)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
 /ratings/bike/{bikeId}:
   get:
@@ -3151,6 +3230,91 @@
                         $ref: '../components/schemas/Rating.yaml'
       '404':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/ratings/rating-reasons:
+  get:
+    tags: [Ratings]
+    summary: Get all rating reasons
+    description: |
+      Retrieves a list of predefined reasons used for ratings.
+      Allows optional filtering by 'type' (e.g., POSITIVE/NEGATIVE) or 'applies_to' (e.g., BIKE/STATION).
+      Requires authentication.
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: type
+        in: query
+        required: false
+        description: "Filter reasons by type (POSITIVE or NEGATIVE)."
+        schema:
+          $ref: '../components/schemas/RatingReason.yaml#/properties/type'
+      - name: applies_to
+        in: query
+        required: false
+        description: "Filter reasons by what they apply to (BIKE, STATION, APP, OTHER)."
+        schema:
+          $ref: '../components/schemas/RatingReason.yaml#/properties/applies_to'
+    responses:
+      '200':
+        description: "A list of rating reasons."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetRatingReasonsResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "User from token not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/ratings/detail/{rating_id}:
+  get:
+    tags: [Ratings]
+    summary: Get rating details by ID (Admin only)
+    description: |
+      Retrieves the complete, detailed object for a single rating.
+      This includes embedded information about the user, the rental (with bike and station info), and the full details of the rating reasons.
+      **Requires Admin privileges.**
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: rating_id
+        in: path
+        required: true
+        description: "The ID of the rating to retrieve."
+        schema:
+          type: string
+          format: mongoId
+    responses:
+      '200':
+        description: "Rating details retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy chi tiết đánh giá thành công"
+                result:
+                  $ref: '../components/schemas/RatingDetail.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Not Found (Rating not found or Admin user not found)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
 # ===================================================================
 # Dashboard API

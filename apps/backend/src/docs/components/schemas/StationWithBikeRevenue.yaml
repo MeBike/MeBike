@@ -1,0 +1,31 @@
+type: object
+description: "Thống kê doanh thu của một trạm, bao gồm chi tiết từng xe tại trạm đó."
+properties:
+  _id:
+    type: string
+    format: mongoId
+    description: "ID của trạm (Station ID)."
+  name:
+    type: string
+    example: "Ga Bến Thành"
+  address:
+    type: string
+    example: "Quận 1, TP.HCM"
+  stationTotalRevenue:
+    type: number
+    format: double
+    description: "Tổng doanh thu của cả trạm."
+    example: 15000000
+  stationTotalRevenueFormatted:
+    type: string
+    description: "Tổng doanh thu của cả trạm (đã định dạng)."
+    example: "15.000.000 VND"
+  stationTotalRentals:
+    type: integer
+    description: "Tổng số lượt thuê của cả trạm."
+    example: 250
+  bikes:
+    type: array
+    description: "Danh sách xe tại trạm và doanh thu của từng xe, sắp xếp theo doanh thu xe giảm dần."
+    items:
+      $ref: './BikeRevenueItem.yaml'

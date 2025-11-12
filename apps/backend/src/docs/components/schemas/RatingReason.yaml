@@ -1,0 +1,20 @@
+type: object
+description: "Đại diện cho một lý do đánh giá (ví dụ: 'Xe sạch', 'Ứng dụng lỗi')."
+properties:
+  _id:
+    type: string
+    format: mongoId
+  reason:
+    type: string
+    description: "Nội dung của lý do."
+    example: "Xe sạch sẽ"
+  type:
+    type: string
+    description: "Loại lý do (Vấn đề hay Khen ngợi)."
+    enum: ["Vấn đề", "Khen ngợi"]
+    example: "Khen ngợi"
+  applies_to:
+    type: string
+    description: "Lý do này áp dụng cho đối tượng nào."
+    enum: ["bike", "station", "app"]
+    example: "bike"
