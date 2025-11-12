@@ -596,7 +596,9 @@ export const STATIONS_MESSAGE = {
   // get station stats messages
   GET_STATION_STATS_SUCCESSFULLY: 'Lấy thống kê trạm thành công',
   // get station alerts messages
-  GET_STATION_ALERTS_SUCCESSFULLY: 'Lấy cảnh báo trạm thành công'
+  GET_STATION_ALERTS_SUCCESSFULLY: 'Lấy cảnh báo trạm thành công',
+  GET_HIGHEST_REVENUE_STATION_SUCCESSFULLY: 'Lấy trạm có doanh thu cao nhất thành công',
+  GET_BIKE_REVENUE_BY_STATION_SUCCESSFULLY: 'Lấy doanh thu xe đạp theo trạm thành công'
 }
 
 export const RATING_MESSAGE = {

@@ -964,6 +964,36 @@ class StationsService {
     };
   }
 
+  async getHighestRevenueStation(query: { from?: string; to?: string }) {
+    const allRevenueData = await this.getAllStationsRevenue(query);
+
+    if (allRevenueData.stations.length === 0) {
+      return {
+        period: allRevenueData.period,
+        station: null,
+        message: "Không có dữ liệu doanh thu cho khoảng thời gian này"
+      };
+    }
+
+    const topStation = allRevenueData.stations[0];
+
+    return {
+      period: allRevenueData.period,
+      station: {
+        _id: topStation._id,
+        name: topStation.name,
+        address: topStation.address,
+        totalRevenue: topStation.totalRevenue,
+        totalRevenueFormatted: topStation.totalRevenueFormatted,
+        totalRentals: topStation.totalRentals,
+        totalDuration: topStation.totalDuration,
+        totalDurationFormatted: topStation.totalDurationFormatted,
+        avgDuration: topStation.avgDuration,
+        avgDurationFormatted: topStation.avgDurationFormatted
+      }
+    };
+  }
+
   async getStationAlerts(threshold: number = 20) {
     // Lấy tất cả trạm với thông tin xe
     const pipeline: Document[] = [
