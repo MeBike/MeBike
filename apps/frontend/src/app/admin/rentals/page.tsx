@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { RentalFilters } from "@/components/rentals/rental-filters";
 import { RentalStats } from "@/components/rentals/rental-stats";
 import { Button } from "@/components/ui/button";
+import { formatDateUTC } from "@/utils/formatDateTime";
 import type {
   RentalStatus,
 } from "@custom-types";
@@ -177,7 +178,11 @@ export default function RentalsPage() {
                 setSelectedRentalId(data._id);
                 getDetailRental();
                 reset({
-                  status: data.status as "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC",
+                  status: data.status as
+                    | "ĐANG THUÊ"
+                    | "HOÀN THÀNH"
+                    | "ĐÃ HỦY"
+                    | "ĐÃ ĐẶT TRƯỚC",
                   end_station: data.end_station || "",
                   end_time: data.end_time
                     ? new Date(data.end_time).toISOString().slice(0, 16)
@@ -362,7 +367,9 @@ export default function RentalsPage() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Mã đơn thuê
                     </label>
-                    <p className="text-foreground font-medium">{detailData.result?._id}</p>
+                    <p className="text-foreground font-medium">
+                      {detailData.result?._id}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
@@ -472,7 +479,8 @@ export default function RentalsPage() {
                       Tọa độ trạm bắt đầu
                     </label>
                     <p className="text-foreground text-sm">
-                      {detailData.result?.start_station?.latitude}, {detailData.result?.start_station?.longitude}
+                      {detailData.result?.start_station?.latitude},{" "}
+                      {detailData.result?.start_station?.longitude}
                     </p>
                   </div>
                 </div>
@@ -495,10 +503,9 @@ export default function RentalsPage() {
                       Tọa độ trạm kết thúc
                     </label>
                     <p className="text-foreground text-sm">
-                      {detailData.result?.end_station 
+                      {detailData.result?.end_station
                         ? `${detailData.result.end_station.latitude}, ${detailData.result.end_station.longitude}`
-                        : "Chưa trả"
-                      }
+                        : "Chưa trả"}
                     </p>
                   </div>
                 </div>
@@ -510,9 +517,7 @@ export default function RentalsPage() {
                       Thời gian bắt đầu
                     </label>
                     <p className="text-foreground text-sm">
-                      {new Date(detailData.result?.start_time).toLocaleString(
-                        "vi-VN"
-                      )}
+                      {formatDateUTC(detailData.result?.start_time)}
                     </p>
                   </div>
                   <div>
@@ -520,11 +525,7 @@ export default function RentalsPage() {
                       Thời gian kết thúc
                     </label>
                     <p className="text-foreground text-sm">
-                      {detailData.result?.end_time
-                        ? new Date(detailData.result.end_time).toLocaleString(
-                            "vi-VN"
-                          )
-                        : "Chưa trả"}
+                      {detailData.result?.end_time ? formatDateUTC(detailData.result.end_time) : "Chưa trả"}
                     </p>
                   </div>
                 </div>
@@ -557,9 +558,7 @@ export default function RentalsPage() {
                       Ngày tạo
                     </label>
                     <p className="text-foreground text-sm">
-                      {new Date(detailData.result?.created_at).toLocaleString(
-                        "vi-VN"
-                      )}
+                      {formatDateUTC(detailData.result?.created_at)}
                     </p>
                   </div>
                   <div>
@@ -567,9 +566,7 @@ export default function RentalsPage() {
                       Cập nhật lần cuối
                     </label>
                     <p className="text-foreground text-sm">
-                      {new Date(detailData.result?.updated_at).toLocaleString(
-                        "vi-VN"
-                      )}
+                      {formatDateUTC(detailData.result?.updated_at)}
                     </p>
                   </div>
                 </div>
@@ -583,7 +580,7 @@ export default function RentalsPage() {
                 >
                   Đóng
                 </Button>
-                <Button 
+                <Button
                   onClick={() => {
                     setIsDetailModalOpen(false);
                     setIsUpdateModalOpen(true);

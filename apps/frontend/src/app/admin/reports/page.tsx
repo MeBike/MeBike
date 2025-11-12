@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { DataTable } from "@/components/TableCustom";
 import { ReportStats } from "@/components/reports/report-stats";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,6 @@ import {
 } from "@/schemas/reportSchema";
 import type { Report } from "@custom-types";
 import { DetailUser } from "@/services/auth.service";
-
 export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);

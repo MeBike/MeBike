@@ -57,7 +57,7 @@ export function useWalletActions(
     limit: 5,
   });
   const { data: walletOverview , refetch : isRefetchingWalletOverview} = useGetWalletOverviewQuery();
-  const useGetWalletOverview = useCallback(async () => {
+  const getWalletOverview = useCallback(async () => {
     if (!hasToken) {
       return;
     }
@@ -193,6 +193,6 @@ export function useWalletActions(
     getDetailWallet,
     isLoadingDetailWallet,
     updateStatusWallet,
-    useGetWalletOverview,
+    getWalletOverview,
   };
 }

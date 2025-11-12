@@ -1,4 +1,4 @@
-import { accessTokenValidator, checkUserExist, verifiedUserValidator } from '~/middlewares/users.middlewares'
+import { accessTokenValidator, checkUserExist, checkUserExistWithPhoneNumber, verifiedUserValidator } from '~/middlewares/users.middlewares'
 import { Router } from 'express'
 
 import {
@@ -7,6 +7,7 @@ import {
   createRentalSessionController,
   endRentalByAdminOrStaffController,
   endRentalSessionController,
+  getActiveRentalListByPhoneNumberController,
   getDashboardSummaryController,
   getDetailRentalController,
   getMyCurrentRentalsController,
@@ -67,6 +68,10 @@ rentalsRouter
 rentalsRouter
   .route('/users/:userId')
   .get(accessTokenValidator, isAdminAndStaffValidator, checkUserExist, wrapAsync(getRentalListByUserIdController))
+
+rentalsRouter
+  .route('/by-phone/:number/active')
+  .get(accessTokenValidator, isAdminAndStaffValidator, checkUserExistWithPhoneNumber, wrapAsync(getActiveRentalListByPhoneNumberController))
 
 rentalsRouter.route('/me').get(accessTokenValidator, wrapAsync(getMyRentalsController))
 

@@ -8,6 +8,7 @@ import { withdrawColumn } from "@/columns/withdraw-column";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { DataTable } from "@/components/TableCustom";
 import { WithdrawStats } from "@/components/withdrawals/withdraw-stats";
+import {Loader2} from "lucide-react";
 import {
   getStatusColor,
   getStatusIcon,
@@ -83,6 +84,7 @@ export default function RefundPage() {
   );
   const handleSaveStatus = async () => {
     if (!selectedRequest?._id) return;
+    console.log("reason", reason);
     await updateWithdrawRequest({
       newStatus: newStatus,
       reason: reason,
@@ -112,8 +114,16 @@ export default function RefundPage() {
       setReason("");
     }
   }, [isUpdateModalOpen, detailResponse, getNextStatuses]);
-
-  const nextStatuses = getNextStatuses(detailResponse?.status as WithdrawStatus);
+  if (response.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+        <Loader2 className="animate-spin w-16 h-16 text-primary" />
+      </div>
+    );
+  }
+    const nextStatuses = getNextStatuses(
+      detailResponse?.status as WithdrawStatus
+    );
   return (
     <div>
       <div className="space-y-6">
