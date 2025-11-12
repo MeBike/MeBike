@@ -123,3 +123,17 @@ export const getAllStationsRevenueController = wrapAsync(
     });
   }
 );
+
+export const getBikeRevenueByStationController = wrapAsync(
+  async (req: Request, res: Response) => {
+    const { from, to } = req.query;
+    const result = await stationsService.getBikeRevenueByStation({
+      from: from as string,
+      to: to as string
+    });
+    return res.json({
+      message: STATIONS_MESSAGE.GET_STATION_STATS_SUCCESSFULLY,
+      result,
+    });
+  }
+);
