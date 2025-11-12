@@ -1,7 +1,7 @@
 import { NextFunction, Response, Request } from 'express'
 import { CreateRatingReqBody, GetRatingReqQuery } from '~/models/requests/rating.requests'
 import databaseService from './database.services'
-import { sendPaginatedResponse } from '~/utils/pagination.helper'
+import { sendPaginatedAggregationResponse } from '~/utils/pagination.helper'
 import Rating, { RatingType } from '~/models/schemas/rating.schema'
 import { ObjectId } from 'mongodb'
 import { ErrorWithStatus } from '~/models/errors'
@@ -31,19 +31,58 @@ class RatingService {
 
   async getAllRating(res: Response, next: NextFunction, query: GetRatingReqQuery) {
     const { user_id, rating, reason_ids } = query
-    const filter: any = {}
+    const matchFilter: any = {}
 
     if (user_id) {
-      filter.user_id = user_id
+      matchFilter.user_id = new ObjectId(user_id)
     }
     if (rating) {
-      filter.rating = rating
+      matchFilter.rating = rating
     }
     if (reason_ids) {
-      filter.reason_ids = (reason_ids as string[]).map((id) => new ObjectId(id))
+      matchFilter.reason_ids = (reason_ids as string[]).map((id) => new ObjectId(id))
     }
 
-    await sendPaginatedResponse(res, next, databaseService.ratings, query as unknown as Request['query'], filter)
+    const pipeline = [
+      {
+        $match: matchFilter
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          user_id: 1,
+          rental_id: 1,
+          rating: 1,
+          reason_ids: 1,
+          comment: 1,
+          created_at: 1,
+          updated_at: 1,
+          user: {
+            fullname: '$user.fullname',
+            email: '$user.email'
+          }
+        }
+      },
+      {
+        $sort: { created_at: -1 }
+      }
+    ]
+
+    await sendPaginatedAggregationResponse(res, next, databaseService.ratings, query as unknown as Request['query'], pipeline)
   }
 
   async getRatingById(id: string, user_id: string) {
@@ -68,7 +107,7 @@ class RatingService {
             from: 'rating_reasons',
             localField: 'reason_ids',
             foreignField: '_id',
-            as: 'reasons'
+            as: 'reason_details'
           }
         },
         {
@@ -77,10 +116,22 @@ class RatingService {
             user_id: 1,
             rental_id: 1,
             rating: 1,
+            reason_ids: 1,
             comment: 1,
             created_at: 1,
             updated_at: 1,
-            reasons: '$reasons.messages'
+            reason_details: {
+              $map: {
+                input: '$reason_details',
+                as: 'reason',
+                in: {
+                  _id: '$$reason._id',
+                  type: '$$reason.type',
+                  applies_to: '$$reason.applies_to',
+                  messages: '$$reason.messages'
+                }
+              }
+            }
           }
         }
       ])
@@ -89,6 +140,158 @@ class RatingService {
     if (!result || result.length === 0) {
       throw new ErrorWithStatus({
         message: RATING_MESSAGE.RATING_NOT_FOUND.replace('%s', id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    return result[0]
+  }
+
+  async getRatingDetailById(rating_id: string) {
+    const result = await databaseService.ratings
+      .aggregate([
+        {
+          $match: { _id: new ObjectId(rating_id) }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $lookup: {
+            from: 'rentals',
+            localField: 'rental_id',
+            foreignField: '_id',
+            as: 'rental'
+          }
+        },
+        {
+          $lookup: {
+            from: 'rating_reasons',
+            localField: 'reason_ids',
+            foreignField: '_id',
+            as: 'reason_details'
+          }
+        },
+        {
+          $unwind: {
+            path: '$user',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $unwind: {
+            path: '$rental',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $lookup: {
+            from: 'bikes',
+            localField: 'rental.bike_id',
+            foreignField: '_id',
+            as: 'bike'
+          }
+        },
+        {
+          $unwind: {
+            path: '$bike',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $lookup: {
+            from: 'stations',
+            localField: 'rental.start_station_id',
+            foreignField: '_id',
+            as: 'start_station'
+          }
+        },
+        {
+          $lookup: {
+            from: 'stations',
+            localField: 'rental.end_station_id',
+            foreignField: '_id',
+            as: 'end_station'
+          }
+        },
+        {
+          $unwind: {
+            path: '$start_station',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $unwind: {
+            path: '$end_station',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            user_id: 1,
+            rental_id: 1,
+            rating: 1,
+            reason_ids: 1,
+            comment: 1,
+            created_at: 1,
+            updated_at: 1,
+            user: {
+              _id: '$user._id',
+              fullname: '$user.fullname',
+              email: '$user.email',
+              phone_number: '$user.phone_number',
+              avatar: '$user.avatar'
+            },
+            rental: {
+              _id: '$rental._id',
+              bike_id: '$rental.bike_id',
+              start_time: '$rental.start_time',
+              end_time: '$rental.end_time',
+              total_price: '$rental.total_price',
+              status: '$rental.status',
+              bike: {
+                _id: '$bike._id',
+                name: '$bike.name',
+                qr_code: '$bike.qr_code',
+                model: '$bike.model'
+              },
+              start_station: {
+                _id: '$start_station._id',
+                name: '$start_station.name',
+                address: '$start_station.address'
+              },
+              end_station: {
+                _id: '$end_station._id',
+                name: '$end_station.name',
+                address: '$end_station.address'
+              }
+            },
+            reason_details: {
+              $map: {
+                input: '$reason_details',
+                as: 'reason',
+                in: {
+                  _id: '$$reason._id',
+                  type: '$$reason.type',
+                  applies_to: '$$reason.applies_to',
+                  messages: '$$reason.messages'
+                }
+              }
+            }
+          }
+        }
+      ])
+      .toArray()
+
+    if (!result || result.length === 0) {
+      throw new ErrorWithStatus({
+        message: RATING_MESSAGE.RATING_NOT_FOUND.replace('%s', rating_id),
         status: HTTP_STATUS.NOT_FOUND
       })
     }

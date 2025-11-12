@@ -1,0 +1,10 @@
+type: object
+description: "Thông tin trạm cơ bản được nhúng trong chi tiết đánh giá."
+properties:
+  _id:
+    type: string
+    format: mongoId
+  name:
+    type: string
+  address:
+    type: string

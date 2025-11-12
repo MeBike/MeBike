@@ -3,7 +3,8 @@ import {
   addNewRatingController,
   getRatingByIdController,
   getRatingController,
-  getRatingReasonsController
+  getRatingReasonsController,
+  getRatingDetailController
 } from '~/controllers/ratings.controllers'
 
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
@@ -25,6 +26,15 @@ ratingRouter.post(
 // admin get all rating
 ratingRouter.get('/', accessTokenValidator, isAdminValidator, wrapAsync(getRatingController))
 ratingRouter.get('/rating-reasons', accessTokenValidator, wrapAsync(getRatingReasonsController))
+/**
+ * Description: Get detailed rating information by rating ID (Admin only)
+ * Path: /ratings/detail/:rating_id
+ * Method: GET
+ * Params: { rating_id: string }
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN
+ */
+ratingRouter.get('/detail/:rating_id', accessTokenValidator, isAdminValidator, wrapAsync(getRatingDetailController))
 ratingRouter.get('/:rental_id', accessTokenValidator, wrapAsync(getRatingByIdController))
 
 export default ratingRouter

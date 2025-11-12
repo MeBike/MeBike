@@ -10,3 +10,4 @@ export * from "./Reservation";
 export * from "./Response";
 export * from "./Report";
 export * from "./SOS";
+export * from "./Rating";

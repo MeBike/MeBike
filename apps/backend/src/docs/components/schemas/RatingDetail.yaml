@@ -1,0 +1,14 @@
+type: object
+description: "Đối tượng chi tiết đầy đủ của một đánh giá, bao gồm thông tin user, rental, và reasons."
+allOf:
+  - $ref: './Rating.yaml' 
+  - type: object
+    properties:
+      user:
+        $ref: './RatingDetailUser.yaml'
+      rental:
+        $ref: './RatingDetailRental.yaml'
+      reason_details:
+        type: array
+        items:
+          $ref: './RatingDetailReason.yaml'
