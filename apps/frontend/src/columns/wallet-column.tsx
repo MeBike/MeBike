@@ -69,20 +69,14 @@ export const walletColumn = ({
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return (
-        formatDateUTC(row.original.created_at) ||
-        "Không có"
-      );
+      return <div className="whitespace-nowrap overflow-hidden text-ellipsis">{formatDateUTC(row.original.created_at) || "Không có"}</div>;
     },
   },
   {
     accessorKey: "updated_at",
     header: "Cập nhật lần cuối",
     cell: ({ row }) => {
-      return (
-        formatDateUTC(row.original.updated_at) ||
-        "Không có"
-      );
+      return <div className="whitespace-nowrap overflow-hidden text-ellipsis">{formatDateUTC(row.original.updated_at) || "Không có"}</div>;
     },
   },
   {

@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw, Pencil } from "lucide-react";
 import type { Bike, BikeStatus, Station, Supplier } from "@/types";
+import { formatDateUTC } from "@/utils/formatDateTime";
 export const getStatusColor = (status: BikeStatus) => {
   switch (status) {
     case "ĐANG ĐƯỢC THUÊ":

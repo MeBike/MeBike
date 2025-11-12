@@ -101,6 +101,13 @@ export default function WalletPage() {
       </div>
     );
   }
+  if(allWallets.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+        <Loader2 className="animate-spin w-16 h-16 text-primary" />
+      </div>
+    );
+  }
   return (
     <div className="w-full bg-background">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
