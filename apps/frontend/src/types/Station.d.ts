@@ -30,3 +30,61 @@ export interface Station {
     distance: number;
   };
 }
+export interface StationBikeRevenue {
+  period: {
+    from: string;
+    to: string;
+  };
+  summary: {
+    totalStations: number;
+    totalRevenue: number;
+    totalRevenueFormatted: string;
+    totalRentals: number;
+  };
+  stations: StationStatistic[];
+}
+export interface StationStatistic {
+  _id: string;
+  name: string;
+  address: string;
+  stationTotalRevenue: number;
+  stationTotalRevenueFormatted: string;
+  stationTotalRentals: number;
+  bikes: BikeStatistic[];
+}
+export interface BikeStatistic {
+  _id: string;
+  chip_id: string;
+  totalRevenue: number;
+  totalRevenueFormatted: string;
+  totalRentals: number;
+  totalDuration: number;
+}
+export interface StationStatisticsResponse {
+  period: {
+    from: string; // ISO datetime string
+    to: string; // ISO datetime string
+  };
+  summary: {
+    totalStations: number;
+    totalRevenue: number;
+    totalRevenueFormatted: string;
+    totalRentals: number;
+    avgRevenuePerStation: number;
+    avgRevenuePerStationFormatted: string;
+  };
+  stations: StationStatistic[];
+}
+
+export interface StationStatistic {
+  _id: string;
+  name: string;
+  address: string;
+  totalRentals: number;
+  totalRevenue: number;
+  totalRevenueFormatted: string;
+  totalDuration: number;
+  totalDurationFormatted: string;
+  avgDuration: number;
+  avgDurationFormatted: string;
+}

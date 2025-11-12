@@ -2,12 +2,18 @@ import fetchHttpClient from "@lib/httpClient";
 import { AxiosResponse } from "axios";
 import { Station } from "@/types";
 import { StationSchemaFormData } from "@/schemas/stationSchema";
+import type {
+  StationBikeRevenue,
+  StationStatisticsResponse,
+} from "@/types/Station";
 const STATION_BASE = "/stations";
 const STATION_ENDPOINTS = {
   BASE: STATION_BASE,
   ALL: `${STATION_BASE}`,
   DETAIL: (id: string) => `${STATION_BASE}/${id}`,
   ID: (id: string) => `${STATION_BASE}/${id}`,
+  STATION_BIKE_REVENUE: () => `${STATION_BASE}/bike-revenue`,
+  STATION_REVENUE : () => `${STATION_BASE}/revenue`,
   //   STATS: `${STATION_BASE}/stats`,
   //   BY_ID: (id: string) => `${BIKE_BASE}/${id}/rentals`,
   //   BY_ID_ADMIN_STATS: (id: string) => `${BIKE_BASE}/${id}/stats`,
@@ -76,17 +82,33 @@ export const stationService = {
     );
     return response;
   },
-  updateStation : async ({
+  updateStation: async ({
     stationID,
-    stationData
+    stationData,
   }: {
     stationID: string;
-    stationData: StationSchemaFormData
+    stationData: StationSchemaFormData;
   }): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
     const response = await fetchHttpClient.put<ApiDetailResponse<Station>>(
       STATION_ENDPOINTS.ID(stationID),
       stationData
     );
+    return response;
+  },
+  getStationBikeRevenue: async (): Promise<
+    AxiosResponse<ApiDetailResponse<StationBikeRevenue[]>>
+  > => {
+    const response = await fetchHttpClient.get<
+      ApiDetailResponse<StationBikeRevenue[]>
+    >(STATION_ENDPOINTS.STATION_BIKE_REVENUE());
+    return response;
+  },
+  getStationRevenue: async (): Promise<
+    AxiosResponse<ApiDetailResponse<StationStatisticsResponse[]>>
+  > => {
+    const response = await fetchHttpClient.get<
+      ApiDetailResponse<StationStatisticsResponse[]>
+    >(STATION_ENDPOINTS.STATION_REVENUE());
     return response;
   },
 };
