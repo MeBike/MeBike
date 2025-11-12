@@ -49,8 +49,8 @@ export const stationService = {
     const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
       STATION_ENDPOINTS.ALL,
       {
-        page: page,
-        limit: limit,
+        page,
+        limit,
       }
     );
     return response;
@@ -108,9 +108,10 @@ export const stationService = {
   > => {
     const response = await fetchHttpClient.get<
       ApiDetailResponse<StationStatisticsResponse[]>
-    >(STATION_ENDPOINTS.STATION_REVENUE() , {
-      from : from,
-      to : to,
+    >(STATION_ENDPOINTS.STATION_REVENUE(), 
+    {
+      from,
+      to,
     });
     return response;
   },

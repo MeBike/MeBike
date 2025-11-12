@@ -67,11 +67,11 @@ export const useStationActions = ({
   const useSoftDeleteStation = useSoftDeleteStationMutation();
   const useUpdateStation = useUpdateStationMutation(stationId || "");
   const getReservationStats = useCallback(() => {
-    if (!hasToken) {
+    if (!hasToken || !stationId) {
       return;
     }
     refetchStationReservationStats();
-  }, [refetchStationReservationStats, hasToken]);
+  }, [refetchStationReservationStats, hasToken, stationId]);
   const getAllStations = useCallback(() => {
     if (!hasToken) {
       return;

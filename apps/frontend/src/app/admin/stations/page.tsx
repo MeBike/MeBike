@@ -13,6 +13,7 @@ import * as tt from "@tomtom-international/web-sdk-maps";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { stationColumns } from "@/columns/station-column";
+import { formatDateUTC } from "@/utils/formatDateTime";
 // MAIN
 export default function StationsPage() {
   // STATES
@@ -47,6 +48,7 @@ export default function StationsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showRevenueReport, setShowRevenueReport] = useState(false);
   const {
     register: createRegister,
     handleSubmit: handleCreateSubmit,
@@ -84,8 +86,11 @@ export default function StationsPage() {
   }, [limit, page, getAllStations]);
   useEffect(() => {
     getStationByID();
+
+  }, [stationID, getStationByID]);
+  useEffect(() => {
     getReservationStats();
-  }, [stationID, getStationByID, getReservationStats]);
+  }, [stationID, getReservationStats]);
   useEffect(() => {
     console.log(responseStationDetail);
   }, [responseStationDetail]);
@@ -240,10 +245,20 @@ export default function StationsPage() {
             <Button onClick={() => setIsModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" /> Thêm trạm mới
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!showRevenueReport) {
+                  getStationBikeRevenue();
+                }
+                setShowRevenueReport(!showRevenueReport);
+              }}
+            >
+              {showRevenueReport ? "Ẩn báo cáo doanh thu" : "Xem báo cáo doanh thu"}
+            </Button>
           </div>
         </div>
 
-        {/* STATS */}
         <div className="grid gap-4">
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Tổng số trạm</p>
@@ -252,6 +267,117 @@ export default function StationsPage() {
             </p>
           </div>
         </div>
+
+        {showRevenueReport && responseStationBikeRevenue?.result && (
+          <div className="space-y-6">
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h2 className="text-xl font-bold text-foreground mb-4">
+                Báo cáo doanh thu trạm xe
+              </h2>
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Từ {formatDateUTC((responseStationBikeRevenue.result as any).period.from)} đến{" "}
+                  {formatDateUTC((responseStationBikeRevenue.result as any).period.to)}
+                </p>
+              </div>
+
+              {/* SUMMARY CARDS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Tổng số trạm</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {(responseStationBikeRevenue.result as any).summary.totalStations}
+                  </p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Tổng doanh thu</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {(responseStationBikeRevenue.result as any).summary.totalRevenueFormatted}
+                  </p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">Tổng lượt thuê</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {(responseStationBikeRevenue.result as any).summary.totalRentals}
+                  </p>
+                </div>
+              </div>
+
+              {/* STATIONS TABLE */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Chi tiết theo trạm
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse border border-border">
+                    <thead>
+                      <tr className="bg-muted/50">
+                        <th className="border border-border p-3 text-left text-sm font-medium text-muted-foreground">
+                          Tên trạm
+                        </th>
+                        <th className="border border-border p-3 text-left text-sm font-medium text-muted-foreground">
+                          Địa chỉ
+                        </th>
+                        <th className="border border-border p-3 text-left text-sm font-medium text-muted-foreground">
+                          Doanh thu
+                        </th>
+                        <th className="border border-border p-3 text-left text-sm font-medium text-muted-foreground">
+                          Lượt thuê
+                        </th>
+                        <th className="border border-border p-3 text-left text-sm font-medium text-muted-foreground">
+                          Chi tiết xe
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(responseStationBikeRevenue.result as any).stations.map((station: any) => (
+                        <tr key={station._id} className="hover:bg-muted/25">
+                          <td className="border border-border p-3 text-sm text-foreground">
+                            {station.name}
+                          </td>
+                          <td className="border border-border p-3 text-sm text-foreground">
+                            {station.address}
+                          </td>
+                          <td className="border border-border p-3 text-sm text-foreground font-medium">
+                            {station.stationTotalRevenueFormatted}
+                          </td>
+                          <td className="border border-border p-3 text-sm text-foreground">
+                            {station.stationTotalRentals}
+                          </td>
+                          <td className="border border-border p-3 text-sm">
+                            <details className="cursor-pointer">
+                              <summary className="text-foreground hover:text-primary">
+                                Xem {station.bikes.length} xe
+                              </summary>
+                              <div className="mt-2 space-y-2">
+                                {station.bikes.map((bike: any) => (
+                                  <div key={bike._id} className="bg-muted/30 rounded p-2">
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      <span className="text-muted-foreground">Chip ID:</span>
+                                      <span className="text-foreground">{bike.chip_id}</span>
+                                      <span className="text-muted-foreground">Doanh thu:</span>
+                                      <span className="text-foreground font-medium">
+                                        {bike.totalRevenueFormatted}
+                                      </span>
+                                      <span className="text-muted-foreground">Lượt thuê:</span>
+                                      <span className="text-foreground">{bike.totalRentals}</span>
+                                      <span className="text-muted-foreground">Thời gian:</span>
+                                      <span className="text-foreground">{bike.totalDuration} phút</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </details>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* FILTERS */}
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
