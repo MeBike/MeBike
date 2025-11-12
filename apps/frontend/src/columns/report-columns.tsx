@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import type { Report } from "@custom-types";
-
+import { formatDateUTC } from "@/utils/formatDateTime";
 interface ReportColumnsProps {
   onView: (report: Report) => void;
   onUpdate: (report: Report) => void;
@@ -85,7 +85,7 @@ export const reportColumns = ({
     header: "Ngày tạo",
     cell: ({ row }) => {
       const date = row.getValue("created_at") as string;
-      return new Date(date).toLocaleDateString("vi-VN");
+      return formatDateUTC(date);
     },
   },
   {
@@ -93,29 +93,29 @@ export const reportColumns = ({
     header: "Cập nhật cuối",
     cell: ({ row }) => {
       const date = row.getValue("updated_at") as string;
-      return new Date(date).toLocaleDateString("vi-VN");
+      return formatDateUTC(date);
     },
   },
-  // {
-  //   id: "actions",
-  //   header: "Thao tác",
-  //   cell: ({ row }) => {
-  //     const report = row.original;
-  //     const status = row.getValue("status") as string;
-  //     return (
-  //       <div className="flex gap-2">
-  //         {/* <Button variant="ghost" size="sm" onClick={() => onView(report)}>
-  //           <Eye className="h-4 w-4 mr-1" />
-  //           Xem
-  //         </Button> */}
-  //         {status !== "ĐÃ GIẢI QUYẾT" &&  status !== "ĐÃ HỦY" && (
-  //           <Button variant="ghost" size="sm" onClick={() => onUpdate(report)}>
-  //             <Edit className="h-4 w-4 mr-1" />
-  //             Cập nhật
-  //           </Button>
-  //         )}
-  //       </div>
-  //     );
-  //   },
-  // },
+  {
+    id: "actions",
+    header: "Thao tác",
+    cell: ({ row }) => {
+      const report = row.original;
+      const status = row.getValue("status") as string;
+      return (
+        <div className="flex gap-2">
+          {/* <Button variant="ghost" size="sm" onClick={() => onView(report)}>
+            <Eye className="h-4 w-4 mr-1" />
+            Xem
+          </Button> */}
+          {status !== "ĐÃ GIẢI QUYẾT" &&  status !== "ĐÃ HỦY" && (
+            <Button variant="ghost" size="sm" onClick={() => onUpdate(report)}>
+              <Edit className="h-4 w-4 mr-1" />
+              Cập nhật
+            </Button>
+          )}
+        </div>
+      );
+    },
+  },
 ];
