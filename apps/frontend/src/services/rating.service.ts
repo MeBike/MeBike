@@ -37,4 +37,11 @@ export const ratingService = {
     );
     return response;
   },
+
+  getRatingDetail: async (ratingId: string): Promise<AxiosResponse<DetailApiResponse<Rating>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<Rating>>(
+      `${RATING_BASE}/detail/${ratingId}`
+    );
+    return response;
+  },
 };

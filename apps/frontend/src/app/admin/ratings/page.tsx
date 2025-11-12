@@ -4,6 +4,7 @@ import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { ratingColumn } from "@/columns/rating-columns";
 import { ratingService } from "@/services/rating.service";
+import { RatingDetailModal } from "@/components/rating-detail-modal";
 import type { Rating } from "@/types";
 
 export default function RatingsPage() {
@@ -16,6 +17,8 @@ export default function RatingsPage() {
     totalRecords: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [selectedRatingId, setSelectedRatingId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchRatings = async () => {
@@ -35,8 +38,13 @@ export default function RatingsPage() {
   }, [page, limit]);
 
   const handleView = ({ id }: { id: string }) => {
-    console.log("View rating:", id);
-    // TODO: Implement view modal
+    setSelectedRatingId(id);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedRatingId(null);
   };
 
   if (loading) {
@@ -80,6 +88,15 @@ export default function RatingsPage() {
       <p className="text-sm text-muted-foreground">
         Trang {pagination.currentPage} / {pagination.totalPages} ({pagination.totalRecords} đánh giá)
       </p>
+
+      {/* Rating Detail Modal */}
+      {selectedRatingId && (
+        <RatingDetailModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          ratingId={selectedRatingId}
+        />
+      )}
     </div>
   );
 }
