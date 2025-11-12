@@ -124,9 +124,10 @@ export default function StationSelectScreen() {
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
-        <Text style={styles.headerTitle}>Chi tiết thuê xe</Text>
+        <Text style={styles.headerTitle}>Trạm thuê xe</Text>
         <Text style={styles.headerSubtitle}>
-          Xem tất cả các lần thuê xe của bạn
+          Chọn một trạm để xem chi tiết
+ 
         </Text>
         <View style={styles.buttonContainer}>
           <TouchableOpacity

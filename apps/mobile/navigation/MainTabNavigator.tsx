@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
 import BookingHistoryScreen from "../screen/BookingHistoryScreen";
 import HomeScreen from "../screen/Home";
+import MyWalletScreen from "../screen/my-wallet-screen";
 import ProfileScreen from "../screen/ProfileScreen";
 import StaffDashboardScreen from "../screen/StaffDashboardScreen";
 import StationSelectScreen from "../styles/StationSelect";
@@ -86,6 +87,22 @@ function MainTabNavigator() {
                 tabBarIcon: ({ color, size }) => (
                   <Ionicons
                     name="calendar-outline"
+                    size={size ?? 24}
+                    color={color ?? "#222"}
+                  />
+                ),
+              }}
+            />
+          )}
+          {isAuthenticated && (
+            <Tab.Screen
+              name="Ví"
+              component={MyWalletScreen}
+              options={{
+                headerShown: false,
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons
+                    name="wallet-outline"
                     size={size ?? 24}
                     color={color ?? "#222"}
                   />
