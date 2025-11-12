@@ -43,7 +43,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow MeBike to access your camera to scan QR codes."
+          "cameraPermission": "Cho phép MeBike truy cập máy ảnh của bạn để quét mã QR."
         }
       ]
     ],
