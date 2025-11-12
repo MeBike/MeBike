@@ -215,10 +215,10 @@ export class FetchHttpClient {
 }
 
 function getBaseUrl() {
-  // if (process.env.EXPO_PUBLIC_API_BASE_URL) {
-  //   console.log(`Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`);
-  //   return process.env.EXPO_PUBLIC_API_BASE_URL;
-  // }
+  if (process.env.EXPO_PUBLIC_API_BASE_URL) {
+    console.log(`Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`);
+    return process.env.EXPO_PUBLIC_API_BASE_URL;
+  }
 
   if (Platform.OS === "android") {
     const androidUrl = "http://10.0.2.2:4000";
