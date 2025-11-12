@@ -1,0 +1,15 @@
+type: object
+properties:
+  message:
+    type: string
+    example: "Tạo đánh giá thành công"
+  result:
+    type: object
+    properties:
+      acknowledged:
+        type: boolean
+        example: true
+      insertedId:
+        type: string
+        format: mongoId
+        example: "69f1b2ae63beb4054de09d22"

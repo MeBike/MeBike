@@ -7,21 +7,24 @@ properties:
   user_id:
     type: string
     format: mongoId
-  bike_id:
-    type: string
-    format: mongoId
   rental_id:
     type: string
     format: mongoId
-  score:
-    type: number
+  rating:
+    type: integer
     description: "The rating score from 1 to 5."
     enum: [1, 2, 3, 4, 5]
-    example: 5
+    example: 4
+  reason_ids:
+    type: array
+    description: "An array of MongoIDs for the rating reasons."
+    items:
+      type: string
+      format: mongoId
   comment:
     type: string
     nullable: true
-    example: "Xe chạy rất êm!"
+    example: "Xe chạy tốt nhưng hơi bẩn."
   created_at:
     type: string
     format: date-time

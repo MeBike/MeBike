@@ -2916,22 +2916,102 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/stations/revenue:
+  get:
+    tags: [Stations]
+    summary: Get revenue statistics for all stations (Admin only)
+    description: |
+      Retrieves revenue statistics (total rentals, revenue, duration) for all stations, grouped by station, within a given time period.
+      Results are sorted by total revenue (descending).
+      **Requires Admin privileges.**
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: from
+        in: query
+        required: false
+        description: "Start date (dd-mm-yyyy hoặc ISO 8601). Mặc định: '2025-01-01'."
+        schema:
+          type: string
+          example: "01-10-2025"
+      - name: to
+        in: query
+        required: false
+        description: "End date (dd-mm-yyyy hoặc ISO 8601). Mặc định: hôm nay."
+        schema:
+          type: string
+          example: "31-10-2025"
+    responses:
+      '200':
+        description: "Station revenue statistics retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy thống kê trạm thành công"
+                result:
+                  $ref: '../components/schemas/AllStationsRevenueResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Ratings API
 # ===================================================================
 /ratings:
   get:
     tags: [Ratings]
-    summary: Get my ratings
-    description: Retrieves a paginated list of ratings submitted by the currently authenticated user.
+    summary: Get all ratings (Admin only)
+    description: |
+      Retrieves a paginated list of all ratings in the system.
+      Allows filtering by user, rating score, or rating reasons.
+      **Requires Admin privileges.**
     security:
       - BearerAuth: []
     parameters:
       - $ref: '../parameters/all-parameters.yaml#/PageQuery'
       - $ref: '../parameters/all-parameters.yaml#/LimitQuery'
+      - name: user_id
+        in: query
+        required: false
+        description: "Filter ratings by a specific User ID."
+        schema:
+          type: string
+          format: mongoId
+      - name: rating
+        in: query
+        required: false
+        description: "Filter ratings by a specific score (1-5)."
+        schema:
+          $ref: '../components/schemas/Rating.yaml#/properties/rating'
+      - name: reason_ids
+        in: query
+        required: false
+        description: "Filter ratings that include any of the specified Reason IDs. (Provide multiple times: reason_ids=id1&reason_ids=id2)"
+        style: form
+        explode: true 
+        schema:
+          type: array
+          items:
+            type: string
+            format: mongoId
     responses:
       '200':
-        description: A paginated list of the user's ratings.
+        description: "A paginated list of ratings."
         content:
           application/json:
             schema:
@@ -2945,19 +3025,35 @@
                         $ref: '../components/schemas/Rating.yaml'
       '401':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
-/ratings/{rentalId}:
+/ratings/{rental_id}:
   post:
     tags: [Ratings]
     summary: Create a new rating for a rental
-    description: Allows a user to submit a rating (score and comment) for a completed rental session.
+    description: |
+      Allows a user to submit a rating for a completed rental session.
+      - A rental can only be rated once.
+      - The rental must be in 'Completed' status.
+      - Rating must be submitted within 7 days of completing the rental.
     security:
       - BearerAuth: []
     parameters:
-      - name: rentalId
+      - name: rental_id
         in: path
         required: true
-        description: The ID of the rental session to be rated.
+        description: "The ID of the completed rental session to be rated."
         schema:
           type: string
           format: mongoId
@@ -2968,28 +3064,36 @@
           schema:
             $ref: '../components/schemas/CreateRatingReqBody.yaml'
     responses:
-      '201':
-        description: Rating created successfully.
+      '200':
+        description: "Rating created successfully."
         content:
           application/json:
             schema:
-              $ref: '../components/schemas/MessageResponse.yaml'
+              $ref: '../components/schemas/CreateRatingResponse.yaml'
       '400':
-        description: Bad Request (e.g., rental already rated, rental not completed).
+        description: "Bad Request. Possible reasons: RATING_EXISTED, CANNOT_RATE_UNCOMPLETED_RENTAL, RATING_EXPIRED."
         content:
           application/json:
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '401':
         $ref: '../components/schemas/ErrorStatusResponse.yaml'
-      '403':
-        description: Forbidden (user did not rent this bike).
+      '404':
+        description: "Not Found. Possible reasons: RENTAL_ID_NOT_FOUND, REASON_ID_NOT_FOUND."
         content:
           application/json:
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
       '422':
-        $ref: '../components/schemas/ErrorValidationResponse.yaml'
+        description: "Validation error (e.g., missing rating, invalid reason_ids array, comment too long)."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorValidationResponse.yaml'
+      '500':
+        $ref: '../components/schemas/ErrorServerResponse.yaml'
+
+/ratings/{rentalId}:
   get:
     tags: [Ratings]
     summary: Get rating by rental ID
