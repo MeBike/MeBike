@@ -28,6 +28,7 @@ import sosRouter from './routes/sos.routes'
 import dashboardRouter from './routes/dashboard.routes'
 import subscriptionRouter from './routes/subscriptions.routes'
 import fixedSlotTemplateRouter from './routes/fixed-slots.routes'
+import eventsRouter from './routes/events.routes'
 import { generateFixedSlotReservation } from './utils/cron/fixed-slots.services'
 
 const port = process.env.PORT || 4000
@@ -70,6 +71,7 @@ app.use('/sos', sosRouter)
 app.use('/dashboard', dashboardRouter)
 app.use('/subscriptions', subscriptionRouter)
 app.use('/fixed-slots', fixedSlotTemplateRouter)
+app.use('/events', eventsRouter)
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 

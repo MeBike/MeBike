@@ -232,5 +232,7 @@ function getBaseUrl() {
   }
 }
 
-const fetchHttpClient = new FetchHttpClient(getBaseUrl());
+export const API_BASE_URL = getBaseUrl();
+
+const fetchHttpClient = new FetchHttpClient(API_BASE_URL);
 export default fetchHttpClient;
