@@ -65,7 +65,7 @@ export const updateFixedSlotTemplateController = async (req: Request, res: Respo
   if (req.body.slot_start) updates.slot_start = req.body.slot_start
   if (req.body.selected_dates) updates.selected_dates = uniqueDates(req.body.selected_dates)
 
-  const result = await fixedSlotTemplateService.update(template._id!, updates)
+  const result = await fixedSlotTemplateService.update(template, updates)
 
   res.json({
     message: RESERVATIONS_MESSAGE.FS_TEMPLATE_UPDATE_SUCCESS,
