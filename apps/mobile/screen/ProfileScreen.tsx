@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState } from "react";
+import { useEffect, useState,useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
   Image,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -24,6 +26,7 @@ function ProfileScreen() {
   const navigation = useNavigation();
   const { user, logOut, verifyEmail, resendVerifyEmail, isCustomer } = useAuth();
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const [profile, setProfile] = useState<DetailUser>(() => ({
     _id: user?._id ?? "",
     fullname: user?.fullname ?? "",
@@ -39,6 +42,13 @@ function ProfileScreen() {
   }));
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
   const [isResendingOtp, setIsResendingOtp] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+    setIsRefreshing(false);
+  }, [queryClient]);
 
   // Update profile when user changes (after verify or any update)
   useEffect(() => {
@@ -100,9 +110,6 @@ function ProfileScreen() {
 
   const handleSupport = () => {
     navigation.navigate("Support" as never);
-  };
-  const handleWallet = () => {
-    navigation.navigate("MyWallet" as never);
   };
   const handleReservations = () => {
     navigation.navigate("Reservations" as never);
@@ -170,7 +177,12 @@ function ProfileScreen() {
         translucent
       />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
+      >
         <LinearGradient
           colors={["#0066FF", "#00B4D8"]}
           start={{ x: 0, y: 0 }}
@@ -202,23 +214,30 @@ function ProfileScreen() {
               <Ionicons name="chevron-back" size={26} color="#fff" />
             </TouchableOpacity>
           )}
-          <Image
-            source={{
-              uri: profile.avatar || "https://via.placeholder.com/110",
-            }}
-            style={{
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              borderWidth: 4,
-              borderColor: "#fff",
-              marginBottom: 14,
-              backgroundColor: "#EBF3FB",
-              shadowColor: "#000",
-              shadowOpacity: 0.14,
-              shadowRadius: 10,
-            }}
-          />
+          <View>
+            <Image
+              source={{
+                uri: profile.avatar || "https://via.placeholder.com/110",
+              }}
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: 50,
+                borderWidth: 4,
+                borderColor: "#fff",
+                marginBottom: 14,
+                backgroundColor: "#EBF3FB",
+                shadowColor: "#000",
+                shadowOpacity: 0.14,
+                shadowRadius: 10,
+              }}
+            />
+            {profile.verify === "VERIFIED" && (
+              <View style={styles.verificationBadge}>
+                <Ionicons name="checkmark-circle" size={28} color="#10B981" />
+              </View>
+            )}
+          </View>
 
           <Text
             style={{
@@ -293,95 +312,8 @@ function ProfileScreen() {
               </View>
             </View>
           </View>
-
-          {/* Email Verification Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Xác thực Email</Text>
-            <View style={styles.emailVerificationCard}>
-              <View style={styles.verificationStatusRow}>
-                <View style={styles.verificationStatusLeft}>
-                  <Ionicons
-                    name={
-                      profile.verify === "VERIFIED"
-                        ? "checkmark-circle"
-                        : "mail"
-                    }
-                    size={24}
-                    color={
-                      profile.verify === "VERIFIED" ? "#10B981" : "#FFA500"
-                    }
-                  />
-                  <View style={styles.verificationStatusContent}>
-                    <Text style={styles.verificationStatusTitle}>
-                      {profile.verify === "VERIFIED"
-                        ? "Email Verified"
-                        : "Email Chưa Xác Thực"}
-                    </Text>
-                    <Text style={styles.verificationStatusEmail}>
-                      {profile.email}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Action Buttons */}
-              <View style={styles.verificationButtonsRow}>
-                {profile.verify !== "VERIFIED" ? (
-                  <>
-                    <TouchableOpacity
-                      style={[styles.verificationButton, styles.verifyButton]}
-                      onPress={() => setIsVerifyEmailModalOpen(true)}
-                    >
-                      <Ionicons name="key" size={16} color="white" />
-                      <Text style={styles.verificationButtonText}>
-                        Xác thực
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[
-                        styles.verificationButton,
-                        styles.resendButton,
-                        isResendingOtp && styles.disabledVerificationButton,
-                      ]}
-                      onPress={handleResendOtp}
-                      disabled={isResendingOtp}
-                    >
-                      <Ionicons name="refresh" size={16} color="#0066FF" />
-                      <Text style={styles.verificationResendButtonText}>
-                        {isResendingOtp ? "Đang gửi..." : "Gửi lại"}
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <TouchableOpacity
-                    style={[styles.verificationButton, styles.verifiedButton]}
-                    disabled
-                  >
-                    <Ionicons name="checkmark-circle" size={16} color="white" />
-                    <Text style={styles.verificationButtonText}>
-                      Đã xác thực
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cài đặt tài khoản</Text>
-            {renderMenuOption(
-              "person-outline",
-              "Thông tin cá nhân",
-              "Quản lý thông tin cá nhân của bạn",
-              handleUpdateProfile
-            )}
-            {renderMenuOption(
-              "lock-closed",
-              "Đổi mật khẩu",
-              "Cập nhật mật khẩu của bạn",
-              handleChangePassword
-            )}
+            <Text style={styles.sectionTitle}>Dịch vụ của tôi</Text>
             {renderMenuOption(
               "help-circle",
               "Báo cáo sự cố xe đạp",
@@ -390,12 +322,6 @@ function ProfileScreen() {
             )}
             {isCustomer && (
               <>
-                {renderMenuOption(
-                  "wallet",
-                  "Ví điện tử",
-                  "Quản lý ví điện tử của bạn",
-                  handleWallet
-                )}
                 {renderMenuOption(
                   "ribbon",
                   "Gói tháng",
@@ -411,11 +337,80 @@ function ProfileScreen() {
               </>
             )}
           </View>
+
+          {/* Email Verification Section */}
+          {profile.verify !== "VERIFIED" && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Xác thực Email</Text>
+              <View style={styles.emailVerificationCard}>
+                <View style={styles.verificationStatusRow}>
+                  <View style={styles.verificationStatusLeft}>
+                    <Ionicons
+                      name={"mail"}
+                      size={24}
+                      color={"#FFA500"}
+                    />
+                    <View style={styles.verificationStatusContent}>
+                      <Text style={styles.verificationStatusTitle}>
+                        Email Chưa Xác Thực
+                      </Text>
+                      <Text style={styles.verificationStatusEmail}>
+                        {profile.email}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.verificationButtonsRow}>
+                  <TouchableOpacity
+                    style={[styles.verificationButton, styles.verifyButton]}
+                    onPress={() => setIsVerifyEmailModalOpen(true)}
+                  >
+                    <Ionicons name="key" size={16} color="white" />
+                    <Text style={styles.verificationButtonText}>
+                      Xác thực
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.verificationButton,
+                      styles.resendButton,
+                      isResendingOtp && styles.disabledVerificationButton,
+                    ]}
+                    onPress={handleResendOtp}
+                    disabled={isResendingOtp}
+                  >
+                    <Ionicons name="refresh" size={16} color="#0066FF" />
+                    <Text style={styles.verificationResendButtonText}>
+                      {isResendingOtp ? "Đang gửi..." : "Gửi lại"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cài đặt tài khoản</Text>
+            {renderMenuOption(
+              "person-outline",
+              "Thông tin cá nhân",
+              "Quản lý thông tin cá nhân của bạn",
+              handleUpdateProfile
+            )}
+            {renderMenuOption(
+              "lock-closed",
+              "Đổi mật khẩu",
+              "Cập nhật mật khẩu của bạn",
+              handleChangePassword
+            )}
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Ionicons name="log-out" size={20} color="#fff" />
             <Text style={styles.logoutButtonText}>Đăng xuất</Text>
           </TouchableOpacity>
           <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
+        </View>
         </View>
       </ScrollView>
 
@@ -611,6 +606,14 @@ const styles = StyleSheet.create({
   },
   disabledButtonText: {
     color: "#ccc",
+  },
+  verificationBadge: {
+    position: "absolute",
+    bottom: 10,
+    right: 0,
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 2,
   },
 });
 

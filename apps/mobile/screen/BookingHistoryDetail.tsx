@@ -5,6 +5,7 @@ import { useRentalsActions } from "@hooks/useRentalAction";
 import { useStationActions } from "@hooks/useStationAction";
 import { useWalletActions } from "@hooks/useWalletAction";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   RefreshControl,
@@ -28,6 +29,9 @@ import RatingSection from "../components/booking-history-detail/components/Ratin
 import StatusCard from "../components/booking-history-detail/components/StatusCard";
 import TimeInfoCard from "../components/booking-history-detail/components/TimeInfoCard";
 import UserInfoCard from "../components/booking-history-detail/components/UserInfoCard";
+import { useBikeStatusStream } from "@hooks/useBikeStatusStream";
+import type { BikeStatusUpdate } from "@hooks/useBikeStatusStream";
+import { useAuth } from "@providers/auth-providers";
 
 type RouteParams = {
   bookingId: string;
@@ -48,6 +52,9 @@ function BookingHistoryDetail() {
   const navigation = useNavigation();
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
+  const { user } = useAuth();
+  const hasToken = Boolean(user?._id);
+  const queryClient = useQueryClient();
   const { getMyWallet } = useWalletActions(true);
   const {
     stations: data,
@@ -102,6 +109,30 @@ function BookingHistoryDetail() {
   const rentalResult = rentalDetailData?.data?.result as
     | RentalDetail
     | undefined;
+  const bikeId = rentalResult?.bike?._id;
+
+  const handleRealtimeUpdate = useCallback(
+    (payload: BikeStatusUpdate) => {
+      if (!bikeId) return;
+      if (payload.bikeId === bikeId && payload.status === "CÓ SẴN") {
+        useGetDetailRental();
+        queryClient.invalidateQueries({ queryKey: ["rentals"] });
+        queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
+      }
+    },
+    [bikeId, queryClient, useGetDetailRental],
+  );
+
+  useBikeStatusStream({
+    autoConnect:
+      hasToken &&
+      Boolean(bikeId) &&
+      rentalResult?.status === "ĐANG THUÊ",
+    onUpdate: handleRealtimeUpdate,
+    onError: (error) => {
+      console.warn("[SSE] booking detail stream error", error);
+    },
+  });
   const endTimeDate = useMemo(() => {
     if (!rentalResult?.end_time) return null;
     const parsed = new Date(rentalResult.end_time);

@@ -24,6 +24,7 @@ import StaffRentalDetailScreen from "../screen/StaffRentalDetailScreen";
 import ResetPasswordFormScreen from "../screen/ResetPasswordForm";
 import ResetPasswordOTPScreen from "../screen/ResetPasswordOTP";
 import StationDetailScreen from "../screen/StationDetail";
+import BikeDetailScreen from "../screen/BikeDetailScreen";
 import StationSelectScreen from "../styles/StationSelect";
 import SubscriptionScreen from "../screen/SubscriptionScreen";
 import SupportScreen from "../screen/SupportScreen";
@@ -65,6 +66,11 @@ function RootNavigator() {
       <Stack.Screen
         name="StationDetail"
         component={StationDetailScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="BikeDetail"
+        component={BikeDetailScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen

@@ -11,6 +11,14 @@ export const rentalSchema = z.object({
     .refine(isValidObjectId, {
       message: "Station ID must be a valid MongoDB ObjectId",
     }),
+  subscription_id: z
+    .string()
+    .min(24, "Subscription ID must be a valid ObjectId")
+    .max(24, "Subscription ID must be a valid ObjectId")
+    .refine(isValidObjectId, {
+      message: "Subscription ID must be a valid MongoDB ObjectId",
+    })
+    .optional(),
 });
 export const endRentalSchema = z.object({
   end_station: z.string()
