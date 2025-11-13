@@ -41,9 +41,9 @@ export interface StationBikeRevenue {
     totalRevenueFormatted: string;
     totalRentals: number;
   };
-  stations: StationStatistic[];
+  stations: StationWithBikes[];
 }
-export interface StationStatistic {
+export interface StationWithBikes {
   _id: string;
   name: string;
   address: string;

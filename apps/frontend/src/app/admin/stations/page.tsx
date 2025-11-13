@@ -14,6 +14,7 @@ import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { stationColumns } from "@/columns/station-column";
 import { formatDateUTC } from "@/utils/formatDateTime";
+import type { StationStatistic } from "@/types/Station";
 // MAIN
 export default function StationsPage() {
   // STATES
@@ -36,8 +37,8 @@ export default function StationsPage() {
     updateStation,
     getReservationStats,
     responseStationReservationStats,
-    responseStationBikeRevenue,
-    getStationBikeRevenue,
+    getStationRevenue,
+    responseStationRevenue
   } = useStationActions({
     hasToken: true,
     page: page,
@@ -105,7 +106,9 @@ export default function StationsPage() {
       });
     }
   }, [isEditModalOpen, responseStationDetail, resetEdit]);
-
+  useEffect(() => {
+    getStationRevenue();
+  }, [getStationRevenue]);
   // MAP FOR CREATE MODAL
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -249,12 +252,14 @@ export default function StationsPage() {
               variant="outline"
               onClick={() => {
                 if (!showRevenueReport) {
-                  getStationBikeRevenue();
+                  getStationRevenue();
                 }
                 setShowRevenueReport(!showRevenueReport);
               }}
             >
-              {showRevenueReport ? "Ẩn báo cáo doanh thu" : "Xem báo cáo doanh thu"}
+              {showRevenueReport
+                ? "Ẩn báo cáo doanh thu"
+                : "Xem báo cáo doanh thu"}
             </Button>
           </div>
         </div>
@@ -268,7 +273,7 @@ export default function StationsPage() {
           </div>
         </div>
 
-        {showRevenueReport && responseStationBikeRevenue?.result && (
+        {showRevenueReport && responseStationRevenue?.result && (
           <div className="space-y-6">
             <div className="bg-card border border-border rounded-lg p-6">
               <h2 className="text-xl font-bold text-foreground mb-4">
@@ -276,29 +281,41 @@ export default function StationsPage() {
               </h2>
               <div className="mb-4">
                 <p className="text-sm text-muted-foreground">
-                  Từ {formatDateUTC((responseStationBikeRevenue.result as any).period.from)} đến{" "}
-                  {formatDateUTC((responseStationBikeRevenue.result as any).period.to)}
+                  Từ {formatDateUTC(responseStationRevenue.result.period.from)}{" "}
+                  đến {formatDateUTC(responseStationRevenue.result.period.to)}
                 </p>
               </div>
 
               {/* SUMMARY CARDS */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-muted/50 rounded-lg p-4">
                   <p className="text-sm text-muted-foreground">Tổng số trạm</p>
                   <p className="text-2xl font-bold text-foreground">
-                    {(responseStationBikeRevenue.result as any).summary.totalStations}
+                    {responseStationRevenue.result.summary.totalStations}
                   </p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Tổng doanh thu</p>
+                  <p className="text-sm text-muted-foreground">
+                    Tổng doanh thu
+                  </p>
                   <p className="text-2xl font-bold text-foreground">
-                    {(responseStationBikeRevenue.result as any).summary.totalRevenueFormatted}
+                    {responseStationRevenue.result.summary.totalRevenueFormatted}
                   </p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-4">
-                  <p className="text-sm text-muted-foreground">Tổng lượt thuê</p>
+                  <p className="text-sm text-muted-foreground">
+                    Tổng lượt thuê
+                  </p>
                   <p className="text-2xl font-bold text-foreground">
-                    {(responseStationBikeRevenue.result as any).summary.totalRentals}
+                    {responseStationRevenue.result.summary.totalRentals}
+                  </p>
+                </div>
+                <div className="bg-muted/50 rounded-lg p-4">
+                  <p className="text-sm text-muted-foreground">
+                    TB doanh thu/trạm
+                  </p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {responseStationRevenue.result.summary.avgRevenuePerStationFormatted}
                   </p>
                 </div>
               </div>
@@ -325,52 +342,39 @@ export default function StationsPage() {
                           Lượt thuê
                         </th>
                         <th className="border border-border p-3 text-left text-sm font-medium text-muted-foreground">
-                          Chi tiết xe
+                          Thời gian thuê
                         </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(responseStationBikeRevenue.result as any).stations.map((station: any) => (
-                        <tr key={station._id} className="hover:bg-muted/25">
-                          <td className="border border-border p-3 text-sm text-foreground">
-                            {station.name}
-                          </td>
-                          <td className="border border-border p-3 text-sm text-foreground">
-                            {station.address}
-                          </td>
-                          <td className="border border-border p-3 text-sm text-foreground font-medium">
-                            {station.stationTotalRevenueFormatted}
-                          </td>
-                          <td className="border border-border p-3 text-sm text-foreground">
-                            {station.stationTotalRentals}
-                          </td>
-                          <td className="border border-border p-3 text-sm">
-                            <details className="cursor-pointer">
-                              <summary className="text-foreground hover:text-primary">
-                                Xem {station.bikes.length} xe
-                              </summary>
-                              <div className="mt-2 space-y-2">
-                                {station.bikes.map((bike: any) => (
-                                  <div key={bike._id} className="bg-muted/30 rounded p-2">
-                                    <div className="grid grid-cols-2 gap-2 text-xs">
-                                      <span className="text-muted-foreground">Chip ID:</span>
-                                      <span className="text-foreground">{bike.chip_id}</span>
-                                      <span className="text-muted-foreground">Doanh thu:</span>
-                                      <span className="text-foreground font-medium">
-                                        {bike.totalRevenueFormatted}
-                                      </span>
-                                      <span className="text-muted-foreground">Lượt thuê:</span>
-                                      <span className="text-foreground">{bike.totalRentals}</span>
-                                      <span className="text-muted-foreground">Thời gian:</span>
-                                      <span className="text-foreground">{bike.totalDuration} phút</span>
-                                    </div>
-                                  </div>
-                                ))}
+                      {responseStationRevenue.result.stations.map(
+                        (station: StationStatistic) => (
+                          <tr key={station._id} className="hover:bg-muted/25">
+                            <td className="border border-border p-3 text-sm text-foreground">
+                              {station.name}
+                            </td>
+                            <td className="border border-border p-3 text-sm text-foreground">
+                              {station.address}
+                            </td>
+                            <td className="border border-border p-3 text-sm text-foreground font-medium">
+                              {station.totalRevenueFormatted}
+                            </td>
+                            <td className="border border-border p-3 text-sm text-foreground">
+                              {station.totalRentals}
+                            </td>
+                            <td className="border border-border p-3 text-sm">
+                              <div className="space-y-1">
+                                <div className="text-muted-foreground text-xs">
+                                  Tổng thời gian: {station.totalDurationFormatted}
+                                </div>
+                                <div className="text-muted-foreground text-xs">
+                                  TB thời gian: {station.avgDurationFormatted}
+                                </div>
                               </div>
-                            </details>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                          </tr>
+                        )
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -509,6 +513,7 @@ export default function StationsPage() {
               )}
               <div className="flex gap-3 pt-4">
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1"
@@ -613,6 +618,7 @@ export default function StationsPage() {
                 )}
                 <div className="flex gap-3 pt-4">
                   <Button
+                    type="button"
                     variant="outline"
                     onClick={() => setIsEditModalOpen(false)}
                     className="flex-1"
@@ -734,7 +740,8 @@ export default function StationsPage() {
                           Tổng đặt chỗ
                         </label>
                         <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.total_count || "0"}
+                          {responseStationReservationStats.result.total_count ||
+                            "0"}
                         </p>
                       </div>
                       <div>
@@ -742,7 +749,8 @@ export default function StationsPage() {
                           Đang chờ xử lý
                         </label>
                         <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.status_counts.Pending || "0"}
+                          {responseStationReservationStats.result.status_counts
+                            .Pending || "0"}
                         </p>
                       </div>
                       <div>
@@ -750,7 +758,8 @@ export default function StationsPage() {
                           Đã hủy
                         </label>
                         <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.status_counts.Cancelled || "0"}
+                          {responseStationReservationStats.result.status_counts
+                            .Cancelled || "0"}
                         </p>
                       </div>
                       <div>
@@ -758,7 +767,8 @@ export default function StationsPage() {
                           Đã hết hạn
                         </label>
                         <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.status_counts.Expired || "0"}
+                          {responseStationReservationStats.result.status_counts
+                            .Expired || "0"}
                         </p>
                       </div>
                       {/* <div>
@@ -774,7 +784,10 @@ export default function StationsPage() {
                           Xe đang đặt trước
                         </label>
                         <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.reserving_bikes.length}
+                          {
+                            responseStationReservationStats.result
+                              .reserving_bikes.length
+                          }
                         </p>
                       </div>
                     </div>
@@ -783,6 +796,7 @@ export default function StationsPage() {
 
                 <div className="pt-4">
                   <Button
+                    type="button"
                     onClick={() => setIsDetailModalOpen(false)}
                     className="w-full"
                   >

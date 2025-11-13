@@ -10,6 +10,7 @@ import { useSoftDeleteStationMutation } from "./mutations/Station/useSoftDeleteS
 import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQuery";
 import { useGetStationStatsReservationQuery } from "./query/Station/useGetStationStatsReservation";
 import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeRevenue";
+import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -178,6 +179,13 @@ export const useStationActions = ({
     }
     refetchStationBikeRevenue();
   }, [refetchStationBikeRevenue, hasToken]);
+  const {data : responseStationRevenue , refetch : refetchStationRevenue } = useGetStationRevenue();
+  const getStationRevenue = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchStationRevenue();
+  }, [refetchStationRevenue, hasToken]);
   return {
     getAllStations,
     getStationByID,
@@ -196,5 +204,7 @@ export const useStationActions = ({
     getReservationStats,
     responseStationBikeRevenue,
     getStationBikeRevenue,
+    responseStationRevenue,
+    getStationRevenue,
   };
 };

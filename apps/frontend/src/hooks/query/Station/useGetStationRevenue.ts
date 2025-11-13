@@ -1,17 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
-const getStationRevenue = async ({
-  from,
-  to,
-}: {
-  from?: string;
-  to?: string;
-}) => {
+const getStationRevenue = async () => {
   try {
-    const response = await stationService.getStationRevenue({
-      from: from,
-      to: to,
-    });
+    const response = await stationService.getStationRevenue();
     if (response.status === 200) {
       return response.data;
     }
@@ -20,10 +11,10 @@ const getStationRevenue = async ({
     throw new Error("Failed to fetch station bike revenue");
   }
 };
-export const useGetStationRevenue = ({from,to} : {from ?: string , to ?:string}) => {
+export const useGetStationRevenue = () => {
   return useQuery({
-    queryKey: ["station-revenue", from , to ],
-    queryFn: () => getStationRevenue({from : from , to : to}),
+    queryKey: ["station-revenue"],
+    queryFn: () => getStationRevenue(),
     enabled: false,
   });
 };

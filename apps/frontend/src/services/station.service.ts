@@ -103,16 +103,12 @@ export const stationService = {
     >(STATION_ENDPOINTS.STATION_BIKE_REVENUE());
     return response;
   },
-  getStationRevenue: async ({from, to}: {from?: string, to?: string}): Promise<
-    AxiosResponse<ApiDetailResponse<StationStatisticsResponse[]>>
+  getStationRevenue: async (): Promise<
+    AxiosResponse<ApiDetailResponse<StationStatisticsResponse>>
   > => {
     const response = await fetchHttpClient.get<
-      ApiDetailResponse<StationStatisticsResponse[]>
-    >(STATION_ENDPOINTS.STATION_REVENUE(), 
-    {
-      from,
-      to,
-    });
+      ApiDetailResponse<StationStatisticsResponse>
+    >(STATION_ENDPOINTS.STATION_REVENUE(), );
     return response;
   },
 };
