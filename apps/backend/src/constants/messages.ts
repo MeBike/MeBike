@@ -383,6 +383,7 @@ export const RESERVATIONS_MESSAGE = {
   FS_INVALID_DATE: 'Ngày phải có định dạng YYYY-MM-DD',
   FS_END_DATE_BEFORE_START: 'Ngày kết thúc phải lớn hơn ngày bắt đầu',
   FS_PAST_DATE_NOT_ALLOWED: 'Không được chọn ngày trong quá khứ',
+  FS_MUST_BEGIN_FROM_TOMORROW: 'Các ngày cố định phải bắt đầu từ ngày mai',
 
   FS_REQUIRED_STATION_ID: 'Vui lòng nhập ID trạm',
   FS_INVALID_SLOT_START_FORMAT: 'Thời gian bắt đầu slot phải theo định dạng HH:MM',
@@ -415,7 +416,8 @@ export const RESERVATIONS_MESSAGE = {
   SUB_CREATE_FAILED: 'Đăng ký gói thất bại',
   SUB_ACTIVATE_TOO_EARLY: 'Gói chỉ có thể kích hoạt sau khi đăng ký ít nhất 1 ngày',
   SUB_ALREADY_HAS_PENDING: 'Bạn đã có gói đang chờ kích hoạt',
-  NOT_ENOUGH_BALANCE_TO_SUBSCRIBE: 'Tài khoản của bạn không đủ để đăng kí gói tháng %s (giá gói: %s)',
+  NOT_ENOUGH_BALANCE_TO_SUBSCRIBE: 'Số dư trong ví của bạn không đủ để đăng kí gói tháng %s (giá gói: %s)',
+  NOT_ENOUGH_BALANCE_TO_PAY: 'Số dư trong ví của bạn không đủ để thanh toán (tổng giá: %s)',
   SUB_MUST_BE_PENDING_TO_ACTIVATE: 'Chỉ có thể kích hoạt gói đang ở trạng thái ĐANG CHỜ XỬ LÍ',
   SUB_GET_DETAIL_SUCCESS: 'Xem chi tiết gói đăng kí thành công',
   SUB_CANNOT_OPERATE_OTHER_SUBSCRIPTION: 'Không thể thao tác với gói của người khác (chỉ dành cho nhân viên và quản trị viên)',
@@ -468,7 +470,7 @@ export const RESERVATIONS_MESSAGE = {
   PAYMENT_DESCRIPTION: 'Thanh toán phiên đặt trước (ID: %s)',
   REFUND_DESCRIPTION: 'Hoàn tiền cho phiên đặt trước (ID: %s)',
   SUBSCRIPTION_PAYMENT_DESCRIPTION: 'Thanh toán gói đăng kí tháng (ID: %s)',
-
+  FIXED_SLOT_PAYMENT_DESCRIPTION: 'Thanh toán cho khung đặt trước cố định (ID: %s)',
   // Quota
   QUOTA_EXCEEDED: 'Trạm này đã vượt ngưỡng xe cho phép đặt trước',
   DESTINATION_SAME_AS_SOURCE: 'Trạm đích phải khác trạm nguồn',

@@ -5,6 +5,10 @@ import databaseService from './database.services'
 import { generateDateTimeWithTimeAndDate, getLocalTime } from '~/utils/date-time'
 import Reservation from '~/models/schemas/reservation.schema'
 import reservationsService from './reservations.services'
+import { ErrorWithStatus } from '~/models/errors'
+import { RESERVATIONS_MESSAGE } from '~/constants/messages'
+import HTTP_STATUS from '~/constants/http-status'
+import walletService from './wallets.services'
 
 interface CreateFixedSlotTemplateParams {
   user_id: ObjectId
@@ -42,11 +46,9 @@ class FixedSlotTemplateService {
       }
     }
 
-    const usedCount = remainingUsages
+    const totalReservation = selected_dates.length
+    const useSubscription = sub && (unlimited || remainingUsages >= totalReservation)
     const reservations = params.selected_dates.map((date) => {
-      const useSubscription = sub && (unlimited || remainingUsages > 0)
-      if (!unlimited && useSubscription) remainingUsages--
-
       return new Reservation({
         user_id,
         station_id,
@@ -58,16 +60,21 @@ class FixedSlotTemplateService {
       })
     })
 
-    const totalReservation = selected_dates.length
-    const totalUsage = !unlimited ? (totalReservation <= usedCount ? totalReservation : usedCount) : totalReservation
-    const totalPrepaid =
-      totalUsage < totalReservation
-        ? reservations.reduce((sum, r) => {
-            return sum + Number(r.prepaid.toString())
-          }, 0)
-        : 0
+    let totalPrepaid = 0
+    if (!useSubscription) {
+      totalPrepaid = reservations.reduce((sum, r) => {
+        return sum + Number(r.prepaid.toString())
+      }, 0)
 
-    const canPay = totalPrepaid > 0 && reservationsService.isEnoughBalanceToPay(totalPrepaid, user_id)
+      const enoughToPay = reservationsService.isEnoughBalanceToPay(totalPrepaid, user_id)
+      if (!enoughToPay) {
+        throw new ErrorWithStatus({
+          message: RESERVATIONS_MESSAGE.NOT_ENOUGH_BALANCE_TO_PAY.replace('%s', totalPrepaid.toString()),
+          status: HTTP_STATUS.BAD_REQUEST
+        })
+      }
+    }
+
     const session = databaseService.getClient().startSession()
     try {
       await session.withTransaction(async () => {
@@ -76,23 +83,35 @@ class FixedSlotTemplateService {
           databaseService.reservations.insertMany(reservations, { session })
         ])
 
-        if (sub && totalUsage > 0) {
+        if (useSubscription) {
           await databaseService.subscriptions.updateOne(
             { _id: sub._id },
-            { $inc: { usage_count: totalUsage }, $set: { updated_at: getLocalTime() } },
+            { $inc: { usage_count: totalReservation }, $set: { updated_at: getLocalTime() } },
             { session }
           )
         }
       })
-      if(canPay){
+      if (totalPrepaid > 0) {
         // TODO: handle payment
+        const reservationIds = reservations.map((r) => r._id) as ObjectId[]
+        await walletService.paymentFixedSlotReservations(
+          user_id.toString(),
+          prepaid,
+          RESERVATIONS_MESSAGE.FIXED_SLOT_PAYMENT_DESCRIPTION.replace('%s', templateId.toString()),
+          reservationIds,
+          true
+        )
+      }
+
+      return {
+        template,
+        useSubscription
       }
     } catch (error) {
       throw error
     } finally {
       await session.endSession()
     }
-    return { ...template, _id: templateId }
   }
 
   async getDetail(template: FixedSlotTemplate) {
