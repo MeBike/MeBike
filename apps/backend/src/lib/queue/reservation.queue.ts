@@ -158,6 +158,15 @@ export const generateFixedSlotWorker = new Worker(
               }
             }
           ),
+          databaseService.rentals.updateOne(
+            { _id: reservation._id },
+            {
+              $set: {
+                bike_id: availableBike._id,
+                updated_at: now
+              }
+            }
+          ),
           databaseService.bikes.updateOne(
             { _id: availableBike._id },
             { $set: { status: BikeStatus.Reserved, updated_at: now } }
