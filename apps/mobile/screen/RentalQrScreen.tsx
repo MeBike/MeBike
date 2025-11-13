@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -17,8 +17,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 
 import { useAuth } from "@providers/auth-providers";
-import { useBikeStatusStream } from "@hooks/useBikeStatusStream";
-import type { BikeStatusUpdate } from "@hooks/useBikeStatusStream";
 import { rentalService } from "@services/rental.service";
 
 import type { RentalDetail } from "../types/RentalTypes";
@@ -221,7 +219,6 @@ function RentalQrScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const hasToken = Boolean(user?._id);
-  const queryClient = useQueryClient();
 
   const {
     data: rentalDetailResponse,
@@ -245,37 +242,6 @@ function RentalQrScreen() {
     }
   }, [rentalDetail?.status]);
 
-  const handleRealtimeUpdate = useCallback((payload: BikeStatusUpdate) => {
-    if (!bikeId) {
-      return;
-    }
-    if (payload.bikeId === bikeId && payload.status === "CÓ SẴN") {
-      setIsSessionCompleted(true);
-      refetchRentalDetail();
-      queryClient.invalidateQueries({ queryKey: ["rentals"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
-    }
-  }, [bikeId, queryClient, refetchRentalDetail]);
-
-  const { isConnected, disconnect } = useBikeStatusStream({
-    autoConnect: hasToken && Boolean(bikeId) && !isSessionCompleted,
-    onUpdate: handleRealtimeUpdate,
-    onError: (error) => {
-      console.warn("[SSE] bike status stream error", error);
-    },
-  });
-
-  useEffect(() => {
-    if (isSessionCompleted) {
-      disconnect();
-    }
-  }, [disconnect, isSessionCompleted]);
-
-  const connectionColor = isSessionCompleted
-    ? "#10B981"
-    : isConnected
-      ? "#34D399"
-      : "#FBBF24";
 
   return (
     <View style={styles.container}>
@@ -350,13 +316,13 @@ function RentalQrScreen() {
                   (navigation as any).navigate("BookingHistoryDetail", { bookingId })}
                 activeOpacity={0.9}
               >
-                <Text style={styles.primaryButtonText}>Xem chi tiết chuyến đi</Text>
+                <Text style={styles.primaryButtonText}>Chi tiết chuyến đi</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.secondaryAction}
                 onPress={() => navigation.goBack()}
               >
-                <Text style={styles.secondaryActionText}>Đóng màn hình</Text>
+                <Text style={styles.secondaryActionText}>Quay lại</Text>
               </TouchableOpacity>
             </>
           ) : (
