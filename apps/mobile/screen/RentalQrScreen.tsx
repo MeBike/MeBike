@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  SafeAreaView,
+  ActivityIndicator,
+  RefreshControl,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -13,6 +15,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
+
+import { useAuth } from "@providers/auth-providers";
+import { useBikeStatusStream } from "@hooks/useBikeStatusStream";
+import type { BikeStatusUpdate } from "@hooks/useBikeStatusStream";
+import { rentalService } from "@services/rental.service";
+
+import type { RentalDetail } from "../types/RentalTypes";
 
 type RouteParams = {
   bookingId: string;
@@ -155,6 +164,54 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  completedCard: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+    marginVertical: 24,
+  },
+  completedTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#0F6BFF",
+    marginTop: 16,
+  },
+  completedSubtitle: {
+    textAlign: "center",
+    marginTop: 8,
+    fontSize: 14,
+    color: "#4B587A",
+    lineHeight: 20,
+  },
+  secondaryAction: {
+    marginTop: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#0066FF",
+  },
+  secondaryActionText: {
+    color: "#0066FF",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 12,
+  },
+  loadingText: {
+    color: "#1F3A6F",
+    fontSize: 13,
+  },
 });
 
 function RentalQrScreen() {
@@ -162,6 +219,64 @@ function RentalQrScreen() {
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const hasToken = Boolean(user?._id);
+  const queryClient = useQueryClient();
+
+  const {
+    data: rentalDetailResponse,
+    isLoading: isRentalLoading,
+    refetch: refetchRentalDetail,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["rentals", "detail", bookingId],
+    queryFn: () => rentalService.userGetRentalById(bookingId),
+    enabled: hasToken && Boolean(bookingId),
+  });
+
+  const rentalDetail = rentalDetailResponse?.data?.result as RentalDetail | undefined;
+  const bikeId = rentalDetail?.bike?._id;
+
+  const [isSessionCompleted, setIsSessionCompleted] = useState(false);
+
+  useEffect(() => {
+    if (rentalDetail?.status === "HOÀN THÀNH") {
+      setIsSessionCompleted(true);
+    }
+  }, [rentalDetail?.status]);
+
+  const handleRealtimeUpdate = useCallback((payload: BikeStatusUpdate) => {
+    if (!bikeId) {
+      return;
+    }
+    if (payload.bikeId === bikeId && payload.status === "CÓ SẴN") {
+      setIsSessionCompleted(true);
+      refetchRentalDetail();
+      queryClient.invalidateQueries({ queryKey: ["rentals"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "detail"] });
+    }
+  }, [bikeId, queryClient, refetchRentalDetail]);
+
+  const { isConnected, disconnect } = useBikeStatusStream({
+    autoConnect: hasToken && Boolean(bikeId) && !isSessionCompleted,
+    onUpdate: handleRealtimeUpdate,
+    onError: (error) => {
+      console.warn("[SSE] bike status stream error", error);
+    },
+  });
+
+  useEffect(() => {
+    if (isSessionCompleted) {
+      disconnect();
+    }
+  }, [disconnect, isSessionCompleted]);
+
+  const connectionColor = isSessionCompleted
+    ? "#10B981"
+    : isConnected
+      ? "#34D399"
+      : "#FBBF24";
 
   return (
     <View style={styles.container}>
@@ -181,53 +296,103 @@ function RentalQrScreen() {
         <Text style={styles.headerTitle}>Trình mã QR</Text>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetchRentalDetail}
+            tintColor="#0066FF"
+            colors={["#0066FF"]}
+          />
+        }
+      >
+        {isRentalLoading && !rentalDetail && (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator size="small" color="#0066FF" />
+            <Text style={styles.loadingText}>Đang tải thông tin chuyến đi...</Text>
+          </View>
+        )}
+
         <LinearGradient
           colors={["#0066FF", "#00B4D8"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroCard}
         >
-          <Text style={styles.heroTitle}>Đưa mã cho nhân viên</Text>
+          <Text style={styles.heroTitle}>
+            {isSessionCompleted ? "Hoàn tất trả xe" : "Đưa mã cho nhân viên"}
+          </Text>
           <Text style={styles.heroSubtitle}>
-            Nhân viên tại trạm sẽ quét mã này và kết thúc phiên thuê giúp bạn. Hãy giữ màn hình sáng trong quá trình quét.
+            {isSessionCompleted
+              ? "Nhân viên đã xác nhận kết thúc phiên thuê. Cảm ơn bạn đã sử dụng MeBike!"
+              : "Nhân viên tại trạm sẽ quét mã này và kết thúc phiên thuê giúp bạn. Hãy giữ màn hình sáng trong quá trình quét."}
           </Text>
         </LinearGradient>
 
-        <View style={styles.qrCard}>
+        <View style={[styles.qrCard, isSessionCompleted && styles.completedCard]}>
           <View style={styles.qrBadge}>
-            <Ionicons name="bicycle" size={14} color="#0F6BFF" />
-            <Text style={styles.qrBadgeText}>Mã thuê</Text>
+            <Ionicons name={isSessionCompleted ? "checkmark-circle" : "bicycle"} size={14} color="#0F6BFF" />
+            <Text style={styles.qrBadgeText}>
+              {isSessionCompleted ? "ĐÃ TRẢ XE" : "MÃ THUÊ"}
+            </Text>
           </View>
-          <QRCode
-            value={bookingId}
-            size={240}
-            backgroundColor="transparent"
-            color="#111"
-          />
-          <Text style={styles.qrValue}>{bookingId}</Text>
+          {isSessionCompleted ? (
+            <>
+              <Ionicons name="checkmark-circle" size={120} color="#10B981" />
+              <Text style={styles.completedTitle}>Phiên thuê đã kết thúc</Text>
+              <Text style={styles.completedSubtitle}>
+                Bạn có thể đóng màn hình hoặc xem lại chi tiết chuyến đi.
+              </Text>
+              <TouchableOpacity
+                style={[styles.primaryButton, { width: "100%", marginTop: 24 }]}
+                onPress={() =>
+                  (navigation as any).navigate("BookingHistoryDetail", { bookingId })}
+                activeOpacity={0.9}
+              >
+                <Text style={styles.primaryButtonText}>Xem chi tiết chuyến đi</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.secondaryAction}
+                onPress={() => navigation.goBack()}
+              >
+                <Text style={styles.secondaryActionText}>Đóng màn hình</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <QRCode
+                value={bookingId}
+                size={240}
+                backgroundColor="transparent"
+                color="#111"
+              />
+              <Text style={styles.qrValue}>{bookingId}</Text>
+            </>
+          )}
         </View>
 
-        <View style={styles.instructionCard}>
-          <Text style={styles.instructionTitle}>Hướng dẫn kết thúc phiên</Text>
-          {[
-            "Đến quầy hoặc gặp nhân viên hỗ trợ của MeBike tại trạm.",
-            "Nhấn “Trình mã QR” và đưa màn hình này cho họ quét.",
-            "Giữ mở ứng dụng cho đến khi nhân viên xác nhận đã kết thúc phiên thuê.",
-          ].map((text, index) => (
-            <View key={text} style={styles.instructionItem}>
-              <Text style={styles.instructionIndex}>{index + 1}</Text>
-              <Text style={styles.instructionText}>{text}</Text>
-            </View>
-          ))}
-          <Text style={styles.noteText}>
-            Lưu ý: Mã QR chỉ hoạt động khi chuyến đi đang diễn ra. Không chia sẻ mã
-            cho người lạ để tránh bị đóng phiên ngoài ý muốn.
-          </Text>
-        </View>
+        {!isSessionCompleted && (
+          <View style={styles.instructionCard}>
+            <Text style={styles.instructionTitle}>Hướng dẫn kết thúc phiên</Text>
+            {[
+              "Đến quầy hoặc gặp nhân viên hỗ trợ của MeBike tại trạm.",
+              "Nhấn “Trình mã QR” và đưa màn hình này cho họ quét.",
+              "Giữ mở ứng dụng cho đến khi nhân viên xác nhận đã kết thúc phiên thuê.",
+            ].map((text, index) => (
+              <View key={text} style={styles.instructionItem}>
+                <Text style={styles.instructionIndex}>{index + 1}</Text>
+                <Text style={styles.instructionText}>{text}</Text>
+              </View>
+            ))}
+            <Text style={styles.noteText}>
+              Lưu ý: Mã QR chỉ hoạt động khi chuyến đi đang diễn ra. Không chia sẻ mã
+              cho người lạ để tránh bị đóng phiên ngoài ý muốn.
+            </Text>
+          </View>
+        )}
       </ScrollView>
-
-     
     </View>
   );
 }
