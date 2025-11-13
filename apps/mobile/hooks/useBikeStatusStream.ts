@@ -25,6 +25,7 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
   const eventSourceRef = useRef<EventSource<CustomEventName> | null>(null);
   const onUpdateRef = useRef<typeof onUpdate>(onUpdate);
   const onErrorRef = useRef<typeof onError>(onError);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     onUpdateRef.current = onUpdate;
@@ -40,6 +41,13 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
       eventSourceRef.current = null;
     }
     setIsConnected(false);
+  }, []);
+
+  const clearReconnectTimeout = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
   }, []);
 
   const connect = useCallback(async () => {
@@ -77,15 +85,28 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
           || "SSE connection error";
         onErrorRef.current?.(new Error(message));
         setIsConnected(false);
-        disconnect();
+        clearReconnectTimeout();
+        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectTimeoutRef.current = null;
+          if (autoConnect) {
+            connect();
+          }
+        }, 5000);
       });
 
       eventSourceRef.current = eventSource;
     }
     catch (error) {
       onErrorRef.current?.(error as Error);
+      clearReconnectTimeout();
+      reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectTimeoutRef.current = null;
+        if (autoConnect) {
+          connect();
+        }
+      }, 5000);
     }
-  }, [disconnect]);
+  }, [autoConnect, clearReconnectTimeout, disconnect]);
 
   useEffect(() => {
     if (autoConnect) {
@@ -94,8 +115,9 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
 
     return () => {
       disconnect();
+      clearReconnectTimeout();
     };
-  }, [autoConnect, connect, disconnect]);
+  }, [autoConnect, connect, disconnect, clearReconnectTimeout]);
 
   return {
     connect,

@@ -36,6 +36,7 @@ import Subscription from '~/models/schemas/subscription.schema'
 
 import { redisPublisher } from '~/lib/redis-pubsub'
 import logger from '~/lib/logger'
+import { enqueuePendingBikeStatus } from '~/lib/pending-bike-status'
 
 const PENALTY_HOURS = parseInt(process.env.RENTAL_PENALTY_HOURS || '24', 10)
 const PENALTY_AMOUNT = parseInt(process.env.RENTAL_PENALTY_AMOUNT || '50000', 10)
@@ -374,6 +375,7 @@ class RentalsService {
           .then(() => logger.info({ bikeId: bike._id, status: bike.status }, 'Published bike status update.'))
           .catch((err) => logger.error({ err, bikeId: bike._id }, 'Failed to publish bike status update.'))
       )
+      enqueuePendingBikeStatus(endedRental.user_id.toString(), payload)
     }
 
     await Promise.allSettled(tasks)

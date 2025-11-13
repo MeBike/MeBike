@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -254,7 +254,6 @@ function RentalQrScreen() {
       refetchRentalDetail();
       queryClient.invalidateQueries({ queryKey: ["rentals"] });
       queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
-      queryClient.invalidateQueries({ queryKey: ["rentals", "detail"] });
     }
   }, [bikeId, queryClient, refetchRentalDetail]);
 
