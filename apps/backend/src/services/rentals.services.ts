@@ -336,7 +336,7 @@ class RentalsService {
 
   async afterRentalEnd(endedRental: Rental, logData?: any) {
     const tasks: Promise<any>[] = []
-    const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', endedRental.bike_id.toString())
+    const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', endedRental.bike_id!.toString())
 
     if (endedRental.total_price && Number(endedRental.total_price) > 0) {
       tasks.push(
@@ -410,7 +410,7 @@ class RentalsService {
     const bike = await databaseService.bikes.findOne({ _id: rental.bike_id })
     if (!bike) {
       throw new ErrorWithStatus({
-        message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id.toString()),
+        message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id!.toString()),
         status: HTTP_STATUS.NOT_FOUND
       })
     }

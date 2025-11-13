@@ -403,7 +403,7 @@ export const cancelRentalValidator = validate(
             const bike = await databaseService.bikes.findOne({ _id: rental.bike_id })
             if (!bike) {
               throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id.toString()),
+                message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id!.toString()),
                 status: HTTP_STATUS.NOT_FOUND
               })
             }

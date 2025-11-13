@@ -1,5 +1,11 @@
 import { ClientSession, Decimal128, ObjectId } from 'mongodb'
-import { FixedSlotStatus, ReservationOptions, ReservationStatus, SubscriptionStatus } from '~/constants/enums'
+import {
+  FixedSlotStatus,
+  RentalStatus,
+  ReservationOptions,
+  ReservationStatus,
+  SubscriptionStatus
+} from '~/constants/enums'
 import FixedSlotTemplate from '~/models/schemas/fixed-slot.schema'
 import databaseService from './database.services'
 import { generateDateTimeWithTimeAndDate, getLocalTime } from '~/utils/date-time'
@@ -10,6 +16,7 @@ import { RESERVATIONS_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
 import walletService from './wallets.services'
 import { uniqueDates } from '~/utils/validation'
+import Rental from '~/models/schemas/rental.schema'
 
 interface CreateFixedSlotTemplateParams {
   user_id: ObjectId
@@ -94,12 +101,24 @@ class FixedSlotTemplateService {
 
     const reservations = selected_dates.map((date) => {
       return new Reservation({
+        _id: new ObjectId(),
         user_id,
         station_id,
         start_time: generateDateTimeWithTimeAndDate(slot_start, date),
         prepaid: useSubscription ? Decimal128.fromString('0') : prepaid,
         reservation_option: ReservationOptions.FIXED_SLOT,
         fixed_slot_template_id: templateId,
+        subscription_id: useSubscription ? sub._id : undefined
+      })
+    })
+
+    const rentals = reservations.map((r) => {
+      return new Rental({
+        _id: r._id,
+        user_id,
+        start_station: r.station_id,
+        start_time: r.start_time,
+        status: RentalStatus.Reserved,
         subscription_id: useSubscription ? sub._id : undefined
       })
     })
@@ -117,7 +136,10 @@ class FixedSlotTemplateService {
       }
     }
 
-    await databaseService.reservations.insertMany(reservations, { session })
+    await Promise.all([
+      databaseService.reservations.insertMany(reservations, { session }),
+      databaseService.rentals.insertMany(rentals, { session })
+    ])
 
     if (useSubscription) {
       await databaseService.subscriptions.updateOne(
@@ -212,63 +234,91 @@ class FixedSlotTemplateService {
     }
 
     const updateSlotStart = updates.slot_start || template.slot_start
-    if (datesToAdd.length > 0) {
-      const session = databaseService.getClient().startSession()
-      await this.generateAndInsertReservations({
-        user_id: template.user_id,
-        station_id: template.station_id,
-        slot_start: updateSlotStart,
-        selected_dates: datesToAdd,
-        template,
-        session
+    const session = databaseService.getClient().startSession()
+    try {
+      await session.withTransaction(async () => {
+        if (datesToAdd.length > 0) {
+          await this.generateAndInsertReservations({
+            user_id: template.user_id,
+            station_id: template.station_id,
+            slot_start: updateSlotStart,
+            selected_dates: datesToAdd,
+            template,
+            session
+          })
+        }
+
+        if (datesToUpdate.length > 0 && updates.slot_start && updates.slot_start !== template.slot_start) {
+          const updateSlotStart = updates.slot_start
+
+          datesToUpdate.map(async (date) => {
+            const newStartTime = generateDateTimeWithTimeAndDate(updateSlotStart, date)
+            const reservationsOfDate = await databaseService.reservations
+              .find({
+                fixed_slot_template_id: templateId,
+                start_time: {
+                  $gte: new Date(date + 'T00:00:00.000Z'),
+                  $lt: new Date(date + 'T23:59:59.999Z')
+                }
+              })
+              .toArray()
+
+            const reservationIds = reservationsOfDate.map((r) => r._id)
+
+            // Update reservation start_time
+            await databaseService.reservations.updateMany(
+              { _id: { $in: reservationIds } },
+              { $set: { start_time: newStartTime, updated_at: now } },
+              { session }
+            )
+
+            // Update corresponding rentals
+            await databaseService.rentals.updateMany(
+              { _id: { $in: reservationIds } },
+              { $set: { start_time: newStartTime, updated_at: now } },
+              { session }
+            )
+
+            updatedData.slot_start = updateSlotStart
+          })
+        }
+
+        if (datesToRemove.length > 0) {
+          const startTimes = datesToRemove.map((d) => generateDateTimeWithTimeAndDate(template.slot_start, d))
+          const reservationsToDelete = await databaseService.reservations
+            .find({
+              fixed_slot_template_id: templateId,
+              start_time: { $in: startTimes },
+              status: ReservationStatus.Pending
+            })
+            .toArray()
+
+          const reservationIdsToDelete = reservationsToDelete.map((r) => r._id)
+
+          // Delete reservations
+          await databaseService.reservations.deleteMany({ _id: { $in: reservationIdsToDelete } }, { session })
+
+          // Delete corresponding rentals
+          await databaseService.rentals.deleteMany({ _id: { $in: reservationIdsToDelete } }, { session })
+        }
       })
-    }
 
-    if (datesToUpdate.length > 0 && updates.slot_start && updates.slot_start !== template.slot_start) {
-      const updateSlotStart = updates.slot_start
+      const updatedTemplate = await databaseService.fixedSlotTemplates.findOneAndUpdate(
+        { _id: templateId },
+        { $set: updatedData },
+        { returnDocument: 'after' }
+      )
 
-      datesToUpdate.map(async (date) => {
-        const newStartTime = generateDateTimeWithTimeAndDate(updateSlotStart, date)
-        await databaseService.reservations.updateMany(
-          {
-            fixed_slot_template_id: templateId,
-            start_time: {
-              $gte: new Date(date + 'T00:00:00.000Z'),
-              $lt: new Date(date + 'T23:59:59.999Z')
-            }
-          },
-          {
-            $set: {
-              start_time: newStartTime,
-              updated_at: now
-            }
-          }
-        )
-
-        updatedData.slot_start = updateSlotStart
-      })
-    }
-
-    if (datesToRemove.length > 0) {
-      const startTimes = datesToRemove.map((d) => generateDateTimeWithTimeAndDate(template.slot_start, d))
-      await databaseService.reservations.deleteMany({
-        fixed_slot_template_id: templateId,
-        start_time: { $in: startTimes },
-        status: ReservationStatus.Pending
-      })
-    }
-
-    const updatedTemplate = await databaseService.fixedSlotTemplates.findOneAndUpdate(
-      { _id: templateId },
-      { $set: updatedData },
-      { returnDocument: 'after' }
-    )
-
-    return {
-      ...updatedTemplate,
-      addedDates: datesToAdd,
-      updatedDates: datesToUpdate,
-      removedDates: datesToRemove
+      return {
+        ...updatedTemplate,
+        addedDates: datesToAdd,
+        updatedDates: datesToUpdate,
+        removedDates: datesToRemove
+      }
+    } catch (err) {
+      throw err
+    } finally {
+      await session.endSession()
     }
   }
 
