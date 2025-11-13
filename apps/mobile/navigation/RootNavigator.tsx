@@ -19,9 +19,12 @@ import ReportDetailScreen from "../screen/ReportDetailScreen";
 import ReservationDetailScreen from "../screen/reservation-detail-screen";
 import ReservationScreen from "../screen/reservation-screen";
 import ReservationFlowScreen from "../screen/ReservationFlowScreen";
+import RentalQrScreen from "../screen/RentalQrScreen";
+import StaffRentalDetailScreen from "../screen/StaffRentalDetailScreen";
 import ResetPasswordFormScreen from "../screen/ResetPasswordForm";
 import ResetPasswordOTPScreen from "../screen/ResetPasswordOTP";
 import StationDetailScreen from "../screen/StationDetail";
+import BikeDetailScreen from "../screen/BikeDetailScreen";
 import StationSelectScreen from "../styles/StationSelect";
 import SubscriptionScreen from "../screen/SubscriptionScreen";
 import SupportScreen from "../screen/SupportScreen";
@@ -66,6 +69,11 @@ function RootNavigator() {
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
+        name="BikeDetail"
+        component={BikeDetailScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
         name="Trạm"
         component={StationSelectScreen}
         options={{ headerShown: false, gestureEnabled: false }}
@@ -73,6 +81,16 @@ function RootNavigator() {
       <Stack.Screen
         name="BookingHistoryDetail"
         component={BookingHistoryDetail}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="StaffRentalDetail"
+        component={StaffRentalDetailScreen}
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="RentalQr"
+        component={RentalQrScreen}
         options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
