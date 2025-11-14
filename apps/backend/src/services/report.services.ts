@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb'
 
 import type { CreateReportReqBody } from '~/models/requests/reports.requests'
 
-import { ReportStatus, ReportTypeEnum, ReportPriority, Role } from '~/constants/enums'
+import { ReportStatus, ReportTypeEnum, ReportPriority, Role, RentalStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { REPORTS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -39,6 +39,26 @@ class ReportService {
       payload.type === ReportTypeEnum.SosHealth ||
       payload.type === ReportTypeEnum.SosThreat
     ) {
+      if (!payload.rental_id) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.BAD_REQUEST,
+          message: REPORTS_MESSAGES.RENTAL_ID_REQUIRED
+        })
+      }
+
+      const findRental = await databaseService.rentals.findOne({ _id: new ObjectId(payload.rental_id) })
+      if (!findRental) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.NOT_FOUND,
+          message: REPORTS_MESSAGES.RENTAL_NOT_FOUND
+        })
+      }
+      if (findRental.status !== RentalStatus.Rented) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.NOT_FOUND,
+          message: REPORTS_MESSAGES.RENTAL_NOT_RENTED
+        })
+      }
       reportData.priority = ReportPriority.URGENT
     }
 

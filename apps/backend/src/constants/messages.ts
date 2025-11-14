@@ -163,7 +163,9 @@ export const REPORTS_MESSAGES = {
   REASON_IS_REQUIRED: 'Lý do từ chối là bắt buộc',
   REASON_INVALID: 'Lý do từ chối không hợp lệ',
   ACCESS_DENIED: 'Truy cập bị từ chối',
-  ASSIGNEE_INVALID: 'Phải là nhân viên SOS hoặc nhân viên'
+  ASSIGNEE_INVALID: 'Phải là nhân viên SOS hoặc nhân viên',
+  RENTAL_ID_REQUIRED: 'ID thuê xe là bắt buộc',
+  RENTAL_NOT_RENTED: 'Phải là 1 phiên xe đang được thuê'
 }
 
 export const SUPPLIER_MESSAGE = {
