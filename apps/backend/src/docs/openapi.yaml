@@ -170,6 +170,8 @@ components:
       $ref: './components/schemas/GetBikeRevenueResponse.yaml'
     GetHighestRevenueStationResponse:
       $ref: './components/schemas/GetHighestRevenueStationResponse.yaml'
+    GetHighestRevenueBikeResponse:
+      $ref: './components/schemas/GetHighestRevenueBikeResponse.yaml'
 
     # --- Model Schemas ---
     User:
@@ -274,6 +276,10 @@ components:
       $ref: './components/schemas/StationWithBikeRevenue.yaml'
     BikeRevenueSummary:
       $ref: './components/schemas/BikeRevenueSummary.yaml'
+    HighestRevenueBikeStation:
+      $ref: './components/schemas/HighestRevenueBikeStation.yaml'
+    HighestRevenueBike:
+      $ref: './components/schemas/HighestRevenueBike.yaml'
 
   securitySchemes:
     BearerAuth:
