@@ -12,7 +12,7 @@ const PaymentInfoCard = ({ booking }: Props) => {
   const totalAmount = parseDecimal(booking.total_price);
   const isSubscriptionRental = Boolean(booking.subscription_id);
   const paymentMethodLabel = isSubscriptionRental ? "Gói tháng" : "Ví MeBike";
-  const amountLabel = isSubscriptionRental ? "Chi phí thêm:" : "Tổng tiền:";
+  const shouldShowAmount = !isSubscriptionRental || totalAmount > 0;
   const showSubscriptionNote = isSubscriptionRental && totalAmount === 0;
 
   return (
@@ -30,12 +30,14 @@ const PaymentInfoCard = ({ booking }: Props) => {
           {paymentMethodLabel}
         </Text>
       </View>
-      <View style={styles.paymentRow}>
-        <Text style={styles.paymentLabel}>{amountLabel}</Text>
-        <Text style={styles.paymentAmount}>
-          {totalAmount.toLocaleString("vi-VN")} đ
-        </Text>
-      </View>
+      {shouldShowAmount && (
+        <View style={styles.paymentRow}>
+          <Text style={styles.paymentLabel}>Tổng tiền:</Text>
+          <Text style={styles.paymentAmount}>
+            {totalAmount.toLocaleString("vi-VN")} đ
+          </Text>
+        </View>
+      )}
       {showSubscriptionNote && (
         <Text style={styles.subscriptionNote}>
           Chi phí đã bao gồm trong gói tháng.
