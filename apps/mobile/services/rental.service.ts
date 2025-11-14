@@ -22,6 +22,7 @@ const RENTAL_ENDPOINTS = {
   STAFF_ADMIN_GET_ALL_RENTALS: () => `${RENTAL_BASE}`,
   STAFF_ADMIN_GET_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
   STAFF_ADMIN_UPDATE_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
+  STAFF_ADMIN_END_RENTAL: (id: string) => `${RENTAL_BASE}/${id}/end`,
 };
 type RentalResponse = {
   data: RentingHistory[];
@@ -117,6 +118,16 @@ export const rentalService = {
   staffAdminGetDetailRental: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
       RENTAL_ENDPOINTS.STAFF_ADMIN_GET_DETAIL_RENTAL(id)
+    );
+    return response;
+  },
+  staffAdminEndRental: async (
+    id: string,
+    payload: { end_station: string; end_time?: string; reason: string }
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.put(
+      RENTAL_ENDPOINTS.STAFF_ADMIN_END_RENTAL(id),
+      payload
     );
     return response;
   },

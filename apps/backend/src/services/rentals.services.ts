@@ -34,9 +34,15 @@ import { FilterQuery } from 'mongoose'
 import subscriptionService from './subscription.services'
 import Subscription from '~/models/schemas/subscription.schema'
 
+import { redisPublisher } from '~/lib/redis-pubsub'
+import logger from '~/lib/logger'
+import { enqueuePendingBikeStatus } from '~/lib/pending-bike-status'
+
 const PENALTY_HOURS = parseInt(process.env.RENTAL_PENALTY_HOURS || '24', 10)
 const PENALTY_AMOUNT = parseInt(process.env.RENTAL_PENALTY_AMOUNT || '50000', 10)
 const HOURS_PER_USED = parseInt(process.env.SUB_HOURS_PER_USED || '10', 10)
+const BIKE_STATUS_CHANNEL = 'bike_status_updates'
+
 class RentalsService {
   async createRentalSession({
     user_id,
@@ -277,12 +283,14 @@ class RentalsService {
       if (durationHours > PENALTY_HOURS) {
         result.penalty_amount = PENALTY_AMOUNT
         totalPrice += PENALTY_AMOUNT
-        console.log(
-          `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${durationHours.toFixed(2)}h)`
+        logger.info(
+          `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${durationHours.toFixed(
+            2
+          )}h)`
         )
       }
     } else {
-      console.log(`[SOS] Bike unsolvable, user will not be charged for this rental.`)
+      logger.info(`[SOS] Bike unsolvable, user will not be charged for this rental.`)
     }
 
     const decimalTotalPrice = Decimal128.fromString(totalPrice.toString())
@@ -357,6 +365,17 @@ class RentalsService {
 
     if (bike?.chip_id) {
       tasks.push(iotService.sendBookingCommand(bike.chip_id, IotBookingCommand.release))
+    }
+
+    if (bike) {
+      const payload = JSON.stringify({ bikeId: bike._id.toString(), status: bike.status })
+      tasks.push(
+        redisPublisher
+          .publish(BIKE_STATUS_CHANNEL, payload)
+          .then(() => logger.info({ bikeId: bike._id, status: bike.status }, 'Published bike status update.'))
+          .catch((err) => logger.error({ err, bikeId: bike._id }, 'Failed to publish bike status update.'))
+      )
+      enqueuePendingBikeStatus(endedRental.user_id.toString(), payload)
     }
 
     await Promise.allSettled(tasks)
