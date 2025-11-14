@@ -2,11 +2,22 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BikeColors } from "@constants/BikeColors";
 import { useFixedSlotTemplateDetailQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplateDetailQuery";
+
+import { DateChips } from "./fixed-slot-detail/components/DateChips";
+import { InfoHighlights } from "./fixed-slot-detail/components/InfoHighlights";
+import { StationSummary } from "./fixed-slot-detail/components/StationSummary";
 
 import type {
   FixedSlotDetailNavigationProp,
@@ -38,7 +49,7 @@ export default function FixedSlotDetailScreen() {
         <Text style={styles.headerTitle}>Chi tiết khung giờ</Text>
       </LinearGradient>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         {isLoading || !data
           ? (
               <View style={styles.loader}>
@@ -47,24 +58,36 @@ export default function FixedSlotDetailScreen() {
             )
           : (
               <View style={styles.card}>
-                <Text style={styles.label}>Trạm</Text>
-                <Text style={styles.value}>{data.station_name ?? "Không xác định"}</Text>
+                <StationSummary
+                  name={data.station_name}
+                  stationId={data.station_id}
+                  status={data.status}
+                />
 
-                <Text style={styles.label}>Giờ bắt đầu</Text>
-                <Text style={styles.value}>{data.slot_start}</Text>
+                <InfoHighlights slotStart={data.slot_start} totalDates={data.selected_dates.length} />
 
-                <Text style={styles.label}>Trạng thái</Text>
-                <Text style={styles.value}>{data.status}</Text>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionLabel}>Danh sách ngày</Text>
+                  <Text style={styles.sectionMeta}>{data.selected_dates.length} ngày</Text>
+                </View>
+                <DateChips dates={data.selected_dates} />
 
-                <Text style={styles.label}>Ngày đã chọn</Text>
-                {data.selected_dates.map((date) => (
-                  <Text key={date} style={styles.dateItem}>
-                    {date}
-                  </Text>
-                ))}
+                {data.status === "ĐANG HOẠT ĐỘNG" && (
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() =>
+                      navigation.navigate("FixedSlotEditor", {
+                        templateId,
+                        stationId: data.station_id,
+                        stationName: data.station_name,
+                      })}
+                  >
+                    <Text style={styles.editButtonText}>Chỉnh sửa khung giờ</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -88,6 +111,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    backgroundColor: "#F3F5FB",
+  },
+  contentContainer: {
     padding: 20,
   },
   loader: {
@@ -96,24 +122,41 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   card: {
-    borderRadius: 20,
-    backgroundColor: BikeColors.surface,
-    padding: 20,
-    gap: 8,
+    borderRadius: 24,
+    backgroundColor: "#fff",
+    padding: 22,
+    gap: 16,
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
-  label: {
-    fontSize: 13,
-    textTransform: "uppercase",
-    color: BikeColors.textSecondary,
-    marginTop: 12,
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
   },
-  value: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: BikeColors.textPrimary,
-  },
-  dateItem: {
+  sectionLabel: {
     fontSize: 14,
-    color: BikeColors.textPrimary,
+    fontWeight: "600",
+    color: BikeColors.textSecondary,
+  },
+  sectionMeta: {
+    fontSize: 12,
+    color: BikeColors.textSecondary,
+  },
+  editButton: {
+    marginTop: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: BikeColors.primary,
+    alignItems: "center",
+  },
+  editButtonText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });
