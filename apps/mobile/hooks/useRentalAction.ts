@@ -1,13 +1,13 @@
-import type { AxiosError } from "axios";
+import type { RentalSchemaFormData } from "@schemas/rentalSchema";
+import type { AxiosError, AxiosResponse } from "axios";
 
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Alert } from "react-native";
 
-import type { RentalSchemaFormData } from "@schemas/rentalSchema";
-
 import type { EndRentalVariables } from "./mutations/Rentals/usePutEndCurrentRental";
+import type { RentingHistory } from "../types/RentalTypes";
 
 import { usePostRentQuery } from "./mutations/Rentals/usePostRentQuery";
 import usePutEndCurrentRental from "./mutations/Rentals/usePutEndCurrentRental";
@@ -44,7 +44,7 @@ function getErrorMessage(error: unknown, defaultMessage: string): string {
 
   return defaultMessage;
 }
-export function useRentalsActions(hasToken: boolean, bikeId?: string , station_id?: string) {
+export function useRentalsActions(hasToken: boolean, bikeId?: string, station_id?: string, onEndRentalSuccess?: () => void) {
   const queryClient = useQueryClient();
   const navigation = useNavigation();
   const useGetAllRentals = useGetAllRentalsQuery();
@@ -62,8 +62,9 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string , station_i
       onSuccess: (result) => {
         if (result.status === 200) {
           Alert.alert("Success", "Rental ended successfully.");
+          onEndRentalSuccess?.();
           queryClient.invalidateQueries({
-            queryKey: ["bikes", "all", undefined , undefined],
+            queryKey: ["bikes", "all", undefined, undefined],
           });
           queryClient.invalidateQueries({
             queryKey: ["rentals", "all", 1, 10],
@@ -105,15 +106,17 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string , station_i
       },
     });
   }, [hasToken, navigation, usePutEndRental]);
+  type PostRentOptions = {
+    onSuccess?: (rental: RentingHistory) => void;
+  };
+
   const postRent = useCallback(
-    async (data: RentalSchemaFormData) => {
+    async (data: RentalSchemaFormData, options?: PostRentOptions) => {
       usePostRent.mutate(data, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result.status === 200) {
+        onSuccess: (response: AxiosResponse<{ message?: string; result?: RentingHistory }>) => {
+          if (response.status === 200) {
             Alert.alert("Success", "Thuê xe thành công.");
+            const rental = response.data?.result;
             queryClient.invalidateQueries({
               queryKey: [
                 "bikes",
@@ -137,19 +140,23 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string , station_i
             queryClient.invalidateQueries({
               queryKey: ["station"],
             });
-          } else {
+            if (rental) {
+              options?.onSuccess?.(rental);
+            }
+          }
+          else {
             Alert.alert("Error", "Failed to rent the bike.");
           }
         },
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            "An error occurred while renting the bike."
+            "An error occurred while renting the bike.",
           );
-          
+
           // Check if error is due to insufficient balance
           const isInsufficientBalance = errorMessage.includes("không đủ") || errorMessage.includes("insufficient");
-          
+
           if (isInsufficientBalance) {
             Alert.alert(
               "Không đủ tiền",
@@ -166,9 +173,10 @@ export function useRentalsActions(hasToken: boolean, bikeId?: string , station_i
                     navigation.navigate("MyWallet" as never);
                   },
                 },
-              ]
+              ],
             );
-          } else {
+          }
+          else {
             Alert.alert("Lỗi", errorMessage);
           }
         },

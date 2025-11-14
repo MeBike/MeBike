@@ -1,0 +1,29 @@
+type: object
+description: "Tóm tắt doanh thu từ tất cả các trạm."
+properties:
+  totalStations:
+    type: integer
+    description: "Tổng số trạm có doanh thu trong kỳ."
+    example: 10
+  totalRevenue:
+    type: number
+    format: double
+    description: "Tổng doanh thu từ tất cả các trạm (dạng số)."
+    example: 50000000
+  totalRevenueFormatted:
+    type: string
+    description: "Tổng doanh thu (đã định dạng tiền tệ)."
+    example: "50.000.000 VND"
+  totalRentals:
+    type: integer
+    description: "Tổng số lượt thuê từ tất cả các trạm."
+    example: 1230
+  avgRevenuePerStation:
+    type: number
+    format: double
+    description: "Doanh thu trung bình mỗi trạm (dạng số)."
+    example: 5000000
+  avgRevenuePerStationFormatted:
+    type: string
+    description: "Doanh thu trung bình mỗi trạm (đã định dạng tiền tệ)."
+    example: "5.000.000 VND"

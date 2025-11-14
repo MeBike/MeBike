@@ -793,6 +793,207 @@ class StationsService {
     };
   }
 
+  async getBikeRevenueByStation(query: { from?: string; to?: string }) {
+    //dd-mm-yyyy format or use default
+    const parseDate = (dateStr?: string) => {
+      if (!dateStr) return null;
+
+      //check dd-mm-yyyy format
+      const ddmmyyyyMatch = dateStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+      if (ddmmyyyyMatch) {
+        const [, dayStr, monthStr, yearStr] = ddmmyyyyMatch;
+        const day = parseInt(dayStr, 10);
+        const month = parseInt(monthStr, 10);
+        const year = parseInt(yearStr, 10);
+
+        //validate ranges
+        if (year < 1900 || year > 2100) {
+          throw new ErrorWithStatus({
+            message: `Năm ${year} không hợp lệ. Năm phải từ 1900 đến 2100.`,
+            status: HTTP_STATUS.BAD_REQUEST,
+          });
+        }
+
+        if (month < 1 || month > 12) {
+          throw new ErrorWithStatus({
+            message: `Tháng ${month} không hợp lệ. Tháng phải từ 01 đến 12.`,
+            status: HTTP_STATUS.BAD_REQUEST,
+          });
+        }
+
+        if (day < 1 || day > 31) {
+          throw new ErrorWithStatus({
+            message: `Ngày ${day} không hợp lệ. Ngày phải từ 01 đến 31.`,
+            status: HTTP_STATUS.BAD_REQUEST,
+          });
+        }
+
+        //check if date actually exists
+        const dateObj = new Date(year, month - 1, day);
+        if (dateObj.getFullYear() !== year ||
+            dateObj.getMonth() !== month - 1 ||
+            dateObj.getDate() !== day) {
+          throw new ErrorWithStatus({
+            message: `Ngày ${dayStr}-${monthStr}-${yearStr} không tồn tại.`,
+            status: HTTP_STATUS.BAD_REQUEST,
+          });
+        }
+
+        return new Date(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}T00:00:00.000Z`);
+      }
+
+      const isoDate = new Date(dateStr);
+      if (isNaN(isoDate.getTime())) {
+        throw new ErrorWithStatus({
+          message: `Định dạng ngày không hợp lệ: ${dateStr}. Sử dụng dd-mm-yyyy hoặc ISO string.`,
+          status: HTTP_STATUS.BAD_REQUEST,
+        });
+      }
+      return isoDate;
+    };
+
+    const startDate = parseDate(query.from) || new Date('2025-01-01');
+    const endDate = parseDate(query.to) || getLocalTime();
+
+    //from date should be before or equal to to date
+    if (startDate > endDate) {
+      throw new ErrorWithStatus({
+        message: `Ngày bắt đầu (${startDate.toISOString().split('T')[0]}) không được sau ngày kết thúc (${endDate.toISOString().split('T')[0]}).`,
+        status: HTTP_STATUS.BAD_REQUEST,
+      });
+    }
+
+    const bikeRevenueStats = await databaseService.rentals.aggregate([
+      {
+        $match: {
+          start_time: { $gte: startDate, $lte: endDate },
+          status: RentalStatus.Completed
+        }
+      },
+      {
+        $group: {
+          _id: "$bike_id",
+          totalRevenue: { $sum: { $toDouble: '$total_price' } },
+          totalRentals: { $sum: 1 },
+          totalDuration: { $sum: '$duration' }
+        }
+      },
+      {
+        $lookup: {
+          from: "bikes",
+          localField: "_id",
+          foreignField: "_id",
+          as: "bike"
+        }
+      },
+      {
+        $unwind: "$bike"
+      },
+      {
+        $lookup: {
+          from: "stations",
+          localField: "bike.station_id",
+          foreignField: "_id",
+          as: "station"
+        }
+      },
+      {
+        $unwind: "$station"
+      },
+      {
+        $group: {
+          _id: "$bike.station_id",
+          stationName: { $first: "$station.name" },
+          stationAddress: { $first: "$station.address" },
+          bikes: {
+            $push: {
+              _id: "$_id",
+              chip_id: "$bike.chip_id",
+              totalRevenue: "$totalRevenue",
+              totalRentals: "$totalRentals",
+              totalDuration: "$totalDuration"
+            }
+          },
+          stationTotalRevenue: { $sum: "$totalRevenue" },
+          stationTotalRentals: { $sum: "$totalRentals" }
+        }
+      },
+      {
+        $sort: { stationTotalRevenue: -1 }
+      }
+    ]).toArray();
+
+    //format currency
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('vi-VN', {
+        minimumFractionDigits: 0
+      }).format(amount) + ' VND';
+    };
+
+    //calculate totals
+    const totalRevenue = bikeRevenueStats.reduce((sum, station) => sum + station.stationTotalRevenue, 0);
+    const totalRentals = bikeRevenueStats.reduce((sum, station) => sum + station.stationTotalRentals, 0);
+
+    return {
+      period: {
+        from: startDate,
+        to: endDate
+      },
+      summary: {
+        totalStations: bikeRevenueStats.length,
+        totalRevenue,
+        totalRevenueFormatted: formatCurrency(totalRevenue),
+        totalRentals
+      },
+      stations: bikeRevenueStats.map((station: any) => ({
+        _id: station._id,
+        name: station.stationName,
+        address: station.stationAddress,
+        stationTotalRevenue: station.stationTotalRevenue,
+        stationTotalRevenueFormatted: formatCurrency(station.stationTotalRevenue),
+        stationTotalRentals: station.stationTotalRentals,
+        bikes: station.bikes.map((bike: any) => ({
+          _id: bike._id,
+          chip_id: bike.chip_id,
+          totalRevenue: bike.totalRevenue,
+          totalRevenueFormatted: formatCurrency(bike.totalRevenue),
+          totalRentals: bike.totalRentals,
+          totalDuration: bike.totalDuration
+        })).sort((a: any, b: any) => b.totalRevenue - a.totalRevenue) // sort bikes by revenue desc
+      }))
+    };
+  }
+
+  async getHighestRevenueStation(query: { from?: string; to?: string }) {
+    const allRevenueData = await this.getAllStationsRevenue(query);
+
+    if (allRevenueData.stations.length === 0) {
+      return {
+        period: allRevenueData.period,
+        station: null,
+        message: "Không có dữ liệu doanh thu cho khoảng thời gian này"
+      };
+    }
+
+    const topStation = allRevenueData.stations[0];
+
+    return {
+      period: allRevenueData.period,
+      station: {
+        _id: topStation._id,
+        name: topStation.name,
+        address: topStation.address,
+        totalRevenue: topStation.totalRevenue,
+        totalRevenueFormatted: topStation.totalRevenueFormatted,
+        totalRentals: topStation.totalRentals,
+        totalDuration: topStation.totalDuration,
+        totalDurationFormatted: topStation.totalDurationFormatted,
+        avgDuration: topStation.avgDuration,
+        avgDurationFormatted: topStation.avgDurationFormatted
+      }
+    };
+  }
+
   async getStationAlerts(threshold: number = 20) {
     // Lấy tất cả trạm với thông tin xe
     const pipeline: Document[] = [

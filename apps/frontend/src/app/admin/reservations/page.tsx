@@ -6,7 +6,7 @@ import { ReservationStats } from "@/components/reservations/reservation-stats";
 import { Button } from "@/components/ui/button";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useReservationActions } from "@/hooks/use-reservation";
-import { useStationActions } from "@/hooks/useStationAction";
+import { useStationActions } from "@/hooks/use-station";
 import { reservationColumn } from "@/columns/reservation-columns";
 import type { Reservation } from "@/types/Reservation";
 import { Loader2 } from "lucide-react";

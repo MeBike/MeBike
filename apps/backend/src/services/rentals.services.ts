@@ -6,6 +6,7 @@ import {
   BikeStatus,
   GroupByOptions,
   RentalStatus,
+  ReservationOptions,
   ReservationStatus,
   SosAlertStatus,
   SubscriptionStatus,
@@ -34,9 +35,15 @@ import { FilterQuery } from 'mongoose'
 import subscriptionService from './subscription.services'
 import Subscription from '~/models/schemas/subscription.schema'
 
+import { redisPublisher } from '~/lib/redis-pubsub'
+import logger from '~/lib/logger'
+import { enqueuePendingBikeStatus } from '~/lib/pending-bike-status'
+
 const PENALTY_HOURS = parseInt(process.env.RENTAL_PENALTY_HOURS || '24', 10)
 const PENALTY_AMOUNT = parseInt(process.env.RENTAL_PENALTY_AMOUNT || '50000', 10)
 const HOURS_PER_USED = parseInt(process.env.SUB_HOURS_PER_USED || '10', 10)
+const BIKE_STATUS_CHANNEL = 'bike_status_updates'
+
 class RentalsService {
   async createRentalSession({
     user_id,
@@ -54,8 +61,9 @@ class RentalsService {
 
     try {
       const bike_id = bike._id as ObjectId
+      const objUserId = toObjectId(user_id)
       const rental = new Rental({
-        user_id: toObjectId(user_id),
+        user_id: objUserId,
         start_station,
         bike_id,
         start_time: now,
@@ -77,6 +85,10 @@ class RentalsService {
             { session }
           )
         ])
+
+        if (subscription_id) {
+          await subscriptionService.useOne(subscription_id, objUserId, session)
+        }
       })
 
       void iotService.sendBookingCommand(bike.chip_id ?? bike_id.toString(), IotBookingCommand.book)
@@ -199,7 +211,7 @@ class RentalsService {
     if (!sosAlert) {
       const subscription = await databaseService.subscriptions.findOne({
         _id: rental.subscription_id,
-        user_id,
+        user_id: rental.user_id,
         status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
       })
 
@@ -207,10 +219,9 @@ class RentalsService {
         let usageToAdd = 0
         let extraHours = 0
 
+        const addedUsage = 1 // 1 lượt đã cộng khi createRental or reserveBike
         // TÍNH SỐ LẦN DÙNG
         const requiredUsages = Math.max(1, Math.ceil(durationHours / HOURS_PER_USED))
-        const totalHoursCoveredByUsages = requiredUsages * HOURS_PER_USED
-        extraHours = Math.max(0, durationHours - totalHoursCoveredByUsages)
 
         // GÓI UNLIMITED
         if (subscription.max_usages == null) {
@@ -219,14 +230,14 @@ class RentalsService {
         }
         // GÓI CÓ GIỚI HẠN
         else {
-          const availableUsages = subscription.max_usages - subscription.usage_count
+          const availableUsages = subscription.max_usages - subscription.usage_count + addedUsage
           if (availableUsages >= requiredUsages) {
             // Còn đủ lượt -> dùng hết
-            usageToAdd = requiredUsages
+            usageToAdd = requiredUsages - addedUsage
             totalPrice = 0
           } else {
             // Không đủ lượt -> dùng hết lượt còn lại, phần dư tính tiền
-            usageToAdd = availableUsages
+            usageToAdd = availableUsages - addedUsage
             const hoursCovered = availableUsages * HOURS_PER_USED
             extraHours = durationHours - hoursCovered
             const extraMinutes = Math.ceil(extraHours * 60)
@@ -246,11 +257,7 @@ class RentalsService {
         }
 
         result.duration_hours = parseFloat(durationHours.toFixed(2))
-        result.usage_counts = usageToAdd
-        // Kích hoạt nếu dùng lần đầu
-        if (subscription.status === SubscriptionStatus.PENDING) {
-          await subscriptionService.activate(subscription._id)
-        }
+        result.total_sub_usages = usageToAdd + addedUsage
       } else {
         // Không có gói -> tính tiền lẻ
         totalPrice = this.generateTotalPrice(durationMinutes)
@@ -277,12 +284,14 @@ class RentalsService {
       if (durationHours > PENALTY_HOURS) {
         result.penalty_amount = PENALTY_AMOUNT
         totalPrice += PENALTY_AMOUNT
-        console.log(
-          `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${durationHours.toFixed(2)}h)`
+        logger.info(
+          `[Penalty] Added ${PENALTY_AMOUNT}₫ for exceeding ${PENALTY_HOURS} hours (duration: ${durationHours.toFixed(
+            2
+          )}h)`
         )
       }
     } else {
-      console.log(`[SOS] Bike unsolvable, user will not be charged for this rental.`)
+      logger.info(`[SOS] Bike unsolvable, user will not be charged for this rental.`)
     }
 
     const decimalTotalPrice = Decimal128.fromString(totalPrice.toString())
@@ -335,7 +344,7 @@ class RentalsService {
 
   async afterRentalEnd(endedRental: Rental, logData?: any) {
     const tasks: Promise<any>[] = []
-    const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', endedRental.bike_id.toString())
+    const description = RENTALS_MESSAGE.PAYMENT_DESCRIPTION.replace('%s', endedRental.bike_id!.toString())
 
     if (endedRental.total_price && Number(endedRental.total_price) > 0) {
       tasks.push(
@@ -357,6 +366,17 @@ class RentalsService {
 
     if (bike?.chip_id) {
       tasks.push(iotService.sendBookingCommand(bike.chip_id, IotBookingCommand.release))
+    }
+
+    if (bike) {
+      const payload = JSON.stringify({ bikeId: bike._id.toString(), status: bike.status })
+      tasks.push(
+        redisPublisher
+          .publish(BIKE_STATUS_CHANNEL, payload)
+          .then(() => logger.info({ bikeId: bike._id, status: bike.status }, 'Published bike status update.'))
+          .catch((err) => logger.error({ err, bikeId: bike._id }, 'Failed to publish bike status update.'))
+      )
+      enqueuePendingBikeStatus(endedRental.user_id.toString(), payload)
     }
 
     await Promise.allSettled(tasks)
@@ -409,7 +429,7 @@ class RentalsService {
     const bike = await databaseService.bikes.findOne({ _id: rental.bike_id })
     if (!bike) {
       throw new ErrorWithStatus({
-        message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id.toString()),
+        message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id!.toString()),
         status: HTTP_STATUS.NOT_FOUND
       })
     }

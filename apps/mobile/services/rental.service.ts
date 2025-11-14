@@ -5,7 +5,7 @@ import type { RentalSchemaFormData } from "@schemas/rentalSchema";
 import fetchHttpClient from "@lib/httpClient";
 
 import type { Pagination } from "../types/Pagination";
-import type { RentingHistory } from "../types/RentalTypes";
+import type { RentingHistory, StaffActiveRental } from "../types/RentalTypes";
 
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
@@ -15,13 +15,10 @@ const RENTAL_ENDPOINTS = {
   USER_RENTAL_DETAIL: (id: string) => `${RENTAL_BASE}/me/${id}`,
   USER_CURRENT_RENTAL: () => `${RENTAL_BASE}/me/current`,
   END_USER_CURRENT_RENTAL: (id: string) => `${RENTAL_BASE}/me/${id}/end`,
-  ADMIN_RENTAL_REVENUE: () => `${RENTAL_BASE}/stats/revenue`,
-  ADMIN_STATS_STATION_ACTIVITY: () => `${RENTAL_BASE}/stats/station-activity`,
-  ADMIN_STATS_RESERVATIONS: () => `${RENTAL_BASE}/stats/reservations`,
-  ADMIN_CANCEL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}/cancel`,
-  STAFF_ADMIN_GET_ALL_RENTALS: () => `${RENTAL_BASE}`,
   STAFF_ADMIN_GET_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
-  STAFF_ADMIN_UPDATE_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
+  STAFF_ADMIN_END_RENTAL: (id: string) => `${RENTAL_BASE}/${id}/end`,
+  STAFF_ACTIVE_RENTALS_BY_PHONE: (phone: string) =>
+    `${RENTAL_BASE}/by-phone/${phone}/active`,
 };
 type RentalResponse = {
   data: RentingHistory[];
@@ -41,6 +38,10 @@ interface DetailApiResponse<T> {
   result: T;
   message: string;
 }
+export type StaffActiveRentalsResponse = {
+  data: StaffActiveRental[];
+  pagination: Pagination;
+};
 export const rentalService = {
   userPostRent: async (
     data: RentalSchemaFormData
@@ -84,50 +85,32 @@ export const rentalService = {
     );
     return response;
   },
-  adminGetRentalRevenue: async (): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.ADMIN_RENTAL_REVENUE()
-    );
-    return response;
-  },
-  adminGetStationActivity: async (): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.ADMIN_STATS_STATION_ACTIVITY()
-    );
-    return response;
-  },
-  adminGetStatisticReservations: async (): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.ADMIN_STATS_RESERVATIONS()
-    );
-    return response;
-  },
-  adminPostCancelRental: async (id: string): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.post(
-      RENTAL_ENDPOINTS.ADMIN_CANCEL_RENTAL(id)
-    );
-    return response;
-  },
-  staffAdminGetAllRentals: async (): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.get(
-      RENTAL_ENDPOINTS.STAFF_ADMIN_GET_ALL_RENTALS()
-    );
-    return response;
-  },
   staffAdminGetDetailRental: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(
       RENTAL_ENDPOINTS.STAFF_ADMIN_GET_DETAIL_RENTAL(id)
     );
     return response;
   },
-  // staffAdminUpdateDetailRental: async (
-  //   id: string,
-  //   data: any
-  // ): Promise<AxiosResponse> => {
-  //   const response = await fetchHttpClient.put(
-  //     RENTAL_ENDPOINTS.STAFF_ADMIN_UPDATE_DETAIL_RENTAL(id),
-  //     data
-  //   );
-  //   return response;
-  // },
+  staffAdminEndRental: async (
+    id: string,
+    payload: { end_station: string; end_time?: string; reason: string }
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.put(
+      RENTAL_ENDPOINTS.STAFF_ADMIN_END_RENTAL(id),
+      payload
+    );
+    return response;
+  },
+  staffGetActiveRentalsByPhone: async (
+    phone: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<AxiosResponse<StaffActiveRentalsResponse>> => {
+    const response = await fetchHttpClient.get<StaffActiveRentalsResponse>(
+      RENTAL_ENDPOINTS.STAFF_ACTIVE_RENTALS_BY_PHONE(phone),
+      {
+        params,
+      }
+    );
+    return response;
+  },
 };

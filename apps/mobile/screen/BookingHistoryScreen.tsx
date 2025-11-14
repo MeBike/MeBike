@@ -15,8 +15,9 @@ import {
 import { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useRentalsActions } from "@hooks/useRentalAction";
 import { LoadingScreen } from "@components/LoadingScreen";
+import { useRentalsActions } from "@hooks/useRentalAction";
+import { parseDecimal } from "@utils/subscription";
 import { formatVietnamDateTime } from "@utils/date";
 import type { RentingHistory } from "../types/RentalTypes";
 
@@ -91,6 +92,13 @@ function BookingHistoryScreen() {
     return `${minutes} phút`;
   };
 
+  const getFormattedPrice = useCallback(
+    (price: RentingHistory["total_price"]) => {
+      return `${parseDecimal(price).toLocaleString("vi-VN")} đ`;
+    },
+    []
+  );
+
   const renderBookingCard = ({ item }: { item: RentingHistory }) => (
     <View style={styles.bookingCard}>
       <View style={styles.cardHeader}>
@@ -130,7 +138,7 @@ function BookingHistoryScreen() {
         <View style={styles.detailRow}>
           <Ionicons name="pricetag" size={16} color="#0066FF" />
           <Text style={[styles.detailText, styles.priceText]}>
-            {item.total_price.toLocaleString("vi-VN")} đ
+            {getFormattedPrice(item.total_price)}
           </Text>
         </View>
       </View>

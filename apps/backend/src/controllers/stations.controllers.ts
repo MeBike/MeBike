@@ -123,3 +123,31 @@ export const getAllStationsRevenueController = wrapAsync(
     });
   }
 );
+
+export const getBikeRevenueByStationController = wrapAsync(
+  async (req: Request, res: Response) => {
+    const { from, to } = req.query;
+    const result = await stationsService.getBikeRevenueByStation({
+      from: from as string,
+      to: to as string
+    });
+    return res.json({
+      message: STATIONS_MESSAGE.GET_BIKE_REVENUE_BY_STATION_SUCCESSFULLY,
+      result,
+    });
+  }
+);
+
+export const getHighestRevenueStationController = wrapAsync(
+  async (req: Request, res: Response) => {
+    const { from, to } = req.query;
+    const result = await stationsService.getHighestRevenueStation({
+      from: from as string,
+      to: to as string
+    });
+    return res.json({
+      message: STATIONS_MESSAGE.GET_HIGHEST_REVENUE_STATION_SUCCESSFULLY,
+      result,
+    });
+  }
+);

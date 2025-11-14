@@ -1,0 +1,10 @@
+type: object
+properties:
+  message:
+    type: string
+    example: "Lấy danh sách lý do đánh giá thành công"
+  result:
+    type: array
+    description: "Danh sách các lý do đánh giá."
+    items:
+      $ref: './RatingReason.yaml'

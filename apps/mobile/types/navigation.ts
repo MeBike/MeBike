@@ -4,6 +4,8 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 // Navigation Types for React Navigation
 import type { Reservation } from "./reservation-types";
+import type { Bike } from "./BikeTypes";
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 
 export type RootStackParamList = {
   Booking: undefined;
@@ -21,12 +23,24 @@ export type RootStackParamList = {
   TransparentModal: undefined;
   Wallet: undefined;
   BookingHistoryDetail: { bookingId: string };
+  BikeDetail: {
+    bike: Bike;
+    station: {
+      id: string;
+      name: string;
+      address: string;
+    };
+  };
+  StaffRentalDetail: { rentalId: string };
+  StaffPhoneLookup: undefined;
+  RentalQr: { bookingId: string };
   ChangePassword: undefined;
   ForgotPassword: undefined;
   ResetPasswordOTP: { email: string };
   ResetPasswordForm: { email: string; otp: string };
   UpdateProfile: undefined;
   MyWallet: undefined;
+  Ví: undefined;
   Subscriptions: undefined;
   Xe: undefined;
   Reservations: undefined;
@@ -40,6 +54,9 @@ export type RootStackParamList = {
     stationAddress?: string;
     bikeId?: string;
     bikeName?: string;
+    initialMode?: ReservationMode;
+    initialSubscriptionId?: string;
+    lockPaymentSelection?: boolean;
   };
   FixedSlotTemplates: {
     stationId?: string;
@@ -79,6 +96,10 @@ export type ProfileScreenNavigationProp = NativeStackNavigationProp<
 export type WalletNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Wallet"
+>;
+export type BikeDetailNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "BikeDetail"
 >;
 
 export type BookingHistoryDetailNavigationProp = NativeStackNavigationProp<

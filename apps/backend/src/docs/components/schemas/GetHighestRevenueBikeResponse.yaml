@@ -1,0 +1,8 @@
+type: object
+properties:
+  message:
+    type: string
+    example: "Lấy xe có doanh thu cao nhất thành công"
+  result:
+    $ref: './HighestRevenueBike.yaml'
+    nullable: true

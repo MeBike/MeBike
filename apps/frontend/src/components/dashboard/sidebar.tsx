@@ -13,6 +13,7 @@ import {
   Download,
   MapIcon,
   FileCheck2,
+  Star,
   Menu,
   X,
 } from "lucide-react";
@@ -125,6 +126,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       title: "Quản lý đơn báo cáo",
       icon: FileCheck2,
       href: "/admin/reports",
+      roles: ["ADMIN"],
+    },
+    {
+      title: "Quản lý đánh giá",
+      icon: Star,
+      href: "/admin/ratings",
       roles: ["ADMIN"],
     },
     {

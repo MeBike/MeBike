@@ -1,0 +1,118 @@
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { RentalDetail } from "../../../types/RentalTypes";
+import { useNavigation } from "@react-navigation/native";
+
+type Props = {
+  booking: RentalDetail;
+  rentalQrValue: string;
+};
+
+const ActionButtons = ({ booking, rentalQrValue }: Props) => {
+  const navigation = useNavigation();
+
+  return (
+    <>
+      {booking.status === "ĐANG THUÊ" && (
+        <TouchableOpacity
+          style={styles.endRentalButton}
+          onPress={() =>
+            (navigation as any).navigate("RentalQr", {
+              bookingId: rentalQrValue,
+            })
+          }
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={["#0066FF", "#00B4D8"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.endRentalButtonContent}
+          >
+            <Ionicons name="qr-code" size={26} color="#fff" />
+            <View style={styles.qrButtonTextWrapper}>
+              <Text style={styles.qrButtonTitle}>
+                Trình mã QR cho nhân viên
+              </Text>
+              <Text style={styles.qrButtonSubtitle}>
+                Nhân viên sẽ quét để kết thúc phiên thuê giúp bạn
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#DFF3FF" />
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
+      <TouchableOpacity
+        style={styles.supportButton}
+        onPress={() => {
+          (navigation as any).navigate("Report", {
+            bike_id:
+              typeof booking.bike === "object"
+                ? booking.bike._id
+                : booking.bike,
+            station_id:
+              typeof booking.start_station === "object"
+                ? booking.start_station._id
+                : booking.start_station,
+            rental_id: booking._id,
+          });
+        }}
+      >
+        <Ionicons name="warning" size={20} color="#0066FF" />
+        <Text style={styles.supportButtonText}>Báo cáo sự cố</Text>
+      </TouchableOpacity>
+    </>
+  );
+};
+
+const styles = StyleSheet.create({
+  supportButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#0066FF",
+  },
+  supportButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#0066FF",
+    marginLeft: 8,
+  },
+  endRentalButton: {
+    borderRadius: 12,
+    marginBottom: 24,
+    overflow: "hidden",
+  },
+  endRentalButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  qrButtonTextWrapper: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  qrButtonTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  qrButtonSubtitle: {
+    fontSize: 12,
+    color: "#DFF3FF",
+    marginTop: 2,
+  },
+});
+
+export default ActionButtons;
