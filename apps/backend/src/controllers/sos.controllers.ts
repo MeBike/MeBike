@@ -51,14 +51,26 @@ export async function assignSosAgentController(req: Request<ParamsDictionary, an
 }
 
 export async function confirmSosController(req: Request<SosParam>, res: Response) {
-  const _id = req.sos_alert
-  await databaseService.sos_alerts.updateOne(
-    {_id},
+  const sosId = req.sos_alert?._id
+  const result = await databaseService.sos_alerts.updateOne(
+    {_id: sosId},
     {$set: {
       status: SosAlertStatus.EN_ROUTE,
       updated_at: getLocalTime()
     }}
   )
+
+  if (result.matchedCount === 0) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      message: SOS_MESSAGE.SOS_NOT_FOUND.replace("%s", req.params.id)
+    });
+  }
+
+  if (result.modifiedCount === 0) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      message: SOS_MESSAGE.SOS_CONFIRMED_FAIL
+    });
+  }
 
   res.json({
     message: SOS_MESSAGE.SOS_CONFIRMED_SUCCESS,

@@ -100,14 +100,20 @@ const createSosValidator = (includeResolvedField = false) => {
       custom: {
         options: async (value: string, { req }: { req: Request }) => {
           const sos = await databaseService.sos_alerts.findOne({
-            _id: toObjectId(value),
-            status: SosAlertStatus.EN_ROUTE
+            _id: toObjectId(value)
           })
 
           if (!sos) {
             throw new ErrorWithStatus({
-              message: SOS_MESSAGE.EN_ROUTE_SOS_NOT_FOUND.replace('%s', value),
+              message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', value),
               status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          if (sos.status !== SosAlertStatus.EN_ROUTE) {
+            throw new ErrorWithStatus({
+              message: includeResolvedField ? SOS_MESSAGE.RESOLVE_EN_ROUTE_ONLY : SOS_MESSAGE.REJECT_EN_ROUTE_ONLY,
+              status: HTTP_STATUS.BAD_REQUEST
             })
           }
 
@@ -213,6 +219,8 @@ export const isSosAgentValidator = async (req: Request, res: Response, next: Nex
         status: HTTP_STATUS.FORBIDDEN
       })
     }
+
+    req.user = user
     next()
   } catch (error) {
     let status: number = HTTP_STATUS.INTERNAL_SERVER_ERROR
@@ -274,14 +282,20 @@ export const assignSosAgentValidator = validate(
         custom: {
           options: async (value, { req }) => {
             const sos = await databaseService.sos_alerts.findOne({
-              _id: toObjectId(value),
-              status: SosAlertStatus.PENDING
+              _id: toObjectId(value)
             })
 
             if (!sos) {
               throw new ErrorWithStatus({
-                message: SOS_MESSAGE.PENDING_SOS_NOT_FOUND.replace('%s', value),
+                message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', value),
                 status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+
+            if (sos.status !== SosAlertStatus.PENDING) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.ASSIGN_PENDING_ONLY,
+                status: HTTP_STATUS.BAD_REQUEST
               })
             }
 
@@ -390,19 +404,25 @@ export const cancelSosValidator = validate(
       custom: {
         options: async (value, { req }) => {
           const sos = await databaseService.sos_alerts.findOne({
-            _id: toObjectId(value),
-            status: SosAlertStatus.PENDING
+            _id: toObjectId(value)
           })
 
           if (!sos) {
             throw new ErrorWithStatus({
-              message: SOS_MESSAGE.PENDING_SOS_NOT_FOUND.replace('%s', value),
+              message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', value),
               status: HTTP_STATUS.NOT_FOUND
             })
           }
 
+          if (sos.status !== SosAlertStatus.PENDING) {
+            throw new ErrorWithStatus({
+              message: SOS_MESSAGE.CANCEL_PENDING_ONLY,
+              status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
           const canCancel = canCancelSosByRole(req.user, sos)
-          if(!canCancel){
+          if (!canCancel) {
             throw new ErrorWithStatus({
               message: SOS_MESSAGE.CANCEL_DENIED,
               status: HTTP_STATUS.FORBIDDEN
@@ -423,6 +443,6 @@ export const cancelSosValidator = validate(
         options: { max: 500 },
         errorMessage: SOS_MESSAGE.INVALID_REASON_LENGTH
       }
-    },
+    }
   })
 )

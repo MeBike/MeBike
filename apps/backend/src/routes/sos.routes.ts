@@ -22,7 +22,7 @@ import {
   resolveSosValidator
 } from '~/middlewares/sos.middlewares'
 import { isStaffValidator } from '~/middlewares/staff.middlewares'
-import { accessTokenValidator } from '~/middlewares/users.middlewares'
+import { accessTokenValidator, checkLoggedUserExist } from '~/middlewares/users.middlewares'
 import { AssignSosReqBody, CancelSosReqBody, CreateSosReqBody, RejectSosReqBody, ResolveSosReqBody } from '~/models/requests/sos.requests'
 import { wrapAsync } from '~/utils/handler'
 
@@ -80,13 +80,14 @@ sosRouter
   .route('/:id')
   .get(
     accessTokenValidator,
+    checkLoggedUserExist,
     getSosRequestByIdValidator,
     wrapAsync(getSosRequestByIdController)
   )
 
 sosRouter
   .route('/')
-  .get(accessTokenValidator, wrapAsync(getSosRequestsController))
+  .get(accessTokenValidator, checkLoggedUserExist, wrapAsync(getSosRequestsController))
   .post(
     accessTokenValidator,
     filterMiddleware<CreateSosReqBody>(['rental_id', 'issue', 'latitude', 'longitude']),

@@ -35,8 +35,8 @@ class SosService {
     // TODO: Push message to nearby SOS agents
 
     return {
-      result,
-      _id: insertedId
+      _id: insertedId,
+      ...alertData
     }
   }
 
@@ -179,7 +179,8 @@ class SosService {
         'sos_agent.forgot_password_otp': 0,
         'sos_agent.forgot_password_otp_expires': 0,
         rental_id: 0,
-        requester_id: 0
+        requester_id: 0,
+        sos_agent_id: 0
       }
     })
 
