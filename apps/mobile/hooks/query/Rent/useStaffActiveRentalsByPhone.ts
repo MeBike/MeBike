@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import type { AxiosResponse } from "axios";
+import type { AxiosError, AxiosResponse } from "axios";
 
 import { rentalService, type StaffActiveRentalsResponse } from "@services/rental.service";
 
@@ -12,7 +12,7 @@ type LookupVariables = {
 export function useStaffActiveRentalsByPhone() {
   return useMutation<
     AxiosResponse<StaffActiveRentalsResponse>,
-    unknown,
+    AxiosError<{ message?: string }>,
     LookupVariables
   >({
     mutationFn: ({ phone, page = 1, limit = 5 }) =>
