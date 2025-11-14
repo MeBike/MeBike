@@ -203,17 +203,19 @@ class RentalsService {
     let totalPrice = 0
     let updatedBikeStatus = BikeStatus.Available
 
-    const sosAlert = await databaseService.sos_alerts.findOne({
-      rental_id: rental._id,
-      status: SosAlertStatus.UNSOLVABLE
-    })
-    if (!sosAlert) {
-      const subscription = await databaseService.subscriptions.findOne({
+    const [sosAlert, subscription] = await Promise.all([
+      databaseService.sos_alerts.findOne({
+        rental_id: rental._id,
+        status: SosAlertStatus.UNSOLVABLE
+      }),
+      databaseService.subscriptions.findOne({
         _id: rental.subscription_id,
         user_id: rental.user_id,
         status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
       })
+    ])
 
+    if (!sosAlert) {
       if (subscription) {
         let usageToAdd = 0
         let extraHours = 0
@@ -291,6 +293,16 @@ class RentalsService {
       }
     } else {
       logger.info(`[SOS] Bike unsolvable, user will not be charged for this rental.`)
+      if (subscription) {
+        const refundUsage = 1
+        result.refund_usage = refundUsage
+        await databaseService.subscriptions.updateOne(
+          { _id: subscription._id },
+          { $inc: { usage_count: -refundUsage }, $set: { updated_at: now } },
+          { session }
+        )
+      }
+
       updatedBikeStatus = BikeStatus.Broken
     }
 

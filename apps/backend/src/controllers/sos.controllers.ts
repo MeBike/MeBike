@@ -52,10 +52,11 @@ export async function assignSosAgentController(req: Request<ParamsDictionary, an
 
 export async function confirmSosController(req: Request<SosParam>, res: Response) {
   const sosId = req.sos_alert?._id
+  const newStatus = SosAlertStatus.EN_ROUTE
   const result = await databaseService.sos_alerts.updateOne(
     {_id: sosId},
     {$set: {
-      status: SosAlertStatus.EN_ROUTE,
+      status: newStatus,
       updated_at: getLocalTime()
     }}
   )
@@ -74,6 +75,7 @@ export async function confirmSosController(req: Request<SosParam>, res: Response
 
   res.json({
     message: SOS_MESSAGE.SOS_CONFIRMED_SUCCESS,
+    newStatus
   })
 }
 
@@ -89,7 +91,7 @@ export async function resolveSosController(req: Request<SosParam, any, ResolveSo
   })
 
   res.json({
-    message: solvable ? SOS_MESSAGE.SOS_RESOLVED_SUCCESS : SOS_MESSAGE.SOS_UNSOLVABLE,
+    message: solvable === true ? SOS_MESSAGE.SOS_RESOLVED_SUCCESS : SOS_MESSAGE.SOS_UNSOLVABLE,
     result
   })
 }
@@ -164,16 +166,30 @@ export async function getSosRequestByIdController(req: Request<SosParam>, res: R
 
 export async function cancelSosController(req: Request<SosParam, any, CancelSosReqBody>, res: Response) {
   const _id = req.sos_alert
-  await databaseService.sos_alerts.updateOne(
+  const newStatus = SosAlertStatus.CANCELLED
+  const result = await databaseService.sos_alerts.updateOne(
     {_id},
     {$set: {
       reason: req.body.reason,
-      status: SosAlertStatus.CANCELLED,
+      status: newStatus,
       updated_at: getLocalTime()
     }}
   )
+  
+  if (result.matchedCount === 0) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      message: SOS_MESSAGE.SOS_NOT_FOUND.replace("%s", req.params.id)
+    });
+  }
+
+  if (result.modifiedCount === 0) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      message: SOS_MESSAGE.SOS_CANCELLED_FAIL
+    });
+  }
 
   res.json({
-    message: SOS_MESSAGE.SOS_CONFIRMED_SUCCESS,
+    message: SOS_MESSAGE.SOS_CANCELLED_SUCCESS,
+    newStatus
   })
 }

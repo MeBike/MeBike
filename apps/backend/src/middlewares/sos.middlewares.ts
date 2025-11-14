@@ -28,6 +28,7 @@ export const createSosAlertValidator = validate(
         custom: {
           options: async (value, { req }) => {
             const rentalId = toObjectId(value)
+            const { user_id } = req.decoded_authorization as TokenPayLoad
 
             const rental = await databaseService.rentals.findOne({
               _id: rentalId
@@ -36,6 +37,13 @@ export const createSosAlertValidator = validate(
             if (!rental) {
               throw new ErrorWithStatus({
                 message: SOS_MESSAGE.RENTAL_NOT_FOUND.replace('%s', value),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+
+            if (!rental.user_id.equals(user_id)) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.CANNOT_CREATE_REQUEST_OF_OTHER_RENTAL.replace('%s', value),
                 status: HTTP_STATUS.NOT_FOUND
               })
             }

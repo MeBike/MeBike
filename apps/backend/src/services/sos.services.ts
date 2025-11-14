@@ -73,7 +73,7 @@ class SosService {
   }) {
     const now = getLocalTime()
     const sosId = sos_alert._id as ObjectId
-    const newStatus = solvable ? SosAlertStatus.RESOLVED : SosAlertStatus.UNSOLVABLE
+    const newStatus = solvable === true ? SosAlertStatus.RESOLVED : SosAlertStatus.UNSOLVABLE
 
     const update: any = {
       status: newStatus,
@@ -81,7 +81,7 @@ class SosService {
       photos,
       updated_at: now
     }
-    if (solvable) update.resolved_at = now
+    if (solvable === true) update.resolved_at = now
 
     const updatedAlert = await databaseService.sos_alerts.findOneAndUpdate(
       { _id: sosId },
