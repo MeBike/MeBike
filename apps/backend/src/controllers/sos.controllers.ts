@@ -5,34 +5,26 @@ import { Role, SosAlertStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { SOS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
-import {
-  ConfirmSosReqBody,
-  CreateSosPayload,
-  CreateSosReqBody,
-  RejectSosReqBody,
-  SosParam
-} from '~/models/requests/sos.requests'
-import { TokenPayLoad } from '~/models/requests/users.requests'
+import { AssignSosReqBody, ConfirmSosReqBody, CreateSosReqBody, RejectSosReqBody, SosParam } from '~/models/requests/sos.requests'
 import Rental from '~/models/schemas/rental.schema'
 import SosAlert from '~/models/schemas/sos-alert.schema'
 import User from '~/models/schemas/user.schema'
 import databaseService from '~/services/database.services'
 import sosService from '~/services/sos.services'
 import { sendPaginatedResponse } from '~/utils/pagination.helper'
-import { toObjectId } from '~/utils/string'
 
 export async function createSosRequestController(req: Request<ParamsDictionary, any, CreateSosReqBody>, res: Response) {
-  const rental = req.rental as Rental
-  const bike_id = toObjectId(rental.bike_id!)
-  const requester_id = toObjectId(rental.user_id)
-  const payload: CreateSosPayload = {
-    ...req.body,
-    rental_id: rental._id as ObjectId,
-    bike_id,
-    requester_id
-  }
+  const result = await sosService.createAlert(req.body)
 
-  const result = await sosService.createAlert(payload)
+  res.json({
+    message: SOS_MESSAGE.SOS_CREATE_SUCCESS,
+    result
+  })
+}
+
+export async function assignSosAgentController(req: Request<ParamsDictionary, any, AssignSosReqBody>, res: Response) {
+  const sosRequest = req.sos_alert as SosAlert
+  const result = await sosService.assignSosAgent(sosRequest, req.body)
 
   res.json({
     message: SOS_MESSAGE.SOS_CREATE_SUCCESS,

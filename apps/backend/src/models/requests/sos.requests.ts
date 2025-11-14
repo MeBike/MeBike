@@ -1,18 +1,9 @@
-import { ObjectId } from "mongodb"
 
 export type CreateSosReqBody = {
-  rental_id: string | ObjectId,
+  rental_id: string,
   issue: string,
   latitude: number,
   longitude: number
-  agent_id: string
-  staff_notes?: string
-}
-
-export interface CreateSosPayload extends CreateSosReqBody {
-  rental_id: ObjectId
-  requester_id: ObjectId
-  bike_id: ObjectId
 }
 
 export type ConfirmSosReqBody = {
@@ -28,5 +19,11 @@ export type RejectSosReqBody = {
 
 export type SosParam = {
   id: string
+}
+
+
+export type AssignSosReqBody = {
+  sos_agent_id: string;
+  replaced_bike_id: string
 }
 

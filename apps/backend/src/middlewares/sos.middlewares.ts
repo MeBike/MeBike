@@ -1,7 +1,7 @@
 // validators/sosValidator.ts
 import { checkSchema } from 'express-validator'
 import { SOS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
-import { Role, SosAlertStatus } from '~/constants/enums'
+import { BikeStatus, Role, SosAlertStatus } from '~/constants/enums'
 import { RentalStatus } from '~/constants/enums'
 import { validate } from '~/utils/validation'
 import { toObjectId } from '~/utils/string'
@@ -51,31 +51,6 @@ export const createSosAlertValidator = validate(
           }
         }
       },
-      agent_id: {
-        in: ['body'],
-        notEmpty: {
-          errorMessage: SOS_MESSAGE.REQUIRED_AGENT_ID
-        },
-        isMongoId: {
-          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'agent_id')
-        },
-        custom: {
-          options: async (value) => {
-            const agent = await databaseService.users.findOne({
-              _id: toObjectId(value),
-              role: Role.Sos
-            })
-
-            if (!agent) {
-              throw new ErrorWithStatus({
-                message: SOS_MESSAGE.AGENT_NOT_FOUND.replace('%s', value),
-                status: HTTP_STATUS.NOT_FOUND
-              })
-            }
-            return true
-          }
-        }
-      },
       issue: {
         notEmpty: {
           errorMessage: SOS_MESSAGE.REQUIRED_ISSUE,
@@ -106,17 +81,6 @@ export const createSosAlertValidator = validate(
         isFloat: {
           options: { min: -180, max: 180 },
           errorMessage: SOS_MESSAGE.INVALID_LONGITUDE
-        }
-      },
-      staff_notes: {
-        optional: true,
-        trim: true,
-        isString: {
-          errorMessage: SOS_MESSAGE.INVALID_NOTE
-        },
-        isLength: {
-          options: { max: 500 },
-          errorMessage: SOS_MESSAGE.INVALID_NOTE_LENGTH
         }
       }
     },
@@ -302,3 +266,86 @@ export const isStaffOrSosAgentValidator = async (req: Request, res: Response, ne
     res.status(status).json({ message })
   }
 }
+
+export const assignSosAgentValidator = validate(
+  checkSchema(
+    {
+      id: {
+        in: ['params'],
+        notEmpty: { errorMessage: SOS_MESSAGE.REQUIRED_ID },
+        isMongoId: {
+          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'ID yêu cầu cứu hộ')
+        },
+        custom: {
+          options: async (value, { req }) => {
+            const sos = await databaseService.sos_alerts.findOne({
+              _id: toObjectId(value),
+              status: SosAlertStatus.PENDING
+            })
+
+            if (!sos) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.PENDING_SOS_NOT_FOUND.replace('%s', value),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+
+            req.sos_alert = sos
+            return true
+          }
+        }
+      },
+      sos_agent_id: {
+        in: ['body'],
+        notEmpty: {
+          errorMessage: SOS_MESSAGE.REQUIRED_AGENT_ID
+        },
+        isMongoId: {
+          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'agent_id')
+        },
+        custom: {
+          options: async (value) => {
+            const agent = await databaseService.users.findOne({
+              _id: toObjectId(value),
+              role: Role.Sos
+            })
+
+            if (!agent) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.AGENT_NOT_FOUND.replace('%s', value),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            return true
+          }
+        }
+      },
+      replaced_bike_id: {
+        in: ['body'],
+        notEmpty: {
+          errorMessage: SOS_MESSAGE.REQUIRED_REPLACED_BIKE_ID
+        },
+        isMongoId: {
+          errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'replaced_bike_id')
+        },
+        custom: {
+          options: async (value) => {
+            const bike = await databaseService.bikes.findOne({
+              _id: toObjectId(value),
+              status: BikeStatus.Available
+            })
+
+            if (!bike) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.AVAILABLE_BIKE_NOT_FOUND.replace('%s', value),
+                status: HTTP_STATUS.NOT_FOUND
+              })
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['body']
+  )
+)

@@ -8,41 +8,55 @@ import HTTP_STATUS from '~/constants/http-status'
 import { toObjectId } from '~/utils/string'
 import { getLocalTime } from '~/utils/date-time'
 import User from '~/models/schemas/user.schema'
+import { AssignSosReqBody } from '~/models/requests/sos.requests'
 
 class SosService {
   async createAlert({
     rental_id,
-    requester_id,
-    bike_id,
-    agent_id,
     issue,
     latitude,
     longitude
   }: {
-    rental_id: ObjectId
-    requester_id: ObjectId
-    bike_id: ObjectId
-    agent_id: string
+    rental_id: string
     issue: string
     latitude: number
     longitude: number
   }) {
     const alertData = new SosAlert({
-      rental_id,
-      requester_id,
-      bike_id,
-      sos_agent_id: toObjectId(agent_id),
+      rental_id: toObjectId(rental_id),
       issue,
       location: { type: 'Point', coordinates: [longitude, latitude] },
       status: SosAlertStatus.PENDING
     })
 
     const result = await databaseService.sos_alerts.insertOne(alertData)
-    const alert = { ...alertData, _id: result.insertedId }
-
+    const { insertedId } = result
     // TODO: Push message to nearby SOS agents
 
-    return alert
+    return {
+      result,
+      _id: insertedId
+    }
+  }
+
+  async assignSosAgent(
+    sosRequest: SosAlert,
+    payload: AssignSosReqBody
+  ) {
+    const now = getLocalTime()
+    const updateData: Partial<SosAlert> = {
+      replaced_bike_id: toObjectId(payload.replaced_bike_id),
+      sos_agent_id: toObjectId(payload.sos_agent_id),
+      status: SosAlertStatus.ASSIGNED,
+      updated_at: now
+    }
+    const updated = await databaseService.sos_alerts.findOneAndUpdate(
+      {_id: sosRequest._id},
+      {$set: updateData},
+      {returnDocument: 'after'}
+    )
+
+    return updated
   }
 
   async confirmSos({
@@ -114,7 +128,7 @@ class SosService {
       {
         $lookup: {
           from: 'bikes',
-          localField: 'bike_id',
+          localField: 'rental.bike_id',
           foreignField: '_id',
           as: 'bike'
         }
@@ -123,7 +137,7 @@ class SosService {
       {
         $lookup: {
           from: 'users',
-          localField: 'requester_id',
+          localField: 'rental.user_id',
           foreignField: '_id',
           as: 'requester'
         }
@@ -149,27 +163,23 @@ class SosService {
       })
     }
 
-    pipeline.push(
-      {
-        $project: {
-          'rental.bike_id': 0,
-          'rental.user_id': 0,
-          'requester.password': 0,
-          'requester.email_verify_otp': 0,
-          'requester.email_verify_otp_expires': 0,
-          'requester.forgot_password_otp': 0,
-          'requester.forgot_password_otp_expires': 0,
-          'sos_agent.password': 0,
-          'sos_agent.email_verify_otp': 0,
-          'sos_agent.email_verify_otp_expires': 0,
-          'sos_agent.forgot_password_otp': 0,
-          'sos_agent.forgot_password_otp_expires': 0,
-          rental_id: 0,
-          requester_id: 0,
-          bike_id: 0
-        }
-      },
-    )
+    pipeline.push({
+      $project: {
+        'rental.bike_id': 0,
+        'rental.user_id': 0,
+        'requester.password': 0,
+        'requester.email_verify_otp': 0,
+        'requester.email_verify_otp_expires': 0,
+        'requester.forgot_password_otp': 0,
+        'requester.forgot_password_otp_expires': 0,
+        'sos_agent.password': 0,
+        'sos_agent.email_verify_otp': 0,
+        'sos_agent.email_verify_otp_expires': 0,
+        'sos_agent.forgot_password_otp': 0,
+        'sos_agent.forgot_password_otp_expires': 0,
+        rental_id: 0
+      }
+    })
 
     const [result] = await databaseService.sos_alerts.aggregate(pipeline).toArray()
 
