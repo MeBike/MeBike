@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getRentalsByStationIdController } from "~/controllers/rentals.controllers";
-import { createStationController, deleteStationController, getAllStationsRevenueController, getBikeRevenueByStationController, getNearbyStationsController, getStationAlertsController, getStationByIdController, getStationsController, getStationStatsController, updateStationController } from "~/controllers/stations.controllers";
+import { createStationController, deleteStationController, getAllStationsRevenueController, getBikeRevenueByStationController, getHighestRevenueStationController, getNearbyStationsController, getStationAlertsController, getStationByIdController, getStationsController, getStationStatsController, updateStationController } from "~/controllers/stations.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { createStationValidator, getNearbyStationsValidator, stationIdValidator, updateStationValidator } from "~/middlewares/stations.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
@@ -51,6 +51,17 @@ stationRouter.get("/revenue", accessTokenValidator, isAdminValidator, wrapAsync(
  * Roles: ADMIN
  */
 stationRouter.get("/bike-revenue", accessTokenValidator, isAdminValidator, wrapAsync(getBikeRevenueByStationController))
+
+/**
+ * Description: Get the station with the highest revenue
+ * Path: /stations/highest-revenue
+ * Method: GET
+ * Query: { from?: string, to?: string } - Date format: dd-mm-yyyy or ISO string
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN
+ */
+stationRouter.get("/highest-revenue", accessTokenValidator, isAdminValidator, wrapAsync(getHighestRevenueStationController));
+
 
 /**
  * Description: Create a new bike station

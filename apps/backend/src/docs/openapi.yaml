@@ -168,6 +168,8 @@ components:
       $ref: './components/schemas/GetRatingReasonsResponse.yaml'
     GetBikeRevenueResponse:
       $ref: './components/schemas/GetBikeRevenueResponse.yaml'
+    GetHighestRevenueStationResponse:
+      $ref: './components/schemas/GetHighestRevenueStationResponse.yaml'
 
     # --- Model Schemas ---
     User:
