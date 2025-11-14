@@ -5,7 +5,7 @@ import type { RentalSchemaFormData } from "@schemas/rentalSchema";
 import fetchHttpClient from "@lib/httpClient";
 
 import type { Pagination } from "../types/Pagination";
-import type { RentingHistory } from "../types/RentalTypes";
+import type { RentingHistory, StaffActiveRental } from "../types/RentalTypes";
 
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
@@ -17,6 +17,8 @@ const RENTAL_ENDPOINTS = {
   END_USER_CURRENT_RENTAL: (id: string) => `${RENTAL_BASE}/me/${id}/end`,
   STAFF_ADMIN_GET_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
   STAFF_ADMIN_END_RENTAL: (id: string) => `${RENTAL_BASE}/${id}/end`,
+  STAFF_ACTIVE_RENTALS_BY_PHONE: (phone: string) =>
+    `${RENTAL_BASE}/by-phone/${phone}/active`,
 };
 type RentalResponse = {
   data: RentingHistory[];
@@ -36,6 +38,10 @@ interface DetailApiResponse<T> {
   result: T;
   message: string;
 }
+type StaffActiveRentalsResponse = {
+  data: StaffActiveRental[];
+  pagination: Pagination;
+};
 export const rentalService = {
   userPostRent: async (
     data: RentalSchemaFormData
@@ -92,6 +98,18 @@ export const rentalService = {
     const response = await fetchHttpClient.put(
       RENTAL_ENDPOINTS.STAFF_ADMIN_END_RENTAL(id),
       payload
+    );
+    return response;
+  },
+  staffGetActiveRentalsByPhone: async (
+    phone: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<AxiosResponse<StaffActiveRentalsResponse>> => {
+    const response = await fetchHttpClient.get<StaffActiveRentalsResponse>(
+      RENTAL_ENDPOINTS.STAFF_ACTIVE_RENTALS_BY_PHONE(phone),
+      {
+        params,
+      }
     );
     return response;
   },
