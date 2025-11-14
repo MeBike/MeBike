@@ -82,3 +82,31 @@ export async function getRatingDetailController(req: Request<ParamsDictionary, a
     result
   })
 }
+
+export async function getBikeRatingController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const { _id } = req.params
+
+  const result = await ratingService.getBikeRating(_id)
+  res.json({
+    message: RATING_MESSAGE.GET_BIKE_RATING_SUCCESS.replace('%s', _id),
+    result
+  })
+}
+
+export async function getStationRatingController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const { _id } = req.params
+
+  const result = await ratingService.getStationRating(_id)
+  res.json({
+    message: RATING_MESSAGE.GET_STATION_RATING_SUCCESS.replace('%s', _id),
+    result
+  })
+}
+
+export async function getAppRatingController(req: Request<ParamsDictionary, any, any>, res: Response) {
+  const result = await ratingService.getAppRating()
+  res.json({
+    message: RATING_MESSAGE.GET_APP_RATING_SUCCESS,
+    result
+  })
+}

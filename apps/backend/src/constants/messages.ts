@@ -639,8 +639,11 @@ export const RATING_MESSAGE = {
   RENTAL_ID_INVALID: 'ID phiên thuê không hợp lệ',
   CANNOT_RATE_UNCOMPLETED_RENTAL: 'Chỉ có thể đánh giá các phiên thuê đã hoàn thành',
   RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này',
-  CANNOT_RATE_OTHERS_RENTAL: 'Không thể đánh giá phiên thuê của người khác',
-  ALREADY_RATED: 'Bạn đã đánh giá phiên thuê này trước đó'
+  GET_BIKE_RATING_SUCCESS: 'Lấy đánh giá xe đạp %s thành công',
+  STATION_RATING_NOT_FOUND: 'Đánh giá trạm %s không tồn tại',
+  GET_STATION_RATING_SUCCESS: 'Lấy đánh giá trạm %s thành công',
+  GET_APP_RATING_SUCCESS: 'Lấy đánh giá ứng dụng thành công',
+  BIKE_RATING_NOT_FOUND: 'Đánh giá xe đạp %s không tồn tại'
 }
 
 export const SOS_MESSAGE = {
