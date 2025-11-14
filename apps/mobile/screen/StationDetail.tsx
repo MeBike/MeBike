@@ -2,17 +2,13 @@ import { LoadingScreen } from "@components/LoadingScreen";
 import StationMap2D from "@components/StationMap2D";
 import { Ionicons } from "@expo/vector-icons";
 import { useBikeActions } from "@hooks/useBikeAction";
-import { useRentalsActions } from "@hooks/useRentalAction";
 import { useStationActions } from "@hooks/useStationAction";
-import { useAuth } from "@providers/auth-providers";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Dimensions,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -35,64 +31,11 @@ const { width: screenWidth } = Dimensions.get("window");
 const MAP_PADDING = 20;
 const MAP_WIDTH = screenWidth - MAP_PADDING * 2;
 const MAP_HEIGHT = 300;
-function BikeDetailCard({
-  bike,
-  onClose,
-}: {
-  bike: Bike | null;
-  onClose: () => void;
-}) {
-  return (
-    <View
-      style={{
-        backgroundColor: "#fff",
-        borderRadius: 16,
-        padding: 16,
-        margin: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
-      }}
-    >
-      <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}>
-        ChipID: #
-        {bike?.chip_id || bike?._id.slice(-4)}
-      </Text>
-      <Text>
-        Trạng thái:
-        <Text style={{ fontWeight: "bold" }}>{bike?.status}</Text>
-      </Text>
-      <Text>
-        Ngày tạo:
-        <Text style={{ fontWeight: "bold" }}>{bike?.created_at ? new Date(bike.created_at).toLocaleString() : "Chưa có"}</Text>
-      </Text>
-      <Text>
-        Nhà cung cấp:
-        <Text style={{ fontWeight: "bold" }}>{bike?.supplier_id || "Chưa có"}</Text>
-      </Text>
-      <TouchableOpacity
-        style={{
-          marginTop: 16,
-          backgroundColor: "#0066FF",
-          padding: 10,
-          borderRadius: 8,
-          alignItems: "center",
-        }}
-        onPress={onClose}
-      >
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>Đóng</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
 
 export default function StationDetailScreen() {
   const navigation = useNavigation<StationDetailScreenNavigationProp>();
   const route = useRoute<StationDetailRouteProp>();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
   const { stationId } = route.params;
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(20);
@@ -100,8 +43,7 @@ export default function StationDetailScreen() {
   const [loadedBikes, setLoadedBikes] = useState<Bike[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [bikeId, setBikeID] = useState<string | undefined>(undefined);
-  const [selectedBike, setSelectedBike] = useState<any | null>(null);
-  const [selectedDetailBike, setSelectedDetailBike] = useState<Bike | null>(null);
+  const [focusedBike, setFocusedBike] = useState<Bike | null>(null);
 
   const {
     getStationByID,
@@ -121,12 +63,6 @@ export default function StationDetailScreen() {
     page: currentPage,
     limit,
   });
-
-  const { postRent } = useRentalsActions(
-    true,
-    selectedBike?._id,
-    stationId,
-  );
 
   useEffect(() => {
     if (stationId) {
@@ -153,44 +89,22 @@ export default function StationDetailScreen() {
   const station = responseStationDetail as StationType | null;
   const isLoading = isLoadingGetStationByID || isFetchingAllBikes;
 
-  const validateReservationEligibility = useCallback((bike: Bike) => {
-    if (bike.status !== "CÓ SẴN") {
-      Alert.alert(
-        "Không thể đặt trước",
-        "Xe này hiện không khả dụng để đặt trước.",
-      );
-      return false;
-    }
-    if (!user?._id) {
-      navigation.navigate("Login" as never);
-      return false;
-    }
-    if (user?.verify === "UNVERIFIED") {
-      Alert.alert(
-        "Tài khoản chưa xác thực",
-        "Vui lòng xác thực tài khoản để sử dụng tính năng đặt trước.",
-      );
-      return false;
-    }
-
-    return true;
-  }, [navigation, user]);
-
-  const handleReservePress = useCallback((bike: Bike) => {
-    if (!validateReservationEligibility(bike)) {
-      return;
-    }
-    const bikeLabel = bike.chip_id
-      ? `Chip #${bike.chip_id}`
-      : `#${bike._id.slice(-4)}`;
-    navigation.navigate("ReservationFlow", {
-      stationId,
-      stationName: station?.name,
-      stationAddress: station?.address,
-      bikeId: bike._id,
-      bikeName: bikeLabel,
-    });
-  }, [navigation, stationId, validateReservationEligibility, station]);
+  const handleBikePress = useCallback(
+    (bike: Bike) => {
+      if (!station)
+        return;
+      setFocusedBike(bike);
+      navigation.navigate("BikeDetail", {
+        bike,
+        station: {
+          id: stationId,
+          name: station.name,
+          address: station.address,
+        },
+      });
+    },
+    [navigation, station, stationId],
+  );
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -203,85 +117,6 @@ export default function StationDetailScreen() {
       </View>
     );
   }
-
-
-  const handleRentPress = (bike: any) => {
-    console.log("Bike selected:", bike.id);
-    setSelectedBike(bike);
-    if (bike.status === "CÓ SẴN") {
-      Alert.alert(
-        "Thuê xe đạp",
-        `Xe #${bike._id}\nBạn có muốn thuê xe này không?`,
-        [
-          {
-            text: "Hủy",
-            style: "cancel",
-            onPress: () => setSelectedBike(null),
-          },
-          {
-            text: "Thuê ngay",
-            onPress: () => {
-              console.log("Renting bike:", bike.id);
-              if (user?.verify === "UNVERIFIED") {
-                Alert.alert(
-                  "Tài khoản chưa xác thực",
-                  "Vui lòng xác thực tài khoản để thuê xe."
-                );
-                setSelectedBike(null);
-                return;
-              }
-              postRent({ bike_id: bike._id });
-              setSelectedBike(null);
-            },
-          },
-          {
-            text: "Đặt xe",
-            onPress: () => {
-              console.log("Reserving bike:", bike.id);
-              if (user?.verify === "UNVERIFIED") {
-                Alert.alert(
-                  "Tài khoản chưa xác thực",
-                  "Vui lòng xác thực tài khoản để đặt xe."
-                );
-                setSelectedBike(null);
-                return;
-              }
-              handleReservePress(bike);
-              setSelectedBike(null);
-            },
-          },
-        ]
-      );
-    }
-    else {
-      Alert.alert(
-        "Xe đang được sử dụng",
-        `Xe #${bike._id.slice(-3)} hiện đang được thuê bởi người khác.`,
-        [{ text: "OK", onPress: () => setSelectedBike(null) }],
-      );
-    }
-  };
-
-  const handleQuickRent = (bike: Bike) => {
-    if (bike.status !== "CÓ SẴN") {
-      Alert.alert(
-        "Không thể thuê",
-        "Xe này hiện không khả dụng."
-      );
-      return;
-    }
-
-    if (user?.verify === "UNVERIFIED") {
-      Alert.alert(
-        "Tài khoản chưa xác thực",
-        "Vui lòng xác thực tài khoản để thuê xe."
-      );
-      return;
-    }
-
-    postRent({ bike_id: bike._id });
-  };
-
   const handleLoadMore = () => {
     if (hasMore && !isFetchingAllBikes) {
       setCurrentPage(prev => prev + 1);
@@ -290,19 +125,6 @@ export default function StationDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <Modal
-        visible={!!selectedDetailBike}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setSelectedDetailBike(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <BikeDetailCard
-            bike={selectedDetailBike}
-            onClose={() => setSelectedDetailBike(null)}
-          />
-        </View>
-      </Modal>
       <ScrollView showsVerticalScrollIndicator={false}>
         <LinearGradient
           colors={["#0066FF", "#00B4D8"]}
@@ -388,8 +210,8 @@ export default function StationDetailScreen() {
         <StationMap2D
           station={station}
           bikes={allBikes}
-          selectedBike={selectedBike}
-          onBikePress={handleRentPress}
+          selectedBike={focusedBike}
+          onBikePress={handleBikePress}
         />
 
         {loadedBikes && loadedBikes.length > 0 ? (
@@ -404,11 +226,9 @@ export default function StationDetailScreen() {
               return (
                 <TouchableOpacity
                   key={`${bike._id}-${index}`}
-                  style={[
-                    styles.bikeItem,
-                    selectedBike?._id === bike._id && styles.selectedBikeItem,
-                  ]}
-                  onPress={() => setSelectedDetailBike(bike)}
+                  style={styles.bikeItem}
+                  onPress={() => handleBikePress(bike)}
+                  activeOpacity={0.85}
                 >
                   {/* Trái: Hiển thị thông tin xe */}
                   <View style={styles.bikeItemLeft}>
@@ -431,7 +251,7 @@ export default function StationDetailScreen() {
                     </View>
                   </View>
 
-                  {/* Phải: Các nút thao tác */}
+                  {/* Phải: trạng thái */}
                   <View style={styles.bikeItemRight}>
                     <Text
                       style={[
@@ -446,45 +266,7 @@ export default function StationDetailScreen() {
                       {isAvailable ? "Có sẵn" : "Đang thuê"}
                     </Text>
 
-                    {isAvailable && (
-                      <TouchableOpacity
-                        style={styles.reserveButton}
-                        onPress={() => handleReservePress(bike)}
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons
-                          name="calendar-outline"
-                          size={16}
-                          color="#fff"
-                          style={{ marginRight: 6 }}
-                        />
-                        <Text style={styles.reserveButtonText}>
-                          Đặt xe
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-
-                    {isAvailable && (
-                      <TouchableOpacity
-                        style={[
-                          styles.reserveButton,
-                          {
-                            backgroundColor: BikeColors.success,
-                            marginLeft: 8,
-                          },
-                        ]}
-                        onPress={() => handleQuickRent(bike)}
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons
-                          name="bicycle-outline"
-                          size={16}
-                          color="#fff"
-                          style={{ marginRight: 6 }}
-                        />
-                        <Text style={styles.reserveButtonText}>Thuê ngay</Text>
-                      </TouchableOpacity>
-                    )}
+                    <Ionicons name="chevron-forward" size={16} color={BikeColors.onSurfaceVariant} />
                   </View>
                 </TouchableOpacity>
               );
@@ -739,11 +521,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     backgroundColor: BikeColors.background,
   },
-  selectedBikeItem: {
-    backgroundColor: BikeColors.primaryContainer,
-    borderWidth: 2,
-    borderColor: BikeColors.primary,
-  },
   bikeItemLeft: {
     flexDirection: "row",
     alignItems: "center",
@@ -768,21 +545,6 @@ const styles = StyleSheet.create({
   bikeItemRight: {
     alignItems: "flex-end",
     gap: 8,
-  },
-  reserveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: BikeColors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: "flex-end",
-  },
-  reserveButtonText: {
-    color: BikeColors.onPrimary,
-    fontWeight: "600",
-    fontSize: 13,
   },
   batteryContainer: {
     flexDirection: "row",
@@ -836,11 +598,5 @@ const styles = StyleSheet.create({
     color: BikeColors.onPrimary,
     fontSize: 16,
     fontWeight: "600",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
   },
 });

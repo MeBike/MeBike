@@ -23,7 +23,7 @@ import { toObjectId } from '~/utils/string'
 
 export async function createSosRequestController(req: Request<ParamsDictionary, any, CreateSosReqBody>, res: Response) {
   const rental = req.rental as Rental
-  const bike_id = toObjectId(rental.bike_id)
+  const bike_id = toObjectId(rental.bike_id!)
   const requester_id = toObjectId(rental.user_id)
   const payload: CreateSosPayload = {
     ...req.body,

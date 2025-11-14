@@ -71,7 +71,7 @@ function MyWalletScreen() {
         end={{ x: 1, y: 1 }}
       >
         <WalletHeader />
-        <WalletSettings />
+        {/* <WalletSettings /> */}
         <WalletBalance
           balance={wallet.myWallet?.balance?.$numberDecimal || "0"}
           status={wallet.myWallet?.status || ""}

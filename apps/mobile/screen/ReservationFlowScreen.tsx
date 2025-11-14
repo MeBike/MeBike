@@ -68,11 +68,16 @@ export default function ReservationFlowScreen() {
     stationAddress,
     bikeId,
     bikeName,
+    initialMode,
+    initialSubscriptionId,
+    lockPaymentSelection = false,
   } = route.params;
 
-  const [mode, setMode] = useState<ReservationMode>("MỘT LẦN");
+  const [mode, setMode] = useState<ReservationMode>(initialMode ?? "MỘT LẦN");
   const [scheduledAt, setScheduledAt] = useState<Date>(() => new Date(Date.now() + 5 * 60 * 1000));
-  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
+  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(
+    initialSubscriptionId ?? null,
+  );
   const [iosPickerVisible, setIosPickerVisible] = useState(false);
   const [iosPickerValue, setIosPickerValue] = useState<Date>(scheduledAt);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,12 +98,8 @@ export default function ReservationFlowScreen() {
   );
 
   useEffect(() => {
-    if (!selectedSubscriptionId && activeSubscriptions.length > 0) {
-      setSelectedSubscriptionId(activeSubscriptions[0]._id);
-    }
-  }, [activeSubscriptions, selectedSubscriptionId]);
-
-  useEffect(() => {
+    if (lockPaymentSelection || initialMode)
+      return;
     AsyncStorage.getItem(STORAGE_KEY)
       .then((value) => {
         if (value && (MODE_OPTIONS.some((option) => option.key === value))) {
@@ -106,12 +107,56 @@ export default function ReservationFlowScreen() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [initialMode, lockPaymentSelection]);
 
-  const handleModeChange = useCallback((nextMode: ReservationMode) => {
-    setMode(nextMode);
-    AsyncStorage.setItem(STORAGE_KEY, nextMode).catch(() => {});
-  }, []);
+  const handleModeChange = useCallback(
+    (nextMode: ReservationMode) => {
+      if (lockPaymentSelection)
+        return;
+      setMode(nextMode);
+      AsyncStorage.setItem(STORAGE_KEY, nextMode).catch(() => {});
+    },
+    [lockPaymentSelection],
+  );
+
+  useEffect(() => {
+    if (mode !== "GÓI THÁNG")
+      return;
+    if (selectedSubscriptionId) {
+      const stillExists = activeSubscriptions.some((item) => item._id === selectedSubscriptionId);
+      if (stillExists)
+        return;
+    }
+    if (initialSubscriptionId && activeSubscriptions.some((item) => item._id === initialSubscriptionId)) {
+      setSelectedSubscriptionId(initialSubscriptionId);
+      return;
+    }
+    if (activeSubscriptions.length > 0) {
+      setSelectedSubscriptionId(activeSubscriptions[0]._id);
+    }
+  }, [activeSubscriptions, initialSubscriptionId, mode, selectedSubscriptionId]);
+
+  const subscriptionsLoaded = subscriptionResponse !== undefined;
+
+  useEffect(() => {
+    if (!subscriptionsLoaded)
+      return;
+    if (mode === "GÓI THÁNG" && activeSubscriptions.length === 0) {
+      setMode("MỘT LẦN");
+      setSelectedSubscriptionId(null);
+    }
+  }, [activeSubscriptions.length, mode, subscriptionsLoaded]);
+
+  const modeOptions = useMemo(
+    () =>
+      MODE_OPTIONS.map((option) => ({
+        ...option,
+        disabled:
+          lockPaymentSelection
+          || (option.key === "GÓI THÁNG" && activeSubscriptions.length === 0),
+      })),
+    [activeSubscriptions.length, lockPaymentSelection],
+  );
 
   const handleOpenTimePicker = useCallback(() => {
     if (Platform.OS === "android") {
@@ -236,9 +281,14 @@ export default function ReservationFlowScreen() {
           <Text style={styles.sectionTitle}>Hình thức đặt</Text>
           <ReservationModeToggle
             value={mode}
-            options={MODE_OPTIONS}
+            options={modeOptions}
             onChange={handleModeChange}
           />
+          {lockPaymentSelection && (
+            <Text style={styles.helperText}>
+              Phương thức thanh toán đã được chọn ở màn hình trước.
+            </Text>
+          )}
           {mode === "GÓI THÁNG" && activeSubscriptions.length === 0 && (
             <Text style={styles.helperText}>
               Bạn chưa có gói tháng hoạt động.{" "}
@@ -281,8 +331,14 @@ export default function ReservationFlowScreen() {
                   style={[
                     styles.subscriptionCard,
                     subscription._id === selectedSubscriptionId && styles.subscriptionCardActive,
+                    lockPaymentSelection && styles.subscriptionCardLocked,
                   ]}
-                  onPress={() => setSelectedSubscriptionId(subscription._id)}
+                  onPress={
+                    lockPaymentSelection
+                      ? undefined
+                      : () => setSelectedSubscriptionId(subscription._id)
+                  }
+                  disabled={lockPaymentSelection}
                 >
                   <View>
                     <Text style={styles.subscriptionName}>
@@ -459,6 +515,9 @@ const styles = StyleSheet.create({
   },
   subscriptionCardActive: {
     borderColor: BikeColors.primary,
+  },
+  subscriptionCardLocked: {
+    opacity: 0.7,
   },
   subscriptionName: {
     fontSize: 16,

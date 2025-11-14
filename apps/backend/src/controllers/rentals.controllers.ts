@@ -151,6 +151,30 @@ export async function getMyCurrentRentalsController(req: Request<RentalParams>, 
   await sendPaginatedResponse(res, next, databaseService.rentals, req.query, filter)
 }
 
+export async function getMyRentalCountsController(req: Request<RentalParams>, res: Response, next: NextFunction) {
+  const { user_id } = req.decoded_authorization as TokenPayLoad
+  const { status } = req.query
+
+  const matchStatus = status ? (status as RentalStatus) : RentalStatus.Completed
+
+  const matchParams: Filter<Rental> = {
+    user_id: toObjectId(user_id),
+    status: matchStatus
+  }
+
+  const statusKey = Object.entries(RentalStatus).find(([key, value]) => value === matchStatus)?.[0] || matchStatus
+
+  const counts = (await databaseService.rentals.find(matchParams).toArray()).length
+
+  res.json({
+    message: RENTALS_MESSAGE.UPDATE_DETAIL_SUCCESS,
+    result: {
+      status: statusKey,
+      counts
+    }
+  })
+}
+
 // staff/admin only
 export async function getRentalListController(req: Request, res: Response, next: NextFunction) {
   const { start_station, end_station, status } = req.query

@@ -34,6 +34,7 @@ import { CreateRefundReqBody } from '~/models/requests/refunds.request'
 import Refund, { RefundType } from '~/models/schemas/refund.schema'
 import Withdraw, { WithdrawType } from '~/models/schemas/withdraw-request'
 import { normalizeDecimal } from '~/utils/string'
+import { getLocalTime } from '~/utils/date-time'
 
 class WalletService {
   async createWallet(user_id: string, session?: ClientSession) {
@@ -91,7 +92,7 @@ class WalletService {
         status: HTTP_STATUS.BAD_REQUEST
       })
     }
-    
+
     const wallet = await databaseService.wallets.findOneAndUpdate(
       { _id: new ObjectId(findWallet._id) },
       { $inc: { balance: Decimal128.fromString(netChange.toString()) } },
@@ -1061,6 +1062,72 @@ class WalletService {
     }
 
     await databaseService.transactions.insertOne(transactionData)
+    return wallet
+  }
+
+  async paymentFixedSlotReservations(
+    user_id: string,
+    amount_per_each: Decimal128,
+    description: string,
+    list_ids: ObjectId[],
+    passCondition: boolean = false
+  ) {
+    const quantity = list_ids.length
+    if (quantity <= 0) return
+    const amountNumber = quantity * Number.parseFloat(amount_per_each.toString())
+
+    if (!passCondition) {
+      const findWallet = await databaseService.wallets.findOne({ user_id: new ObjectId(user_id) })
+      if (!findWallet) {
+        throw new ErrorWithStatus({
+          message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id),
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+
+      const currentBalance = Number.parseFloat(findWallet.balance.toString())
+      if (currentBalance < amountNumber) {
+        throw new ErrorWithStatus({
+          message: WALLETS_MESSAGE.INSUFFICIENT_BALANCE.replace('%s', user_id),
+          status: HTTP_STATUS.BAD_REQUEST
+        })
+      }
+    }
+
+    const wallet = await databaseService.wallets.findOneAndUpdate(
+      { user_id: new ObjectId(user_id) },
+      { $inc: { balance: Decimal128.fromString((-amountNumber).toString()) } },
+      { returnDocument: 'after' }
+    )
+
+    if (!wallet) {
+      throw new ErrorWithStatus({
+        message: WALLETS_MESSAGE.USER_NOT_HAVE_WALLET.replace('%s', user_id),
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    const now = getLocalTime()
+
+    const transactions = list_ids.map((rental_id) => {
+      const transactionID = new ObjectId()
+      const transactionData: TransactionType = {
+        _id: transactionID,
+        wallet_id: new ObjectId(wallet._id),
+        rental_id: rental_id,
+        amount: Decimal128.fromString(amount_per_each.toString()),
+        fee: Decimal128.fromString('0'),
+        description: description,
+        transaction_hash: '',
+        type: TransactionTypeEnum.RESERVATION,
+        status: TransactionStaus.Success,
+        created_at: now
+      }
+
+      return transactionData
+    })
+
+    await databaseService.transactions.insertMany(transactions)
     return wallet
   }
 
