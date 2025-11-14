@@ -1,10 +1,13 @@
 import { Request } from 'express'
 import { Filter, ObjectId } from 'mongodb'
-import { ReservationStatus, SubscriptionStatus } from '~/constants/enums'
+import { ReservationStatus, Role, SosAlertStatus, SubscriptionStatus } from '~/constants/enums'
 import { toObjectId } from './string'
 import { RESERVATIONS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import HTTP_STATUS from '~/constants/http-status'
+import User from '~/models/schemas/user.schema'
+import Rental from '~/models/schemas/rental.schema'
+import SosAlert from '~/models/schemas/sos-alert.schema'
 
 interface ReservationFilter {
   user_id?: ObjectId
@@ -25,7 +28,7 @@ export function buildAdminReservationFilter(query: Request['query']): Filter<Res
       throw new ErrorWithStatus({
         message: RESERVATIONS_MESSAGE.INVALID_USER_ID,
         status: HTTP_STATUS.BAD_REQUEST
-      });
+      })
     }
   }
 
@@ -65,12 +68,30 @@ export function buildAdminSubscriptionFilter(query: any) {
 
   if (query.user_id) filter.user_id = toObjectId(query.user_id)
   if (query.package_name) filter.package_name = query.package_name
-  if (query.status && Object.values(SubscriptionStatus).includes(query.status))
-    filter.status = query.status
+  if (query.status && Object.values(SubscriptionStatus).includes(query.status)) filter.status = query.status
   if (query.start_date || query.end_date) {
     filter.created_at = {}
     if (query.start_date) filter.created_at.$gte = new Date(query.start_date)
     if (query.end_date) filter.created_at.$lte = new Date(query.end_date)
+  }
+
+  return filter
+}
+
+export function buildSosFilterByRole(user: User) {
+  const filter: any = {};
+
+  if (user.role === Role.User) {
+    filter.requester_id = user._id;
+  }
+
+  else if (user.role === Role.Sos) {
+    filter.sos_agent_id = user._id;
+
+    filter.status = {
+      $nin: [SosAlertStatus.PENDING, SosAlertStatus.CANCELLED]
+    };
+
   }
 
   return filter

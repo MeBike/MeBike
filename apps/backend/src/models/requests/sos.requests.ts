@@ -6,7 +6,7 @@ export type CreateSosReqBody = {
   longitude: number
 }
 
-export type ConfirmSosReqBody = {
+export type ResolveSosReqBody = {
   solvable: boolean;
   agent_notes: string;
   photos: string[]
@@ -15,6 +15,10 @@ export type ConfirmSosReqBody = {
 export type RejectSosReqBody = {
   agent_notes: string;
   photos: string[]
+}
+
+export type CancelSosReqBody = {
+  reason: string;
 }
 
 export type SosParam = {

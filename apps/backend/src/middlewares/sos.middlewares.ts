@@ -1,6 +1,6 @@
-// validators/sosValidator.ts
+import { ObjectId } from 'mongodb'
 import { checkSchema } from 'express-validator'
-import { SOS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
+import { AUTH_MESSAGE, SOS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
 import { BikeStatus, Role, SosAlertStatus } from '~/constants/enums'
 import { RentalStatus } from '~/constants/enums'
 import { validate } from '~/utils/validation'
@@ -11,6 +11,7 @@ import HTTP_STATUS from '~/constants/http-status'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import { NextFunction, Request, Response } from 'express'
 import User from '~/models/schemas/user.schema'
+import { canAccessSosByRole, canCancelSosByRole } from '~/utils/authorization-helper'
 
 export const createSosAlertValidator = validate(
   checkSchema(
@@ -99,20 +100,14 @@ const createSosValidator = (includeResolvedField = false) => {
       custom: {
         options: async (value: string, { req }: { req: Request }) => {
           const sos = await databaseService.sos_alerts.findOne({
-            _id: toObjectId(value)
+            _id: toObjectId(value),
+            status: SosAlertStatus.EN_ROUTE
           })
 
           if (!sos) {
             throw new ErrorWithStatus({
-              message: SOS_MESSAGE.SOS_NOT_FOUND.replace('%s', value),
+              message: SOS_MESSAGE.EN_ROUTE_SOS_NOT_FOUND.replace('%s', value),
               status: HTTP_STATUS.NOT_FOUND
-            })
-          }
-
-          if (sos.status !== SosAlertStatus.PENDING) {
-            throw new ErrorWithStatus({
-              message: SOS_MESSAGE.CANNOT_CONFIRM_SOS.replace('%s', sos.status),
-              status: HTTP_STATUS.BAD_REQUEST
             })
           }
 
@@ -157,7 +152,7 @@ const createSosValidator = (includeResolvedField = false) => {
   return validate(checkSchema(baseSchema, ['params', 'body']))
 }
 
-export const confirmSosValidator = createSosValidator(true)
+export const resolveSosValidator = createSosValidator(true)
 
 export const rejectSosValidator = createSosValidator(false)
 
@@ -186,14 +181,14 @@ export const getSosRequestByIdValidator = validate(
 
           const user = req.user as User
 
-          if (user.role === Role.Sos) {
-            if (!sos.sos_agent_id || !user._id?.equals(sos.sos_agent_id)) {
-              throw new ErrorWithStatus({
-                message: SOS_MESSAGE.CANNOT_VIEW_OTHER_DISPATCHED_REQUEST,
-                status: HTTP_STATUS.FORBIDDEN
-              })
-            }
+          const isAllowed = canAccessSosByRole(user, sos)
+          if (!isAllowed) {
+            throw new ErrorWithStatus({
+              message: AUTH_MESSAGE.ACCESS_DENIED,
+              status: HTTP_STATUS.FORBIDDEN
+            })
           }
+
           req.sos_alert = sos
           return true
         }
@@ -348,4 +343,86 @@ export const assignSosAgentValidator = validate(
     },
     ['body']
   )
+)
+
+export const confirmSosValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: {
+        errorMessage: SOS_MESSAGE.REQUIRED_ID
+      },
+      isMongoId: {
+        errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'ID yêu cầu cứu hộ')
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const sos_agent_id = req.user._id as ObjectId
+          const sos = await databaseService.sos_alerts.findOne({
+            _id: toObjectId(value),
+            status: SosAlertStatus.ASSIGNED,
+            sos_agent_id
+          })
+
+          if (!sos) {
+            throw new ErrorWithStatus({
+              message: SOS_MESSAGE.ASSIGNED_SOS_NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          req.sos_alert = sos
+          return true
+        }
+      }
+    }
+  })
+)
+
+export const cancelSosValidator = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: { errorMessage: SOS_MESSAGE.REQUIRED_ID },
+      isMongoId: {
+        errorMessage: SOS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'ID yêu cầu cứu hộ')
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const sos = await databaseService.sos_alerts.findOne({
+            _id: toObjectId(value),
+            status: SosAlertStatus.PENDING
+          })
+
+          if (!sos) {
+            throw new ErrorWithStatus({
+              message: SOS_MESSAGE.PENDING_SOS_NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          const canCancel = canCancelSosByRole(req.user, sos)
+          if(!canCancel){
+            throw new ErrorWithStatus({
+              message: SOS_MESSAGE.CANCEL_DENIED,
+              status: HTTP_STATUS.FORBIDDEN
+            })
+          }
+
+          req.sos_alert = sos
+          return true
+        }
+      }
+    },
+    reason: {
+      in: ['body'],
+      notEmpty: { errorMessage: SOS_MESSAGE.REQUIRED_REASON },
+      trim: true,
+      isString: { errorMessage: SOS_MESSAGE.INVALID_REASON },
+      isLength: {
+        options: { max: 500 },
+        errorMessage: SOS_MESSAGE.INVALID_REASON_LENGTH
+      }
+    },
+  })
 )

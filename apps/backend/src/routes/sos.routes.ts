@@ -1,25 +1,29 @@
 import { Router } from 'express'
 import {
   assignSosAgentController,
+  cancelSosController,
   confirmSosController,
   createSosRequestController,
   getSosRequestByIdController,
   getSosRequestsController,
-  rejectSosController
+  rejectSosController,
+  resolveSosController
 } from '~/controllers/sos.controllers'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
 import {
   assignSosAgentValidator,
+  cancelSosValidator,
   confirmSosValidator,
   createSosAlertValidator,
   getSosRequestByIdValidator,
   isSosAgentValidator,
   isStaffOrSosAgentValidator,
-  rejectSosValidator
+  rejectSosValidator,
+  resolveSosValidator
 } from '~/middlewares/sos.middlewares'
 import { isStaffValidator } from '~/middlewares/staff.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
-import { AssignSosReqBody, ConfirmSosReqBody, CreateSosReqBody, RejectSosReqBody } from '~/models/requests/sos.requests'
+import { AssignSosReqBody, CancelSosReqBody, CreateSosReqBody, RejectSosReqBody, ResolveSosReqBody } from '~/models/requests/sos.requests'
 import { wrapAsync } from '~/utils/handler'
 
 const sosRouter = Router()
@@ -39,9 +43,18 @@ sosRouter
   .post(
     accessTokenValidator,
     isSosAgentValidator,
-    filterMiddleware<ConfirmSosReqBody>(['solvable', 'agent_notes', 'photos']),
     confirmSosValidator,
     wrapAsync(confirmSosController)
+  )
+
+sosRouter
+  .route('/:id/resolve')
+  .post(
+    accessTokenValidator,
+    isSosAgentValidator,
+    filterMiddleware<ResolveSosReqBody>(['solvable', 'agent_notes', 'photos']),
+    resolveSosValidator,
+    wrapAsync(resolveSosController)
   )
 
 sosRouter
@@ -53,18 +66,27 @@ sosRouter
     rejectSosValidator,
     wrapAsync(rejectSosController)
   )
+
+sosRouter
+  .route('/:id/cancel')
+  .post(
+    accessTokenValidator,
+    filterMiddleware<CancelSosReqBody>(['reason']),
+    cancelSosValidator,
+    wrapAsync(cancelSosController)
+  )
+
 sosRouter
   .route('/:id')
   .get(
     accessTokenValidator,
-    isStaffOrSosAgentValidator,
     getSosRequestByIdValidator,
     wrapAsync(getSosRequestByIdController)
   )
 
 sosRouter
   .route('/')
-  .get(accessTokenValidator, isStaffOrSosAgentValidator, wrapAsync(getSosRequestsController))
+  .get(accessTokenValidator, wrapAsync(getSosRequestsController))
   .post(
     accessTokenValidator,
     filterMiddleware<CreateSosReqBody>(['rental_id', 'issue', 'latitude', 'longitude']),

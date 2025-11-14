@@ -11,7 +11,7 @@ import User from '~/models/schemas/user.schema'
 import { AssignSosReqBody } from '~/models/requests/sos.requests'
 
 class SosService {
-  async createAlert({
+  async createAlert(requester_id: ObjectId, {
     rental_id,
     issue,
     latitude,
@@ -24,6 +24,7 @@ class SosService {
   }) {
     const alertData = new SosAlert({
       rental_id: toObjectId(rental_id),
+      requester_id,
       issue,
       location: { type: 'Point', coordinates: [longitude, latitude] },
       status: SosAlertStatus.PENDING
@@ -59,7 +60,7 @@ class SosService {
     return updated
   }
 
-  async confirmSos({
+  async resolveSos({
     sos_alert,
     solvable,
     agent_notes,
@@ -137,7 +138,7 @@ class SosService {
       {
         $lookup: {
           from: 'users',
-          localField: 'rental.user_id',
+          localField: 'requester_id',
           foreignField: '_id',
           as: 'requester'
         }
@@ -177,7 +178,8 @@ class SosService {
         'sos_agent.email_verify_otp_expires': 0,
         'sos_agent.forgot_password_otp': 0,
         'sos_agent.forgot_password_otp_expires': 0,
-        rental_id: 0
+        rental_id: 0,
+        requester_id: 0
       }
     })
 
