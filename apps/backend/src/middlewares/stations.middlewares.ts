@@ -232,7 +232,7 @@ export const getNearbyStationsValidator = validate(
         in: ["query"],
         optional: true,
         isFloat: {
-          errorMessage: "maxDistance phải là một con số (mét)",
+          errorMessage: STATIONS_MESSAGE.MAX_DISTANCE_MUST_BE_POSITIVE_NUMBER,
         },
         toFloat: true,
       },

@@ -52,8 +52,8 @@ bikesRouter.get(
  * Description: Get the bike with highest revenue
  * Path: /bikes/highest-revenue
  * Method: GET
- * Headers: { Authorization: Bearer <access_token> } (optional)
- * Roles: Any (public access for now)
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN
  */
 bikesRouter.get(
   '/highest-revenue',

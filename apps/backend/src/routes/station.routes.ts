@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getRentalsByStationIdController } from "~/controllers/rentals.controllers";
-import { createStationController, deleteStationController, getAllStationsRevenueController, getBikeRevenueByStationController, getHighestRevenueStationController, getNearbyStationsController, getStationAlertsController, getStationByIdController, getStationsController, getStationStatsController, updateStationController } from "~/controllers/stations.controllers";
+import { createStationController, deleteStationController, getAllStationsRevenueController, getBikeRevenueByStationController, getHighestRevenueStationController, getNearbyStationsController, getNearestAvailableBikeController, getStationAlertsController, getStationByIdController, getStationsController, getStationStatsController, updateStationController } from "~/controllers/stations.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { createStationValidator, getNearbyStationsValidator, stationIdValidator, updateStationValidator } from "~/middlewares/stations.middlewares";
 import { accessTokenValidator } from "~/middlewares/users.middlewares";
@@ -80,7 +80,7 @@ stationRouter.post(
 );
 
 /**
- * Description: lấy danh sách xe gần nhất theo tọa độ
+ * Description: lấy danh sách trạm gần nhất theo tọa độ
  * Path: /stations/nearby
  * Method: GET
  * Query: { latitude: number, longitude: number, maxDistance?: number, page?: number, limit?: number }
@@ -90,6 +90,19 @@ stationRouter.get(
   "/nearby",
   getNearbyStationsValidator,
   wrapAsync(getNearbyStationsController)
+);
+
+/**
+ * Description: Tìm xe gần nhất có trạng thái AVAILABLE theo tọa độ
+ * Path: /stations/nearest-available-bike
+ * Method: GET
+ * Query: { latitude: number, longitude: number, maxDistance?: number }
+ * Roles: Public
+ */
+stationRouter.get(
+  "/nearest-available-bike",
+  getNearbyStationsValidator,
+  wrapAsync(getNearestAvailableBikeController)
 );
 
 /**
