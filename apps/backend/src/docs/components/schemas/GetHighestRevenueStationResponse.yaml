@@ -1,0 +1,23 @@
+type: object
+description: "Đối tượng trả về chứa thông tin trạm có doanh thu cao nhất."
+properties:
+  period:
+    type: object
+    properties:
+      from:
+        type: string
+        format: date-time
+        description: "Ngày bắt đầu của kỳ thống kê."
+      to:
+        type: string
+        format: date-time
+        description: "Ngày kết thúc của kỳ thống kê."
+  station:
+    # Tái sử dụng schema đã tạo ở API trước
+    $ref: './StationRevenueItem.yaml' 
+    nullable: true # Rất quan trọng, vì code có trả về 'null' nếu không có dữ liệu
+  message:
+    type: string
+    description: "Một thông báo bổ sung (ví dụ: khi không có dữ liệu)."
+    nullable: true
+    example: "Không có dữ liệu doanh thu cho khoảng thời gian này"

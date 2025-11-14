@@ -9,6 +9,8 @@ import { useCreateSupplierMutation } from "./mutations/Station/useCreateStationQ
 import { useSoftDeleteStationMutation } from "./mutations/Station/useSoftDeleteStationMutation";
 import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQuery";
 import { useGetStationStatsReservationQuery } from "./query/Station/useGetStationStatsReservation";
+import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeRevenue";
+import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -17,11 +19,9 @@ interface ErrorResponse {
     };
   };
 }
-
 interface ErrorWithMessage {
   message: string;
 }
-
 const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   const axiosError = error as ErrorResponse;
   if (axiosError?.response?.data) {
@@ -68,11 +68,11 @@ export const useStationActions = ({
   const useSoftDeleteStation = useSoftDeleteStationMutation();
   const useUpdateStation = useUpdateStationMutation(stationId || "");
   const getReservationStats = useCallback(() => {
-    if (!hasToken) {
+    if (!hasToken || !stationId) {
       return;
     }
     refetchStationReservationStats();
-  }, [refetchStationReservationStats, hasToken]);
+  }, [refetchStationReservationStats, hasToken, stationId]);
   const getAllStations = useCallback(() => {
     if (!hasToken) {
       return;
@@ -172,6 +172,20 @@ export const useStationActions = ({
     },
     [hasToken, router, queryClient, useUpdateStation]
   );
+  const { data: responseStationBikeRevenue, refetch: refetchStationBikeRevenue } = useGetStationBikeRevenue();
+  const getStationBikeRevenue = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchStationBikeRevenue();
+  }, [refetchStationBikeRevenue, hasToken]);
+  const {data : responseStationRevenue , refetch : refetchStationRevenue } = useGetStationRevenue();
+  const getStationRevenue = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchStationRevenue();
+  }, [refetchStationRevenue, hasToken]);
   return {
     getAllStations,
     getStationByID,
@@ -188,5 +202,9 @@ export const useStationActions = ({
     isLoadingGetStationByID: isLoadingStationID,
     responseStationReservationStats,
     getReservationStats,
+    responseStationBikeRevenue,
+    getStationBikeRevenue,
+    responseStationRevenue,
+    getStationRevenue,
   };
 };

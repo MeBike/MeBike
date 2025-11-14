@@ -132,7 +132,21 @@ export const getBikeRevenueByStationController = wrapAsync(
       to: to as string
     });
     return res.json({
-      message: STATIONS_MESSAGE.GET_STATION_STATS_SUCCESSFULLY,
+      message: STATIONS_MESSAGE.GET_BIKE_REVENUE_BY_STATION_SUCCESSFULLY,
+      result,
+    });
+  }
+);
+
+export const getHighestRevenueStationController = wrapAsync(
+  async (req: Request, res: Response) => {
+    const { from, to } = req.query;
+    const result = await stationsService.getHighestRevenueStation({
+      from: from as string,
+      to: to as string
+    });
+    return res.json({
+      message: STATIONS_MESSAGE.GET_HIGHEST_REVENUE_STATION_SUCCESSFULLY,
       result,
     });
   }

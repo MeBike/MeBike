@@ -477,7 +477,7 @@ async function finalizeRentalWithoutTransaction({
 
   if (!bikeUpdateResult.matchedCount) {
     throw new ErrorWithStatus({
-      message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', persistedRental.bike_id.toString()),
+      message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', persistedRental.bike_id!.toString()),
       status: HTTP_STATUS.NOT_FOUND
     })
   }
