@@ -1,5 +1,6 @@
 import { Decimal128, ObjectId } from "mongodb";
 import { SubscriptionPackage, SubscriptionStatus } from "~/constants/enums";
+import { PACKAGE_CONFIG } from "~/constants/subscription-packages";
 import { getLocalTime } from "~/utils/date-time";
 
 type SubscriptionType = {
@@ -36,8 +37,11 @@ export default class Subscription {
     this.package_name = sub.package_name ?? SubscriptionPackage.BASIC;
     this.activated_at = sub.activated_at ?? undefined;
     this.expires_at = sub.expires_at ?? undefined;
+
+    const maxUsage = PACKAGE_CONFIG[this.package_name].max_usages
     this.max_usages =
-      sub.max_usages === null ? undefined : sub.max_usages ?? undefined
+      maxUsage === null ? undefined : maxUsage ?? undefined
+
     this.usage_count = sub.usage_count ?? 0;
     this.price = sub.price instanceof Decimal128 ? sub.price : Decimal128.fromString(String(sub.price));
     this.status = sub.status ?? SubscriptionStatus.PENDING;

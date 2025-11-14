@@ -4,7 +4,7 @@ import { Queue, Worker } from 'bullmq'
 import reservationsService from '~/services/reservations.services'
 import { BikeStatus, ReservationStatus } from '~/constants/enums'
 import { toObjectId } from '~/utils/string'
-import { formatUTCDateToVietnamese, getLocalTime } from '~/utils/date-time'
+import { formatUTCDateToVietnameseWithoutTime, getLocalTime } from '~/utils/date-time'
 import { applySlotToDate } from '~/utils/reservation.helper'
 import subscriptionService from '~/services/subscription.services'
 import { fixedSlotTemplateService } from '~/services/fixed-slot.services'
@@ -105,11 +105,23 @@ export const generateFixedSlotWorker = new Worker(
     let noBikeCount = 0
     let errorCount = 0
 
+    const now = getLocalTime()
     for (const template of templates) {
       try {
         if (!template.selected_dates.includes(todayStr)) continue
 
-        const {start, end} = applySlotToDate(today, template.slot_start)
+        const { start, end } = applySlotToDate(today, template.slot_start)
+
+        const reservation = await databaseService.reservations.findOne({
+          fixed_slot_template_id: template._id,
+          start_time: start,
+          bike_id: { $exists: false } // ensure not yet assigned
+        })
+
+        if (!reservation) {
+          console.log(`[FixedSlot] No reservation found for ${template._id} on ${todayStr}`)
+          continue
+        }
 
         const availableBike = await databaseService.bikes.findOne({
           station_id: template.station_id,
@@ -121,7 +133,7 @@ export const generateFixedSlotWorker = new Worker(
           fullname: template.user.fullname,
           station_name: template.station.name,
           slot_time: `${template.slot_start}`,
-          date: formatUTCDateToVietnamese(today.toString())
+          date: formatUTCDateToVietnameseWithoutTime(today.toString())
         }
 
         if (!availableBike) {
@@ -136,14 +148,30 @@ export const generateFixedSlotWorker = new Worker(
           continue
         }
 
-        // Tạo đặt chỗ
-        const reservation = await reservationsService.reserveWithFixedSlot({
-          user_id: template.user_id,
-          bike_id: availableBike._id,
-          station_id: template.station_id,
-          start_time: start,
-          fixed_slot_template_id: template._id
-        })
+        await Promise.all([
+          databaseService.reservations.updateOne(
+            { _id: reservation._id },
+            {
+              $set: {
+                bike_id: availableBike._id,
+                updated_at: now
+              }
+            }
+          ),
+          databaseService.rentals.updateOne(
+            { _id: reservation._id },
+            {
+              $set: {
+                bike_id: availableBike._id,
+                updated_at: now
+              }
+            }
+          ),
+          databaseService.bikes.updateOne(
+            { _id: availableBike._id },
+            { $set: { status: BikeStatus.Reserved, updated_at: now } }
+          )
+        ])
 
         // Gửi email: Thành công
         await emailQueue.add('success', {
@@ -151,7 +179,7 @@ export const generateFixedSlotWorker = new Worker(
           subject: RESERVATIONS_MESSAGE.EMAIL_SUBJECT_SUCCESS_RESERVING,
           data: {
             ...reservation,
-            station_name: template.station.name,
+            station_name: template.station.name
           },
           user: template.user
         })

@@ -103,7 +103,7 @@ export const createFixedSlotTemplateValidator = validate(
         notEmpty: { errorMessage: RESERVATIONS_MESSAGE.FS_REQUIRED_ONE_DATE_AT_LEAST },
         isArray: { options: { min: 1 } },
         custom: {
-          options: (value: string[], {req}) => {
+          options: (value: string[], { req }) => {
             const unique = uniqueDates(value)
 
             const invalid = unique.some((date) => !/^\d{4}-\d{2}-\d{2}$/.test(date))
@@ -113,12 +113,12 @@ export const createFixedSlotTemplateValidator = validate(
                 status: HTTP_STATUS.BAD_REQUEST
               })
 
-            const today = getLocalTime()
-            today.setUTCHours(0, 0, 0, 0)
-            const past = unique.some((date) => new Date(date) < today)
+            const tomorrow = new Date(getLocalTime().getTime() + 24 * 3600000)
+            tomorrow.setUTCHours(0, 0, 0, 0)
+            const past = unique.some((date) => new Date(date) < tomorrow)
             if (past)
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_PAST_DATE_NOT_ALLOWED,
+                message: RESERVATIONS_MESSAGE.FS_MUST_BEGIN_FROM_TOMORROW,
                 status: HTTP_STATUS.BAD_REQUEST
               })
 
@@ -162,12 +162,12 @@ export const updateFixedSlotTemplateValidator = validate(
                 status: HTTP_STATUS.BAD_REQUEST
               })
 
-            const today = getLocalTime()
-            today.setUTCHours(0, 0, 0, 0)
-            const past = unique.some((date) => new Date(date) < today)
+            const tomorrow = new Date(getLocalTime().getTime() + 24 * 3600000)
+            tomorrow.setUTCHours(0, 0, 0, 0)
+            const past = unique.some((date) => new Date(date) < tomorrow)
             if (past)
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.FS_PAST_DATE_NOT_ALLOWED,
+                message: RESERVATIONS_MESSAGE.FS_MUST_BEGIN_FROM_TOMORROW,
                 status: HTTP_STATUS.BAD_REQUEST
               })
 

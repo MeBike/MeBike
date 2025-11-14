@@ -2,7 +2,7 @@ import { CronJob } from "cron"
 import { generateFixedSlotQueue } from "~/lib/queue/reservation.queue"
 
 
-export const generateFixedSlotReservation = new CronJob('5 0 * * *', async () => {
+export const generateFixedSlotReservation = new CronJob('0 0 * * *', async () => {
   console.log(`[Cron] Running notify and schedule expiration job (${new Date().toLocaleTimeString()})`)
   try {
     await generateFixedSlotQueue.add('generate-fixed-slot', {}, { jobId: 'fixed-slot-today' })
