@@ -435,11 +435,11 @@ class BikesService {
         $facet: {
           //Đếm tổng số xe đang hoạt động (không tính xe đã ngừng)
           "total_active_bikes": [
-            { 
-              $match: { 
+            {
+              $match: {
                 //BikeStatus.Unavailable là trạng thái soft-delete
-                status: { $ne: BikeStatus.Unavailable } 
-              } 
+                status: { $ne: BikeStatus.Unavailable }
+              }
             },
             { $count: "count" }
           ],
@@ -475,6 +475,80 @@ class BikesService {
       rented_bikes: rented_bikes,
       percentage: parseFloat(percentage.toFixed(2))
     }
+  }
+
+  async getHighestRevenueBike() {
+    const pipeline = [
+      {
+        // Chỉ lấy rentals đã hoàn thành
+        $match: {
+          status: RentalStatus.Completed
+        }
+      },
+      {
+        // Group by bike_id để tính tổng doanh thu và số lượt thuê
+        $group: {
+          _id: "$bike_id",
+          total_revenue: { $sum: { $toDouble: "$total_price" } },
+          rental_count: { $sum: 1 }
+        }
+      },
+      {
+        // Sắp xếp theo doanh thu giảm dần
+        $sort: { total_revenue: -1 }
+      },
+      {
+        // Lấy xe có doanh thu cao nhất
+        $limit: 1
+      },
+      {
+        // Join với bikes collection để lấy thông tin xe
+        $lookup: {
+          from: 'bikes',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'bike_info'
+        }
+      },
+      {
+        // Join với stations collection để lấy thông tin trạm
+        $lookup: {
+          from: 'stations',
+          localField: 'bike_info.station_id',
+          foreignField: '_id',
+          as: 'station_info'
+        }
+      },
+      {
+        // Unwind để dễ xử lý
+        $unwind: { path: '$bike_info', preserveNullAndEmptyArrays: true }
+      },
+      {
+        // Unwind station
+        $unwind: { path: '$station_info', preserveNullAndEmptyArrays: true }
+      },
+      {
+        // Định dạng output
+        $project: {
+          bike_id: '$_id',
+          bike_chip_id: '$bike_info.chip_id',
+          total_revenue: 1,
+          rental_count: 1,
+          station: {
+            _id: '$station_info._id',
+            name: '$station_info.name'
+          }
+        }
+      }
+    ]
+
+    const result = await databaseService.rentals.aggregate(pipeline).toArray()
+
+    if (result.length === 0) {
+      return null
+    }
+
+    return result[0]
   }
 }
 

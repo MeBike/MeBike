@@ -1206,6 +1206,38 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/bikes/highest-revenue:
+  get:
+    tags: [Bikes]
+    summary: Get the bike with the highest revenue (Admin only)
+    description: |
+      Retrieves the single bike with the highest total revenue from completed rentals, including its current station info.
+      **Requires Admin privileges.**
+      *(Lưu ý: Mô tả trong code của bạn nói API này là public, nhưng code thực tế lại yêuS cầu `isAdminValidator`.)*
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: "Successfully retrieved the highest revenue bike. 'result' will be null if no completed rentals are found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetHighestRevenueBikeResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Suppliers API (ADMIN ONLY)
 # ===================================================================

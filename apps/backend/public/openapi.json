@@ -2035,6 +2035,55 @@
         }
       }
     },
+    "/bikes/highest-revenue": {
+      "get": {
+        "tags": [
+          "Bikes"
+        ],
+        "summary": "Get the bike with the highest revenue (Admin only)",
+        "description": "Retrieves the single bike with the highest total revenue from completed rentals, including its current station info.\n**Requires Admin privileges.**\n*(Lưu ý: Mô tả trong code của bạn nói API này là public, nhưng code thực tế lại yêuS cầu `isAdminValidator`.)*\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved the highest revenue bike. 'result' will be null if no completed rentals are found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetHighestRevenueBikeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User is not an Admin.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/suppliers": {
       "get": {
         "tags": [
@@ -6944,6 +6993,19 @@
           }
         }
       },
+      "GetHighestRevenueBikeResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Lấy xe có doanh thu cao nhất thành công"
+          },
+          "result": {
+            "$ref": "#/components/schemas/HighestRevenueBike",
+            "nullable": true
+          }
+        }
+      },
       "User": {
         "type": "object",
         "description": "Represents a user object.",
@@ -8601,6 +8663,49 @@
             "type": "string",
             "description": "Doanh thu trung bình mỗi trạm (đã định dạng tiền tệ).",
             "example": "5.000.000 VND"
+          }
+        }
+      },
+      "HighestRevenueBikeStation": {
+        "type": "object",
+        "description": "Thông tin trạm cơ bản của xe có doanh thu cao nhất.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "example": "Trạm Đại học FPT"
+          }
+        }
+      },
+      "HighestRevenueBike": {
+        "type": "object",
+        "description": "Thông tin chi tiết về xe đạp có doanh thu cao nhất.",
+        "properties": {
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "bike_chip_id": {
+            "type": "string",
+            "nullable": true,
+            "example": "BIKE-007"
+          },
+          "total_revenue": {
+            "type": "number",
+            "format": "double",
+            "example": 2500000
+          },
+          "rental_count": {
+            "type": "integer",
+            "example": 50
+          },
+          "station": {
+            "$ref": "#/components/schemas/HighestRevenueBikeStation"
           }
         }
       }
