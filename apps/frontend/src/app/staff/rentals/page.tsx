@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { RentalStatus } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useRentalsActions } from "@/hooks/use-rental";
-import { useStationActions } from "@/hooks/useStationAction";
+import { useStationActions } from "@/hooks/use-station";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { rentalColumn } from "@/columns/rental-columns";

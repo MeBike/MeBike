@@ -61,3 +61,21 @@ export type RentalDetail = {
   created_at: string;
   updated_at: string;
 };
+
+export type StaffActiveRental = {
+  _id: string;
+  user: {
+    _id: string;
+    fullname: string;
+  };
+  bike_id: string;
+  status: RentingHistory["status"];
+  start_station: string;
+  end_station?: string | null;
+  start_time: string;
+  end_time?: string | null;
+  duration: number;
+  total_price: number;
+  created_at: string;
+  updated_at: string;
+};

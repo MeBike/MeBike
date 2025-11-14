@@ -28,14 +28,14 @@ withdrawsRouter.post(
 withdrawsRouter.get('/manage-withdrawal', accessTokenValidator, isAdminValidator, wrapAsync(getAllWithDrawController))
 // user get all withdraw
 withdrawsRouter.get('/', accessTokenValidator, wrapAsync(getAllUserWithdrawController))
-withdrawsRouter.get('/overview', accessTokenValidator, isAdminValidator,wrapAsync(getWithdrawOverviewController))
+withdrawsRouter.get('/overview', accessTokenValidator, isAdminValidator, wrapAsync(getWithdrawOverviewController))
 withdrawsRouter.get('/:id', accessTokenValidator, wrapAsync(getWithdrawDetailController))
 withdrawsRouter.put(
   '/:id',
   accessTokenValidator,
   isAdminValidator,
   updateWithdrawStatusValidator,
-  filterMiddleware(['newStatus']),
+  filterMiddleware(['newStatus', 'reason']),
   wrapAsync(updateWithdrawStatusController)
 )
 

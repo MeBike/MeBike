@@ -4,12 +4,17 @@ import {
   getRatingByIdController,
   getRatingController,
   getRatingReasonsController,
-  getRatingDetailController
+  getRatingDetailController,
+  getBikeRatingController,
+  getAppRatingController,
+  getStationRatingController
 } from '~/controllers/ratings.controllers'
 
 import { isAdminValidator } from '~/middlewares/admin.middlewares'
+import { bikeIdValidator } from '~/middlewares/bikes.middlewares'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
 import { createRatingValidator } from '~/middlewares/rating.middlewares'
+import { stationIdValidator } from '~/middlewares/stations.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { CreateRatingReqBody } from '~/models/requests/rating.requests'
 import { wrapAsync } from '~/utils/handler'
@@ -26,6 +31,7 @@ ratingRouter.post(
 // admin get all rating
 ratingRouter.get('/', accessTokenValidator, isAdminValidator, wrapAsync(getRatingController))
 ratingRouter.get('/rating-reasons', accessTokenValidator, wrapAsync(getRatingReasonsController))
+ratingRouter.get('/app', accessTokenValidator, isAdminValidator, wrapAsync(getAppRatingController))
 /**
  * Description: Get detailed rating information by rating ID (Admin only)
  * Path: /ratings/detail/:rating_id
@@ -35,6 +41,20 @@ ratingRouter.get('/rating-reasons', accessTokenValidator, wrapAsync(getRatingRea
  * Roles: ADMIN
  */
 ratingRouter.get('/detail/:rating_id', accessTokenValidator, isAdminValidator, wrapAsync(getRatingDetailController))
+ratingRouter.get(
+  '/bike/:_id',
+  accessTokenValidator,
+  isAdminValidator,
+  bikeIdValidator,
+  wrapAsync(getBikeRatingController)
+)
+ratingRouter.get(
+  '/station/:_id',
+  accessTokenValidator,
+  isAdminValidator,
+  stationIdValidator,
+  wrapAsync(getStationRatingController)
+)
 ratingRouter.get('/:rental_id', accessTokenValidator, wrapAsync(getRatingByIdController))
 
 export default ratingRouter

@@ -251,36 +251,38 @@ class FixedSlotTemplateService {
         if (datesToUpdate.length > 0 && updates.slot_start && updates.slot_start !== template.slot_start) {
           const updateSlotStart = updates.slot_start
 
-          datesToUpdate.map(async (date) => {
-            const newStartTime = generateDateTimeWithTimeAndDate(updateSlotStart, date)
-            const reservationsOfDate = await databaseService.reservations
-              .find({
-                fixed_slot_template_id: templateId,
-                start_time: {
-                  $gte: new Date(date + 'T00:00:00.000Z'),
-                  $lt: new Date(date + 'T23:59:59.999Z')
-                }
-              })
-              .toArray()
+          await Promise.all(
+            datesToUpdate.map(async (date) => {
+              const newStartTime = generateDateTimeWithTimeAndDate(updateSlotStart, date)
+              const reservationsOfDate = await databaseService.reservations
+                .find({
+                  fixed_slot_template_id: templateId,
+                  start_time: {
+                    $gte: new Date(date + 'T00:00:00.000Z'),
+                    $lt: new Date(date + 'T23:59:59.999Z')
+                  }
+                })
+                .toArray()
 
-            const reservationIds = reservationsOfDate.map((r) => r._id)
+              const reservationIds = reservationsOfDate.map((r) => r._id)
 
-            // Update reservation start_time
-            await databaseService.reservations.updateMany(
-              { _id: { $in: reservationIds } },
-              { $set: { start_time: newStartTime, updated_at: now } },
-              { session }
-            )
+              // Update reservation start_time
+              await databaseService.reservations.updateMany(
+                { _id: { $in: reservationIds } },
+                { $set: { start_time: newStartTime, updated_at: now } },
+                { session }
+              )
 
-            // Update corresponding rentals
-            await databaseService.rentals.updateMany(
-              { _id: { $in: reservationIds } },
-              { $set: { start_time: newStartTime, updated_at: now } },
-              { session }
-            )
+              // Update corresponding rentals
+              await databaseService.rentals.updateMany(
+                { _id: { $in: reservationIds } },
+                { $set: { start_time: newStartTime, updated_at: now } },
+                { session }
+              )
 
-            updatedData.slot_start = updateSlotStart
-          })
+              updatedData.slot_start = updateSlotStart
+            })
+          )
         }
 
         if (datesToRemove.length > 0) {
