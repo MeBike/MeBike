@@ -403,7 +403,7 @@ export const cancelRentalValidator = validate(
             const bike = await databaseService.bikes.findOne({ _id: rental.bike_id })
             if (!bike) {
               throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id.toString()),
+                message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id!.toString()),
                 status: HTTP_STATUS.NOT_FOUND
               })
             }
@@ -464,7 +464,7 @@ export const checkUserWalletBeforeRent = async (req: Request, res: Response, nex
       const sub = await databaseService.subscriptions.findOne({
         _id: toObjectId(subId),
         user_id: toObjectId(user_id),
-        status: SubscriptionStatus.ACTIVE
+        status: {$in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE]}
       })
       
       if (!sub || (sub.max_usages != null && sub.usage_count >= sub.max_usages)) {
@@ -499,3 +499,31 @@ export const checkUserWalletBeforeRent = async (req: Request, res: Response, nex
     next(error)
   }
 }
+
+export const checkRentalExist = validate(
+  checkSchema({
+    id: {
+      in: ['params'],
+      notEmpty: {
+        errorMessage: RENTALS_MESSAGE.REQUIRED_ID
+      },
+      isMongoId: {
+        errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace("%s", "ID phiên thuê")
+      },
+      custom: {
+        options: async(value, {req}) => {
+          const rental = await databaseService.rentals.findOne({_id: toObjectId(value)})
+          if(!rental){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.NOT_FOUND.replace("%s", value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+          
+          req.rental = rental
+          return true
+        }
+      }
+    }
+  },['params'])
+)

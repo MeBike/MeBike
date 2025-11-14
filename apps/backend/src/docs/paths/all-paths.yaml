@@ -1206,6 +1206,38 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/bikes/highest-revenue:
+  get:
+    tags: [Bikes]
+    summary: Get the bike with the highest revenue (Admin only)
+    description: |
+      Retrieves the single bike with the highest total revenue from completed rentals, including its current station info.
+      **Requires Admin privileges.**
+      *(Lưu ý: Mô tả trong code của bạn nói API này là public, nhưng code thực tế lại yêuS cầu `isAdminValidator`.)*
+    security:
+      - BearerAuth: []
+    responses:
+      '200':
+        description: "Successfully retrieved the highest revenue bike. 'result' will be null if no completed rentals are found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/GetHighestRevenueBikeResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Suppliers API (ADMIN ONLY)
 # ===================================================================
@@ -3009,6 +3041,64 @@
                   example: "Lấy thống kê trạm thành công"
                 result:
                   $ref: '../components/schemas/GetBikeRevenueResponse.yaml'
+      '400':
+        description: "Bad Request. Lỗi do định dạng ngày không hợp lệ (e.g., '31-02-2025') hoặc 'from' > 'to'."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User is not an Admin."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
+/stations/highest-revenue:
+  get:
+    tags: [Stations]
+    summary: Get the station with the highest revenue (Admin only)
+    description: |
+      Retrieves the single station with the highest total revenue within a given time period.
+      **Requires Admin privileges.**
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: from
+        in: query
+        required: false
+        description: "Start date (dd-mm-yyyy hoặc ISO 8601). Mặc định: '2025-01-01'."
+        schema:
+          type: string
+          example: "01-10-2025"
+      - name: to
+        in: query
+        required: false
+        description: "End date (dd-mm-yyyy hoặc ISO 8601). Mặc định: hôm nay."
+        schema:
+          type: string
+          example: "31-10-2025"
+    responses:
+      '200':
+        description: "Highest revenue station retrieved successfully. 'station' will be null if no data is found for the period."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy trạm có doanh thu cao nhất thành công"
+                result:
+                  $ref: '../components/schemas/GetHighestRevenueStationResponse.yaml'
       '400':
         description: "Bad Request. Lỗi do định dạng ngày không hợp lệ (e.g., '31-02-2025') hoặc 'from' > 'to'."
         content:

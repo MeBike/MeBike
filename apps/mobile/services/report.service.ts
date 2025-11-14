@@ -86,23 +86,6 @@ export const reportService = {
     const response = await fetchHttpClient.post(REPORT_ENDPOINTS.BASE, payload);
     return response;
   },
-  getUserReports: async ({
-    page,
-    limit,
-  }: {
-    page?: number;
-    limit?: number;
-  }): Promise<AxiosResponse<ApiResponse<Report[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Report[]>>(
-      REPORT_ENDPOINTS.BASE,
-
-      {
-        page,
-        limit,
-      }
-    );
-    return response;
-  },
   getReportById: async (
     id: string
   ): Promise<AxiosResponse<DetailApiResponse<Report>>> => {

@@ -208,3 +208,17 @@ export const getBikeRentalStatsController = async (req: Request, res: Response) 
     result,
   });
 }
+
+export const getHighestRevenueBikeController = async (req: Request, res: Response) => {
+  const result = await bikesService.getHighestRevenueBike()
+  if (!result) {
+    return res.json({
+      message: BIKES_MESSAGES.NOT_BIKE_FOUND,
+      result: null
+    })
+  }
+  return res.json({
+    message: BIKES_MESSAGES.GET_BIKE_HIGHEST_REVENUE_SUCCESS,
+    result,
+  });
+}

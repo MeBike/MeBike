@@ -10,7 +10,7 @@ type ReservationType = {
   start_time: Date
   end_time?: Date
   prepaid: Decimal128
-  status: ReservationStatus
+  status?: ReservationStatus
   reservation_option: ReservationOptions
   fixed_slot_template_id?: ObjectId
   subscription_id?: ObjectId
@@ -36,6 +36,20 @@ export default class Reservation {
   constructor(reservation: ReservationType) {
     const localTime = getLocalTime()
     const holdTimeMs = Number(process.env.HOLD_HOURS_RESERVATION || '1') * 60 * 60 * 1000
+
+    if (
+      reservation.reservation_option === ReservationOptions.FIXED_SLOT &&
+      !reservation.fixed_slot_template_id
+    ) {
+      throw new Error('fixed_slot_template_id is required when reservation_option is FIXED_SLOT')
+    }
+
+    if (
+      reservation.reservation_option === ReservationOptions.SUBSCRIPTION &&
+      !reservation.subscription_id
+    ) {
+      throw new Error('subscription_id is required when reservation_option is SUBSCRIPTION')
+    }
 
     this._id = reservation._id || new ObjectId()
     this.user_id = reservation.user_id

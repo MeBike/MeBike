@@ -8,7 +8,7 @@ export type FixedSlotTemplateType = {
   station_id: ObjectId
   slot_start: string
   selected_dates: string[]
-  status: FixedSlotStatus
+  status?: FixedSlotStatus
   created_at?: Date
   updated_at?: Date
 }

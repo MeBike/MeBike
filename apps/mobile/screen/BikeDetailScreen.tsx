@@ -40,6 +40,18 @@ type RouteParams = {
 
 type PaymentMode = "wallet" | "subscription";
 
+const BIKE_STATUS_COLORS: Record<Bike["status"], string> = {
+  "CÓ SẴN": "#4CAF50",
+  "ĐANG ĐƯỢC THUÊ": "#FF9800",
+  "BỊ HỎNG": "#F44336",
+  "ĐÃ ĐẶT TRƯỚC": "#FF9800",
+  "ĐANG BẢO TRÌ": "#F44336",
+  "KHÔNG CÓ SẴN": "#999999",
+};
+
+const getBikeStatusColor = (status: Bike["status"]) =>
+  BIKE_STATUS_COLORS[status] ?? "#999999";
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -403,8 +415,7 @@ function BikeDetailScreen() {
     selectedSubscriptionId,
   ]);
 
-  const statusColor =
-    currentBike.status === "CÓ SẴN" ? BikeColors.success : BikeColors.error;
+  const statusColor = getBikeStatusColor(currentBike.status);
   const isPrimaryDisabled = isPostRentLoading || !isBikeAvailable;
   const isReserveDisabled = !isBikeAvailable;
 
