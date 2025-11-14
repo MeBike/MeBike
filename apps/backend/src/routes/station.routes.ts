@@ -51,6 +51,7 @@ stationRouter.get("/revenue", accessTokenValidator, isAdminValidator, wrapAsync(
  * Roles: ADMIN
  */
 stationRouter.get("/bike-revenue", accessTokenValidator, isAdminValidator, wrapAsync(getBikeRevenueByStationController))
+
 /**
  * Description: Get the station with the highest revenue
  * Path: /stations/highest-revenue
