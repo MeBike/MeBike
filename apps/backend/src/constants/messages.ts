@@ -165,7 +165,8 @@ export const REPORTS_MESSAGES = {
   ACCESS_DENIED: 'Truy cập bị từ chối',
   ASSIGNEE_INVALID: 'Phải là nhân viên SOS hoặc nhân viên',
   RENTAL_ID_REQUIRED: 'ID thuê xe là bắt buộc',
-  RENTAL_NOT_RENTED: 'Phải là 1 phiên xe đang được thuê'
+  RENTAL_NOT_RENTED: 'Phải là 1 phiên xe đang được thuê',
+  RENTAL_ALREADY_REPORTED: 'Phiên xe đã được báo cáo'
 }
 
 export const SUPPLIER_MESSAGE = {

@@ -53,6 +53,15 @@ class ReportService {
           message: REPORTS_MESSAGES.RENTAL_NOT_FOUND
         })
       }
+
+      const existedReport = await databaseService.reports.findOne({ rental_id: new ObjectId(payload.rental_id) })
+      if (existedReport) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.BAD_REQUEST,
+          message: REPORTS_MESSAGES.RENTAL_ALREADY_REPORTED
+        })
+      }
+
       if (findRental.status !== RentalStatus.Rented) {
         throw new ErrorWithStatus({
           status: HTTP_STATUS.NOT_FOUND,
