@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import type { AxiosError } from "axios";
 import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -22,6 +23,52 @@ import type { StaffActiveRental } from "@/types/RentalTypes";
 import { formatVietnamDateTime } from "@utils/date";
 import { RootStackParamList } from "../types/navigation";
 
+const formatDate = (value?: string | null) => {
+  if (!value) return "-";
+  return formatVietnamDateTime(value);
+};
+
+const shortenId = (value: string) => {
+  if (!value) return "-";
+  return value.length > 8 ? `...${value.slice(-6)}` : value;
+};
+
+const formatDuration = (minutes?: number) => {
+  if (!minutes || minutes <= 0) return "Chưa xác định";
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hours > 0) {
+    return mins > 0 ? `${hours}h ${mins}p` : `${hours}h`;
+  }
+  return `${mins} phút`;
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "ĐANG THUÊ":
+      return "#FF9800";
+    case "HOÀN THÀNH":
+      return "#4CAF50";
+    case "ĐÃ HỦY":
+      return "#F44336";
+    default:
+      return "#999";
+  }
+};
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case "ĐANG THUÊ":
+      return "Đang thuê";
+    case "HOÀN THÀNH":
+      return "Hoàn thành";
+    case "ĐÃ HỦY":
+      return "Đã hủy";
+    default:
+      return status;
+  }
+};
+
 function StaffPhoneLookupScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -43,52 +90,6 @@ function StaffPhoneLookupScreen() {
     );
   }, [stationData]);
 
-  const formatDate = (value?: string | null) => {
-    if (!value) return "-";
-    return formatVietnamDateTime(value);
-  };
-
-  const shortenId = (value: string) => {
-    if (!value) return "-";
-    return value.length > 8 ? `...${value.slice(-6)}` : value;
-  };
-
-  const formatDuration = (minutes?: number) => {
-    if (!minutes || minutes <= 0) return "Chưa xác định";
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return mins > 0 ? `${hours}h ${mins}p` : `${hours}h`;
-    }
-    return `${mins} phút`;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ĐANG THUÊ":
-        return "#FF9800";
-      case "HOÀN THÀNH":
-        return "#4CAF50";
-      case "ĐÃ HỦY":
-        return "#F44336";
-      default:
-        return "#999";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "ĐANG THUÊ":
-        return "Đang thuê";
-      case "HOÀN THÀNH":
-        return "Hoàn thành";
-      case "ĐÃ HỦY":
-        return "Đã hủy";
-      default:
-        return status;
-    }
-  };
-
   const handleLookup = () => {
     const normalized = phoneNumber.trim();
     if (!normalized) {
@@ -102,7 +103,7 @@ function StaffPhoneLookupScreen() {
           setSearchResults(response.data.data ?? []);
           setLastSearchedPhone(normalized);
         },
-        onError: (error: any) => {
+        onError: (error: AxiosError<{ message?: string }>) => {
           const message =
             error?.response?.data?.message ||
             "Không thể tra cứu khách bằng số điện thoại.";

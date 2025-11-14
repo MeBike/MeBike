@@ -1,14 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
 
-import { rentalService } from "@services/rental.service";
-import type { StaffActiveRental } from "@/types/RentalTypes";
-import type { Pagination } from "@/types/Pagination";
-
-type StaffLookupResponse = {
-  data: StaffActiveRental[];
-  pagination: Pagination;
-};
+import { rentalService, type StaffActiveRentalsResponse } from "@services/rental.service";
 
 type LookupVariables = {
   phone: string;
@@ -18,7 +11,7 @@ type LookupVariables = {
 
 export function useStaffActiveRentalsByPhone() {
   return useMutation<
-    AxiosResponse<StaffLookupResponse>,
+    AxiosResponse<StaffActiveRentalsResponse>,
     unknown,
     LookupVariables
   >({

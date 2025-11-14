@@ -38,7 +38,7 @@ interface DetailApiResponse<T> {
   result: T;
   message: string;
 }
-type StaffActiveRentalsResponse = {
+export type StaffActiveRentalsResponse = {
   data: StaffActiveRental[];
   pagination: Pagination;
 };
