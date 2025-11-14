@@ -1,6 +1,6 @@
 import { checkSchema } from 'express-validator'
 
-import { BikeStatus, RentalStatus, ReservationOptions, SubscriptionStatus } from '~/constants/enums'
+import { BikeStatus, RentalStatus, ReservationOptions, SosAlertStatus, SubscriptionStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RENTALS_MESSAGE, RESERVATIONS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -123,13 +123,85 @@ const createRentalValidator = (includeUserIdField = false) => {
       }
     }
   }
-
   return validate(checkSchema(baseSchema, ['body']))
 }
 
-export const createRentalSessionValidator = createRentalValidator(false)
-
+export const createRentalSessionValidator = createRentalValidator()
 export const createRentalSessionByStaffValidator = createRentalValidator(true)
+
+export const createRentalFromSosValidator = validate(
+  checkSchema({
+    sosId: {
+      in: ['params'],
+      notEmpty: { errorMessage: RENTALS_MESSAGE.REQUIRED_SOS_ID },
+      isMongoId: {
+        errorMessage: RENTALS_MESSAGE.INVALID_OBJECT_ID.replace('%s', 'ID yêu cầu cứu hộ')
+      },
+      custom: {
+        options: async (value, { req }) => {
+          const sos = await databaseService.sos_alerts.findOne({
+            _id: toObjectId(value),
+          })
+
+          if (!sos) {
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.SOS_NOT_FOUND.replace('%s', value),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          if(sos.status !== SosAlertStatus.UNSOLVABLE){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.CANNOT_CREATE_RENTAL_WITH_SOS_STATUS,
+              status: HTTP_STATUS.FORBIDDEN
+            })
+          }
+          const rental = await databaseService.rentals.findOne({_id: sos.rental_id})
+          if(!rental){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.NOT_FOUND.replace("%s", sos.rental_id.toString()),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          const [replacedBike, start_station, requester] = await Promise.all([
+            databaseService.bikes.findOne({_id: sos.replaced_bike_id}),
+            databaseService.stations.findOne({_id: rental.start_station}),
+            databaseService.users.findOne({_id: sos.requester_id}),
+          ])
+
+          if(!replacedBike){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace("%s", sos.rental_id.toString()),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          if(!start_station){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace("%s", sos.rental_id.toString()),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          if(!requester){
+            throw new ErrorWithStatus({
+              message: RENTALS_MESSAGE.USER_NOT_FOUND.replace("%s", sos.rental_id.toString()),
+              status: HTTP_STATUS.NOT_FOUND
+            })
+          }
+
+          req.sos_alert = sos
+          req.rental = rental
+          req.user = requester
+          req.bike = replacedBike
+          req.station = start_station
+          return true
+        }
+      }
+    }
+  },['params'])
+)
 
 export const endRentalSessionValidator = validate(
   checkSchema({

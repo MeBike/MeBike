@@ -987,3 +987,21 @@ export const checkUserExistWithPhoneNumber = async(req: Request, res: Response, 
     next(error)
   }
 }
+
+export const checkLoggedUserExist = async(req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {user_id} = req.decoded_authorization as TokenPayLoad
+    const user = await databaseService.users.findOne({_id: toObjectId(user_id)})
+    if(!user){
+      throw new ErrorWithStatus({
+        message: USERS_MESSAGES.USER_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    req.user = user
+    next()
+  } catch (error) {
+    next(error)
+  }
+}
