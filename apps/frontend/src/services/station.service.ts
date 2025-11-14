@@ -96,10 +96,10 @@ export const stationService = {
     return response;
   },
   getStationBikeRevenue: async (): Promise<
-    AxiosResponse<ApiDetailResponse<StationBikeRevenue[]>>
+    AxiosResponse<ApiDetailResponse<StationBikeRevenue>>
   > => {
     const response = await fetchHttpClient.get<
-      ApiDetailResponse<StationBikeRevenue[]>
+      ApiDetailResponse<StationBikeRevenue>
     >(STATION_ENDPOINTS.STATION_BIKE_REVENUE());
     return response;
   },
