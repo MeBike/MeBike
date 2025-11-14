@@ -151,3 +151,17 @@ export const getHighestRevenueStationController = wrapAsync(
     });
   }
 );
+
+export const getNearestAvailableBikeController = wrapAsync(
+  async (
+    req: Request<ParamsDictionary, any, any, GetStationsReqQuery>,
+    res: Response
+  ) => {
+    const result = await stationsService.getNearestAvailableBike(req.query);
+    return res.json({
+      message: result ? STATIONS_MESSAGE.GET_NEAREST_AVAILABLE_BIKE_SUCCESSFULLY 
+                      : STATIONS_MESSAGE.NO_AVAILABLE_BIKE_FOUND,
+      result,
+    });
+  }
+);

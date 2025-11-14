@@ -603,7 +603,10 @@ export const STATIONS_MESSAGE = {
   // get station alerts messages
   GET_STATION_ALERTS_SUCCESSFULLY: 'Lấy cảnh báo trạm thành công',
   GET_HIGHEST_REVENUE_STATION_SUCCESSFULLY: 'Lấy trạm có doanh thu cao nhất thành công',
-  GET_BIKE_REVENUE_BY_STATION_SUCCESSFULLY: 'Lấy doanh thu xe đạp theo trạm thành công'
+  GET_BIKE_REVENUE_BY_STATION_SUCCESSFULLY: 'Lấy doanh thu xe đạp theo trạm thành công',
+  GET_NEAREST_AVAILABLE_BIKE_SUCCESSFULLY: 'Tìm xe gần nhất có sẵn thành công',
+  NO_AVAILABLE_BIKE_FOUND: 'Không tìm thấy xe khả dụng trong phạm vi tìm kiếm',
+  MAX_DISTANCE_MUST_BE_POSITIVE_NUMBER: 'Khoảng cách tối đa phải là một số dương (mét)'
 }
 
 export const RATING_MESSAGE = {

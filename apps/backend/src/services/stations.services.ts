@@ -994,6 +994,74 @@ class StationsService {
     };
   }
 
+  async getNearestAvailableBike(query: GetStationsReqQuery) {
+    const lat = Number(query.latitude);
+    const lng = Number(query.longitude);
+    const maxDistance = query.maxDistance ? Number(query.maxDistance) : 20000;
+
+    const pipeline: Document[] = [
+      {
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [lng, lat],
+          },
+          distanceField: "distance_meters",
+          maxDistance: maxDistance,
+          spherical: true,
+          query: {},
+          key: "location_geo",
+        },
+      },
+      {
+        $lookup: {
+          from: "bikes",
+          localField: "_id",
+          foreignField: "station_id",
+          as: "bikesData",
+        },
+      },
+      {
+        $unwind: {
+          path: "$bikesData",
+          preserveNullAndEmptyArrays: false,
+        },
+      },
+      {
+        $match: {
+          "bikesData.status": BikeStatus.Available,
+        },
+      },
+      {
+        $sort: {
+          distance_meters: 1,
+        },
+      },
+      {
+        $limit: 1,
+      },
+      {
+        $project: {
+          _id: 0,
+          bike_id: "$bikesData._id",
+          chip_id: "$bikesData.chip_id",
+          status: "$bikesData.status",
+          station_id: "$_id",
+          station_name: "$name",
+          station_address: "$address",
+          distance_meters: 1,
+          distance_km: {
+            $round: [{ $divide: ["$distance_meters", 1000] }, 2],
+          },
+        },
+      },
+    ];
+
+    const result = await databaseService.stations.aggregate(pipeline).toArray();
+
+    return result.length > 0 ? result[0] : null;
+  }
+
   async getStationAlerts(threshold: number = 20) {
     // Lấy tất cả trạm với thông tin xe
     const pipeline: Document[] = [
