@@ -166,7 +166,10 @@ export const REPORTS_MESSAGES = {
   ASSIGNEE_INVALID: 'Phải là nhân viên SOS hoặc nhân viên',
   RENTAL_ID_REQUIRED: 'ID thuê xe là bắt buộc',
   RENTAL_NOT_RENTED: 'Phải là 1 phiên xe đang được thuê',
-  RENTAL_ALREADY_REPORTED: 'Phiên xe đã được báo cáo'
+  RENTAL_ALREADY_REPORTED: 'Phiên xe đã được báo cáo',
+  RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này',
+  CANNOT_RATE_OTHERS_RENTAL: 'Không thể đánh giá phiên thuê của người khác',
+  ALREADY_RATED: 'Bạn đã đánh giá phiên thuê này trước đó'
 }
 
 export const SUPPLIER_MESSAGE = {
@@ -246,7 +249,7 @@ export const BIKES_MESSAGES = {
   GET_BIKE_RENTAL_STATS_SUCCESS: 'Lấy thống kê thuê xe thành công',
   //thống kê doanh thu xe
   NOT_BIKE_FOUND: 'Không tìm thấy xe đạp nào',
-  GET_BIKE_HIGHEST_REVENUE_SUCCESS: 'Lấy thống kê xe có doanh thu cao nhất thành công',
+  GET_BIKE_HIGHEST_REVENUE_SUCCESS: 'Lấy thống kê xe có doanh thu cao nhất thành công'
 } as const
 
 export const RENTALS_MESSAGE = {
