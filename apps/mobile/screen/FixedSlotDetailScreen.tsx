@@ -35,17 +35,18 @@ export default function FixedSlotDetailScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#0066FF", "#00B4D8"]}
+        colors={[BikeColors.primary, BikeColors.secondary]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
-        <Ionicons
-          name="chevron-back"
-          size={24}
-          color="#fff"
-          onPress={() => navigation.goBack()}
-        />
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons
+            name="chevron-back"
+            size={24}
+            color="#fff"
+          />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>Chi tiết khung giờ</Text>
       </LinearGradient>
 
@@ -98,20 +99,30 @@ const styles = StyleSheet.create({
     backgroundColor: BikeColors.background,
   },
   header: {
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    gap: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "700",
     color: "#fff",
   },
   content: {
     flex: 1,
-    backgroundColor: "#F3F5FB",
+    backgroundColor: BikeColors.surfaceVariant,
   },
   contentContainer: {
     padding: 20,
@@ -122,15 +133,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   card: {
-    borderRadius: 24,
-    backgroundColor: "#fff",
-    padding: 22,
+    borderRadius: 20,
+    backgroundColor: BikeColors.surface,
+    padding: 20,
     gap: 16,
-    shadowColor: "#0F172A",
+    shadowColor: BikeColors.shadow,
     shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   sectionHeader: {
     flexDirection: "row",

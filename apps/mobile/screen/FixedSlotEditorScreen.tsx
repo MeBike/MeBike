@@ -64,7 +64,7 @@ export default function FixedSlotEditorScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#0066FF", "#00B4D8"]}
+        colors={[BikeColors.primary, BikeColors.secondary]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
