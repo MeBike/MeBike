@@ -94,6 +94,11 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: BikeColors.divider,
+    shadowColor: BikeColors.shadow,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
     gap: 6,
   },
   summaryTitle: {

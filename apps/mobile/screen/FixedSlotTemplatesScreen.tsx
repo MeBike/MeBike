@@ -95,6 +95,24 @@ export default function FixedSlotTemplatesScreen() {
     ]);
   }, [cancelMutation, handleInvalidate]);
 
+  const handleCreateTemplate = useCallback(() => {
+    Alert.alert(
+      "Tạo khung giờ mới",
+      "Việc tạo khung giờ sẽ trừ lượt sử dụng trong gói đăng ký tháng. Nếu đã hết lượt, số dư ví sẽ bị trừ tương ứng. Bạn có chắc chắn muốn tiếp tục?",
+      [
+        { text: "Huỷ", style: "cancel" },
+        {
+          text: "Tiếp tục",
+          onPress: () =>
+            navigation.navigate("FixedSlotEditor", {
+              stationId,
+              stationName,
+            }),
+        },
+      ],
+    );
+  }, [navigation, stationId, stationName]);
+
   const headerTitle = useMemo(() => {
     if (stationName)
       return stationName;
@@ -140,7 +158,7 @@ export default function FixedSlotTemplatesScreen() {
         />
         <TouchableOpacity
           style={styles.createButton}
-          onPress={() => navigation.navigate("FixedSlotEditor", { stationId, stationName })}
+          onPress={handleCreateTemplate}
         >
           <Ionicons name="add-circle" size={20} color="#fff" />
           <Text style={styles.createButtonText}>Tạo khung giờ</Text>
