@@ -301,7 +301,8 @@ export const RENTALS_MESSAGE = {
   CANNOT_EDIT_BIKE_STATUS_TO:
     'Bạn không thể cập nhật trạng thái xe thành %s khi huỷ phiên thuê (Available, Broken only)',
   NOT_ENOUGH_BALANCE_TO_RENT: 'Tài khoản của bạn không đủ để bắt đầu phiên thuê (tối thiếu: %s)',
-  CANNOT_CREATE_RENTAL_WITH_SOS_STATUS: 'Nhân viên chỉ có thể tạo phiên thuê bởi yêu cầu không xử lí được bởi người cứu hộ',
+  CANNOT_CREATE_RENTAL_WITH_SOS_STATUS: 'Nhân viên chỉ có thể tạo phiên thuê bởi yêu cầu mà người cứu hộ không xử lí được',
+  CANNOT_END_RENTAL_WITH_SOS_STATUS: 'Nhân viên chỉ có thể kết thúc phiên thuê bởi yêu cầu mà người cứu hộ không xử lí được',
   // Not allowed body fields
   NOT_ALLOWED_CREATED_FIELD: '%s không nằm trong các trường được cho phép để tạo',
   NOT_ALLOWED_UPDATED_FIELD: '%s không nằm trong các trường được cho phép để cập nhật',

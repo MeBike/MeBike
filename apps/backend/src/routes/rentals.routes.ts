@@ -54,15 +54,6 @@ rentalsRouter
   )
 
 rentalsRouter
-  .route('/sos/:sosId/end')
-  .post(
-    accessTokenValidator,
-    isStaffValidator,
-    createRentalFromSosValidator,
-    wrapAsync(createRentalBySosIdController)
-  )
-
-rentalsRouter
   .route('/sos/:sosId')
   .post(
     accessTokenValidator,

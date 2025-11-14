@@ -1,6 +1,6 @@
 import { checkSchema } from 'express-validator'
 
-import { BikeStatus, RentalStatus, ReservationOptions, SosAlertStatus, SubscriptionStatus } from '~/constants/enums'
+import { BikeStatus, RentalStatus, SosAlertStatus, SubscriptionStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RENTALS_MESSAGE, RESERVATIONS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
@@ -10,7 +10,7 @@ import { isAvailability } from './bikes.middlewares'
 import { toObjectId } from '~/utils/string'
 import { NextFunction, Request, Response } from 'express'
 import { TokenPayLoad } from '~/models/requests/users.requests'
-import { Decimal128, ObjectId } from 'mongodb'
+import { Decimal128 } from 'mongodb'
 
 const createRentalValidator = (includeUserIdField = false) => {
   const baseSchema: any = {
@@ -153,7 +153,7 @@ export const createRentalFromSosValidator = validate(
           if(sos.status !== SosAlertStatus.UNSOLVABLE){
             throw new ErrorWithStatus({
               message: RENTALS_MESSAGE.CANNOT_CREATE_RENTAL_WITH_SOS_STATUS,
-              status: HTTP_STATUS.FORBIDDEN
+              status: HTTP_STATUS.BAD_REQUEST
             })
           }
           const rental = await databaseService.rentals.findOne({_id: sos.rental_id})
@@ -274,7 +274,6 @@ export const endRentalByAdminOrStaffValidator = validate(
           req.rental = currentRental
           return true
         },
-        bail: true
       }
     },
     end_station: {

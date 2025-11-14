@@ -6,7 +6,6 @@ import {
   BikeStatus,
   GroupByOptions,
   RentalStatus,
-  ReservationOptions,
   ReservationStatus,
   SosAlertStatus,
   SubscriptionStatus,
@@ -30,10 +29,9 @@ import RentalLog from '~/models/schemas/rental-audit-logs.schema'
 import walletService from './wallets.services'
 import Bike from '~/models/schemas/bike.schema'
 import iotService from './iot.services'
-import { IotBookingCommand } from '@mebike/shared/sdk/iot-service'
+import { IotBookingCommand, IotStateCommand } from '@mebike/shared/sdk/iot-service'
 import { FilterQuery } from 'mongoose'
 import subscriptionService from './subscription.services'
-import Subscription from '~/models/schemas/subscription.schema'
 
 import { redisPublisher } from '~/lib/redis-pubsub'
 import logger from '~/lib/logger'
@@ -203,6 +201,7 @@ class RentalsService {
     const durationMinutes = this.generateDuration(rental.start_time, effective_end_time)
     const durationHours = durationMinutes / 60
     let totalPrice = 0
+    let updatedBikeStatus = BikeStatus.Available
 
     const sosAlert = await databaseService.sos_alerts.findOne({
       rental_id: rental._id,
@@ -292,6 +291,7 @@ class RentalsService {
       }
     } else {
       logger.info(`[SOS] Bike unsolvable, user will not be charged for this rental.`)
+      updatedBikeStatus = BikeStatus.Broken
     }
 
     const decimalTotalPrice = Decimal128.fromString(totalPrice.toString())
@@ -315,7 +315,7 @@ class RentalsService {
         { _id: rental.bike_id },
         {
           $set: {
-            status: BikeStatus.Available,
+            status: updatedBikeStatus,
             updated_at: now
           }
         },
@@ -365,7 +365,11 @@ class RentalsService {
     const bike = await databaseService.bikes.findOne({ _id: endedRental.bike_id })
 
     if (bike?.chip_id) {
-      tasks.push(iotService.sendBookingCommand(bike.chip_id, IotBookingCommand.release))
+      tasks.push(
+        bike.status === BikeStatus.Available
+          ? iotService.sendBookingCommand(bike.chip_id, IotBookingCommand.release)
+          : iotService.sendStateCommand(bike.chip_id, IotStateCommand.broken)
+      )
     }
 
     if (bike) {
@@ -1288,11 +1292,7 @@ class RentalsService {
     return this.getRentalListPipelineTemplate(matchQuery)
   }
 
-  async getActiveRentalListByPhoneNumber({
-    user_id,
-  }: {
-    user_id: ObjectId
-  }) {
+  async getActiveRentalListByPhoneNumber({ user_id }: { user_id: ObjectId }) {
     const matchQuery: FilterQuery<Rental> = {
       user_id,
       status: RentalStatus.Rented
