@@ -23,44 +23,48 @@ export function StationSection({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Trạm áp dụng</Text>
-      {canEdit
-        ? (
-            <>
-              <TextInput
-                style={styles.input}
-                value={stationId}
-                onChangeText={onChangeStationId}
-                placeholder="Nhập ID trạm"
-              />
-              {stationName && (
-                <Text style={styles.helper}>
-                  Gợi ý: {stationName}
-                  {stationId ? ` (ID: ${stationId})` : ""}
-                </Text>
-              )}
-            </>
-          )
-        : (
-            <View style={styles.summary}>
-              <View style={styles.summaryHeader}>
-                <Text style={styles.summaryTitle} numberOfLines={2} ellipsizeMode="tail">
-                  {resolvedStationName ?? "Trạm chưa xác định"}
-                </Text>
-                {stationId
-                  ? (
-                      <Text style={styles.summaryBadge} numberOfLines={1} ellipsizeMode="middle">
-                        ID: {stationId}
-                      </Text>
-                    )
-                  : null}
-              </View>
-              {isEditMode && (
-                <Text style={styles.helper}>
-                  Chỉ chỉnh sửa trên khung giờ của trạm này.
-                </Text>
-              )}
-            </View>
+      {canEdit ? (
+        <>
+          <TextInput
+            style={styles.input}
+            value={stationId}
+            onChangeText={onChangeStationId}
+            placeholder="Nhập ID trạm"
+          />
+          {stationName && (
+            <Text style={styles.helper}>
+              Gợi ý: {stationName}
+              {stationId ? ` (ID: ${stationId})` : ""}
+            </Text>
           )}
+        </>
+      ) : (
+        <View style={styles.summary}>
+          <View style={styles.summaryHeader}>
+            <Text
+              style={styles.summaryTitle}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {resolvedStationName ?? "Trạm chưa xác định"}
+            </Text>
+            {stationId ? (
+              <Text
+                style={styles.summaryBadge}
+                numberOfLines={1}
+                ellipsizeMode="middle"
+              >
+                ID: {stationId}
+              </Text>
+            ) : null}
+          </View>
+          {isEditMode && (
+            <Text style={styles.helper}>
+              Chỉ chỉnh sửa trên khung giờ của trạm này.
+            </Text>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -93,12 +97,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: BikeColors.divider,
     shadowColor: BikeColors.shadow,
     shadowOpacity: 0.08,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
     elevation: 3,
+    borderColor: BikeColors.divider,
     gap: 6,
   },
   summaryTitle: {
