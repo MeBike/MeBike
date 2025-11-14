@@ -163,7 +163,9 @@ export async function getAllReportController(req: Request<any, any, any>, res: R
     filter.created_at = { $gte: start, $lte: end }
   }
 
-  await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter)
+  const sortOptions: Sort = { created_at: -1 }
+
+  await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter, {}, sortOptions)
 }
 
 export async function getAllInProgressReportController(req: Request<any, any, any>, res: Response, next: NextFunction) {
