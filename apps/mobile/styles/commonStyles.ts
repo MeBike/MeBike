@@ -4,8 +4,6 @@ import { BikeColors } from "@/constants/BikeColors";
 
 export const colors = {
   primary: BikeColors.primary,
-  primaryLight: BikeColors.primaryLight,
-  primaryDark: BikeColors.primaryDark,
   background: BikeColors.background,
   surface: BikeColors.surface,
   text: BikeColors.onSurface,
