@@ -232,7 +232,10 @@ export const BIKES_MESSAGES = {
   GET_BIKE_RENTAL_HISTORY_SUCCESS: 'Lấy lịch sử thuê xe thành công',
   //thống kê hoạt động xe
   GET_BIKE_ACTIVITY_STATS_SUCCESS: 'Lấy thống kê hoạt động xe thành công',
-  GET_BIKE_RENTAL_STATS_SUCCESS: 'Lấy thống kê thuê xe thành công'
+  GET_BIKE_RENTAL_STATS_SUCCESS: 'Lấy thống kê thuê xe thành công',
+  //thống kê doanh thu xe
+  NOT_BIKE_FOUND: 'Không tìm thấy xe đạp nào',
+  GET_BIKE_HIGHEST_REVENUE_SUCCESS: 'Lấy thống kê xe có doanh thu cao nhất thành công',
 } as const
 
 export const RENTALS_MESSAGE = {
