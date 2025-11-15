@@ -170,23 +170,23 @@ export const createRentalFromSosValidator = validate(
             databaseService.users.findOne({_id: sos.requester_id}),
           ])
 
-          if(!replacedBike){
+          if(sos.replaced_bike_id && !replacedBike){
             throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace("%s", sos.rental_id.toString()),
+              message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace("%s", sos.replaced_bike_id.toString()),
               status: HTTP_STATUS.NOT_FOUND
             })
           }
 
           if(!start_station){
             throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace("%s", sos.rental_id.toString()),
+              message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace("%s", rental.start_station.toString()),
               status: HTTP_STATUS.NOT_FOUND
             })
           }
 
           if(!requester){
             throw new ErrorWithStatus({
-              message: RENTALS_MESSAGE.USER_NOT_FOUND.replace("%s", sos.rental_id.toString()),
+              message: RENTALS_MESSAGE.USER_NOT_FOUND.replace("%s", sos.requester_id.toString()),
               status: HTTP_STATUS.NOT_FOUND
             })
           }
