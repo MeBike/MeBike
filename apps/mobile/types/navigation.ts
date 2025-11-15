@@ -32,6 +32,7 @@ export type RootStackParamList = {
     };
   };
   StaffRentalDetail: { rentalId: string };
+  StaffPhoneLookup: undefined;
   RentalQr: { bookingId: string };
   ChangePassword: undefined;
   ForgotPassword: undefined;

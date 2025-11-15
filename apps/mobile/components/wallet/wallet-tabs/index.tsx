@@ -32,14 +32,14 @@ export function WalletTabs({ activeTab, onTabChange }: WalletTabsProps) {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         style={[styles.tab, activeTab === TAB_TYPES.REFUNDS && styles.activeTab]}
         onPress={() => onTabChange(TAB_TYPES.REFUNDS)}
       >
         <Text style={[styles.tabText, activeTab === TAB_TYPES.REFUNDS && styles.activeTabText]}>
           Yêu cầu hoàn tiền
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }

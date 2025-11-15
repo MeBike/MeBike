@@ -232,7 +232,10 @@ export const BIKES_MESSAGES = {
   GET_BIKE_RENTAL_HISTORY_SUCCESS: 'Lấy lịch sử thuê xe thành công',
   //thống kê hoạt động xe
   GET_BIKE_ACTIVITY_STATS_SUCCESS: 'Lấy thống kê hoạt động xe thành công',
-  GET_BIKE_RENTAL_STATS_SUCCESS: 'Lấy thống kê thuê xe thành công'
+  GET_BIKE_RENTAL_STATS_SUCCESS: 'Lấy thống kê thuê xe thành công',
+  //thống kê doanh thu xe
+  NOT_BIKE_FOUND: 'Không tìm thấy xe đạp nào',
+  GET_BIKE_HIGHEST_REVENUE_SUCCESS: 'Lấy thống kê xe có doanh thu cao nhất thành công',
 } as const
 
 export const RENTALS_MESSAGE = {
@@ -425,7 +428,8 @@ export const RESERVATIONS_MESSAGE = {
   NOT_ENOUGH_BALANCE_TO_PAY: 'Số dư trong ví của bạn không đủ để thanh toán (tổng giá: %s)',
   SUB_MUST_BE_PENDING_TO_ACTIVATE: 'Chỉ có thể kích hoạt gói đang ở trạng thái ĐANG CHỜ XỬ LÍ',
   SUB_GET_DETAIL_SUCCESS: 'Xem chi tiết gói đăng kí thành công',
-  SUB_CANNOT_OPERATE_OTHER_SUBSCRIPTION: 'Không thể thao tác với gói của người khác (chỉ dành cho nhân viên và quản trị viên)',
+  SUB_CANNOT_OPERATE_OTHER_SUBSCRIPTION:
+    'Không thể thao tác với gói của người khác (chỉ dành cho nhân viên và quản trị viên)',
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
@@ -493,8 +497,8 @@ export const RESERVATIONS_MESSAGE = {
     `[EXPIRED] Reservation ${reservationId} for user ${userId} expired.`,
   EXPIRE_FAILURE: (reservationId: string, error: string) =>
     `Failed to fully expire reservation ${reservationId}: ${error}`,
-  SCHEDULING_EXPIRE_TASK: (reservationId: string, delayMinutes: number) => 
-        `Scheduling expiration task for reservation ${reservationId} in ${delayMinutes} minutes.`,
+  SCHEDULING_EXPIRE_TASK: (reservationId: string, delayMinutes: number) =>
+    `Scheduling expiration task for reservation ${reservationId} in ${delayMinutes} minutes.`,
   // Email Messages
   EMAIL_SUBJECT_NEAR_EXPIRY: 'Phiên đặt trước gần đến giờ hết hạn',
   EMAIL_SUBJECT_SUCCESS_RESERVING: 'Xác nhận đặt trước thành công',
@@ -603,7 +607,12 @@ export const STATIONS_MESSAGE = {
   // get station stats messages
   GET_STATION_STATS_SUCCESSFULLY: 'Lấy thống kê trạm thành công',
   // get station alerts messages
-  GET_STATION_ALERTS_SUCCESSFULLY: 'Lấy cảnh báo trạm thành công'
+  GET_STATION_ALERTS_SUCCESSFULLY: 'Lấy cảnh báo trạm thành công',
+  GET_HIGHEST_REVENUE_STATION_SUCCESSFULLY: 'Lấy trạm có doanh thu cao nhất thành công',
+  GET_BIKE_REVENUE_BY_STATION_SUCCESSFULLY: 'Lấy doanh thu xe đạp theo trạm thành công',
+  GET_NEAREST_AVAILABLE_BIKE_SUCCESSFULLY: 'Tìm xe gần nhất có sẵn thành công',
+  NO_AVAILABLE_BIKE_FOUND: 'Không tìm thấy xe khả dụng trong phạm vi tìm kiếm',
+  MAX_DISTANCE_MUST_BE_POSITIVE_NUMBER: 'Khoảng cách tối đa phải là một số dương (mét)'
 }
 
 export const RATING_MESSAGE = {
@@ -626,7 +635,12 @@ export const RATING_MESSAGE = {
   RENTAL_ID_IS_REQUIRED: 'ID phiên thuê là bắt buộc',
   RENTAL_ID_INVALID: 'ID phiên thuê không hợp lệ',
   CANNOT_RATE_UNCOMPLETED_RENTAL: 'Chỉ có thể đánh giá các phiên thuê đã hoàn thành',
-  RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này'
+  RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này',
+  GET_BIKE_RATING_SUCCESS: 'Lấy đánh giá xe đạp %s thành công',
+  STATION_RATING_NOT_FOUND: 'Đánh giá trạm %s không tồn tại',
+  GET_STATION_RATING_SUCCESS: 'Lấy đánh giá trạm %s thành công',
+  GET_APP_RATING_SUCCESS: 'Lấy đánh giá ứng dụng thành công',
+  BIKE_RATING_NOT_FOUND: 'Đánh giá xe đạp %s không tồn tại'
 }
 
 export const SOS_MESSAGE = {
@@ -692,5 +706,5 @@ export const SOS_MESSAGE = {
 export const DASHBOARD_MESSAGES = {
   GET_DASHBOARD_STATS_SUCCESS: 'Lấy thống kê dashboard thành công',
   GET_DASHBOARD_STATS_ERROR: 'Lỗi khi lấy thống kê dashboard',
-  STATIONS_FETCH_SUCCESS: 'Lấy danh sách trạm thành công',
+  STATIONS_FETCH_SUCCESS: 'Lấy danh sách trạm thành công'
 }

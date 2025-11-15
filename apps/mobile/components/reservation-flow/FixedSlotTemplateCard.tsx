@@ -93,12 +93,17 @@ export function FixedSlotTemplateCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: BikeColors.surface,
+    backgroundColor: "#F6F8FC",
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 18,
     gap: 12,
     borderWidth: 1,
-    borderColor: "transparent",
+    borderColor: "rgba(0,0,0,0.03)",
+    shadowColor: "#091E42",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   cardSelected: {
     borderColor: BikeColors.primary,

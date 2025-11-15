@@ -1,0 +1,19 @@
+type: object
+description: "Thông tin chi tiết về xe đạp có doanh thu cao nhất."
+properties:
+  bike_id:
+    type: string
+    format: mongoId
+  bike_chip_id:
+    type: string
+    nullable: true
+    example: "BIKE-007"
+  total_revenue:
+    type: number
+    format: double
+    example: 2500000
+  rental_count:
+    type: integer
+    example: 50
+  station:
+    $ref: './HighestRevenueBikeStation.yaml'

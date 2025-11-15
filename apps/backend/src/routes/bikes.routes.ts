@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeActivityStatsController, getBikeByIdController, getBikeRentalHistoryController, getBikeRentalStatsController, getBikesController, getBikesStatsController, getBikeStatsByIdController, getRentalsByBikeIdController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
+import { adminUpdateBikeController, createBikeController, deleteBikeController, getBikeActivityStatsController, getBikeByIdController, getBikeRentalHistoryController, getBikeRentalStatsController, getBikesController, getBikesStatsController, getBikeStatsByIdController, getHighestRevenueBikeController, getRentalsByBikeIdController, reportBrokenBikeController } from "~/controllers/bikes.controllers";
 import { isAdminAndStaffValidator, isAdminValidator } from "~/middlewares/admin.middlewares";
 import { bikeIdValidator, createBikeValidator, updateBikeValidator } from "~/middlewares/bikes.middlewares";
 import { accessTokenValidator, statsPaginationValidator } from "~/middlewares/users.middlewares";
@@ -46,6 +46,21 @@ bikesRouter.get(
   isAdminValidator,
   wrapAsync(getBikesStatsController)
 );
+
+
+/**
+ * Description: Get the bike with highest revenue
+ * Path: /bikes/highest-revenue
+ * Method: GET
+ * Headers: { Authorization: Bearer <access_token> }
+ * Roles: ADMIN
+ */
+bikesRouter.get(
+  '/highest-revenue',
+  accessTokenValidator,
+  isAdminValidator,
+  wrapAsync(getHighestRevenueBikeController)
+)
 
 // admin/staff lấy lịch sử thuê xe theo bike id
 bikesRouter.get(

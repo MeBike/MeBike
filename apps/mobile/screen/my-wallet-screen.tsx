@@ -15,7 +15,6 @@ import { WalletHeader, WalletSettings } from "../components/wallet/wallet-header
 import { WalletTabs } from "../components/wallet/wallet-tabs";
 import { WithdrawDetailModal } from "../components/wallet/withdraw-detail-modal";
 import { useWallet } from "../hooks/wallet/use-wallet";
-import { useWithdraw } from "../hooks/wallet/use-withdraw";
 import { myWalletScreenStyles as styles } from "../styles/wallet/my-wallet-screen";
 import { TAB_TYPES } from "../utils/wallet/constants";
 
@@ -32,7 +31,6 @@ function MyWalletScreen() {
   const [selectedRefund, setSelectedRefund] = useState<any>(null);
 
   const wallet = useWallet();
-  const withdraw = useWithdraw();
 
   useEffect(() => {
     wallet.getMyWallet();
@@ -71,7 +69,6 @@ function MyWalletScreen() {
         end={{ x: 1, y: 1 }}
       >
         <WalletHeader />
-        {/* <WalletSettings /> */}
         <WalletBalance
           balance={wallet.myWallet?.balance?.$numberDecimal || "0"}
           status={wallet.myWallet?.status || ""}
@@ -99,8 +96,8 @@ function MyWalletScreen() {
       case TAB_TYPES.WITHDRAWALS:
         console.log(wallet.withdrawalRequests);
         return wallet.withdrawalRequests || [];
-      case TAB_TYPES.REFUNDS:
-        return wallet.refundRequests || [];
+      // case TAB_TYPES.REFUNDS:
+      //   return wallet.refundRequests || [];
       default:
         return [];
     }
@@ -112,8 +109,8 @@ function MyWalletScreen() {
         return "giao dịch";
       case TAB_TYPES.WITHDRAWALS:
         return "yêu cầu rút tiền";
-      case TAB_TYPES.REFUNDS:
-        return "yêu cầu hoàn tiền";
+      // case TAB_TYPES.REFUNDS:
+      //   return "yêu cầu hoàn tiền";
       default:
         return "";
     }
@@ -125,8 +122,8 @@ function MyWalletScreen() {
         return wallet.loadMoreTransactions;
       case TAB_TYPES.WITHDRAWALS:
         return wallet.loadMoreWithdrawals;
-      case TAB_TYPES.REFUNDS:
-        return wallet.loadMoreRefunds;
+      // case TAB_TYPES.REFUNDS:
+      //   return wallet.loadMoreRefunds;
       default:
         return () => {};
     }
@@ -138,8 +135,8 @@ function MyWalletScreen() {
         return wallet.hasNextPageTransactions;
       case TAB_TYPES.WITHDRAWALS:
         return wallet.hasNextPageWithdrawals;
-      case TAB_TYPES.REFUNDS:
-        return wallet.hasNextPageRefunds;
+      // case TAB_TYPES.REFUNDS:
+      //   return wallet.hasNextPageRefunds;
       default:
         return false;
     }
@@ -151,8 +148,8 @@ function MyWalletScreen() {
         return wallet.isFetchingNextPageTransactions;
       case TAB_TYPES.WITHDRAWALS:
         return wallet.isFetchingNextPageWithdrawals;
-      case TAB_TYPES.REFUNDS:
-        return wallet.isFetchingNextPageRefunds;
+      // case TAB_TYPES.REFUNDS:
+      //   return wallet.isFetchingNextPageRefunds;
       default:
         return false;
     }
@@ -167,18 +164,18 @@ function MyWalletScreen() {
       setSelectedWithdraw(item);
       setShowWithdrawDetail(true);
     }
-    else if (activeTab === TAB_TYPES.REFUNDS) {
-      setSelectedRefund(item);
-      setShowRefundDetail(true);
-    }
+    // else if (activeTab === TAB_TYPES.REFUNDS) {
+    //   setSelectedRefund(item);
+    //   setShowRefundDetail(true);
+    // }
   };
 
   const renderItem = ({ item }: { item: any }) => {
     let type: "transaction" | "withdrawal" | "refund";
     if (activeTab === TAB_TYPES.WITHDRAWALS)
       type = "withdrawal";
-    else if (activeTab === TAB_TYPES.REFUNDS)
-      type = "refund";
+    // else if (activeTab === TAB_TYPES.REFUNDS)
+    //   type = "refund";
     else type = "transaction";
 
     return (
@@ -238,11 +235,11 @@ function MyWalletScreen() {
           onClose={() => setShowWithdrawDetail(false)}
           withdrawal={selectedWithdraw}
         />
-        <RefundDetailModal
+        {/* <RefundDetailModal
           visible={showRefundDetail}
           onClose={() => setShowRefundDetail(false)}
           refund={selectedRefund}
-        />
+        /> */}
       </View>
     );
   }
@@ -287,11 +284,11 @@ function MyWalletScreen() {
         onClose={() => setShowWithdrawDetail(false)}
         withdrawal={selectedWithdraw}
       />
-      <RefundDetailModal
+      {/* <RefundDetailModal
         visible={showRefundDetail}
         onClose={() => setShowRefundDetail(false)}
         refund={selectedRefund}
-      />
+      /> */}
     </View>
   );
 }

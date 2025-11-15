@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { bikeColumn } from "@/columns/bike-colums";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { useStationActions } from "@/hooks/useStationAction";
+import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/useSupplierAction";
 import { getStatusColor } from "@utils/bike-status";
 import { formatDateUTC } from "@/utils/formatDateTime";
@@ -28,6 +28,7 @@ export default function BikesPage() {
     chip_id: "",
     status: "CÓ SẴN" as BikeStatus,
   });
+  const {responseStationBikeRevenue, getStationBikeRevenue} = useStationActions({ hasToken: true });
   const [editBike, setEditBike] = useState<Bike | null>(null);
   const { stations } = useStationActions({ hasToken: true });
   const { allSupplier } = useSupplierActions(true);
@@ -65,6 +66,21 @@ export default function BikesPage() {
     page
   );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [showBikeRevenue, setShowBikeRevenue] = useState(false);
+  const [expandedStations, setExpandedStations] = useState<Set<string>>(new Set());
+  
+  const toggleStation = (stationId: string) => {
+    setExpandedStations(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(stationId)) {
+        newSet.delete(stationId);
+      } else {
+        newSet.add(stationId);
+      }
+      return newSet;
+    });
+  };
+
   const handleViewDetails = (bikeId: string) => {
     setDetailId(bikeId);
     setIsDetailModalOpen(true);
@@ -156,19 +172,296 @@ export default function BikesPage() {
                 Quản lý danh sách xe đạp băng chân
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              {/* <Button variant="outline">
+          <div className="flex items-center gap-3">
+            {/* <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Xuất Excel
             </Button> */}
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Thêm xe mới
-              </Button>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Thêm xe mới
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!showBikeRevenue) {
+                  getStationBikeRevenue();
+                }
+                setShowBikeRevenue(!showBikeRevenue);
+              }}
+            >
+              {showBikeRevenue
+                ? "Ẩn báo cáo doanh thu"
+                : "Xem báo cáo doanh thu"}
+            </Button>
+          </div>
+        </div>
+
+        {/* BIKE REVENUE REPORT */}
+        {showBikeRevenue && responseStationBikeRevenue?.result && (
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border rounded-2xl p-8 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-foreground">
+                      Báo cáo Doanh thu Xe Đạp
+                    </h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground flex items-center gap-2 ml-[52px]">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span className="font-medium">Thời gian:</span>
+                    {formatDateUTC(responseStationBikeRevenue.result.period.from)}{" "}
+                    <span className="text-muted-foreground/60">→</span>
+                    {formatDateUTC(responseStationBikeRevenue.result.period.to)}
+                  </p>
+                </div>
+              </div>
+
+              {/* SUMMARY CARDS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="group relative bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 rounded-xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Trạm</p>
+                          <p className="text-2xl font-bold text-foreground group-hover:text-blue-600 transition-colors">
+                            {responseStationBikeRevenue.result.summary.totalStations}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-1 w-full bg-gradient-to-r from-blue-500/20 to-transparent rounded-full"></div>
+                  </div>
+                </div>
+                
+                <div className="group relative bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent border border-green-500/20 rounded-xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors">
+                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Doanh Thu</p>
+                          <p className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                            {responseStationBikeRevenue.result.summary.totalRevenueFormatted}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-1 w-full bg-gradient-to-r from-green-500/20 to-transparent rounded-full"></div>
+                  </div>
+                </div>
+                
+                <div className="group relative bg-gradient-to-br from-purple-500/10 via-purple-500/5 to-transparent border border-purple-500/20 rounded-xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl"></div>
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+                          <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Lượt Thuê</p>
+                          <p className="text-2xl font-bold text-foreground group-hover:text-purple-600 transition-colors">
+                            {responseStationBikeRevenue.result.summary.totalRentals}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-1 w-full bg-gradient-to-r from-purple-500/20 to-transparent rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* STATIONS TABLE */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/20 rounded-full"></div>
+                  <h3 className="text-xl font-bold text-foreground">
+                    Chi tiết theo trạm và xe
+                  </h3>
+                </div>
+                <div className="space-y-6">
+                  {responseStationBikeRevenue.result.stations.map((station, stationIndex) => (
+                    <div 
+                      key={station._id} 
+                      className="bg-gradient-to-br from-card to-muted/5 border border-border rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+                      style={{ animationDelay: `${stationIndex * 100}ms` }}
+                    >
+                      {/* Station Header */}
+                      <div 
+                        className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b border-border cursor-pointer hover:bg-primary/5 transition-colors"
+                        onClick={() => toggleStation(station._id)}
+                      >
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20">
+                              <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                              </svg>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <h4 className="text-lg font-bold text-foreground">
+                                  {station.name}
+                                </h4>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                                    {station.bikes?.length || 0} xe
+                                  </span>
+                                  <svg 
+                                    className={`w-4 h-4 text-muted-foreground transform transition-transform duration-200 ${expandedStations.has(station._id) ? 'rotate-180' : ''}`}
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </div>
+                              </div>
+                              <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                {station.address}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-3">
+                            <div className="bg-gradient-to-br from-green-500/15 to-green-500/5 rounded-xl px-5 py-3 border border-green-500/20 min-w-[140px]">
+                              <div className="flex items-center gap-2 mb-1">
+                                <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p className="text-xs font-medium text-muted-foreground uppercase">Doanh Thu</p>
+                              </div>
+                              <p className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                                {station.stationTotalRevenueFormatted}
+                              </p>
+                            </div>
+                            <div className="bg-gradient-to-br from-blue-500/15 to-blue-500/5 rounded-xl px-5 py-3 border border-blue-500/20 min-w-[120px]">
+                              <div className="flex items-center gap-2 mb-1">
+                                <svg className="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                <p className="text-xs font-medium text-muted-foreground uppercase">Lượt Thuê</p>
+                              </div>
+                              <p className="text-xl font-bold text-blue-600">
+                                {station.stationTotalRentals}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bikes Grid - Collapsible */}
+                      {expandedStations.has(station._id) && station.bikes && station.bikes.length > 0 && (
+                        <div className="p-6 animate-in slide-in-from-top duration-300">
+                          <div className="mb-4 flex items-center gap-3 pb-3 border-b border-border">
+                            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                            <p className="text-sm font-semibold text-foreground">
+                              Chi tiết xe đạp
+                            </p>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+                              {station.bikes.length}
+                            </span>
+                          </div>
+                          <div className="grid gap-3">
+                            {station.bikes.map((bike, bikeIndex) => (
+                              <div 
+                                key={bike._id} 
+                                className="group bg-gradient-to-r from-muted/30 to-transparent border border-border rounded-xl p-4 hover:border-primary/50 hover:shadow-md transition-all duration-200"
+                                style={{ animationDelay: `${bikeIndex * 30}ms` }}
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 flex items-center justify-center group-hover:scale-110 group-hover:border-primary/40 transition-all">
+                                      <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <circle cx="7" cy="17" r="3" strokeWidth={2} />
+                                        <circle cx="17" cy="17" r="3" strokeWidth={2} />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 7l-4 10M7 17h10M17 17V7" />
+                                      </svg>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                                        {bike.chip_id}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground font-medium">Mã Chip</p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-3 gap-3 sm:gap-6">
+                                    <div className="text-center">
+                                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                                        <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p className="text-xs text-muted-foreground font-medium">Doanh Thu</p>
+                                      </div>
+                                      <p className="text-sm font-bold text-green-600">
+                                        {bike.totalRevenueFormatted}
+                                      </p>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                                        <svg className="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                        </svg>
+                                        <p className="text-xs text-muted-foreground font-medium">Lượt Thuê</p>
+                                      </div>
+                                      <p className="text-sm font-bold text-blue-600">
+                                        {bike.totalRentals}
+                                      </p>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="flex items-center justify-center gap-1.5 mb-1">
+                                        <svg className="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p className="text-xs text-muted-foreground font-medium">Thời Gian</p>
+                                      </div>
+                                      <p className="text-sm font-bold text-purple-600">
+                                        {Math.round(bike.totalDuration / 60)}h {bike.totalDuration % 60}m
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Stats */}
+        {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Tổng số xe</p>
