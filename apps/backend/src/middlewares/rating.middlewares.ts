@@ -4,6 +4,7 @@ import { RentalStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RATING_MESSAGE, RENTALS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
+import { TokenPayLoad } from '~/models/requests/users.requests'
 import databaseService from '~/services/database.services'
 import { validate } from '~/utils/validation'
 
@@ -67,7 +68,7 @@ export const createRatingValidator = validate(
         errorMessage: RATING_MESSAGE.RENTAL_ID_INVALID
       },
       custom: {
-        options: async (value) => {
+        options: async (value, { req }) => {
           const findRetal = await databaseService.rentals.findOne({ _id: new ObjectId(value) })
           if (!findRetal) {
             throw new ErrorWithStatus({
@@ -80,6 +81,25 @@ export const createRatingValidator = validate(
             throw new ErrorWithStatus({
               message: RATING_MESSAGE.CANNOT_RATE_UNCOMPLETED_RENTAL,
               status: HTTP_STATUS.BAD_REQUEST
+            })
+          }
+
+          const { user_id } = req.decoded_authorization as TokenPayLoad
+          if (findRetal.user_id.toString() !== user_id) {
+            throw new ErrorWithStatus({
+              message: RATING_MESSAGE.CANNOT_RATE_OTHERS_RENTAL,
+              status: HTTP_STATUS.FORBIDDEN
+            })
+          }
+
+          const existRating = await databaseService.ratings.findOne({
+            rental_id: new ObjectId(value),
+            user_id: new ObjectId(user_id)
+          })
+          if (existRating) {
+            throw new ErrorWithStatus({
+              message: RATING_MESSAGE.ALREADY_RATED,
+              status: HTTP_STATUS.FORBIDDEN
             })
           }
 
