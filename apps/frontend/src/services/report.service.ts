@@ -1,7 +1,10 @@
 import type { AxiosResponse } from "axios";
 import fetchHttpClient from "../lib/httpClient";
 import type { Report, ReportOverview } from "@custom-types";
-import type { UpdateReportSchemaFormData } from "@/schemas/reportSchema";
+import {
+  type ResolveReportSchemaFormData ,
+  type UpdateReportSchemaFormData,
+} from "@/schemas/reportSchema";
 type ApiResponse<T> = {
   data: T;
   pagination?: {
@@ -25,6 +28,7 @@ const REPORT_ENDPOINTS = {
   MANAGE_USER_REPORTS: `${REPORT_BASE}/manage-reports`,
   OVERVIEW: `${REPORT_BASE}/overview`,
   INPROGRESS: `${REPORT_BASE}/inprogress`,
+  RESOLVE: (id: string) => `${REPORT_BASE}/staff/${id}`,
 } as const;
 
 export const reportService = {
@@ -89,6 +93,11 @@ export const reportService = {
       }
     );
     return response;
+  },
+  resolveReport : async({id,data} : {id:string, data : ResolveReportSchemaFormData }) : Promise<AxiosResponse<DetailApiResponse<Report>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<Report>>(
+      REPORT_ENDPOINTS.RESOLVE(id) , data
+    );
+    return response
   }
-
 };
