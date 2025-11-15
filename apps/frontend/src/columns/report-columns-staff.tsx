@@ -4,19 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import type { Report } from "@custom-types";
 import { formatDateUTC } from "@/utils/formatDateTime";
-import type { DetailUser } from "@/services/auth.service";
 
 interface ReportColumnsProps {
-  onView: (report: Report) => void;
-  onUpdate: (report: Report) => void;
-  staffList: DetailUser[];
-}
+   onView: (report: Report) => void;
+   onUpdate: (report: Report) => void;
+ }
 
 export const reportColumns = ({
-  // onView,
-  onUpdate,
-  staffList,
-}: ReportColumnsProps): ColumnDef<Report>[] => [
+   // onView,
+   onUpdate,
+ }: ReportColumnsProps): ColumnDef<Report>[] => [
   {
     accessorKey: "type",
     header: "Loại báo cáo",

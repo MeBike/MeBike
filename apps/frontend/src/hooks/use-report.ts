@@ -11,7 +11,6 @@ import type {
 } from "@/schemas/reportSchema";
 import { useRouter } from "next/navigation";
 import { useResolveReportMutation } from "./mutations/Report/useResolveReportMutation";
-import { error } from "console";
 interface ErrorWithMessage {
   message: string;
 }
@@ -164,7 +163,7 @@ export const useUserReport = ({
         }
       );
     },
-    [hasToken, router, queryClient, useResolveReport, getReportInProgress]
+    [hasToken, router, queryClient, useResolveReport, getReportInProgress, page, limit]
   );
   return {
     reports: reports?.data || [],

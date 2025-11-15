@@ -5,35 +5,28 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DataTable } from "@/components/TableCustom";
-import { ReportStats } from "@/components/reports/report-stats";
 import { Button } from "@/components/ui/button";
 import { reportColumns } from "@/columns/report-columns-staff";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useUserReport } from "@/hooks/use-report";
-import { userService } from "@/services/user.service";
 import {
   ResolveReportSchema,
   type ResolveReportSchemaFormData,
 } from "@/schemas/reportSchema";
 import type { Report } from "@custom-types";
-import { DetailUser } from "@/services/auth.service";
 import { uploadMultipleImagesToFirebase } from "@/lib/firebase";
 export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [staffList, setStaffList] = useState<DetailUser[]>([]);
-  const [isLoadingStaff, setIsLoadingStaff] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
 
   const {
-    reports,
     refetchReports,
     isFetchingReports,
     pagination,
-    updateReport,
     getReportInProgress,
     reportInProgress,
     resolveReport,
@@ -44,12 +37,10 @@ export default function ReportsPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    watch,
   } = useForm<ResolveReportSchemaFormData>({
     resolver: zodResolver(ResolveReportSchema),
   });
 
-  const currentStatus = watch("newStatus");
   // Get available status transitions based on current status
   const getAvailableStatuses = () => {
     // Staff chỉ có thể chọn 2 trạng thái: ĐÃ GIẢI QUYẾT hoặc KHÔNG GIẢI QUYẾT ĐƯỢC
@@ -58,24 +49,8 @@ export default function ReportsPage() {
 
   useEffect(() => {
     getReportInProgress();
-  }, [currentPage, refetchReports]);
+  }, [currentPage, refetchReports, getReportInProgress]);
 
-  // Fetch staff list on mount
-  useEffect(() => {
-    setIsLoadingStaff(true);
-    userService
-      .getAllUsers({ role: "STAFF", limit: 100 })
-      .then((res) => {
-        setStaffList(res.data.data || []);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch staff list:", error);
-        setStaffList([]);
-      })
-      .finally(() => {
-        setIsLoadingStaff(false);
-      });
-  }, []);
 
   const handleViewReport = (report: Report) => {
     console.log("[v0] View report:", report._id);
@@ -166,7 +141,6 @@ export default function ReportsPage() {
           columns={reportColumns({
             onView: handleViewReport,
             onUpdate: handleUpdateReport,
-            staffList,
           })}
           data={reportInProgress?.data || []}
           title="Danh sách báo cáo"
