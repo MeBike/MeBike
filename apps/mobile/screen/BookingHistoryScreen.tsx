@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,43 +12,101 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { LoadingScreen } from "@components/LoadingScreen";
-import { useRentalsActions } from "@hooks/useRentalAction";
+import { rentalService } from "@services/rental.service";
 import { parseDecimal } from "@utils/subscription";
 import { formatVietnamDateTime } from "@utils/date";
 import type { RentingHistory } from "../types/RentalTypes";
 
+type RentalHistoryPage = {
+  data: RentingHistory[];
+  pagination: {
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+    totalRecords: number;
+  };
+};
+
+const PAGE_SIZE = 10;
+
+async function fetchRentalHistory(
+  page: number = 1,
+  limit: number = PAGE_SIZE
+): Promise<RentalHistoryPage> {
+  const response = await rentalService.userGetAllRentals(page, limit);
+  if (response.status === 200) {
+    return response.data as unknown as RentalHistoryPage;
+  }
+  throw new Error("Failed to fetch rental history");
+}
+
 function BookingHistoryScreen() {
   const navigator = useNavigation();
   const insets = useSafeAreaInsets();
-  const {
-    rentalsData,
-    isGetAllRentalsFetching,
-    getAllRentals,
-    refetchingAllRentals,
-  } = useRentalsActions(true);
-  const [bookings, setBookings] = useState<RentingHistory[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+
+  const {
+    data,
+    isLoading,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isRefetching,
+  } = useInfiniteQuery({
+    queryKey: ["rentalsHistory"],
+    queryFn: ({ pageParam = 1 }) =>
+      fetchRentalHistory(pageParam as number, PAGE_SIZE),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.currentPage < lastPage.pagination.totalPages) {
+        return lastPage.pagination.currentPage + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const bookings = useMemo(() => {
+    if (!data?.pages) return [];
+    const seenIds = new Set<string>();
+    const unique: RentingHistory[] = [];
+
+    data.pages.forEach((page) => {
+      page.data.forEach((item) => {
+        if (item && !seenIds.has(item._id)) {
+          seenIds.add(item._id);
+          unique.push(item);
+        }
+      });
+    });
+
+    return unique;
+  }, [data]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetchingAllRentals();
-    setRefreshing(false);
-  }, [refetchingAllRentals]);
-
-  useEffect(() => {
-    if (rentalsData && !isGetAllRentalsFetching) {
-      if (rentalsData.data?.data && Array.isArray(rentalsData.data.data)) {
-        setBookings(rentalsData.data.data);
-      }
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
     }
-  }, [rentalsData, isGetAllRentalsFetching]);
+  }, [refetch]);
+
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   useEffect(() => {
     console.log("bookings state:", bookings);
   }, [bookings]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "HOÀN THÀNH":
@@ -156,7 +214,7 @@ function BookingHistoryScreen() {
       </TouchableOpacity>
     </View>
   );
-  if (bookings === null || isGetAllRentalsFetching) {
+  if (isLoading && !data) {
     return <LoadingScreen />;
   }
   return (
@@ -175,7 +233,7 @@ function BookingHistoryScreen() {
         </Text>
       </LinearGradient>
 
-      {isGetAllRentalsFetching ? (
+      {isLoading && !data ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0066FF" />
           <Text style={styles.loadingText}>Đang tải...</Text>
@@ -187,13 +245,23 @@ function BookingHistoryScreen() {
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContent}
           scrollEnabled={true}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.4}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={refreshing || isRefetching}
               onRefresh={onRefresh}
               colors={["#0066FF"]}
               tintColor="#0066FF"
             />
+          }
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.loadingMoreContainer}>
+                <ActivityIndicator size="small" color="#0066FF" />
+                <Text style={styles.loadingMoreText}>Đang tải thêm...</Text>
+              </View>
+            ) : null
           }
         />
       ) : (
@@ -326,6 +394,16 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
+    color: "#666",
+  },
+  loadingMoreContainer: {
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  loadingMoreText: {
+    marginTop: 8,
+    fontSize: 14,
     color: "#666",
   },
   emptyContainer: {
