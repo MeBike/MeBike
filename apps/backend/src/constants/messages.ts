@@ -155,7 +155,21 @@ export const REPORTS_MESSAGES = {
   INVALID_PRIORITY: 'Độ ưu tiên không hợp lệ!',
   FILES_MUST_BE_ARRAY: 'Files phải là một mảng các chuỗi URL.',
   FILE_MUST_BE_URL: 'Mỗi file phải là một URL hợp lệ.',
-  GET_REPORT_OVERVIEW_SUCCESS: 'Lấy tổng quan báo cáo thành công'
+  GET_REPORT_OVERVIEW_SUCCESS: 'Lấy tổng quan báo cáo thành công',
+  STAFF_NOT_FOUND: 'Không tìm thấy nhân viên với ID %s',
+  STAFF_INVALID: 'Phải là nhân viên SOS',
+  REPORT_NOT_IN_PROGRESS: 'Báo cáo không ở trạng thái đang thực hiện',
+  STAFF_NOT_ASSIGNED: 'Nhân viên không được giao cho báo cáo',
+  REASON_IS_REQUIRED: 'Lý do từ chối là bắt buộc',
+  REASON_INVALID: 'Lý do từ chối không hợp lệ',
+  ACCESS_DENIED: 'Truy cập bị từ chối',
+  ASSIGNEE_INVALID: 'Phải là nhân viên SOS hoặc nhân viên',
+  RENTAL_ID_REQUIRED: 'ID thuê xe là bắt buộc',
+  RENTAL_NOT_RENTED: 'Phải là 1 phiên xe đang được thuê',
+  RENTAL_ALREADY_REPORTED: 'Phiên xe đã được báo cáo',
+  RATING_EXPIRED: 'Đã quá thời gian để đánh giá phiên thuê này',
+  CANNOT_RATE_OTHERS_RENTAL: 'Không thể đánh giá phiên thuê của người khác',
+  ALREADY_RATED: 'Bạn đã đánh giá phiên thuê này trước đó'
 }
 
 export const SUPPLIER_MESSAGE = {
@@ -235,7 +249,7 @@ export const BIKES_MESSAGES = {
   GET_BIKE_RENTAL_STATS_SUCCESS: 'Lấy thống kê thuê xe thành công',
   //thống kê doanh thu xe
   NOT_BIKE_FOUND: 'Không tìm thấy xe đạp nào',
-  GET_BIKE_HIGHEST_REVENUE_SUCCESS: 'Lấy thống kê xe có doanh thu cao nhất thành công',
+  GET_BIKE_HIGHEST_REVENUE_SUCCESS: 'Lấy thống kê xe có doanh thu cao nhất thành công'
 } as const
 
 export const RENTALS_MESSAGE = {
@@ -640,7 +654,9 @@ export const RATING_MESSAGE = {
   STATION_RATING_NOT_FOUND: 'Đánh giá trạm %s không tồn tại',
   GET_STATION_RATING_SUCCESS: 'Lấy đánh giá trạm %s thành công',
   GET_APP_RATING_SUCCESS: 'Lấy đánh giá ứng dụng thành công',
-  BIKE_RATING_NOT_FOUND: 'Đánh giá xe đạp %s không tồn tại'
+  BIKE_RATING_NOT_FOUND: 'Đánh giá xe đạp %s không tồn tại',
+  CANNOT_RATE_OTHERS_RENTAL: 'Không thể đánh giá phiên thuê của người khác',
+  ALREADY_RATED: 'Bạn đã đánh giá phiên thuê này trước đó'
 }
 
 export const SOS_MESSAGE = {
