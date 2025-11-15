@@ -233,12 +233,13 @@ class FixedSlotTemplateService {
       updated_at: now
     }
 
+    let result: any = {}
     const updateSlotStart = updates.slot_start || template.slot_start
     const session = databaseService.getClient().startSession()
     try {
       await session.withTransaction(async () => {
         if (datesToAdd.length > 0) {
-          await this.generateAndInsertReservations({
+          const {totalPrepaid, useSubscription} = await this.generateAndInsertReservations({
             user_id: template.user_id,
             station_id: template.station_id,
             slot_start: updateSlotStart,
@@ -246,6 +247,9 @@ class FixedSlotTemplateService {
             template,
             session
           })
+          result.addedDates = datesToAdd
+          result.totalPrepaid = totalPrepaid
+          result.useSubscription = useSubscription
         }
 
         if (datesToUpdate.length > 0 && updates.slot_start && updates.slot_start !== template.slot_start) {
@@ -283,6 +287,7 @@ class FixedSlotTemplateService {
               updatedData.slot_start = updateSlotStart
             })
           )
+          result.updatedDates = datesToUpdate
         }
 
         if (datesToRemove.length > 0) {
@@ -298,6 +303,7 @@ class FixedSlotTemplateService {
           const reservationIdsToCancel = reservationsToCancel.map((r) => r._id)
 
           await this.processCancel(reservationIdsToCancel, session)
+          result.removedDates = datesToRemove
         }
       })
 
@@ -309,9 +315,7 @@ class FixedSlotTemplateService {
 
       return {
         ...updatedTemplate,
-        addedDates: datesToAdd,
-        updatedDates: datesToUpdate,
-        removedDates: datesToRemove
+        ...result
       }
     } catch (err) {
       throw err

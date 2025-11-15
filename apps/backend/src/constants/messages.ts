@@ -384,7 +384,8 @@ export const RESERVATIONS_MESSAGE = {
 
   FS_TEMPLATE_NOT_FOUND: 'Không tìm thấy mẫu khung giờ cố định',
   FS_TEMPLATE_CANNOT_OPERATE_OTHER: 'Bạn không thể thao tác mẫu của người khác',
-  FS_TEMPLATE_MUST_BE_ACTIVE_TO_PAUSE: 'Chỉ có thể tạm dừng mẫu đang hoạt động',
+  FS_TEMPLATE_MUST_BE_ACTIVE_TO_UPDATE: 'Chỉ có thể cập nhật mẫu đang hoạt động',
+  FS_INVALID_STATUS: 'Trạng thái của khung không đúng với trạng thái yêu cầu',
   FS_TEMPLATE_MUST_BE_PAUSED_TO_RESUME: 'Chỉ có thể kích hoạt lại mẫu đang tạm dừng',
   FS_TEMPLATE_CANNOT_MODIFY_AFTER_START: 'Không thể chỉnh sửa mẫu sau khi đã bắt đầu',
   FS_INVALID_SLOT_TIME: 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu',

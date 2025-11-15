@@ -48,7 +48,7 @@ export const getFixedSlotTemplateListController = async (req: Request, res: Resp
     })
 
   const match: any = {}
-  if (user.role === Role.User) {
+  if (![Role.Admin, Role.Staff].includes(user.role)) {
     match.user_id = toObjectId(user_id)
   }
 

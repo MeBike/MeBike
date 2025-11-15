@@ -45,8 +45,8 @@ const makeFixedSlotTemplateIdRule = (options?: { mustBeStatus?: FixedSlotStatus 
       if (options?.mustBeStatus && template.status !== options.mustBeStatus) {
         const msg =
           options.mustBeStatus === FixedSlotStatus.ACTIVE
-            ? RESERVATIONS_MESSAGE.FS_TEMPLATE_MUST_BE_ACTIVE_TO_PAUSE
-            : RESERVATIONS_MESSAGE.FS_TEMPLATE_MUST_BE_PAUSED_TO_RESUME
+            ? RESERVATIONS_MESSAGE.FS_TEMPLATE_MUST_BE_ACTIVE_TO_UPDATE
+            : RESERVATIONS_MESSAGE.FS_INVALID_STATUS
         throw new ErrorWithStatus({ message: msg, status: HTTP_STATUS.BAD_REQUEST })
       }
 

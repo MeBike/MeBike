@@ -21,13 +21,6 @@ import { wrapAsync } from '~/utils/handler'
 
 const fixedSlotTemplateRouter = Router()
 
-fixedSlotTemplateRouter.patch(
-  '/:id',
-  accessTokenValidator,
-  updateFixedSlotTemplateValidator,
-  wrapAsync(updateFixedSlotTemplateController)
-)
-
 fixedSlotTemplateRouter.post(
   '/:id/cancel',
   accessTokenValidator,
