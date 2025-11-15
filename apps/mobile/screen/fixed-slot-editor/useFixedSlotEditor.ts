@@ -182,14 +182,14 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
             Alert.alert("Đã lưu", "Khung giờ đã được cập nhật.");
             navigation.goBack();
           },
-          onError: () => {
-          Alert.alert(
-            "Không thể cập nhật",
-            getApiErrorMessage(error, "Vui lòng thử lại."),
-          );
+          onError: (error) => {
+            Alert.alert(
+              "Không thể cập nhật",
+              getApiErrorMessage(error, "Vui lòng thử lại."),
+            );
+          },
         },
-      },
-    );
+      );
       return;
     }
 
