@@ -1,20 +1,12 @@
-import type { Buffer } from 'node:buffer'
-
-import { v2 as cloudinary } from 'cloudinary'
 import { ObjectId } from 'mongodb'
-import process from 'node:process'
-import { Readable } from 'node:stream'
-import pLimit from 'p-limit'
 
-import type { ReportPriority } from '~/constants/enums'
 import type { CreateReportReqBody } from '~/models/requests/reports.requests'
-import type { ReportType } from '~/models/schemas/report.schema'
 
-import { ReportStatus, ReportTypeEnum } from '~/constants/enums'
+import { ReportStatus, ReportTypeEnum, ReportPriority, Role, RentalStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { REPORTS_MESSAGES } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
-import Report from '~/models/schemas/report.schema'
+import Report, { ReportType } from '~/models/schemas/report.schema'
 
 import databaseService from './database.services'
 
@@ -42,6 +34,42 @@ class ReportService {
     if (payload.rental_id) reportData.rental_id = new ObjectId(payload.rental_id)
     if (userID) reportData.user_id = new ObjectId(userID)
     if (payload.bike_id) reportData.bike_id = new ObjectId(payload.bike_id)
+    if (
+      payload.type === ReportTypeEnum.SosAccident ||
+      payload.type === ReportTypeEnum.SosHealth ||
+      payload.type === ReportTypeEnum.SosThreat
+    ) {
+      if (!payload.rental_id) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.BAD_REQUEST,
+          message: REPORTS_MESSAGES.RENTAL_ID_REQUIRED
+        })
+      }
+
+      const findRental = await databaseService.rentals.findOne({ _id: new ObjectId(payload.rental_id) })
+      if (!findRental) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.NOT_FOUND,
+          message: REPORTS_MESSAGES.RENTAL_NOT_FOUND
+        })
+      }
+
+      const existedReport = await databaseService.reports.findOne({ rental_id: new ObjectId(payload.rental_id) })
+      if (existedReport) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.BAD_REQUEST,
+          message: REPORTS_MESSAGES.RENTAL_ALREADY_REPORTED
+        })
+      }
+
+      if (findRental.status !== RentalStatus.Rented) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.NOT_FOUND,
+          message: REPORTS_MESSAGES.RENTAL_NOT_RENTED
+        })
+      }
+      reportData.priority = ReportPriority.URGENT
+    }
 
     const result = await databaseService.reports.insertOne(new Report(reportData))
 
@@ -61,8 +89,9 @@ class ReportService {
   }) {
     const allowedStatuses: Record<ReportStatus, ReportStatus[]> = {
       [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
-      [ReportStatus.InProgress]: [ReportStatus.Resolved],
+      [ReportStatus.InProgress]: [ReportStatus.Resolved, ReportStatus.CannotResolved],
       [ReportStatus.Resolved]: [],
+      [ReportStatus.CannotResolved]: [],
       [ReportStatus.Cancel]: []
     }
 
@@ -102,15 +131,144 @@ class ReportService {
           status: HTTP_STATUS.BAD_REQUEST
         })
       }
-      if (!priority || priority.trim() === '') {
+
+      const sosType = [ReportTypeEnum.SosAccident, ReportTypeEnum.SosHealth, ReportTypeEnum.SosThreat]
+      if (sosType.includes(findReport.type)) {
+        priority = ReportPriority.URGENT
+      } else if (!priority || priority.trim() === '') {
         throw new ErrorWithStatus({
           message: REPORTS_MESSAGES.PRIORITY_IS_REQUIRED,
           status: HTTP_STATUS.BAD_REQUEST
         })
       }
 
+      const findStaff = await databaseService.users.findOne({
+        _id: new ObjectId(assignee_id)
+      })
+      if (!findStaff) {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.STAFF_NOT_FOUND.replace('%s', assignee_id),
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+      if (findStaff.role !== Role.Sos && priority === ReportPriority.URGENT) {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.STAFF_INVALID,
+          status: HTTP_STATUS.BAD_REQUEST
+        })
+      }
+      if (findStaff.role !== Role.Sos && findStaff.role !== Role.Staff) {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.ASSIGNEE_INVALID,
+          status: HTTP_STATUS.BAD_REQUEST
+        })
+      }
+
       updateData.assignee_id = new ObjectId(assignee_id)
       updateData.priority = priority
+    }
+
+    const currentDate = new Date()
+    const vietnamTimezoneOffset = 7 * 60
+    const localTime = new Date(currentDate.getTime() + vietnamTimezoneOffset * 60 * 1000)
+
+    if (newStatusTyped === ReportStatus.Resolved) {
+      updateData.updated_at = localTime
+    }
+
+    const result = await databaseService.reports.findOneAndUpdate(
+      { _id: new ObjectId(reportID) },
+      { $set: updateData },
+      { returnDocument: 'after' }
+    )
+
+    return result
+  }
+
+  async staffUpdateReportStatus({
+    reportID,
+    newStatus,
+    reason,
+    staffID,
+    files
+  }: {
+    reportID: string
+    newStatus: string
+    reason: string
+    staffID: string
+    files: string[]
+  }) {
+    const allowedStatuses: Record<ReportStatus, ReportStatus[]> = {
+      [ReportStatus.Pending]: [ReportStatus.InProgress, ReportStatus.Cancel],
+      [ReportStatus.InProgress]: [ReportStatus.Resolved, ReportStatus.CannotResolved],
+      [ReportStatus.Resolved]: [],
+      [ReportStatus.CannotResolved]: [],
+      [ReportStatus.Cancel]: []
+    }
+
+    const findReport = await databaseService.reports.findOne({ _id: new ObjectId(reportID) })
+    if (!findReport) {
+      throw new ErrorWithStatus({
+        message: REPORTS_MESSAGES.REPORT_NOT_FOUND,
+        status: HTTP_STATUS.NOT_FOUND
+      })
+    }
+
+    if (!Object.values(ReportStatus).includes(newStatus as ReportStatus)) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.BAD_REQUEST,
+        message: REPORTS_MESSAGES.INVALID_NEW_STATUS
+      })
+    }
+
+    const currentStatus = findReport.status as ReportStatus
+    const newStatusTyped = newStatus as ReportStatus
+    if (
+      currentStatus !== ReportStatus.InProgress &&
+      (newStatusTyped === ReportStatus.Resolved || newStatusTyped === ReportStatus.CannotResolved)
+    ) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.BAD_REQUEST,
+        message: REPORTS_MESSAGES.REPORT_NOT_IN_PROGRESS
+      })
+    }
+
+    if (!allowedStatuses[currentStatus]?.includes(newStatusTyped)) {
+      throw new ErrorWithStatus({
+        status: HTTP_STATUS.BAD_REQUEST,
+        message: REPORTS_MESSAGES.INVALID_NEW_STATUS
+      })
+    }
+
+    const updateData: any = {
+      status: newStatusTyped,
+      files
+    }
+
+    if (newStatusTyped === ReportStatus.CannotResolved) {
+      if (!reason || reason.trim() === '') {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.REASON_IS_REQUIRED,
+          status: HTTP_STATUS.BAD_REQUEST
+        })
+      }
+      updateData.reason = reason
+
+      const findStaff = await databaseService.users.findOne({
+        _id: new ObjectId(staffID)
+      })
+      if (!findStaff) {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.STAFF_NOT_FOUND.replace('%s', staffID),
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
+      if (findStaff.role !== Role.Sos && findReport.priority === ReportPriority.URGENT) {
+        throw new ErrorWithStatus({
+          message: REPORTS_MESSAGES.STAFF_INVALID,
+          status: HTTP_STATUS.NOT_FOUND
+        })
+      }
     }
 
     const currentDate = new Date()
