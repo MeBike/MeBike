@@ -2,7 +2,6 @@ import type { Pagination } from "./Pagination";
 
 export type FixedSlotStatus =
   | "ĐANG HOẠT ĐỘNG"
-  | "TẠM DỪNG"
   | "ĐÃ HUỶ";
 
 export type FixedSlotTemplate = {

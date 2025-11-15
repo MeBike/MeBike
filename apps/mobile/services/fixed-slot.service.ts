@@ -15,8 +15,6 @@ const FIXED_SLOT_BASE = "/fixed-slots";
 const FIXED_SLOT_ENDPOINTS = {
   BASE: FIXED_SLOT_BASE,
   DETAIL: (id: string) => `${FIXED_SLOT_BASE}/${id}`,
-  PAUSE: (id: string) => `${FIXED_SLOT_BASE}/${id}/pause`,
-  RESUME: (id: string) => `${FIXED_SLOT_BASE}/${id}/resume`,
   CANCEL: (id: string) => `${FIXED_SLOT_BASE}/${id}/cancel`,
 } as const;
 
@@ -59,22 +57,6 @@ export const fixedSlotService = {
     return fetchHttpClient.patch<MessageResponse<FixedSlotTemplateDetail>>(
       FIXED_SLOT_ENDPOINTS.DETAIL(id),
       payload,
-    );
-  },
-
-  pause: async (
-    id: string,
-  ): Promise<AxiosResponse<MessageResponse<FixedSlotTemplateDetail>>> => {
-    return fetchHttpClient.post<MessageResponse<FixedSlotTemplateDetail>>(
-      FIXED_SLOT_ENDPOINTS.PAUSE(id),
-    );
-  },
-
-  resume: async (
-    id: string,
-  ): Promise<AxiosResponse<MessageResponse<FixedSlotTemplateDetail>>> => {
-    return fetchHttpClient.post<MessageResponse<FixedSlotTemplateDetail>>(
-      FIXED_SLOT_ENDPOINTS.RESUME(id),
     );
   },
 
