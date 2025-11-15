@@ -95,7 +95,11 @@ export const resumeFixedSlotTemplateController = async (req: Request, res: Respo
 
 export const cancelFixedSlotTemplateController = async (req: Request, res: Response) => {
   const template = req.fixedSlotTemplate!
-  const result = await fixedSlotTemplateService.updateStatus(template._id!, FixedSlotStatus.CANCELLED)
+
+  const [result] = await Promise.all([
+    fixedSlotTemplateService.updateStatus(template._id!, FixedSlotStatus.CANCELLED),
+    fixedSlotTemplateService.updateCorrespondingRentalAndReservation(template._id!)
+  ])
 
   res.json({
     message: RESERVATIONS_MESSAGE.FS_TEMPLATE_CANCEL_SUCCESS,
