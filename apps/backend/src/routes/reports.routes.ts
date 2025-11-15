@@ -75,7 +75,7 @@ reportsRouter.post(
 reportsRouter.put(
   '/:reportID',
   accessTokenValidator,
-  isStaffValidator,
+  isAdminValidator,
   getIdValidator,
   filterMiddleware(['newStatus', 'staff_id', 'priority']),
   updateReportValidator,
