@@ -268,6 +268,7 @@ export const RENTALS_MESSAGE = {
   TRACKING_RENTAL_IN_STATION_SUCCESS: 'Xem danh sách các phiên thuê tại trạm thành công',
   GET_DASHBOARD_SUMMARY_SUCCESS: 'Lấy dữ liệu thống kê cho các phiên thuê hôm nay thành công',
   GET_SUMMARY_SUCCESS: 'Lấy dữ liệu thống kê tổng quan các phiên thuê thành công',
+  CREATE_SESSION_BY_SOS_SUCCESS: 'Tạo phiên thuê từ yêu cầu cứu hộ thành công',
   // Fail action
   CREATE_SESSION_FAILED: 'Tạo phiên thuê xe không thành công',
   RENTAL_UPDATE_FAILED: 'Cập nhật phiên thuê không thành công',
@@ -280,6 +281,7 @@ export const RENTALS_MESSAGE = {
   REQUIRED_ID: 'Vui lòng nhập Id của phiên thuê',
   REQUIRED_CANCELLED_REASON: 'Vui lòng nhập lí do huỷ phiên thuê',
   REQUIRED_UPDATED_REASON: 'Vui lòng nhập lí do thay đổi phiên thuê',
+  REQUIRED_SOS_ID: 'Vui lòng nhập ID yêu cầu cứu hộ',
   // Invalid data
   INVALID_OBJECT_ID: '%s phải là 1 ObjectId hợp lệ',
   INVALID_DURATION: 'Khoảng thời gian không hợp lệ (phải là số nguyên dương)',
@@ -302,6 +304,7 @@ export const RENTALS_MESSAGE = {
   NOT_FOUND_RENTED_RENTAL: 'Không tìm thấy phiên thuê nào với Id %s đang diễn ra ở thời điểm hiện tại',
   NOT_FOUND: 'Không tìm thấy phiên thuê nào với Id %s',
   NOT_FOUND_RESERVED_RENTAL: 'Không tìm thấy phiên đặt trước nào với Id %s',
+  SOS_NOT_FOUND: 'Không tìm thấy yêu cầu cứu hộ nào với ID: %s',
   // Not available
   NOT_AVAILABLE_BIKE: 'Xe chưa sẵn sàng để sử dụng',
   // Not allowed action
@@ -315,6 +318,8 @@ export const RENTALS_MESSAGE = {
   CANNOT_EDIT_BIKE_STATUS_TO:
     'Bạn không thể cập nhật trạng thái xe thành %s khi huỷ phiên thuê (Available, Broken only)',
   NOT_ENOUGH_BALANCE_TO_RENT: 'Tài khoản của bạn không đủ để bắt đầu phiên thuê (tối thiếu: %s)',
+  CANNOT_CREATE_RENTAL_WITH_SOS_STATUS: 'Nhân viên chỉ có thể tạo phiên thuê bởi yêu cầu mà người cứu hộ không xử lí được',
+  CANNOT_END_RENTAL_WITH_SOS_STATUS: 'Nhân viên chỉ có thể kết thúc phiên thuê bởi yêu cầu mà người cứu hộ không xử lí được',
   // Not allowed body fields
   NOT_ALLOWED_CREATED_FIELD: '%s không nằm trong các trường được cho phép để tạo',
   NOT_ALLOWED_UPDATED_FIELD: '%s không nằm trong các trường được cho phép để cập nhật',
@@ -618,7 +623,10 @@ export const STATIONS_MESSAGE = {
   // get station alerts messages
   GET_STATION_ALERTS_SUCCESSFULLY: 'Lấy cảnh báo trạm thành công',
   GET_HIGHEST_REVENUE_STATION_SUCCESSFULLY: 'Lấy trạm có doanh thu cao nhất thành công',
-  GET_BIKE_REVENUE_BY_STATION_SUCCESSFULLY: 'Lấy doanh thu xe đạp theo trạm thành công'
+  GET_BIKE_REVENUE_BY_STATION_SUCCESSFULLY: 'Lấy doanh thu xe đạp theo trạm thành công',
+  GET_NEAREST_AVAILABLE_BIKE_SUCCESSFULLY: 'Tìm xe gần nhất có sẵn thành công',
+  NO_AVAILABLE_BIKE_FOUND: 'Không tìm thấy xe khả dụng trong phạm vi tìm kiếm',
+  MAX_DISTANCE_MUST_BE_POSITIVE_NUMBER: 'Khoảng cách tối đa phải là một số dương (mét)'
 }
 
 export const RATING_MESSAGE = {
@@ -659,14 +667,23 @@ export const SOS_MESSAGE = {
   REQUIRED_ID: 'Vui lòng nhập ID yêu cầu cứu hộ',
   REQUIRED_AGENT_ID: 'Vui lòng nhập ID người cứu hộ',
   REQUIRED_AGENT_NOTES: 'Vui lòng nhập ghi chú',
+  REQUIRED_REASON: 'Vui lòng nhập nguyên nhân',
+  REQUIRED_REPLACED_BIKE_ID: 'Vui lòng nhập ID xe đạp dự phòng',
   INVALID_LOCATION_FORMAT: 'Vị trí phải có dạng { lat, lng }',
   RENTAL_NOT_FOUND: 'Không tìm thấy phiên thuê với ID: %s',
   BIKE_NOT_FOUND: 'Không tìm thấy xe với ID: %s',
   USER_NOT_FOUND: 'Không tìm thấy người dùng với ID: %s',
   RENTAL_NOT_ACTIVE: 'Chỉ có thể gửi SOS khi đang thuê xe',
   SOS_CREATE_SUCCESS: 'Tạo yêu cầu cứu hộ thành công',
+  SOS_ASSIGNED_SUCCESS: 'Phân công người cứu hộ thành công',
+  SOS_CONFIRMED_SUCCESS: 'Xác nhận yêu cầu cứu hộ thành công',
+  SOS_CANCELLED_SUCCESS: 'Huỷ yêu cầu cứu hộ thành công',
   SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ với ID: %s',
   AGENT_NOT_FOUND: 'Không tìm thấy người cứu hộ với ID: %s',
+  AVAILABLE_BIKE_NOT_FOUND: 'Không tìm thấy xe khả dụng với ID: %s',
+  PENDING_SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ đang chờ xử lí với ID: %s',
+  ASSIGNED_SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ được phân công cho bạn với ID: %s',
+  EN_ROUTE_SOS_NOT_FOUND: 'Không tìm thấy yêu cầu hỗ trợ được xác nhận bởi người cứu hộ với ID: %s',
   SOS_ALREADY_ACCEPTED: 'Yêu cầu đã được nhận bởi người khác',
   SOS_ACCEPTED_SUCCESS: 'Bạn đã nhận yêu cầu hỗ trợ',
   SOS_STATUS_UPDATED: 'Cập nhật trạng thái thành công',
@@ -676,21 +693,31 @@ export const SOS_MESSAGE = {
   INVALID_LATITUDE: 'Latitude phải từ -90 đến 90',
   INVALID_LONGITUDE: 'Longitude phải từ -180 đến 180',
   INVALID_NOTE: 'Ghi chú phải là kiểu chuỗi',
+  INVALID_REASON: 'Nguyên nhân phải là kiểu chuỗi',
   INVALID_NOTE_LENGTH: 'Độ dài của ghi chú không được vượt quá 500 kí tự',
+  INVALID_REASON_LENGTH: 'Độ dài của nguyên nhân không được vượt quá 500 kí tự',
   INVALID_SOLVABLE: 'Khả năng xử lí sự cố phải là đúng hoặc sai',
   INVALID_PHOTO: 'Mỗi ảnh phải là kiểu chuỗi hợp lệ',
   INVALID_PHOTO_URL: 'Mỗi ảnh phải là 1 URL hợp lệ',
   INVALID_PHOTOS_ARRAY: 'Danh sách ảnh phải là 1 mảng từ 1-5 ảnh',
   INVALID_STATUS: 'Trạng thái không hợp lệ',
   SOS_DISPATCHED_SUCCESS: 'Đã phân đội xử lí cho yêu cầu cứu hộ',
-  SOS_RESOLVED: 'Sự cố đã được xử lí, phiên thuê có thể tiếp tục',
+  SOS_RESOLVED_SUCCESS: 'Sự cố đã được xử lí thành công, phiên thuê có thể tiếp tục',
   SOS_UNSOLVABLE: 'Sự cố không thể xử lí tại chỗ, phiên thuê không thể tiếp tục',
   SOS_REJECTED: 'Đã từ chối yêu cầu, tình trạng không nằm trong phạm vi xử lí hoặc không đúng với báo cáo',
   CANNOT_CONFIRM_SOS: 'Không thể xác nhận yêu cầu cứu hộ với trạng thái: %s (trạng thái cần: PENDING)',
   GET_REQUEST_BY_ID_SUCCESS: 'Xem chi tiết yêu cầu hỗ trợ thành công',
-  CANNOT_VIEW_OTHER_DISPATCHED_REQUEST: 'Không thể xem yêu cầu được phân công bởi người khác',
-  YOUR_RENTAL_NOT_FOUND: 'Không tìm thấy phiên thuê nào của bạn với ID: %s'
-}
+  CANNOT_CREATE_REQUEST_OF_OTHER_RENTAL: 'Không thể tạo yêu cầu bởi phiên thuê của người khác',
+  YOUR_RENTAL_NOT_FOUND: 'Không tìm thấy phiên thuê nào của bạn với ID: %s',
+  UNAUTHORIZED_STATUS: 'Bạn không có quyền xem yêu cầu hỗ trợ ở trạng thái: %s',
+  CANCEL_DENIED: 'Bạn không có quyền huỷ yêu cầu cứu hộ này',
+  SOS_CONFIRMED_FAIL: 'Có lỗi khi xác nhận yêu cầu cứu hộ',
+  SOS_CANCELLED_FAIL: 'Có lỗi khi huỷ yêu cầu cứu hộ',
+  CANCEL_PENDING_ONLY: 'Bạn chỉ có thể huỷ yêu cầu ở trạng thái đang chờ xử lí',
+  ASSIGN_PENDING_ONLY: 'Bạn chỉ có thể phân công người cứu hộ cho yêu cầu ở trạng thái đang chờ xử lí',
+  RESOLVE_EN_ROUTE_ONLY: 'Bạn chỉ có thể xử lí yêu cầu đã được xác nhận',
+  REJECT_EN_ROUTE_ONLY: 'Bạn chỉ có thể từ chối yêu cầu đã được xác nhận',
+};
 
 export const DASHBOARD_MESSAGES = {
   GET_DASHBOARD_STATS_SUCCESS: 'Lấy thống kê dashboard thành công',
