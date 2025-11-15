@@ -19,6 +19,10 @@ export type RentalParams = {
   id: string
 }
 
+export type SosParams = {
+  sosId: string
+}
+
 export type UpdateRentalReqBody = {
   end_station?: string
   end_time?: string

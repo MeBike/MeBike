@@ -10,6 +10,7 @@ import type {
   CreateRentalReqBody,
   EndRentalByAdminOrStaffReqBody,
   RentalParams,
+  SosParams,
   UpdateRentalReqBody
 } from '~/models/requests/rentals.requests'
 import type Bike from '~/models/schemas/bike.schema'
@@ -25,6 +26,8 @@ import { toObjectId } from '~/utils/string'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import User from '~/models/schemas/user.schema'
 import Subscription from '~/models/schemas/subscription.schema'
+import SosAlert from '~/models/schemas/sos-alert.schema'
+import bikesService from '~/services/bikes.services'
 
 export async function createRentalSessionController(
   req: Request<ParamsDictionary, any, CreateRentalReqBody>,
@@ -54,14 +57,39 @@ export async function createRentalSessionByStaffController(
   const user = req.user as User
   const station = req.station as Station
   const bike = req.bike as Bike
+  const subscription = req.subscription as Subscription
 
   const result = await rentalsService.createRentalSession({
     user_id: user._id as ObjectId,
     start_station: station._id as ObjectId,
-    bike
+    bike,
+    subscription_id: subscription?._id as ObjectId | undefined
   })
   res.json({
     message: RENTALS_MESSAGE.CREATE_SESSION_SUCCESS,
+    result
+  })
+}
+
+export async function createRentalBySosIdController(
+  req: Request<SosParams>,
+  res: Response
+) {
+  const station = req.station as Station
+  const bike = req.bike as Bike
+  const user_id = req.user?._id as ObjectId
+
+  if(!station._id?.equals(bike.station_id)){
+    await bikesService.updateBike(bike._id?.toString()!, {station_id: station._id?.toString()})
+  }
+
+  const result = await rentalsService.createRentalSession({
+    user_id,
+    start_station: station._id as ObjectId,
+    bike,
+  })
+  res.json({
+    message: RENTALS_MESSAGE.CREATE_SESSION_BY_SOS_SUCCESS,
     result
   })
 }
