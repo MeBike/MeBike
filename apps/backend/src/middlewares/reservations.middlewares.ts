@@ -10,7 +10,7 @@ import { validate } from '~/utils/validation'
 import { isAvailability } from './bikes.middlewares'
 import { BikeStatus } from '~/constants/enums'
 import { TokenPayLoad } from '~/models/requests/users.requests'
-import { getLocalTime } from '~/utils/date-time'
+import { fromDaysToMs, getLocalTime } from '~/utils/date-time'
 import { DispatchBikeReqBody } from '~/models/requests/reservations.requests'
 import { NextFunction, Request, Response } from 'express'
 
@@ -131,10 +131,20 @@ export const reserveBikeValidator = validate(
             const now = getLocalTime()
             if (new Date(value) < now) {
               throw new ErrorWithStatus({
-                message: RESERVATIONS_MESSAGE.INVALID_START_TIME,
+                message: RESERVATIONS_MESSAGE.INVALID_PAST_START_TIME,
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }
+
+            const allowedReservationDays = parseFloat(process.env.ALLOWED_RESERVATION_DAYS || '7')
+            const allowedReservationMs = fromDaysToMs(allowedReservationDays)
+            if (new Date(value) > new Date(now.getTime() + allowedReservationMs)) {
+              throw new ErrorWithStatus({
+                message: RESERVATIONS_MESSAGE.EXCEED_ALLOWED_START_TIME.replace("%s", allowedReservationDays.toString()),
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
+
             return true
           }
         }
@@ -198,7 +208,7 @@ export const reserveBikeValidator = validate(
                   $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE]
                 }
               })
-              
+
               if (!subscription) {
                 throw new ErrorWithStatus({
                   message: RESERVATIONS_MESSAGE.SUBSCRIPTION_NOT_FOUND,
