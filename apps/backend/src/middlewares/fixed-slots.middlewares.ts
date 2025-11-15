@@ -45,8 +45,8 @@ const makeFixedSlotTemplateIdRule = (options?: { mustBeStatus?: FixedSlotStatus 
       if (options?.mustBeStatus && template.status !== options.mustBeStatus) {
         const msg =
           options.mustBeStatus === FixedSlotStatus.ACTIVE
-            ? RESERVATIONS_MESSAGE.FS_TEMPLATE_MUST_BE_ACTIVE_TO_PAUSE
-            : RESERVATIONS_MESSAGE.FS_TEMPLATE_MUST_BE_PAUSED_TO_RESUME
+            ? RESERVATIONS_MESSAGE.FS_TEMPLATE_MUST_BE_ACTIVE_TO_UPDATE
+            : RESERVATIONS_MESSAGE.FS_INVALID_STATUS
         throw new ErrorWithStatus({ message: msg, status: HTTP_STATUS.BAD_REQUEST })
       }
 
@@ -78,7 +78,7 @@ export const createFixedSlotTemplateValidator = validate(
             const userTemplate = await databaseService.fixedSlotTemplates.findOne({
               user_id: toObjectId(user_id),
               station_id: toObjectId(value),
-              status: { $in: [FixedSlotStatus.ACTIVE, FixedSlotStatus.PAUSED] }
+              status: FixedSlotStatus.ACTIVE
             })
 
             if (userTemplate) {
@@ -180,14 +180,6 @@ export const updateFixedSlotTemplateValidator = validate(
   )
 )
 
-export const pauseFixedSlotTemplateValidator = validate(
-  checkSchema({ id: makeFixedSlotTemplateIdRule({ mustBeStatus: FixedSlotStatus.ACTIVE }) as any }, ['params'])
-)
-
-export const resumeFixedSlotTemplateValidator = validate(
-  checkSchema({ id: makeFixedSlotTemplateIdRule({ mustBeStatus: FixedSlotStatus.PAUSED }) as any }, ['params'])
-)
-
 export const cancelFixedSlotTemplateValidator = validate(
   checkSchema({ id: makeFixedSlotTemplateIdRule() as any }, ['params'])
 )
@@ -205,7 +197,7 @@ export const checkUserTemplateExistInStation = async (req: Request, res: Respons
 
     const userTemplate = await databaseService.fixedSlotTemplates.findOne({
       user_id: toObjectId(user_id),
-      status: { $in: [FixedSlotStatus.ACTIVE, FixedSlotStatus.PAUSED] }
+      status: FixedSlotStatus.ACTIVE
     })
 
     if (userTemplate) {

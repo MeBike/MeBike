@@ -233,12 +233,13 @@ class FixedSlotTemplateService {
       updated_at: now
     }
 
+    let result: any = {}
     const updateSlotStart = updates.slot_start || template.slot_start
     const session = databaseService.getClient().startSession()
     try {
       await session.withTransaction(async () => {
         if (datesToAdd.length > 0) {
-          await this.generateAndInsertReservations({
+          const {totalPrepaid, useSubscription} = await this.generateAndInsertReservations({
             user_id: template.user_id,
             station_id: template.station_id,
             slot_start: updateSlotStart,
@@ -246,6 +247,9 @@ class FixedSlotTemplateService {
             template,
             session
           })
+          result.addedDates = datesToAdd
+          result.totalPrepaid = totalPrepaid
+          result.useSubscription = useSubscription
         }
 
         if (datesToUpdate.length > 0 && updates.slot_start && updates.slot_start !== template.slot_start) {
@@ -283,11 +287,12 @@ class FixedSlotTemplateService {
               updatedData.slot_start = updateSlotStart
             })
           )
+          result.updatedDates = datesToUpdate
         }
 
         if (datesToRemove.length > 0) {
           const startTimes = datesToRemove.map((d) => generateDateTimeWithTimeAndDate(template.slot_start, d))
-          const reservationsToDelete = await databaseService.reservations
+          const reservationsToCancel = await databaseService.reservations
             .find({
               fixed_slot_template_id: templateId,
               start_time: { $in: startTimes },
@@ -295,13 +300,10 @@ class FixedSlotTemplateService {
             })
             .toArray()
 
-          const reservationIdsToDelete = reservationsToDelete.map((r) => r._id)
+          const reservationIdsToCancel = reservationsToCancel.map((r) => r._id)
 
-          // Delete reservations
-          await databaseService.reservations.deleteMany({ _id: { $in: reservationIdsToDelete } }, { session })
-
-          // Delete corresponding rentals
-          await databaseService.rentals.deleteMany({ _id: { $in: reservationIdsToDelete } }, { session })
+          await this.processCancel(reservationIdsToCancel, session)
+          result.removedDates = datesToRemove
         }
       })
 
@@ -313,9 +315,7 @@ class FixedSlotTemplateService {
 
       return {
         ...updatedTemplate,
-        addedDates: datesToAdd,
-        updatedDates: datesToUpdate,
-        removedDates: datesToRemove
+        ...result
       }
     } catch (err) {
       throw err
@@ -332,6 +332,50 @@ class FixedSlotTemplateService {
       { returnDocument: 'after' }
     )
     return result
+  }
+
+  async updateCorrespondingRentalAndReservation(template_id: ObjectId) {
+    const reservations = await databaseService.reservations.find({ fixed_slot_template_id: template_id }).toArray()
+    const reservationIds = reservations.map((r) => r._id)
+    const session = databaseService.getClient().startSession()
+    try {
+      await session.withTransaction(async()=>{
+        await this.processCancel(reservationIds, session)
+      })
+    } catch (error) {
+      throw error
+    } finally {
+      await session.endSession()
+    }
+  }
+
+  async processCancel(reservationIds: ObjectId[], session?: ClientSession) {
+    const now = getLocalTime()
+    await Promise.all([
+      // Mark cancelled reservations
+      databaseService.reservations.updateMany(
+        { _id: { $in: reservationIds } },
+        {
+          $set: {
+            status: ReservationStatus.Cancelled,
+            updated_at: now
+          }
+        },
+        { session }
+      ),
+
+      // Mark cancelled corresponding rentals
+      databaseService.rentals.updateMany(
+        { _id: { $in: reservationIds } },
+        {
+          $set: {
+            status: RentalStatus.Cancelled,
+            updated_at: now
+          }
+        },
+        { session }
+      )
+    ])
   }
 
   // Lấy tất cả template ACTIVE
