@@ -155,10 +155,13 @@ export enum TrendValue {
 }
 
 export enum SosAlertStatus {
-  PENDING = 'ĐANG CHỜ XỬ LÍ',
+  PENDING   = 'ĐANG CHỜ XỬ LÍ',
+  ASSIGNED = 'ĐÃ GỬI NGƯỜI CỨU HỘ',
+  EN_ROUTE = 'ĐANG TRÊN ĐƯỜNG ĐẾN',
   RESOLVED = 'ĐÃ XỬ LÍ',
   UNSOLVABLE = 'KHÔNG XỬ LÍ ĐƯỢC',
-  REJECTED = 'ĐÃ TỪ CHỐI'
+  REJECTED = 'ĐÃ TỪ CHỐI',
+  CANCELLED = 'ĐÃ HUỶ'
 }
 
 export enum SummaryPeriodType {

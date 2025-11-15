@@ -3,6 +3,7 @@ import { Router } from 'express'
 
 import {
   cancelRentalController,
+  createRentalBySosIdController,
   createRentalFromCardController,
   createRentalSessionController,
   endRentalByAdminOrStaffController,
@@ -27,6 +28,7 @@ import {
   cancelRentalValidator,
   checkRentalExist,
   checkUserWalletBeforeRent,
+  createRentalFromSosValidator,
   createRentalSessionByStaffValidator,
   createRentalSessionValidator,
   endRentalByAdminOrStaffValidator,
@@ -49,6 +51,15 @@ rentalsRouter
     filterMiddleware<CreateRentalByStaffReqBody>(['bike_id', 'user_id']),
     createRentalSessionByStaffValidator,
     wrapAsync(createRentalSessionController)
+  )
+
+rentalsRouter
+  .route('/sos/:sosId')
+  .post(
+    accessTokenValidator,
+    isStaffValidator,
+    createRentalFromSosValidator,
+    wrapAsync(createRentalBySosIdController)
   )
 
 rentalsRouter.route('/dashboard-summary').get(accessTokenValidator, isAdminValidator, wrapAsync(getDashboardSummaryController))
