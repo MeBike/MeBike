@@ -54,7 +54,7 @@ export async function confirmSosController(req: Request<SosParam>, res: Response
   const sosId = req.sos_alert?._id
   const newStatus = SosAlertStatus.EN_ROUTE
   const result = await databaseService.sos_alerts.updateOne(
-    {_id: sosId},
+    {_id: sosId, status: SosAlertStatus.ASSIGNED},
     {$set: {
       status: newStatus,
       updated_at: getLocalTime()
@@ -168,7 +168,7 @@ export async function cancelSosController(req: Request<SosParam, any, CancelSosR
   const _id = req.sos_alert
   const newStatus = SosAlertStatus.CANCELLED
   const result = await databaseService.sos_alerts.updateOne(
-    {_id},
+    {_id, status: SosAlertStatus.PENDING},
     {$set: {
       reason: req.body.reason,
       status: newStatus,
