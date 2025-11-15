@@ -24,6 +24,7 @@ const REPORT_ENDPOINTS = {
   BY_ID: (id: string) => `${REPORT_BASE}/${id}`,
   MANAGE_USER_REPORTS: `${REPORT_BASE}/manage-reports`,
   OVERVIEW: `${REPORT_BASE}/overview`,
+  INPROGRESS: `${REPORT_BASE}/inprogress`,
 } as const;
 
 export const reportService = {
@@ -79,4 +80,15 @@ export const reportService = {
     const response = await fetchHttpClient.put(REPORT_ENDPOINTS.BY_ID(id), data);
     return response;
   },
+  getReportInProgress : async({page,limit} : {page : number , limit : number}) : Promise<AxiosResponse<ApiResponse<Report[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Report[]>>(
+      REPORT_ENDPOINTS.INPROGRESS ,
+      {
+        page : page ,
+        limit : limit,
+      }
+    );
+    return response;
+  }
+
 };

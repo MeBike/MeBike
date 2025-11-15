@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useGetAllManageReportQuery } from "./query/Report/useGetAllReportQuery";
 import { useGetReportOverview } from "./query/Report/useGetReportOverview";
 import { useUpdateReportMutation } from "./mutations/Report/useUpdateReportMutation";
+import { useGetReportInProgressQuery } from "./query/Report/useGetReportInProgress";
 import type { UpdateReportSchemaFormData } from "@/schemas/reportSchema";
 import { useRouter } from "next/navigation";
 interface ErrorWithMessage {
@@ -96,9 +97,13 @@ export const useUserReport = ({ hasToken , page , limit }: { hasToken: boolean ,
         }
       );
     },
-    [hasToken, router, queryClient, refetchReports , useUpdateReport]
+    [hasToken, router, queryClient, refetchReports, useUpdateReport]
   );
-
+  const {data : reportInProgress , refetch : refetchingReportInProgress , isLoading : isLoadingReportInProgress} = useGetReportInProgressQuery({ page: page ?? 1, limit: limit ?? 10 });
+  const getReportInProgress = useCallback(async () => {
+    if(!hasToken) return;
+    refetchingReportInProgress();
+  },[hasToken , refetchingReportInProgress])
   return {
     reports: reports?.data || [],
     refetchReports,
@@ -108,5 +113,8 @@ export const useUserReport = ({ hasToken , page , limit }: { hasToken: boolean ,
     refreshReportOverview,
     pagination: reports?.pagination,
     updateReport: updateReport,
+    getReportInProgress,
+    reportInProgress,
+    isLoadingReportInProgress,
   };
 };
