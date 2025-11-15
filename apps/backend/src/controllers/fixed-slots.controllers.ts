@@ -73,26 +73,6 @@ export const updateFixedSlotTemplateController = async (req: Request, res: Respo
   })
 }
 
-export const pauseFixedSlotTemplateController = async (req: Request, res: Response) => {
-  const template = req.fixedSlotTemplate!
-  const result = await fixedSlotTemplateService.updateStatus(template._id!, FixedSlotStatus.PAUSED)
-
-  res.json({
-    message: RESERVATIONS_MESSAGE.FS_TEMPLATE_PAUSE_SUCCESS,
-    result
-  })
-}
-
-export const resumeFixedSlotTemplateController = async (req: Request, res: Response) => {
-  const template = req.fixedSlotTemplate!
-  const result = await fixedSlotTemplateService.updateStatus(template._id!, FixedSlotStatus.ACTIVE)
-
-  res.json({
-    message: RESERVATIONS_MESSAGE.FS_TEMPLATE_RESUME_SUCCESS,
-    result
-  })
-}
-
 export const cancelFixedSlotTemplateController = async (req: Request, res: Response) => {
   const template = req.fixedSlotTemplate!
 

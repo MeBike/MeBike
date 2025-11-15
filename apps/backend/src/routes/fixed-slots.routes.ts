@@ -4,8 +4,6 @@ import {
   createFixedSlotTemplateController,
   getFixedSlotTemplateByIdController,
   getFixedSlotTemplateListController,
-  pauseFixedSlotTemplateController,
-  resumeFixedSlotTemplateController,
   updateFixedSlotTemplateController
 } from '~/controllers/fixed-slots.controllers'
 import { filterMiddleware } from '~/middlewares/common.middlewares'
@@ -13,8 +11,6 @@ import {
   cancelFixedSlotTemplateValidator,
   createFixedSlotTemplateValidator,
   getFixedSlotTemplateByIdValidator,
-  pauseFixedSlotTemplateValidator,
-  resumeFixedSlotTemplateValidator,
   updateFixedSlotTemplateValidator
 } from '~/middlewares/fixed-slots.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
@@ -30,20 +26,6 @@ fixedSlotTemplateRouter.patch(
   accessTokenValidator,
   updateFixedSlotTemplateValidator,
   wrapAsync(updateFixedSlotTemplateController)
-)
-
-fixedSlotTemplateRouter.post(
-  '/:id/pause',
-  accessTokenValidator,
-  pauseFixedSlotTemplateValidator,
-  wrapAsync(pauseFixedSlotTemplateController)
-)
-
-fixedSlotTemplateRouter.post(
-  '/:id/resume',
-  accessTokenValidator,
-  resumeFixedSlotTemplateValidator,
-  wrapAsync(resumeFixedSlotTemplateController)
 )
 
 fixedSlotTemplateRouter.post(

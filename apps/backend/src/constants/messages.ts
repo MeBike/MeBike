@@ -402,7 +402,7 @@ export const RESERVATIONS_MESSAGE = {
   FS_INVALID_END_DATE: 'Ngày kết thúc không hợp lệ',
   FS_START_DATE_MUST_AFTER_24H: 'Ngày bắt đầu phải cách hiện tại 24h',
   FS_END_SLOT_AFTER_START: 'Thời gian kết thúc slot phải lớn hơn thời gian bắt đầu',
-  FS_USER_ALREADY_HAD_TEMPLATE_IN_STATION: 'Người dùng đã có một khung lịch đang hoạt động hay tạm dừng tại trạm này',
+  FS_USER_ALREADY_HAD_TEMPLATE_IN_STATION: 'Người dùng đã có một khung lịch đang hoạt động tại trạm này',
   // Subscription (SUB)
   SUB_REQUIRED_SUBSCRIPTION_ID: 'Vui lòng nhập ID gói đăng ký (subscription_id)',
   SUBSCRIPTION_NOT_FOUND: 'Không tìm thấy gói đăng ký',
