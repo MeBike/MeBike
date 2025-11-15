@@ -1,0 +1,33 @@
+type: object
+description: "Thông tin về xe đạp có sẵn gần nhất được tìm thấy."
+properties:
+  bike_id:
+    type: string
+    format: mongoId
+    example: "68e0b2ae63beb4054de09d11"
+  chip_id:
+    type: string
+    nullable: true
+    example: "BIKE-123"
+  status:
+    $ref: './BikeStatus.yaml'
+  station_id:
+    type: string
+    format: mongoId
+    example: "68e0b2ae63beb4054de09d10"
+  station_name:
+    type: string
+    example: "Trạm Đại học FPT"
+  station_address:
+    type: string
+    example: "Quận 9, TP.HCM"
+  distance_meters:
+    type: number
+    format: double
+    description: "Khoảng cách từ điểm tìm kiếm đến trạm (mét)."
+    example: 150.75
+  distance_km:
+    type: number
+    format: double
+    description: "Khoảng cách (km)."
+    example: 0.15

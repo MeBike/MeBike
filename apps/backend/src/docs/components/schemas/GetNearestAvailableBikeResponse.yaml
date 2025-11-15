@@ -1,0 +1,8 @@
+type: object
+properties:
+  message:
+    type: string
+    example: "Tìm thấy xe có sẵn gần nhất thành công"
+  result:
+    $ref: './NearestAvailableBike.yaml'
+    nullable: true
