@@ -208,11 +208,13 @@ class RentalsService {
         rental_id: rental._id,
         status: SosAlertStatus.UNSOLVABLE
       }),
-      databaseService.subscriptions.findOne({
-        _id: rental.subscription_id,
-        user_id: rental.user_id,
-        status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
-      })
+      rental.subscription_id
+        ? databaseService.subscriptions.findOne({
+            _id: rental.subscription_id,
+            user_id: rental.user_id,
+            status: { $in: [SubscriptionStatus.PENDING, SubscriptionStatus.ACTIVE] }
+          })
+        : Promise.resolve(null)
     ])
 
     if (!sosAlert) {
