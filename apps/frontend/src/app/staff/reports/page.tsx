@@ -12,11 +12,12 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useUserReport } from "@/hooks/use-report";
 import { userService } from "@/services/user.service";
 import {
-  UpdateReportSchema,
-  type UpdateReportSchemaFormData,
+  ResolveReportSchema,
+  type ResolveReportSchemaFormData,
 } from "@/schemas/reportSchema";
 import type { Report } from "@custom-types";
 import { DetailUser } from "@/services/auth.service";
+import { uploadMultipleImagesToFirebase } from "@/lib/firebase";
 export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
@@ -24,16 +25,18 @@ export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [staffList, setStaffList] = useState<DetailUser[]>([]);
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
 
   const {
     reports,
     refetchReports,
     isFetchingReports,
     pagination,
-    reportOverview,
     updateReport,
     getReportInProgress,
-    reportInProgress
+    reportInProgress,
+    resolveReport,
   } = useUserReport({ hasToken: true, page: currentPage, limit: limit });
 
   const {
@@ -42,21 +45,15 @@ export default function ReportsPage() {
     formState: { errors, isSubmitting },
     reset,
     watch,
-  } = useForm<UpdateReportSchemaFormData>({
-    resolver: zodResolver(UpdateReportSchema),
+  } = useForm<ResolveReportSchemaFormData>({
+    resolver: zodResolver(ResolveReportSchema),
   });
 
   const currentStatus = watch("newStatus");
   // Get available status transitions based on current status
   const getAvailableStatuses = () => {
-    const statusTransitions: Record<string, string[]> = {
-      "": ["ĐANG CHỜ XỬ LÝ"],
-      "ĐANG CHỜ XỬ LÝ": ["ĐANG CHỜ XỬ LÝ", "ĐANG XỬ LÝ", "ĐÃ HỦY"],
-      "ĐANG XỬ LÝ": ["ĐANG XỬ LÝ", "ĐÃ GIẢI QUYẾT", "ĐÃ HỦY"],
-      "ĐÃ GIẢI QUYẾT": ["ĐÃ GIẢI QUYẾT", "ĐÃ HỦY"],
-      "ĐÃ HỦY": ["ĐÃ HỦY"],
-    };
-    return statusTransitions[currentStatus] || [];
+    // Staff chỉ có thể chọn 2 trạng thái: ĐÃ GIẢI QUYẾT hoặc KHÔNG GIẢI QUYẾT ĐƯỢC
+    return ["ĐÃ GIẢI QUYẾT", "KHÔNG GIẢI QUYẾT ĐƯỢC"];
   };
 
   useEffect(() => {
@@ -86,42 +83,57 @@ export default function ReportsPage() {
 
   const handleUpdateReport = (report: Report) => {
     setSelectedReport(report);
+    setSelectedFiles([]);
     reset({
-      newStatus: report.status,
-      staff_id: report.assignee_id || "",
-      priority: report.priority,
+      newStatus: undefined,
+      reason: "",
+      files: [],
     });
     setIsUpdateModalOpen(true);
   };
 
-  const onSubmit = async (data: UpdateReportSchemaFormData) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const onSubmit = async (data: ResolveReportSchemaFormData) => {
     if (!selectedReport) return;
-    // try {
-    //   const response = await reportService.updateReport(selectedReport._id, data);
-    //   if (response?.status === 200) {
-    //     toast.success("Cập nhật báo cáo thành công");
-    //     setIsUpdateModalOpen(false);
-    //     setSelectedReport(null);
-    //     refetchReports();
-    //   }
-    // } catch (error: unknown) {
-    //   const axiosError = error as {
-    //     response?: {
-    //       data?: {
-    //         message?: string;
-    //       };
-    //     };
-    //     message?: string;
-    //   };
-    //   const errorMessage =
-    //     axiosError?.response?.data?.message ||
-    //     axiosError?.message ||
-    //     "Lỗi khi cập nhật báo cáo";
-    //   toast.error(errorMessage);
-    // }
-    updateReport(selectedReport._id, data);
-    setIsUpdateModalOpen(false);
-    setSelectedReport(null);
+
+    try {
+      setIsUploadingFiles(true);
+      let fileUrls: string[] = [];
+
+      // Upload files to Firebase if any
+      if (selectedFiles.length > 0) {
+        fileUrls = await uploadMultipleImagesToFirebase(
+          selectedFiles,
+          `reports/${selectedReport._id}`
+        );
+      }
+
+      // Merge uploaded URLs with form data
+      const submitData = {
+        ...data,
+        files: fileUrls,
+      };
+
+      resolveReport(selectedReport._id, submitData);
+      setIsUpdateModalOpen(false);
+      setSelectedReport(null);
+      setSelectedFiles([]);
+    } catch (error) {
+      console.error("Error uploading files:", error);
+    } finally {
+      setIsUploadingFiles(false);
+    }
   };
 
   if (isFetchingReports) {
@@ -145,7 +157,6 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {reportOverview && <ReportStats reports={reportOverview} />}
 
       <div>
         <p className="text-sm text-muted-foreground mb-4">
@@ -171,114 +182,162 @@ export default function ReportsPage() {
       </div>
 
       {isUpdateModalOpen && selectedReport && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-foreground mb-4">
-              Cập nhật báo cáo
-            </h2>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-foreground">
+                Cập nhật báo cáo
+              </h2>
+              <button
+                onClick={() => setIsUpdateModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
-                <label className="text-sm font-medium text-foreground">
-                  Trạng thái
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Trạng thái <span className="text-destructive">*</span>
                 </label>
                 <select
                   {...register("newStatus")}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 >
                   <option value="">Chọn trạng thái</option>
                   {getAvailableStatuses().map((status) => (
                     <option key={status} value={status}>
-                      {status === "ĐANG CHỜ XỬ LÝ"
-                        ? "Đang chờ xử lý"
-                        : status === "ĐANG XỬ LÝ"
-                          ? "Đang xử lý"
-                          : status === "ĐÃ GIẢI QUYẾT"
-                            ? "Đã giải quyết"
-                            : status === "KHÔNG GIẢI QUYẾT ĐƯỢC"
-                              ? "Không thể giải quyết được"
-                              : "Đã hủy"}
+                      {status === "ĐÃ GIẢI QUYẾT"
+                        ? "Đã giải quyết"
+                        : "Không giải quyết được"}
                     </option>
                   ))}
                 </select>
                 {errors.newStatus && (
-                  <div className="flex items-center gap-2 mt-1 text-sm text-destructive">
+                  <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
                     <AlertCircle className="w-4 h-4" />
                     {errors.newStatus?.message}
                   </div>
                 )}
               </div>
 
-              {/* Priority Field */}
               <div>
-                <label className="text-sm font-medium text-foreground">
-                  Ưu tiên
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Lý do giải quyết <span className="text-destructive">*</span>
                 </label>
-                <select
-                  {...register("priority")}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                >
-                  <option value="">Chọn ưu tiên</option>
-                  <option value="4 - THẤP">4 - THẤP</option>
-                  <option value="3 - BÌNH THƯỜNG">3 - BÌNH THƯỜNG</option>
-                  <option value="2 - CAO">2 - CAO</option>
-                  <option value="1 - KHẨN CẤP">1 - KHẨN CẤP</option>
-                </select>
-                {errors.priority && (
-                  <div className="flex items-center gap-2 mt-1 text-sm text-destructive">
+                <textarea
+                  {...register("reason")}
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
+                  placeholder="Nhập lý do giải quyết báo cáo..."
+                  rows={4}
+                />
+                {errors.reason && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
                     <AlertCircle className="w-4 h-4" />
-                    {errors.priority?.message}
+                    {errors.reason?.message}
                   </div>
                 )}
               </div>
 
-              {/* Staff ID Field */}
               <div>
-                <label className="text-sm font-medium text-foreground">
-                  Nhân viên xử lý
+                <label className="block text-sm font-semibold text-foreground mb-2">
+                  Hình ảnh minh chứng
                 </label>
-                <select
-                  {...register("staff_id")}
-                  disabled={isLoadingStaff}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1 disabled:opacity-50"
-                >
-                  <option value="">
-                    {isLoadingStaff ? "Đang tải..." : "Chọn nhân viên"}
-                  </option>
-                  {staffList.map((staff) => (
-                    <option key={staff._id} value={staff._id}>
-                      {staff.fullname} ({staff.email})
-                    </option>
-                  ))}
-                </select>
-                {errors.staff_id && (
-                  <div className="flex items-center gap-2 mt-1 text-sm text-destructive">
+                <div className="space-y-3">
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-border rounded-lg bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all group"
+                    >
+                      <svg className="w-5 h-5 text-muted-foreground group-hover:text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground">
+                        Chọn ảnh để tải lên
+                      </span>
+                    </label>
+                  </div>
+
+                  {selectedFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Đã chọn {selectedFiles.length} file
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 max-h-[200px] overflow-y-auto pr-2">
+                        {selectedFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="relative group bg-muted/50 border border-border rounded-lg p-3 hover:bg-muted transition-all"
+                          >
+                            <div className="flex items-start gap-2">
+                              <svg className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-foreground truncate">
+                                  {file.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {(file.size / 1024).toFixed(1)} KB
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeFile(index)}
+                                className="flex-shrink-0 p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {errors.files && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-destructive">
                     <AlertCircle className="w-4 h-4" />
-                    {errors.staff_id?.message}
+                    {errors.files?.message}
                   </div>
                 )}
               </div>
             </form>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-8 pt-6 border-t border-border">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => setIsUpdateModalOpen(false)}
-                className="flex-1"
+                className="flex-1 py-6 text-base"
               >
                 Hủy
               </Button>
               <Button
                 onClick={handleSubmit(onSubmit)}
-                disabled={isSubmitting}
-                className="flex-1"
+                disabled={isSubmitting || isUploadingFiles}
+                className="flex-1 py-6 text-base"
               >
-                {isSubmitting ? (
+                {isSubmitting || isUploadingFiles ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Đang cập nhật...
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    {isUploadingFiles ? "Đang tải ảnh..." : "Đang cập nhật..."}
                   </>
                 ) : (
-                  "Cập nhật"
+                  "Cập nhật báo cáo"
                 )}
               </Button>
             </div>

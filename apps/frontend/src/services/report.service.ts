@@ -95,7 +95,7 @@ export const reportService = {
     return response;
   },
   resolveReport : async({id,data} : {id:string, data : ResolveReportSchemaFormData }) : Promise<AxiosResponse<DetailApiResponse<Report>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Report>>(
+    const response = await fetchHttpClient.put<DetailApiResponse<Report>>(
       REPORT_ENDPOINTS.RESOLVE(id) , data
     );
     return response
