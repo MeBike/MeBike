@@ -160,7 +160,7 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
     },
     {
       title: "Quản lý đơn báo cáo",
-      icon: Users,
+      icon: FileCheck2,
       href: "/staff/reports",
       roles: ["STAFF"],
     },
