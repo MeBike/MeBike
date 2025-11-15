@@ -297,11 +297,29 @@ class FixedSlotTemplateService {
 
           const reservationIdsToDelete = reservationsToDelete.map((r) => r._id)
 
-          // Delete reservations
-          await databaseService.reservations.deleteMany({ _id: { $in: reservationIdsToDelete } }, { session })
+          // Mark cancelled reservations
+          await databaseService.reservations.updateMany(
+            { _id: { $in: reservationIdsToDelete } },
+            {
+              $set: {
+                status: ReservationStatus.Cancelled,
+                updated_at: now
+              }
+            },
+            { session }
+          )
 
-          // Delete corresponding rentals
-          await databaseService.rentals.deleteMany({ _id: { $in: reservationIdsToDelete } }, { session })
+          // Mark cancelled corresponding rentals
+          await databaseService.rentals.updateMany(
+            { _id: { $in: reservationIdsToDelete } },
+            {
+              $set: {
+                status: RentalStatus.Cancelled,
+                updated_at: now
+              }
+            },
+            { session }
+          )
         }
       })
 
