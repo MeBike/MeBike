@@ -8,6 +8,7 @@ import { useCreateFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/
 import { useUpdateFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useUpdateFixedSlotTemplateMutation";
 import { useFixedSlotTemplateDetailQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplateDetailQuery";
 import { useGetStationById } from "@hooks/query/Station/useGetStationByIDQuery";
+import { getApiErrorMessage } from "@utils/error";
 
 import type {
   FixedSlotEditorNavigationProp,
@@ -181,8 +182,11 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
             Alert.alert("Đã lưu", "Khung giờ đã được cập nhật.");
             navigation.goBack();
           },
-          onError: () => {
-            Alert.alert("Lỗi", "Không thể cập nhật khung giờ. Vui lòng thử lại.");
+          onError: (error) => {
+            Alert.alert(
+              "Không thể cập nhật",
+              getApiErrorMessage(error, "Vui lòng thử lại."),
+            );
           },
         },
       );
@@ -198,8 +202,11 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
           AsyncStorage.removeItem("fixedSlots:lastCreated").catch(() => {});
           navigation.goBack();
         },
-        onError: () => {
-          Alert.alert("Lỗi", "Không thể tạo khung giờ. Vui lòng thử lại.");
+        onError: (error) => {
+          Alert.alert(
+            "Không thể tạo khung giờ",
+            getApiErrorMessage(error, "Vui lòng thử lại."),
+          );
         },
       },
     );

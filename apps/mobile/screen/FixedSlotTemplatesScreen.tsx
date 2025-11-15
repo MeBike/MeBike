@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -19,9 +18,8 @@ import { FixedSlotTemplateCard } from "@components/reservation-flow/FixedSlotTem
 import { BikeColors } from "@constants/BikeColors";
 import { useFixedSlotTemplatesQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplatesQuery";
 import { useCancelFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useCancelFixedSlotTemplateMutation";
-import { usePauseFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/usePauseFixedSlotTemplateMutation";
-import { useResumeFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useResumeFixedSlotTemplateMutation";
 import { useAuth } from "@providers/auth-providers";
+import { getApiErrorMessage } from "@utils/error";
 
 import type {
   FixedSlotTemplatesNavigationProp,
@@ -32,7 +30,6 @@ import type { FixedSlotStatus } from "@/types/fixed-slot-types";
 const STATUS_FILTERS: Array<{ label: string; value?: FixedSlotStatus }> = [
   { label: "Tất cả" },
   { label: "ĐANG HOẠT ĐỘNG", value: "ĐANG HOẠT ĐỘNG" },
-  { label: "TẠM DỪNG", value: "TẠM DỪNG" },
   { label: "ĐÃ HUỶ", value: "ĐÃ HUỶ" },
 ];
 
@@ -46,39 +43,28 @@ export default function FixedSlotTemplatesScreen() {
   const hasToken = Boolean(user?._id);
 
   const [statusFilter, setStatusFilter] = useState<FixedSlotStatus | undefined>();
+  const pageLimit = 5;
 
-  const { data, isFetching, refetch, isLoading } = useFixedSlotTemplatesQuery(
-    { page: 1, limit: 20, station_id: stationId, status: statusFilter },
+  const {
+    data,
+    refetch,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isRefetching,
+  } = useFixedSlotTemplatesQuery(
+    { limit: pageLimit, station_id: stationId, status: statusFilter },
     hasToken,
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const templates = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
 
-  const pauseMutation = usePauseFixedSlotTemplateMutation();
-  const resumeMutation = useResumeFixedSlotTemplateMutation();
   const cancelMutation = useCancelFixedSlotTemplateMutation();
 
   const handleInvalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["fixed-slots"] });
   }, [queryClient]);
-
-  const handlePause = useCallback((id: string) => {
-    Alert.alert("Tạm dừng khung giờ", "Khung giờ sẽ tạm dừng cho đến khi bạn kích hoạt lại.", [
-      { text: "Hủy", style: "cancel" },
-      {
-        text: "Tạm dừng",
-        onPress: () => {
-          pauseMutation.mutate(id, {
-            onSuccess: () => handleInvalidate(),
-          });
-        },
-      },
-    ]);
-  }, [pauseMutation, handleInvalidate]);
-
-  const handleResume = useCallback((id: string) => {
-    resumeMutation.mutate(id, {
-      onSuccess: () => handleInvalidate(),
-    });
-  }, [resumeMutation, handleInvalidate]);
 
   const handleCancel = useCallback((id: string) => {
     Alert.alert("Huỷ khung giờ", "Hành động này không thể hoàn tác.", [
@@ -89,11 +75,29 @@ export default function FixedSlotTemplatesScreen() {
         onPress: () => {
           cancelMutation.mutate(id, {
             onSuccess: () => handleInvalidate(),
+            onError: (error) => {
+              Alert.alert("Không thể huỷ khung giờ", getApiErrorMessage(error, "Vui lòng thử lại sau."));
+            },
           });
         },
       },
     ]);
   }, [cancelMutation, handleInvalidate]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    }
+    finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
+
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage)
+      fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleCreateTemplate = useCallback(() => {
     Alert.alert(
@@ -166,11 +170,21 @@ export default function FixedSlotTemplatesScreen() {
       </View>
 
       <FlatList
-        data={data?.data ?? []}
-        keyExtractor={(item, index) => `${item._id}-${index}`}
+        data={templates}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} />
+        refreshing={isRefreshing || isRefetching}
+        onRefresh={handleRefresh}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.4}
+        ListFooterComponent={
+          isFetchingNextPage
+            ? (
+                <View style={styles.footerLoader}>
+                  <ActivityIndicator color={BikeColors.primary} />
+                </View>
+              )
+            : null
         }
         ListEmptyComponent={
           isLoading
@@ -189,8 +203,6 @@ export default function FixedSlotTemplatesScreen() {
         renderItem={({ item }) => (
           <FixedSlotTemplateCard
             template={item}
-            onPause={() => handlePause(item._id)}
-            onResume={() => handleResume(item._id)}
             onCancel={() => handleCancel(item._id)}
             onSelect={() => navigation.navigate("FixedSlotDetail", { templateId: item._id })}
           />
@@ -279,5 +291,8 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: BikeColors.textSecondary,
+  },
+  footerLoader: {
+    paddingVertical: 16,
   },
 });

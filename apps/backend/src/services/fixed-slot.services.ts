@@ -197,6 +197,7 @@ class FixedSlotTemplateService {
         }
       },
       { $unwind: { path: '$station', preserveNullAndEmptyArrays: true } },
+      { $sort: { created_at: -1, _id: -1 } },
       {
         $project: {
           _id: 1,
