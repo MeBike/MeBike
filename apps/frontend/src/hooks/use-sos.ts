@@ -7,6 +7,7 @@ import {
 } from "@/schemas/sosSchema";
 import { toast } from "sonner";
 import { useAssignSOSRequestMutation } from "./mutations/SOS/useAssignSOSRequestMutation";
+import { useConfirmSOSRequestMutation } from "./mutations/SOS/useConfirmSOSRequestMutation";
 interface UseSOSProps {
   hasToken: boolean;
   page?: number;
@@ -98,6 +99,48 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
       }
     );
   }, [refetchSOSRequest, refetchSOSDetail, hasToken, id, useAssignSOSRequest, queryClient]);
+  const useConfirmSOSRequest = useConfirmSOSRequestMutation(id || "");
+  const confirmSOSRequest = useCallback(
+    async () => {
+      if (!hasToken) {
+        return;
+      }
+      useConfirmSOSRequest.mutate(undefined, {
+        onSuccess: async (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result.status === 200) {
+            toast.success(result.data?.message || "Confirmed SOS request successfully");
+            await queryClient.invalidateQueries({
+              queryKey: ["sos-requests"],
+            });
+            await refetchSOSRequest();
+            await refetchSOSDetail();
+          } else {
+            const errorMessage = result.data?.message || "Error confirming SOS request";
+            toast.error(errorMessage);
+          }
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(
+            error,
+            "Failed to assign SOS request"
+          );
+          toast.error(errorMessage);
+        },
+      });
+    },
+    [
+      refetchSOSRequest,
+      refetchSOSDetail,
+      hasToken,
+      id,
+      useAssignSOSRequest,
+      queryClient,
+    ]
+  );
+
   return {
     sosRequests,
     isLoading,
@@ -105,6 +148,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
     sosDetail,
     isLoadingSOSDetail,
     refetchSOSDetail,
+    confirmSOSRequest,
     assignSOSRequest,
   };
 }

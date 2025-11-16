@@ -1,51 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, AlertCircle, X } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { Button } from "@/components/ui/button";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import type { SOS } from "@/types/SOS";
 import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
-import { useForm } from "react-hook-form";
-import { RejectSOSSchema , rejectSOSSchema , ConfirmSOSSchema , confirmSOSSchema} from "@/schemas/sosSchema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { uploadMultipleImagesToFirebase } from "@/lib/firebase";
+import { formatDateUTC } from "@/utils/formatDateTime";
+
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    SOS["status"] | "all"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<SOS["status"] | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">("info");
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
-  const [actionType, setActionType] = useState<"confirm" | "reject" | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmPhotos, setConfirmPhotos] = useState<File[]>([]);
-  const [rejectPhotos, setRejectPhotos] = useState<File[]>([]);
-  const [isUploadingConfirm, setIsUploadingConfirm] = useState(false);
-  const [isUploadingReject, setIsUploadingReject] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  // Confirm SOS Form
-  const confirmForm = useForm<ConfirmSOSSchema>({
-    resolver: zodResolver(confirmSOSSchema),
-  });
-
-  // Reject SOS Form
-  const rejectForm = useForm<RejectSOSSchema>({
-    resolver: zodResolver(rejectSOSSchema),
-  });
   const {
     sosRequests,
     isLoading,
     refetchSOSRequest,
     sosDetail,
     refetchSOSDetail,
-    confirmSOS,
-    rejectSOS,
+    confirmSOSRequest,
   } = useSOS({
     hasToken: true,
     page: currentPage,
@@ -73,70 +54,29 @@ export default function SOSPage() {
     setCurrentPage(1);
   };
 
-  const handleConfirmSOS = confirmForm.handleSubmit(async (data) => {
-    if (!selectedSOSId) return;
-    try {
-      setIsSubmitting(true);
-      
-      // Upload photos nếu có
-      if (confirmPhotos.length > 0) {
-        setIsUploadingConfirm(true);
-        const uploadedUrls = await uploadMultipleImagesToFirebase(confirmPhotos, "sos/confirm");
-        data.photos = uploadedUrls;
-        setIsUploadingConfirm(false);
-      }
-      console.log(data)
-      await confirmSOS(data, selectedSOSId);
-      setIsDetailModalOpen(false);
-      setSelectedSOSId("");
-      setActionType(null);
-      setConfirmPhotos([]);
-      confirmForm.reset();
-    } catch (error) {
-      console.error("Error confirming SOS:", error);
-      setIsUploadingConfirm(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  });
 
-  const handleRejectSOS = rejectForm.handleSubmit(async (data) => {
-    if (!selectedSOSId) return;
-    try {
-      setIsSubmitting(true);
-      
-      // Upload photos nếu có
-      if (rejectPhotos.length > 0) {
-        setIsUploadingReject(true);
-        const uploadedUrls = await uploadMultipleImagesToFirebase(rejectPhotos, "sos/reject");
-        data.photos = uploadedUrls;
-        setIsUploadingReject(false);
-      }
-      
-      console.log(data);
-      await rejectSOS(data, selectedSOSId);
-      setIsDetailModalOpen(false);
-      setSelectedSOSId("");
-      setActionType(null);
-      setRejectPhotos([]);
-      rejectForm.reset();
-    } catch (error) {
-      console.error("Error rejecting SOS:", error);
-      setIsUploadingReject(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  });
 
   const handleCloseModal = () => {
     setIsDetailModalOpen(false);
     setSelectedSOSId("");
     setDetailTab("info");
-    setActionType(null);
-    setConfirmPhotos([]);
-    setRejectPhotos([]);
-    confirmForm.reset();
-    rejectForm.reset();
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedSOSId) return;
+    
+    setIsConfirming(true);
+    try {
+      await confirmSOSRequest();
+      await refetchSOSDetail();
+      await refetchSOSRequest();
+      setIsDetailModalOpen(false);
+      setSelectedSOSId("");
+    } catch (error) {
+      console.error("Error confirming SOS:", error);
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   if (isLoading && currentPage === 1) {
@@ -197,6 +137,7 @@ export default function SOSPage() {
               >
                 <option value="all">Tất cả</option>
                 <option value="ĐANG CHỜ XỬ LÍ">Đang chờ xử lý</option>
+                <option value="ĐÃ GỬI NGƯỜI CỨU HỘ">Đã gửi người cứu hộ</option>
                 <option value="ĐÃ XỬ LÍ">Đã xử lý</option>
                 <option value="KHÔNG XỬ LÍ ĐƯỢC">Không xử lý được</option>
                 <option value="ĐÃ TỪ CHỐI">Đã từ chối</option>
@@ -627,263 +568,25 @@ export default function SOSPage() {
               <Button
                 onClick={handleCloseModal}
                 className="flex-1"
+                variant="outline"
               >
                 Đóng
               </Button>
-              {actionType === null && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => setActionType("confirm")}
-                    disabled={sosDetail?.result?.status !== "ĐANG CHỜ XỬ LÍ"}
-                  >
-                    Xác nhận xử lý
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    className="flex-1"
-                    onClick={() => setActionType("reject")}
-                    disabled={sosDetail?.result?.status !== "ĐANG CHỜ XỬ LÍ"}
-                  >
-                    Từ chối
-                  </Button>
-                </>
-              )}
+              <Button 
+                className="flex-1"
+                onClick={handleConfirm}
+                disabled={sosDetail?.result?.status !== "ĐÃ GỬI NGƯỜI CỨU HỘ" || isConfirming}
+              >
+                {isConfirming ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Xác nhận xử lý"
+                )}
+              </Button>
             </div>
-
-            {/* Confirm SOS Modal */}
-            {actionType === "confirm" && (
-              <div className="mt-6 p-4 border border-border rounded-lg bg-muted/50">
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                  Xác nhận xử lý yêu cầu cứu hộ
-                </h3>
-                <form onSubmit={handleConfirmSOS} className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground block mb-2">
-                      Có thể giải quyết được? <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          value="true"
-                          checked={confirmForm.watch("solvable") === true}
-                          onChange={() => confirmForm.setValue("solvable", true)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">Có thể giải quyết</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          value="false"
-                          checked={confirmForm.watch("solvable") === false}
-                          onChange={() => confirmForm.setValue("solvable", false)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">Không thể giải quyết</span>
-                      </label>
-                    </div>
-                    {confirmForm.formState.errors.solvable && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {confirmForm.formState.errors.solvable.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-foreground block mb-2">
-                      Ghi chú xử lý <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      {...confirmForm.register("agent_notes")}
-                      placeholder="Nhập ghi chú xử lý..."
-                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder-muted-foreground resize-none"
-                      rows={4}
-                    />
-                    {confirmForm.formState.errors.agent_notes && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {confirmForm.formState.errors.agent_notes.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-foreground block mb-2">
-                      Hình ảnh đính kèm (tùy chọn)
-                    </label>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          setConfirmPhotos((prev) => [...prev, ...files]);
-                        }}
-                        disabled={isUploadingConfirm}
-                        className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm file:bg-primary file:text-primary-foreground file:border-0 file:rounded file:px-3 file:py-1 file:mr-2 disabled:opacity-50"
-                      />
-                      {confirmPhotos.length > 0 && (
-                        <div className="grid grid-cols-2 gap-2">
-                          {confirmPhotos.map((file, idx) => (
-                            <div
-                              key={idx}
-                              className="relative bg-muted rounded-lg p-2 text-xs flex items-center justify-between"
-                            >
-                              <span className="truncate text-foreground">
-                                {file.name}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setConfirmPhotos((prev) =>
-                                    prev.filter((_, i) => i !== idx)
-                                  );
-                                }}
-                                className="text-muted-foreground hover:text-foreground"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        {confirmPhotos.length} hình ảnh được chọn
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setActionType(null)}
-                      disabled={isSubmitting || isUploadingConfirm}
-                    >
-                      Hủy
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                      disabled={isSubmitting || isUploadingConfirm}
-                    >
-                      {isSubmitting || isUploadingConfirm ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {isUploadingConfirm ? "Đang tải ảnh..." : "Đang xử lý..."}
-                        </>
-                      ) : (
-                        "Xác nhận"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            )}
-
-            {/* Reject SOS Modal */}
-            {actionType === "reject" && (
-              <div className="mt-6 p-4 border border-border rounded-lg bg-muted/50">
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                  Từ chối yêu cầu cứu hộ
-                </h3>
-                <form onSubmit={handleRejectSOS} className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground block mb-2">
-                      Lý do từ chối <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      {...rejectForm.register("agent_notes")}
-                      placeholder="Nhập lý do từ chối..."
-                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground placeholder-muted-foreground resize-none"
-                      rows={4}
-                    />
-                    {rejectForm.formState.errors.agent_notes && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {rejectForm.formState.errors.agent_notes.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-foreground block mb-2">
-                      Hình ảnh đính kèm (tùy chọn)
-                    </label>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          setRejectPhotos((prev) => [...prev, ...files]);
-                        }}
-                        disabled={isUploadingReject}
-                        className="px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm file:bg-primary file:text-primary-foreground file:border-0 file:rounded file:px-3 file:py-1 file:mr-2 disabled:opacity-50"
-                      />
-                      {rejectPhotos.length > 0 && (
-                        <div className="grid grid-cols-2 gap-2">
-                          {rejectPhotos.map((file, idx) => (
-                            <div
-                              key={idx}
-                              className="relative bg-muted rounded-lg p-2 text-xs flex items-center justify-between"
-                            >
-                              <span className="truncate text-foreground">
-                                {file.name}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setRejectPhotos((prev) =>
-                                    prev.filter((_, i) => i !== idx)
-                                  );
-                                }}
-                                className="text-muted-foreground hover:text-foreground"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        {rejectPhotos.length} hình ảnh được chọn
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setActionType(null)}
-                      disabled={isSubmitting || isUploadingReject}
-                    >
-                      Hủy
-                    </Button>
-                    <Button
-                      type="submit"
-                      className="flex-1 bg-red-600 hover:bg-red-700"
-                      disabled={isSubmitting || isUploadingReject}
-                    >
-                      {isSubmitting || isUploadingReject ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {isUploadingReject ? "Đang tải ảnh..." : "Đang xử lý..."}
-                        </>
-                      ) : (
-                        "Từ chối"
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            )}
           </div>
         </div>
       )}

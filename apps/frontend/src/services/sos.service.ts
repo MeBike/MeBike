@@ -1,18 +1,23 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { SOS } from "@custom-types";
 import type { AxiosResponse } from "axios";
-import type { AssignSOSSchema } from "@/schemas/sosSchema";
+import type { AssignSOSSchema, ResolveSOSSchema } from "@/schemas/sosSchema";
 import type {
   DetailApiResponse,
   ApiResponse,
   IBikeIssueReport,
 } from "@custom-types";
-import { assign } from "nodemailer/lib/shared";
+interface ConfirmSOS {
+  message: string;
+  newStatus : string;
+}
 const SOS_BASE = "/sos";
 const SOS_ENDPOINTS = {
   BASE: SOS_BASE,
   ID: (id: string) => `${SOS_BASE}/${id}`,
   ASSIGN: (id: string) => `${SOS_BASE}/${id}/assign`,
+  CONFIRM: (id: string) => `${SOS_BASE}/${id}/confirm`,
+  RESOLVE: (id: string) => `${SOS_BASE}/${id}/resolve`,
 } as const;
 export const sosService = {
   getSOSRequest: async ({
@@ -47,6 +52,24 @@ export const sosService = {
     const response = await fetchHttpClient.post<
       DetailApiResponse<IBikeIssueReport>
     >(SOS_ENDPOINTS.ASSIGN(id), data);
+    return response;
+  },
+  //sos agent
+  confirmSOSRequest: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<ConfirmSOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<ConfirmSOS>>(
+      SOS_ENDPOINTS.CONFIRM(id)
+    );
+    return response;
+  },
+  resolveSOSRequest: async (
+    {id , data} : {id: string, data: ResolveSOSSchema}
+  ): Promise<AxiosResponse<DetailApiResponse<ConfirmSOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<ConfirmSOS>>(
+      SOS_ENDPOINTS.RESOLVE(id),
+      data
+    );
     return response;
   },
 };
