@@ -32,45 +32,12 @@ export const sosService = {
     );
     return response;
   },
-  postConfirmSOSRequest: async ({
-    id,
-    data,
-  }: {
-    id: string;
-    data: ConfirmSOSSchema; 
-  }): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
-      SOS_ENDPOINTS.CONFIRM(id),data
-    );
-    return response;
-  },
-  postRejectSOSRequest: async ({
-    id,
-    data,
-  }: {
-    id: string;
-    data: RejectSOSSchema;
-  }): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
-      SOS_ENDPOINTS.REJECT(id),data
-    );
-    return response;
-  },
   getDetailSOSRequest: async (
     id: string
   ): Promise<AxiosResponse<DetailApiResponse<IBikeIssueReport>>> => {
     const response = await fetchHttpClient.get<
       DetailApiResponse<IBikeIssueReport>
     >(SOS_ENDPOINTS.ID(id));
-    return response;
-  },
-  postCreateSOSRequest: async ( 
-    data: CreateSOSSchema
-  ): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
-      SOS_ENDPOINTS.BASE,
-      data
-    );
     return response;
   },
 };
