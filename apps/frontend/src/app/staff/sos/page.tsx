@@ -9,30 +9,71 @@ import type { SOS } from "@/types/SOS";
 import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
 import { formatDateUTC } from "@/utils/formatDateTime";
-
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { assignSOSSchema, type AssignSOSSchema } from "@/schemas/sosSchema";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useStationActions } from "@/hooks/use-station";
+import { useUserActions } from "@/hooks/use-user";
 
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    SOS["status"] | "all"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<SOS["status"] | "all">(
+    "all"
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">("info");
+  const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">(
+    "info"
+  );
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  
+  const {users} = useUserActions({hasToken: true});
   const {
     sosRequests,
     isLoading,
     refetchSOSRequest,
     sosDetail,
     refetchSOSDetail,
+    assignSOSRequest,
   } = useSOS({
     hasToken: true,
     page: currentPage,
     limit: limit,
     id: selectedSOSId,
   });
+
+  const latitude = sosDetail?.result?.location?.coordinates?.[1] || 0;
+  const longitude = sosDetail?.result?.location?.coordinates?.[0] || 0;
+  
+  const {responseNearestAvailableBike , getNearestAvailableBike} = useStationActions({latitude, longitude});
+
+  // Filter SOS agents from users
+  const sosAgents = users?.filter((user: any) => user.role === "SOS") || [];
+
+  const form = useForm<AssignSOSSchema>({
+    resolver: zodResolver(assignSOSSchema),
+    defaultValues: {
+      replaced_bike_id: "",
+      sos_agent_id: "",
+    },
+  });
+
+  const onSubmitAssign = async (data: AssignSOSSchema) => {
+    await assignSOSRequest(data);
+    setIsAssignModalOpen(false);
+    form.reset();
+  };
   useEffect(() => {
     refetchSOSRequest();
   }, [currentPage, statusFilter, searchQuery, refetchSOSRequest]);
@@ -42,6 +83,12 @@ export default function SOSPage() {
       refetchSOSDetail();
     }
   }, [selectedSOSId, refetchSOSDetail]);
+
+  useEffect(() => {
+    if (latitude && longitude && isAssignModalOpen) {
+      getNearestAvailableBike();
+    }
+  }, [latitude, longitude, isAssignModalOpen, getNearestAvailableBike]);
 
   const handleReset = () => {
     setSearchQuery("");
@@ -360,7 +407,8 @@ export default function SOSPage() {
                         Thời gian xử lý
                       </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.resolved_at && sosDetail.result.resolved_at !== null
+                        {sosDetail.result.resolved_at &&
+                        sosDetail.result.resolved_at !== null
                           ? new Date(
                               sosDetail.result.resolved_at
                             ).toLocaleString("vi-VN")
@@ -513,7 +561,8 @@ export default function SOSPage() {
                           Thời gian xử lý
                         </p>
                         <p className="text-foreground font-medium text-sm">
-                          {sosDetail.result.resolved_at && sosDetail.result.resolved_at !== null
+                          {sosDetail.result.resolved_at &&
+                          sosDetail.result.resolved_at !== null
                             ? formatDateUTC(sosDetail.result.resolved_at)
                             : "Chưa xử lý"}
                         </p>
@@ -551,13 +600,140 @@ export default function SOSPage() {
                   setDetailTab("info");
                 }}
                 className="flex-1"
+                variant="outline"
               >
                 Đóng
               </Button>
-              <Button variant="outline" className="flex-1" disabled>
-                Xử lý yêu cầu
+              <Button 
+                className="flex-1"
+                onClick={() => {
+                  setIsAssignModalOpen(true);
+                }}
+                disabled={sosDetail.result.status !== "ĐANG CHỜ XỬ LÍ"}
+              >
+                Phân công xử lý
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign SOS Modal */}
+      {isAssignModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">
+                Phân công xử lý SOS
+              </h2>
+              <button
+                onClick={() => {
+                  setIsAssignModalOpen(false);
+                  form.reset();
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitAssign)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="replaced_bike_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Xe thay thế</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground truncate"
+                        >
+                          <option value="">Chọn xe thay thế</option>
+                          {responseNearestAvailableBike?.data?.result ? (
+                            <option 
+                              value={(responseNearestAvailableBike.data.result as any).bike_id}
+                              className="truncate"
+                            >
+                              {(responseNearestAvailableBike.data.result as any).chip_id}km
+                            </option>
+                          ) : null}
+                        </select>
+                      </FormControl>
+                      {responseNearestAvailableBike?.data?.result && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Trạm: {(responseNearestAvailableBike.data.result as any).station_name}
+                        </p>
+                      )}
+                      <FormMessage />
+                      {!responseNearestAvailableBike?.data?.result && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Không tìm thấy xe khả dụng gần đó
+                        </p>
+                      )}
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sos_agent_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nhân viên SOS</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                        >
+                          <option value="">Chọn nhân viên SOS</option>
+                          {sosAgents?.map((agent: any) => (
+                            <option key={agent._id} value={agent._id}>
+                              {agent.fullname} - {agent.email}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                      {sosAgents && sosAgents.length === 0 && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Không có nhân viên SOS khả dụng
+                        </p>
+                      )}
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsAssignModalOpen(false);
+                      form.reset();
+                    }}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {form.formState.isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Phân công"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </div>
         </div>
       )}

@@ -3,11 +3,10 @@ import { useGetSOSQuery } from "./query/SOS/useGetSOSQuery";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  CreateSOSSchema,
-  ConfirmSOSSchema,
-  RejectSOSSchema,
+  AssignSOSSchema,
 } from "@/schemas/sosSchema";
 import { toast } from "sonner";
+import { useAssignSOSRequestMutation } from "./mutations/SOS/useAssignSOSRequestMutation";
 interface UseSOSProps {
   hasToken: boolean;
   page?: number;
@@ -65,6 +64,40 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
     }
     await refetchSOSDetailRequest();
   }, [hasToken, id, refetchSOSDetailRequest]);
+  const useAssignSOSRequest = useAssignSOSRequestMutation(id || "");
+  const assignSOSRequest = useCallback(async (data : AssignSOSSchema) => {
+    if (!hasToken || !id) {
+      return;
+    }
+    useAssignSOSRequest.mutate(
+      data,
+      {
+        onSuccess: async (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result.status === 200) {
+            toast.success("Assigned SOS request successfully");
+            await queryClient.invalidateQueries({
+              queryKey: ["sos-requests"],
+            });
+            await refetchSOSRequest();
+            await refetchSOSDetail();
+          } else {
+            const errorMessage = result.data?.message || "Error updating bikes";
+            toast.error(errorMessage);
+          }
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(
+            error,
+            "Failed to assign SOS request"
+          );
+          toast.error(errorMessage);
+        },
+      }
+    );
+  }, [refetchSOSRequest, refetchSOSDetail, hasToken, id, useAssignSOSRequest, queryClient]);
   return {
     sosRequests,
     isLoading,
@@ -72,5 +105,6 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
     sosDetail,
     isLoadingSOSDetail,
     refetchSOSDetail,
+    assignSOSRequest,
   };
 }
