@@ -1,6 +1,6 @@
 import { useGetSOSDetailQuery } from "./query/SOS/useGetSOSDetailQuery";
 import { useGetSOSQuery } from "./query/SOS/useGetSOSQuery";
-import { use, useCallback } from "react";
+import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AssignSOSSchema,
@@ -16,6 +16,14 @@ interface UseSOSProps {
   page?: number;
   limit?: number;
   id?: string;
+  status?:
+    | "ĐANG CHỜ XỬ LÍ"
+    | "ĐÃ GỬI NGƯỜI CỨU HỘ"
+    | "ĐANG TRÊN ĐƯỜNG ĐẾN"
+    | "ĐÃ XỬ LÍ"
+    | "KHÔNG XỬ LÍ ĐƯỢC"
+    | "ĐÃ TỪ CHỐI"
+    | "ĐÃ HUỶ";
 }
 interface ErrorResponse {
   response?: {
@@ -44,13 +52,13 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   }
   return defaultMessage;
 };
-export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
+export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
   const queryClient = useQueryClient();
   const {
     data: sosRequests,
     isLoading,
     refetch: refetchSOS,
-  } = useGetSOSQuery({ page, limit });
+  } = useGetSOSQuery({ page, limit , status });
   const {
     data: sosDetail,
     refetch: refetchSOSDetailRequest,
@@ -61,7 +69,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
       return;
     }
     await refetchSOS();
-  }, [hasToken, refetchSOS]);
+  }, [hasToken, refetchSOS, status]);
   const refetchSOSDetail = useCallback(async () => {
     if (!hasToken || !id) {
       return;
@@ -138,8 +146,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
       refetchSOSRequest,
       refetchSOSDetail,
       hasToken,
-      id,
-      useAssignSOSRequest,
+      useConfirmSOSRequest,
       queryClient,
     ]
   );

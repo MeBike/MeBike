@@ -2,7 +2,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
-import Image from "next/image";
 import type { SOS } from "@/types/SOS";
 import { formatDateUTC } from "@/utils/formatDateTime";
 

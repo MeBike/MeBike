@@ -219,9 +219,11 @@ function ProfileScreen() {
           )}
           <View>
             <Image
-              source={{
-                uri: profile.avatar || "https://via.placeholder.com/110",
-              }}
+              source={
+                profile.avatar
+                  ? { uri: profile.avatar }
+                  : require("../assets/avatar2.png")
+              }
               style={{
                 width: 100,
                 height: 100,

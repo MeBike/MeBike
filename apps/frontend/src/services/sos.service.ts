@@ -36,9 +36,18 @@ export const sosService = {
   getSOSRequest: async ({
     page,
     limit,
+    status,
   }: {
     page?: number;
     limit?: number;
+    status?:
+      | "ĐANG CHỜ XỬ LÍ"
+      | "ĐÃ GỬI NGƯỜI CỨU HỘ"
+      | "ĐANG TRÊN ĐƯỜNG ĐẾN"
+      | "ĐÃ XỬ LÍ"
+      | "KHÔNG XỬ LÍ ĐƯỢC"
+      | "ĐÃ TỪ CHỐI"
+      | "ĐÃ HUỶ";
   }): Promise<AxiosResponse<ApiResponse<SOS[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<SOS[]>>(
       SOS_ENDPOINTS.BASE,
@@ -46,6 +55,7 @@ export const sosService = {
       {
         page,
         limit,
+        status,
       }
     );
     return response;
@@ -92,10 +102,9 @@ export const sosService = {
   createNewRentalSOS: async (
     id: string
   ): Promise<AxiosResponse<DetailApiResponse<RentalBySOSID>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<RentalBySOSID>>(
-      SOS_ENDPOINTS.CREATE(id)
-    );
+    const response = await fetchHttpClient.post<
+      DetailApiResponse<RentalBySOSID>
+    >(SOS_ENDPOINTS.CREATE(id));
     return response;
   },
-
 };

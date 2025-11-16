@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
+import Image from "next/image";
 import { DataTable } from "@/components/TableCustom";
 import { Button } from "@/components/ui/button";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import type { SOS } from "@/types/SOS";
+import type { Station } from "@/types/Station";
 import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
 import { formatDateUTC } from "@/utils/formatDateTime";
@@ -58,6 +60,7 @@ export default function SOSPage() {
     page: currentPage,
     limit: limit,
     id: selectedSOSId,
+    status : statusFilter === "all" ? undefined : statusFilter,
   });
 
   const latitude = sosDetail?.result?.location?.coordinates?.[1] || 0;
@@ -66,7 +69,7 @@ export default function SOSPage() {
   const {responseNearestAvailableBike , getNearestAvailableBike} = useStationActions({latitude, longitude});
 
   // Filter SOS agents from users
-  const sosAgents = users?.filter((user: any) => user.role === "SOS") || [];
+  const sosAgents = users?.filter((user) => user.role === "SOS") || [];
 
   const form = useForm<AssignSOSSchema>({
     resolver: zodResolver(assignSOSSchema),
@@ -520,10 +523,11 @@ export default function SOSPage() {
                                 key={idx}
                                 className="relative aspect-video rounded-lg overflow-hidden border border-border bg-muted group"
                               >
-                                <img
+                                <Image
                                   src={photo}
                                   alt={`SOS photo ${idx + 1}`}
-                                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                  fill
+                                  className="object-cover transition-transform group-hover:scale-105"
                                   loading="lazy"
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1">
@@ -664,8 +668,8 @@ export default function SOSPage() {
                   className="flex-1"
                   onClick={() => {
                     console.log("Status:", sosDetail.result.status);
-                    console.log("Rental:", (sosDetail.result as any).rental);
-                    const rentalId = (sosDetail.result as any).rental?._id;
+                    console.log("Rental:", sosDetail.result.rental);
+                    const rentalId = sosDetail.result.rental?._id;
                     if (!rentalId) {
                       alert("Không tìm thấy thông tin thuê xe");
                       return;
@@ -673,7 +677,7 @@ export default function SOSPage() {
                     setSelectedRentalId(rentalId);
                     setIsReplaceModalOpen(true);
                     // Pre-fill form with rental station info
-                    const startStation = (sosDetail.result as any).rental?.start_station;
+                    const startStation = sosDetail.result.rental?.start_station;
                     if (startStation) {
                       endRentalForm.setValue("end_station", startStation);
                     }
@@ -684,8 +688,6 @@ export default function SOSPage() {
                     const day = String(now.getDate()).padStart(2, '0');
                     const hours = String(now.getHours()).padStart(2, '0');
                     const minutes = String(now.getMinutes()).padStart(2, '0');
-                    const seconds = String(now.getSeconds()).padStart(2, '0');
-                    const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
                     const datetimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
                     endRentalForm.setValue("end_time", datetimeLocal);
                     endRentalForm.setValue("reason", "Không xử lý được - Thay xe mới");
@@ -734,17 +736,17 @@ export default function SOSPage() {
                           <option value="">Chọn xe thay thế</option>
                           {responseNearestAvailableBike?.data?.result ? (
                             <option 
-                              value={(responseNearestAvailableBike.data.result as any).bike_id}
+                              value={(responseNearestAvailableBike.data.result as { bike_id: string; chip_id: string; station_name: string }).bike_id}
                               className="truncate"
                             >
-                              {(responseNearestAvailableBike.data.result as any).chip_id}km
+                              {(responseNearestAvailableBike.data.result as { bike_id: string; chip_id: string; station_name: string }).chip_id}km
                             </option>
                           ) : null}
                         </select>
                       </FormControl>
                       {responseNearestAvailableBike?.data?.result && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Trạm: {(responseNearestAvailableBike.data.result as any).station_name}
+                          Trạm: {(responseNearestAvailableBike.data.result as { bike_id: string; chip_id: string; station_name: string }).station_name}
                         </p>
                       )}
                       <FormMessage />
@@ -769,7 +771,7 @@ export default function SOSPage() {
                           className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                         >
                           <option value="">Chọn nhân viên SOS</option>
-                          {sosAgents?.map((agent: any) => (
+                          {sosAgents?.map((agent) => (
                             <option key={agent._id} value={agent._id}>
                               {agent.fullname} - {agent.email}
                             </option>
@@ -852,7 +854,7 @@ export default function SOSPage() {
                           className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                         >
                           <option value="">Chọn trạm trả xe</option>
-                          {stations?.map((station: any) => (
+                          {stations?.map((station: Station) => (
                             <option key={station._id} value={station._id}>
                               {station.name}
                             </option>

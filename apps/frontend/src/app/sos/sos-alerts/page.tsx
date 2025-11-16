@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, AlertCircle, Upload, X } from "lucide-react";
+import Image from "next/image";
 import { DataTable } from "@/components/TableCustom";
 import { Button } from "@/components/ui/button";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import type { SOS } from "@/types/SOS";
 import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
-import { formatDateUTC } from "@/utils/formatDateTime";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resolveSOSSchema, type ResolveSOSSchema } from "@/schemas/sosSchema";
@@ -21,7 +21,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function SOSPage() {
@@ -758,9 +757,11 @@ export default function SOSPage() {
                     <div className="grid grid-cols-3 gap-2 mt-2">
                       {resolvePhotos.map((photo, index) => (
                         <div key={index} className="relative">
-                          <img
+                          <Image
                             src={URL.createObjectURL(photo)}
                             alt={`Preview ${index + 1}`}
+                            width={96}
+                            height={96}
                             className="w-full h-24 object-cover rounded-lg"
                           />
                           <button

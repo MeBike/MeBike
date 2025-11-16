@@ -240,7 +240,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
         data?: { message?: string };
       }) => {
         if (result.status === 200) {
-          alert(result.data?.message || "Tạo yêu cầu SOS thành công");
+          // alert(result.data?.message || "Tạo yêu cầu SOS thành công");
           await queryClient.invalidateQueries({
             queryKey: ["sos-requests"],
           });
