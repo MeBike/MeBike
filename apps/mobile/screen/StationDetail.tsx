@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -42,6 +43,7 @@ export default function StationDetailScreen() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loadedBikes, setLoadedBikes] = useState<Bike[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [bikeId, setBikeID] = useState<string | undefined>(undefined);
   const [focusedBike, setFocusedBike] = useState<Bike | null>(null);
 
@@ -69,7 +71,7 @@ export default function StationDetailScreen() {
       getStationByID();
       getBikes();
     }
-  }, [stationId]);
+  }, [stationId, currentPage, getStationByID, getBikes]);
 
   useEffect(() => {
     if (allBikes && allBikes.length > 0) {
@@ -84,7 +86,9 @@ export default function StationDetailScreen() {
     else if (currentPage > 1) {
       setHasMore(false);
     }
-  }, [allBikes, currentPage, limit]);
+    if (refreshing)
+      setRefreshing(false);
+  }, [allBikes, currentPage, limit, refreshing]);
 
   const station = responseStationDetail as StationType | null;
   const isLoading = isLoadingGetStationByID || isFetchingAllBikes;
@@ -106,6 +110,13 @@ export default function StationDetailScreen() {
     [navigation, station, stationId],
   );
 
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setCurrentPage(1);
+    setHasMore(true);
+    setLoadedBikes([]);
+  }, []);
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -125,7 +136,17 @@ export default function StationDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={(
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[BikeColors.primary]}
+            tintColor={BikeColors.primary}
+          />
+        )}
+      >
         <LinearGradient
           colors={["#0066FF", "#00B4D8"]}
           start={{ x: 0, y: 0 }}

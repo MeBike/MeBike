@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
-import BookingHistoryScreen from "../screen/BookingHistoryScreen";
+import BookingHistoryScreen from "../screen/booking-history";
 import HomeScreen from "../screen/Home";
 import MyWalletScreen from "../screen/my-wallet-screen";
 import ProfileScreen from "../screen/ProfileScreen";

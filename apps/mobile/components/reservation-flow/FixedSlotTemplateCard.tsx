@@ -9,14 +9,11 @@ type Props = {
   template: FixedSlotTemplateListItem;
   isSelected?: boolean;
   onSelect?: (template: FixedSlotTemplateListItem) => void;
-  onPause?: (template: FixedSlotTemplateListItem) => void;
-  onResume?: (template: FixedSlotTemplateListItem) => void;
   onCancel?: (template: FixedSlotTemplateListItem) => void;
 };
 
 const STATUS_COLORS: Record<string, string> = {
   "ĐANG HOẠT ĐỘNG": BikeColors.success,
-  "TẠM DỪNG": BikeColors.warning,
   "ĐÃ HUỶ": BikeColors.error,
 };
 
@@ -24,15 +21,11 @@ export function FixedSlotTemplateCard({
   template,
   isSelected,
   onSelect,
-  onPause,
-  onResume,
   onCancel,
 }: Props) {
   const statusColor = STATUS_COLORS[template.status] ?? BikeColors.textSecondary;
   const selectedDateCount = template.selected_dates?.length ?? 0;
   const slotStartLabel = template.slot_start ?? "--:--";
-  const canPause = template.status === "ĐANG HOẠT ĐỘNG";
-  const canResume = template.status === "TẠM DỪNG";
   const canCancel = template.status !== "ĐÃ HUỶ";
 
   return (
@@ -61,32 +54,16 @@ export function FixedSlotTemplateCard({
         </View>
       </View>
 
-      <View style={styles.actions}>
-        {canPause && (
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => onPause?.(template)}
-          >
-            <Text style={styles.actionText}>Tạm dừng</Text>
-          </TouchableOpacity>
-        )}
-        {canResume && (
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => onResume?.(template)}
-          >
-            <Text style={styles.actionText}>Tiếp tục</Text>
-          </TouchableOpacity>
-        )}
-        {canCancel && (
+      {canCancel && (
+        <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.actionButton, styles.dangerButton]}
             onPress={() => onCancel?.(template)}
           >
             <Text style={styles.dangerText}>Huỷ</Text>
           </TouchableOpacity>
-        )}
-      </View>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
