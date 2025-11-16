@@ -110,7 +110,6 @@ export function useReservations(hasToken: boolean) {
     setRefreshing(true);
     resetHistory();
     fetchPendingRef.current?.();
-    fetchHistoryRef.current?.();
     getAllStationsRef.current?.();
   }, [hasToken, refreshing, resetHistory]);
 
@@ -127,7 +126,6 @@ export function useReservations(hasToken: boolean) {
 
       resetHistory();
       fetchPendingRef.current?.();
-      fetchHistoryRef.current?.();
       getAllStationsRef.current?.();
     }, [hasToken, resetHistory]),
   );
