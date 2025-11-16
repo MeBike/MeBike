@@ -3,7 +3,6 @@ import { useGetSOSQuery } from "./query/SOS/useGetSOSQuery";
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AssignSOSSchema, ResolveSOSSchema } from "@/schema/sosSchema";
-import { toast } from "sonner";
 import { useAssignSOSRequestMutation } from "./mutations/SOS/useAssignSOSRequestMutation";
 import { useConfirmSOSRequestMutation } from "./mutations/SOS/useConfirmSOSRequestMutation";
 import { useResolveSOSRequestMutation } from "./mutations/SOS/useResolveSOSRequestMutaiton";
@@ -77,7 +76,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
           data?: { message?: string };
         }) => {
           if (result.status === 200) {
-            toast.success("Assigned SOS request successfully");
+            alert("Assigned SOS request successfully");
             await queryClient.invalidateQueries({
               queryKey: ["sos-requests"],
             });
@@ -85,7 +84,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
             await refetchSOSDetail();
           } else {
             const errorMessage = result.data?.message || "Error updating bikes";
-            toast.error(errorMessage);
+            alert(errorMessage);
           }
         },
         onError: (error) => {
@@ -93,7 +92,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
             error,
             "Failed to assign SOS request"
           );
-          toast.error(errorMessage);
+          alert(errorMessage);
         },
       });
     },
@@ -117,7 +116,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
         data?: { message?: string };
       }) => {
         if (result.status === 200) {
-          toast.success(
+          alert(
             result.data?.message || "Confirmed SOS request successfully"
           );
           await queryClient.invalidateQueries({
@@ -128,7 +127,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
         } else {
           const errorMessage =
             result.data?.message || "Error confirming SOS request";
-          toast.error(errorMessage);
+          alert(errorMessage);
         }
       },
       onError: (error) => {
@@ -136,7 +135,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
           error,
           "Failed to assign SOS request"
         );
-        toast.error(errorMessage);
+        alert(errorMessage);
       },
     });
   }, [
@@ -159,7 +158,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
           data?: { message?: string };
         }) => {
           if (result.status === 200) {
-            toast.success(
+            alert(
               result.data?.message || "Resolved SOS request successfully"
             );
             await queryClient.invalidateQueries({
@@ -170,7 +169,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
           } else {
             const errorMessage =
               result.data?.message || "Error resolving SOS request";
-            toast.error(errorMessage);
+            alert(errorMessage);
           }
         },
         onError: (error) => {
@@ -178,7 +177,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
             error,
             "Failed to resolve SOS request"
           );
-          toast.error(errorMessage);
+          alert(errorMessage);
         },
       });
     },
@@ -202,7 +201,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
         data?: { message?: string };
       }) => {
         if (result.status === 200) {
-          toast.success(result.data?.message || "Tạo thuê xe thành công");
+          alert(result.data?.message || "Tạo thuê xe thành công");
           await queryClient.invalidateQueries({
             queryKey: ["sos-requests"],
           });
@@ -210,7 +209,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
           await refetchSOSDetail();
         } else {
           const errorMessage = result.data?.message || "Lỗi khi tạo thuê xe";
-          toast.error(errorMessage);
+          alert(errorMessage);
         }
       },
       onError: (error) => {
@@ -218,7 +217,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
           error,
           "Failed to create rental request"
         );
-        toast.error(errorMessage);
+        alert(errorMessage);
       },
     });
   }, [

@@ -18,7 +18,7 @@ type MessageResponse = {
   };
   message: string;
 };
-export const ROLES = ["USER", "ADMIN", "STAFF"] as const;
+export const ROLES = ["USER", "ADMIN", "STAFF" , "SOS"] as const;
 export type RoleType = typeof ROLES[number];
 export type DetailUser = {
   _id: string;
@@ -29,7 +29,7 @@ export type DetailUser = {
   username: string;
   phone_number: string;
   avatar: string;
-  role: "STAFF" | "ADMIN" | "USER";
+  role: "STAFF" | "ADMIN" | "USER" | "SOS";
   created_at: string;
   updated_at: string;
 };

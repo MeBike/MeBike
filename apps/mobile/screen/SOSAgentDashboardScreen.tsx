@@ -17,10 +17,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSOS } from "@/hooks/use-sos";
 import { useAuth } from "@/providers/auth-providers";
 import type { SOS } from "@/types/SOS";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "@/types/navigation";
+import type { ResolveSOSSchema } from "@/schema/sosSchema";
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function SOSAgentDashboardScreen() {
   const insets = useSafeAreaInsets();
   const { isAuthenticated } = useAuth();
+  const navigation = useNavigation<NavigationProp>();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [selectedSOS, setSelectedSOS] = useState<string | null>(null);
@@ -88,22 +95,20 @@ export default function SOSAgentDashboardScreen() {
     );
   };
 
-  const handleResolveSOS = async (solvable: boolean) => {
+  const handleResolveSOS = (solvable: boolean) => {
     if (!selectedSOS) return;
 
-    Alert.prompt(
-      solvable ? "Đã xử lý" : "Không xử lý được",
-      "Nhập ghi chú về tình trạng xử lý:",
-      async (notes) => {
-        if (notes) {
-          await resolveSOSRequest({
-            solvable,
-            agent_notes: notes,
-            photos: [],
-          });
-        }
-      }
-    );
+    const onSubmit = async (data: ResolveSOSSchema) => {
+      await resolveSOSRequest(data);
+      await refetchSOSRequest();
+      await refetchSOSDetail();
+    };
+
+    navigation.navigate("ResolveSOSScreen", {
+      sosId: selectedSOS,
+      solvable,
+      onSubmit,
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -119,11 +124,9 @@ export default function SOSAgentDashboardScreen() {
 
   const renderSOSItem = ({ item }: { item: SOS }) => (
     <TouchableOpacity
-      style={[
-        styles.sosCard,
-        selectedSOS === item._id && styles.sosCardSelected,
-      ]}
+      style={styles.sosCard}
       onPress={() => setSelectedSOS(item._id)}
+      activeOpacity={0.7}
     >
       <View style={styles.sosCardHeader}>
         <View
@@ -137,7 +140,7 @@ export default function SOSAgentDashboardScreen() {
         <Text style={styles.sosDate}>{formatDate(item.created_at)}</Text>
       </View>
 
-      <Text style={styles.sosIssue} numberOfLines={2}>
+      <Text style={styles.sosIssue} numberOfLines={3}>
         {item.issue}
       </Text>
 
@@ -145,33 +148,26 @@ export default function SOSAgentDashboardScreen() {
         <View style={styles.sosInfoRow}>
           <Ionicons name="person-outline" size={16} color="#666" />
           <Text style={styles.sosInfoText}>
-            ID: {item.requester_id.substring(0, 8)}...
+            {item.requester_id.substring(0, 8)}...
           </Text>
         </View>
         {item.sos_agent_id && (
           <View style={styles.sosInfoRow}>
-            <Ionicons name="medkit-outline" size={16} color="#666" />
-            <Text style={styles.sosInfoText}>
-              Agent: {item.sos_agent_id.substring(0, 8)}...
+            <Ionicons name="medkit-outline" size={16} color="#2196F3" />
+            <Text style={[styles.sosInfoText, { color: "#2196F3" }]}>
+              Đã được assign
             </Text>
           </View>
         )}
+      </View>
+
+      <View style={styles.arrowIcon}>
+        <Ionicons name="chevron-forward" size={20} color="#999" />
       </View>
     </TouchableOpacity>
   );
 
   const renderSOSDetail = () => {
-    if (!selectedSOS) {
-      return (
-        <View style={styles.detailPlaceholder}>
-          <Ionicons name="alert-circle-outline" size={64} color="#ccc" />
-          <Text style={styles.detailPlaceholderText}>
-            Chọn một yêu cầu SOS để xem chi tiết
-          </Text>
-        </View>
-      );
-    }
-
     if (isLoadingSOSDetail) {
       return (
         <View style={styles.detailLoading}>
@@ -184,6 +180,7 @@ export default function SOSAgentDashboardScreen() {
     if (!sosDetail?.result) {
       return (
         <View style={styles.detailPlaceholder}>
+          <Ionicons name="alert-circle-outline" size={64} color="#ccc" />
           <Text style={styles.detailPlaceholderText}>
             Không tìm thấy thông tin
           </Text>
@@ -194,11 +191,18 @@ export default function SOSAgentDashboardScreen() {
     const detail = sosDetail.result;
 
     return (
-      <ScrollView style={styles.detailContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.detailScrollView}
+        contentContainerStyle={styles.detailScrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View style={styles.detailSection}>
-          <Text style={styles.detailSectionTitle}>Thông tin chung</Text>
+          <Text style={styles.detailSectionTitle}>📋 Thông tin chung</Text>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Trạng thái:</Text>
+            <Text style={styles.detailLabel}>Trạng thái</Text>
             <View
               style={[
                 styles.statusBadge,
@@ -209,16 +213,16 @@ export default function SOSAgentDashboardScreen() {
             </View>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Vấn đề:</Text>
+            <Text style={styles.detailLabel}>Vấn đề</Text>
             <Text style={styles.detailValue}>{detail.issue}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Tạo lúc:</Text>
+            <Text style={styles.detailLabel}>Tạo lúc</Text>
             <Text style={styles.detailValue}>{formatDate(detail.created_at)}</Text>
           </View>
           {detail.resolved_at && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Giải quyết lúc:</Text>
+              <Text style={styles.detailLabel}>Giải quyết</Text>
               <Text style={styles.detailValue}>
                 {formatDate(detail.resolved_at)}
               </Text>
@@ -227,30 +231,34 @@ export default function SOSAgentDashboardScreen() {
         </View>
 
         <View style={styles.detailSection}>
-          <Text style={styles.detailSectionTitle}>Người yêu cầu</Text>
+          <Text style={styles.detailSectionTitle}>👤 Người yêu cầu</Text>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Tên:</Text>
+            <Text style={styles.detailLabel}>Tên</Text>
             <Text style={styles.detailValue}>{detail.requester.fullname}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>SĐT:</Text>
+            <Text style={styles.detailLabel}>SĐT</Text>
             <Text style={styles.detailValue}>{detail.requester.phone_number}</Text>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Email:</Text>
-            <Text style={styles.detailValue}>{detail.requester.email}</Text>
+            <Text style={styles.detailLabel}>Email</Text>
+            <Text style={styles.detailValue} numberOfLines={1}>
+              {detail.requester.email}
+            </Text>
           </View>
         </View>
 
         {detail.bike && (
           <View style={styles.detailSection}>
-            <Text style={styles.detailSectionTitle}>Thông tin xe</Text>
+            <Text style={styles.detailSectionTitle}>🚲 Thông tin xe</Text>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>ID Xe:</Text>
-              <Text style={styles.detailValue}>{detail.bike._id}</Text>
+              <Text style={styles.detailLabel}>ID Xe</Text>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {detail.bike._id}
+              </Text>
             </View>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Trạng thái:</Text>
+              <Text style={styles.detailLabel}>Trạng thái</Text>
               <Text style={styles.detailValue}>{detail.bike.status}</Text>
             </View>
           </View>
@@ -258,8 +266,10 @@ export default function SOSAgentDashboardScreen() {
 
         {detail.agent_notes && (
           <View style={styles.detailSection}>
-            <Text style={styles.detailSectionTitle}>Ghi chú của Agent</Text>
-            <Text style={styles.detailValue}>{detail.agent_notes}</Text>
+            <Text style={styles.detailSectionTitle}>📝 Ghi chú của Agent</Text>
+            <Text style={[styles.detailValue, { textAlign: "left", marginTop: 8 }]}>
+              {detail.agent_notes}
+            </Text>
           </View>
         )}
 
@@ -268,8 +278,9 @@ export default function SOSAgentDashboardScreen() {
             <TouchableOpacity
               style={[styles.actionButton, styles.confirmButton]}
               onPress={handleConfirmSOS}
+              activeOpacity={0.8}
             >
-              <Ionicons name="checkmark-circle" size={20} color="#fff" />
+              <Ionicons name="checkmark-circle" size={22} color="#fff" />
               <Text style={styles.actionButtonText}>Xác nhận đang đến</Text>
             </TouchableOpacity>
           </View>
@@ -280,15 +291,17 @@ export default function SOSAgentDashboardScreen() {
             <TouchableOpacity
               style={[styles.actionButton, styles.resolveButton]}
               onPress={() => handleResolveSOS(true)}
+              activeOpacity={0.8}
             >
-              <Ionicons name="checkmark-done" size={20} color="#fff" />
-              <Text style={styles.actionButtonText}>Đã xử lý</Text>
+              <Ionicons name="checkmark-done" size={22} color="#fff" />
+              <Text style={styles.actionButtonText}>Đã xử lý xong</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, styles.rejectButton]}
               onPress={() => handleResolveSOS(false)}
+              activeOpacity={0.8}
             >
-              <Ionicons name="close-circle" size={20} color="#fff" />
+              <Ionicons name="close-circle" size={22} color="#fff" />
               <Text style={styles.actionButtonText}>Không xử lý được</Text>
             </TouchableOpacity>
           </View>
@@ -296,6 +309,31 @@ export default function SOSAgentDashboardScreen() {
       </ScrollView>
     );
   };
+
+  if (selectedSOS) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
+        <LinearGradient
+          colors={["#0066FF", "#00B4D8"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.header, { paddingTop: insets.top + 16 }]}
+        >
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              onPress={() => setSelectedSOS(null)}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Chi tiết yêu cầu SOS</Text>
+          </View>
+        </LinearGradient>
+        {renderSOSDetail()}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -312,36 +350,29 @@ export default function SOSAgentDashboardScreen() {
         </View>
       </LinearGradient>
 
-      <View style={styles.content}>
-        <View style={styles.listContainer}>
-          <Text style={styles.sectionTitle}>Danh sách yêu cầu</Text>
-          {isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#0066FF" />
-              <Text style={styles.loadingText}>Đang tải...</Text>
-            </View>
-          ) : sosRequests?.data && sosRequests.data.length > 0 ? (
-            <FlatList
-              data={sosRequests.data}
-              renderItem={renderSOSItem}
-              keyExtractor={(item) => item._id}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
-              showsVerticalScrollIndicator={false}
-            />
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Ionicons name="folder-open-outline" size={64} color="#ccc" />
-              <Text style={styles.emptyText}>Không có yêu cầu SOS nào</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.detailContainer}>
-          <Text style={styles.sectionTitle}>Chi tiết</Text>
-          {renderSOSDetail()}
-        </View>
+      <View style={styles.fullContainer}>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#0066FF" />
+            <Text style={styles.loadingText}>Đang tải...</Text>
+          </View>
+        ) : sosRequests?.data && sosRequests.data.length > 0 ? (
+          <FlatList
+            data={sosRequests.data}
+            renderItem={renderSOSItem}
+            keyExtractor={(item) => item._id}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+          />
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="folder-open-outline" size={64} color="#ccc" />
+            <Text style={styles.emptyText}>Không có yêu cầu SOS nào</Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -357,91 +388,82 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
+  backButton: {
+    padding: 4,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
   },
-  content: {
+  fullContainer: {
     flex: 1,
-    flexDirection: "row",
     padding: 16,
-    gap: 16,
   },
-  listContainer: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  detailContainer: {
-    flex: 1,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 16,
+  listContent: {
+    paddingBottom: 16,
   },
   sosCard: {
-    backgroundColor: "#f9fafb",
-    borderRadius: 12,
+    backgroundColor: "#fff",
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  sosCardSelected: {
-    borderColor: "#0066FF",
-    backgroundColor: "#E3F2FD",
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+    position: "relative",
   },
   sosCardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
   statusBadge: {
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   statusText: {
     color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   sosDate: {
     fontSize: 12,
-    color: "#666",
+    color: "#999",
+    fontWeight: "500",
   },
   sosIssue: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#333",
     marginBottom: 12,
-    lineHeight: 20,
+    lineHeight: 22,
+    fontWeight: "500",
   },
   sosFooter: {
-    gap: 4,
+    flexDirection: "row",
+    gap: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
   },
   sosInfoRow: {
     flexDirection: "row",
@@ -449,8 +471,119 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sosInfoText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#666",
+    fontWeight: "500",
+  },
+  arrowIcon: {
+    position: "absolute",
+    right: 16,
+    top: "50%",
+    marginTop: -10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: "#666",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#999",
+    marginTop: 16,
+  },
+  detailScrollView: {
+    flex: 1,
+  },
+  detailScrollContent: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailSection: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  detailSectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: "#0066FF",
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f5f5f5",
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "600",
+    width: 100,
+  },
+  detailValue: {
+    fontSize: 14,
+    color: "#333",
+    flex: 1,
+    textAlign: "right",
+    fontWeight: "500",
+  },
+  actionButtons: {
+    gap: 12,
+    marginTop: 8,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  confirmButton: {
+    backgroundColor: "#2196F3",
+  },
+  resolveButton: {
+    backgroundColor: "#4CAF50",
+  },
+  rejectButton: {
+    backgroundColor: "#F44336",
+  },
+  actionButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.5,
   },
   detailPlaceholder: {
     flex: 1,
@@ -468,84 +601,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: "#666",
-  },
-  detailContent: {
-    flex: 1,
-  },
-  detailSection: {
-    marginBottom: 20,
-  },
-  detailSectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: "#666",
-    fontWeight: "500",
-  },
-  detailValue: {
-    fontSize: 14,
-    color: "#333",
-    flex: 1,
-    textAlign: "right",
-    marginLeft: 12,
-  },
-  actionButtons: {
-    gap: 12,
-    marginTop: 20,
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  confirmButton: {
-    backgroundColor: "#2196F3",
-  },
-  resolveButton: {
-    backgroundColor: "#4CAF50",
-  },
-  rejectButton: {
-    backgroundColor: "#F44336",
-  },
-  actionButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: "#999",
-    marginTop: 16,
   },
 });
