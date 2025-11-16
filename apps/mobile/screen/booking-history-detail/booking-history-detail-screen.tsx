@@ -49,7 +49,6 @@ function BookingHistoryDetail() {
   const { bookingId } = route.params as RouteParams;
   const { user } = useAuth();
   const hasToken = Boolean(user?._id);
-  const rentalEndRef = useRef<(() => void) | undefined>();
 
   const {
     booking,
@@ -58,16 +57,29 @@ function BookingHistoryDetail() {
     isRefreshing,
     onRefresh,
     refetchDetail,
-  } = useRentalDetailData(bookingId, { onRentalEndRef: rentalEndRef });
+  } = useRentalDetailData(bookingId, {
+    onRentalEnd: () => ratingModal.open(),
+  });
 
   const { ratingModal, ratingState } = useBookingRating({
     bookingId,
     booking: booking as RentalDetail | undefined,
   });
 
+  const previousStatusRef = useRef<string | undefined>(booking?.status);
+
   useEffect(() => {
-    rentalEndRef.current = ratingModal.open;
-  }, [ratingModal.open]);
+    const prevStatus = previousStatusRef.current;
+    if (
+      booking?.status === "HOÀN THÀNH" &&
+      prevStatus !== "HOÀN THÀNH" &&
+      ratingState.canOpenRatingForm &&
+      !ratingModal.visible
+    ) {
+      ratingModal.open();
+    }
+    previousStatusRef.current = booking?.status;
+  }, [booking?.status, ratingState.canOpenRatingForm, ratingModal]);
 
   useRentalStatusWatcher({
     booking: booking as RentalDetail | undefined,

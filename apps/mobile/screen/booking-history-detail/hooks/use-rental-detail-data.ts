@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import type { MutableRefObject } from "react";
 
 import { useRentalsActions } from "@hooks/useRentalAction";
 import { useStationActions } from "@hooks/useStationAction";
@@ -8,11 +7,11 @@ import { useWalletActions } from "@hooks/useWalletAction";
 import type { RentalDetail } from "@/types/RentalTypes";
 
 type Options = {
-  onRentalEndRef?: MutableRefObject<(() => void) | undefined>;
+  onRentalEnd?: () => void;
 };
 
 export function useRentalDetailData(bookingId: string, options?: Options) {
-  const { onRentalEndRef } = options || {};
+  const { onRentalEnd } = options || {};
   const { getMyWallet } = useWalletActions(true);
   const { isLoadingGetAllStations, refetch: refetchStations } =
     useStationActions(true);
@@ -24,7 +23,7 @@ export function useRentalDetailData(bookingId: string, options?: Options) {
     isGetDetailRentalFetching,
     isGetDetailRentalError,
   } = useRentalsActions(true, bookingId, undefined, () => {
-    onRentalEndRef?.current?.();
+    onRentalEnd?.();
   });
 
   const refreshAll = useCallback(async () => {
