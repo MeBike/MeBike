@@ -12,17 +12,17 @@ import {
   View,
 } from "react-native";
 
-import BookingDetailHeader from "@components/booking-history-detail/components/BookingDetailHeader";
-import StatusCard from "@components/booking-history-detail/components/StatusCard";
-import BikeInfoCard from "@components/booking-history-detail/components/BikeInfoCard";
-import TimeInfoCard from "@components/booking-history-detail/components/TimeInfoCard";
-import PaymentInfoCard from "@components/booking-history-detail/components/PaymentInfoCard";
-import BookingIdCard from "@components/booking-history-detail/components/BookingIdCard";
-import UserInfoCard from "@components/booking-history-detail/components/UserInfoCard";
-import LoadingState from "@components/booking-history-detail/components/LoadingState";
-import ErrorState from "@components/booking-history-detail/components/ErrorState";
+import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
+import StatusCard from "./booking-history-detail/components/StatusCard";
+import BikeInfoCard from "./booking-history-detail/components/BikeInfoCard";
+import TimeInfoCard from "./booking-history-detail/components/TimeInfoCard";
+import PaymentInfoCard from "./booking-history-detail/components/PaymentInfoCard";
+import BookingIdCard from "./booking-history-detail/components/BookingIdCard";
+import UserInfoCard from "./booking-history-detail/components/UserInfoCard";
+import LoadingState from "./booking-history-detail/components/LoadingState";
+import ErrorState from "./booking-history-detail/components/ErrorState";
 
-import StaffEndRentalCard from "@components/booking-history-detail/components/StaffEndRentalCard";
+import StaffEndRentalCard from "./booking-history-detail/components/StaffEndRentalCard";
 import { useStationActions } from "@hooks/useStationAction";
 import usePutStaffEndRental from "@hooks/mutations/Rentals/usePutStaffEndRental";
 import { useStaffGetDetailRentalQuery } from "@hooks/query/Rent/useStaffGetDetailRentalQuery";
