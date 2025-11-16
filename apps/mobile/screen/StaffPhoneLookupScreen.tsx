@@ -16,7 +16,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import BookingDetailHeader from "@components/booking-history-detail/components/BookingDetailHeader";
+import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
 import { useStaffActiveRentalsByPhone } from "@hooks/query/Rent/useStaffActiveRentalsByPhone";
 import { useStationActions } from "@hooks/useStationAction";
 import type { StaffActiveRental } from "@/types/RentalTypes";

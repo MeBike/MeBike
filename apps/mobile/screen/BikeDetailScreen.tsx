@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 
-import BookingDetailHeader from "@components/booking-history-detail/components/BookingDetailHeader";
+import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
 import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 import { BikeColors } from "@constants/BikeColors";
 import { useAuth } from "@providers/auth-providers";

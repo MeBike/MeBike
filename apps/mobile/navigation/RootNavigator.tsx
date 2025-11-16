@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
 
 import MainTabNavigator from "./MainTabNavigator";
-import BookingHistoryDetail from "../screen/BookingHistoryDetail";
+import BookingHistoryDetail from "../screen/booking-history-detail/booking-history-detail-screen";
 import ChangePasswordScreen from "../screen/ChangePasswordScreen";
 import EmailVerificationScreen from "../screen/EmailVerification";
 import FixedSlotDetailScreen from "../screen/FixedSlotDetailScreen";
