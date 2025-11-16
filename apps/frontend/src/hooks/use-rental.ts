@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useGetRevenueQuery } from "./query/Rent/useGetRevenueQuery";
 import { useGetDetailRentalAdminQuery } from "./query/Rent/useGetDetailRentalAdminQuery";
 import { usePutUpdateRentalMutation } from "./mutations/Rentals/usePutUpdateRentalMutation";
-import { UpdateRentalSchema } from "@/schemas/rentalSchema";
+import { EndRentalSchema, UpdateRentalSchema } from "@/schemas/rentalSchema";
 import { toast } from "sonner";
 import { useGetDashboardSummaryQuery } from "./query/Rent/useGetDashboardSummaryQuery";
+import useEndCurrentRental from "./mutations/Rentals/useEndCurrentRentalMutation";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -47,6 +48,7 @@ interface UseRentalsActionsProps {
   start_station?: string;
   end_station?: string;
   status?: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
+  rental_id?: string;
 }
 export function useRentalsActions({
   hasToken,
@@ -56,6 +58,7 @@ export function useRentalsActions({
   start_station,
   end_station,
   status,
+  rental_id,
 } : UseRentalsActionsProps) {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -164,6 +167,56 @@ export function useRentalsActions({
     }
     refetchDashboardSummary();
   }, [hasToken, refetchDashboardSummary]);
+  const useEndRental = useEndCurrentRental(rental_id || "");
+  const endRental = useCallback(
+    (data: EndRentalSchema) => {
+      if (!hasToken || !rental_id) {
+        router.push("/login");
+        return;
+      }
+      useEndRental.mutate(data, {
+        onSuccess: (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result.status === 200) {
+            toast.success(result.data?.message || "Kết thúc thuê xe thành công");
+            queryClient.invalidateQueries({
+              queryKey: [
+                "rentals",
+                "all-admin-staff",
+                page,
+                limit,
+                start_station,
+                end_station,
+                status,
+              ],
+            });
+          } else {
+            const errorMessage =
+              result.data?.message || "Lỗi khi kết thúc thuê xe";
+            toast.error(errorMessage);
+          }
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(error, "Failed to end rental");
+          toast.error(errorMessage);
+        },
+      });
+    },
+    [
+      useEndRental,
+      hasToken,
+      rental_id,
+      router,
+      queryClient,
+      page,
+      limit,
+      start_station,
+      end_station,
+      status,
+    ]
+  );
   return {
     allRentalsData: allRentalsData?.data,
     getRentals,
@@ -172,6 +225,7 @@ export function useRentalsActions({
     revenueData,
     todayRevenueData,
     updateRental,
+    endRental,
     getRevenue,
     getTodayRevenue,
     refetchRevenue,

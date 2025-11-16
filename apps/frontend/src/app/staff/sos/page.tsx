@@ -12,6 +12,7 @@ import { formatDateUTC } from "@/utils/formatDateTime";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { assignSOSSchema, type AssignSOSSchema } from "@/schemas/sosSchema";
+import { endRentalSchema, type EndRentalSchema } from "@/schemas/rentalSchema";
 import {
   Form,
   FormControl,
@@ -23,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useStationActions } from "@/hooks/use-station";
 import { useUserActions } from "@/hooks/use-user";
+import { useRentalsActions } from "@/hooks/use-rental";
 
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,8 +39,12 @@ export default function SOSPage() {
   );
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  
+  const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
+  const [selectedRentalId, setSelectedRentalId] = useState<string>("");
+  const [isReplacingBike, setIsReplacingBike] = useState(false);
+  const {endRental} = useRentalsActions({hasToken: true , rental_id: selectedRentalId});
   const {users} = useUserActions({hasToken: true});
+  const {stations} = useStationActions({hasToken: true});
   const {
     sosRequests,
     isLoading,
@@ -46,6 +52,7 @@ export default function SOSPage() {
     sosDetail,
     refetchSOSDetail,
     assignSOSRequest,
+    createRentalRequest
   } = useSOS({
     hasToken: true,
     page: currentPage,
@@ -66,6 +73,15 @@ export default function SOSPage() {
     defaultValues: {
       replaced_bike_id: "",
       sos_agent_id: "",
+    },
+  });
+
+  const endRentalForm = useForm<EndRentalSchema>({
+    resolver: zodResolver(endRentalSchema),
+    defaultValues: {
+      end_station: "",
+      end_time: "",
+      reason: "",
     },
   });
 
@@ -98,6 +114,35 @@ export default function SOSPage() {
 
   const handleFilterChange = () => {
     setCurrentPage(1);
+  };
+
+  const onSubmitReplaceBike = async (data: EndRentalSchema) => {
+    setIsReplacingBike(true);
+    
+    try {
+      // Format to keep local time: 2025-11-16T19:53:14.179+00:00
+      const endTime = data.end_time + ':00.000+00:00';
+      console.log("Ending rental with time:", endTime);
+      await endRental({
+        ...data,
+        end_time: endTime,
+      });
+      
+      // Step 2: Create new rental
+      await createRentalRequest();
+      
+      // Refresh data
+      await refetchSOSRequest();
+      await refetchSOSDetail();
+      
+      setIsReplaceModalOpen(false);
+      endRentalForm.reset();
+    } catch (error) {
+      console.error("Error replacing bike:", error);
+      alert("Lỗi khi thay xe");
+    } finally {
+      setIsReplacingBike(false);
+    }
   };
 
   if (isLoading && currentPage === 1) {
@@ -604,15 +649,51 @@ export default function SOSPage() {
               >
                 Đóng
               </Button>
-              <Button 
-                className="flex-1"
-                onClick={() => {
-                  setIsAssignModalOpen(true);
-                }}
-                disabled={sosDetail.result.status !== "ĐANG CHỜ XỬ LÍ"}
-              >
-                Phân công xử lý
-              </Button>
+              {sosDetail.result.status === "ĐANG CHỜ XỬ LÍ" && (
+                <Button 
+                  className="flex-1"
+                  onClick={() => {
+                    setIsAssignModalOpen(true);
+                  }}
+                >
+                  Phân công xử lý
+                </Button>
+              )}
+              {(sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC" || sosDetail.result.status.includes("KHÔNG XỬ LÍ")) && (
+                <Button 
+                  className="flex-1"
+                  onClick={() => {
+                    console.log("Status:", sosDetail.result.status);
+                    console.log("Rental:", (sosDetail.result as any).rental);
+                    const rentalId = (sosDetail.result as any).rental?._id;
+                    if (!rentalId) {
+                      alert("Không tìm thấy thông tin thuê xe");
+                      return;
+                    }
+                    setSelectedRentalId(rentalId);
+                    setIsReplaceModalOpen(true);
+                    // Pre-fill form with rental station info
+                    const startStation = (sosDetail.result as any).rental?.start_station;
+                    if (startStation) {
+                      endRentalForm.setValue("end_station", startStation);
+                    }
+                    // Set current time in datetime-local format (YYYY-MM-DDTHH:mm)
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const seconds = String(now.getSeconds()).padStart(2, '0');
+                    const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+                    const datetimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    endRentalForm.setValue("end_time", datetimeLocal);
+                    endRentalForm.setValue("reason", "Không xử lý được - Thay xe mới");
+                  }}
+                >
+                  Thay xe
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -729,6 +810,121 @@ export default function SOSPage() {
                       </>
                     ) : (
                       "Phân công"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {/* Replace Bike Modal */}
+      {isReplaceModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">
+                Thay xe mới
+              </h2>
+              <button
+                onClick={() => {
+                  setIsReplaceModalOpen(false);
+                  endRentalForm.reset();
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <Form {...endRentalForm}>
+              <form onSubmit={endRentalForm.handleSubmit(onSubmitReplaceBike)} className="space-y-4">
+                <FormField
+                  control={endRentalForm.control}
+                  name="end_station"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Trạm trả xe</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                        >
+                          <option value="">Chọn trạm trả xe</option>
+                          {stations?.map((station: any) => (
+                            <option key={station._id} value={station._id}>
+                              {station.name}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={endRentalForm.control}
+                  name="end_time"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Thời gian kết thúc</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="datetime-local"
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={endRentalForm.control}
+                  name="reason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lý do</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Nhập lý do kết thúc thuê xe..."
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsReplaceModalOpen(false);
+                      endRentalForm.reset();
+                    }}
+                    className="flex-1"
+                    disabled={isReplacingBike}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={isReplacingBike}
+                  >
+                    {isReplacingBike ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Xác nhận thay xe"
                     )}
                   </Button>
                 </div>

@@ -25,5 +25,20 @@ export const updateRentalSchema = z.object({
   total_price: z.number().min(0, "Total price must be a non-negative number"),
   reason: z.string().min(5, "Reason must be at least 5 characters long").max(500, "Reason must be at most 500 characters long"),
 });
+export const endRentalSchema = z.object({
+  end_station: z
+    .string()
+    .min(24, "Station ID must be a valid ObjectId")
+    .max(24, "Station ID must be a valid ObjectId")
+    .refine(isValidObjectId, {
+      message: "Station ID must be a valid MongoDB ObjectId",
+    }),
+  end_time: z.string(),
+  reason: z
+    .string()
+    .min(5, "Reason must be at least 5 characters long")
+    .max(500, "Reason must be at most 500 characters long"),
+});
+export type EndRentalSchema = z.infer<typeof endRentalSchema>;
 export type RentalSchemaFormData = z.infer<typeof rentalSchema>;
 export type UpdateRentalSchema = z.infer<typeof updateRentalSchema>;

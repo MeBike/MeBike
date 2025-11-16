@@ -42,15 +42,17 @@ export const reportService = {
     return response;
   },
   getManageUserReports: async ({
-    page , limit
-  } : {page ?: number , limit ?: number}): Promise<
-    AxiosResponse<ApiResponse<Report[]>>
-  > => {
+    page,
+    limit,
+  }: {
+    page?: number;
+    limit?: number;
+  }): Promise<AxiosResponse<ApiResponse<Report[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Report[]>>(
       REPORT_ENDPOINTS.MANAGE_USER_REPORTS,
       {
         page,
-        limit
+        limit,
       }
     );
     return response;
@@ -76,7 +78,10 @@ export const reportService = {
     id: string,
     data: UpdateReportSchemaFormData
   ): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.put(REPORT_ENDPOINTS.BY_ID(id), data);
+    const response = await fetchHttpClient.put(
+      REPORT_ENDPOINTS.BY_ID(id),
+      data
+    );
     return response;
   },
 };

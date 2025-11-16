@@ -11,6 +11,18 @@ interface ConfirmSOS {
   message: string;
   newStatus : string;
 }
+interface RentalBySOSID {
+  _id: string;
+  user_id: string;
+  bike_id: string;
+  start_station: string;
+  start_time : string;
+  duration : number;
+  total_price : number;
+  status : string;
+  created_at : string;
+  updated_at : string;
+}
 const SOS_BASE = "/sos";
 const SOS_ENDPOINTS = {
   BASE: SOS_BASE,
@@ -18,6 +30,7 @@ const SOS_ENDPOINTS = {
   ASSIGN: (id: string) => `${SOS_BASE}/${id}/assign`,
   CONFIRM: (id: string) => `${SOS_BASE}/${id}/confirm`,
   RESOLVE: (id: string) => `${SOS_BASE}/${id}/resolve`,
+  CREATE: (id:string) => `/rentals/sos/${id}`,
 } as const;
 export const sosService = {
   getSOSRequest: async ({
@@ -63,12 +76,24 @@ export const sosService = {
     );
     return response;
   },
-  resolveSOSRequest: async (
-    {id , data} : {id: string, data: ResolveSOSSchema}
-  ): Promise<AxiosResponse<DetailApiResponse<ConfirmSOS>>> => {
+  resolveSOSRequest: async ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: ResolveSOSSchema;
+  }): Promise<AxiosResponse<DetailApiResponse<ConfirmSOS>>> => {
     const response = await fetchHttpClient.post<DetailApiResponse<ConfirmSOS>>(
       SOS_ENDPOINTS.RESOLVE(id),
       data
+    );
+    return response;
+  },
+  createNewRentalSOS: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<RentalBySOSID>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<RentalBySOSID>>(
+      SOS_ENDPOINTS.CREATE(id)
     );
     return response;
   },

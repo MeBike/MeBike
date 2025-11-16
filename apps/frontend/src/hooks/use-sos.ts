@@ -1,13 +1,16 @@
 import { useGetSOSDetailQuery } from "./query/SOS/useGetSOSDetailQuery";
 import { useGetSOSQuery } from "./query/SOS/useGetSOSQuery";
-import { useCallback } from "react";
+import { use, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   AssignSOSSchema,
+  ResolveSOSSchema,
 } from "@/schemas/sosSchema";
 import { toast } from "sonner";
 import { useAssignSOSRequestMutation } from "./mutations/SOS/useAssignSOSRequestMutation";
 import { useConfirmSOSRequestMutation } from "./mutations/SOS/useConfirmSOSRequestMutation";
+import { useResolveSOSRequestMutation } from "./mutations/SOS/useResolveSOSRequestMutaiton";
+import { useCreateRentalSOSRequestMutation } from "./mutations/SOS/useCreateRentalBySOSMutation";
 interface UseSOSProps {
   hasToken: boolean;
   page?: number;
@@ -140,7 +143,88 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
       queryClient,
     ]
   );
-
+  const useResolveSOSRequest = useResolveSOSRequestMutation(id || "");
+  const resolveSOSRequest = useCallback(async (data: ResolveSOSSchema) => {
+    if (!hasToken || !id) {
+      return;
+    }
+    useResolveSOSRequest.mutate(data, {
+      onSuccess: async (result: {
+        status: number;
+        data?: { message?: string };
+      }) => {
+        if (result.status === 200) {
+          toast.success(
+            result.data?.message || "Resolved SOS request successfully"
+          );
+          await queryClient.invalidateQueries({
+            queryKey: ["sos-requests"],
+          });
+          await refetchSOSRequest();
+          await refetchSOSDetail();
+        } else {
+          const errorMessage =
+            result.data?.message || "Error resolving SOS request";
+          toast.error(errorMessage);
+        }
+      },
+      onError: (error) => {
+        const errorMessage = getErrorMessage(
+          error,
+          "Failed to resolve SOS request"
+        );
+        toast.error(errorMessage);
+      },
+    });
+  }, [
+    refetchSOSRequest,
+    refetchSOSDetail,
+    hasToken,
+    id,
+    useResolveSOSRequest,
+    queryClient,
+  ]);
+  const useCreateRental = useCreateRentalSOSRequestMutation(id || "");
+  const createRentalRequest = useCallback(async () => {
+    if (!hasToken || !id) {
+      return;
+    }
+    useCreateRental.mutate(undefined, {
+      onSuccess: async (result: {
+        status: number;
+        data?: { message?: string };
+      }) => {
+        if (result.status === 200) {
+          toast.success(
+            result.data?.message || "Tạo thuê xe thành công"
+          );
+          await queryClient.invalidateQueries({
+            queryKey: ["sos-requests"],
+          });
+          await refetchSOSRequest();
+          await refetchSOSDetail();
+        } else {
+          const errorMessage =
+            result.data?.message || "Lỗi khi tạo thuê xe";
+          toast.error(errorMessage);
+        }
+      },
+      onError: (error) => {
+        const errorMessage = getErrorMessage(
+          error,
+          "Failed to create rental request"
+        );
+        toast.error(errorMessage);
+      },
+    });
+  }, [
+    refetchSOSRequest,
+    refetchSOSDetail,
+    hasToken,
+    id,
+    useCreateRental,
+    queryClient,
+  ]);
   return {
     sosRequests,
     isLoading,
@@ -150,5 +234,7 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
     refetchSOSDetail,
     confirmSOSRequest,
     assignSOSRequest,
+    resolveSOSRequest,
+    createRentalRequest,
   };
 }

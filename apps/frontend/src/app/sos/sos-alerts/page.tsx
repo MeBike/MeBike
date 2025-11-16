@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Upload, X } from "lucide-react";
 import { DataTable } from "@/components/TableCustom";
 import { Button } from "@/components/ui/button";
 import { PaginationDemo } from "@/components/PaginationCustomer";
@@ -9,6 +9,20 @@ import type { SOS } from "@/types/SOS";
 import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
 import { formatDateUTC } from "@/utils/formatDateTime";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { resolveSOSSchema, type ResolveSOSSchema } from "@/schemas/sosSchema";
+import { uploadMultipleImagesToFirebase } from "@/lib/firebase";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -19,6 +33,9 @@ export default function SOSPage() {
   const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">("info");
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
   const [isConfirming, setIsConfirming] = useState(false);
+  const [isResolveModalOpen, setIsResolveModalOpen] = useState(false);
+  const [resolvePhotos, setResolvePhotos] = useState<File[]>([]);
+  const [isUploadingResolve, setIsUploadingResolve] = useState(false);
 
   const {
     sosRequests,
@@ -27,11 +44,21 @@ export default function SOSPage() {
     sosDetail,
     refetchSOSDetail,
     confirmSOSRequest,
+    resolveSOSRequest,
   } = useSOS({
     hasToken: true,
     page: currentPage,
     limit: limit,
     id: selectedSOSId,
+  });
+
+  const resolveForm = useForm<ResolveSOSSchema>({
+    resolver: zodResolver(resolveSOSSchema),
+    defaultValues: {
+      solvable: true,
+      agent_notes: "",
+      photos: [],
+    },
   });
 
   useEffect(() => {
@@ -71,11 +98,49 @@ export default function SOSPage() {
       await refetchSOSDetail();
       await refetchSOSRequest();
       setIsDetailModalOpen(false);
-      setSelectedSOSId("");
+      setIsResolveModalOpen(true);
     } catch (error) {
       console.error("Error confirming SOS:", error);
     } finally {
       setIsConfirming(false);
+    }
+  };
+
+  const handleResolvePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setResolvePhotos(Array.from(e.target.files));
+    }
+  };
+
+  const handleRemoveResolvePhoto = (index: number) => {
+    setResolvePhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const onSubmitResolve = async (data: ResolveSOSSchema) => {
+    if (!selectedSOSId) return;
+
+    setIsUploadingResolve(true);
+    try {
+      let photoUrls: string[] = [];
+      if (resolvePhotos.length > 0) {
+        photoUrls = await uploadMultipleImagesToFirebase(resolvePhotos);
+      }
+
+      await resolveSOSRequest({
+        ...data,
+        photos: photoUrls,
+      });
+
+      await refetchSOSDetail();
+      await refetchSOSRequest();
+      setIsResolveModalOpen(false);
+      setSelectedSOSId("");
+      setResolvePhotos([]);
+      resolveForm.reset();
+    } catch (error) {
+      console.error("Error resolving SOS:", error);
+    } finally {
+      setIsUploadingResolve(false);
     }
   };
 
@@ -138,6 +203,7 @@ export default function SOSPage() {
                 <option value="all">Tất cả</option>
                 <option value="ĐANG CHỜ XỬ LÍ">Đang chờ xử lý</option>
                 <option value="ĐÃ GỬI NGƯỜI CỨU HỘ">Đã gửi người cứu hộ</option>
+                <option value="ĐANG TRÊN ĐƯỜNG ĐẾN">Đang trên đường đến</option>
                 <option value="ĐÃ XỬ LÍ">Đã xử lý</option>
                 <option value="KHÔNG XỬ LÍ ĐƯỢC">Không xử lý được</option>
                 <option value="ĐÃ TỪ CHỐI">Đã từ chối</option>
@@ -572,21 +638,175 @@ export default function SOSPage() {
               >
                 Đóng
               </Button>
-              <Button 
-                className="flex-1"
-                onClick={handleConfirm}
-                disabled={sosDetail?.result?.status !== "ĐÃ GỬI NGƯỜI CỨU HỘ" || isConfirming}
-              >
-                {isConfirming ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Đang xử lý...
-                  </>
-                ) : (
-                  "Xác nhận xử lý"
-                )}
-              </Button>
+              {sosDetail?.result?.status === "ĐÃ GỬI NGƯỜI CỨU HỘ" && (
+                <Button 
+                  className="flex-1"
+                  onClick={handleConfirm}
+                  disabled={isConfirming}
+                >
+                  {isConfirming ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    "Xác nhận xử lý"
+                  )}
+                </Button>
+              )}
+              {sosDetail?.result?.status === "ĐANG TRÊN ĐƯỜNG ĐẾN" && (
+                <Button 
+                  className="flex-1"
+                  onClick={() => {
+                    setIsDetailModalOpen(false);
+                    setIsResolveModalOpen(true);
+                  }}
+                >
+                  Hoàn thành xử lý
+                </Button>
+              )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Resolve SOS Modal */}
+      {isResolveModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">
+                Hoàn thành xử lý SOS
+              </h2>
+              <button
+                onClick={() => {
+                  setIsResolveModalOpen(false);
+                  setResolvePhotos([]);
+                  resolveForm.reset();
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <Form {...resolveForm}>
+              <form onSubmit={resolveForm.handleSubmit(onSubmitResolve)} className="space-y-4">
+                <FormField
+                  control={resolveForm.control}
+                  name="solvable"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tình trạng xử lý</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          value={field.value ? "true" : "false"}
+                          onChange={(e) => field.onChange(e.target.value === "true")}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                        >
+                          <option value="true">Đã xử lý thành công</option>
+                          <option value="false">Không xử lý được</option>
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={resolveForm.control}
+                  name="agent_notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ghi chú xử lý</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="Nhập ghi chú về quá trình xử lý..."
+                          className="min-h-24"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Hình ảnh xử lý</label>
+                  <div className="border-2 border-dashed border-border rounded-lg p-4">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleResolvePhotoChange}
+                      className="hidden"
+                      id="resolve-photo-upload"
+                    />
+                    <label
+                      htmlFor="resolve-photo-upload"
+                      className="flex flex-col items-center justify-center cursor-pointer"
+                    >
+                      <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Click để tải ảnh lên
+                      </p>
+                    </label>
+                  </div>
+
+                  {resolvePhotos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {resolvePhotos.map((photo, index) => (
+                        <div key={index} className="relative">
+                          <img
+                            src={URL.createObjectURL(photo)}
+                            alt={`Preview ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveResolvePhoto(index)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setIsResolveModalOpen(false);
+                      setResolvePhotos([]);
+                      resolveForm.reset();
+                    }}
+                    className="flex-1"
+                    variant="outline"
+                    disabled={isUploadingResolve}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={isUploadingResolve}
+                  >
+                    {isUploadingResolve ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Hoàn thành"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </div>
         </div>
       )}

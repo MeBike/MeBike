@@ -6,7 +6,7 @@ export type SOS = {
   photos: Array<string>;
   issue: string;
   location: LocationGEO;
-  status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ GỬI NGƯỜI CỨU HỘ" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
+  status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ GỬI NGƯỜI CỨU HỘ" | "ĐANG TRÊN ĐƯỜNG ĐẾN" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
   agent_notes: string;
   reason: string;
   sos_agent_id: string;
@@ -21,7 +21,7 @@ export interface SOSDetail {
   photos: string[];
   issue: string;
   location: ILocationSOS;
-  status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ GỬI NGƯỜI CỨU HỘ" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
+  status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ GỬI NGƯỜI CỨU HỘ" | "ĐANG TRÊN ĐƯỜNG ĐẾN" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
   agent_notes: string;
   reason: string;
   resolved_at: string | null;
