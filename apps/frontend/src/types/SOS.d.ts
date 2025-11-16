@@ -17,23 +17,20 @@ export type SOS = {
 
 export interface SOSDetail {
   _id: string;
-  rental_id: string;
-  requester_id: string;
   replaced_bike_id: string;
   photos: string[];
   issue: string;
-  location: LocationGEO;
+  location: ILocationSOS;
   status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
   agent_notes: string;
   reason: string;
-  sos_agent_id: string;
   resolved_at: string | null;
   created_at: string;
   updated_at: string;
-  requester: IUser;
-  rental: IRental;
-  replaced_bike: IBike;
-  sos_agent: IUser;
+  rental: IRentalSOS;
+  bike: IBikeSOS;
+  requester: IUserSOS;
+  sos_agent: IUserSOS;
 }
 export interface LocationGEO {
   type: string;

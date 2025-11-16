@@ -8,6 +8,7 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import type { SOS } from "@/types/SOS";
 import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
+import { formatDateUTC } from "@/utils/formatDateTime";
 
 
 export default function SOSPage() {
@@ -287,7 +288,8 @@ export default function SOSPage() {
                         Tên nhân viên SOS
                       </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.sos_agent?.fullname || "-"}
+                        {sosDetail.result.sos_agent?.fullname ||
+                          "Chưa được giao"}
                       </p>
                     </div>
 
@@ -296,7 +298,7 @@ export default function SOSPage() {
                         Email nhân viên SOS
                       </p>
                       <p className="text-foreground font-medium text-sm">
-                        {sosDetail.result.sos_agent?.email || "-"}
+                        {sosDetail.result.sos_agent?.email || "Chưa có"}
                       </p>
                     </div>
 
@@ -305,7 +307,8 @@ export default function SOSPage() {
                         Số điện thoại nhân viên SOS
                       </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.sos_agent?.phone_number || "-"}
+                        {sosDetail.result.sos_agent?.phone_number ||
+                          "Chưa được giao"}
                       </p>
                     </div>
 
@@ -357,11 +360,11 @@ export default function SOSPage() {
                         Thời gian xử lý
                       </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.resolved_at
+                        {sosDetail.result.resolved_at && sosDetail.result.resolved_at !== null
                           ? new Date(
                               sosDetail.result.resolved_at
                             ).toLocaleString("vi-VN")
-                          : "-"}
+                          : "Chưa xử lý"}
                       </p>
                     </div>
                   </div>
@@ -418,16 +421,21 @@ export default function SOSPage() {
                           <p className="text-sm text-foreground">
                             Tổng cộng: {sosDetail.result.photos.length} hình ảnh
                           </p>
-                          <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                          <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
                             {sosDetail.result.photos.map((photo, idx) => (
                               <div
                                 key={idx}
-                                className="bg-muted rounded-lg p-3 text-xs break-all hover:bg-muted/80 transition-colors"
+                                className="relative aspect-video rounded-lg overflow-hidden border border-border bg-muted group"
                               >
-                                <p className="font-mono text-xs mb-1">#{idx + 1}</p>
-                                <p title={photo}>
-                                  {photo.slice(0, 40)}...
-                                </p>
+                                <img
+                                  src={photo}
+                                  alt={`SOS photo ${idx + 1}`}
+                                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                  loading="lazy"
+                                />
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1">
+                                  Ảnh #{idx + 1}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -459,10 +467,11 @@ export default function SOSPage() {
                           Nhân viên SOS
                         </p>
                         <p className="text-foreground font-medium">
-                          {sosDetail.result.sos_agent?.fullname || "-"}
+                          {sosDetail.result.sos_agent?.fullname ||
+                            "Chưa được giao"}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {sosDetail.result.sos_agent?.email || "-"}
+                          {sosDetail.result.sos_agent?.email || "Chưa có"}
                         </p>
                       </div>
 
@@ -483,8 +492,8 @@ export default function SOSPage() {
                         </p>
                         <p className="text-foreground font-medium text-sm">
                           {sosDetail.result.created_at
-                            ? new Date(sosDetail.result.created_at).toLocaleString("vi-VN")
-                            : "-"}
+                            ? formatDateUTC(sosDetail.result.created_at)
+                            : "Chưa có"}
                         </p>
                       </div>
 
@@ -494,8 +503,8 @@ export default function SOSPage() {
                         </p>
                         <p className="text-foreground font-medium text-sm">
                           {sosDetail.result.updated_at
-                            ? new Date(sosDetail.result.updated_at).toLocaleString("vi-VN")
-                            : "-"}
+                            ? formatDateUTC(sosDetail.result.updated_at)
+                            : "Chưa có"}
                         </p>
                       </div>
 
@@ -504,8 +513,8 @@ export default function SOSPage() {
                           Thời gian xử lý
                         </p>
                         <p className="text-foreground font-medium text-sm">
-                          {sosDetail.result.resolved_at
-                            ? new Date(sosDetail.result.resolved_at).toLocaleString("vi-VN")
+                          {sosDetail.result.resolved_at && sosDetail.result.resolved_at !== null
+                            ? formatDateUTC(sosDetail.result.resolved_at)
                             : "Chưa xử lý"}
                         </p>
                       </div>
@@ -552,7 +561,6 @@ export default function SOSPage() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

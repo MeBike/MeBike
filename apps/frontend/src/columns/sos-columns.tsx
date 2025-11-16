@@ -48,39 +48,6 @@ export const sosColumns = ({ onView }: SOSColumnsProps): ColumnDef<SOS>[] => [
     },
   },
   {
-    accessorKey: "photos",
-    header: "Hình ảnh",
-    cell: ({ row }) => {
-      const photos = row.getValue("photos") as string[];
-      return (
-        <div className="flex gap-1">
-          {photos && photos.length > 0 ? (
-            photos.slice(0, 3).map((photo, index) => (
-              <div
-                key={index}
-                className="relative w-12 h-12 rounded overflow-hidden border border-gray-200"
-              >
-                <Image
-                  src={photo}
-                  alt={`SOS photo ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ))
-          ) : (
-            <span className="text-sm text-gray-400">Không có</span>
-          )}
-          {photos && photos.length > 3 && (
-            <div className="flex items-center justify-center w-12 h-12 rounded bg-gray-100 border border-gray-200 text-xs text-gray-600">
-              +{photos.length - 3}
-            </div>
-          )}
-        </div>
-      );
-    },
-  },
-  {
     accessorKey: "issue",
     header: "Vấn đề",
     cell: ({ row }) => {
