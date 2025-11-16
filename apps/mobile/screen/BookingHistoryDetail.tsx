@@ -366,7 +366,11 @@ function BookingHistoryDetail() {
           handleOpenRatingForm={handleOpenRatingForm}
           getAppliesTo={getAppliesTo}
         />
-        <ActionButtons booking={booking} rentalQrValue={rentalQrValue} />
+        <ActionButtons 
+          booking={booking} 
+          rentalQrValue={rentalQrValue} 
+          onSOSPress={() => (navigation as any).navigate("CreateSOSRequest", { rentalId: booking._id })}
+        />
       </ScrollView>
 
       <RatingModal

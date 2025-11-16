@@ -55,6 +55,13 @@ export type RootStackParamList = {
     solvable: boolean;
     onSubmit: (data: ResolveSOSSchema) => Promise<void>;
   };
+  CreateSOSRequest: {
+    rentalId: string;
+  };
+  MySOS: undefined;
+  MySOSDetail: {
+    sosId: string;
+  };
   ReservationFlow: {
     stationId: string;
     stationName?: string;

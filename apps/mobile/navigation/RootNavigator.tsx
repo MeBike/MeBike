@@ -33,6 +33,9 @@ import WithdrawScreen from "../screen/withdraw-screen";
 import QRScannerScreen from "../screen/QRScannerScreen";
 import StaffPhoneLookupScreen from "../screen/StaffPhoneLookupScreen";
 import ResolveSOSScreen from "../screen/ResolveSOSScreen";
+import CreateSOSRequestScreen from "../screen/CreateSOSRequestScreen";
+import MySOSScreen from "../screen/MySOSScreen";
+import MySOSDetailScreen from "../screen/MySOSDetailScreen";
 import { RootStackParamList } from "../types/navigation";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -197,6 +200,30 @@ function RootNavigator() {
           headerShown: false, 
           gestureEnabled: false,
           presentation: 'modal'
+        }}
+      />
+      <Stack.Screen
+        name="CreateSOSRequest"
+        component={CreateSOSRequestScreen}
+        options={{ 
+          headerShown: false, 
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen
+        name="MySOS"
+        component={MySOSScreen}
+        options={{ 
+          headerShown: false, 
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen
+        name="MySOSDetail"
+        component={MySOSDetailScreen}
+        options={{ 
+          headerShown: false, 
+          gestureEnabled: false
         }}
       />
     </Stack.Navigator>

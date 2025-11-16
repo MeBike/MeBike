@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { SOS, IBikeIssueReport } from "@/types/SOS";
 import type { AxiosResponse } from "axios";
-import type { AssignSOSSchema, ResolveSOSSchema } from "@/schema/sosSchema";
+import type { AssignSOSSchema, ResolveSOSSchema , CreateSOSSchema} from "@/schema/sosSchema";
 import type {
   DetailApiResponse,
   ApiResponse,
@@ -94,6 +94,10 @@ export const sosService = {
     const response = await fetchHttpClient.post<
       DetailApiResponse<RentalBySOSID>
     >(SOS_ENDPOINTS.CREATE(id));
+    return response;
+  },
+  createSOS: async (data: CreateSOSSchema) : Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(`${SOS_ENDPOINTS.BASE}`, data);
     return response;
   },
 };

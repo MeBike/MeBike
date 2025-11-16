@@ -27,5 +27,18 @@ export const resolveSOSSchema = z.object({
     .optional(),
   photos: z.array(z.string().min(1, "URI không hợp lệ")),
 });
+export const createSOSSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  rental_id: z
+    .string()
+    .min(24, "Bike ID must be a valid ObjectId")
+    .max(24, "Bike ID must be a valid ObjectId")
+    .refine(isValidObjectId, {
+      message: "Bike ID must be a valid MongoDB ObjectId",
+    }),
+  issue : z.string().min(5, "Vấn đề phải ít nhất 5 ký tự").max(1000, "Vấn đề phải nhiều nhất 1000 ký tự"),  
+});
 export type AssignSOSSchema = z.infer<typeof assignSOSSchema>;
 export type ResolveSOSSchema = z.infer<typeof resolveSOSSchema>;
+export type CreateSOSSchema = z.infer<typeof createSOSSchema>;
