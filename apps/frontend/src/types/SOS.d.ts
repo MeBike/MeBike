@@ -1,33 +1,38 @@
 export type SOS = {
   _id: string;
+  rental_id: string;
   requester_id: string;
-  bike_id: string;
-  photo: Array<string>;
+  replaced_bike_id: string;
+  photos: Array<string>;
   issue: string;
   location: LocationGEO;
   status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
+  agent_notes: string;
+  reason: string;
   sos_agent_id: string;
-  staff_id: string | null;
-  resolved_at: string;
+  resolved_at: string | null;
   created_at: string;
   updated_at: string;
-  agent_notes: string;
 }
 
 export interface SOSDetail {
   _id: string;
-  photos: string[] | null;
+  rental_id: string;
+  requester_id: string;
+  replaced_bike_id: string;
+  photos: string[];
   issue: string;
   location: LocationGEO;
   status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
+  agent_notes: string;
+  reason: string;
   sos_agent_id: string;
-  staff_id: string | null;
-  resolved_at: string;
+  resolved_at: string | null;
   created_at: string;
   updated_at: string;
-  agent_notes: string;
   requester: IUser;
-  bike: IBike;
+  rental: IRental;
+  replaced_bike: IBike;
   sos_agent: IUser;
 }
 export interface LocationGEO {
