@@ -32,6 +32,7 @@ export default function ReportsPage() {
     pagination,
     reportOverview,
     updateReport,
+    refreshReportOverview
   } = useUserReport({ hasToken: true , page : currentPage , limit : limit });
 
   const {
@@ -128,8 +129,10 @@ export default function ReportsPage() {
         <Loader2 className="animate-spin w-16 h-16 text-primary" />
       </div>
     );
-  }
-
+  } 
+  useEffect(() => {
+    refreshReportOverview();
+  }, [refreshReportOverview]);
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
