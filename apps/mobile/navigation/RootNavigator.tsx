@@ -8,7 +8,7 @@ import ChangePasswordScreen from "../screen/ChangePasswordScreen";
 import EmailVerificationScreen from "../screen/EmailVerification";
 import FixedSlotDetailScreen from "../screen/FixedSlotDetailScreen";
 import FixedSlotEditorScreen from "../screen/FixedSlotEditorScreen";
-import FixedSlotTemplatesScreen from "../screen/FixedSlotTemplatesScreen";
+import FixedSlotTemplatesScreen from "../screen/fixed-slot-templates";
 import ForgotPasswordScreen from "../screen/ForgotPassword";
 import IntroScreen from "../screen/Intro";
 import LoginScreen from "../screen/Login";
