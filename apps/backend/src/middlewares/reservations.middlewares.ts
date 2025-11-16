@@ -334,6 +334,13 @@ const checkReservationState = async (reservationId: string, req: any) => {
     })
   }
 
+  if(reservation.bike_id == null){
+    throw new ErrorWithStatus({
+      message: RESERVATIONS_MESSAGE.CANNOT_CONFIRM_RESERVATION_WITHOUT_BIKE,
+      status: HTTP_STATUS.BAD_REQUEST
+    })
+  }
+
   const now = getLocalTime()
 
   if (reservation.start_time > now) {
