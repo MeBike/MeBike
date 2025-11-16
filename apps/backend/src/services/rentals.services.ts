@@ -444,20 +444,23 @@ class RentalsService {
       })
     }
 
-    const bike = await databaseService.bikes.findOne({ _id: rental.bike_id })
-    if (!bike) {
-      throw new ErrorWithStatus({
-        message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id!.toString()),
-        status: HTTP_STATUS.NOT_FOUND
-      })
-    }
-    if (bike.station_id) {
-      const bikeStation = await databaseService.stations.findOne({ _id: bike.station_id })
-      if (!bikeStation) {
+    let bike = null
+    if (rental.bike_id) {
+      bike = await databaseService.bikes.findOne({ _id: rental.bike_id })
+      if (!bike) {
         throw new ErrorWithStatus({
-          message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', rental.start_station.toString()),
+          message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id.toString()),
           status: HTTP_STATUS.NOT_FOUND
         })
+      }
+      if (bike.station_id) {
+        const bikeStation = await databaseService.stations.findOne({ _id: bike.station_id })
+        if (!bikeStation) {
+          throw new ErrorWithStatus({
+            message: RENTALS_MESSAGE.STATION_NOT_FOUND.replace('%s', rental.start_station.toString()),
+            status: HTTP_STATUS.NOT_FOUND
+          })
+        }
       }
     }
 
@@ -482,7 +485,7 @@ class RentalsService {
       forgot_password_otp_expires,
       ...insensitiveUserData
     } = user
-    const { station_id, ...restBike } = bike
+    const restBike = bike ? (({ station_id, ...rest }) => rest)(bike) : null
     const { _id, user_id, bike_id, start_station, end_station, ...restRental } = rental
 
     return {

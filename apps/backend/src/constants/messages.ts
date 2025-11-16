@@ -479,6 +479,7 @@ export const RESERVATIONS_MESSAGE = {
   // Not allowed action
   CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền huỷ phiên đặt trước của người khác',
   CANNOT_CONFIRM_THIS_RESERVATION: 'Bạn chỉ có thể xác nhận phiên đặt trước ở trạng thái đang được xử lí',
+  CANNOT_CONFIRM_RESERVATION_WITHOUT_BIKE: 'Chưa có xe sẵn sàng cho phiên đặt trước của bạn, không thể xác nhận',
   CANNOT_CONFIRM_EXPIRED_RESERVATION: 'Đã vượt quá thời gian cho phép xác nhận phiên đặt trước này',
   NOT_AVAILABLE_FOR_CONFIRMATION: 'Chưa đến thời gian cho phép xác nhận phiên đặt trước này',
   CANNOT_CANCEL_THIS_RESERVATION: 'Bạn chỉ có thể huỷ phiên đặt trước ở trạng thái đang được xử lí',

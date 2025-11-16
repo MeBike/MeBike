@@ -30,20 +30,12 @@ import {
 import User from '~/models/schemas/user.schema'
 import subscriptionService from './subscription.services'
 import { generateEndTime, getHoldHours } from '~/utils/reservation.helper'
-import { toObjectId } from '~/utils/string'
 
 interface ReserveOneTimeParams {
   user_id: ObjectId
   bike_id: ObjectId
   station_id: ObjectId
   start_time: Date
-}
-interface ReserveFixedSlotParams {
-  user_id: ObjectId
-  bike_id: ObjectId
-  station_id: ObjectId
-  start_time: Date
-  fixed_slot_template_id: ObjectId
 }
 
 interface ReserveWithSubscriptionParams {
@@ -224,7 +216,7 @@ class ReservationsService {
         const updatedData: Partial<Reservation> = {
           status: ReservationStatus.Cancelled
         }
-        if (!reservation.subscription_id && reservation.created_at && this.isRefundable(reservation.created_at)) {
+        if (!reservation.fixed_slot_template_id && !reservation.subscription_id && reservation.created_at && this.isRefundable(reservation.created_at)) {
           isRefund = true
           refundAmount = parseFloat(reservation.prepaid.toString())
         }
@@ -257,16 +249,18 @@ class ReservationsService {
             },
             { session }
           ),
-          databaseService.bikes.updateOne(
-            { _id: reservation.bike_id },
-            {
-              $set: {
-                status: BikeStatus.Available,
-                updated_at: now
-              }
-            },
-            { session }
-          ),
+          bike_id
+            ? databaseService.bikes.updateOne(
+                { _id: reservation.bike_id },
+                {
+                  $set: {
+                    status: BikeStatus.Available,
+                    updated_at: now
+                  }
+                },
+                { session }
+              )
+            : Promise.resolve(null),
           databaseService.rentalLogs.insertOne({ ...log }, { session })
         ])
 
@@ -942,7 +936,7 @@ class ReservationsService {
           as: 'bike'
         }
       },
-      { $unwind: { path: '$bike', preserveNullAndEmptyArrays: false } },
+      { $unwind: { path: '$bike', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: 'stations',

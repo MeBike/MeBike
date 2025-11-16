@@ -2,7 +2,7 @@ import { ClientSession, Decimal128, Int32, ObjectId } from 'mongodb'
 
 import HTTP_STATUS from '~/constants/http-status'
 import { BikeStatus, RentalStatus, ReservationStatus } from '~/constants/enums'
-import { RENTALS_MESSAGE } from '~/constants/messages'
+import { BIKES_MESSAGES, RENTALS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import databaseService from './database.services'
 import rentalsService from './rentals.services'
@@ -477,7 +477,7 @@ async function finalizeRentalWithoutTransaction({
 
   if (!bikeUpdateResult.matchedCount) {
     throw new ErrorWithStatus({
-      message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', persistedRental.bike_id!.toString()),
+      message: persistedRental.bike_id ? RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', persistedRental.bike_id.toString()) : BIKES_MESSAGES.BIKE_NOT_FOUND,
       status: HTTP_STATUS.NOT_FOUND
     })
   }
