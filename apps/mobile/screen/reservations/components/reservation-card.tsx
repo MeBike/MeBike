@@ -2,9 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import type { Reservation } from "../../types/reservation-types";
+import type { Reservation } from "../../../types/reservation-types";
 
-import { formatCurrency, formatDateTime, statusColorMap } from "../../utils/reservation-screen-utils";
+import { formatCurrency, formatDateTime, statusColorMap } from "../../../utils/reservation-screen-utils";
 
 type ReservationCardProps = {
   reservation: Reservation;
@@ -108,7 +108,7 @@ export function ReservationCard({
             <Ionicons name="bicycle" size={22} color="#0066FF" />
             <Text style={styles.cardTitle}>
               Xe #
-              {String(reservation.bike_id ?? "").slice(-10) || reservation.bike_id}
+              {String(reservation.bike_id ?? "").slice(-4) || reservation.bike_id}
             </Text>
           </View>
           <View

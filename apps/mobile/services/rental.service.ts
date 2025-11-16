@@ -15,6 +15,7 @@ const RENTAL_ENDPOINTS = {
   USER_RENTAL_DETAIL: (id: string) => `${RENTAL_BASE}/me/${id}`,
   USER_CURRENT_RENTAL: () => `${RENTAL_BASE}/me/current`,
   END_USER_CURRENT_RENTAL: (id: string) => `${RENTAL_BASE}/me/${id}/end`,
+  USER_RENTAL_COUNTS: () => `${RENTAL_BASE}/me/counts`,
   STAFF_ADMIN_GET_DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
   STAFF_ADMIN_END_RENTAL: (id: string) => `${RENTAL_BASE}/${id}/end`,
   STAFF_ACTIVE_RENTALS_BY_PHONE: (phone: string) =>
@@ -41,6 +42,14 @@ interface DetailApiResponse<T> {
 export type StaffActiveRentalsResponse = {
   data: StaffActiveRental[];
   pagination: Pagination;
+};
+
+type RentalCountsResponse = {
+  result: {
+    status: string;
+    counts: number;
+  };
+  message: string;
 };
 export const rentalService = {
   userPostRent: async (
@@ -82,6 +91,9 @@ export const rentalService = {
       RENTAL_ENDPOINTS.USER_RENTAL_DETAIL(id)
     );
     return response;
+  },
+  userGetRentalCounts: async (status?: string): Promise<AxiosResponse<RentalCountsResponse>> => {
+    return fetchHttpClient.get(RENTAL_ENDPOINTS.USER_RENTAL_COUNTS(), status ? { status } : undefined);
   },
   staffAdminGetDetailRental: async (id: string): Promise<AxiosResponse> => {
     const response = await fetchHttpClient.get(

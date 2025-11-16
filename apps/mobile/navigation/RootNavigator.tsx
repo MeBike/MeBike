@@ -17,7 +17,7 @@ import RegisterScreen from "../screen/Register";
 import ReportScreen from "../screen/ReportScreen";
 import ReportDetailScreen from "../screen/ReportDetailScreen";
 import ReservationDetailScreen from "../screen/reservation-detail-screen";
-import ReservationScreen from "../screen/reservation-screen";
+import ReservationScreen from "../screen/reservations";
 import ReservationFlowScreen from "../screen/ReservationFlowScreen";
 import RentalQrScreen from "../screen/RentalQrScreen";
 import StaffRentalDetailScreen from "../screen/StaffRentalDetailScreen";
