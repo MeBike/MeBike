@@ -4,8 +4,13 @@ import { toast } from "sonner";
 import { useGetAllManageReportQuery } from "./query/Report/useGetAllReportQuery";
 import { useGetReportOverview } from "./query/Report/useGetReportOverview";
 import { useUpdateReportMutation } from "./mutations/Report/useUpdateReportMutation";
-import type { UpdateReportSchemaFormData } from "@/schemas/reportSchema";
+import { useGetReportInProgressQuery } from "./query/Report/useGetReportInProgress";
+import type {
+  ResolveReportSchemaFormData,
+  UpdateReportSchemaFormData,
+} from "@/schemas/reportSchema";
 import { useRouter } from "next/navigation";
+import { useResolveReportMutation } from "./mutations/Report/useResolveReportMutation";
 interface ErrorWithMessage {
   message: string;
 }
@@ -31,7 +36,7 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
     if (message) return message;
     if (errorField) return errorField;
     // If data is a string, return it
-    if (typeof data === 'string') return data;
+    if (typeof data === "string") return data;
   }
   const simpleError = error as ErrorWithMessage;
   if (simpleError?.message) {
@@ -39,7 +44,15 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   }
   return defaultMessage;
 };
-export const useUserReport = ({ hasToken , page , limit }: { hasToken: boolean , page?: number , limit?: number }) => {
+export const useUserReport = ({
+  hasToken,
+  page,
+  limit,
+}: {
+  hasToken: boolean;
+  page?: number;
+  limit?: number;
+}) => {
   const queryClient = useQueryClient();
   const router = useRouter();
   const {
@@ -52,12 +65,12 @@ export const useUserReport = ({ hasToken , page , limit }: { hasToken: boolean ,
   const refreshReports = useCallback(async () => {
     if (!hasToken) return;
     refetchReports();
-  }, [hasToken , refetchReports]);
+  }, [hasToken, refetchReports]);
   const useUpdateReport = useUpdateReportMutation();
   const refreshReportOverview = useCallback(async () => {
     if (!hasToken) return;
     refetchReportOverview();
-  }, [hasToken , refetchReportOverview]);
+  }, [hasToken, refetchReportOverview]);
   const updateReport = useCallback(
     async (id: string, data: UpdateReportSchemaFormData) => {
       if (!hasToken) {
@@ -73,7 +86,10 @@ export const useUserReport = ({ hasToken , page , limit }: { hasToken: boolean ,
           }) => {
             if (result?.status === 200) {
               const message = result?.data?.message;
-              if (message && message !== "Update trạng thái report thành công!") {
+              if (
+                message &&
+                message !== "Update trạng thái report thành công!"
+              ) {
                 toast.error(message);
               } else {
                 toast.success("Cập nhật báo cáo thành công");
@@ -96,9 +112,59 @@ export const useUserReport = ({ hasToken , page , limit }: { hasToken: boolean ,
         }
       );
     },
-    [hasToken, router, queryClient, refetchReports , useUpdateReport]
+    [hasToken, router, queryClient, refetchReports, useUpdateReport]
   );
-
+  const {
+    data: reportInProgress,
+    refetch: refetchingReportInProgress,
+    isLoading: isLoadingReportInProgress,
+  } = useGetReportInProgressQuery({ page: page ?? 1, limit: limit ?? 10 });
+  const getReportInProgress = useCallback(async () => {
+    if (!hasToken) return;
+    refetchingReportInProgress();
+  }, [hasToken, refetchingReportInProgress]);
+  const useResolveReport = useResolveReportMutation();
+  const resolveReport = useCallback(
+    async (id: string, data: ResolveReportSchemaFormData) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useResolveReport.mutate(
+        { id, data },
+        {
+          onSuccess: (result: {
+            status: number;
+            data?: { message?: string };
+          }) => {
+            if (result?.status === 200) {
+              const message = result?.data?.message;
+              if (
+                message &&
+                message !== "Update trạng thái report thành công!"
+              ) {
+                toast.error(message);
+              } else {
+                toast.success("Cập nhật báo cáo thành công!");
+                queryClient.invalidateQueries({
+                  queryKey: ["reports", "in-progress", page, limit],
+                });
+                getReportInProgress();
+              }
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Lỗi khi cập nhật báo cáo"
+            );
+            toast.error(errorMessage);
+          },
+        }
+      );
+    },
+    [hasToken, router, queryClient, useResolveReport, getReportInProgress, page, limit]
+  );
   return {
     reports: reports?.data || [],
     refetchReports,
@@ -108,5 +174,9 @@ export const useUserReport = ({ hasToken , page , limit }: { hasToken: boolean ,
     refreshReportOverview,
     pagination: reports?.pagination,
     updateReport: updateReport,
+    getReportInProgress,
+    reportInProgress,
+    isLoadingReportInProgress,
+    resolveReport,
   };
 };

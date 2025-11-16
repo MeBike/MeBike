@@ -27,11 +27,13 @@ export enum ReportStatus {
   Pending = "ĐANG CHỜ XỬ LÝ",
   InProgress = "ĐANG XỬ LÝ",
   Resolved = "ĐÃ GIẢI QUYẾT",
+  CannotResolved = "KHÔNG GIẢI QUYẾT ĐƯỢC",
   Cancel = "ĐÃ HỦY",
 }
+
 export enum ReportPriority {
-  LOW = "THẤP",
-  NORMAL = "BÌNH THƯỜNG",
-  HIGH = "CAO",
-  URGENT = "KHẨN CẤP",
+  LOW = "4 - THẤP",
+  NORMAL = "3 - BÌNH THƯỜNG",
+  HIGH = "2 - CAO",
+  URGENT = "1 - KHẨN CẤP",
 }

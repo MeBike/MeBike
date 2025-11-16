@@ -12,5 +12,6 @@ export function useGetReportOverview() {
     return useQuery({
     queryKey: ["report-overview"],
     queryFn: getReportOverview,
+    enabled: false,
   });
 }
