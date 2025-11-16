@@ -474,8 +474,14 @@ class RentalsService {
       endStation = await databaseService.stations.findOne({ _id: rental.end_station })
     }
 
-    // const { password, email_verify_token, forgot_password_token, ...insensitiveUserData } = user
-    const { password, ...insensitiveUserData } = user
+    const {
+      password,
+      email_verify_otp,
+      email_verify_otp_expires,
+      forgot_password_otp,
+      forgot_password_otp_expires,
+      ...insensitiveUserData
+    } = user
     const { station_id, ...restBike } = bike
     const { _id, user_id, bike_id, start_station, end_station, ...restRental } = rental
 

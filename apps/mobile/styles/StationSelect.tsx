@@ -6,7 +6,7 @@ import { useStationActions } from "@hooks/useStationAction";
 import {
   ActivityIndicator,
   FlatList,
-  SafeAreaView,
+  RefreshControl,
   StatusBar,
   StyleSheet,
   Text,
@@ -100,6 +100,18 @@ export default function StationSelectScreen() {
 
   const stations = showingNearby ? nearbyStations : data;
   const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    if (showingNearby) {
+      await getNearbyStations();
+    }
+    else {
+      await getAllStations();
+    }
+    setRefreshing(false);
+  };
+
   if (
     !Array.isArray(stations) ||
     stations === null ||
@@ -149,34 +161,41 @@ export default function StationSelectScreen() {
           
         </View>
       </LinearGradient>
-        <FlatList
-          data={stations}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => {
-            const stationCardData = {
-              id: item._id,
-              name: item.name,
-              location: {
-                latitude: Number(item.latitude),
-                longitude: Number(item.longitude),
-                address: item.address,
-              },
-              availableBikes: Number(item.availableBikes),
-              totalSlots: Number(item.capacity),
-              isActive: true,
-              bikes: [],
-              layout: { width: 0, height: 0, entrances: [] },
-            };
-            return (
-              <StationCard
-                station={item}
-                onPress={() => handleSelectStation(item._id)}
-                
-              />
-            );
-          }}
-          contentContainerStyle={styles.list}
-        />
+      <FlatList
+        data={stations}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => {
+          const stationCardData = {
+            id: item._id,
+            name: item.name,
+            location: {
+              latitude: Number(item.latitude),
+              longitude: Number(item.longitude),
+              address: item.address,
+            },
+            availableBikes: Number(item.availableBikes),
+            totalSlots: Number(item.capacity),
+            isActive: true,
+            bikes: [],
+            layout: { width: 0, height: 0, entrances: [] },
+          };
+          return (
+            <StationCard
+              station={item}
+              onPress={() => handleSelectStation(item._id)}
+            />
+          );
+        }}
+        contentContainerStyle={styles.list}
+        refreshControl={(
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={["#0066FF"]}
+            tintColor="#0066FF"
+          />
+        )}
+      />
     </View>
   );
 }

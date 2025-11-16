@@ -29,6 +29,7 @@ export function DatePickerModal({ visible, value, onChange, onConfirm, onClose }
             mode="date"
             display="spinner"
             value={value}
+            accentColor={BikeColors.primary}
             minimumDate={getTomorrowDate()}
             onChange={onChange}
           />

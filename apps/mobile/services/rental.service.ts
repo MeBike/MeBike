@@ -59,10 +59,8 @@ export const rentalService = {
     const response = await fetchHttpClient.get<RentalResponse>(
       RENTAL_ENDPOINTS.USER_RENTAL_ME(),
       {
-        params: {
-          page,
-          limit,
-        },
+        page,
+        limit,
       }
     );
     return response;
@@ -107,9 +105,7 @@ export const rentalService = {
   ): Promise<AxiosResponse<StaffActiveRentalsResponse>> => {
     const response = await fetchHttpClient.get<StaffActiveRentalsResponse>(
       RENTAL_ENDPOINTS.STAFF_ACTIVE_RENTALS_BY_PHONE(phone),
-      {
-        params,
-      }
+      params
     );
     return response;
   },

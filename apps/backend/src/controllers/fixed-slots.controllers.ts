@@ -48,7 +48,7 @@ export const getFixedSlotTemplateListController = async (req: Request, res: Resp
     })
 
   const match: any = {}
-  if (user.role === Role.User) {
+  if (![Role.Admin, Role.Staff].includes(user.role)) {
     match.user_id = toObjectId(user_id)
   }
 
@@ -73,29 +73,13 @@ export const updateFixedSlotTemplateController = async (req: Request, res: Respo
   })
 }
 
-export const pauseFixedSlotTemplateController = async (req: Request, res: Response) => {
-  const template = req.fixedSlotTemplate!
-  const result = await fixedSlotTemplateService.updateStatus(template._id!, FixedSlotStatus.PAUSED)
-
-  res.json({
-    message: RESERVATIONS_MESSAGE.FS_TEMPLATE_PAUSE_SUCCESS,
-    result
-  })
-}
-
-export const resumeFixedSlotTemplateController = async (req: Request, res: Response) => {
-  const template = req.fixedSlotTemplate!
-  const result = await fixedSlotTemplateService.updateStatus(template._id!, FixedSlotStatus.ACTIVE)
-
-  res.json({
-    message: RESERVATIONS_MESSAGE.FS_TEMPLATE_RESUME_SUCCESS,
-    result
-  })
-}
-
 export const cancelFixedSlotTemplateController = async (req: Request, res: Response) => {
   const template = req.fixedSlotTemplate!
-  const result = await fixedSlotTemplateService.updateStatus(template._id!, FixedSlotStatus.CANCELLED)
+
+  const [result] = await Promise.all([
+    fixedSlotTemplateService.updateStatus(template._id!, FixedSlotStatus.CANCELLED),
+    fixedSlotTemplateService.updateCorrespondingRentalAndReservation(template._id!)
+  ])
 
   res.json({
     message: RESERVATIONS_MESSAGE.FS_TEMPLATE_CANCEL_SUCCESS,

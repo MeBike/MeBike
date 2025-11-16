@@ -398,7 +398,8 @@ export const RESERVATIONS_MESSAGE = {
 
   FS_TEMPLATE_NOT_FOUND: 'Không tìm thấy mẫu khung giờ cố định',
   FS_TEMPLATE_CANNOT_OPERATE_OTHER: 'Bạn không thể thao tác mẫu của người khác',
-  FS_TEMPLATE_MUST_BE_ACTIVE_TO_PAUSE: 'Chỉ có thể tạm dừng mẫu đang hoạt động',
+  FS_TEMPLATE_MUST_BE_ACTIVE_TO_UPDATE: 'Chỉ có thể cập nhật mẫu đang hoạt động',
+  FS_INVALID_STATUS: 'Trạng thái của khung không đúng với trạng thái yêu cầu',
   FS_TEMPLATE_MUST_BE_PAUSED_TO_RESUME: 'Chỉ có thể kích hoạt lại mẫu đang tạm dừng',
   FS_TEMPLATE_CANNOT_MODIFY_AFTER_START: 'Không thể chỉnh sửa mẫu sau khi đã bắt đầu',
   FS_INVALID_SLOT_TIME: 'Thời gian kết thúc phải lớn hơn thời gian bắt đầu',
@@ -416,7 +417,7 @@ export const RESERVATIONS_MESSAGE = {
   FS_INVALID_END_DATE: 'Ngày kết thúc không hợp lệ',
   FS_START_DATE_MUST_AFTER_24H: 'Ngày bắt đầu phải cách hiện tại 24h',
   FS_END_SLOT_AFTER_START: 'Thời gian kết thúc slot phải lớn hơn thời gian bắt đầu',
-  FS_USER_ALREADY_HAD_TEMPLATE_IN_STATION: 'Người dùng đã có một khung lịch đang hoạt động hay tạm dừng tại trạm này',
+  FS_USER_ALREADY_HAD_TEMPLATE_IN_STATION: 'Người dùng đã có một khung lịch đang hoạt động tại trạm này',
   // Subscription (SUB)
   SUB_REQUIRED_SUBSCRIPTION_ID: 'Vui lòng nhập ID gói đăng ký (subscription_id)',
   SUBSCRIPTION_NOT_FOUND: 'Không tìm thấy gói đăng ký',
@@ -449,7 +450,8 @@ export const RESERVATIONS_MESSAGE = {
   INVALID_START_TIME_FORMAT: 'Thời gian bắt đầu hiệu lực không hợp lệ (phải theo mẫu ISO8601)',
   INVALID_REASON: 'Nguyên nhân không hợp lệ (phải là dạng chuỗi)',
   INVALID_REASON_LENGTH: 'Độ dài của nguyên nhân không hợp lệ (phải từ 5 đến 255 kí tự)',
-  INVALID_START_TIME: 'Thời gian đặt trước không thể là thời điểm ở quá khứ',
+  INVALID_PAST_START_TIME: 'Thời gian đặt trước không thể là thời điểm ở quá khứ',
+  EXCEED_ALLOWED_START_TIME: 'Thời gian bắt đầu vượt quá giới hạn cho phép. Bạn chỉ có thể đặt trước trong vòng %s ngày.',
   INVALID_STATION_ID: 'Id trạm xe không hợp lệ',
   INVALID_USER_ID: 'Id người dùng không hợp lệ',
   INVALID_SOURCE_STATION_ID: 'Id trạm nguồn không hợp lệ.',

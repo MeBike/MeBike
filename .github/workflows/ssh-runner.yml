@@ -1,0 +1,33 @@
+name: ssh-runner
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  ssh-runner:
+    runs-on: ubuntu-latest
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/gha_vps_key
+          chmod 600 ~/.ssh/gha_vps_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+          echo "SSH_KEY_PATH=$HOME/.ssh/gha_vps_key" >> "$GITHUB_ENV"
+
+      - name: Run remote command
+        run: ssh -i "$SSH_KEY_PATH" -o StrictHostKeyChecking=yes "amogus@$VPS_HOST" "echo hello world"
+
+      - name: Cleanup SSH key
+        if: always()
+        run: |
+          rm -f ~/.ssh/gha_vps_key
