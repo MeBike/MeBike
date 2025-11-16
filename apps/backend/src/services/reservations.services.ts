@@ -37,13 +37,6 @@ interface ReserveOneTimeParams {
   station_id: ObjectId
   start_time: Date
 }
-interface ReserveFixedSlotParams {
-  user_id: ObjectId
-  bike_id: ObjectId
-  station_id: ObjectId
-  start_time: Date
-  fixed_slot_template_id: ObjectId
-}
 
 interface ReserveWithSubscriptionParams {
   user_id: ObjectId
