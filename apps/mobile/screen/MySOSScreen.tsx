@@ -16,14 +16,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSOS } from "@hooks/use-sos";
 import { useAuth } from "@providers/auth-providers";
 import type { SOS } from "@/types/SOS";
-
+import { formatVietnamDateTime } from "@/utils/date";
 const MySOSScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const hasToken = Boolean(user?._id);
-  const [page] = useState(1);
-  const [limit] = useState(20);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(5);
+  const [allSOSData, setAllSOSData] = useState<SOS[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
 
   const { sosRequests, isLoading, refetchSOSRequest } = useSOS({
     hasToken,
@@ -32,27 +34,58 @@ const MySOSScreen = () => {
   });
 
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  // Accumulate data when sosRequests changes
+  React.useEffect(() => {
+    if (sosRequests?.data) {
+      if (page === 1) {
+        // Reset data when refreshing or initial load
+        setAllSOSData(sosRequests.data);
+      } else {
+        // Append new data for pagination
+        setAllSOSData(prev => [...prev, ...sosRequests.data]);
+      }
+      setLoadingMore(false);
+    }
+    // Update total records
+    if (sosRequests?.pagination?.totalRecords !== undefined) {
+      setTotalRecords(sosRequests.pagination.totalRecords);
+    }
+  }, [sosRequests?.data, page]);
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setPage(1);
     await refetchSOSRequest();
     setRefreshing(false);
+  };
+
+  const loadMore = async () => {
+    if (loadingMore || isLoading || !sosRequests?.pagination) return;
+    
+    const { currentPage, totalPages } = sosRequests.pagination;
+    if (currentPage >= totalPages) return;
+
+    setLoadingMore(true);
+    setPage(currentPage + 1);
+    // refetchSOSRequest will be triggered by the page change
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ĐANG CHỜ XỬ LÍ":
-        return "#FFA500";
+        return "#FF9800";
       case "ĐÃ GỬI NGƯỜI CỨU HỘ":
-        return "#3B82F6";
+        return "#2196F3";
       case "ĐANG TRÊN ĐƯỜNG ĐẾN":
-        return "#8B5CF6";
+        return "#9C27B0";
       case "ĐÃ XỬ LÍ":
-        return "#10B981";
+        return "#4CAF50";
       case "KHÔNG XỬ LÍ ĐƯỢC":
-        return "#EF4444";
+        return "#F44336";
       case "ĐÃ TỪ CHỐI":
-        return "#6B7280";
+        return "#FF6B6B";
       default:
         return "#999";
     }
@@ -128,17 +161,20 @@ const MySOSScreen = () => {
         <View style={styles.sosCardFooter}>
           <View style={styles.footerItem}>
             <Ionicons name="time-outline" size={16} color="#999" />
-            <Text style={styles.footerText}>{formatDate(item.created_at)}</Text>
+            <Text style={styles.footerText}>
+              {formatVietnamDateTime(item.created_at)}
+            </Text>
           </View>
-          {item.location?.coordinates && item.location.coordinates.length >= 2 && (
-            <View style={styles.footerItem}>
-              <Ionicons name="location-outline" size={16} color="#999" />
-              <Text style={styles.footerText}>
-                {String(item.location.coordinates[1]).slice(0, 9)},{" "}
-                {String(item.location.coordinates[0]).slice(0, 9)}
-              </Text>
-            </View>
-          )}
+          {item.location?.coordinates &&
+            item.location.coordinates.length >= 2 && (
+              <View style={styles.footerItem}>
+                <Ionicons name="location-outline" size={16} color="#999" />
+                <Text style={styles.footerText}>
+                  {String(item.location.coordinates[1]).slice(0, 9)},{" "}
+                  {String(item.location.coordinates[0]).slice(0, 9)}
+                </Text>
+              </View>
+            )}
         </View>
 
         <View style={styles.chevronContainer}>
@@ -157,8 +193,6 @@ const MySOSScreen = () => {
       </Text>
     </View>
   );
-
-  const sosData = sosRequests?.data || [];
 
   return (
     <View style={styles.container}>
@@ -185,41 +219,22 @@ const MySOSScreen = () => {
       {/* Stats Card */}
       <View style={styles.statsCard}>
         <View style={styles.statsItem}>
-          <Text style={styles.statsValue}>{sosData.length}</Text>
+          <Text style={styles.statsValue}>{totalRecords}</Text>
           <Text style={styles.statsLabel}>Tổng yêu cầu</Text>
         </View>
-        <View style={styles.statsDivider} />
-        <View style={styles.statsItem}>
-          <Text style={styles.statsValue}>
-            {sosData.filter((s: SOS) => s.status === "ĐÃ XỬ LÍ").length}
-          </Text>
-          <Text style={styles.statsLabel}>Đã xử lý</Text>
-        </View>
-        <View style={styles.statsDivider} />
-        <View style={styles.statsItem}>
-          <Text style={styles.statsValue}>
-            {
-              sosData.filter(
-                (s: SOS) =>
-                  s.status === "ĐANG CHỜ XỬ LÍ" ||
-                  s.status === "ĐÃ GỬI NGƯỜI CỨU HỘ" ||
-                  s.status === "ĐANG TRÊN ĐƯỜNG ĐẾN"
-              ).length
-            }
-          </Text>
-          <Text style={styles.statsLabel}>Đang xử lý</Text>
-        </View>
+
+
       </View>
 
       {/* SOS List */}
-      {isLoading && !refreshing ? (
+      {isLoading && !refreshing && page === 1 ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FF3B30" />
           <Text style={styles.loadingText}>Đang tải...</Text>
         </View>
       ) : (
         <FlatList
-          data={sosData}
+          data={allSOSData}
           renderItem={renderSOSItem}
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContent}
@@ -233,6 +248,15 @@ const MySOSScreen = () => {
             />
           }
           ListEmptyComponent={renderEmptyState}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={styles.loadingMore}>
+                <ActivityIndicator size="small" color="#FF3B30" />
+              </View>
+            ) : null
+          }
         />
       )}
     </View>
@@ -416,6 +440,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#999",
     textAlign: "center",
+  },
+  loadingMore: {
+    paddingVertical: 20,
+    alignItems: "center",
   },
 });
 

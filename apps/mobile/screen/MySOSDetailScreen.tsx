@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Modal,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSOS } from "@hooks/use-sos";
 import { useAuth } from "@providers/auth-providers";
 import type { SOSDetail } from "@/types/SOS";
-
+import { formatVietnamDateTime } from "@/utils/date";
 type RouteParams = {
   sosId: string;
 };
@@ -28,8 +30,11 @@ const MySOSDetailScreen = () => {
   const { sosId } = route.params as RouteParams;
   const { user } = useAuth();
   const hasToken = Boolean(user?._id);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
 
-  const { sosDetail, isLoadingSOSDetail, refetchSOSDetail } = useSOS({
+  const { sosDetail, isLoadingSOSDetail, refetchSOSDetail, cancelSOSRequest } = useSOS({
     hasToken,
     page: 1,
     limit: 10,
@@ -47,17 +52,17 @@ const MySOSDetailScreen = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ĐANG CHỜ XỬ LÍ":
-        return "#FFA500";
+        return "#FF9800";
       case "ĐÃ GỬI NGƯỜI CỨU HỘ":
-        return "#3B82F6";
+        return "#2196F3";
       case "ĐANG TRÊN ĐƯỜNG ĐẾN":
-        return "#8B5CF6";
+        return "#9C27B0";
       case "ĐÃ XỬ LÍ":
-        return "#10B981";
+        return "#4CAF50";
       case "KHÔNG XỬ LÍ ĐƯỢC":
-        return "#EF4444";
+        return "#F44336";
       case "ĐÃ TỪ CHỐI":
-        return "#6B7280";
+        return "#FF6B6B";
       default:
         return "#999";
     }
@@ -82,15 +87,29 @@ const MySOSDetailScreen = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleCancelSOS = async () => {
+    if (!cancelReason.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập lý do hủy");
+      return;
+    }
+
+    setIsCancelling(true);
+    try {
+      await cancelSOSRequest({ reason: cancelReason });
+      setShowCancelModal(false);
+      setCancelReason("");
+      await refetchSOSDetail();
+      Alert.alert("Thành công", "Đã hủy yêu cầu SOS thành công", [
+        {
+          text: "OK",
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể hủy yêu cầu SOS");
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   if (isLoadingSOSDetail || !detail) {
@@ -161,14 +180,18 @@ const MySOSDetailScreen = () => {
             <View style={styles.timelineItem}>
               <Ionicons name="time-outline" size={16} color="#666" />
               <Text style={styles.timelineText}>
-                Tạo lúc: {formatDate(detail.created_at)}
+                Tạo lúc: {formatVietnamDateTime(detail.created_at)}
               </Text>
             </View>
             {detail.resolved_at && (
               <View style={styles.timelineItem}>
-                <Ionicons name="checkmark-done-outline" size={16} color="#666" />
+                <Ionicons
+                  name="checkmark-done-outline"
+                  size={16}
+                  color="#666"
+                />
                 <Text style={styles.timelineText}>
-                  Xử lý lúc: {formatDate(detail.resolved_at)}
+                  Xử lý lúc: {formatVietnamDateTime(detail.resolved_at)}
                 </Text>
               </View>
             )}
@@ -183,7 +206,9 @@ const MySOSDetailScreen = () => {
           </View>
           <View style={styles.infoSection}>
             <Text style={styles.infoLabel}>Mã yêu cầu:</Text>
-            <Text style={styles.infoValue}>#{detail._id.slice(-8).toUpperCase()}</Text>
+            <Text style={styles.infoValue}>
+              #{detail._id.slice(-8).toUpperCase()}
+            </Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.infoSection}>
@@ -236,7 +261,7 @@ const MySOSDetailScreen = () => {
             <View style={styles.infoSection}>
               <Text style={styles.infoLabel}>Bắt đầu:</Text>
               <Text style={styles.infoValue}>
-                {formatDate(detail.rental.start_time)}
+                {formatVietnamDateTime(detail.rental.start_time)}
               </Text>
             </View>
           </View>
@@ -253,13 +278,14 @@ const MySOSDetailScreen = () => {
               <Image
                 source={{
                   uri:
-                    detail.sos_agent.avatar ||
-                    "https://via.placeholder.com/60",
+                    detail.sos_agent.avatar || "https://via.placeholder.com/60",
                 }}
                 style={styles.agentAvatar}
               />
               <View style={styles.agentDetails}>
-                <Text style={styles.agentName}>{detail.sos_agent.fullname}</Text>
+                <Text style={styles.agentName}>
+                  {detail.sos_agent.fullname}
+                </Text>
                 <Text style={styles.agentPhone}>
                   {detail.sos_agent.phone_number}
                 </Text>
@@ -282,7 +308,9 @@ const MySOSDetailScreen = () => {
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Ionicons name="images" size={24} color="#FF3B30" />
-              <Text style={styles.cardTitle}>Hình ảnh ({detail.photos.length})</Text>
+              <Text style={styles.cardTitle}>
+                Hình ảnh ({detail.photos.length})
+              </Text>
             </View>
             <View style={styles.photosGrid}>
               {detail.photos.map((photo, index) => (
@@ -311,7 +339,81 @@ const MySOSDetailScreen = () => {
             <Text style={styles.reasonText}>{detail.reason}</Text>
           </View>
         )}
+
+        {/* Cancel Button - only show if status is ĐANG CHỜ XỬ LÍ */}
+        {detail.status === "ĐANG CHỜ XỬ LÍ" && (
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => setShowCancelModal(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="close-circle" size={24} color="#fff" />
+            <Text style={styles.cancelButtonText}>Hủy yêu cầu SOS</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
+
+      {/* Cancel Modal */}
+      <Modal
+        visible={showCancelModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowCancelModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Hủy yêu cầu SOS</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowCancelModal(false);
+                  setCancelReason("");
+                }}
+                disabled={isCancelling}
+              >
+                <Ionicons name="close" size={28} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalLabel}>Lý do hủy:</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Nhập lý do hủy yêu cầu SOS..."
+              placeholderTextColor="#999"
+              value={cancelReason}
+              onChangeText={setCancelReason}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              editable={!isCancelling}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSecondary]}
+                onPress={() => {
+                  setShowCancelModal(false);
+                  setCancelReason("");
+                }}
+                disabled={isCancelling}
+              >
+                <Text style={styles.modalButtonSecondaryText}>Đóng</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonDanger]}
+                onPress={handleCancelSOS}
+                disabled={isCancelling}
+              >
+                {isCancelling ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.modalButtonDangerText}>Xác nhận hủy</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -503,6 +605,89 @@ const styles = StyleSheet.create({
     color: "#EF4444",
     lineHeight: 22,
     fontWeight: "500",
+  },
+  cancelButton: {
+    backgroundColor: "#EF4444",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+    marginBottom: 16,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    width: "100%",
+    maxWidth: 400,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1a1a1a",
+  },
+  modalLabel: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginBottom: 8,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 15,
+    color: "#1a1a1a",
+    minHeight: 100,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalButtonSecondary: {
+    backgroundColor: "#f0f0f0",
+  },
+  modalButtonSecondaryText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#666",
+  },
+  modalButtonDanger: {
+    backgroundColor: "#EF4444",
+  },
+  modalButtonDangerText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
   },
 });
 

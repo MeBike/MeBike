@@ -148,6 +148,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       roles: ["STAFF"],
     },
     {
+      title: "Quản lý đơn báo cáo",
+      icon: FileCheck2,
+      href: "/staff/reports",
+      roles: ["STAFF"],
+    },
+    {
       title: "Quản lý đơn SOS",
       icon: FileCheck2,
       href: "/sos/sos-alerts",

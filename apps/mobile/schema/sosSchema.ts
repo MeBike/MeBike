@@ -39,6 +39,13 @@ export const createSOSSchema = z.object({
     }),
   issue : z.string().min(5, "Vấn đề phải ít nhất 5 ký tự").max(1000, "Vấn đề phải nhiều nhất 1000 ký tự"),  
 });
+export const cancelSOSSchema = z.object({
+  reason: z
+    .string()
+    .min(1, "Lý do phải ít nhất 1 ký tự")
+    .max(500, "Lý do phải nhiều nhất 500 ký tự"),
+});
 export type AssignSOSSchema = z.infer<typeof assignSOSSchema>;
 export type ResolveSOSSchema = z.infer<typeof resolveSOSSchema>;
 export type CreateSOSSchema = z.infer<typeof createSOSSchema>;
+export type CancelSOSSchema = z.infer<typeof cancelSOSSchema>;

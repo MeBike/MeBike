@@ -47,9 +47,12 @@ export default function SOSPage() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [selectedRentalId, setSelectedRentalId] = useState<string>("");
   const [isReplacingBike, setIsReplacingBike] = useState(false);
-  const {endRental} = useRentalsActions({hasToken: true , rental_id: selectedRentalId});
-  const {users} = useUserActions({hasToken: true});
-  const {stations} = useStationActions({hasToken: true});
+  const { endRental } = useRentalsActions({
+    hasToken: true,
+    rental_id: selectedRentalId,
+  });
+  const { users } = useUserActions({ hasToken: true });
+  const { stations } = useStationActions({ hasToken: true });
   const {
     sosRequests,
     isLoading,
@@ -64,13 +67,14 @@ export default function SOSPage() {
     page: currentPage,
     limit: limit,
     id: selectedSOSId,
-    status : statusFilter === "all" ? undefined : statusFilter,
+    status: statusFilter === "all" ? undefined : statusFilter,
   });
 
   const latitude = sosDetail?.result?.location?.coordinates?.[1] || 0;
   const longitude = sosDetail?.result?.location?.coordinates?.[0] || 0;
-  
-  const {responseNearestAvailableBike , getNearestAvailableBike} = useStationActions({latitude, longitude});
+
+  const { responseNearestAvailableBike, getNearestAvailableBike } =
+    useStationActions({ latitude, longitude });
 
   // Filter SOS agents from users
   const sosAgents = users?.filter((user) => user.role === "SOS") || [];
@@ -87,7 +91,6 @@ export default function SOSPage() {
     resolver: zodResolver(endRentalSchema),
     defaultValues: {
       end_station: "",
-      end_time: "",
       reason: "",
     },
   });
@@ -103,13 +106,13 @@ export default function SOSPage() {
       console.error("Error assigning SOS:", error);
     }
   };
-  
+
   const handleCancelSOS = async () => {
     if (!cancelReason.trim()) {
       alert("Vui lòng nhập lý do hủy");
       return;
     }
-    
+
     setIsCancelling(true);
     try {
       await cancelSOSRequest({ reason: cancelReason });
@@ -152,23 +155,17 @@ export default function SOSPage() {
 
   const onSubmitReplaceBike = async (data: EndRentalSchema) => {
     setIsReplacingBike(true);
-    
+
     try {
-      // Format to keep local time: 2025-11-16T19:53:14.179+00:00
-      const endTime = data.end_time + ':00.000+00:00';
-      console.log("Ending rental with time:", endTime);
-      await endRental({
-        ...data,
-        end_time: endTime,
-      });
-      
+      await endRental(data);
+
       // Step 2: Create new rental
       await createRentalRequest();
-      
+
       // Refresh data
       await refetchSOSRequest();
       await refetchSOSDetail();
-      
+
       setIsReplaceModalOpen(false);
       endRentalForm.reset();
     } catch (error) {
@@ -446,10 +443,10 @@ export default function SOSPage() {
                           sosDetail.result.status === "ĐÃ XỬ LÍ"
                             ? "bg-green-100 text-green-800"
                             : sosDetail.result.status === "ĐANG CHỜ XỬ LÍ"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
-                                ? "bg-orange-100 text-orange-800"
-                                : "bg-red-100 text-red-800"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
                         {sosDetail.result.status}
@@ -460,10 +457,8 @@ export default function SOSPage() {
                       <p className="text-sm text-muted-foreground">Ngày tạo</p>
                       <p className="text-foreground font-medium">
                         {sosDetail.result.created_at
-                          ? new Date(
-                              sosDetail.result.created_at
-                            ).toLocaleString("vi-VN")
-                          : "-"}
+                          ? formatDateUTC(sosDetail.result.created_at)
+                          : "Chưa có"}
                       </p>
                     </div>
 
@@ -473,10 +468,8 @@ export default function SOSPage() {
                       </p>
                       <p className="text-foreground font-medium">
                         {sosDetail.result.updated_at
-                          ? new Date(
-                              sosDetail.result.updated_at
-                            ).toLocaleString("vi-VN")
-                          : "-"}
+                          ? formatDateUTC(sosDetail.result.updated_at)
+                          : "Chưa có"}
                       </p>
                     </div>
 
@@ -487,9 +480,7 @@ export default function SOSPage() {
                       <p className="text-foreground font-medium">
                         {sosDetail.result.resolved_at &&
                         sosDetail.result.resolved_at !== null
-                          ? new Date(
-                              sosDetail.result.resolved_at
-                            ).toLocaleString("vi-VN")
+                          ? formatDateUTC(sosDetail.result.resolved_at)
                           : "Chưa xử lý"}
                       </p>
                     </div>
@@ -656,10 +647,10 @@ export default function SOSPage() {
                             sosDetail.result.status === "ĐÃ XỬ LÍ"
                               ? "bg-green-100 text-green-800"
                               : sosDetail.result.status === "ĐANG CHỜ XỬ LÍ"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
-                                  ? "bg-orange-100 text-orange-800"
-                                  : "bg-red-100 text-red-800"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-red-100 text-red-800"
                           }`}
                         >
                           {sosDetail.result.status}
@@ -685,7 +676,7 @@ export default function SOSPage() {
               </Button>
               {sosDetail.result.status === "ĐANG CHỜ XỬ LÍ" && (
                 <>
-                  <Button 
+                  <Button
                     className="flex-1"
                     onClick={() => {
                       setIsAssignModalOpen(true);
@@ -693,7 +684,7 @@ export default function SOSPage() {
                   >
                     Phân công xử lý
                   </Button>
-                  <Button 
+                  <Button
                     className="flex-1"
                     variant="destructive"
                     onClick={() => {
@@ -704,8 +695,9 @@ export default function SOSPage() {
                   </Button>
                 </>
               )}
-              {(sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC" || sosDetail.result.status.includes("KHÔNG XỬ LÍ")) && (
-                <Button 
+              {(sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC" ||
+                sosDetail.result.status.includes("KHÔNG XỬ LÍ")) && (
+                <Button
                   className="flex-1"
                   onClick={() => {
                     console.log("Status:", sosDetail.result.status);
@@ -722,16 +714,10 @@ export default function SOSPage() {
                     if (startStation) {
                       endRentalForm.setValue("end_station", startStation);
                     }
-                    // Set current time in datetime-local format (YYYY-MM-DDTHH:mm)
-                    const now = new Date();
-                    const year = now.getFullYear();
-                    const month = String(now.getMonth() + 1).padStart(2, '0');
-                    const day = String(now.getDate()).padStart(2, '0');
-                    const hours = String(now.getHours()).padStart(2, '0');
-                    const minutes = String(now.getMinutes()).padStart(2, '0');
-                    const datetimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
-                    endRentalForm.setValue("end_time", datetimeLocal);
-                    endRentalForm.setValue("reason", "Không xử lý được - Thay xe mới");
+                    endRentalForm.setValue(
+                      "reason",
+                      "Không xử lý được - Thay xe mới"
+                    );
                   }}
                 >
                   Thay xe
@@ -762,7 +748,10 @@ export default function SOSPage() {
             </div>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmitAssign)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmitAssign)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="replaced_bike_id"
@@ -776,18 +765,44 @@ export default function SOSPage() {
                         >
                           <option value="">Chọn xe thay thế</option>
                           {responseNearestAvailableBike?.data?.result ? (
-                            <option 
-                              value={(responseNearestAvailableBike.data.result as { bike_id: string; chip_id: string; station_name: string }).bike_id}
+                            <option
+                              value={
+                                (
+                                  responseNearestAvailableBike.data.result as {
+                                    bike_id: string;
+                                    chip_id: string;
+                                    station_name: string;
+                                  }
+                                ).bike_id
+                              }
                               className="truncate"
                             >
-                              {(responseNearestAvailableBike.data.result as { bike_id: string; chip_id: string; station_name: string }).chip_id}km
+                              {
+                                (
+                                  responseNearestAvailableBike.data.result as {
+                                    bike_id: string;
+                                    chip_id: string;
+                                    station_name: string;
+                                  }
+                                ).chip_id
+                              }
+                              km
                             </option>
                           ) : null}
                         </select>
                       </FormControl>
                       {responseNearestAvailableBike?.data?.result && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Trạm: {(responseNearestAvailableBike.data.result as { bike_id: string; chip_id: string; station_name: string }).station_name}
+                          Trạm:{" "}
+                          {
+                            (
+                              responseNearestAvailableBike.data.result as {
+                                bike_id: string;
+                                chip_id: string;
+                                station_name: string;
+                              }
+                            ).station_name
+                          }
                         </p>
                       )}
                       <FormMessage />
@@ -867,9 +882,7 @@ export default function SOSPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">
-                Thay xe mới
-              </h2>
+              <h2 className="text-xl font-bold text-foreground">Thay xe mới</h2>
               <button
                 onClick={() => {
                   setIsReplaceModalOpen(false);
@@ -882,7 +895,10 @@ export default function SOSPage() {
             </div>
 
             <Form {...endRentalForm}>
-              <form onSubmit={endRentalForm.handleSubmit(onSubmitReplaceBike)} className="space-y-4">
+              <form
+                onSubmit={endRentalForm.handleSubmit(onSubmitReplaceBike)}
+                className="space-y-4"
+              >
                 <FormField
                   control={endRentalForm.control}
                   name="end_station"
@@ -901,24 +917,6 @@ export default function SOSPage() {
                             </option>
                           ))}
                         </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={endRentalForm.control}
-                  name="end_time"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Thời gian kết thúc</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="datetime-local"
-                          className="w-full"
-                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

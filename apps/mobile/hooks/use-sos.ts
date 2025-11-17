@@ -8,11 +8,20 @@ import { useConfirmSOSRequestMutation } from "./mutations/SOS/useConfirmSOSReque
 import { useResolveSOSRequestMutation } from "./mutations/SOS/useResolveSOSRequestMutaiton";
 import { useCreateRentalSOSRequestMutation } from "./mutations/SOS/useCreateRentalBySOSMutation";
 import { useCreateSOSMutation } from "./mutations/SOS/useCreateSOSMutation";
+import { useCancelSOSRequestMutation } from "./mutations/SOS/useCancelSOSRequestMutation";
 interface UseSOSProps {
   hasToken: boolean;
   page?: number;
   limit?: number;
   id?: string;
+  status?:
+    | "ĐANG CHỜ XỬ LÍ"
+    | "ĐÃ GỬI NGƯỜI CỨU HỘ"
+    | "ĐANG TRÊN ĐƯỜNG ĐẾN"
+    | "ĐÃ XỬ LÍ"
+    | "KHÔNG XỬ LÍ ĐƯỢC"
+    | "ĐÃ TỪ CHỐI"
+    | "ĐÃ HUỶ";
 }
 interface ErrorResponse {
   response?: {
@@ -41,13 +50,13 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   }
   return defaultMessage;
 };
-export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
+export function useSOS({ hasToken, page, limit, id , status }: UseSOSProps) {
   const queryClient = useQueryClient();
   const {
     data: sosRequests,
     isLoading,
     refetch: refetchSOS,
-  } = useGetSOSQuery({ page, limit });
+  } = useGetSOSQuery({ page, limit , status });
   const {
     data: sosDetail,
     refetch: refetchSOSDetailRequest,
@@ -254,10 +263,16 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(
-            error,
-            "Failed to create SOS request"
-          );
+          // Extract message from axios error response
+          const axiosError = error as ErrorResponse;
+          let errorMessage = "Failed to create SOS request";
+          
+          if (axiosError?.response?.data?.message) {
+            errorMessage = axiosError.response.data.message;
+          } else {
+            errorMessage = getErrorMessage(error, "Failed to create SOS request");
+          }
+          
           reject(new Error(errorMessage));
         },
       });
@@ -270,6 +285,56 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
     useCreateSOS,
     queryClient,
   ]);
+  const useCancelSOSRequest = useCancelSOSRequestMutation(id || "");
+  const cancelSOSRequest = useCallback(
+    async (data: { reason: string }) => {
+      if (!hasToken || !id) {
+        throw new Error("Unauthorized");
+      }
+
+      return new Promise((resolve, reject) => {
+        useCancelSOSRequest.mutate(data, {
+          onSuccess: async (result: {
+            status: number;
+            data?: { message?: string };
+          }) => {
+            if (result.status === 200) {
+              alert(
+                result.data?.message || "Hủy yêu cầu SOS thành công"
+              );
+              await queryClient.invalidateQueries({
+                queryKey: ["sos-requests"],
+              });
+              await refetchSOSRequest();
+              await refetchSOSDetail();
+              resolve(result);
+            } else {
+              const errorMessage =
+                result.data?.message || "Lỗi khi hủy yêu cầu SOS";
+              alert(errorMessage);
+              reject(new Error(errorMessage));
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Failed to cancel SOS request"
+            );
+            alert(errorMessage);
+            reject(new Error(errorMessage));
+          },
+        });
+      });
+    },
+    [
+      refetchSOSRequest,
+      refetchSOSDetail,
+      hasToken,
+      id,
+      useCancelSOSRequest,
+      queryClient,
+    ]
+  );
   return {
     sosRequests,
     isLoading,
@@ -282,5 +347,6 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
     resolveSOSRequest,
     createRentalRequest,
     createSOSRequest,
+    cancelSOSRequest,
   };
 }

@@ -134,8 +134,9 @@ const CreateSOSRequestScreen = () => {
           },
         ]
       );
-    } catch (error) {
-      Alert.alert("Lỗi", "Không thể gửi yêu cầu cứu hộ. Vui lòng thử lại.");
+    } catch (error: any) {
+      const errorMessage = error?.message || "Không thể gửi yêu cầu cứu hộ. Vui lòng thử lại.";
+      Alert.alert("Lỗi", errorMessage);
     } finally {
       setIsSubmitting(false);
     }

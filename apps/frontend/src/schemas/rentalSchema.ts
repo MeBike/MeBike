@@ -33,7 +33,6 @@ export const endRentalSchema = z.object({
     .refine(isValidObjectId, {
       message: "Station ID must be a valid MongoDB ObjectId",
     }),
-  end_time: z.string(),
   reason: z
     .string()
     .min(5, "Reason must be at least 5 characters long")

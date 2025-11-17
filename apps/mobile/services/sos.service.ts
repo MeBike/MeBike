@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { SOS, IBikeIssueReport } from "@/types/SOS";
 import type { AxiosResponse } from "axios";
-import type { AssignSOSSchema, ResolveSOSSchema , CreateSOSSchema} from "@/schema/sosSchema";
+import type { AssignSOSSchema, ResolveSOSSchema , CreateSOSSchema , CancelSOSSchema} from "@/schema/sosSchema";
 import type {
   DetailApiResponse,
   ApiResponse,
@@ -30,14 +30,24 @@ const SOS_ENDPOINTS = {
   CONFIRM: (id: string) => `${SOS_BASE}/${id}/confirm`,
   RESOLVE: (id: string) => `${SOS_BASE}/${id}/resolve`,
   CREATE: (id: string) => `/rentals/sos/${id}`,
+  CANCEL: (id: string) => `${SOS_BASE}/${id}/cancel`,
 } as const;
 export const sosService = {
   getSOSRequest: async ({
     page,
     limit,
+    status,
   }: {
     page?: number;
     limit?: number;
+    status?:
+      | "ĐANG CHỜ XỬ LÍ"
+      | "ĐÃ GỬI NGƯỜI CỨU HỘ"
+      | "ĐANG TRÊN ĐƯỜNG ĐẾN"
+      | "ĐÃ XỬ LÍ"
+      | "KHÔNG XỬ LÍ ĐƯỢC"
+      | "ĐÃ TỪ CHỐI"
+      | "ĐÃ HUỶ";
   }): Promise<AxiosResponse<ApiResponse<SOS[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<SOS[]>>(
       SOS_ENDPOINTS.BASE,
@@ -45,6 +55,7 @@ export const sosService = {
       {
         page,
         limit,
+        status
       }
     );
     return response;
@@ -96,8 +107,26 @@ export const sosService = {
     >(SOS_ENDPOINTS.CREATE(id));
     return response;
   },
-  createSOS: async (data: CreateSOSSchema) : Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(`${SOS_ENDPOINTS.BASE}`, data);
+  createSOS: async (
+    data: CreateSOSSchema
+  ): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
+      `${SOS_ENDPOINTS.BASE}`,
+      data
+    );
+    return response;
+  },
+  cancelSOSRequest: async ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: CancelSOSSchema;
+  }): Promise<AxiosResponse<DetailApiResponse<ConfirmSOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<ConfirmSOS>>(
+      SOS_ENDPOINTS.CANCEL(id),
+      data
+    );
     return response;
   },
 };

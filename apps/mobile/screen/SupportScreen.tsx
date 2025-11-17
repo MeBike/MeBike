@@ -177,7 +177,7 @@ function SupportScreen() {
           <FlatList
             data={userReports}
             renderItem={renderReportCard}
-            keyExtractor={(item) => item._id}
+            keyExtractor={(item, index) => `${item._id}-${index}`}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             onEndReached={() => {
