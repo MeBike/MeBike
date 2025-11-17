@@ -20,7 +20,7 @@ import databaseService from '~/services/database.services'
 import sosService from '~/services/sos.services'
 import { getLocalTime } from '~/utils/date-time'
 import { buildSosFilterByRole } from '~/utils/filters.helper'
-import { sendPaginatedResponse } from '~/utils/pagination.helper'
+import { sendPaginatedAggregationResponse, sendPaginatedResponse } from '~/utils/pagination.helper'
 import { toObjectId } from '~/utils/string'
 
 export async function createSosRequestController(req: Request<ParamsDictionary, any, CreateSosReqBody>, res: Response) {
@@ -120,7 +120,7 @@ export async function getSosRequestsController(
   const user = req.user as User;
   const { status } = req.query;
 
-  const filters: Filter<SosAlert> = buildSosFilterByRole(user);
+  const matches: Partial<SosAlert> = buildSosFilterByRole(user);
 
   if (status && typeof status === 'string') {
     if (!Object.values(SosAlertStatus).includes(status as SosAlertStatus)) {
@@ -139,16 +139,12 @@ export async function getSosRequestsController(
       }
     }
 
-    filters.status = status as SosAlertStatus;
+    matches.status = status as SosAlertStatus;
   }
 
-  return sendPaginatedResponse(
-    res,
-    next,
-    databaseService.sos_alerts,
-    req.query,
-    filters
-  );
+  const pipeline = await sosService.buildSosRequestsPipeline(matches)
+
+  return await sendPaginatedAggregationResponse(res,next,databaseService.sos_alerts,req.query,pipeline)  
 }
 
 
