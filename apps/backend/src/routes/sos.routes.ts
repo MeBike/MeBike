@@ -71,6 +71,7 @@ sosRouter
   .route('/:id/cancel')
   .post(
     accessTokenValidator,
+    checkLoggedUserExist,
     filterMiddleware<CancelSosReqBody>(['reason']),
     cancelSosValidator,
     wrapAsync(cancelSosController)
