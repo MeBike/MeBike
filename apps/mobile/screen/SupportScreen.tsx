@@ -19,6 +19,7 @@ import { useReportActions } from "@hooks/useReportActions";
 import { LoadingScreen } from "@components/LoadingScreen";
 import type { Report } from "../services/report.service";
 import type { SupportScreenNavigationProp } from "../types/navigation";
+import { formatVietnamDateTime } from "@/utils/date";
 
 function SupportScreen() {
   const navigation = useNavigation<SupportScreenNavigationProp>();
@@ -123,7 +124,7 @@ function SupportScreen() {
         <Text style={styles.reportMessage} numberOfLines={2}>
           {item.message}
         </Text>
-        <Text style={styles.reportDate}>{formatDate(item.created_at)}</Text>
+        <Text style={styles.reportDate}>{formatVietnamDateTime(item.created_at)}</Text>
       </View>
 
       {item.media_urls && item.media_urls.length > 0 && (

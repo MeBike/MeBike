@@ -16,9 +16,8 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import { formatVietnamDateTime } from "@/utils/date";
 import { useReportActions } from "@hooks/useReportActions";
-import { LoadingScreen } from "@components/LoadingScreen";
 import type { ReportDetailRouteProp } from "../types/navigation";
 
 function ReportDetailScreen() {
@@ -192,8 +191,8 @@ function ReportDetailScreen() {
         <Text style={styles.headerTitle}>Chi tiết báo cáo</Text>
       </LinearGradient>
 
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
         onScroll={(event) => {
           if (event.nativeEvent.contentOffset.y < -100) {
@@ -229,12 +228,16 @@ function ReportDetailScreen() {
 
           <View style={styles.detailSection}>
             <Text style={styles.detailLabel}>Ngày tạo</Text>
-            <Text style={styles.detailValue}>{formatDate(report.created_at)}</Text>
+            <Text style={styles.detailValue}>
+              {formatVietnamDateTime(report.created_at)}
+            </Text>
           </View>
 
           <View style={styles.detailSection}>
             <Text style={styles.detailLabel}>Trạng thái cập nhật lần cuối</Text>
-            <Text style={styles.detailValue}>{formatDate(report.updated_at)}</Text>
+            <Text style={styles.detailValue}>
+              {formatVietnamDateTime(report.updated_at)}
+            </Text>
           </View>
 
           {report.priority && (
@@ -245,9 +248,7 @@ function ReportDetailScreen() {
           )}
         </View>
 
-        <View style={styles.mediaSection}>
-          {renderMediaGrid()}
-        </View>
+        <View style={styles.mediaSection}>{renderMediaGrid()}</View>
 
         <View style={{ height: 20 }} />
       </ScrollView>
