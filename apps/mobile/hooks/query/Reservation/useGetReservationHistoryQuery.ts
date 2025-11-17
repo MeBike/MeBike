@@ -1,9 +1,14 @@
 import { reservationService } from "@services/reservation.service";
 import { useQuery } from "@tanstack/react-query";
 
-export function useGetReservationHistoryQuery(page: number = 1, limit: number = 10, enabled: boolean = true) {
+export function useGetReservationHistoryQuery(
+  page: number = 1,
+  limit: number = 10,
+  enabled: boolean = true,
+  version: number = 0,
+) {
   return useQuery({
-    queryKey: ["reservations", "history", page, limit],
+    queryKey: ["reservations", "history", page, limit, version],
     enabled,
     queryFn: async ({ queryKey }) => {
       const [, , pageParam, limitParam] = queryKey;

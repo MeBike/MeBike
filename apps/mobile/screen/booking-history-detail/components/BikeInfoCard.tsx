@@ -13,9 +13,9 @@ const BikeInfoCard = ({ booking }: Props) => {
       <InfoRow
         label="Mã xe:"
         value={
-          typeof booking.bike === "object"
+          typeof booking.bike === "object" && booking.bike
             ? booking.bike._id
-            : booking.bike || "Không có dữ liệu"
+            : "Không có dữ liệu"
         }
       />
       <InfoRow

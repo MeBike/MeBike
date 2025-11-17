@@ -1,7 +1,7 @@
 import SosAlert from '~/models/schemas/sos-alert.schema'
 import databaseService from './database.services'
-import { ObjectId } from 'mongodb'
-import { RentalStatus, Role, SosAlertStatus } from '~/constants/enums'
+import { Document, Filter, ObjectId } from 'mongodb'
+import { Role, SosAlertStatus } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/errors'
 import { SOS_MESSAGE } from '~/constants/messages'
 import HTTP_STATUS from '~/constants/http-status'
@@ -11,17 +11,20 @@ import User from '~/models/schemas/user.schema'
 import { AssignSosReqBody } from '~/models/requests/sos.requests'
 
 class SosService {
-  async createAlert(requester_id: ObjectId, {
-    rental_id,
-    issue,
-    latitude,
-    longitude
-  }: {
-    rental_id: string
-    issue: string
-    latitude: number
-    longitude: number
-  }) {
+  async createAlert(
+    requester_id: ObjectId,
+    {
+      rental_id,
+      issue,
+      latitude,
+      longitude
+    }: {
+      rental_id: string
+      issue: string
+      latitude: number
+      longitude: number
+    }
+  ) {
     const alertData = new SosAlert({
       rental_id: toObjectId(rental_id),
       requester_id,
@@ -40,10 +43,7 @@ class SosService {
     }
   }
 
-  async assignSosAgent(
-    sosRequest: SosAlert,
-    payload: AssignSosReqBody
-  ) {
+  async assignSosAgent(sosRequest: SosAlert, payload: AssignSosReqBody) {
     const now = getLocalTime()
     const updateData: Partial<SosAlert> = {
       replaced_bike_id: toObjectId(payload.replaced_bike_id),
@@ -52,9 +52,9 @@ class SosService {
       updated_at: now
     }
     const updated = await databaseService.sos_alerts.findOneAndUpdate(
-      {_id: sosRequest._id},
-      {$set: updateData},
-      {returnDocument: 'after'}
+      { _id: sosRequest._id },
+      { $set: updateData },
+      { returnDocument: 'after' }
     )
 
     return updated
@@ -194,6 +194,28 @@ class SosService {
     }
 
     return result
+  }
+
+  async buildSosRequestsPipeline(matches: Filter<SosAlert>) {
+    const pipeline: Document[] = [
+      { $match: matches },
+      {
+        $lookup: {
+          from: 'rentals',
+          localField: 'rental_id',
+          foreignField: '_id',
+          as: 'rental'
+        }
+      },
+      { $unwind: { path: '$rental', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          rental_id: 0
+        }
+      }
+    ]
+
+    return pipeline
   }
 }
 

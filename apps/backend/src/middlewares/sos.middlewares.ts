@@ -29,6 +29,25 @@ export const createSosAlertValidator = validate(
           options: async (value, { req }) => {
             const rentalId = toObjectId(value)
             const { user_id } = req.decoded_authorization as TokenPayLoad
+            const existedSos = await databaseService.sos_alerts.findOne({
+              rental_id: rentalId,
+              requester_id: toObjectId(user_id),
+              status: {
+                $nin: [
+                  SosAlertStatus.CANCELLED,
+                  SosAlertStatus.REJECTED,
+                  SosAlertStatus.RESOLVED,
+                  SosAlertStatus.UNSOLVABLE
+                ]
+              }
+            })
+
+            if (existedSos) {
+              throw new ErrorWithStatus({
+                message: SOS_MESSAGE.EXISTED,
+                status: HTTP_STATUS.BAD_REQUEST
+              })
+            }
 
             const rental = await databaseService.rentals.findOne({
               _id: rentalId

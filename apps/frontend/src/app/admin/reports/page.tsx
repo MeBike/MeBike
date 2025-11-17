@@ -32,6 +32,7 @@ export default function ReportsPage() {
     pagination,
     reportOverview,
     updateReport,
+    refreshReportOverview
   } = useUserReport({ hasToken: true , page : currentPage , limit : limit });
 
   const {
@@ -45,7 +46,6 @@ export default function ReportsPage() {
   });
 
   const currentStatus = watch("newStatus");
-
   // Get available status transitions based on current status
   const getAvailableStatuses = () => {
     const statusTransitions: Record<string, string[]> = {
@@ -62,24 +62,22 @@ export default function ReportsPage() {
     refetchReports();
   }, [currentPage, refetchReports]);
 
-  // Fetch staff list when modal opens
+  // Fetch staff list on mount
   useEffect(() => {
-    if (isUpdateModalOpen) {
-      setIsLoadingStaff(true);
-      userService
-        .getAllUsers({ role: "STAFF", limit: 100 })
-        .then((res) => {
-          setStaffList(res.data.data || []);
-        })
-        .catch((error) => {
-          console.error("Failed to fetch staff list:", error);
-          setStaffList([]);
-        })
-        .finally(() => {
-          setIsLoadingStaff(false);
-        });
-    }
-  }, [isUpdateModalOpen]);
+    setIsLoadingStaff(true);
+    userService
+      .getAllUsers({ role: "STAFF", limit: 100 })
+      .then((res) => {
+        setStaffList(res.data.data || []);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch staff list:", error);
+        setStaffList([]);
+      })
+      .finally(() => {
+        setIsLoadingStaff(false);
+      });
+  }, []);
 
   const handleViewReport = (report: Report) => {
     console.log("[v0] View report:", report._id);
@@ -125,6 +123,10 @@ export default function ReportsPage() {
     setSelectedReport(null);
   };
 
+  useEffect(() => {
+    refreshReportOverview();
+  }, [refreshReportOverview]);
+
   if (isFetchingReports) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -156,6 +158,7 @@ export default function ReportsPage() {
           columns={reportColumns({
             onView: handleViewReport,
             onUpdate: handleUpdateReport,
+            staffList,
           })}
           data={reports || []}
           title="Danh sách báo cáo"
@@ -193,7 +196,7 @@ export default function ReportsPage() {
                         : status === "ĐANG XỬ LÝ"
                           ? "Đang xử lý"
                           : status === "ĐÃ GIẢI QUYẾT"
-                            ? "Đã giải quyết"
+                            ? "Đã giải quyết" : status === "KHÔNG GIẢI QUYẾT ĐƯỢC" ? "Không thể giải quyết được"
                             : "Đã hủy"}
                     </option>
                   ))}
@@ -216,10 +219,12 @@ export default function ReportsPage() {
                   className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                 >
                   <option value="">Chọn ưu tiên</option>
-                  <option value="THẤP">Thấp</option>
-                  <option value="BÌNH THƯỜNG">Bình thường</option>
-                  <option value="CAO">Cao</option>
-                  <option value="KHẨN CẤP">Khẩn cấp</option>
+                  <option value="4 - THẤP">4 - THẤP</option>
+                  <option value="3 - BÌNH THƯỜNG">
+                    3 - BÌNH THƯỜNG
+                  </option>
+                  <option value="2 - CAO">2 - CAO</option>
+                  <option value="1 - KHẨN CẤP">1 - KHẨN CẤP</option>
                 </select>
                 {errors.priority && (
                   <div className="flex items-center gap-2 mt-1 text-sm text-destructive">

@@ -32,7 +32,11 @@ export function SubscriptionSummary({
     if (hasActive && activeSubscription) {
       const limit = activeSubscription.max_usages;
       const used = activeSubscription.usage_count;
-      const quota = limit ? `${used}/${limit} lượt` : `${used} lượt đã dùng`;
+      const remaining =
+        typeof limit === "number" ? Math.max(0, limit - used) : null;
+      const quota = typeof limit === "number"
+        ? `Còn ${remaining}/${limit} lượt`
+        : `${used} lượt đã dùng`;
       return `Hạn: ${formatDate(activeSubscription.expires_at)} • ${quota}`;
     }
     if (hasPending && pendingSubscription) {

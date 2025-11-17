@@ -479,6 +479,7 @@ export const RESERVATIONS_MESSAGE = {
   // Not allowed action
   CANNOT_CANCEL_OTHER_RESERVATION: 'Bạn không có quyền huỷ phiên đặt trước của người khác',
   CANNOT_CONFIRM_THIS_RESERVATION: 'Bạn chỉ có thể xác nhận phiên đặt trước ở trạng thái đang được xử lí',
+  CANNOT_CONFIRM_RESERVATION_WITHOUT_BIKE: 'Chưa có xe sẵn sàng cho phiên đặt trước của bạn, không thể xác nhận',
   CANNOT_CONFIRM_EXPIRED_RESERVATION: 'Đã vượt quá thời gian cho phép xác nhận phiên đặt trước này',
   NOT_AVAILABLE_FOR_CONFIRMATION: 'Chưa đến thời gian cho phép xác nhận phiên đặt trước này',
   CANNOT_CANCEL_THIS_RESERVATION: 'Bạn chỉ có thể huỷ phiên đặt trước ở trạng thái đang được xử lí',
@@ -719,6 +720,7 @@ export const SOS_MESSAGE = {
   ASSIGN_PENDING_ONLY: 'Bạn chỉ có thể phân công người cứu hộ cho yêu cầu ở trạng thái đang chờ xử lí',
   RESOLVE_EN_ROUTE_ONLY: 'Bạn chỉ có thể xử lí yêu cầu đã được xác nhận',
   REJECT_EN_ROUTE_ONLY: 'Bạn chỉ có thể từ chối yêu cầu đã được xác nhận',
+  EXISTED: 'Yêu cầu cứu hộ của bạn đang được xử lí'
 };
 
 export const DASHBOARD_MESSAGES = {

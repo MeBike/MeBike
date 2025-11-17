@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState,useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
@@ -21,12 +21,14 @@ import type { DetailUser } from "@services/auth.service";
 import { useAuth } from "@providers/auth-providers";
 import { getRefreshToken } from "@utils/tokenManager";
 import { VerifyEmailModal } from "@components/VerifyEmailModal";
+import { useGetRentalCountsQuery } from "@hooks/query/Rent/useGetRentalCountsQuery";
 
 function ProfileScreen() {
   const navigation = useNavigation();
   const { user, logOut, verifyEmail, resendVerifyEmail, isCustomer } = useAuth();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const hasToken = Boolean(user?._id);
   const [profile, setProfile] = useState<DetailUser>(() => ({
     _id: user?._id ?? "",
     fullname: user?.fullname ?? "",
@@ -44,9 +46,15 @@ function ProfileScreen() {
   const [isResendingOtp, setIsResendingOtp] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const { data: rentalCountsResponse, isLoading: isRentalCountsLoading } = useGetRentalCountsQuery("HOÀN THÀNH", hasToken);
+  const completedTrips = rentalCountsResponse?.data?.result?.counts ?? 0;
+
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["user", "me"] }),
+      queryClient.invalidateQueries({ queryKey: ["rentals", "counts"] }),
+    ]);
     setIsRefreshing(false);
   }, [queryClient]);
 
@@ -276,7 +284,7 @@ function ProfileScreen() {
           >
             <View style={{ alignItems: "center" }}>
               <Text style={{ fontSize: 17, fontWeight: "700", color: "#fff" }}>
-                0
+                {isRentalCountsLoading ? "—" : completedTrips}
               </Text>
               <Text style={{ fontSize: 13, color: "#e0eaff", marginTop: 2 }}>
                 Chuyến đi

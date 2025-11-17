@@ -4,19 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import type { Report } from "@custom-types";
 import { formatDateUTC } from "@/utils/formatDateTime";
-import type { DetailUser } from "@/services/auth.service";
 
 interface ReportColumnsProps {
-  onView: (report: Report) => void;
-  onUpdate: (report: Report) => void;
-  staffList: DetailUser[];
-}
+   onView: (report: Report) => void;
+   onUpdate: (report: Report) => void;
+ }
 
 export const reportColumns = ({
-  // onView,
-  onUpdate,
-  staffList,
-}: ReportColumnsProps): ColumnDef<Report>[] => [
+   // onView,
+   onUpdate,
+ }: ReportColumnsProps): ColumnDef<Report>[] => [
   {
     accessorKey: "type",
     header: "Loại báo cáo",
@@ -65,16 +62,6 @@ export const reportColumns = ({
     },
   },
   {
-    accessorKey: "assignee_id",
-    header: "Người được giao",
-    cell: ({ row }) => {
-      const assigneeId = row.getValue("assignee_id") as string;
-      if (!assigneeId) return <div>Chưa có</div>;
-      const staff = staffList.find(s => s._id === assigneeId);
-      return <div>{staff ? `${staff.fullname} (${staff.email})` : assigneeId}</div>;
-    },
-  },
-  {
     accessorKey: "status",
     header: "Trạng thái",
     cell: ({ row }) => {
@@ -94,11 +81,7 @@ export const reportColumns = ({
             : status === "ĐÃ GIẢI QUYẾT"
               ? "success"
               : "destructive";
-      return (
-        <Badge variant={variant}>
-          {statusMap[status] || status}
-        </Badge>
-      );
+      return <Badge variant={variant}>{statusMap[status] || status}</Badge>;
     },
   },
   {
@@ -144,16 +127,16 @@ export const reportColumns = ({
           {(status === "ĐÃ GIẢI QUYẾT" ||
             status === "ĐÃ HỦY" ||
             status === "KHÔNG GIẢI QUYẾT ĐƯỢC") && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onUpdate(report)}
-                disabled
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                Cập nhật
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onUpdate(report)}
+              disabled
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Cập nhật
+            </Button>
+          )}
         </div>
       );
     },

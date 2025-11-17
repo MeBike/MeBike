@@ -2,7 +2,7 @@ import { checkSchema } from 'express-validator'
 
 import { BikeStatus, RentalStatus, SosAlertStatus, SubscriptionStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
-import { RENTALS_MESSAGE, RESERVATIONS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
+import { BIKES_MESSAGES, RENTALS_MESSAGE, RESERVATIONS_MESSAGE, WALLETS_MESSAGE } from '~/constants/messages'
 import { ErrorWithStatus } from '~/models/errors'
 import databaseService from '~/services/database.services'
 import { validate } from '~/utils/validation'
@@ -474,7 +474,7 @@ export const cancelRentalValidator = validate(
             const bike = await databaseService.bikes.findOne({ _id: rental.bike_id })
             if (!bike) {
               throw new ErrorWithStatus({
-                message: RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id!.toString()),
+                message: rental.bike_id ? RENTALS_MESSAGE.BIKE_NOT_FOUND.replace('%s', rental.bike_id.toString()) : BIKES_MESSAGES.BIKE_NOT_FOUND,
                 status: HTTP_STATUS.NOT_FOUND
               })
             }

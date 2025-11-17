@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Alert } from "react-native";
 
 import type { Reservation } from "../types/reservation-types";
@@ -53,6 +53,7 @@ type UseReservationActionsParams = {
   pendingLimit?: number;
   historyPage?: number;
   historyLimit?: number;
+  historyVersion?: number;
   reservationId?: string;
   enableDetailQuery?: boolean;
   autoFetch?: boolean;
@@ -90,6 +91,7 @@ export function useReservationActions({
   pendingLimit = 10,
   historyPage = 1,
   historyLimit = 10,
+  historyVersion = 0,
   reservationId,
   enableDetailQuery = false,
   autoFetch = true,
@@ -118,7 +120,7 @@ export function useReservationActions({
     data: reservationHistoryResponse,
     isLoading: isReservationHistoryLoading,
     isFetching: isReservationHistoryFetching,
-  } = useGetReservationHistoryQuery(historyPage, historyLimit, shouldFetchLists);
+  } = useGetReservationHistoryQuery(historyPage, historyLimit, shouldFetchLists, historyVersion);
   const {
     refetch: refetchReservationDetail,
     data: reservationDetailResponse,
@@ -300,12 +302,19 @@ type CreateReservationOptions = {
     ? normalizeReservation(reservationDetailResponse as RawReservation)
     : undefined;
 
-  const normalizedPending = Array.isArray(pendingResponse?.data)
-    ? (pendingResponse!.data as RawReservation[]).map(normalizeReservation)
-    : [];
-  const normalizedHistory = Array.isArray(historyResponse?.data)
-    ? (historyResponse!.data as RawReservation[]).map(normalizeReservation)
-    : [];
+  const normalizedPending = useMemo(() => {
+    if (!Array.isArray(pendingResponse?.data)) {
+      return [];
+    }
+    return (pendingResponse!.data as RawReservation[]).map(normalizeReservation);
+  }, [pendingResponse?.data]);
+
+  const normalizedHistory = useMemo(() => {
+    if (!Array.isArray(historyResponse?.data)) {
+      return [];
+    }
+    return (historyResponse!.data as RawReservation[]).map(normalizeReservation);
+  }, [historyResponse?.data]);
 
   return {
     // Queries
