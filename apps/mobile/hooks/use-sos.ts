@@ -232,39 +232,42 @@ export function useSOS({ hasToken, page, limit, id }: UseSOSProps) {
   const useCreateSOS = useCreateSOSMutation();
   const createSOSRequest = useCallback(async (data: CreateSOSSchema) => {
     if (!hasToken) {
-      return;
+      throw new Error("Unauthorized");
     }
-    useCreateSOS.mutate(data, {
-      onSuccess: async (result: {
-        status: number;
-        data?: { message?: string };
-      }) => {
-        if (result.status === 200) {
-          // alert(result.data?.message || "Tạo yêu cầu SOS thành công");
-          await queryClient.invalidateQueries({
-            queryKey: ["sos-requests"],
-          });
-          await refetchSOSRequest();
-          await refetchSOSDetail();
-        } else {
-          const errorMessage = result.data?.message || "Lỗi khi tạo yêu cầu SOS";
-          alert(errorMessage);
-        }
-      },
-      onError: (error) => {
-        const errorMessage = getErrorMessage(
-          error,
-          "Failed to create SOS request"
-        );
-        alert(errorMessage);
-      },
+    
+    return new Promise((resolve, reject) => {
+      useCreateSOS.mutate(data, {
+        onSuccess: async (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result.status === 200 || result.status === 201) {
+            await queryClient.invalidateQueries({
+              queryKey: ["sos-requests"],
+            });
+            await refetchSOSRequest();
+            await refetchSOSDetail();
+            resolve(result);
+          } else {
+            const errorMessage = result.data?.message || "Lỗi khi tạo yêu cầu SOS";
+            reject(new Error(errorMessage));
+          }
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(
+            error,
+            "Failed to create SOS request"
+          );
+          reject(new Error(errorMessage));
+        },
+      });
     });
   }, [
     refetchSOSRequest,
     refetchSOSDetail,
     hasToken,
     id,
-    useCreateRental,
+    useCreateSOS,
     queryClient,
   ]);
   return {

@@ -42,6 +42,9 @@ export default function SOSPage() {
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
   const [selectedRentalId, setSelectedRentalId] = useState<string>("");
   const [isReplacingBike, setIsReplacingBike] = useState(false);
   const {endRental} = useRentalsActions({hasToken: true , rental_id: selectedRentalId});
@@ -54,7 +57,8 @@ export default function SOSPage() {
     sosDetail,
     refetchSOSDetail,
     assignSOSRequest,
-    createRentalRequest
+    createRentalRequest,
+    cancelSOSRequest,
   } = useSOS({
     hasToken: true,
     page: currentPage,
@@ -89,9 +93,36 @@ export default function SOSPage() {
   });
 
   const onSubmitAssign = async (data: AssignSOSSchema) => {
-    await assignSOSRequest(data);
-    setIsAssignModalOpen(false);
-    form.reset();
+    try {
+      await assignSOSRequest(data);
+      setIsAssignModalOpen(false);
+      form.reset();
+      await refetchSOSRequest();
+      await refetchSOSDetail();
+    } catch (error) {
+      console.error("Error assigning SOS:", error);
+    }
+  };
+  
+  const handleCancelSOS = async () => {
+    if (!cancelReason.trim()) {
+      alert("Vui lòng nhập lý do hủy");
+      return;
+    }
+    
+    setIsCancelling(true);
+    try {
+      await cancelSOSRequest({ reason: cancelReason });
+      setIsCancelModalOpen(false);
+      setCancelReason("");
+      await refetchSOSRequest();
+      await refetchSOSDetail();
+      setIsDetailModalOpen(false);
+    } catch (error) {
+      console.error("Error cancelling SOS:", error);
+    } finally {
+      setIsCancelling(false);
+    }
   };
   useEffect(() => {
     refetchSOSRequest();
@@ -142,7 +173,6 @@ export default function SOSPage() {
       endRentalForm.reset();
     } catch (error) {
       console.error("Error replacing bike:", error);
-      alert("Lỗi khi thay xe");
     } finally {
       setIsReplacingBike(false);
     }
@@ -245,7 +275,7 @@ export default function SOSPage() {
               <div className="pt-3">
                 <PaginationDemo
                   currentPage={currentPage}
-                  totalPages={1}
+                  totalPages={sosRequests?.pagination.totalPages || 1}
                   onPageChange={setCurrentPage}
                 />
               </div>
@@ -654,14 +684,25 @@ export default function SOSPage() {
                 Đóng
               </Button>
               {sosDetail.result.status === "ĐANG CHỜ XỬ LÍ" && (
-                <Button 
-                  className="flex-1"
-                  onClick={() => {
-                    setIsAssignModalOpen(true);
-                  }}
-                >
-                  Phân công xử lý
-                </Button>
+                <>
+                  <Button 
+                    className="flex-1"
+                    onClick={() => {
+                      setIsAssignModalOpen(true);
+                    }}
+                  >
+                    Phân công xử lý
+                  </Button>
+                  <Button 
+                    className="flex-1"
+                    variant="destructive"
+                    onClick={() => {
+                      setIsCancelModalOpen(true);
+                    }}
+                  >
+                    Hủy yêu cầu
+                  </Button>
+                </>
               )}
               {(sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC" || sosDetail.result.status.includes("KHÔNG XỬ LÍ")) && (
                 <Button 
@@ -932,6 +973,140 @@ export default function SOSPage() {
                 </div>
               </form>
             </Form>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel SOS Modal */}
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">
+                Hủy yêu cầu SOS
+              </h2>
+              <button
+                onClick={() => {
+                  setIsCancelModalOpen(false);
+                  setCancelReason("");
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Lý do hủy
+                </label>
+                <textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Nhập lý do hủy yêu cầu SOS..."
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground min-h-24"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsCancelModalOpen(false);
+                    setCancelReason("");
+                  }}
+                  className="flex-1"
+                  disabled={isCancelling}
+                >
+                  Đóng
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleCancelSOS}
+                  className="flex-1"
+                  disabled={isCancelling}
+                >
+                  {isCancelling ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang hủy...
+                    </>
+                  ) : (
+                    "Xác nhận hủy"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel SOS Modal */}
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">
+                Hủy yêu cầu SOS
+              </h2>
+              <button
+                onClick={() => {
+                  setIsCancelModalOpen(false);
+                  setCancelReason("");
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Lý do hủy
+                </label>
+                <textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Nhập lý do hủy yêu cầu SOS..."
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground min-h-24"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsCancelModalOpen(false);
+                    setCancelReason("");
+                  }}
+                  className="flex-1"
+                  disabled={isCancelling}
+                >
+                  Đóng
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleCancelSOS}
+                  className="flex-1"
+                  disabled={isCancelling}
+                >
+                  {isCancelling ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang hủy...
+                    </>
+                  ) : (
+                    "Xác nhận hủy"
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

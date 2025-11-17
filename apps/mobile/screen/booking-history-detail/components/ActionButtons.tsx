@@ -8,10 +8,9 @@ import { useNavigation } from "@react-navigation/native";
 type Props = {
   booking: RentalDetail;
   rentalQrValue: string;
-  onSOSPress?: () => void;
 };
 
-const ActionButtons = ({ booking, rentalQrValue, onSOSPress }: Props) => {
+const ActionButtons = ({ booking, rentalQrValue }: Props) => {
   const navigation = useNavigation();
 
   return (
@@ -48,7 +47,9 @@ const ActionButtons = ({ booking, rentalQrValue, onSOSPress }: Props) => {
           
           <TouchableOpacity
             style={styles.sosButton}
-            onPress={onSOSPress}
+            onPress={() => {
+              (navigation as any).navigate("CreateSOSRequest", { rentalId: booking._id });
+            }}
             activeOpacity={0.9}
           >
             <LinearGradient

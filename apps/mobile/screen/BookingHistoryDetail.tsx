@@ -18,17 +18,18 @@ import {
 
 import type { RentalDetail } from "../types/RentalTypes";
 import type { StationType } from "../types/StationType";
-import ActionButtons from "../components/booking-history-detail/components/ActionButtons";
-import BikeInfoCard from "../components/booking-history-detail/components/BikeInfoCard";
-import BookingDetailHeader from "../components/booking-history-detail/components/BookingDetailHeader";
-import BookingIdCard from "../components/booking-history-detail/components/BookingIdCard";
-import ErrorState from "../components/booking-history-detail/components/ErrorState";
-import LoadingState from "../components/booking-history-detail/components/LoadingState";
-import PaymentInfoCard from "../components/booking-history-detail/components/PaymentInfoCard";
-import RatingSection from "../components/booking-history-detail/components/RatingSection";
-import StatusCard from "../components/booking-history-detail/components/StatusCard";
-import TimeInfoCard from "../components/booking-history-detail/components/TimeInfoCard";
-import UserInfoCard from "../components/booking-history-detail/components/UserInfoCard";
+import ActionButtons from "./booking-history-detail/components/ActionButtons";
+import BikeInfoCard from "./booking-history-detail/components/BikeInfoCard";
+import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
+import BookingIdCard from "./booking-history-detail/components/BookingIdCard";
+import ErrorState from "./booking-history-detail/components/ErrorState";
+import LoadingState from "./booking-history-detail/components/LoadingState";
+import PaymentInfoCard from "./booking-history-detail/components/PaymentInfoCard";
+import RatingSection from "./booking-history-detail/components/RatingSection";
+import StatusCard from "./booking-history-detail/components/StatusCard";
+import TimeInfoCard from "./booking-history-detail/components/TimeInfoCard";
+// import UserInfoCard from "../components/booking-history-detail/components/UserInfoCard";
+import UserInfoCard from "./booking-history-detail/components/UserInfoCard";
 import { useBikeStatusStream } from "@hooks/useBikeStatusStream";
 import type { BikeStatusUpdate } from "@hooks/useBikeStatusStream";
 import { useAuth } from "@providers/auth-providers";
@@ -368,8 +369,7 @@ function BookingHistoryDetail() {
         />
         <ActionButtons 
           booking={booking} 
-          rentalQrValue={rentalQrValue} 
-          onSOSPress={() => (navigation as any).navigate("CreateSOSRequest", { rentalId: booking._id })}
+          rentalQrValue={rentalQrValue}
         />
       </ScrollView>
 

@@ -11,6 +11,7 @@ import { useAssignSOSRequestMutation } from "./mutations/SOS/useAssignSOSRequest
 import { useConfirmSOSRequestMutation } from "./mutations/SOS/useConfirmSOSRequestMutation";
 import { useResolveSOSRequestMutation } from "./mutations/SOS/useResolveSOSRequestMutaiton";
 import { useCreateRentalSOSRequestMutation } from "./mutations/SOS/useCreateRentalBySOSMutation";
+import { useCancelSOSRequestMutation } from "./mutations/SOS/useCancelSOSRequestMutation";
 interface UseSOSProps {
   hasToken: boolean;
   page?: number;
@@ -79,67 +80,79 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
   const useAssignSOSRequest = useAssignSOSRequestMutation(id || "");
   const assignSOSRequest = useCallback(async (data : AssignSOSSchema) => {
     if (!hasToken || !id) {
-      return;
+      throw new Error("Unauthorized");
     }
-    useAssignSOSRequest.mutate(
-      data,
-      {
-        onSuccess: async (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result.status === 200) {
-            toast.success("Assigned SOS request successfully");
-            await queryClient.invalidateQueries({
-              queryKey: ["sos-requests"],
-            });
-            await refetchSOSRequest();
-            await refetchSOSDetail();
-          } else {
-            const errorMessage = result.data?.message || "Error updating bikes";
+    
+    return new Promise((resolve, reject) => {
+      useAssignSOSRequest.mutate(
+        data,
+        {
+          onSuccess: async (result: {
+            status: number;
+            data?: { message?: string };
+          }) => {
+            if (result.status === 200) {
+              toast.success("Assigned SOS request successfully");
+              await queryClient.invalidateQueries({
+                queryKey: ["sos-requests"],
+              });
+              await refetchSOSRequest();
+              await refetchSOSDetail();
+              resolve(result);
+            } else {
+              const errorMessage = result.data?.message || "Error updating bikes";
+              toast.error(errorMessage);
+              reject(new Error(errorMessage));
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Failed to assign SOS request"
+            );
             toast.error(errorMessage);
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(
-            error,
-            "Failed to assign SOS request"
-          );
-          toast.error(errorMessage);
-        },
-      }
-    );
+            reject(new Error(errorMessage));
+          },
+        }
+      );
+    });
   }, [refetchSOSRequest, refetchSOSDetail, hasToken, id, useAssignSOSRequest, queryClient]);
   const useConfirmSOSRequest = useConfirmSOSRequestMutation(id || "");
   const confirmSOSRequest = useCallback(
     async () => {
       if (!hasToken) {
-        return;
+        throw new Error("Unauthorized");
       }
-      useConfirmSOSRequest.mutate(undefined, {
-        onSuccess: async (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Confirmed SOS request successfully");
-            await queryClient.invalidateQueries({
-              queryKey: ["sos-requests"],
-            });
-            await refetchSOSRequest();
-            await refetchSOSDetail();
-          } else {
-            const errorMessage = result.data?.message || "Error confirming SOS request";
+      
+      return new Promise((resolve, reject) => {
+        useConfirmSOSRequest.mutate(undefined, {
+          onSuccess: async (result: {
+            status: number;
+            data?: { message?: string };
+          }) => {
+            if (result.status === 200) {
+              toast.success(result.data?.message || "Confirmed SOS request successfully");
+              await queryClient.invalidateQueries({
+                queryKey: ["sos-requests"],
+              });
+              await refetchSOSRequest();
+              await refetchSOSDetail();
+              resolve(result);
+            } else {
+              const errorMessage = result.data?.message || "Error confirming SOS request";
+              toast.error(errorMessage);
+              reject(new Error(errorMessage));
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Failed to confirm SOS request"
+            );
             toast.error(errorMessage);
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(
-            error,
-            "Failed to assign SOS request"
-          );
-          toast.error(errorMessage);
-        },
+            reject(new Error(errorMessage));
+          },
+        });
       });
     },
     [
@@ -153,35 +166,41 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
   const useResolveSOSRequest = useResolveSOSRequestMutation(id || "");
   const resolveSOSRequest = useCallback(async (data: ResolveSOSSchema) => {
     if (!hasToken || !id) {
-      return;
+      throw new Error("Unauthorized");
     }
-    useResolveSOSRequest.mutate(data, {
-      onSuccess: async (result: {
-        status: number;
-        data?: { message?: string };
-      }) => {
-        if (result.status === 200) {
-          toast.success(
-            result.data?.message || "Resolved SOS request successfully"
+    
+    return new Promise((resolve, reject) => {
+      useResolveSOSRequest.mutate(data, {
+        onSuccess: async (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result.status === 200) {
+            toast.success(
+              result.data?.message || "Resolved SOS request successfully"
+            );
+            await queryClient.invalidateQueries({
+              queryKey: ["sos-requests"],
+            });
+            await refetchSOSRequest();
+            await refetchSOSDetail();
+            resolve(result);
+          } else {
+            const errorMessage =
+              result.data?.message || "Error resolving SOS request";
+            toast.error(errorMessage);
+            reject(new Error(errorMessage));
+          }
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(
+            error,
+            "Failed to resolve SOS request"
           );
-          await queryClient.invalidateQueries({
-            queryKey: ["sos-requests"],
-          });
-          await refetchSOSRequest();
-          await refetchSOSDetail();
-        } else {
-          const errorMessage =
-            result.data?.message || "Error resolving SOS request";
           toast.error(errorMessage);
-        }
-      },
-      onError: (error) => {
-        const errorMessage = getErrorMessage(
-          error,
-          "Failed to resolve SOS request"
-        );
-        toast.error(errorMessage);
-      },
+          reject(new Error(errorMessage));
+        },
+      });
     });
   }, [
     refetchSOSRequest,
@@ -194,35 +213,41 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
   const useCreateRental = useCreateRentalSOSRequestMutation(id || "");
   const createRentalRequest = useCallback(async () => {
     if (!hasToken || !id) {
-      return;
+      throw new Error("Unauthorized");
     }
-    useCreateRental.mutate(undefined, {
-      onSuccess: async (result: {
-        status: number;
-        data?: { message?: string };
-      }) => {
-        if (result.status === 200) {
-          toast.success(
-            result.data?.message || "Tạo thuê xe thành công"
+    
+    return new Promise((resolve, reject) => {
+      useCreateRental.mutate(undefined, {
+        onSuccess: async (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result.status === 200) {
+            toast.success(
+              result.data?.message || "Tạo thuê xe thành công"
+            );
+            await queryClient.invalidateQueries({
+              queryKey: ["sos-requests"],
+            });
+            await refetchSOSRequest();
+            await refetchSOSDetail();
+            resolve(result);
+          } else {
+            const errorMessage =
+              result.data?.message || "Lỗi khi tạo thuê xe";
+            toast.error(errorMessage);
+            reject(new Error(errorMessage));
+          }
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(
+            error,
+            "Failed to create rental request"
           );
-          await queryClient.invalidateQueries({
-            queryKey: ["sos-requests"],
-          });
-          await refetchSOSRequest();
-          await refetchSOSDetail();
-        } else {
-          const errorMessage =
-            result.data?.message || "Lỗi khi tạo thuê xe";
           toast.error(errorMessage);
-        }
-      },
-      onError: (error) => {
-        const errorMessage = getErrorMessage(
-          error,
-          "Failed to create rental request"
-        );
-        toast.error(errorMessage);
-      },
+          reject(new Error(errorMessage));
+        },
+      });
     });
   }, [
     refetchSOSRequest,
@@ -232,6 +257,54 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
     useCreateRental,
     queryClient,
   ]);
+  const useCancelSOSRequest = useCancelSOSRequestMutation(id || "");
+  const cancelSOSRequest = useCallback(async (data: { reason: string }) => {
+    if (!hasToken || !id) {
+      throw new Error("Unauthorized");
+    }
+    
+    return new Promise((resolve, reject) => {
+      useCancelSOSRequest.mutate(data, {
+        onSuccess: async (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result.status === 200) {
+            toast.success(
+              result.data?.message || "Hủy yêu cầu SOS thành công"
+            );
+            await queryClient.invalidateQueries({
+              queryKey: ["sos-requests"],
+            });
+            await refetchSOSRequest();
+            await refetchSOSDetail();
+            resolve(result);
+          } else {
+            const errorMessage =
+              result.data?.message || "Lỗi khi hủy yêu cầu SOS";
+            toast.error(errorMessage);
+            reject(new Error(errorMessage));
+          }
+        },
+        onError: (error) => {
+          const errorMessage = getErrorMessage(
+            error,
+            "Failed to cancel SOS request"
+          );
+          toast.error(errorMessage);
+          reject(new Error(errorMessage));
+        },
+      });
+    });
+  }, [
+    refetchSOSRequest,
+    refetchSOSDetail,
+    hasToken,
+    id,
+    useCancelSOSRequest,
+    queryClient,
+  ]);
+  
   return {
     sosRequests,
     isLoading,
@@ -243,5 +316,6 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
     assignSOSRequest,
     resolveSOSRequest,
     createRentalRequest,
+    cancelSOSRequest,
   };
 }

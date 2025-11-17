@@ -1,7 +1,11 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { SOS } from "@custom-types";
 import type { AxiosResponse } from "axios";
-import type { AssignSOSSchema, ResolveSOSSchema } from "@/schemas/sosSchema";
+import type {
+  AssignSOSSchema,
+  ResolveSOSSchema,
+  CancelSOSSchema,
+} from "@/schemas/sosSchema";
 import type {
   DetailApiResponse,
   ApiResponse,
@@ -31,6 +35,7 @@ const SOS_ENDPOINTS = {
   CONFIRM: (id: string) => `${SOS_BASE}/${id}/confirm`,
   RESOLVE: (id: string) => `${SOS_BASE}/${id}/resolve`,
   CREATE: (id:string) => `/rentals/sos/${id}`,
+  CANCEL : (id: string) => `${SOS_BASE}/${id}/cancel`,
 } as const;
 export const sosService = {
   getSOSRequest: async ({
@@ -105,6 +110,19 @@ export const sosService = {
     const response = await fetchHttpClient.post<
       DetailApiResponse<RentalBySOSID>
     >(SOS_ENDPOINTS.CREATE(id));
+    return response;
+  },
+  cancelSOSRequest: async ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: CancelSOSSchema;
+  }): Promise<AxiosResponse<DetailApiResponse<ConfirmSOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<ConfirmSOS>>(
+      SOS_ENDPOINTS.CANCEL(id),
+      data
+    );
     return response;
   },
 };

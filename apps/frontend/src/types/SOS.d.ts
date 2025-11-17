@@ -1,20 +1,42 @@
+
+
 export type SOS = {
   _id: string;
-  rental_id: string;
+  rental: RentalSOS;
   requester_id: string;
   replaced_bike_id: string;
   photos: Array<string>;
   issue: string;
   location: LocationGEO;
-  status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ GỬI NGƯỜI CỨU HỘ" | "ĐANG TRÊN ĐƯỜNG ĐẾN" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
+  status:
+    | "ĐANG CHỜ XỬ LÍ"
+    | "ĐÃ GỬI NGƯỜI CỨU HỘ"
+    | "ĐANG TRÊN ĐƯỜNG ĐẾN"
+    | "ĐÃ XỬ LÍ"
+    | "KHÔNG XỬ LÍ ĐƯỢC"
+    | "ĐÃ TỪ CHỐI";
   agent_notes: string;
   reason: string;
   sos_agent_id: string;
   resolved_at: string | null;
   created_at: string;
   updated_at: string;
+};
+interface RentalSOS {
+  _id: string;
+  user_id: string;
+  bike_id: string;
+  start_station: string;
+  end_station: string | null;
+  start_time: string;
+  end_time: string | null;
+  duration: number;
+  total_price: number;
+  subscription_id: string | null;
+  status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
+  created_at: string;
+  updated_at: string;
 }
-
 export interface SOSDetail {
   _id: string;
   replaced_bike_id: string;

@@ -27,5 +27,12 @@ export const resolveSOSSchema = z.object({
     .optional(),
   photos: z.array(z.string().min(1, "URI không hợp lệ")),
 });
+export const cancelSOSSchema = z.object({
+  reason: z
+    .string()
+    .min(1, "Lý do phải ít nhất 1 ký tự")
+    .max(500, "Lý do phải nhiều nhất 500 ký tự"),
+});
 export type AssignSOSSchema = z.infer<typeof assignSOSSchema>;
 export type ResolveSOSSchema = z.infer<typeof resolveSOSSchema>;
+export type CancelSOSSchema = z.infer<typeof cancelSOSSchema>;

@@ -19,11 +19,11 @@ export const sosColumns = ({ onView }: SOSColumnsProps): ColumnDef<SOS>[] => [
     },
   },
   {
-    accessorKey: "rental_id",
+    accessorKey: "rental",
     header: "Mã thuê xe",
     cell: ({ row }) => {
-      const rentalId = row.getValue("rental_id") as string;
-      return <div className="font-mono text-sm">{rentalId.slice(0, 8)}</div>;
+      const rental = row.getValue("rental") as { _id: string };
+      return <div className="font-mono text-sm">{rental?._id?.slice(0, 8) || "Không có"}</div>;
     },
   },
   {
