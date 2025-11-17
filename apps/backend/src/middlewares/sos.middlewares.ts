@@ -44,7 +44,7 @@ export const createSosAlertValidator = validate(
 
             if (existedSos) {
               throw new ErrorWithStatus({
-                message: SOS_MESSAGE.EXISTED.replace('%s', value),
+                message: SOS_MESSAGE.EXISTED,
                 status: HTTP_STATUS.BAD_REQUEST
               })
             }

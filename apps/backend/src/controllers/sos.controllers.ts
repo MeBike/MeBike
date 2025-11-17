@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { ParamsDictionary } from 'express-serve-static-core'
-import { Filter, ObjectId } from 'mongodb'
+import { Filter } from 'mongodb'
 import { Role, SosAlertStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { SOS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
@@ -120,7 +120,7 @@ export async function getSosRequestsController(
   const user = req.user as User;
   const { status } = req.query;
 
-  const matches: Partial<SosAlert> = buildSosFilterByRole(user);
+  const matches: Filter<SosAlert> = buildSosFilterByRole(user);
 
   if (status && typeof status === 'string') {
     if (!Object.values(SosAlertStatus).includes(status as SosAlertStatus)) {
@@ -144,7 +144,7 @@ export async function getSosRequestsController(
 
   const pipeline = await sosService.buildSosRequestsPipeline(matches)
 
-  return await sendPaginatedAggregationResponse(res,next,databaseService.sos_alerts,req.query,pipeline)  
+  return sendPaginatedAggregationResponse(res,next,databaseService.sos_alerts,req.query,pipeline)  
 }
 
 

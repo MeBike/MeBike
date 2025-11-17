@@ -1,6 +1,6 @@
 import SosAlert from '~/models/schemas/sos-alert.schema'
 import databaseService from './database.services'
-import { Document, ObjectId } from 'mongodb'
+import { Document, Filter, ObjectId } from 'mongodb'
 import { Role, SosAlertStatus } from '~/constants/enums'
 import { ErrorWithStatus } from '~/models/errors'
 import { SOS_MESSAGE } from '~/constants/messages'
@@ -196,7 +196,7 @@ class SosService {
     return result
   }
 
-  async buildSosRequestsPipeline(matches: Partial<SosAlert>) {
+  async buildSosRequestsPipeline(matches: Filter<SosAlert>) {
     const pipeline: Document[] = [
       { $match: matches },
       {
