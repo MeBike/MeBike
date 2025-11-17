@@ -720,6 +720,7 @@ export const SOS_MESSAGE = {
   ASSIGN_PENDING_ONLY: 'Bạn chỉ có thể phân công người cứu hộ cho yêu cầu ở trạng thái đang chờ xử lí',
   RESOLVE_EN_ROUTE_ONLY: 'Bạn chỉ có thể xử lí yêu cầu đã được xác nhận',
   REJECT_EN_ROUTE_ONLY: 'Bạn chỉ có thể từ chối yêu cầu đã được xác nhận',
+  EXISTED: 'Yêu cầu cứu hộ của bạn đang được xử lí'
 };
 
 export const DASHBOARD_MESSAGES = {
