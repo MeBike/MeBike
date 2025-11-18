@@ -163,9 +163,55 @@ export async function getAllReportController(req: Request<any, any, any>, res: R
     filter.created_at = { $gte: start, $lte: end }
   }
 
-  const sortOptions: Sort = { created_at: -1 }
+  const page = Number.parseInt(req.query.page as string) || 1
+  const limit = Number.parseInt(req.query.limit as string) || 10
+  const skip = (page - 1) * limit
 
-  await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter, {}, sortOptions)
+  const pipeline = [
+    { $match: filter },
+    {
+      $addFields: {
+        sortPriority: {
+          $switch: {
+            branches: [
+              { case: { $eq: ['$status', 'ĐANG XỬ LÝ'] }, then: 2 },
+              { case: { $eq: ['$status', 'ĐÃ GIẢI QUYẾT'] }, then: 3 },
+              { case: { $eq: ['$status', 'KHÔNG GIẢI QUYẾT ĐƯỢC'] }, then: 4 },
+              { case: { $eq: ['$status', 'ĐANG CHỜ XỬ LÝ'] }, then: 1 },
+              { case: { $eq: ['$status', 'ĐÃ HỦY'] }, then: 5 }
+            ],
+            default: 6
+          }
+        }
+      }
+    },
+    {
+      $sort: {
+        sortPriority: 1,
+        created_at: -1
+      }
+    },
+    { $skip: skip },
+    { $limit: limit },
+    { $project: { sortPriority: 0 } }
+  ]
+
+  const [totalRecords, data] = await Promise.all([
+    databaseService.reports.countDocuments(filter),
+    databaseService.reports.aggregate<Report>(pipeline).toArray()
+  ])
+
+  const totalPages = Math.ceil(totalRecords / limit)
+
+  return res.status(200).json({
+    data: data,
+    pagination: {
+      limit,
+      currentPage: page,
+      totalPages,
+      totalRecords
+    }
+  })
 }
 
 export async function getAllInProgressReportController(req: Request<any, any, any>, res: Response, next: NextFunction) {
@@ -186,6 +232,74 @@ export async function getAllInProgressReportController(req: Request<any, any, an
   const sortOptions: Sort = { type: 1, created_at: -1 }
 
   await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter, {}, sortOptions)
+}
+
+export async function getAllReportStaffController(req: Request<any, any, any>, res: Response, next: NextFunction) {
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayLoad
+
+    const filter: Filter<Report> = {}
+    filter.assignee_id = new ObjectId(user_id)
+
+    if (req.query.date) {
+      const start = new Date(req.query.date as string)
+      const end = new Date(start)
+      end.setUTCHours(23, 59, 59, 999)
+      filter.created_at = { $gte: start, $lte: end }
+    }
+
+    const page = Number.parseInt(req.query.page as string) || 1
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const skip = (page - 1) * limit
+
+    const pipeline = [
+      { $match: filter },
+      {
+        $addFields: {
+          sortPriority: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$status', 'ĐANG XỬ LÝ'] }, then: 1 },
+                { case: { $eq: ['$status', 'ĐÃ GIẢI QUYẾT'] }, then: 2 },
+                { case: { $eq: ['$status', 'KHÔNG GIẢI QUYẾT ĐƯỢC'] }, then: 3 },
+                { case: { $eq: ['$status', 'ĐANG CHỜ XỬ LÝ'] }, then: 4 },
+                { case: { $eq: ['$status', 'ĐÃ HỦY'] }, then: 5 }
+              ],
+              default: 6
+            }
+          }
+        }
+      },
+      {
+        $sort: {
+          sortPriority: 1,
+          created_at: -1
+        }
+      },
+      { $skip: skip },
+      { $limit: limit },
+      { $project: { sortPriority: 0 } }
+    ]
+
+    const [totalRecords, data] = await Promise.all([
+      databaseService.reports.countDocuments(filter),
+      databaseService.reports.aggregate<Report>(pipeline).toArray()
+    ])
+
+    const totalPages = Math.ceil(totalRecords / limit)
+
+    return res.status(200).json({
+      data: data,
+      pagination: {
+        limit,
+        currentPage: page,
+        totalPages,
+        totalRecords
+      }
+    })
+  } catch (error) {
+    next(error)
+  }
 }
 
 export async function getReportOverviewController(req: Request<any, any, any>, res: Response) {

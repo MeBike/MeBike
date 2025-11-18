@@ -5,6 +5,7 @@ import {
   createReportController,
   getAllInProgressReportController,
   getAllReportController,
+  getAllReportStaffController,
   getAllUserReportController,
   getByIdController,
   getReportOverviewController,
@@ -25,7 +26,6 @@ import { getIdValidator } from '~/middlewares/supplier.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handler'
 import { isStaffOrSosAgentValidator } from '~/middlewares/sos.middlewares'
-import { isStaffValidator } from '~/middlewares/staff.middlewares'
 
 const reportsRouter = Router()
 
@@ -46,6 +46,13 @@ reportsRouter.get(
   accessTokenValidator,
   isStaffOrSosAgentValidator,
   wrapAsync(getAllInProgressReportController)
+)
+// get all cho staff
+reportsRouter.get(
+  '/report-staff',
+  accessTokenValidator,
+  isStaffOrSosAgentValidator,
+  wrapAsync(getAllReportStaffController)
 )
 // get report by id for staff or sos agent
 reportsRouter.get(
