@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -26,15 +27,34 @@ const MySOSScreen = () => {
   const [limit] = useState(5);
   const [allSOSData, setAllSOSData] = useState<SOS[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [selectedStatus, setSelectedStatus] = React.useState<string | undefined>(undefined);
 
   const { sosRequests, isLoading, refetchSOSRequest } = useSOS({
     hasToken,
     page,
     limit,
+    status: selectedStatus as any,
   });
 
   const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const statusFilters = [
+    { label: "Tất cả", value: undefined },
+    { label: "Đang chờ", value: "ĐANG CHỜ XỬ LÍ" },
+    { label: "Đã gửi cứu hộ", value: "ĐÃ GỬI NGƯỜI CỨU HỘ" },
+    { label: "Đang đến", value: "ĐANG TRÊN ĐƯỜNG ĐẾN" },
+    { label: "Đã xử lý", value: "ĐÃ XỬ LÍ" },
+    { label: "Không xử lý được", value: "KHÔNG XỬ LÍ ĐƯỢC" },
+    { label: "Đã từ chối", value: "ĐÃ TỪ CHỐI" },
+    { label: "Đã hủy", value: "ĐÃ HUỶ" },
+  ];
+
+  const handleStatusFilter = (status: string | undefined) => {
+    setSelectedStatus(status);
+    setPage(1); // Reset to first page when changing filter
+    setAllSOSData([]); // Clear current data
+  };
 
   // Accumulate data when sosRequests changes
   React.useEffect(() => {
@@ -224,6 +244,35 @@ const MySOSScreen = () => {
         </View>
 
 
+      </View>
+
+      {/* Status Filter Tabs */}
+      <View style={styles.filterContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScrollContent}
+        >
+          {statusFilters.map((filter) => (
+            <TouchableOpacity
+              key={filter.label}
+              style={[
+                styles.filterTab,
+                selectedStatus === filter.value && styles.filterTabActive,
+              ]}
+              onPress={() => handleStatusFilter(filter.value)}
+            >
+              <Text
+                style={[
+                  styles.filterTabText,
+                  selectedStatus === filter.value && styles.filterTabTextActive,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {/* SOS List */}
@@ -444,6 +493,34 @@ const styles = StyleSheet.create({
   loadingMore: {
     paddingVertical: 20,
     alignItems: "center",
+  },
+  filterContainer: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  filterScrollContent: {
+    paddingHorizontal: 0,
+    gap: 8,
+  },
+  filterTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#f0f0f0",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  filterTabActive: {
+    backgroundColor: "#FF3B30",
+    borderColor: "#FF3B30",
+  },
+  filterTabText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#666",
+  },
+  filterTabTextActive: {
+    color: "#fff",
   },
 });
 
