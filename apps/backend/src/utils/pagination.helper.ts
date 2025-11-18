@@ -96,7 +96,7 @@ export async function sendPaginatedAggregationResponse<T extends Document>(
       // Pipeline to count the total matching documents
       collection.aggregate([...pipeline, { $count: 'total' }]).toArray(),
       // Pipeline to get the actual data for the current page
-      collection.aggregate([...pipeline, { $skip: skip }, { $limit: limit }]).sort(sort).toArray()
+      collection.aggregate([...pipeline]).sort(sort).skip(skip).limit(limit).toArray()
     ])
 
     const totalRecords = totalRecordsResult.length > 0 ? totalRecordsResult[0].total : 0
