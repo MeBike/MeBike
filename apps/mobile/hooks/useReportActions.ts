@@ -2,10 +2,10 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { useCreateReport } from "@hooks/mutations/Report/useCreateReport";
 import { reportService } from "@services/report.service";
-import type { CreateReportData, Report } from "@services/report.service";
+import type { CreateReportData, Report, ReportStatus } from "@services/report.service";
 import { useCallback } from "react";
 import { useGetReportById } from "./query/Report/useGetReportById";
-export function useReportActions({ page, limit , id}: { page?: number; limit?: number; id?: string }) {
+export function useReportActions({ page, limit, id, status }: { page?: number; limit?: number; id?: string; status?: ReportStatus }) {
   const createReportMutation = useCreateReport();
   const {
     data: userReportsData,
@@ -15,9 +15,9 @@ export function useReportActions({ page, limit , id}: { page?: number; limit?: n
     isFetchingNextPage,
     refetch: refetchUserReports,
   } = useInfiniteQuery({
-    queryKey: ["reports", "user"],
+    queryKey: ["reports", "user", status],
     queryFn: () =>
-      reportService.getUserReports({ page, limit }),
+      reportService.getUserReports({ page, limit, status }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       const pagination = lastPage.data.pagination;
