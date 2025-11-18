@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { Reservation } from "./reservation-types";
 import type { Bike } from "./BikeTypes";
 import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
+import type { ResolveSOSSchema } from "@/schema/sosSchema";
 
 export type RootStackParamList = {
   Booking: undefined;
@@ -47,6 +48,26 @@ export type RootStackParamList = {
   ReservationDetail: {
     reservationId: string;
     reservation?: Reservation;
+  };
+  "SOS Dashboard": undefined;
+  ResolveSOSScreen: {
+    sosId: string;
+    solvable: boolean;
+    onSubmit: (data: ResolveSOSSchema) => Promise<void>;
+  };
+  CreateSOSRequest: {
+    rentalId: string;
+  };
+  MySOS: undefined;
+  MySOSDetail: {
+    sosId: string;
+  };
+  SOSAgentDetail: {
+    sosId: string;
+  };
+  ResolveSOSForm: {
+    sosId: string;
+    solvable: boolean;
   };
   ReservationFlow: {
     stationId: string;
@@ -187,3 +208,4 @@ export type ReportScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Report"
 >;
+

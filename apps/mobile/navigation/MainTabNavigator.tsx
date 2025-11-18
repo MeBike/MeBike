@@ -6,6 +6,7 @@ import HomeScreen from "../screen/Home";
 import MyWalletScreen from "../screen/my-wallet-screen";
 import ProfileScreen from "../screen/ProfileScreen";
 import StaffDashboardScreen from "../screen/StaffDashboardScreen";
+import SOSAgentDashboardScreen from "../screen/SOSAgentDashboardScreen";
 import StationSelectScreen from "../styles/StationSelect";
 import { useAuth } from "@providers/auth-providers";
 import { RootStackParamList } from "../types/navigation";
@@ -13,11 +14,42 @@ import { RootStackParamList } from "../types/navigation";
 const Tab = createBottomTabNavigator<RootStackParamList>();
 
 function MainTabNavigator() {
-  const { isAuthenticated, isStaff } = useAuth();
+  const { isAuthenticated, isStaff, isSOS } = useAuth();
 
   return (
     <Tab.Navigator>
-      {isStaff ? (
+      {isSOS ? (
+        <>
+          <Tab.Screen
+            name="SOS Dashboard"
+            component={SOSAgentDashboardScreen}
+            options={{
+              headerShown: false,
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={size ?? 24}
+                  color={color ?? "#222"}
+                />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Tôi"
+            component={ProfileScreen}
+            options={{
+              headerShown: false,
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons
+                  name="person-outline"
+                  size={size ?? 24}
+                  color={color ?? "#222"}
+                />
+              ),
+            }}
+          />
+        </>
+      ) : isStaff ? (
         <>
           <Tab.Screen
             name="Công cụ"

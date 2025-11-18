@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
+import { Edit, Eye } from "lucide-react";
 import type { Report } from "@custom-types";
 import { formatDateUTC } from "@/utils/formatDateTime";
 
@@ -11,7 +11,7 @@ interface ReportColumnsProps {
  }
 
 export const reportColumns = ({
-   // onView,
+   onView,
    onUpdate,
  }: ReportColumnsProps): ColumnDef<Report>[] => [
   {
@@ -108,10 +108,10 @@ export const reportColumns = ({
       const status = row.getValue("status") as string;
       return (
         <div className="flex gap-2">
-          {/* <Button variant="ghost" size="sm" onClick={() => onView(report)}>
+          <Button variant="ghost" size="sm" onClick={() => onView(report)}>
             <Eye className="h-4 w-4 mr-1" />
             Xem
-          </Button> */}
+          </Button>
           {status !== "ĐÃ GIẢI QUYẾT" &&
             status !== "ĐÃ HỦY" &&
             status !== "KHÔNG GIẢI QUYẾT ĐƯỢC" && (

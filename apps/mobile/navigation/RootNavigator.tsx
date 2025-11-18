@@ -32,6 +32,12 @@ import UpdateProfileScreen from "../screen/UpdateProfileScreen";
 import WithdrawScreen from "../screen/withdraw-screen";
 import QRScannerScreen from "../screen/QRScannerScreen";
 import StaffPhoneLookupScreen from "../screen/StaffPhoneLookupScreen";
+import ResolveSOSScreen from "../screen/ResolveSOSScreen";
+import CreateSOSRequestScreen from "../screen/CreateSOSRequestScreen";
+import MySOSScreen from "../screen/MySOSScreen";
+import MySOSDetailScreen from "../screen/MySOSDetailScreen";
+import SOSAgentDetailScreen from "../screen/SOSAgentDetailScreen";
+import ResolveSOSFormScreen from "../screen/ResolveSOSFormScreen";
 import { RootStackParamList } from "../types/navigation";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -188,6 +194,55 @@ function RootNavigator() {
         name="StaffPhoneLookup"
         component={StaffPhoneLookupScreen}
         options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="ResolveSOSScreen"
+        component={ResolveSOSScreen}
+        options={{ 
+          headerShown: false, 
+          gestureEnabled: false,
+          presentation: 'modal'
+        }}
+      />
+      <Stack.Screen
+        name="CreateSOSRequest"
+        component={CreateSOSRequestScreen}
+        options={{ 
+          headerShown: false, 
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen
+        name="MySOS"
+        component={MySOSScreen}
+        options={{ 
+          headerShown: false, 
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen
+        name="MySOSDetail"
+        component={MySOSDetailScreen}
+        options={{ 
+          headerShown: false, 
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen
+        name="SOSAgentDetail"
+        component={SOSAgentDetailScreen}
+        options={{ 
+          headerShown: false, 
+          gestureEnabled: false
+        }}
+      />
+      <Stack.Screen
+        name="ResolveSOSForm"
+        component={ResolveSOSFormScreen}
+        options={{ 
+          headerShown: false, 
+          gestureEnabled: false
+        }}
       />
     </Stack.Navigator>
   );

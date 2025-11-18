@@ -2,140 +2,130 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
+import Image from "next/image";
 import { DataTable } from "@/components/TableCustom";
 import { Button } from "@/components/ui/button";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import type { SOS } from "@/types/SOS";
+import type { Station } from "@/types/Station";
 import { useSOS } from "@/hooks/use-sos";
 import { sosColumns } from "@/columns/sos-columns";
+import { formatDateUTC } from "@/utils/formatDateTime";
 import { useForm } from "react-hook-form";
-import { CreateSOSSchema , createSOSSchema} from "@/schemas/sosSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRentalsActions } from "@/hooks/use-rental";
+import { assignSOSSchema, type AssignSOSSchema } from "@/schemas/sosSchema";
+import { endRentalSchema, type EndRentalSchema } from "@/schemas/rentalSchema";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useStationActions } from "@/hooks/use-station";
 import { useUserActions } from "@/hooks/use-user";
-import type { DetailUser } from "@/services/auth.service";
-import type { RentingHistory } from "@/types/Rental";
-
-// TomTom API
-const TOMTOM_API_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
-
-interface TomTomResult {
-  address: {
-    freeformAddress: string;
-  };
-  position: {
-    lat: number;
-    lon: number;
-  };
-}
-
-interface AddressSuggestion {
-  address: string;
-  latitude: number;
-  longitude: number;
-}
-
-const fetchTomTomAddressSuggest = async (addressText: string): Promise<AddressSuggestion[]> => {
-  try {
-    const url = `https://api.tomtom.com/search/2/geocode/${encodeURIComponent(addressText)}.JSON?key=${TOMTOM_API_KEY}`;
-    const response = await fetch(url);
-    const data = await response.json() as { results: TomTomResult[] };
-    return data.results.map((r: TomTomResult) => ({
-      address: r.address.freeformAddress,
-      latitude: r.position.lat,
-      longitude: r.position.lon,
-    }));
-  } catch {
-    return [];
-  }
-};
+import { useRentalsActions } from "@/hooks/use-rental";
 
 export default function SOSPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    SOS["status"] | "all"
-  >("all");
+  const [statusFilter, setStatusFilter] = useState<SOS["status"] | "all">(
+    "all"
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">("info");
+  const [detailTab, setDetailTab] = useState<"info" | "details" | "notes">(
+    "info"
+  );
   const [selectedSOSId, setSelectedSOSId] = useState<string>("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
-  const [addressInput, setAddressInput] = useState("");
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [selectedCoordinates, setSelectedCoordinates] = useState<{ lat: string; lon: string } | null>(null);
-  
-  const { allRentalsData } = useRentalsActions({ hasToken: true , page  :1, limit:1000 });
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [selectedRentalId, setSelectedRentalId] = useState<string>("");
+  const [isReplacingBike, setIsReplacingBike] = useState(false);
+  const { endRental } = useRentalsActions({
+    hasToken: true,
+    rental_id: selectedRentalId,
+  });
   const { users } = useUserActions({ hasToken: true });
-  
-  // Filter SOS agents (users with SOS role)
-  const sosAgents = users?.filter((user: DetailUser) => user.role === "SOS") || [];
+  const { stations } = useStationActions({ hasToken: true });
   const {
     sosRequests,
     isLoading,
     refetchSOSRequest,
     sosDetail,
     refetchSOSDetail,
-    createSOS,
+    assignSOSRequest,
+    createRentalRequest,
+    cancelSOSRequest,
   } = useSOS({
     hasToken: true,
     page: currentPage,
     limit: limit,
     id: selectedSOSId,
-  });
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-  } = useForm<CreateSOSSchema>({
-    resolver: zodResolver(createSOSSchema),
+    status: statusFilter === "all" ? undefined : statusFilter,
   });
 
-  const onSubmit = async (data: CreateSOSSchema) => {
+  const latitude = sosDetail?.result?.location?.coordinates?.[1] || 0;
+  const longitude = sosDetail?.result?.location?.coordinates?.[0] || 0;
+
+  const { responseNearestAvailableBike, getNearestAvailableBike } =
+    useStationActions({ latitude, longitude });
+
+  // Filter SOS agents from users
+  const sosAgents = users?.filter((user) => user.role === "SOS") || [];
+
+  const form = useForm<AssignSOSSchema>({
+    resolver: zodResolver(assignSOSSchema),
+    defaultValues: {
+      replaced_bike_id: "",
+      sos_agent_id: "",
+    },
+  });
+
+  const endRentalForm = useForm<EndRentalSchema>({
+    resolver: zodResolver(endRentalSchema),
+    defaultValues: {
+      end_station: "",
+      reason: "",
+    },
+  });
+
+  const onSubmitAssign = async (data: AssignSOSSchema) => {
     try {
-      await createSOS(data);
-      reset();
-      setIsCreateModalOpen(false);
-      setAddressSuggestions([]);
-      setAddressInput("");
-      setSelectedCoordinates(null);
+      await assignSOSRequest(data);
+      setIsAssignModalOpen(false);
+      form.reset();
+      await refetchSOSRequest();
+      await refetchSOSDetail();
     } catch (error) {
-      console.error("Error creating SOS:", error);
+      console.error("Error assigning SOS:", error);
     }
   };
 
-  const handleAddressChange = async (text: string) => {
-    setAddressInput(text);
-    if (typingTimeout) clearTimeout(typingTimeout);
-    
-    if (text.length > 3) {
-      const timeout = setTimeout(async () => {
-        try {
-          const sugg = await fetchTomTomAddressSuggest(text);
-          setAddressSuggestions(sugg);
-        } catch (error) {
-          console.error("Error fetching address:", error);
-        }
-      }, 500);
-      setTypingTimeout(timeout);
-    } else {
-      setAddressSuggestions([]);
-      setSelectedCoordinates(null);
+  const handleCancelSOS = async () => {
+    if (!cancelReason.trim()) {
+      alert("Vui lòng nhập lý do hủy");
+      return;
     }
-  };
 
-  const handleSelectAddress = (suggestion: AddressSuggestion) => {
-    setAddressInput(suggestion.address);
-    setSelectedCoordinates({
-      lat: suggestion.latitude.toString(),
-      lon: suggestion.longitude.toString(),
-    });
-    setValue("latitude", suggestion.latitude.toString());
-    setValue("longitude", suggestion.longitude.toString());
-    setAddressSuggestions([]);
+    setIsCancelling(true);
+    try {
+      await cancelSOSRequest({ reason: cancelReason });
+      setIsCancelModalOpen(false);
+      setCancelReason("");
+      await refetchSOSRequest();
+      await refetchSOSDetail();
+      setIsDetailModalOpen(false);
+    } catch (error) {
+      console.error("Error cancelling SOS:", error);
+    } finally {
+      setIsCancelling(false);
+    }
   };
   useEffect(() => {
     refetchSOSRequest();
@@ -147,6 +137,12 @@ export default function SOSPage() {
     }
   }, [selectedSOSId, refetchSOSDetail]);
 
+  useEffect(() => {
+    if (latitude && longitude && isAssignModalOpen) {
+      getNearestAvailableBike();
+    }
+  }, [latitude, longitude, isAssignModalOpen, getNearestAvailableBike]);
+
   const handleReset = () => {
     setSearchQuery("");
     setStatusFilter("all");
@@ -155,6 +151,28 @@ export default function SOSPage() {
 
   const handleFilterChange = () => {
     setCurrentPage(1);
+  };
+
+  const onSubmitReplaceBike = async (data: EndRentalSchema) => {
+    setIsReplacingBike(true);
+
+    try {
+      await endRental(data);
+
+      // Step 2: Create new rental
+      await createRentalRequest();
+
+      // Refresh data
+      await refetchSOSRequest();
+      await refetchSOSDetail();
+
+      setIsReplaceModalOpen(false);
+      endRentalForm.reset();
+    } catch (error) {
+      console.error("Error replacing bike:", error);
+    } finally {
+      setIsReplacingBike(false);
+    }
   };
 
   if (isLoading && currentPage === 1) {
@@ -177,9 +195,6 @@ export default function SOSPage() {
               Theo dõi và quản lý các yêu cầu cứu hộ từ người dùng
             </p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            Tạo yêu cầu cứu hộ
-          </Button>
         </div>
 
         {/* Filters */}
@@ -257,7 +272,7 @@ export default function SOSPage() {
               <div className="pt-3">
                 <PaginationDemo
                   currentPage={currentPage}
-                  totalPages={1}
+                  totalPages={sosRequests?.pagination.totalPages || 1}
                   onPageChange={setCurrentPage}
                 />
               </div>
@@ -395,7 +410,8 @@ export default function SOSPage() {
                         Tên nhân viên SOS
                       </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.sos_agent?.fullname || "-"}
+                        {sosDetail.result.sos_agent?.fullname ||
+                          "Chưa được giao"}
                       </p>
                     </div>
 
@@ -404,7 +420,7 @@ export default function SOSPage() {
                         Email nhân viên SOS
                       </p>
                       <p className="text-foreground font-medium text-sm">
-                        {sosDetail.result.sos_agent?.email || "-"}
+                        {sosDetail.result.sos_agent?.email || "Chưa có"}
                       </p>
                     </div>
 
@@ -413,7 +429,8 @@ export default function SOSPage() {
                         Số điện thoại nhân viên SOS
                       </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.sos_agent?.phone_number || "-"}
+                        {sosDetail.result.sos_agent?.phone_number ||
+                          "Chưa được giao"}
                       </p>
                     </div>
 
@@ -426,10 +443,10 @@ export default function SOSPage() {
                           sosDetail.result.status === "ĐÃ XỬ LÍ"
                             ? "bg-green-100 text-green-800"
                             : sosDetail.result.status === "ĐANG CHỜ XỬ LÍ"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
-                                ? "bg-orange-100 text-orange-800"
-                                : "bg-red-100 text-red-800"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-red-100 text-red-800"
                         }`}
                       >
                         {sosDetail.result.status}
@@ -440,10 +457,8 @@ export default function SOSPage() {
                       <p className="text-sm text-muted-foreground">Ngày tạo</p>
                       <p className="text-foreground font-medium">
                         {sosDetail.result.created_at
-                          ? new Date(
-                              sosDetail.result.created_at
-                            ).toLocaleString("vi-VN")
-                          : "-"}
+                          ? formatDateUTC(sosDetail.result.created_at)
+                          : "Chưa có"}
                       </p>
                     </div>
 
@@ -453,10 +468,8 @@ export default function SOSPage() {
                       </p>
                       <p className="text-foreground font-medium">
                         {sosDetail.result.updated_at
-                          ? new Date(
-                              sosDetail.result.updated_at
-                            ).toLocaleString("vi-VN")
-                          : "-"}
+                          ? formatDateUTC(sosDetail.result.updated_at)
+                          : "Chưa có"}
                       </p>
                     </div>
 
@@ -465,11 +478,10 @@ export default function SOSPage() {
                         Thời gian xử lý
                       </p>
                       <p className="text-foreground font-medium">
-                        {sosDetail.result.resolved_at
-                          ? new Date(
-                              sosDetail.result.resolved_at
-                            ).toLocaleString("vi-VN")
-                          : "-"}
+                        {sosDetail.result.resolved_at &&
+                        sosDetail.result.resolved_at !== null
+                          ? formatDateUTC(sosDetail.result.resolved_at)
+                          : "Chưa xử lý"}
                       </p>
                     </div>
                   </div>
@@ -526,16 +538,22 @@ export default function SOSPage() {
                           <p className="text-sm text-foreground">
                             Tổng cộng: {sosDetail.result.photos.length} hình ảnh
                           </p>
-                          <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                          <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
                             {sosDetail.result.photos.map((photo, idx) => (
                               <div
                                 key={idx}
-                                className="bg-muted rounded-lg p-3 text-xs break-all hover:bg-muted/80 transition-colors"
+                                className="relative aspect-video rounded-lg overflow-hidden border border-border bg-muted group"
                               >
-                                <p className="font-mono text-xs mb-1">#{idx + 1}</p>
-                                <p title={photo}>
-                                  {photo.slice(0, 40)}...
-                                </p>
+                                <Image
+                                  src={photo}
+                                  alt={`SOS photo ${idx + 1}`}
+                                  fill
+                                  className="object-cover transition-transform group-hover:scale-105"
+                                  loading="lazy"
+                                />
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1">
+                                  Ảnh #{idx + 1}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -567,10 +585,11 @@ export default function SOSPage() {
                           Nhân viên SOS
                         </p>
                         <p className="text-foreground font-medium">
-                          {sosDetail.result.sos_agent?.fullname || "-"}
+                          {sosDetail.result.sos_agent?.fullname ||
+                            "Chưa được giao"}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {sosDetail.result.sos_agent?.email || "-"}
+                          {sosDetail.result.sos_agent?.email || "Chưa có"}
                         </p>
                       </div>
 
@@ -591,8 +610,8 @@ export default function SOSPage() {
                         </p>
                         <p className="text-foreground font-medium text-sm">
                           {sosDetail.result.created_at
-                            ? new Date(sosDetail.result.created_at).toLocaleString("vi-VN")
-                            : "-"}
+                            ? formatDateUTC(sosDetail.result.created_at)
+                            : "Chưa có"}
                         </p>
                       </div>
 
@@ -602,8 +621,8 @@ export default function SOSPage() {
                         </p>
                         <p className="text-foreground font-medium text-sm">
                           {sosDetail.result.updated_at
-                            ? new Date(sosDetail.result.updated_at).toLocaleString("vi-VN")
-                            : "-"}
+                            ? formatDateUTC(sosDetail.result.updated_at)
+                            : "Chưa có"}
                         </p>
                       </div>
 
@@ -612,8 +631,9 @@ export default function SOSPage() {
                           Thời gian xử lý
                         </p>
                         <p className="text-foreground font-medium text-sm">
-                          {sosDetail.result.resolved_at
-                            ? new Date(sosDetail.result.resolved_at).toLocaleString("vi-VN")
+                          {sosDetail.result.resolved_at &&
+                          sosDetail.result.resolved_at !== null
+                            ? formatDateUTC(sosDetail.result.resolved_at)
                             : "Chưa xử lý"}
                         </p>
                       </div>
@@ -627,10 +647,10 @@ export default function SOSPage() {
                             sosDetail.result.status === "ĐÃ XỬ LÍ"
                               ? "bg-green-100 text-green-800"
                               : sosDetail.result.status === "ĐANG CHỜ XỬ LÍ"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
-                                  ? "bg-orange-100 text-orange-800"
-                                  : "bg-red-100 text-red-800"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-red-100 text-red-800"
                           }`}
                         >
                           {sosDetail.result.status}
@@ -650,29 +670,76 @@ export default function SOSPage() {
                   setDetailTab("info");
                 }}
                 className="flex-1"
+                variant="outline"
               >
                 Đóng
               </Button>
-              <Button variant="outline" className="flex-1" disabled>
-                Xử lý yêu cầu
-              </Button>
+              {sosDetail.result.status === "ĐANG CHỜ XỬ LÍ" && (
+                <>
+                  <Button
+                    className="flex-1"
+                    onClick={() => {
+                      setIsAssignModalOpen(true);
+                    }}
+                  >
+                    Phân công xử lý
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    variant="destructive"
+                    onClick={() => {
+                      setIsCancelModalOpen(true);
+                    }}
+                  >
+                    Hủy yêu cầu
+                  </Button>
+                </>
+              )}
+              {(sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC" ||
+                sosDetail.result.status.includes("KHÔNG XỬ LÍ")) && (
+                <Button
+                  className="flex-1"
+                  onClick={() => {
+                    console.log("Status:", sosDetail.result.status);
+                    console.log("Rental:", sosDetail.result.rental);
+                    const rentalId = sosDetail.result.rental?._id;
+                    if (!rentalId) {
+                      alert("Không tìm thấy thông tin thuê xe");
+                      return;
+                    }
+                    setSelectedRentalId(rentalId);
+                    setIsReplaceModalOpen(true);
+                    // Pre-fill form with rental station info
+                    const startStation = sosDetail.result.rental?.start_station;
+                    if (startStation) {
+                      endRentalForm.setValue("end_station", startStation);
+                    }
+                    endRentalForm.setValue(
+                      "reason",
+                      "Không xử lý được - Thay xe mới"
+                    );
+                  }}
+                >
+                  Thay xe
+                </Button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Create SOS Modal */}
-      {isCreateModalOpen && (
+      {/* Assign SOS Modal */}
+      {isAssignModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-auto">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-foreground">
-                Tạo yêu cầu cứu hộ
+                Phân công xử lý SOS
               </h2>
               <button
                 onClick={() => {
-                  setIsCreateModalOpen(false);
-                  reset();
+                  setIsAssignModalOpen(false);
+                  form.reset();
                 }}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -680,164 +747,264 @@ export default function SOSPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    <span className="text-red-500">*</span> Chọn đơn thuê
-                  </label>
-                  <select
-                    {...register("rental_id")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  >
-                    <option value="">-- Chọn đơn thuê --</option>
-                    {allRentalsData?.map((rental: RentingHistory) => (
-                      <option key={rental._id} value={rental._id}>
-                        {rental._id} -{rental.user.fullname}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.rental_id && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.rental_id.message}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    <span className="text-red-500">*</span> Chọn nhân viên SOS
-                  </label>
-                  <select
-                    {...register("agent_id")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  >
-                    <option value="">-- Chọn nhân viên SOS --</option>
-                    {sosAgents?.map((agent: DetailUser) => (
-                      <option key={agent._id} value={agent._id}>
-                        {agent.fullname} ({agent.email})
-                      </option>
-                    ))}
-                  </select>
-                  {errors.agent_id && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.agent_id.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  <span className="text-red-500">*</span> Mô tả vấn đề
-                </label>
-                <textarea
-                  placeholder="Nhập mô tả vấn đề (tối thiểu 10 ký tự)"
-                  {...register("issue")}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                />
-                {errors.issue && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.issue.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  <span className="text-red-500">*</span> Địa chỉ
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Nhập địa chỉ để tìm vị trí"
-                    value={addressInput}
-                    onChange={(e) => handleAddressChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                  />
-                  {addressSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
-                      {addressSuggestions.map((suggestion, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleSelectAddress(suggestion)}
-                          className="w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b border-border last:border-b-0"
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmitAssign)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="replaced_bike_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Xe thay thế</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground truncate"
                         >
-                          <p className="text-sm text-foreground">
-                            {suggestion.address}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            ({suggestion.latitude}, {suggestion.longitude})
-                          </p>
-                        </button>
-                      ))}
-                    </div>
+                          <option value="">Chọn xe thay thế</option>
+                          {responseNearestAvailableBike?.data?.result ? (
+                            <option
+                              value={
+                                (
+                                  responseNearestAvailableBike.data.result as {
+                                    bike_id: string;
+                                    chip_id: string;
+                                    station_name: string;
+                                  }
+                                ).bike_id
+                              }
+                              className="truncate"
+                            >
+                              {
+                                (
+                                  responseNearestAvailableBike.data.result as {
+                                    bike_id: string;
+                                    chip_id: string;
+                                    station_name: string;
+                                  }
+                                ).chip_id
+                              }
+                              km
+                            </option>
+                          ) : null}
+                        </select>
+                      </FormControl>
+                      {responseNearestAvailableBike?.data?.result && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Trạm:{" "}
+                          {
+                            (
+                              responseNearestAvailableBike.data.result as {
+                                bike_id: string;
+                                chip_id: string;
+                                station_name: string;
+                              }
+                            ).station_name
+                          }
+                        </p>
+                      )}
+                      <FormMessage />
+                      {!responseNearestAvailableBike?.data?.result && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Không tìm thấy xe khả dụng gần đó
+                        </p>
+                      )}
+                    </FormItem>
                   )}
-                </div>
-                {selectedCoordinates && (
-                  <p className="text-xs text-green-600 mt-1">
-                    ✓ Tọa độ: {selectedCoordinates.lat}, {selectedCoordinates.lon}
-                  </p>
-                )}
-              </div>
+                />
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    <span className="text-red-500">*</span> Kinh độ (Longitude)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={selectedCoordinates?.lon || "Sẽ tự động điền"}
-                    value={selectedCoordinates?.lon || ""}
-                    readOnly
-                    {...register("longitude")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground opacity-70 cursor-not-allowed"
-                  />
-                  {errors.longitude && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.longitude.message}
-                    </p>
+                <FormField
+                  control={form.control}
+                  name="sos_agent_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nhân viên SOS</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                        >
+                          <option value="">Chọn nhân viên SOS</option>
+                          {sosAgents?.map((agent) => (
+                            <option key={agent._id} value={agent._id}>
+                              {agent.fullname} - {agent.email}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                      {sosAgents && sosAgents.length === 0 && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Không có nhân viên SOS khả dụng
+                        </p>
+                      )}
+                    </FormItem>
                   )}
-                </div>
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    <span className="text-red-500">*</span> Vĩ độ (Latitude)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={selectedCoordinates?.lat || "Sẽ tự động điền"}
-                    value={selectedCoordinates?.lat || ""}
-                    readOnly
-                    {...register("latitude")}
-                    className="w-full px-3 py-2 border border-border rounded-md bg-muted text-foreground opacity-70 cursor-not-allowed"
-                  />
-                  {errors.latitude && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.latitude.message}
-                    </p>
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsAssignModalOpen(false);
+                      form.reset();
+                    }}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={form.formState.isSubmitting}
+                  >
+                    {form.formState.isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Phân công"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {/* Replace Bike Modal */}
+      {isReplaceModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">Thay xe mới</h2>
+              <button
+                onClick={() => {
+                  setIsReplaceModalOpen(false);
+                  endRentalForm.reset();
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <Form {...endRentalForm}>
+              <form
+                onSubmit={endRentalForm.handleSubmit(onSubmitReplaceBike)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={endRentalForm.control}
+                  name="end_station"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Trạm trả xe</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                        >
+                          <option value="">Chọn trạm trả xe</option>
+                          {stations?.map((station: Station) => (
+                            <option key={station._id} value={station._id}>
+                              {station.name}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-              </div>
+                />
 
+                <FormField
+                  control={endRentalForm.control}
+                  name="reason"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lý do</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="Nhập lý do kết thúc thuê xe..."
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsReplaceModalOpen(false);
+                      endRentalForm.reset();
+                    }}
+                    className="flex-1"
+                    disabled={isReplacingBike}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                    disabled={isReplacingBike}
+                  >
+                    {isReplacingBike ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "Xác nhận thay xe"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel SOS Modal */}
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">
+                Hủy yêu cầu SOS
+              </h2>
+              <button
+                onClick={() => {
+                  setIsCancelModalOpen(false);
+                  setCancelReason("");
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  <span className="text-red-500">*</span> Ghi chú
+                <label className="text-sm font-medium mb-2 block">
+                  Lý do hủy
                 </label>
                 <textarea
-                  placeholder="Nhập ghi chú (tối thiểu 10 ký tự)"
-                  {...register("staff_notes")}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Nhập lý do hủy yêu cầu SOS..."
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground min-h-24"
                 />
-                {errors.staff_notes && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.staff_notes.message}
-                  </p>
-                )}
               </div>
 
               <div className="flex gap-3">
@@ -845,18 +1012,99 @@ export default function SOSPage() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setIsCreateModalOpen(false);
-                    reset();
+                    setIsCancelModalOpen(false);
+                    setCancelReason("");
                   }}
                   className="flex-1"
+                  disabled={isCancelling}
                 >
-                  Hủy
+                  Đóng
                 </Button>
-                <Button type="submit" className="flex-1">
-                  Tạo yêu cầu
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleCancelSOS}
+                  className="flex-1"
+                  disabled={isCancelling}
+                >
+                  {isCancelling ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang hủy...
+                    </>
+                  ) : (
+                    "Xác nhận hủy"
+                  )}
                 </Button>
               </div>
-            </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel SOS Modal */}
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-foreground">
+                Hủy yêu cầu SOS
+              </h2>
+              <button
+                onClick={() => {
+                  setIsCancelModalOpen(false);
+                  setCancelReason("");
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Lý do hủy
+                </label>
+                <textarea
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Nhập lý do hủy yêu cầu SOS..."
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground min-h-24"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsCancelModalOpen(false);
+                    setCancelReason("");
+                  }}
+                  className="flex-1"
+                  disabled={isCancelling}
+                >
+                  Đóng
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleCancelSOS}
+                  className="flex-1"
+                  disabled={isCancelling}
+                >
+                  {isCancelling ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang hủy...
+                    </>
+                  ) : (
+                    "Xác nhận hủy"
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -11,6 +11,7 @@ import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQu
 import { useGetStationStatsReservationQuery } from "./query/Station/useGetStationStatsReservation";
 import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeRevenue";
 import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
+import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -44,12 +45,16 @@ interface StationActionProps {
   stationId?: string;
   page?: number;
   limit?: number;
+  latitude?: number;
+  longitude?: number;
 }
 export const useStationActions = ({
   hasToken,
   stationId,
   page,
   limit,
+  latitude,
+  longitude,
 }: StationActionProps) => {
   const queryClient = useQueryClient();
   const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
@@ -186,6 +191,16 @@ export const useStationActions = ({
     }
     refetchStationRevenue();
   }, [refetchStationRevenue, hasToken]);
+  const { data : responseNearestAvailableBike , refetch : refetchNearestAvailableBike} = useGetNearestAvailableBike({
+    latitude: latitude ?? 0,
+    longitude: longitude ?? 0,
+  });
+  const getNearestAvailableBike = useCallback(() => {
+    if (!hasToken) {
+      return;
+    }
+    refetchNearestAvailableBike();
+  }, [refetchNearestAvailableBike, hasToken]);
   return {
     getAllStations,
     getStationByID,
@@ -206,5 +221,7 @@ export const useStationActions = ({
     getStationBikeRevenue,
     responseStationRevenue,
     getStationRevenue,
+    responseNearestAvailableBike,
+    getNearestAvailableBike,
   };
 };
