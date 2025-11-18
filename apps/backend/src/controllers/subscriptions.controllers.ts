@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
-import { FilterQuery } from 'mongoose'
-import { Role, SubscriptionPackage } from '~/constants/enums'
+import { Filter } from 'mongodb'
+import { Role, SubscriptionPackage, SubscriptionStatus } from '~/constants/enums'
 import HTTP_STATUS from '~/constants/http-status'
 import { RESERVATIONS_MESSAGE, USERS_MESSAGES } from '~/constants/messages'
 import { PACKAGE_CONFIG } from '~/constants/subscription-packages'
@@ -8,11 +8,10 @@ import { ErrorWithStatus } from '~/models/errors'
 import { CreateSubscriptionReqBody, SubscriptionParam } from '~/models/requests/subscriptions.requests'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import Subscription from '~/models/schemas/subscription.schema'
-import User from '~/models/schemas/user.schema'
 import databaseService from '~/services/database.services'
 import subscriptionService from '~/services/subscription.services'
 import { buildAdminSubscriptionFilter } from '~/utils/filters.helper'
-import { sendPaginatedAggregationResponse, sendPaginatedResponse } from '~/utils/pagination.helper'
+import { sendPaginatedAggregationResponse } from '~/utils/pagination.helper'
 import { toObjectId } from '~/utils/string'
 
 export async function createSubscriptionController(req: Request<CreateSubscriptionReqBody>, res: Response) {
@@ -69,12 +68,12 @@ export async function getSubscriptionListController(req: Request, res: Response,
     })
   }
 
-  let matchQuery: FilterQuery<Subscription> = {}
+  let matchQuery: Filter<Subscription> = {}
 
   if (user.role === Role.User) {
     matchQuery.user_id = objUserId
     if (req.query.status) {
-      matchQuery.status = req.query.status
+      matchQuery.status = req.query.status as SubscriptionStatus
     }
   } else if ([Role.Admin, Role.Staff].includes(user.role)) {
     // admin or staff can filter by any field

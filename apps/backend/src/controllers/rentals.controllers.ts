@@ -26,7 +26,6 @@ import { toObjectId } from '~/utils/string'
 import { TokenPayLoad } from '~/models/requests/users.requests'
 import User from '~/models/schemas/user.schema'
 import Subscription from '~/models/schemas/subscription.schema'
-import SosAlert from '~/models/schemas/sos-alert.schema'
 import bikesService from '~/services/bikes.services'
 
 export async function createRentalSessionController(
