@@ -25,7 +25,7 @@ export const resolveSOSSchema = z.object({
     .min(1, "Note phải ít nhất 1 ký tự")
     .max(500, "Note phải nhiều nhất 500 ký tự")
     .optional(),
-  photos: z.array(z.string().min(1, "URI không hợp lệ")),
+  photos: z.array(z.string().min(1, "URI không hợp lệ")).min(1, "Phải có ít nhất 1 ảnh"),
 });
 export const createSOSSchema = z.object({
   latitude: z.number().min(-90).max(90),

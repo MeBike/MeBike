@@ -89,6 +89,7 @@ export function useSOS({ hasToken, page, limit, id , status }: UseSOSProps) {
             alert("Assigned SOS request successfully");
             await queryClient.invalidateQueries({
               queryKey: ["sos-requests"],
+              refetchType: "all",
             });
             await refetchSOSRequest();
             await refetchSOSDetail();
@@ -131,6 +132,7 @@ export function useSOS({ hasToken, page, limit, id , status }: UseSOSProps) {
           );
           await queryClient.invalidateQueries({
             queryKey: ["sos-requests"],
+            refetchType: "all",
           });
           await refetchSOSRequest();
           await refetchSOSDetail();
@@ -168,11 +170,15 @@ export function useSOS({ hasToken, page, limit, id , status }: UseSOSProps) {
           data?: { message?: string };
         }) => {
           if (result.status === 200) {
-            alert(
-              result.data?.message || "Resolved SOS request successfully"
-            );
+            // alert(
+            //   result.data?.message || "Resolved SOS request successfully"
+            // );
             await queryClient.invalidateQueries({
               queryKey: ["sos-requests"],
+              refetchType: "all",
+            });
+            await queryClient.invalidateQueries({
+              queryKey: ["sos-detail", id],
             });
             await refetchSOSRequest();
             await refetchSOSDetail();

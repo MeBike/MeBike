@@ -105,7 +105,7 @@ export default function SOSAgentDashboardScreen() {
   const renderSOSItem = ({ item }: { item: SOS }) => (
     <TouchableOpacity
       style={styles.sosCard}
-      onPress={() => navigation.navigate("MySOSDetail", { sosId: item._id })}
+      onPress={() => navigation.navigate("SOSAgentDetail", { sosId: item._id })}
       activeOpacity={0.7}
     >
       <View style={styles.sosCardHeader}>

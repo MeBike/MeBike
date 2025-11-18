@@ -17,6 +17,7 @@ import {
 } from "@/schemas/reportSchema";
 import type { Report } from "@custom-types";
 import { DetailUser } from "@/services/auth.service";
+import { formatDateUTC } from "@/utils/formatDateTime";
 export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
@@ -24,6 +25,7 @@ export default function ReportsPage() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [staffList, setStaffList] = useState<DetailUser[]>([]);
   const [isLoadingStaff, setIsLoadingStaff] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const {
     reports,
@@ -32,8 +34,11 @@ export default function ReportsPage() {
     pagination,
     reportOverview,
     updateReport,
-    refreshReportOverview
-  } = useUserReport({ hasToken: true , page : currentPage , limit : limit });
+    refreshReportOverview,
+    reportById,
+    getReportById,
+    isLoadingReportById
+  } = useUserReport({ hasToken: true , page : currentPage , limit : limit, id: selectedReport?._id });
 
   const {
     register,
@@ -79,8 +84,10 @@ export default function ReportsPage() {
       });
   }, []);
 
-  const handleViewReport = (report: Report) => {
-    console.log("[v0] View report:", report._id);
+  const handleViewReport = async (report: Report) => {
+    setSelectedReport(report);
+    setIsDetailModalOpen(true);
+    await getReportById();
   };
 
   const handleUpdateReport = (report: Report) => {
@@ -283,6 +290,100 @@ export default function ReportsPage() {
                 ) : (
                   "Cập nhật"
                 )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {isDetailModalOpen && selectedReport && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-foreground">
+                Chi tiết báo cáo
+              </h2>
+              <button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {isLoadingReportById ? (
+              <div className="flex items-center justify-center py-12">
+              <Loader2 className="animate-spin w-12 h-12 text-primary" />
+              </div>
+            ) : reportById?.result ? (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-muted/30 rounded-lg border border-border">
+                    <p className="text-sm text-muted-foreground font-medium mb-2">Loại báo cáo</p>
+                    <p className="text-base font-semibold text-foreground">{reportById.result.type}</p>
+                  </div>
+                  <div className="p-4 bg-muted/30 rounded-lg border border-border">
+                    <p className="text-sm text-muted-foreground font-medium mb-2">Trạng thái</p>
+                    <span className="inline-block px-3 py-1 text-sm font-semibold rounded-full bg-primary/10 text-primary">
+                      {reportById.result.status}
+                    </span>
+                  </div>
+                  <div className="p-4 bg-muted/30 rounded-lg border border-border">
+                    <p className="text-sm text-muted-foreground font-medium mb-2">Độ ưu tiên</p>
+                    <p className="text-base font-semibold text-foreground">{reportById.result.priority || "Không xác định"}</p>
+                  </div>
+                  <div className="p-4 bg-muted/30 rounded-lg border border-border">
+                    <p className="text-sm text-muted-foreground font-medium mb-2">Ngày tạo</p>
+                    <p className="text-base font-semibold text-foreground">
+                      {formatDateUTC(reportById.result.created_at)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-muted/30 rounded-lg border border-border">
+                  <p className="text-sm text-muted-foreground font-medium mb-2">Nội dung báo cáo</p>
+                  <p className="text-base text-foreground leading-relaxed">{reportById.result.message}</p>
+                </div>
+
+                {reportById.result.location && (
+                  <div className="p-4 bg-muted/30 rounded-lg border border-border">
+                    <p className="text-sm text-muted-foreground font-medium mb-2">Vị trí</p>
+                    <p className="text-base text-foreground">{reportById.result.location}</p>
+                  </div>
+                )}
+
+                {reportById.result.media_urls && reportById.result.media_urls.length > 0 && (
+                  <div className="p-4 bg-muted/30 rounded-lg border border-border">
+                    <p className="text-sm text-muted-foreground font-medium mb-3">Hình ảnh đính kèm</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {reportById.result.media_urls.map((url: string, index: number) => (
+                        <img
+                          key={index}
+                          src={url}
+                          alt={`Report ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border border-border hover:scale-105 transition-transform cursor-pointer"
+                          onClick={() => window.open(url, "_blank")}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Không tìm thấy thông tin báo cáo
+              </div>
+            )}
+
+            <div className="flex justify-end mt-6 pt-6 border-t border-border">
+              <Button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="px-6"
+              >
+                Đóng
               </Button>
             </div>
           </div>

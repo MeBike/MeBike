@@ -62,6 +62,13 @@ export type RootStackParamList = {
   MySOSDetail: {
     sosId: string;
   };
+  SOSAgentDetail: {
+    sosId: string;
+  };
+  ResolveSOSForm: {
+    sosId: string;
+    solvable: boolean;
+  };
   ReservationFlow: {
     stationId: string;
     stationName?: string;
@@ -201,3 +208,4 @@ export type ReportScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "Report"
 >;
+
