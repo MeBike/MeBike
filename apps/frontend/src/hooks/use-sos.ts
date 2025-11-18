@@ -70,7 +70,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
       return;
     }
     await refetchSOS();
-  }, [hasToken, refetchSOS, status]);
+  }, [hasToken, refetchSOS]);
   const refetchSOSDetail = useCallback(async () => {
     if (!hasToken || !id) {
       return;

@@ -73,7 +73,7 @@ export function useSOS({ hasToken, page, limit, id , status }: UseSOSProps) {
       return;
     }
     await refetchSOSDetailRequest();
-  }, [hasToken, id, refetchSOSDetailRequest]);
+  }, [hasToken, id, refetchSOSDetailRequest]); // eslint-disable-line react-hooks/exhaustive-deps
   const useAssignSOSRequest = useAssignSOSRequestMutation(id || "");
   const assignSOSRequest = useCallback(
     async (data: AssignSOSSchema) => {

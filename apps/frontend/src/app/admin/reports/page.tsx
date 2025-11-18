@@ -18,6 +18,7 @@ import {
 import type { Report } from "@custom-types";
 import { DetailUser } from "@/services/auth.service";
 import { formatDateUTC } from "@/utils/formatDateTime";
+import Image from "next/image";
 export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
@@ -360,10 +361,12 @@ export default function ReportsPage() {
                     <p className="text-sm text-muted-foreground font-medium mb-3">Hình ảnh đính kèm</p>
                     <div className="grid grid-cols-3 gap-3">
                       {reportById.result.media_urls.map((url: string, index: number) => (
-                        <img
+                        <Image
                           key={index}
                           src={url}
                           alt={`Report ${index + 1}`}
+                          width={200}
+                          height={128}
                           className="w-full h-32 object-cover rounded-lg border border-border hover:scale-105 transition-transform cursor-pointer"
                           onClick={() => window.open(url, "_blank")}
                         />
