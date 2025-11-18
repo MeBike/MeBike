@@ -161,7 +161,7 @@ export enum SosAlertStatus {
   RESOLVED = 'ĐÃ XỬ LÍ',
   UNSOLVABLE = 'KHÔNG XỬ LÍ ĐƯỢC',
   REJECTED = 'ĐÃ TỪ CHỐI',
-  CANCELLED = 'ĐÃ HUỶ'
+  CANCELLED = 'ĐÃ HỦY'
 }
 
 export enum SummaryPeriodType {

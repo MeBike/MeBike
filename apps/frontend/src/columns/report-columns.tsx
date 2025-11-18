@@ -53,10 +53,10 @@ export const reportColumns = ({
         priority === "KHẨN CẤP"
           ? "destructive"
           : priority === "CAO"
-            ? "warning"
-            : priority === "BÌNH THƯỜNG"
-              ? "pending"
-              : "success";
+          ? "warning"
+          : priority === "BÌNH THƯỜNG"
+          ? "pending"
+          : "success";
       return (
         <Badge variant={variant} className="capitalize">
           {priority}
@@ -70,8 +70,10 @@ export const reportColumns = ({
     cell: ({ row }) => {
       const assigneeId = row.getValue("assignee_id") as string;
       if (!assigneeId) return <div>Chưa có</div>;
-      const staff = staffList.find(s => s._id === assigneeId);
-      return <div>{staff ? `${staff.fullname} (${staff.email})` : assigneeId}</div>;
+      const staff = staffList.find((s) => s._id === assigneeId);
+      return (
+        <div>{staff ? `${staff.fullname} (${staff.email})` : assigneeId}</div>
+      );
     },
   },
   {
@@ -90,15 +92,15 @@ export const reportColumns = ({
         status === "ĐANG CHỜ XỬ LÝ"
           ? "processing"
           : status === "ĐANG XỬ LÝ"
-            ? "pending"
-            : status === "ĐÃ GIẢI QUYẾT"
-              ? "success"
-              : "destructive";
-      return (
-        <Badge variant={variant}>
-          {statusMap[status] || status}
-        </Badge>
-      );
+          ? "pending"
+          : status === "ĐÃ GIẢI QUYẾT"
+          ? "success"
+          : status === "KHÔNG GIẢI QUYẾT ĐƯỢC"
+          ? "unresolvable"
+          : status === "ĐÃ HỦY"
+          ? "destructive"
+          : "destructive";
+      return <Badge variant={variant}>{statusMap[status] || status}</Badge>;
     },
   },
   {
@@ -129,31 +131,26 @@ export const reportColumns = ({
             <Eye className="h-4 w-4 mr-1" />
             Xem
           </Button>
-          {status !== "ĐÃ GIẢI QUYẾT" &&
-            status !== "ĐÃ HỦY" &&
-            status !== "KHÔNG GIẢI QUYẾT ĐƯỢC" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onUpdate(report)}
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                Cập nhật
-              </Button>
-            )}
+          {status === "ĐANG CHỜ XỬ LÝ" && (
+            <Button variant="ghost" size="sm" onClick={() => onUpdate(report)}>
+              <Edit className="h-4 w-4 mr-1" />
+              Cập nhật
+            </Button>
+          )}
           {(status === "ĐÃ GIẢI QUYẾT" ||
             status === "ĐÃ HỦY" ||
-            status === "KHÔNG GIẢI QUYẾT ĐƯỢC") && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onUpdate(report)}
-                disabled
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                Cập nhật
-              </Button>
-            )}
+            status === "KHÔNG GIẢI QUYẾT ĐƯỢC" ||
+            status === "ĐANG XỬ LÝ") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onUpdate(report)}
+              disabled
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Cập nhật
+            </Button>
+          )}
         </div>
       );
     },

@@ -910,12 +910,17 @@ export default function SOSPage() {
                           {...field}
                           className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
                         >
-                          <option value="">Chọn trạm trả xe</option>
-                          {stations?.map((station: Station) => (
-                            <option key={station._id} value={station._id}>
-                              {station.name}
-                            </option>
-                          ))}
+                          {(() => {
+                            const startStation = sosDetail?.result?.rental?.start_station;
+                            const station = stations?.find((s: Station) => s._id === startStation);
+                            return station ? (
+                              <option value={station._id}>
+                                {station.name}
+                              </option>
+                            ) : (
+                              <option value="">Không tìm thấy trạm</option>
+                            );
+                          })()}
                         </select>
                       </FormControl>
                       <FormMessage />

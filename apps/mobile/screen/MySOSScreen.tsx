@@ -47,7 +47,7 @@ const MySOSScreen = () => {
     { label: "Đã xử lý", value: "ĐÃ XỬ LÍ" },
     { label: "Không xử lý được", value: "KHÔNG XỬ LÍ ĐƯỢC" },
     { label: "Đã từ chối", value: "ĐÃ TỪ CHỐI" },
-    { label: "Đã hủy", value: "ĐÃ HUỶ" },
+    { label: "Đã hủy", value: "ĐÃ HỦY" },
   ];
 
   const handleStatusFilter = (status: string | undefined) => {

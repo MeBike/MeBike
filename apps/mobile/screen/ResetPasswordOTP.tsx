@@ -138,6 +138,14 @@ export default function ResetPasswordOTPScreen() {
   const [resendTimeLeft, setResendTimeLeft] = useState(RESEND_COOLDOWN);
   const [isVerifying, setIsVerifying] = useState(false);
   const otpInputRefs = useRef<(TextInput | null)[]>([]);
+  const mountedRef = useRef(true);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Timer cho OTP expiry
   useEffect(() => {
@@ -147,9 +155,11 @@ export default function ResetPasswordOTPScreen() {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          Alert.alert("Lỗi", "Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại.");
-          setOtp(["", "", "", "", "", ""]);
-          setResendTimeLeft(0);
+          if (mountedRef.current) {
+            Alert.alert("Lỗi", "Mã OTP đã hết hạn. Vui lòng yêu cầu gửi lại.");
+            setOtp(["", "", "", "", "", ""]);
+            setResendTimeLeft(0);
+          }
           return 0;
         }
         return prev - 1;

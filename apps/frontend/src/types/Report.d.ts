@@ -28,7 +28,7 @@ export enum ReportStatus {
   InProgress = "ĐANG XỬ LÝ",
   Resolved = "ĐÃ GIẢI QUYẾT",
   CannotResolved = "KHÔNG GIẢI QUYẾT ĐƯỢC",
-  Cancel = "ĐÃ HỦY",
+  Cancel = "ĐÃ HUỶ",
 }
 
 export enum ReportPriority {

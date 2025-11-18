@@ -45,6 +45,7 @@ function ReportDetailScreen() {
       case ReportStatus.Resolved:
         return "#10b981"; // success - green
       case ReportStatus.CannotResolved:
+        return "#6b7280";
       case ReportStatus.Cancel:
         return "#ef4444"; // destructive - red
       default:
