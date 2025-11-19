@@ -42,7 +42,7 @@ const CreateSOSRequestScreen = () => {
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  useEffect(() => {
+useEffect(() => {
     (async () => {
       try {
         setLoadingLocation(true);

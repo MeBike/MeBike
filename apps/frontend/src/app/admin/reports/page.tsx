@@ -16,12 +16,14 @@ import {
   type UpdateReportSchemaFormData,
 } from "@/schemas/reportSchema";
 import type { Report } from "@custom-types";
+import type { ReportStatus } from "@/types";
 import { DetailUser } from "@/services/auth.service";
 import { formatDateUTC } from "@/utils/formatDateTime";
 import Image from "next/image";
 export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState<number>(10);
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [staffList, setStaffList] = useState<DetailUser[]>([]);
@@ -39,7 +41,7 @@ export default function ReportsPage() {
     reportById,
     getReportById,
     isLoadingReportById
-  } = useUserReport({ hasToken: true , page : currentPage , limit : limit, id: selectedReport?._id });
+  } = useUserReport({ hasToken: true , page : currentPage , limit : limit, id: selectedReport?._id, status: selectedStatus as ReportStatus || undefined });
 
   const {
     register,
@@ -157,6 +159,24 @@ export default function ReportsPage() {
       </div>
 
       {reportOverview && <ReportStats reports={reportOverview} />}
+
+      <div className="flex items-center gap-4 mb-4">
+        <div>
+          <label className="text-sm font-medium text-foreground">Lọc theo trạng thái</label>
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+          >
+            <option value="">Tất cả</option>
+            <option value="ĐANG CHỜ XỬ LÝ">Đang chờ xử lý</option>
+            <option value="ĐANG XỬ LÝ">Đang xử lý</option>
+            <option value="ĐÃ GIẢI QUYẾT">Đã giải quyết</option>
+            <option value="ĐÃ HỦY">Đã hủy</option>
+            <option value="KHÔNG GIẢI QUYẾT ĐƯỢC">Không giải quyết được</option>
+          </select>
+        </div>
+      </div>
 
       <div>
         <p className="text-sm text-muted-foreground mb-4">

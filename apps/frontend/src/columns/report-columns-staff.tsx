@@ -77,10 +77,12 @@ export const reportColumns = ({
         status === "ĐANG CHỜ XỬ LÝ"
           ? "processing"
           : status === "ĐANG XỬ LÝ"
-            ? "pending"
-            : status === "ĐÃ GIẢI QUYẾT"
-              ? "success"
-              : "destructive";
+          ? "pending"
+          : status === "ĐÃ GIẢI QUYẾT"
+          ? "success"
+          : status === "KHÔNG GIẢI QUYẾT ĐƯỢC"
+          ? "unsolvable"
+          : "destructive";
       return <Badge variant={variant}>{statusMap[status] || status}</Badge>;
     },
   },

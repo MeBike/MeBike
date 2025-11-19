@@ -1,6 +1,6 @@
 import type { AxiosResponse } from "axios";
 import fetchHttpClient from "../lib/httpClient";
-import type { Report, ReportOverview } from "@custom-types";
+import type { Report, ReportOverview, ReportStatus } from "@custom-types";
 import {
   type ResolveReportSchemaFormData ,
   type UpdateReportSchemaFormData,
@@ -49,15 +49,18 @@ export const reportService = {
   getManageUserReports: async ({
     page,
     limit,
+    status
   }: {
     page?: number;
     limit?: number;
+    status ?: ReportStatus;
   }): Promise<AxiosResponse<ApiResponse<Report[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Report[]>>(
       REPORT_ENDPOINTS.MANAGE_USER_REPORTS,
       {
         page,
         limit,
+        status
       }
     );
     return response;
