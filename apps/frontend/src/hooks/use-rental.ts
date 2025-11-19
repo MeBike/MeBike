@@ -9,6 +9,7 @@ import { EndRentalSchema, UpdateRentalSchema } from "@/schemas/rentalSchema";
 import { toast } from "sonner";
 import { useGetDashboardSummaryQuery } from "./query/Rent/useGetDashboardSummaryQuery";
 import useEndCurrentRental from "./mutations/Rentals/useEndCurrentRentalMutation";
+import { useGetSummaryRentalQuery } from "./query/Rent/useGetSummaryRental";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -217,6 +218,13 @@ export function useRentalsActions({
       status,
     ]
   );
+  const {data : summaryRental , refetch : refetchSummaryRental , isLoading : isLoadingSummaryRental } = useGetSummaryRentalQuery();
+  const getSummaryRental = useCallback(() => {
+    if(!hasToken){
+      return;
+    }
+    refetchSummaryRental();
+  }, [hasToken, refetchSummaryRental]);
   return {
     allRentalsData: allRentalsData?.data,
     getRentals,
@@ -237,6 +245,8 @@ export function useRentalsActions({
     isDetailLoading,
     dashboardSummaryData,
     getDashboardSummary,
+    summaryRental,
+    getSummaryRental,
   };
 }
 

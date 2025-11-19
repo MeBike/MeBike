@@ -167,7 +167,13 @@ export const useUserReport = ({
         }
       );
     },
-    [hasToken, router, queryClient, useResolveReport, getReportInProgress, page, limit]
+    [
+      hasToken,
+      router,
+      queryClient,
+      useResolveReport,
+      refetchReports,
+    ]
   );
   const {data : reportById , refetch: refetchReportById , isLoading: isLoadingReportById} = useGetReportByIdQuery({id : id ?? ""}); 
   const getReportById = useCallback(async () => {
