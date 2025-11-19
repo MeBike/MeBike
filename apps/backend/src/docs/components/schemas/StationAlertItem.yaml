@@ -1,0 +1,52 @@
+type: object
+description: "Thông tin chi tiết của một trạm trong danh sách cảnh báo."
+properties:
+  _id:
+    type: string
+    format: mongoId
+  name:
+    type: string
+    example: "Ga Bến Thành"
+  address:
+    type: string
+    example: "Quận 1, TP.HCM"
+  capacity:
+    type: integer
+    example: 20
+  totalBikes:
+    type: integer
+    example: 19
+  availableBikes:
+    type: integer
+    example: 2
+  brokenBikes:
+    type: integer
+    example: 5
+  emptySlots:
+    type: integer
+    example: 1
+  utilizationRate:
+    type: number
+    format: float
+    description: "Tỷ lệ sử dụng (%) (chỉ có trong 'overloaded')."
+    example: 95.5
+  availableRate:
+    type: number
+    format: float
+    description: "Tỷ lệ xe có sẵn (%) (chỉ có trong 'underloaded')."
+    example: 10.0
+  brokenRate:
+    type: number
+    format: float
+    description: "Tỷ lệ xe hỏng (%) (chỉ có trong 'broken')."
+    example: 25.0
+  emptyRate:
+    type: number
+    format: float
+    description: "Tỷ lệ chỗ trống (%) (chỉ có trong 'empty')."
+    example: 60.0
+  severity:
+    type: string
+    enum: ["warning", "critical"]
+    description: "Mức độ nghiêm trọng của cảnh báo."
+    example: "critical"

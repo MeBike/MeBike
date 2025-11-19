@@ -5189,6 +5189,77 @@
         }
       }
     },
+    "/stations/alerts": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Get station alerts (Admin/Staff only)",
+        "description": "Retrieves alerts for stations that require attention.\n- **Overloaded**: > 90% utilization.\n- **Underloaded**: < `threshold`% available bikes.\n- **Broken**: > 10% broken bikes.\n- **Empty**: > 50% empty slots.\n**Requires Admin or Staff privileges.**\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "threshold",
+            "in": "query",
+            "required": false,
+            "description": "The percentage threshold for 'underloaded' alerts (default: 20).",
+            "schema": {
+              "type": "number",
+              "default": 20,
+              "example": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Station alerts retrieved successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Lấy cảnh báo trạm thành công"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/GetStationAlertsResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/schemas/ErrorStatusResponse"
+          },
+          "403": {
+            "description": "Forbidden. User does not have Admin or Staff rights.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Admin/Staff user not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ratings": {
       "get": {
         "tags": [
@@ -7006,6 +7077,46 @@
           }
         }
       },
+      "GetStationAlertsResponse": {
+        "type": "object",
+        "description": "Đối tượng trả về chứa thông tin cảnh báo trạm.",
+        "properties": {
+          "threshold": {
+            "type": "number",
+            "description": "Ngưỡng phần trăm xe có sẵn được sử dụng để xác định trạm 'underloaded'.",
+            "example": 20
+          },
+          "totalStations": {
+            "type": "integer",
+            "description": "Tổng số trạm đã được kiểm tra.",
+            "example": 50
+          },
+          "alertsCount": {
+            "type": "object",
+            "description": "Thống kê số lượng cảnh báo theo loại.",
+            "properties": {
+              "overloaded": {
+                "type": "integer"
+              },
+              "underloaded": {
+                "type": "integer"
+              },
+              "broken": {
+                "type": "integer"
+              },
+              "empty": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            }
+          },
+          "alerts": {
+            "$ref": "#/components/schemas/StationAlertsList"
+          }
+        }
+      },
       "User": {
         "type": "object",
         "description": "Represents a user object.",
@@ -8706,6 +8817,111 @@
           },
           "station": {
             "$ref": "#/components/schemas/HighestRevenueBikeStation"
+          }
+        }
+      },
+      "StationAlertItem": {
+        "type": "object",
+        "description": "Thông tin chi tiết của một trạm trong danh sách cảnh báo.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "mongoId"
+          },
+          "name": {
+            "type": "string",
+            "example": "Ga Bến Thành"
+          },
+          "address": {
+            "type": "string",
+            "example": "Quận 1, TP.HCM"
+          },
+          "capacity": {
+            "type": "integer",
+            "example": 20
+          },
+          "totalBikes": {
+            "type": "integer",
+            "example": 19
+          },
+          "availableBikes": {
+            "type": "integer",
+            "example": 2
+          },
+          "brokenBikes": {
+            "type": "integer",
+            "example": 5
+          },
+          "emptySlots": {
+            "type": "integer",
+            "example": 1
+          },
+          "utilizationRate": {
+            "type": "number",
+            "format": "float",
+            "description": "Tỷ lệ sử dụng (%) (chỉ có trong 'overloaded').",
+            "example": 95.5
+          },
+          "availableRate": {
+            "type": "number",
+            "format": "float",
+            "description": "Tỷ lệ xe có sẵn (%) (chỉ có trong 'underloaded').",
+            "example": 10
+          },
+          "brokenRate": {
+            "type": "number",
+            "format": "float",
+            "description": "Tỷ lệ xe hỏng (%) (chỉ có trong 'broken').",
+            "example": 25
+          },
+          "emptyRate": {
+            "type": "number",
+            "format": "float",
+            "description": "Tỷ lệ chỗ trống (%) (chỉ có trong 'empty').",
+            "example": 60
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "warning",
+              "critical"
+            ],
+            "description": "Mức độ nghiêm trọng của cảnh báo.",
+            "example": "critical"
+          }
+        }
+      },
+      "StationAlertsList": {
+        "type": "object",
+        "description": "Danh sách các trạm được phân loại theo loại cảnh báo.",
+        "properties": {
+          "overloaded": {
+            "type": "array",
+            "description": "Danh sách các trạm quá tải (> 90% sức chứa).",
+            "items": {
+              "$ref": "#/components/schemas/StationAlertItem"
+            }
+          },
+          "underloaded": {
+            "type": "array",
+            "description": "Danh sách các trạm thiếu xe (< ngưỡng quy định).",
+            "items": {
+              "$ref": "#/components/schemas/StationAlertItem"
+            }
+          },
+          "broken": {
+            "type": "array",
+            "description": "Danh sách các trạm có nhiều xe hỏng (> 10% tổng số xe).",
+            "items": {
+              "$ref": "#/components/schemas/StationAlertItem"
+            }
+          },
+          "empty": {
+            "type": "array",
+            "description": "Danh sách các trạm quá trống (> 50% chỗ trống).",
+            "items": {
+              "$ref": "#/components/schemas/StationAlertItem"
+            }
           }
         }
       }
