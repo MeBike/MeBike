@@ -33,7 +33,7 @@ class BikesService {
     const filter: any = {};
 
     if (chip_id) {
-        filter.chip_id = chip_id;
+        filter.chip_id = { $regex: chip_id, $options: "i" };
     }
     if (station_id) {
       filter.station_id = new ObjectId(station_id);

@@ -3120,6 +3120,56 @@
             schema:
               $ref: '../components/schemas/ErrorStatusResponse.yaml'
 
+/stations/alerts:
+  get:
+    tags: [Stations]
+    summary: Get station alerts (Admin/Staff only)
+    description: |
+      Retrieves alerts for stations that require attention.
+      - **Overloaded**: > 90% utilization.
+      - **Underloaded**: < `threshold`% available bikes.
+      - **Broken**: > 10% broken bikes.
+      - **Empty**: > 50% empty slots.
+      **Requires Admin or Staff privileges.**
+    security:
+      - BearerAuth: []
+    parameters:
+      - name: threshold
+        in: query
+        required: false
+        description: "The percentage threshold for 'underloaded' alerts (default: 20)."
+        schema:
+          type: number
+          default: 20
+          example: 15
+    responses:
+      '200':
+        description: "Station alerts retrieved successfully."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: "Lấy cảnh báo trạm thành công"
+                result:
+                  $ref: '../components/schemas/GetStationAlertsResponse.yaml'
+      '401':
+        $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '403':
+        description: "Forbidden. User does not have Admin or Staff rights."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+      '404':
+        description: "Admin/Staff user not found."
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas/ErrorStatusResponse.yaml'
+
 # ===================================================================
 # Ratings API
 # ===================================================================

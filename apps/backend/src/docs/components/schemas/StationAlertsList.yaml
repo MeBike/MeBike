@@ -1,0 +1,23 @@
+type: object
+description: "Danh sách các trạm được phân loại theo loại cảnh báo."
+properties:
+  overloaded:
+    type: array
+    description: "Danh sách các trạm quá tải (> 90% sức chứa)."
+    items:
+      $ref: './StationAlertItem.yaml'
+  underloaded:
+    type: array
+    description: "Danh sách các trạm thiếu xe (< ngưỡng quy định)."
+    items:
+      $ref: './StationAlertItem.yaml'
+  broken:
+    type: array
+    description: "Danh sách các trạm có nhiều xe hỏng (> 10% tổng số xe)."
+    items:
+      $ref: './StationAlertItem.yaml'
+  empty:
+    type: array
+    description: "Danh sách các trạm quá trống (> 50% chỗ trống)."
+    items:
+      $ref: './StationAlertItem.yaml'

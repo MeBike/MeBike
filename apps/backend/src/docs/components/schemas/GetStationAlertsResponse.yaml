@@ -1,0 +1,27 @@
+type: object
+description: "Đối tượng trả về chứa thông tin cảnh báo trạm."
+properties:
+  threshold:
+    type: number
+    description: "Ngưỡng phần trăm xe có sẵn được sử dụng để xác định trạm 'underloaded'."
+    example: 20
+  totalStations:
+    type: integer
+    description: "Tổng số trạm đã được kiểm tra."
+    example: 50
+  alertsCount:
+    type: object
+    description: "Thống kê số lượng cảnh báo theo loại."
+    properties:
+      overloaded:
+        type: integer
+      underloaded:
+        type: integer
+      broken:
+        type: integer
+      empty:
+        type: integer
+      total:
+        type: integer
+  alerts:
+    $ref: './StationAlertsList.yaml'
