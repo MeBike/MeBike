@@ -68,6 +68,7 @@ function SupportScreen() {
       case ReportStatus.Resolved:
         return "#10b981"; // success - green
       case ReportStatus.CannotResolved:
+        return "#9ca3af"; // unsolvable - gray
       case ReportStatus.Cancel:
         return "#ef4444"; // destructive - red
       default:
