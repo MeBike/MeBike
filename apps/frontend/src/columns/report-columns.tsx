@@ -93,6 +93,8 @@ export const reportColumns = ({
             ? "pending"
             : status === "ĐÃ GIẢI QUYẾT"
               ? "success"
+              : status === "KHÔNG GIẢI QUYẾT ĐƯỢC"
+                ? "unsolvable"
               : "destructive";
       return (
         <Badge variant={variant}>
