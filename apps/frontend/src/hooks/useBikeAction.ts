@@ -111,7 +111,8 @@ export const useBikeActions = (
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
   const {
-    data: statisticData,
+    data: 
+    statisticData,
     refetch: refetchStatistics,
     isFetching: isLoadingStatistics,
   } = useGetStatisticsBikeQuery();
