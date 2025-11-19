@@ -178,11 +178,11 @@ export async function getAllReportController(req: Request<any, any, any>, res: R
         sortPriority: {
           $switch: {
             branches: [
-              { case: { $eq: ['$status', 'ĐANG XỬ LÝ'] }, then: 2 },
-              { case: { $eq: ['$status', 'ĐÃ GIẢI QUYẾT'] }, then: 3 },
-              { case: { $eq: ['$status', 'KHÔNG GIẢI QUYẾT ĐƯỢC'] }, then: 4 },
-              { case: { $eq: ['$status', 'ĐANG CHỜ XỬ LÝ'] }, then: 1 },
-              { case: { $eq: ['$status', 'ĐÃ HỦY'] }, then: 5 }
+              { case: { $eq: ['$status', ReportStatus.InProgress] }, then: 2 },
+              { case: { $eq: ['$status', ReportStatus.Resolved] }, then: 3 },
+              { case: { $eq: ['$status', ReportStatus.CannotResolved] }, then: 4 },
+              { case: { $eq: ['$status', ReportStatus.Pending] }, then: 1 },
+              { case: { $eq: ['$status', ReportStatus.Cancel] }, then: 5 }
             ],
             default: 6
           }
@@ -263,11 +263,11 @@ export async function getAllReportStaffController(req: Request<any, any, any>, r
           sortPriority: {
             $switch: {
               branches: [
-                { case: { $eq: ['$status', 'ĐANG XỬ LÝ'] }, then: 1 },
-                { case: { $eq: ['$status', 'ĐÃ GIẢI QUYẾT'] }, then: 2 },
-                { case: { $eq: ['$status', 'KHÔNG GIẢI QUYẾT ĐƯỢC'] }, then: 3 },
-                { case: { $eq: ['$status', 'ĐANG CHỜ XỬ LÝ'] }, then: 4 },
-                { case: { $eq: ['$status', 'ĐÃ HỦY'] }, then: 5 }
+                { case: { $eq: ['$status', ReportStatus.InProgress] }, then: 2 },
+                { case: { $eq: ['$status', ReportStatus.Resolved] }, then: 3 },
+                { case: { $eq: ['$status', ReportStatus.CannotResolved] }, then: 4 },
+                { case: { $eq: ['$status', ReportStatus.Pending] }, then: 1 },
+                { case: { $eq: ['$status', ReportStatus.Cancel] }, then: 5 }
               ],
               default: 6
             }
