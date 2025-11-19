@@ -25,7 +25,6 @@ import { getIdValidator } from '~/middlewares/supplier.middlewares'
 import { accessTokenValidator } from '~/middlewares/users.middlewares'
 import { wrapAsync } from '~/utils/handler'
 import { isStaffOrSosAgentValidator } from '~/middlewares/sos.middlewares'
-import { isStaffValidator } from '~/middlewares/staff.middlewares'
 
 const reportsRouter = Router()
 
