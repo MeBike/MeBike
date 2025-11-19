@@ -5,7 +5,6 @@ import {
   createReportController,
   getAllInProgressReportController,
   getAllReportController,
-  getAllReportStaffController,
   getAllUserReportController,
   getByIdController,
   getReportOverviewController,
@@ -46,13 +45,6 @@ reportsRouter.get(
   accessTokenValidator,
   isStaffOrSosAgentValidator,
   wrapAsync(getAllInProgressReportController)
-)
-// get all cho staff
-reportsRouter.get(
-  '/report-staff',
-  accessTokenValidator,
-  isStaffOrSosAgentValidator,
-  wrapAsync(getAllReportStaffController)
 )
 // get report by id for staff or sos agent
 reportsRouter.get(

@@ -219,26 +219,6 @@ export async function getAllReportController(req: Request<any, any, any>, res: R
 }
 
 export async function getAllInProgressReportController(req: Request<any, any, any>, res: Response, next: NextFunction) {
-  const filter: Filter<Report> = {}
-  filter.status = ReportStatus.InProgress
-
-  const { user_id } = req.decoded_authorization as TokenPayLoad
-  filter.assignee_id = new ObjectId(user_id)
-
-  if (req.query.date) {
-    const start = new Date(req.query.date as string)
-    const end = new Date(start)
-    end.setUTCHours(23, 59, 59, 999)
-
-    filter.created_at = { $gte: start, $lte: end }
-  }
-
-  const sortOptions: Sort = { type: 1, created_at: -1 }
-
-  await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter, {}, sortOptions)
-}
-
-export async function getAllReportStaffController(req: Request<any, any, any>, res: Response, next: NextFunction) {
   try {
     const { user_id } = req.decoded_authorization as TokenPayLoad
 
@@ -250,6 +230,10 @@ export async function getAllReportStaffController(req: Request<any, any, any>, r
       const end = new Date(start)
       end.setUTCHours(23, 59, 59, 999)
       filter.created_at = { $gte: start, $lte: end }
+    }
+
+    if (req.query.status) {
+      filter.status = req.query.status as ReportStatus
     }
 
     const page = Number.parseInt(req.query.page as string) || 1
