@@ -5260,6 +5260,98 @@
         }
       }
     },
+    "/stations/nearest-available-bike": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Find the nearest available bike",
+        "description": "Finds the single nearest bike with status 'CÓ SẴN' (Available) based on geographic coordinates.\nThis is a public endpoint and does not require authentication.\n",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "description": "The latitude of the location to search from.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 10.7769
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "description": "The longitude of the location to search from.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "example": 106.7009
+            }
+          },
+          {
+            "name": "maxDistance",
+            "in": "query",
+            "required": false,
+            "description": "Maximum search distance in meters. (Default: 20000m)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 20000,
+              "example": 5000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the nearest available bike, or null if no bike is found within the distance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetNearestAvailableBikeResponse"
+                },
+                "examples": {
+                  "found": {
+                    "summary": "Khi tìm thấy xe",
+                    "value": {
+                      "message": "Tìm thấy xe có sẵn gần nhất thành công",
+                      "result": {
+                        "bike_id": "68e0b2ae63beb4054de09d11",
+                        "chip_id": "BIKE-123",
+                        "status": "CÓ SẴN",
+                        "station_id": "68e0b2ae63beb4054de09d10",
+                        "station_name": "Trạm Đại học FPT",
+                        "station_address": "Quận 9, TP.HCM",
+                        "distance_meters": 150.75,
+                        "distance_km": 0.15
+                      }
+                    }
+                  },
+                  "not_found": {
+                    "summary": "Khi không tìm thấy xe",
+                    "value": {
+                      "message": "Không tìm thấy xe đạp nào có sẵn",
+                      "result": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error (e.g., latitude/longitude is missing or invalid format).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorValidationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ratings": {
       "get": {
         "tags": [
@@ -7117,6 +7209,19 @@
           }
         }
       },
+      "GetNearestAvailableBikeResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Tìm thấy xe có sẵn gần nhất thành công"
+          },
+          "result": {
+            "$ref": "#/components/schemas/NearestAvailableBike",
+            "nullable": true
+          }
+        }
+      },
       "User": {
         "type": "object",
         "description": "Represents a user object.",
@@ -8922,6 +9027,50 @@
             "items": {
               "$ref": "#/components/schemas/StationAlertItem"
             }
+          }
+        }
+      },
+      "NearestAvailableBike": {
+        "type": "object",
+        "description": "Thông tin về xe đạp có sẵn gần nhất được tìm thấy.",
+        "properties": {
+          "bike_id": {
+            "type": "string",
+            "format": "mongoId",
+            "example": "68e0b2ae63beb4054de09d11"
+          },
+          "chip_id": {
+            "type": "string",
+            "nullable": true,
+            "example": "BIKE-123"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BikeStatus"
+          },
+          "station_id": {
+            "type": "string",
+            "format": "mongoId",
+            "example": "68e0b2ae63beb4054de09d10"
+          },
+          "station_name": {
+            "type": "string",
+            "example": "Trạm Đại học FPT"
+          },
+          "station_address": {
+            "type": "string",
+            "example": "Quận 9, TP.HCM"
+          },
+          "distance_meters": {
+            "type": "number",
+            "format": "double",
+            "description": "Khoảng cách từ điểm tìm kiếm đến trạm (mét).",
+            "example": 150.75
+          },
+          "distance_km": {
+            "type": "number",
+            "format": "double",
+            "description": "Khoảng cách (km).",
+            "example": 0.15
           }
         }
       }
