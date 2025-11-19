@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import type { SOS } from "@/types/SOS";
+import { formatDateUTC } from "@/utils/formatDateTime";
 
 interface SOSColumnsProps {
   onView: (sos: SOS) => void;
@@ -14,11 +15,15 @@ export const sosColumns = ({ onView }: SOSColumnsProps): ColumnDef<SOS>[] => [
     header: "Mã SOS",
     cell: ({ row }) => {
       const id = row.getValue("_id") as string;
-      return (
-        <div className="font-mono text-sm">
-          {id.slice(0, 8)}
-        </div>
-      );
+      return <div className="font-mono text-sm">{id.slice(0, 8)}</div>;
+    },
+  },
+  {
+    accessorKey: "rental",
+    header: "Mã thuê xe",
+    cell: ({ row }) => {
+      const rental = row.getValue("rental") as { _id: string };
+      return <div className="font-mono text-sm">{rental?._id?.slice(0, 8) || "Không có"}</div>;
     },
   },
   {
@@ -26,21 +31,17 @@ export const sosColumns = ({ onView }: SOSColumnsProps): ColumnDef<SOS>[] => [
     header: "Mã người dùng",
     cell: ({ row }) => {
       const requesterId = row.getValue("requester_id") as string;
-      return (
-        <div className="font-mono text-sm">
-          {requesterId.slice(0, 8)}
-        </div>
-      );
+      return <div className="font-mono text-sm">{requesterId.slice(0, 8)}</div>;
     },
   },
   {
-    accessorKey: "bike_id",
-    header: "Mã xe đạp",
+    accessorKey: "replaced_bike_id",
+    header: "Mã xe thay thế",
     cell: ({ row }) => {
-      const bikeId = row.getValue("bike_id") as string;
+      const replacedBikeId = row.getValue("replaced_bike_id") as string;
       return (
         <div className="font-mono text-sm">
-          {bikeId.slice(0, 8)}
+          {replacedBikeId ? replacedBikeId.slice(0, 8) : "Không có"}
         </div>
       );
     },
@@ -51,8 +52,20 @@ export const sosColumns = ({ onView }: SOSColumnsProps): ColumnDef<SOS>[] => [
     cell: ({ row }) => {
       const issue = row.getValue("issue") as string;
       return (
-        <div className="max-w-[250px] truncate text-sm" title={issue}>
+        <div className="max-w-[200px] truncate text-sm" title={issue}>
           {issue}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "reason",
+    header: "Lý do",
+    cell: ({ row }) => {
+      const reason = row.getValue("reason") as string;
+      return (
+        <div className="max-w-[150px] truncate text-sm" title={reason}>
+          {reason || "Không có"}
         </div>
       );
     },
@@ -71,7 +84,7 @@ export const sosColumns = ({ onView }: SOSColumnsProps): ColumnDef<SOS>[] => [
               ? "warning"
               : "destructive";
       return (
-        <Badge variant={variant} className="capitalize">
+        <Badge variant={variant} className="whitespace-nowrap">
           {status}
         </Badge>
       );
@@ -83,8 +96,20 @@ export const sosColumns = ({ onView }: SOSColumnsProps): ColumnDef<SOS>[] => [
     cell: ({ row }) => {
       const date = row.getValue("created_at") as string;
       return (
-        <div className="text-sm">
-          {date ? new Date(date).toLocaleDateString("vi-VN") : "-"}
+        <div className="text-sm whitespace-nowrap">
+          {date ? formatDateUTC(date) : "Không có"}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "updated_at",
+    header: "Ngày cập nhật",
+    cell: ({ row }) => {
+      const date = row.getValue("updated_at") as string;
+      return (
+        <div className="text-sm whitespace-nowrap">
+          {date ? formatDateUTC(date) : "Không có"}
         </div>
       );
     },

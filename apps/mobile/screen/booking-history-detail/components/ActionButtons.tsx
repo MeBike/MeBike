@@ -16,33 +16,61 @@ const ActionButtons = ({ booking, rentalQrValue }: Props) => {
   return (
     <>
       {booking.status === "ĐANG THUÊ" && (
-        <TouchableOpacity
-          style={styles.endRentalButton}
-          onPress={() =>
-            (navigation as any).navigate("RentalQr", {
-              bookingId: rentalQrValue,
-            })
-          }
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={["#0066FF", "#00B4D8"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.endRentalButtonContent}
+        <>
+          <TouchableOpacity
+            style={styles.endRentalButton}
+            onPress={() =>
+              (navigation as any).navigate("RentalQr", {
+                bookingId: rentalQrValue,
+              })
+            }
+            activeOpacity={0.9}
           >
-            <Ionicons name="qr-code" size={26} color="#fff" />
-            <View style={styles.qrButtonTextWrapper}>
-              <Text style={styles.qrButtonTitle}>
-                Trình mã QR cho nhân viên
-              </Text>
-              <Text style={styles.qrButtonSubtitle}>
-                Nhân viên sẽ quét để kết thúc phiên thuê giúp bạn
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#DFF3FF" />
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={["#0066FF", "#00B4D8"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.endRentalButtonContent}
+            >
+              <Ionicons name="qr-code" size={26} color="#fff" />
+              <View style={styles.qrButtonTextWrapper}>
+                <Text style={styles.qrButtonTitle}>
+                  Trình mã QR cho nhân viên
+                </Text>
+                <Text style={styles.qrButtonSubtitle}>
+                  Nhân viên sẽ quét để kết thúc phiên thuê giúp bạn
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#DFF3FF" />
+            </LinearGradient>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.sosButton}
+            onPress={() => {
+              (navigation as any).navigate("CreateSOSRequest", { rentalId: booking._id });
+            }}
+            activeOpacity={0.9}
+          >
+            <LinearGradient
+              colors={["#FF3B30", "#FF6B6B"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.sosButtonContent}
+            >
+              <Ionicons name="alert-circle" size={26} color="#fff" />
+              <View style={styles.sosButtonTextWrapper}>
+                <Text style={styles.sosButtonTitle}>
+                  Yêu cầu cứu hộ khẩn cấp
+                </Text>
+                <Text style={styles.sosButtonSubtitle}>
+                  Gọi đội cứu hộ đến vị trí của bạn
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#FFE5E5" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </>
       )}
       <TouchableOpacity
         style={styles.supportButton}
@@ -111,6 +139,33 @@ const styles = StyleSheet.create({
   qrButtonSubtitle: {
     fontSize: 12,
     color: "#DFF3FF",
+    marginTop: 2,
+  },
+  sosButton: {
+    borderRadius: 12,
+    marginBottom: 24,
+    overflow: "hidden",
+  },
+  sosButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  sosButtonTextWrapper: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  sosButtonTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  sosButtonSubtitle: {
+    fontSize: 12,
+    color: "#FFE5E5",
     marginTop: 2,
   },
 });

@@ -88,3 +88,13 @@ export interface StationStatistic {
   avgDuration: number;
   avgDurationFormatted: string;
 }
+export interface NearestStationResponse {
+  distance_meters: number;
+  bike_id: string;
+  chip_id: string;
+  status: string;
+  station_id: string;
+  station_name: string;
+  station_address: string;
+  distance_km: number;
+}

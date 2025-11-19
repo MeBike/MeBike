@@ -2,7 +2,6 @@ import type { AxiosResponse } from "axios";
 
 import fetchHttpClient from "../lib/httpClient";
 import { uploadMultipleImagesToFirebase } from "../lib/imageUpload";
-
 type ApiResponse<T> = {
   data: T;
   pagination?: {
@@ -44,10 +43,17 @@ export type Report = {
   priority: string;
   type: string;
   message: string;
-  status: string;
+  status: ReportStatus;
   created_at: string;
   updated_at: string;
 };
+export enum ReportStatus {
+  Pending = "ĐANG CHỜ XỬ LÝ",
+  InProgress = "ĐANG XỬ LÝ",
+  Resolved = "ĐÃ GIẢI QUYẾT",
+  CannotResolved = "KHÔNG GIẢI QUYẾT ĐƯỢC",
+  Cancel = "ĐÃ HỦY",
+}
 
 const REPORT_BASE = "/reports";
 const REPORT_ENDPOINTS = {
@@ -91,6 +97,25 @@ export const reportService = {
   ): Promise<AxiosResponse<DetailApiResponse<Report>>> => {
     const response = await fetchHttpClient.get<DetailApiResponse<Report>>(
       REPORT_ENDPOINTS.BY_ID(id)
+    );
+    return response;
+  },
+  getUserReports: async ({
+    page,
+    limit,
+    status
+   }: {
+    page?: number;
+    limit?: number;
+    status?: ReportStatus;
+  }): Promise<AxiosResponse<ApiResponse<Report[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Report[]>>(
+      REPORT_ENDPOINTS.BASE,
+      {
+        page,
+        limit,
+        status,
+      }
     );
     return response;
   },

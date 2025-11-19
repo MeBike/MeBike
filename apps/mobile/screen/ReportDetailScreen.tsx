@@ -16,11 +16,10 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import { formatVietnamDateTime } from "@/utils/date";
 import { useReportActions } from "@hooks/useReportActions";
-import { LoadingScreen } from "@components/LoadingScreen";
 import type { ReportDetailRouteProp } from "../types/navigation";
-
+import { ReportStatus } from "@/services/report.service";
 function ReportDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute<ReportDetailRouteProp>();
@@ -39,34 +38,37 @@ function ReportDetailScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
-        return "#FF9800";
-      case "InProgress":
-        return "#2196F3";
-      case "Resolved":
-        return "#4CAF50";
-      case "Cancel":
-        return "#F44336";
+      case ReportStatus.Pending:
+        return "#60a5fa"; // processing - light blue
+      case ReportStatus.InProgress:
+        return "#3b82f6"; // pending - blue
+      case ReportStatus.Resolved:
+        return "#10b981"; // success - green
+      case ReportStatus.CannotResolved:
+      case ReportStatus.Cancel:
+        return "#ef4444"; // destructive - red
       default:
         return "#999";
     }
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
-      case "Pending":
-        return "Chờ xử lý";
-      case "InProgress":
-        return "Đang xử lý";
-      case "Resolved":
-        return "Đã giải quyết";
-      case "Cancel":
-        return "Đã hủy";
-      default:
-        return status;
-    }
-  };
-
+      switch (status) {
+        case ReportStatus.Pending:
+          return "Đang chờ xử lý";
+        case ReportStatus.InProgress:
+          return "Đang xử lý";
+        case ReportStatus.Resolved:
+          return "Đã giải quyết";
+        case ReportStatus.CannotResolved:
+          return "Không thể giải quyết được";
+        case ReportStatus.Cancel:
+          return "Đã hủy";
+        default:
+          return status;
+      }
+    };
+  
   const getTypeText = (type: string) => {
     switch (type) {
       case "BikeDamage":
@@ -94,7 +96,10 @@ function ReportDetailScreen() {
   };
 
   const renderMediaGrid = () => {
-    if (!reportDetailData?.result.media_urls || reportDetailData.result.media_urls.length === 0) {
+    if (
+      !reportDetailData?.result.media_urls ||
+      reportDetailData.result.media_urls.length === 0
+    ) {
       return null;
     }
 
@@ -105,13 +110,13 @@ function ReportDetailScreen() {
       <>
         <Text style={styles.mediaTitle}>Hình ảnh đính kèm</Text>
         {images.map((url, index) => (
-          <View
-            key={index}
-            style={styles.mediaImageContainer}
-          >
+          <View key={index} style={styles.mediaImageContainer}>
             <Image
               source={{ uri: url }}
-              style={[styles.mediaImage, { width: imageWidth, height: imageWidth * 0.75 }]}
+              style={[
+                styles.mediaImage,
+                { width: imageWidth, height: imageWidth * 0.75 },
+              ]}
             />
           </View>
         ))}
@@ -192,8 +197,8 @@ function ReportDetailScreen() {
         <Text style={styles.headerTitle}>Chi tiết báo cáo</Text>
       </LinearGradient>
 
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
         onScroll={(event) => {
           if (event.nativeEvent.contentOffset.y < -100) {
@@ -229,12 +234,16 @@ function ReportDetailScreen() {
 
           <View style={styles.detailSection}>
             <Text style={styles.detailLabel}>Ngày tạo</Text>
-            <Text style={styles.detailValue}>{formatDate(report.created_at)}</Text>
+            <Text style={styles.detailValue}>
+              {formatVietnamDateTime(report.created_at)}
+            </Text>
           </View>
 
           <View style={styles.detailSection}>
             <Text style={styles.detailLabel}>Trạng thái cập nhật lần cuối</Text>
-            <Text style={styles.detailValue}>{formatDate(report.updated_at)}</Text>
+            <Text style={styles.detailValue}>
+              {formatVietnamDateTime(report.updated_at)}
+            </Text>
           </View>
 
           {report.priority && (
@@ -245,9 +254,7 @@ function ReportDetailScreen() {
           )}
         </View>
 
-        <View style={styles.mediaSection}>
-          {renderMediaGrid()}
-        </View>
+        <View style={styles.mediaSection}>{renderMediaGrid()}</View>
 
         <View style={{ height: 20 }} />
       </ScrollView>

@@ -122,6 +122,9 @@ function ProfileScreen() {
   const handleReservations = () => {
     navigation.navigate("Reservations" as never);
   };
+  const handleSOS = () => {
+    navigation.navigate("MySOS" as never);
+  }
 
   const handleSubscriptions = () => {
     navigation.navigate("Subscriptions" as never);
@@ -224,9 +227,11 @@ function ProfileScreen() {
           )}
           <View>
             <Image
-              source={{
-                uri: profile.avatar || "https://via.placeholder.com/110",
-              }}
+              source={
+                profile.avatar
+                  ? { uri: profile.avatar }
+                  : require("../assets/avatar2.png")
+              }
               style={{
                 width: 100,
                 height: 100,
@@ -342,6 +347,12 @@ function ProfileScreen() {
                   "Theo dõi các lượt đặt trước",
                   handleReservations
                 )}
+                {renderMenuOption(
+                  "medical",
+                  "Yêu cầu cứu hộ của tôi",
+                  "Theo dõi các yêu cầu cứu hộ",
+                  handleSOS
+                )}
               </>
             )}
           </View>
@@ -353,11 +364,7 @@ function ProfileScreen() {
               <View style={styles.emailVerificationCard}>
                 <View style={styles.verificationStatusRow}>
                   <View style={styles.verificationStatusLeft}>
-                    <Ionicons
-                      name={"mail"}
-                      size={24}
-                      color={"#FFA500"}
-                    />
+                    <Ionicons name={"mail"} size={24} color={"#FFA500"} />
                     <View style={styles.verificationStatusContent}>
                       <Text style={styles.verificationStatusTitle}>
                         Email Chưa Xác Thực
@@ -375,9 +382,7 @@ function ProfileScreen() {
                     onPress={() => setIsVerifyEmailModalOpen(true)}
                   >
                     <Ionicons name="key" size={16} color="white" />
-                    <Text style={styles.verificationButtonText}>
-                      Xác thực
-                    </Text>
+                    <Text style={styles.verificationButtonText}>Xác thực</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -413,12 +418,15 @@ function ProfileScreen() {
               "Cập nhật mật khẩu của bạn",
               handleChangePassword
             )}
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out" size={20} color="#fff" />
-            <Text style={styles.logoutButtonText}>Đăng xuất</Text>
-          </TouchableOpacity>
-          <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
-        </View>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Ionicons name="log-out" size={20} color="#fff" />
+              <Text style={styles.logoutButtonText}>Đăng xuất</Text>
+            </TouchableOpacity>
+            <Text style={styles.versionText}>Phiên bản 1.0.0</Text>
+          </View>
         </View>
       </ScrollView>
 

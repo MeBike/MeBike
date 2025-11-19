@@ -37,6 +37,7 @@ interface Dashboardsummary {
     totalRentals: number;
   }>;
 }
+import { EndRentalSchema } from "@schemas/rentalSchema";
 const RENTAL_BASE = "/rentals";
 const RENTAL_ENDPOINTS = {
   BASE: RENTAL_BASE,
@@ -60,6 +61,7 @@ const RENTAL_ENDPOINTS = {
   CANCEL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}/cancel`,
   DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
   DASHBOARD_RENTAL_STATS: () => `${RENTAL_BASE}/dashboard-summary`,
+  END_RENTAL_SOS: (id: string) => `${RENTAL_BASE}/${id}/end`,
 };
 type RentalResponse = {
   data: RentingHistory[];
@@ -199,9 +201,9 @@ export const rentalService = {
   getDetailRental: async (
     id: string
   ): Promise<AxiosResponse<DetailApiResponse<RentalRecord>>> => {
-    const response = await fetchHttpClient.get<
-      DetailApiResponse<RentalRecord>
-    >(RENTAL_ENDPOINTS.DETAIL_RENTAL(id));
+    const response = await fetchHttpClient.get<DetailApiResponse<RentalRecord>>(
+      RENTAL_ENDPOINTS.DETAIL_RENTAL(id)
+    );
     return response;
   },
   updateDetailRental: async (
@@ -220,6 +222,16 @@ export const rentalService = {
     const response = await fetchHttpClient.get<
       DetailApiResponse<Dashboardsummary>
     >(RENTAL_ENDPOINTS.DASHBOARD_RENTAL_STATS());
+    return response;
+  },
+  endRentalByReport: async (
+    id: string,
+    data: EndRentalSchema
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.put(
+      RENTAL_ENDPOINTS.END_RENTAL_SOS(id),
+      data
+    );
     return response;
   },
   // staffAdminUpdateDetailRental: async (

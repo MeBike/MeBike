@@ -12,18 +12,23 @@ import {
   View,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useReportActions } from "@hooks/useReportActions";
 import { LoadingScreen } from "@components/LoadingScreen";
 import type { Report } from "../services/report.service";
+import { ReportStatus } from "../services/report.service";
 import type { SupportScreenNavigationProp } from "../types/navigation";
+import { formatVietnamDateTime } from "@/utils/date";
 
 function SupportScreen() {
   const navigation = useNavigation<SupportScreenNavigationProp>();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = React.useState(false);
+  const [selectedStatus, setSelectedStatus] = React.useState<ReportStatus | undefined>(undefined);
+
   const {
     userReports,
     isLoadingUserReports,
@@ -31,7 +36,7 @@ function SupportScreen() {
     hasNextPage,
     isFetchingNextPage,
     refetchUserReports,
-  } = useReportActions({ limit: 5 });
+  } = useReportActions({ limit: 5, status: selectedStatus });
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -39,18 +44,32 @@ function SupportScreen() {
     setRefreshing(false);
   }, [refetchUserReports]);
 
+  const statusFilters = [
+    { label: "Tất cả", value: undefined },
+    { label: "Đang chờ", value: ReportStatus.Pending },
+    { label: "Đang xử lý", value: ReportStatus.InProgress },
+    { label: "Đã giải quyết", value: ReportStatus.Resolved },
+    { label: "Không thể giải quyết", value: ReportStatus.CannotResolved },
+    { label: "Đã hủy", value: ReportStatus.Cancel },
+  ];
+
+  const handleStatusFilter = (status: ReportStatus | undefined) => {
+    setSelectedStatus(status);
+  };
+
 
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending":
-        return "#FF9800";
-      case "InProgress":
-        return "#2196F3";
-      case "Resolved":
-        return "#4CAF50";
-      case "Cancel":
-        return "#F44336";
+      case ReportStatus.Pending:
+        return "#60a5fa"; // processing - light blue
+      case ReportStatus.InProgress:
+        return "#3b82f6"; // pending - blue
+      case ReportStatus.Resolved:
+        return "#10b981"; // success - green
+      case ReportStatus.CannotResolved:
+      case ReportStatus.Cancel:
+        return "#ef4444"; // destructive - red
       default:
         return "#999";
     }
@@ -58,13 +77,15 @@ function SupportScreen() {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "Pending":
-        return "Chờ xử lý";
-      case "InProgress":
+      case ReportStatus.Pending:
+        return "Đang chờ xử lý";
+      case ReportStatus.InProgress:
         return "Đang xử lý";
-      case "Resolved":
+      case ReportStatus.Resolved:
         return "Đã giải quyết";
-      case "Cancel":
+      case ReportStatus.CannotResolved:
+        return "Không thể giải quyết được";
+      case ReportStatus.Cancel:
         return "Đã hủy";
       default:
         return status;
@@ -86,16 +107,6 @@ function SupportScreen() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const renderReportCard = ({ item }: { item: Report }) => (
     <TouchableOpacity 
@@ -123,7 +134,7 @@ function SupportScreen() {
         <Text style={styles.reportMessage} numberOfLines={2}>
           {item.message}
         </Text>
-        <Text style={styles.reportDate}>{formatDate(item.created_at)}</Text>
+        <Text style={styles.reportDate}>{formatVietnamDateTime(item.created_at)}</Text>
       </View>
 
       {item.media_urls && item.media_urls.length > 0 && (
@@ -173,11 +184,40 @@ function SupportScreen() {
 
         <Text style={styles.sectionTitle}>Lịch sử báo cáo</Text>
 
+        {/* Status Filter Tabs */}
+        <View style={styles.filterContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScrollContent}
+          >
+            {statusFilters.map((filter) => (
+              <TouchableOpacity
+                key={filter.label}
+                style={[
+                  styles.filterTab,
+                  selectedStatus === filter.value && styles.filterTabActive,
+                ]}
+                onPress={() => handleStatusFilter(filter.value)}
+              >
+                <Text
+                  style={[
+                    styles.filterTabText,
+                    selectedStatus === filter.value && styles.filterTabTextActive,
+                  ]}
+                >
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         {userReports.length > 0 ? (
           <FlatList
             data={userReports}
             renderItem={renderReportCard}
-            keyExtractor={(item) => item._id}
+            keyExtractor={(item, index) => `${item._id}-${index}`}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             onEndReached={() => {
@@ -364,6 +404,33 @@ const styles = StyleSheet.create({
   loadingMoreText: {
     fontSize: 14,
     color: "#666",
+  },
+  filterContainer: {
+    marginBottom: 16,
+  },
+  filterScrollContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  filterTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#f0f0f0",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  filterTabActive: {
+    backgroundColor: "#0066FF",
+    borderColor: "#0066FF",
+  },
+  filterTabText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#666",
+  },
+  filterTabTextActive: {
+    color: "#fff",
   },
 });
 

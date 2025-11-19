@@ -1,6 +1,6 @@
 import fetchHttpClient from "@lib/httpClient";
 import { AxiosResponse } from "axios";
-import { Station } from "@/types";
+import { Station, NearestStationResponse } from "@/types";
 import { StationSchemaFormData } from "@/schemas/stationSchema";
 import type {
   StationBikeRevenue,
@@ -13,7 +13,10 @@ const STATION_ENDPOINTS = {
   DETAIL: (id: string) => `${STATION_BASE}/${id}`,
   ID: (id: string) => `${STATION_BASE}/${id}`,
   STATION_BIKE_REVENUE: () => `${STATION_BASE}/bike-revenue`,
-  STATION_REVENUE : () => `${STATION_BASE}/revenue`,
+  STATION_REVENUE: () => `${STATION_BASE}/revenue`,
+  STATION_NEAREST_AVAILABLE_BIKE: () =>
+    `${STATION_BASE}/nearest-available-bike`,
+  //   CREATE: `${STATION_BASE}`,
   //   STATS: `${STATION_BASE}/stats`,
   //   BY_ID: (id: string) => `${BIKE_BASE}/${id}/rentals`,
   //   BY_ID_ADMIN_STATS: (id: string) => `${BIKE_BASE}/${id}/stats`,
@@ -108,7 +111,25 @@ export const stationService = {
   > => {
     const response = await fetchHttpClient.get<
       ApiDetailResponse<StationStatisticsResponse>
-    >(STATION_ENDPOINTS.STATION_REVENUE(), );
+    >(STATION_ENDPOINTS.STATION_REVENUE());
+    return response;
+  },
+  getStationNearestAvailableBike: async ({
+    latitude,
+    longitude,
+    maxDistance,
+  }: {
+    latitude: number;
+    longitude: number;
+    maxDistance?: number;
+  }): Promise<AxiosResponse<ApiDetailResponse<NearestStationResponse>>> => {
+    const response = await fetchHttpClient.get<
+      ApiDetailResponse<NearestStationResponse>
+    >(STATION_ENDPOINTS.STATION_NEAREST_AVAILABLE_BIKE(), {
+      latitude: latitude,
+      longitude: longitude,
+      maxDistance: maxDistance,
+    });
     return response;
   },
 };

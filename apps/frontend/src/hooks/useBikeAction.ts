@@ -55,10 +55,21 @@ export const useBikeActions = (
   page?: number
 ) => {
   const router = useRouter();
-  const { data: bikeActivityStats, refetch: refetchGetBikeActivityStats , isFetching: isFetchingBikeActivityStats } =
-    useGetBikeActivityStatsQuery(bike_detail_id || "");
-  const { data: bikeStats, refetch: refetchStatisticsBike, isFetching: isFetchingBikeStats } = useGetBikeStatsQuery(bike_detail_id || "");
-  const { data : bikeRentals , refetch : refetchRentalBike , isFetching : isFetchingRentalBikes} = useGetRentalBikeQuery(bike_detail_id || "");
+  const {
+    data: bikeActivityStats,
+    refetch: refetchGetBikeActivityStats,
+    isFetching: isFetchingBikeActivityStats,
+  } = useGetBikeActivityStatsQuery(bike_detail_id || "");
+  const {
+    data: bikeStats,
+    refetch: refetchStatisticsBike,
+    isFetching: isFetchingBikeStats,
+  } = useGetBikeStatsQuery(bike_detail_id || "");
+  const {
+    data: bikeRentals,
+    refetch: refetchRentalBike,
+    isFetching: isFetchingRentalBikes,
+  } = useGetRentalBikeQuery(bike_detail_id || "");
   const getRentalBikes = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -133,7 +144,10 @@ export const useBikeActions = (
         return;
       }
       useCreateBike.mutate(data, {
-        onSuccess: (result : { status: number; data?: { message?: string } }) => {
+        onSuccess: (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
           if (result.status === 201) {
             toast.success("Bike created successfully");
             queryClient.invalidateQueries({
@@ -158,7 +172,17 @@ export const useBikeActions = (
         },
       });
     },
-    [useCreateBike, hasToken, router, page, limit, station_id, supplier_id, status, queryClient]
+    [
+      useCreateBike,
+      hasToken,
+      router,
+      page,
+      limit,
+      station_id,
+      supplier_id,
+      status,
+      queryClient,
+    ]
   );
   const updateBike = useCallback(
     (data: UpdateBikeSchemaFormData, id: string) => {
@@ -169,7 +193,10 @@ export const useBikeActions = (
       updateBikeMutation.mutate(
         { id, data },
         {
-          onSuccess: (result : { status: number; data?: { message?: string } }) => {
+          onSuccess: (result: {
+            status: number;
+            data?: { message?: string };
+          }) => {
             if (result.status === 200) {
               toast.success("Bike updated successfully");
               queryClient.invalidateQueries({
@@ -196,7 +223,17 @@ export const useBikeActions = (
         }
       );
     },
-    [updateBikeMutation, hasToken, router, page, limit, station_id, supplier_id, status, queryClient]
+    [
+      updateBikeMutation,
+      hasToken,
+      router,
+      page,
+      limit,
+      station_id,
+      supplier_id,
+      status,
+      queryClient,
+    ]
   );
   const deleteBike = useCallback(
     (id: string) => {

@@ -84,7 +84,8 @@ export async function sendPaginatedAggregationResponse<T extends Document>(
   next: NextFunction,
   collection: Collection<T>,
   query: Request['query'],
-  pipeline: Document[]
+  pipeline: Document[],
+  sort: Sort = { created_at: -1 }
 ) {
   try {
     const page = Number.parseInt(query.page as string) || 1
@@ -95,7 +96,7 @@ export async function sendPaginatedAggregationResponse<T extends Document>(
       // Pipeline to count the total matching documents
       collection.aggregate([...pipeline, { $count: 'total' }]).toArray(),
       // Pipeline to get the actual data for the current page
-      collection.aggregate([...pipeline, { $skip: skip }, { $limit: limit }]).toArray()
+      collection.aggregate([...pipeline]).sort(sort).skip(skip).limit(limit).toArray()
     ])
 
     const totalRecords = totalRecordsResult.length > 0 ? totalRecordsResult[0].total : 0

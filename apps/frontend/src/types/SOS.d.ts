@@ -1,34 +1,58 @@
+
+
 export type SOS = {
   _id: string;
+  rental: RentalSOS;
   requester_id: string;
-  bike_id: string;
-  photo: Array<string>;
+  replaced_bike_id: string;
+  photos: Array<string>;
   issue: string;
   location: LocationGEO;
-  status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
+  status:
+    | "ĐANG CHỜ XỬ LÍ"
+    | "ĐÃ GỬI NGƯỜI CỨU HỘ"
+    | "ĐANG TRÊN ĐƯỜNG ĐẾN"
+    | "ĐÃ XỬ LÍ"
+    | "KHÔNG XỬ LÍ ĐƯỢC"
+    | "ĐÃ TỪ CHỐI";
+  agent_notes: string;
+  reason: string;
   sos_agent_id: string;
-  staff_id: string | null;
-  resolved_at: string;
+  resolved_at: string | null;
   created_at: string;
   updated_at: string;
-  agent_notes: string;
+};
+interface RentalSOS {
+  _id: string;
+  user_id: string;
+  bike_id: string;
+  start_station: string;
+  end_station: string | null;
+  start_time: string;
+  end_time: string | null;
+  duration: number;
+  total_price: number;
+  subscription_id: string | null;
+  status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
+  created_at: string;
+  updated_at: string;
 }
-
 export interface SOSDetail {
   _id: string;
-  photos: string[] | null;
+  replaced_bike_id: string;
+  photos: string[];
   issue: string;
-  location: LocationGEO;
-  status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
-  sos_agent_id: string;
-  staff_id: string | null;
-  resolved_at: string;
+  location: ILocationSOS;
+  status: "ĐANG CHỜ XỬ LÍ" | "ĐÃ GỬI NGƯỜI CỨU HỘ" | "ĐANG TRÊN ĐƯỜNG ĐẾN" | "ĐÃ XỬ LÍ" | "KHÔNG XỬ LÍ ĐƯỢC" | "ĐÃ TỪ CHỐI";
+  agent_notes: string;
+  reason: string;
+  resolved_at: string | null;
   created_at: string;
   updated_at: string;
-  agent_notes: string;
-  requester: IUser;
-  bike: IBike;
-  sos_agent: IUser;
+  rental: IRentalSOS;
+  bike: IBikeSOS;
+  requester: IUserSOS;
+  sos_agent: IUserSOS;
 }
 export interface LocationGEO {
   type: string;
