@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
@@ -85,11 +86,49 @@ function ReportScreen() {
     longitude: number;
   } | null>(null);
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(
-    null
-  );
+  const [typingTimeout, setTypingTimeout] = useState<number | null>(null);
+  const [locationMode, setLocationMode] = useState<'manual' | 'current'>('current');
+  const [loadingLocation, setLoadingLocation] = useState(true);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoadingLocation(true);
+        setLocationError(null);
 
+        // Request permission
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          setLocationError("Quyền truy cập vị trí bị từ chối");
+          setLoadingLocation(false);
+          return;
+        }
+
+        // Get current location
+        const currentLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+
+        setCurrentLocation({
+          latitude: currentLocation.coords.latitude,
+          longitude: currentLocation.coords.longitude,
+        });
+
+        // Reverse geocode to get address
+        const address = await fetchTomTomReverseGeocode(
+          currentLocation.coords.latitude.toString(),
+          currentLocation.coords.longitude.toString()
+        );
+        setLocation(address || `${currentLocation.coords.latitude}, ${currentLocation.coords.longitude}`);
+      } catch (error) {
+        console.error("Error getting location:", error);
+        setLocationError("Không thể lấy vị trí hiện tại");
+      } finally {
+        setLoadingLocation(false);
+      }
+    })();
+  }, []);
 
   // Lấy latitude/longitude từ địa chỉ nhập, rồi lấy lại địa chỉ từ coordinates
   const handleLocationChange = async (text: string) => {
@@ -116,23 +155,49 @@ function ReportScreen() {
   const handleSelectSuggestion = async (item: any) => {
     setLocation(item.address);
     setAddressSuggestions([]);
-    
+
     // Lấy địa chỉ chính xác từ lat/lon
     const address = await fetchTomTomReverseGeocode(
       item.latitude.toString(),
       item.longitude.toString()
     );
-    
+
     // Cập nhật location với địa chỉ chính xác
     if (address) {
       setLocation(address);
     }
-    
+
     // Lưu coordinates
     setCurrentLocation({
       latitude: item.latitude,
       longitude: item.longitude,
     });
+  };
+
+  const handleGetCurrentLocation = async () => {
+    try {
+      setLoadingLocation(true);
+      setLocationError(null);
+
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const { latitude, longitude } = currentLocation.coords;
+
+      // Reverse geocode to get address
+      const address = await fetchTomTomReverseGeocode(latitude.toString(), longitude.toString());
+
+      setLocation(address || `${latitude}, ${longitude}`);
+      setCurrentLocation({ latitude, longitude });
+      setLocationMode('current');
+      setLocationError(null);
+    } catch (error) {
+      console.error('Error getting location:', error);
+      setLocationError('Không thể lấy vị trí hiện tại');
+    } finally {
+      setLoadingLocation(false);
+    }
   };
 
   const reportTypes = [
@@ -156,14 +221,11 @@ function ReportScreen() {
       bike_id: bike_id || undefined,
       station_id: station_id || undefined,
       rental_id: rental_id || undefined,
-      location: location.trim() || undefined,
       type: reportType,
       message: message.trim(),
       media_urls: selectedImages.length > 0 ? selectedImages : undefined,
-      ...(currentLocation && {
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-      }),
+      latitude: currentLocation?.latitude ?? null,
+      longitude: currentLocation?.longitude ?? null,
     };
     createReport(reportData, {
       onSuccess: () => {
@@ -348,41 +410,104 @@ function ReportScreen() {
             <Ionicons name="location" size={24} color="#0066FF" />
             <Text style={styles.cardTitle}>Vị trí (tùy chọn)</Text>
           </View>
-          <TextInput
-            style={styles.locationInput}
-            placeholder="Nhập địa chỉ"
-            value={location}
-            onChangeText={handleLocationChange}
-          />
-          {addressSuggestions.length > 0 && (
-            <View
-              style={{
-                backgroundColor: "#fff",
-                borderRadius: 8,
-                marginTop: 8,
-                maxHeight: 180,
-                borderColor: "#d0d7de",
-                borderWidth: 1,
-                overflow: "hidden",
+          <View style={styles.locationOptions}>
+            <TouchableOpacity
+              style={[
+                styles.locationOption,
+                locationMode === 'current' && styles.locationOptionSelected,
+              ]}
+              onPress={() => {
+                setLocationMode('current');
+                if (!currentLocation) {
+                  handleGetCurrentLocation();
+                }
               }}
             >
-              {addressSuggestions.map((item, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={{
-                    padding: 10,
-                    borderBottomColor: idx === addressSuggestions.length - 1 ? "transparent" : "#eee",
-                    borderBottomWidth: idx === addressSuggestions.length - 1 ? 0 : 1,
-                  }}
-                  onPress={() => handleSelectSuggestion(item)}
-                >
-                  <Text style={{ color: "#0066FF" }}>{item.address}</Text>
-                  <Text style={{ fontSize: 12, color: "#888" }}>
-                    ({item.latitude}, {item.longitude})
+              <Ionicons name="navigate" size={20} color={locationMode === 'current' ? "#fff" : "#0066FF"} />
+              <Text style={[
+                styles.locationOptionText,
+                locationMode === 'current' && styles.locationOptionTextSelected,
+              ]}>
+                Lấy vị trí hiện tại
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.locationOption,
+                locationMode === 'manual' && styles.locationOptionSelected,
+              ]}
+              onPress={() => setLocationMode('manual')}
+            >
+              <Ionicons name="pencil" size={20} color={locationMode === 'manual' ? "#fff" : "#0066FF"} />
+              <Text style={[
+                styles.locationOptionText,
+                locationMode === 'manual' && styles.locationOptionTextSelected,
+              ]}>
+                Nhập địa chỉ
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {locationMode === 'current' && (
+            <>
+              {loadingLocation ? (
+                <View style={styles.loadingLocation}>
+                  <ActivityIndicator size="small" color="#0066FF" />
+                  <Text style={styles.loadingLocationText}>Đang lấy vị trí...</Text>
+                </View>
+              ) : locationError ? (
+                <View style={styles.locationErrorBox}>
+                  <Ionicons name="warning" size={20} color="#FF3B30" />
+                  <Text style={styles.locationErrorText}>{locationError}</Text>
+                </View>
+              ) : currentLocation ? (
+                <View style={styles.locationInfo}>
+                  <Text style={styles.locationText}>{location}</Text>
+                  <Text style={styles.locationNote}>
+                    Vị trí hiện tại của bạn ({currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)})
                   </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                </View>
+              ) : null}
+            </>
+          )}
+          {locationMode === 'manual' && (
+            <>
+              <TextInput
+                style={styles.locationInput}
+                placeholder="Nhập địa chỉ"
+                value={location}
+                onChangeText={handleLocationChange}
+              />
+              {addressSuggestions.length > 0 && (
+                <View
+                  style={{
+                    backgroundColor: "#fff",
+                    borderRadius: 8,
+                    marginTop: 8,
+                    maxHeight: 180,
+                    borderColor: "#d0d7de",
+                    borderWidth: 1,
+                    overflow: "hidden",
+                  }}
+                >
+                  {addressSuggestions.map((item, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      style={{
+                        padding: 10,
+                        borderBottomColor: idx === addressSuggestions.length - 1 ? "transparent" : "#eee",
+                        borderBottomWidth: idx === addressSuggestions.length - 1 ? 0 : 1,
+                      }}
+                      onPress={() => handleSelectSuggestion(item)}
+                    >
+                      <Text style={{ color: "#0066FF" }}>{item.address}</Text>
+                      <Text style={{ fontSize: 12, color: "#888" }}>
+                        ({item.latitude}, {item.longitude})
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </>
           )}
         </View>
 
@@ -805,6 +930,60 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
     fontStyle: "italic",
+  },
+  locationOptions: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
+  locationOption: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#0066FF",
+    backgroundColor: "#fff",
+    gap: 8,
+  },
+  locationOptionSelected: {
+    backgroundColor: "#0066FF",
+    borderColor: "#0066FF",
+  },
+  locationOptionText: {
+    fontSize: 14,
+    color: "#0066FF",
+    fontWeight: "500",
+  },
+  locationOptionTextSelected: {
+    color: "#fff",
+  },
+  loadingLocation: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+    gap: 12,
+  },
+  loadingLocationText: {
+    fontSize: 15,
+    color: "#666",
+  },
+  locationErrorBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF5F5",
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+  },
+  locationErrorText: {
+    fontSize: 14,
+    color: "#FF3B30",
+    flex: 1,
   },
 });
 

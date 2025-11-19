@@ -12,6 +12,7 @@ import type {
 import { useRouter } from "next/navigation";
 import { useResolveReportMutation } from "./mutations/Report/useResolveReportMutation";
 import { useGetReportByIdQuery } from "./query/Report/useGetReportByIDQuery";
+import type { ReportStatus } from "@/types";
 interface ErrorWithMessage {
   message: string;
 }
@@ -50,11 +51,13 @@ export const useUserReport = ({
   page,
   limit,
   id,
+  status,
 }: {
   hasToken: boolean;
   page?: number;
   limit?: number;
   id?: string;
+  status?: ReportStatus;
 }) => {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -62,7 +65,7 @@ export const useUserReport = ({
     data: reports,
     refetch: refetchReports,
     isFetching: isFetchingReports,
-  } = useGetAllManageReportQuery({ page, limit });
+  } = useGetAllManageReportQuery({ page, limit, status });
   const { data: reportOverview, refetch: refetchReportOverview } =
     useGetReportOverview();
   const refreshReports = useCallback(async () => {
@@ -149,10 +152,8 @@ export const useUserReport = ({
                 toast.error(message);
               } else {
                 toast.success("Cập nhật báo cáo thành công!");
-                queryClient.invalidateQueries({
-                  queryKey: ["reports", "in-progress", page, limit],
-                });
-                getReportInProgress();
+                queryClient.invalidateQueries({ queryKey: ["all", "report"] });
+                refetchReports();
               }
             }
           },

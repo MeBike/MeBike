@@ -23,12 +23,11 @@ export type CreateReportData = {
   bike_id?: string;
   station_id?: string;
   rental_id?: string;
-  location?: string;
   type: string;
   message: string;
   media_urls?: ImagePickerAsset[];
-  latitude?: number;
-  longitude?: number;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export type Report = {
@@ -82,7 +81,6 @@ export const reportService = {
       bike_id: data.bike_id,
       station_id: data.station_id,
       rental_id: data.rental_id,
-      location: data.location,
       files: mediaUrls.length > 0 ? mediaUrls : undefined,
       latitude: data.latitude,
       longitude: data.longitude,
