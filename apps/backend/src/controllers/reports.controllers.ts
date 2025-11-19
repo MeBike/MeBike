@@ -163,29 +163,131 @@ export async function getAllReportController(req: Request<any, any, any>, res: R
     filter.created_at = { $gte: start, $lte: end }
   }
 
-  const sortOptions: Sort = { created_at: -1 }
+  if (req.query.status) {
+    filter.status = req.query.status as ReportStatus
+  }
 
-  await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter, {}, sortOptions)
+  const page = Number.parseInt(req.query.page as string) || 1
+  const limit = Number.parseInt(req.query.limit as string) || 10
+  const skip = (page - 1) * limit
+
+  const pipeline = [
+    { $match: filter },
+    {
+      $addFields: {
+        sortPriority: {
+          $switch: {
+            branches: [
+              { case: { $eq: ['$status', ReportStatus.InProgress] }, then: 2 },
+              { case: { $eq: ['$status', ReportStatus.Resolved] }, then: 3 },
+              { case: { $eq: ['$status', ReportStatus.CannotResolved] }, then: 4 },
+              { case: { $eq: ['$status', ReportStatus.Pending] }, then: 1 },
+              { case: { $eq: ['$status', ReportStatus.Cancel] }, then: 5 }
+            ],
+            default: 6
+          }
+        }
+      }
+    },
+    {
+      $sort: {
+        sortPriority: 1,
+        created_at: -1
+      }
+    },
+    { $skip: skip },
+    { $limit: limit },
+    { $project: { sortPriority: 0 } }
+  ]
+
+  const [totalRecords, data] = await Promise.all([
+    databaseService.reports.countDocuments(filter),
+    databaseService.reports.aggregate<Report>(pipeline).toArray()
+  ])
+
+  const totalPages = Math.ceil(totalRecords / limit)
+
+  return res.status(200).json({
+    data: data,
+    pagination: {
+      limit,
+      currentPage: page,
+      totalPages,
+      totalRecords
+    }
+  })
 }
 
 export async function getAllInProgressReportController(req: Request<any, any, any>, res: Response, next: NextFunction) {
-  const filter: Filter<Report> = {}
-  filter.status = ReportStatus.InProgress
+  try {
+    const { user_id } = req.decoded_authorization as TokenPayLoad
 
-  const { user_id } = req.decoded_authorization as TokenPayLoad
-  filter.assignee_id = new ObjectId(user_id)
+    const filter: Filter<Report> = {}
+    filter.assignee_id = new ObjectId(user_id)
 
-  if (req.query.date) {
-    const start = new Date(req.query.date as string)
-    const end = new Date(start)
-    end.setUTCHours(23, 59, 59, 999)
+    if (req.query.date) {
+      const start = new Date(req.query.date as string)
+      const end = new Date(start)
+      end.setUTCHours(23, 59, 59, 999)
+      filter.created_at = { $gte: start, $lte: end }
+    }
 
-    filter.created_at = { $gte: start, $lte: end }
+    if (req.query.status) {
+      filter.status = req.query.status as ReportStatus
+    }
+
+    const page = Number.parseInt(req.query.page as string) || 1
+    const limit = Number.parseInt(req.query.limit as string) || 10
+    const skip = (page - 1) * limit
+
+    const pipeline = [
+      { $match: filter },
+      {
+        $addFields: {
+          sortPriority: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$status', ReportStatus.InProgress] }, then: 2 },
+                { case: { $eq: ['$status', ReportStatus.Resolved] }, then: 3 },
+                { case: { $eq: ['$status', ReportStatus.CannotResolved] }, then: 4 },
+                { case: { $eq: ['$status', ReportStatus.Pending] }, then: 1 },
+                { case: { $eq: ['$status', ReportStatus.Cancel] }, then: 5 }
+              ],
+              default: 6
+            }
+          }
+        }
+      },
+      {
+        $sort: {
+          sortPriority: 1,
+          created_at: -1
+        }
+      },
+      { $skip: skip },
+      { $limit: limit },
+      { $project: { sortPriority: 0 } }
+    ]
+
+    const [totalRecords, data] = await Promise.all([
+      databaseService.reports.countDocuments(filter),
+      databaseService.reports.aggregate<Report>(pipeline).toArray()
+    ])
+
+    const totalPages = Math.ceil(totalRecords / limit)
+
+    return res.status(200).json({
+      data: data,
+      pagination: {
+        limit,
+        currentPage: page,
+        totalPages,
+        totalRecords
+      }
+    })
+  } catch (error) {
+    next(error)
   }
-
-  const sortOptions: Sort = { type: 1, created_at: -1 }
-
-  await sendPaginatedResponse(res, next, databaseService.reports, req.query, filter, {}, sortOptions)
 }
 
 export async function getReportOverviewController(req: Request<any, any, any>, res: Response) {
