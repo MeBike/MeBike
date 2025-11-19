@@ -16,6 +16,7 @@ import {
   Star,
   Menu,
   X,
+  User2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
@@ -32,6 +33,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
         ? "/staff"
         : "/user";
   return [
+    {
+      title: "Hồ sơ cá nhân",
+      icon: User2,
+      href: "/staff/profile",
+      roles: ["STAFF"],
+    },
     {
       title: "Tổng quan",
       icon: LayoutDashboard,
@@ -141,6 +148,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       roles: ["STAFF"],
     },
     {
+      title: "Quản lý đơn báo cáo",
+      icon: FileCheck2,
+      href: "/staff/reports",
+      roles: ["STAFF"],
+    },
+    {
       title: "Quản lý đơn SOS",
       icon: FileCheck2,
       href: "/sos/sos-alerts",
@@ -151,18 +164,6 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       icon: Users,
       href: "/sos/profile",
       roles: ["SOS"],
-    },
-    {
-      title: "Hồ sơ cá nhân",
-      icon: Users,
-      href: "/staff/profile",
-      roles: ["STAFF"],
-    },
-    {
-      title: "Quản lý đơn báo cáo",
-      icon: FileCheck2,
-      href: "/staff/reports",
-      roles: ["STAFF"],
     },
   ];
 };

@@ -1,26 +1,58 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { SOS } from "@custom-types";
 import type { AxiosResponse } from "axios";
-import type { CreateSOSSchema , ConfirmSOSSchema , RejectSOSSchema } from "@/schemas/sosSchema";
+import type {
+  AssignSOSSchema,
+  ResolveSOSSchema,
+  CancelSOSSchema,
+} from "@/schemas/sosSchema";
 import type {
   DetailApiResponse,
   ApiResponse,
   IBikeIssueReport,
 } from "@custom-types";
+interface ConfirmSOS {
+  message: string;
+  newStatus : string;
+}
+interface RentalBySOSID {
+  _id: string;
+  user_id: string;
+  bike_id: string;
+  start_station: string;
+  start_time : string;
+  duration : number;
+  total_price : number;
+  status : string;
+  created_at : string;
+  updated_at : string;
+}
 const SOS_BASE = "/sos";
 const SOS_ENDPOINTS = {
   BASE: SOS_BASE,
-  CONFIRM: (id: string) => `${SOS_BASE}/${id}/confirm`,
-  REJECT: (id: string) => `${SOS_BASE}/${id}/reject`,
   ID: (id: string) => `${SOS_BASE}/${id}`,
+  ASSIGN: (id: string) => `${SOS_BASE}/${id}/assign`,
+  CONFIRM: (id: string) => `${SOS_BASE}/${id}/confirm`,
+  RESOLVE: (id: string) => `${SOS_BASE}/${id}/resolve`,
+  CREATE: (id:string) => `/rentals/sos/${id}`,
+  CANCEL : (id: string) => `${SOS_BASE}/${id}/cancel`,
 } as const;
 export const sosService = {
   getSOSRequest: async ({
     page,
     limit,
+    status,
   }: {
     page?: number;
     limit?: number;
+    status?:
+      | "ĐANG CHỜ XỬ LÍ"
+      | "ĐÃ GỬI NGƯỜI CỨU HỘ"
+      | "ĐANG TRÊN ĐƯỜNG ĐẾN"
+      | "ĐÃ XỬ LÍ"
+      | "KHÔNG XỬ LÍ ĐƯỢC"
+      | "ĐÃ TỪ CHỐI"
+      | "ĐÃ HUỶ";
   }): Promise<AxiosResponse<ApiResponse<SOS[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<SOS[]>>(
       SOS_ENDPOINTS.BASE,
@@ -28,31 +60,8 @@ export const sosService = {
       {
         page,
         limit,
+        status,
       }
-    );
-    return response;
-  },
-  postConfirmSOSRequest: async ({
-    id,
-    data,
-  }: {
-    id: string;
-    data: ConfirmSOSSchema; 
-  }): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
-      SOS_ENDPOINTS.CONFIRM(id),data
-    );
-    return response;
-  },
-  postRejectSOSRequest: async ({
-    id,
-    data,
-  }: {
-    id: string;
-    data: RejectSOSSchema;
-  }): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
-      SOS_ENDPOINTS.REJECT(id),data
     );
     return response;
   },
@@ -64,11 +73,54 @@ export const sosService = {
     >(SOS_ENDPOINTS.ID(id));
     return response;
   },
-  postCreateSOSRequest: async ( 
-    data: CreateSOSSchema
-  ): Promise<AxiosResponse<DetailApiResponse<SOS>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<SOS>>(
-      SOS_ENDPOINTS.BASE,
+  assignSOSRequest: async (
+    id: string,
+    data: AssignSOSSchema
+  ): Promise<AxiosResponse<DetailApiResponse<IBikeIssueReport>>> => {
+    const response = await fetchHttpClient.post<
+      DetailApiResponse<IBikeIssueReport>
+    >(SOS_ENDPOINTS.ASSIGN(id), data);
+    return response;
+  },
+  //sos agent
+  confirmSOSRequest: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<ConfirmSOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<ConfirmSOS>>(
+      SOS_ENDPOINTS.CONFIRM(id)
+    );
+    return response;
+  },
+  resolveSOSRequest: async ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: ResolveSOSSchema;
+  }): Promise<AxiosResponse<DetailApiResponse<ConfirmSOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<ConfirmSOS>>(
+      SOS_ENDPOINTS.RESOLVE(id),
+      data
+    );
+    return response;
+  },
+  createNewRentalSOS: async (
+    id: string
+  ): Promise<AxiosResponse<DetailApiResponse<RentalBySOSID>>> => {
+    const response = await fetchHttpClient.post<
+      DetailApiResponse<RentalBySOSID>
+    >(SOS_ENDPOINTS.CREATE(id));
+    return response;
+  },
+  cancelSOSRequest: async ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: CancelSOSSchema;
+  }): Promise<AxiosResponse<DetailApiResponse<ConfirmSOS>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<ConfirmSOS>>(
+      SOS_ENDPOINTS.CANCEL(id),
       data
     );
     return response;

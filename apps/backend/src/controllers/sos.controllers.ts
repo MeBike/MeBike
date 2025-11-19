@@ -161,7 +161,7 @@ export async function getSosRequestByIdController(req: Request<SosParam>, res: R
 }
 
 export async function cancelSosController(req: Request<SosParam, any, CancelSosReqBody>, res: Response) {
-  const _id = req.sos_alert
+  const _id = req.sos_alert?._id
   const newStatus = SosAlertStatus.CANCELLED
   const result = await databaseService.sos_alerts.updateOne(
     {_id, status: SosAlertStatus.PENDING},

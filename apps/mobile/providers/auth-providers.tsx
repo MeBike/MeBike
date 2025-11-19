@@ -22,6 +22,7 @@ type AuthContextType = ReturnType<typeof useAuthActions> & {
   isLoading: boolean;
   isStaff: boolean;
   isCustomer: boolean;
+  isSOS: boolean;
   actions: ReturnType<typeof useAuthActions>;
 };
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -114,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading: isUserProfileLoading || !isInitialized,
       isStaff: role === "STAFF",
       isCustomer: role === "USER",
+      isSOS: role === "SOS",
       actions,
     };
   }, [userProfile, isUserProfileLoading, isSuccess, actions, isInitialized]);

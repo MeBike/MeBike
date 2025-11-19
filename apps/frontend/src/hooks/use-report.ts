@@ -11,6 +11,7 @@ import type {
 } from "@/schemas/reportSchema";
 import { useRouter } from "next/navigation";
 import { useResolveReportMutation } from "./mutations/Report/useResolveReportMutation";
+import { useGetReportByIdQuery } from "./query/Report/useGetReportByIDQuery";
 interface ErrorWithMessage {
   message: string;
 }
@@ -48,10 +49,12 @@ export const useUserReport = ({
   hasToken,
   page,
   limit,
+  id,
 }: {
   hasToken: boolean;
   page?: number;
   limit?: number;
+  id?: string;
 }) => {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -165,6 +168,12 @@ export const useUserReport = ({
     },
     [hasToken, router, queryClient, useResolveReport, getReportInProgress, page, limit]
   );
+  const {data : reportById , refetch: refetchReportById , isLoading: isLoadingReportById} = useGetReportByIdQuery({id : id ?? ""}); 
+  const getReportById = useCallback(async () => {
+    if (!hasToken) return;
+    refetchReportById();
+  }
+  , [hasToken, refetchReportById]);
   return {
     reports: reports?.data || [],
     refetchReports,
@@ -178,5 +187,8 @@ export const useUserReport = ({
     reportInProgress,
     isLoadingReportInProgress,
     resolveReport,
+    getReportById,
+    reportById,
+    isLoadingReportById,
   };
 };
