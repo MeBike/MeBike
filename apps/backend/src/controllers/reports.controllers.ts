@@ -163,6 +163,10 @@ export async function getAllReportController(req: Request<any, any, any>, res: R
     filter.created_at = { $gte: start, $lte: end }
   }
 
+  if (req.query.status) {
+    filter.status = req.query.status as ReportStatus
+  }
+
   const page = Number.parseInt(req.query.page as string) || 1
   const limit = Number.parseInt(req.query.limit as string) || 10
   const skip = (page - 1) * limit
