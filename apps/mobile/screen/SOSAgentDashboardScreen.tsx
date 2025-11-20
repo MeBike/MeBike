@@ -17,12 +17,12 @@ import { useSOS } from "@/hooks/use-sos";
 import { useAuth } from "@/providers/auth-providers";
 import type { SOS } from "@/types/SOS";
 import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { StackNavigationProp } from "@react-navigation/stack";
 import type { RootStackParamList } from "@/types/navigation";
 import { formatVietnamDateTime } from "@/utils/date";
 import { useQueryClient } from "@tanstack/react-query";
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export default function SOSAgentDashboardScreen() {
   const insets = useSafeAreaInsets();

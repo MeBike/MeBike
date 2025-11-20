@@ -1,5 +1,5 @@
 
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import React from "react";
 
 import MainTabNavigator from "./MainTabNavigator";
@@ -40,7 +40,7 @@ import SOSAgentDetailScreen from "../screen/SOSAgentDetailScreen";
 import ResolveSOSFormScreen from "../screen/ResolveSOSFormScreen";
 import { RootStackParamList } from "../types/navigation";
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createStackNavigator<RootStackParamList>();
 
 function RootNavigator() {
   return (

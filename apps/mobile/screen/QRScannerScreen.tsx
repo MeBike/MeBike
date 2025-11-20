@@ -15,15 +15,14 @@ import {
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../types/navigation";
 
 function QRScannerScreen() {
   const [permission, requestPermission, getPermission] = useCameraPermissions();
   const [isGranted, setIsGranted] = useState(permission?.granted ?? false);
   const [scanned, setScanned] = useState(false);
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const appState = useRef(AppState.currentState);
   const isFocused = useIsFocused();
