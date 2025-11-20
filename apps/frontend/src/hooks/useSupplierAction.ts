@@ -78,19 +78,19 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
       useCreateSupplier.mutate(supplierData, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success("Supplier created successfully");
+            toast.success(result.data?.message || "Nhà cung cấp được tạo thành công");
             queryClient.invalidateQueries({
               queryKey: ["suppliers", "all", 1, 10],
             });
             queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
           } else {
             const errorMessage =
-              result.data?.message || "Error creating suppliers";
+              result.data?.message || "Lỗi khi tạo nhà cung cấp";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error creating bikes");
+          const errorMessage = getErrorMessage(error, "Lỗi khi tạo nhà cung cấp");
           toast.error(errorMessage);
         },
       });
@@ -108,14 +108,14 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
         {
           onSuccess: (result) => {
             if (result.status === 200) {
-              toast.success("Supplier status changed successfully");
+              toast.success(result.data?.message || "Trạng thái nhà cung cấp đã được thay đổi thành công");
               queryClient.invalidateQueries({
                 queryKey: ["suppliers", "all", 1, 10],
               });
               queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
             } else {
               const errorMessage =
-                result.data?.message || "Error changing supplier status";
+                result.data?.message || "Lỗi khi thay đổi trạng thái nhà cung cấp";
               toast.error(errorMessage);
             }
           },
@@ -139,19 +139,19 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     useUpdateSupplier.mutate({ id: id, data }, {
       onSuccess: (result) => {
         if (result.status === 200) {
-          toast.success("Supplier updated successfully");
+          toast.success(result.data?.message || "Cập nhật nhà cung cấp thành công");
           queryClient.invalidateQueries({
             queryKey: ["suppliers", "all", 1, 10],
           });
           queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
         } else {
           const errorMessage =
-            result.data?.message || "Error updating supplier";
+            result.data?.message || "Lỗi khi cập nhật nhà cung cấp";
           toast.error(errorMessage);
         }
       },
       onError: (error) => {
-        const errorMessage = getErrorMessage(error, "Error updating supplier");
+        const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật nhà cung cấp");
         toast.error(errorMessage);
       },
     });

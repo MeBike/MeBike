@@ -124,7 +124,7 @@ export function useRentalsActions({
             data?: { message?: string };
           }) => {
             if (result.status === 200) {
-              toast.success("Rental updated successfully");
+              toast.success("Phiên thuê xe đã được cập nhật thành công");
               queryClient.invalidateQueries({
                 queryKey: [
                   "rentals",
