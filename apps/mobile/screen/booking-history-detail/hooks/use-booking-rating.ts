@@ -35,9 +35,15 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
     return nowTime > endTime + RATING_WINDOW_MS;
   }, [endTimeDate]);
 
+  const {
+    data: existingRating,
+    isFetched: isRatingFetched,
+  } = useGetRatingQuery(bookingId, Boolean(booking));
+
   const canOpenRatingForm =
     Boolean(booking) &&
     booking!.status === "HOÀN THÀNH" &&
+    isRatingFetched &&
     !hasRated &&
     !ratingWindowExpired;
 
@@ -50,11 +56,6 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
   } = useRatingActions({
     enabled: showRatingForm && Boolean(booking),
   });
-
-  const { data: existingRating } = useGetRatingQuery(
-    bookingId,
-    Boolean(booking)
-  );
 
   const filteredReasons = useMemo(() => {
     if (!ratingReasons || ratingReasons.length === 0) return [];
@@ -92,8 +93,10 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
   useEffect(() => {
     if (existingRating) {
       setHasRated(true);
+    } else if (isRatingFetched) {
+      setHasRated(false);
     }
-  }, [existingRating]);
+  }, [existingRating, isRatingFetched]);
 
   const handleToggleReason = useCallback((reasonId: string) => {
     setSelectedReasons((prev) =>

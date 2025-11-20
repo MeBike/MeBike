@@ -11,8 +11,11 @@ import Rental from '~/models/schemas/rental.schema'
 import Reservation from '~/models/schemas/reservation.schema'
 import { getLocalTime } from '~/utils/date-time'
 import { toObjectId } from '~/utils/string'
+import { redisPublisher } from '~/lib/redis-pubsub'
 import Bike from '~/models/schemas/bike.schema'
 import logger from '~/lib/logger'
+
+const BIKE_STATUS_CHANNEL = 'bike_status_updates'
 
 export type CardTapRequest = { chip_id: string; card_uid: string }
 export type CardTapMode = 'started' | 'ended' | 'reservation_started'
@@ -90,6 +93,8 @@ export const cardTapService = {
         reservation: reservationModel
       })
 
+      await publishBikeStatusUpdate(bike._id as ObjectId, BikeStatus.Booked)
+
       logger.info(
         {
           rental_id: (rentalSession as any)?._id?.toString?.(),
@@ -138,6 +143,8 @@ export const cardTapService = {
       start_station: startStationId,
       bike
     })
+
+    await publishBikeStatusUpdate(bike._id as ObjectId, BikeStatus.Booked)
 
     logger.info(
       {
@@ -222,4 +229,14 @@ function isTransactionNotSupportedError(error: unknown): boolean {
     'code' in error &&
     (error as { code?: number }).code === 20
   )
+}
+
+async function publishBikeStatusUpdate(bikeId: ObjectId, status: BikeStatus) {
+  try {
+    const payload = JSON.stringify({ bikeId: bikeId.toString(), status })
+    await redisPublisher.publish(BIKE_STATUS_CHANNEL, payload)
+    logger.info({ bikeId: bikeId.toString(), status }, 'Published bike status update from card-tap flow')
+  } catch (err) {
+    logger.error({ err, bikeId: bikeId.toString(), status }, 'Failed to publish bike status update from card-tap flow')
+  }
 }
