@@ -42,6 +42,8 @@ const Page = () => {
             coordinates: [106.6951, 10.7769],
           },
           description: `Ga ${apiStation.name} nằm trên tuyến Metro số 1 Bến Thành - Suối Tiên.`,
+          average_rating: apiStation.average_rating,
+          total_ratings: apiStation.total_ratings,
           bikeStation: {
             id: `BS${String(index + 1).padStart(3, '0')}`,
             stationId: index + 1,
@@ -168,6 +170,17 @@ const Page = () => {
                       <span className="text-sm text-gray-500">
                         Ga số {selectedStation.stationNumber}
                       </span>
+                      {selectedStation.average_rating !== undefined && selectedStation.total_ratings !== undefined ? (
+                        selectedStation.total_ratings > 0 ? (
+                          <span className="text-sm text-yellow-600">
+                            ⭐ {selectedStation.average_rating.toFixed(1)} ({selectedStation.total_ratings} đánh giá)
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-500">
+                            Chưa có đánh giá
+                          </span>
+                        )
+                      ) : null}
                     </div>
                   </div>
                 </div>

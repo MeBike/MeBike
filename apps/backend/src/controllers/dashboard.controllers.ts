@@ -7,22 +7,86 @@ import { BikeStatus, UserVerifyStatus } from "~/constants/enums";
 
 export const getStationsController = async (req: Request, res: Response) => {
   try {
-    const stations = await databaseService.stations.find({}).toArray();
+    const pipeline: any[] = [
+      {
+        $lookup: {
+          from: "bikes",
+          localField: "_id",
+          foreignField: "station_id",
+          as: "bikesData",
+        },
+      },
+      {
+        $addFields: {
+          availableBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Available] },
+              },
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: 'rentals',
+          localField: '_id',
+          foreignField: 'start_station',
+          as: 'rentals'
+        }
+      },
+      {
+        $unwind: { path: '$rentals', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'ratings',
+          localField: 'rentals._id',
+          foreignField: 'rental_id',
+          as: 'ratings'
+        }
+      },
+      {
+        $unwind: { path: '$ratings', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          station: { $first: '$$ROOT' },
+          ratings: { $push: '$ratings.rating' }
+        }
+      },
+      {
+        $addFields: {
+          'station.average_rating': {
+            $cond: {
+              if: { $gt: [{ $size: { $filter: { input: '$ratings', cond: { $ne: ['$$this', null] } } } }, 0] },
+              then: { $avg: { $filter: { input: '$ratings', cond: { $ne: ['$$this', null] } } } },
+              else: 0
+            }
+          },
+          'station.total_ratings': { $size: { $filter: { input: '$ratings', cond: { $ne: ['$$this', null] } } } }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: '$station' }
+      },
+      {
+        $project: {
+          name: 1,
+          address: 1,
+          availableBikes: '$availableBikesCount',
+          average_rating: 1,
+          total_ratings: 1,
+          bikesData: 0,
+          rentals: 0,
+          ratings: 0,
+        },
+      }
+    ];
 
-    const stationsWithData = await Promise.all(
-      stations.map(async (station) => {
-        const availableBikesCount = await databaseService.bikes.countDocuments({
-          station_id: station._id,
-          status: BikeStatus.Available
-        });
-
-        return {
-          name: station.name,
-          address: station.address,
-          availableBikes: availableBikesCount
-        };
-      })
-    );
+    const stationsWithData = await databaseService.stations.aggregate(pipeline).toArray();
 
     return res.json({
       message: DASHBOARD_MESSAGES.STATIONS_FETCH_SUCCESS,

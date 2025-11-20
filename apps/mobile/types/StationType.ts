@@ -41,4 +41,6 @@ export interface Station {
   reservedBikes: number;
   maintainedBikes: number;
   unavailableBikes: number;
+  average_rating?: number;
+  total_ratings?: number;
 }

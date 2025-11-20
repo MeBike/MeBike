@@ -26,6 +26,8 @@ interface StationData {
   name: string;
   address: string;
   availableBikes: number;
+  average_rating?: number;
+  total_ratings?: number;
 }
 
 interface ApiResponse<T> {
