@@ -6,7 +6,7 @@ export interface Reservation {
   start_time: string;
   end_time: string;
   prepaid: number;
-  status: "ĐÃ HẾT HẠN" | "ĐÃ HUỶ" | "ĐANG CHỜ XỬ LÝ" | "ĐANG HOẠT ĐỘNG" | "ĐÃ HỦY";
+  status: "ĐÃ HẾT HẠN" | "ĐÃ HUỶ" | "ĐANG CHỜ XỬ LÍ" | "ĐANG HOẠT ĐỘNG" | "ĐÃ HỦY";
   created_at: string;
   updated_at: string;
 }
