@@ -1207,11 +1207,10 @@ class RentalsService {
         ])
         .toArray()
 
-      return result.length > 0 ? parseFloat(result[0].totalRevenue) : 0
+      return result.length > 0 ? parseFloat(result[0].totalRevenue.toString()) : 0
     }
 
-    const current = await calculate(start, end)
-    const previous = await calculate(prevStart, prevEnd)
+    const [current, previous] = await Promise.all([calculate(start, end), calculate(prevStart, prevEnd)])
 
     const difference = current - previous
     let percentChange = 0
