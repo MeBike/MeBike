@@ -20,6 +20,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "@/types/navigation";
 import { formatVietnamDateTime } from "@/utils/date";
+import { useQueryClient } from "@tanstack/react-query";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -27,6 +28,7 @@ export default function SOSAgentDashboardScreen() {
   const insets = useSafeAreaInsets();
   const { isAuthenticated } = useAuth();
   const navigation = useNavigation<NavigationProp>();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [limit] = useState(5);
   const [refreshing, setRefreshing] = useState(false);
@@ -71,13 +73,15 @@ export default function SOSAgentDashboardScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     setPage(1);
-    await refetchSOSRequest();
+    await queryClient.invalidateQueries({
+      queryKey: ["sos-requests"],
+      refetchType: "all",
+    });
     setRefreshing(false);
-  }, [refetchSOSRequest]);
+  }, [queryClient]);
 
   const statusFilters = [
     { label: "Tất cả", value: undefined },
-    { label: "Đang chờ", value: "ĐANG CHỜ XỬ LÍ" },
     { label: "Đã gửi cứu hộ", value: "ĐÃ GỬI NGƯỜI CỨU HỘ" },
     { label: "Đang đến", value: "ĐANG TRÊN ĐƯỜNG ĐẾN" },
     { label: "Đã xử lý", value: "ĐÃ XỬ LÍ" },
@@ -105,8 +109,6 @@ export default function SOSAgentDashboardScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "ĐANG CHỜ XỬ LÍ":
-        return "#FF9800";
       case "ĐÃ GỬI NGƯỜI CỨU HỘ":
         return "#2196F3";
       case "ĐANG TRÊN ĐƯỜNG ĐẾN":

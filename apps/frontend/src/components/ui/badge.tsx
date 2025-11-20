@@ -28,6 +28,10 @@ const badgeVariants = cva(
           "border-transparent bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
         unsolvable:
           "border-transparent bg-gray-400 text-white [a&]:hover:bg-gray-500 dark:bg-gray-600 dark:hover:bg-gray-700",
+        brand:
+          "border-transparent bg-brand-500 text-white [a&]:hover:bg-brand-600 dark:bg-brand-600 dark:hover:bg-brand-700",
+        customBlue:
+          "border-transparent bg-[#2196F3] text-white [a&]:hover:bg-[#1e86d6]",
       },
     },
     defaultVariants: {
