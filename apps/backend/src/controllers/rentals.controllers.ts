@@ -331,7 +331,7 @@ export async function getDashboardSummaryController(req: Request, res: Response)
 }
 
 export async function getRentalSummaryController(req: Request, res: Response) {
-  const [rentalList, todayRevenue, thisMonthRevenue] = await Promise.all([
+  const [rentalList, dailyRevenue, monthlyRevenue] = await Promise.all([
     rentalsService.countRentalByStatus(),
     rentalsService.getRevenueBy(SummaryPeriodType.TODAY),
     rentalsService.getRevenueBy(SummaryPeriodType.THIS_MONTH)
@@ -340,8 +340,8 @@ export async function getRentalSummaryController(req: Request, res: Response) {
     message: RENTALS_MESSAGE.GET_SUMMARY_SUCCESS,
     result: {
       rentalList,
-      todayRevenue,
-      thisMonthRevenue
+      dailyRevenue,
+      monthlyRevenue
     }
   })
 }
