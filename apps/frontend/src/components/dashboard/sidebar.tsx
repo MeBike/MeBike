@@ -241,7 +241,7 @@ export function Sidebar() {
               </div>
               <div>
                 <h2 className="text-sm font-bold text-sidebar-foreground">
-                  BikeRental Pro
+                  MeBike
                 </h2>
                 <p className="text-xs text-muted-foreground">
                   Quản lý cho thuê
