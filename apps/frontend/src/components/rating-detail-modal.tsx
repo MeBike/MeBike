@@ -234,7 +234,21 @@ export function RatingDetailModal({ isOpen, onClose, ratingId }: RatingDetailMod
                         <div>
                           <p className="text-sm text-gray-500">Tổng tiền</p>
                           <p className="font-medium text-gray-900">
-                            {rating.rental.total_price.toLocaleString("vi-VN")} ₫
+                            {(() => {
+                              // Handle Decimal128 format VND
+                              const totalPrice = rating.rental.total_price;
+                              let price = 0;
+
+                              if (typeof totalPrice === 'number') {
+                                price = totalPrice;
+                              } else if (typeof totalPrice === 'object' && totalPrice && '$numberDecimal' in totalPrice) {
+                                price = parseFloat((totalPrice as { $numberDecimal: string }).$numberDecimal);
+                              } else if (typeof totalPrice === 'string') {
+                                price = parseFloat(totalPrice);
+                              }
+
+                              return price.toLocaleString("vi-VN");
+                            })()} ₫
                           </p>
                         </div>
                       </div>
