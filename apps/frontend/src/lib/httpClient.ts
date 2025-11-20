@@ -148,10 +148,10 @@ export class FetchHttpClient {
   }
  
    async get<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
-    return this.axiosInstance.get(url, {
-      params: params ?? {},
-    });
-  }
+     return this.axiosInstance.get(url, {
+       params: params ? { ...params } : {},
+     });
+   }
 
    async post<T>(
     url: string,
@@ -179,7 +179,7 @@ export class FetchHttpClient {
   //axios.delete(url[, config])
   async delete<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
     return this.axiosInstance.delete(url, {
-      params,
+      params: params ? { ...params } : undefined,
     });
   }
 }
