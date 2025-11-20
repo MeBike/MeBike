@@ -92,7 +92,10 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
             data?: { message?: string };
           }) => {
             if (result.status === 200) {
-              toast.success("Assigned SOS request successfully");
+              toast.success(
+                result.data?.message ||
+                  "Yêu cầu cứu hộ đã được phân công thành công"
+              );
               await queryClient.invalidateQueries({
                 queryKey: ["sos-requests"],
               });
@@ -100,7 +103,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
               await refetchSOSDetail();
               resolve(result);
             } else {
-              const errorMessage = result.data?.message || "Error updating bikes";
+              const errorMessage = result.data?.message || "Không thể phân công yêu cầu SOS";
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }
@@ -131,7 +134,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
             data?: { message?: string };
           }) => {
             if (result.status === 200) {
-              toast.success(result.data?.message || "Confirmed SOS request successfully");
+              toast.success(result.data?.message || "Xác nhận yêu cầu cứu hộ thành công");
               await queryClient.invalidateQueries({
                 queryKey: ["sos-requests"],
               });
@@ -177,7 +180,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
         }) => {
           if (result.status === 200) {
             toast.success(
-              result.data?.message || "Resolved SOS request successfully"
+              result.data?.message || "Giải quyết yêu cầu cứu hộ thành công"
             );
             await queryClient.invalidateQueries({
               queryKey: ["sos-requests"],
@@ -187,7 +190,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
             resolve(result);
           } else {
             const errorMessage =
-              result.data?.message || "Error resolving SOS request";
+              result.data?.message || "Lỗi khi giải quyết yêu cầu cứu hộ";
             toast.error(errorMessage);
             reject(new Error(errorMessage));
           }

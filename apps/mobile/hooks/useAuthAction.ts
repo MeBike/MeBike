@@ -97,12 +97,12 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
             setTokens(access_token, refresh_token);
             onTokenUpdate?.();
             await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-            Alert.alert("Login Successful", "Welcome back!");
+            Alert.alert("Đăng nhập thành công", "Chào mừng trở lại!");
             navigation?.navigate("Main");
             resolve();
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, "Error logging in");
+            const errorMessage = getErrorMessage(error, "Lỗi khi đăng nhập");
             Alert.alert("Lỗi đăng nhập", errorMessage);
             reject(error);
           },
@@ -121,17 +121,17 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
               setTokens(access_token, refresh_token);
               await onTokenUpdate?.();
               await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-              Alert.alert("Success", "Registration Successful. Your account has been created.");
+              Alert.alert("Thành công", "Đăng ký thành công. Tài khoản của bạn đã được tạo.");
               resolve();
             } else {
-              const errorMessage = result.data?.message || "Error registering";
-              Alert.alert("Error", errorMessage);
+              const errorMessage = result.data?.message || "Lỗi khi đăng ký";
+              Alert.alert("Lỗi", errorMessage);
               reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, "Error registering");
-            Alert.alert("Error", errorMessage);
+            const errorMessage = getErrorMessage(error, "Lỗi khi đăng ký");
+            Alert.alert("Lỗi", errorMessage);
             reject(error);
           },
         });
@@ -147,16 +147,16 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
             clearTokens();
             onTokenUpdate?.();
             queryClient.clear();
-            Alert.alert("Success", "Logged out successfully");
+            Alert.alert("Thành công", "Đăng xuất thành công");
             navigation?.navigate("Login");
           } else {
-            const errorMessage = result.data?.message || "Error logging out";
-            Alert.alert("Error", errorMessage);
+            const errorMessage = result.data?.message || "Lỗi khi đăng xuất";
+            Alert.alert("Lỗi", errorMessage);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Error logging out");
-          Alert.alert("Error", errorMessage);
+          const errorMessage = getErrorMessage(error, "Lỗi khi đăng xuất");
+          Alert.alert("Lỗi", errorMessage);
         },
       });
     },
@@ -172,8 +172,8 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
               const accessToken = result.data.result?.access_token;
               const refreshToken = result.data.result?.refresh_token;
               if (!accessToken || !refreshToken) {
-                const errMsg = "Missing access or refresh token";
-                Alert.alert("Error", errMsg);
+                const errMsg = "Thiếu access hoặc refresh token";
+                Alert.alert("Lỗi", errMsg);
                 reject(new Error(errMsg));
                 return;
               }
@@ -183,8 +183,8 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
               resolve();
             } else {
               const errorMessage =
-                result.data?.message || "Error verifying email";
-              Alert.alert("Error", errorMessage);
+                result.data?.message || "Lỗi khi xác minh email";
+              Alert.alert("Lỗi", errorMessage);
               reject(new Error(errorMessage));
             }
           },
@@ -194,7 +194,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
               error,
               "OTP không hợp lệ hoặc đã hết hạn"
             );
-            Alert.alert("Error", errorMessage);
+            Alert.alert("Lỗi", errorMessage);
             reject(error);
           },
         });
@@ -207,19 +207,19 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
       useResendVerifyEmail.mutate(undefined, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            Alert.alert("Success", "Verification email resent successfully");
+            Alert.alert("Thành công", "Email xác minh đã được gửi lại thành công");
             resolve();
           } else {
             const errorMessage =
-              result.data?.message || "Error resending verification email";
-            Alert.alert("Error", errorMessage);
+              result.data?.message || "Lỗi khi gửi lại email xác minh";
+            Alert.alert("Lỗi", errorMessage);
             reject(new Error(errorMessage));
           }
         },
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error resending verification email"
+            "Lỗi khi gửi lại email xác minh"
           );
           Alert.alert("Error", errorMessage);
           reject(error);
@@ -232,19 +232,19 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
       useForgotPassword.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            Alert.alert("Success", "Password reset email sent successfully");
+            Alert.alert("Thành công", "Email đặt lại mật khẩu đã được gửi thành công");
           } else {
             const errorMessage =
-              result.data?.message || "Error sending password reset email";
-            Alert.alert("Error", errorMessage);
+              result.data?.message || "Lỗi khi gửi email đặt lại mật khẩu";
+            Alert.alert("Lỗi", errorMessage);
           }
         },
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error sending password reset email"
+            "Lỗi khi gửi email đặt lại mật khẩu"
           );
-          Alert.alert("Error", errorMessage);
+          Alert.alert("Lỗi", errorMessage);
         },
       });
     },
@@ -257,13 +257,13 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
         useResetPassword.mutate(data, {
           onSuccess: (result) => {
             if (result.status === 200) {
-              Alert.alert("Success", "Password reset successfully");
+              Alert.alert("Thành công", "Đặt lại mật khẩu thành công");
               navigation?.navigate("Login");
               resolve();
             } else {
               const errorMessage =
-                result.data?.message || "Error resetting password";
-              Alert.alert("Error", errorMessage);
+                result.data?.message || "Lỗi khi đặt lại mật khẩu";
+              Alert.alert("Lỗi", errorMessage);
               reject(new Error(errorMessage));
             }
           },
@@ -286,16 +286,17 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
         useUpdateProfile.mutate(data, {
           onSuccess: (result) => {
             if (result.status === 200) {
+              Alert.alert("Thành công", "Cập nhật thông tin thành công");
               queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               resolve();
             } else {
               const errorMessage =
-                result.data?.message || "Error updating profile";
+                result.data?.message || "Lỗi khi cập nhật thông tin";
               reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, "Error updating profile");
+            const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật thông tin");
             reject(new Error(errorMessage));
           },
         });

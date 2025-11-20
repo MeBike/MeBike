@@ -69,9 +69,9 @@ export const useAuthActions = () => {
         {
           onSuccess: (result) => {
             if (result.status === 200) {
-              toast.success("Password changed successfully");
+              toast.success(result.data?.message || "Mật khẩu đã được thay đổi thành công");
             } else {
-              toast.error("Error changing password");
+              toast.error(result.data?.message || "Lỗi khi thay đổi mật khẩu");
             }
           },
           onError: (error: unknown) => {
@@ -98,8 +98,8 @@ export const useAuthActions = () => {
               new StorageEvent("storage", { key: "auth_tokens" })
             );
             await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-            toast.success("Login Successful", {
-              description: "Welcome back!",
+            toast.success(result.data?.message || "Đăng nhập thành công", {
+              description: "Chào mừng bạn trở lại!",
             });
             resolve();
           },
@@ -126,8 +126,8 @@ export const useAuthActions = () => {
               // Wait for token to be set
               await new Promise(resolve => setTimeout(resolve, 100));
               await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-              toast.success("Registration Successful", {
-                description: "Your account has been created.",
+              toast.success(result.data?.message || "Đăng ký thành công", {
+                description: "Tài khoản của bạn đã được tạo.",
               });
               resolve();
               // router.push("/user/profile");
@@ -158,15 +158,15 @@ export const useAuthActions = () => {
             );
             queryClient.removeQueries({ queryKey: ["user", "me"] });
             queryClient.clear();
-            toast.success("Logged out successfully");
+            toast.success(result.data?.message || "Đăng xuất thành công");
             router.push("/auth/login");
           } else {
-            const errorMessage = result.data?.message || "Error logging out";
+            const errorMessage = result.data?.message || "Lỗi khi đăng xuất";
             toast.error(errorMessage);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Error logging out");
+          const errorMessage = getErrorMessage(error, "Lỗi khi đăng xuất");
           toast.error(errorMessage);
         },
       });
@@ -183,19 +183,19 @@ export const useAuthActions = () => {
               const accessToken = result.data.result?.access_token;
               const refreshToken = result.data.result?.refresh_token;
               if (!accessToken || !refreshToken) {
-                const errMsg = "Missing access or refresh token";
+                const errMsg = "Thiếu access hoặc refresh token";
                 toast.error(errMsg);
                 reject(new Error(errMsg));
                 return;
               }
               setTokens(accessToken, refreshToken);
               window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
-              toast.success("Email verified successfully");
+              toast.success(result.data?.message || "Email đã được xác minh thành công");
               queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               resolve();
             } else {
               const errorMessage =
-                result.data?.message || "Error verifying email";
+                result.data?.message || "Lỗi khi xác minh email";
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }
@@ -219,11 +219,11 @@ export const useAuthActions = () => {
       useResendVerifyEmail.mutate(undefined, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success("Verification email resent successfully");
+            toast.success(result.data?.message || "Email xác minh đã được gửi lại thành công");
             resolve();
           } else {
             const errorMessage =
-              result.data?.message || "Error resending verification email";
+              result.data?.message || "Lỗi khi gửi lại email xác minh";
             toast.error(errorMessage);
             reject(new Error(errorMessage));
           }
@@ -244,10 +244,10 @@ export const useAuthActions = () => {
       useForgotPassword.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success("Password reset email sent successfully");
+            toast.success(result.data?.message || "Email đặt lại mật khẩu đã được gửi thành công");
           } else {
             const errorMessage =
-              result.data?.message || "Error sending password reset email";
+              result.data?.message || "Lỗi khi gửi email đặt lại mật khẩu";
             toast.error(errorMessage);
           }
         },
@@ -268,11 +268,11 @@ export const useAuthActions = () => {
         useResetPassword.mutate(data, {
           onSuccess: (result) => {
             if (result.status === 200) {
-              toast.success("Password reset successfully");
+              toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
               resolve();
             } else {
               const errorMessage =
-                result.data?.message || "Error resetting password";
+                result.data?.message || "Lỗi khi đặt lại mật khẩu";
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }
@@ -295,16 +295,16 @@ export const useAuthActions = () => {
       useUpdateProfile.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success("Profile updated successfully");
+            toast.success(result.data?.message || "Cập nhật hồ sơ thành công");
             queryClient.invalidateQueries({ queryKey: ["user", "me"] });
           } else {
             const errorMessage =
-              result.data?.message || "Error updating profile";
+              result.data?.message || "Lỗi khi cập nhật hồ sơ";
             toast.error(errorMessage);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Error updating profile");
+          const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật hồ sơ");
           toast.error(errorMessage);
         },
       });

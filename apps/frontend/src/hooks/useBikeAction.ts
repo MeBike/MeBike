@@ -150,7 +150,7 @@ export const useBikeActions = (
           data?: { message?: string };
         }) => {
           if (result.status === 201) {
-            toast.success("Bike created successfully");
+            toast.success(result.data?.message || "Xe đạp được tạo thành công");
             queryClient.invalidateQueries({
               queryKey: [
                 "bikes",
@@ -163,12 +163,12 @@ export const useBikeActions = (
               ],
             });
           } else {
-            const errorMessage = result.data?.message || "Error creating bikes";
+            const errorMessage = result.data?.message || "Lỗi khi tạo xe đạp";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error creating bikes");
+          const errorMessage = getErrorMessage(error, "Lỗi khi tạo xe đạp");
           toast.error(errorMessage);
         },
       });
@@ -199,7 +199,7 @@ export const useBikeActions = (
             data?: { message?: string };
           }) => {
             if (result.status === 200) {
-              toast.success("Bike updated successfully");
+              toast.success(result.data?.message || "Cập nhật xe đạp thành công");
               queryClient.invalidateQueries({
                 queryKey: [
                   "bikes",
@@ -213,12 +213,12 @@ export const useBikeActions = (
               });
             } else {
               const errorMessage =
-                result.data?.message || "Error updating bikes";
+                result.data?.message || "Lỗi khi cập nhật xe đạp";
               toast.error(errorMessage);
             }
           },
           onError: (error) => {
-            const errorMessage = getErrorMessage(error, "Error updating bikes");
+            const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật xe đạp");
             toast.error(errorMessage);
           },
         }
@@ -245,15 +245,15 @@ export const useBikeActions = (
       deleteBikeMutation.mutate(id, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success("Bike deleted successfully");
+            toast.success(result.data?.message || "Xóa xe đạp thành công");
             queryClient.invalidateQueries({ queryKey: ["bikes"] });
           } else {
-            const errorMessage = result.data?.message || "Error deleting bikes";
+            const errorMessage = result.data?.message || "Lỗi khi xóa xe đạp";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error deleting bikes");
+          const errorMessage = getErrorMessage(error, "Lỗi khi xóa xe đạp");
           toast.error(errorMessage);
         },
       });
@@ -269,7 +269,7 @@ export const useBikeActions = (
       reportBikeMutation.mutate(id, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success("Bike reported successfully");
+            toast.success(result.data?.message || "Báo cáo xe đạp thành công");
           } else {
             const errorMessage = result.data?.message || "Error reporting bike";
             toast.error(errorMessage);
