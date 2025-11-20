@@ -46,6 +46,7 @@ interface StationActionProps {
   page?: number;
   limit?: number;
   latitude?: number;
+  name?: string;
   longitude?: number;
 }
 export const useStationActions = ({
@@ -55,6 +56,7 @@ export const useStationActions = ({
   limit,
   latitude,
   longitude,
+  name
 }: StationActionProps) => {
   const queryClient = useQueryClient();
   const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
@@ -63,7 +65,7 @@ export const useStationActions = ({
     refetch,
     data: response,
     isLoading,
-  } = useGetAllStation({ page: page, limit: limit });
+  } = useGetAllStation({ page: page, limit: limit , name: name });
   const {
     refetch: fetchingStationID,
     data: responseStationDetail,
