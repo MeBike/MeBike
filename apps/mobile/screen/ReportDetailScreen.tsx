@@ -200,12 +200,7 @@ function ReportDetailScreen() {
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
-        onScroll={(event) => {
-          if (event.nativeEvent.contentOffset.y < -100) {
-            onRefresh();
-          }
-        }}
-        scrollEventThrottle={16}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -257,6 +252,9 @@ function ReportDetailScreen() {
         <View style={styles.mediaSection}>{renderMediaGrid()}</View>
 
         <View style={{ height: 20 }} />
+
+        {/* Spacer to ensure scrollable content */}
+        <View style={{ height: 50 }} />
       </ScrollView>
     </View>
   );
@@ -285,7 +283,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    flex: 1,
     padding: 16,
   },
   card: {
