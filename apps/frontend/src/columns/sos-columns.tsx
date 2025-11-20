@@ -79,10 +79,12 @@ export const sosColumns = ({ onView }: SOSColumnsProps): ColumnDef<SOS>[] => [
         status === "ĐÃ XỬ LÍ"
           ? "success"
           : status === "ĐANG CHỜ XỬ LÍ"
-            ? "pending"
-            : status === "KHÔNG XỬ LÍ ĐƯỢC"
-              ? "warning"
-              : "destructive";
+          ? "pending"
+          : status === "KHÔNG XỬ LÍ ĐƯỢC"
+          ? "warning"
+          : status === "ĐÃ GỬI NGƯỜI CỨU HỘ"
+          ? "customBlue"
+          : "destructive";
       return (
         <Badge variant={variant} className="whitespace-nowrap">
           {status}
