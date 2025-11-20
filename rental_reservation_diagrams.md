@@ -1,86 +1,118 @@
 # MeBike Rental/Reservation System Diagrams
 
-## Class Diagram
+## Physical Database Diagram (ER Diagram)
 
 ```mermaid
-classDiagram
-    class User {
-        +_id
-        +name
-        +email
-        +role
-        +rentals
-        +reservations
-        +subscriptions
+erDiagram
+    users {
+        ObjectId _id PK
+        string fullname
+        string email
+        string password
+        string email_verify_otp
+        Date email_verify_otp_expires
+        string forgot_password_otp
+        Date forgot_password_otp_expires
+        UserVerifyStatus verify
+        string location
+        string username
+        string phone_number
+        string avatar
+        Role role
+        string nfc_card_uid
+        Date created_at
+        Date updated_at
     }
 
-    class Bike {
-        +_id
-        +station_id
-        +status
-        +chip_id
-        +rentals
-        +reservations
+    bikes {
+        ObjectId _id PK
+        string chip_id
+        ObjectId station_id FK
+        BikeStatus status
+        ObjectId supplier_id FK
+        Date created_at
+        Date updated_at
     }
 
-    class Station {
-        +_id
-        +name
-        +address
-        +bikes
+    stations {
+        ObjectId _id PK
+        string name
+        string address
+        string latitude
+        string longitude
+        string capacity
+        Date created_at
+        Date updated_at
+        location_geo Point
     }
 
-    class Rental {
-        +_id
-        +user_id
-        +bike_id
-        +start_station
-        +end_station
-        +status
-        +start_time
-        +end_time
-        +total_price
-        +subscription_id
+    rentals {
+        ObjectId _id PK
+        ObjectId user_id FK
+        ObjectId bike_id FK
+        ObjectId start_station FK
+        ObjectId end_station FK
+        Date start_time
+        Date end_time
+        Int32 duration
+        Decimal128 total_price
+        ObjectId subscription_id FK
+        RentalStatus status
+        Date created_at
+        Date updated_at
     }
 
-    class Reservation {
-        +_id
-        +user_id
-        +bike_id
-        +station_id
-        +status
-        +start_time
-        +end_time
-        +prepaid
-        +subscription_id
+    reservations {
+        ObjectId _id PK
+        ObjectId user_id FK
+        ObjectId bike_id FK
+        ObjectId station_id FK
+        Date start_time
+        Date end_time
+        Decimal128 prepaid
+        ReservationStatus status
+        ReservationOptions reservation_option
+        ObjectId fixed_slot_template_id FK
+        ObjectId subscription_id FK
+        Date created_at
+        Date updated_at
     }
 
-    class Subscription {
-        +_id
-        +user_id
-        +status
-        +package
+    subscriptions {
+        ObjectId _id PK
+        ObjectId user_id FK
+        SubscriptionPackage package_name
+        Date activated_at
+        Date expires_at
+        number max_usages
+        number usage_count
+        Decimal128 price
+        SubscriptionStatus status
+        Date created_at
+        Date updated_at
     }
 
-    class Wallet {
-        +_id
-        +user_id
-        +balance
-        +status
+    wallets {
+        ObjectId _id PK
+        ObjectId user_id FK
+        Decimal128 balance
+        WalletStatus status
+        Date created_at
+        Date updated_at
     }
 
-    User "1" --* "*" Rental : has
-    User "1" --* "*" Reservation : has
-    User "1" --* "*" Subscription : has
-    User "1" -- "1" Wallet : has
-    Station "1" --* "*" Bike : contains
-    Bike "1" --* "*" Rental : used in
-    Bike "1" --* "*" Reservation : reserved for
-    Rental --> Station : start_station
-    Rental --> Station : end_station
-    Reservation --> Station : station
-    Rental ..> Subscription : optional
-    Reservation ..> Subscription : optional
+    users ||--o{ rentals : "1 user has many rentals"
+    users ||--o{ reservations : "1 user has many reservations"
+    users ||--o{ subscriptions : "1 user has many subscriptions"
+    users ||--|| wallets : "1 user has 1 wallet"
+    stations ||--o{ bikes : "1 station has many bikes"
+    bikes ||--o{ rentals : "1 bike used in many rentals"
+    bikes ||--o{ reservations : "1 bike reserved in many reservations"
+    stations ||--o{ rentals : "start_station"
+    stations ||--o{ rentals : "end_station"
+    stations ||--o{ reservations : "station"
+    subscriptions ||--o{ rentals : "optional subscription"
+    subscriptions ||--o{ reservations : "optional subscription"
 ```
 
 ## Sequence Diagram - Reservation Flow
