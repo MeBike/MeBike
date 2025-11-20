@@ -498,13 +498,7 @@ export default function BikesPage() {
           {/* Filters */}
           <div className="bg-card border border-border rounded-lg p-4 space-y-4">
             <div className="flex items-center gap-4">
-              <input
-                type="text"
-                placeholder="Tìm kiếm theo ID xe hoặc Chip ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground"
-              />
+              
               <select
                 value={statusFilter}
                 onChange={(e) =>
