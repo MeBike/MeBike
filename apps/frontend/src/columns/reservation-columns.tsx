@@ -79,7 +79,14 @@ export const reservationColumn = ({
   {
     accessorKey: "end_time",
     header: "Thời gian kết thúc",
-    cell: ({ row }) => formatDateUTC(row.original.end_time),
+    cell: ({ row }) => {
+      if(row.original.end_time){
+        return formatDateUTC(row.original.end_time);
+      }
+      else {
+        return "Chưa kết thúc";
+      }
+    },
   },
   {
     id: "actions",

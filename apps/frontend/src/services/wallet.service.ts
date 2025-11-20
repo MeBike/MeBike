@@ -135,7 +135,11 @@ export const walletService = {
     user_id: string;
   }): Promise<AxiosResponse<ApiResponse<DetailWallet[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<DetailWallet[]>>(
-      `${WALLET_ENDPOINTS.DETAIL_WALLET(user_id)}`
+      `${WALLET_ENDPOINTS.DETAIL_WALLET(user_id)}` ,
+      {
+        page : 1,
+        limit : 100
+      }
     );
     return response;
   },
