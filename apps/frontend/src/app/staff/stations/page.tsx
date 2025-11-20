@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useStationActions } from "@/hooks/use-station";
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
 import { DataTable } from "@/components/TableCustom";
@@ -10,6 +11,7 @@ import { stationColumns } from "@/columns/station-column-staff";
 export default function StationsPage() {
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
+  const [searchQuery, setSearchQuery] = useState("");
   const {
     getAllStations,
     stations,
@@ -18,14 +20,13 @@ export default function StationsPage() {
     hasToken: true,
     page: page,
     limit: limit,
+    name: searchQuery,
   });
-
-  // const [searchQuery, setSearchQuery] = useState("");
 
   // LOAD DATA
   useEffect(() => {
     getAllStations();
-  }, [limit, page, getAllStations]);
+  }, [limit, page, searchQuery, getAllStations]);
 
   // UI
   return (
@@ -42,15 +43,15 @@ export default function StationsPage() {
           </div>
         </div>
 
-        <div className="grid gap-4">
+        {/* <div className="grid gap-4">
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Tổng số trạm</p>
             <p className="text-2xl font-bold text-foreground mt-1">
               {paginationStations?.totalRecords}
             </p>
           </div>
-        </div>
-        {/* <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+        </div> */}
+        <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center gap-4">
             <input
               type="text"
@@ -63,7 +64,7 @@ export default function StationsPage() {
               Đặt lại
             </Button>
           </div>
-        </div> */}
+        </div>
 
         <div className="w-full rounded-lg space-y-4 flex flex-col">
           <div>

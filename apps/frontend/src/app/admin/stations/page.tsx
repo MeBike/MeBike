@@ -15,7 +15,7 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { stationColumns } from "@/columns/station-column";
 import { formatDateUTC } from "@/utils/formatDateTime";
 import type { StationStatistic } from "@/types/Station";
-// MAIN
+
 export default function StationsPage() {
   // STATES
   const mapRef = useRef<HTMLDivElement>(null);
@@ -25,6 +25,8 @@ export default function StationsPage() {
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
   const [stationID, setStationID] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [allStation, setAllStation] = useState<number>(0);
   const {
     getAllStations,
     stations,
@@ -44,8 +46,8 @@ export default function StationsPage() {
     page: page,
     limit: limit,
     stationId: stationID,
+    name: searchQuery,
   });
-  const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -82,19 +84,18 @@ export default function StationsPage() {
       capacity: "",
     },
   });
+
   useEffect(() => {
     getAllStations();
-  }, [limit, page, getAllStations]);
-  useEffect(() => {
-    getStationByID();
+  }, [page, searchQuery, getAllStations]);
 
-  }, [stationID, getStationByID]);
   useEffect(() => {
-    getReservationStats();
-  }, [stationID, getReservationStats]);
-  useEffect(() => {
-    console.log(responseStationDetail);
-  }, [responseStationDetail]);
+    if (stationID) {
+      getStationByID();
+      getReservationStats();
+    }
+  }, [stationID, getStationByID, getReservationStats]);
+
   useEffect(() => {
     if (isEditModalOpen && responseStationDetail) {
       resetEdit({
@@ -106,49 +107,53 @@ export default function StationsPage() {
       });
     }
   }, [isEditModalOpen, responseStationDetail, resetEdit]);
+
   useEffect(() => {
     getStationRevenue();
   }, [getStationRevenue]);
+  useEffect(() => {
+    setAllStation(paginationStations?.totalRecords || 0);
+  }, [paginationStations]);
+
   // MAP FOR CREATE MODAL
   useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
-    const markerRef = { current: null as tt.Marker | null };
+    if (!isModalOpen || !mapRef.current || mapInstanceRef.current) return;
 
-    if (isModalOpen && mapRef.current && !mapInstanceRef.current) {
-      timer = setTimeout(() => {
-        const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY
-        mapInstanceRef.current = tt.map({
-          key: apiKey as string,
-          container: mapRef.current as HTMLElement,
-          center: [106.70098, 10.77689],
-          zoom: 14,
-          style:
-            "https://api.tomtom.com/style/1/style/20.3.2-*?map=hybrid_main",
-        });
+    const timer = setTimeout(() => {
+      const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
+      if (!apiKey) return;
 
-        setTimeout(() => {
-          mapInstanceRef.current?.resize();
-        }, 300);
+      mapInstanceRef.current = tt.map({
+        key: apiKey,
+        container: mapRef.current as HTMLElement,
+        center: [106.70098, 10.77689],
+        zoom: 14,
+        style: "https://api.tomtom.com/style/1/style/20.3.2-*?map=hybrid_main",
+      });
 
-        // Select location by click
-        mapInstanceRef.current.on("click", function (e) {
-          const { lat, lng } = e.lngLat;
-          setCreateValue("latitude", lat.toString());
-          setCreateValue("longitude", lng.toString());
+      setTimeout(() => {
+        mapInstanceRef.current?.resize();
+      }, 300);
 
-          if (markerRef.current) {
-            markerRef.current.setLngLat([lng, lat]);
-          } else {
-            markerRef.current = new tt.Marker({ draggable: false })
-              .setLngLat([lng, lat])
-              .addTo(mapInstanceRef.current!);
-          }
-        });
-      }, 400);
-    }
+      const markerRef = { current: null as tt.Marker | null };
+
+      mapInstanceRef.current.on("click", function (e) {
+        const { lat, lng } = e.lngLat;
+        setCreateValue("latitude", lat.toString());
+        setCreateValue("longitude", lng.toString());
+
+        if (markerRef.current) {
+          markerRef.current.setLngLat([lng, lat]);
+        } else {
+          markerRef.current = new tt.Marker({ draggable: false })
+            .setLngLat([lng, lat])
+            .addTo(mapInstanceRef.current!);
+        }
+      });
+    }, 400);
 
     return () => {
-      if (timer) clearTimeout(timer);
+      clearTimeout(timer);
       if (!isModalOpen && mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -158,58 +163,52 @@ export default function StationsPage() {
 
   // MAP FOR EDIT MODAL
   useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
-    const editMarkerRef = { current: null as tt.Marker | null };
+    if (!isEditModalOpen || !editMapRef.current || editMapInstanceRef.current || !responseStationDetail?.latitude || !responseStationDetail?.longitude) return;
 
-    if (
-      isEditModalOpen &&
-      editMapRef.current &&
-      !editMapInstanceRef.current &&
-      responseStationDetail?.latitude &&
-      responseStationDetail?.longitude
-    ) {
-      timer = setTimeout(() => {
-        const apiKey =
-          process.env.NEXT_PUBLIC_TOMTOM_API_KEY
-        const lat = parseFloat(responseStationDetail.latitude);
-        const lng = parseFloat(responseStationDetail.longitude);
+    const timer = setTimeout(() => {
+      const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
+      if (!apiKey) return;
 
-        editMapInstanceRef.current = tt.map({
-          key: apiKey as string,
-          container: editMapRef.current as HTMLElement,
-          center: [lng, lat],
-          zoom: 14,
-          style: "https://api.tomtom.com/style/1/style/20.3.2-*?map=basic_main",
-        });
+      const lat = parseFloat(responseStationDetail.latitude);
+      const lng = parseFloat(responseStationDetail.longitude);
 
-        setTimeout(() => {
-          editMapInstanceRef.current?.resize();
-        }, 300);
+      editMapInstanceRef.current = tt.map({
+        key: apiKey,
+        container: editMapRef.current as HTMLElement,
+        center: [lng, lat],
+        zoom: 14,
+        style: "https://api.tomtom.com/style/1/style/20.3.2-*?map=basic_main",
+      });
 
-        // Add initial marker at existing location
-        editMarkerRef.current = new tt.Marker({ draggable: false })
-          .setLngLat([lng, lat])
-          .addTo(editMapInstanceRef.current!);
+      setTimeout(() => {
+        editMapInstanceRef.current?.resize();
+      }, 300);
 
-        // Update position on click
-        editMapInstanceRef.current.on("click", function (e) {
-          const { lat, lng } = e.lngLat;
-          setEditValue("latitude", lat.toString());
-          setEditValue("longitude", lng.toString());
+      const editMarkerRef = { current: null as tt.Marker | null };
 
-          if (editMarkerRef.current) {
-            editMarkerRef.current.setLngLat([lng, lat]);
-          } else {
-            editMarkerRef.current = new tt.Marker({ draggable: false })
-              .setLngLat([lng, lat])
-              .addTo(editMapInstanceRef.current!);
-          }
-        });
-      }, 400);
-    }
+      // Add initial marker at existing location
+      editMarkerRef.current = new tt.Marker({ draggable: false })
+        .setLngLat([lng, lat])
+        .addTo(editMapInstanceRef.current!);
+
+      // Update position on click
+      editMapInstanceRef.current.on("click", function (e) {
+        const { lat, lng } = e.lngLat;
+        setEditValue("latitude", lat.toString());
+        setEditValue("longitude", lng.toString());
+
+        if (editMarkerRef.current) {
+          editMarkerRef.current.setLngLat([lng, lat]);
+        } else {
+          editMarkerRef.current = new tt.Marker({ draggable: false })
+            .setLngLat([lng, lat])
+            .addTo(editMapInstanceRef.current!);
+        }
+      });
+    }, 400);
 
     return () => {
-      if (timer) clearTimeout(timer);
+      clearTimeout(timer);
       if (!isEditModalOpen && editMapInstanceRef.current) {
         editMapInstanceRef.current.remove();
         editMapInstanceRef.current = null;
@@ -264,14 +263,14 @@ export default function StationsPage() {
           </div>
         </div>
 
-        <div className="grid gap-4">
+        {/* <div className="grid gap-4">
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground">Tổng số trạm</p>
             <p className="text-2xl font-bold text-foreground mt-1">
-              {paginationStations?.totalRecords}
+              {allStation}
             </p>
           </div>
-        </div>
+        </div> */}
 
         {showRevenueReport && responseStationRevenue?.result && (
           <div className="space-y-6 animate-in fade-in duration-500">
