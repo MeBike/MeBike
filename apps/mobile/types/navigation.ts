@@ -1,6 +1,6 @@
 import type { RouteProp } from "@react-navigation/native";
 // Common navigation hook types
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { StackNavigationProp } from "@react-navigation/stack";
 
 // Navigation Types for React Navigation
 import type { Reservation } from "./reservation-types";
@@ -105,70 +105,70 @@ export type RootStackParamList = {
   QRScanner: undefined;
   "Công cụ": undefined;
 };
-export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Nhà">;
-export type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Login">;
-export type IntroScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Intro">;
-export type RegisterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "Register">;
-export type StationDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, "StationDetail">;
-export type ProfileScreenNavigationProp = NativeStackNavigationProp<
+export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Nhà">;
+export type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, "Login">;
+export type IntroScreenNavigationProp = StackNavigationProp<RootStackParamList, "Intro">;
+export type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, "Register">;
+export type StationDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, "StationDetail">;
+export type ProfileScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Tôi"
 >;
-export type WalletNavigationProp = NativeStackNavigationProp<
+export type WalletNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Wallet"
 >;
-export type BikeDetailNavigationProp = NativeStackNavigationProp<
+export type BikeDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
   "BikeDetail"
 >;
 
-export type BookingHistoryDetailNavigationProp = NativeStackNavigationProp<
+export type BookingHistoryDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
   "BookingHistoryDetail"
 >;
-export type ChangePasswordNavigationProp = NativeStackNavigationProp<
+export type ChangePasswordNavigationProp = StackNavigationProp<
   RootStackParamList,
   "ChangePassword"
 >;
-export type ForgotPasswordNavigationProp = NativeStackNavigationProp<
+export type ForgotPasswordNavigationProp = StackNavigationProp<
   RootStackParamList,
   "ForgotPassword"
 >;
-export type UpdateProfileNavigationProp = NativeStackNavigationProp<
+export type UpdateProfileNavigationProp = StackNavigationProp<
   RootStackParamList,
   "UpdateProfile"
 >;
-export type MyWalletNavigationProp = NativeStackNavigationProp<
+export type MyWalletNavigationProp = StackNavigationProp<
   RootStackParamList,
   "MyWallet"
 >;
-export type SubscriptionsNavigationProp = NativeStackNavigationProp<
+export type SubscriptionsNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Subscriptions"
 >;
 export type StationDetailRouteProp = RouteProp<RootStackParamList, "StationDetail">;
-export type ReservationsScreenNavigationProp = NativeStackNavigationProp<
+export type ReservationsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Reservations"
 >;
-export type ReservationDetailNavigationProp = NativeStackNavigationProp<
+export type ReservationDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
   "ReservationDetail"
 >;
-export type ReservationFlowNavigationProp = NativeStackNavigationProp<
+export type ReservationFlowNavigationProp = StackNavigationProp<
   RootStackParamList,
   "ReservationFlow"
 >;
-export type FixedSlotTemplatesNavigationProp = NativeStackNavigationProp<
+export type FixedSlotTemplatesNavigationProp = StackNavigationProp<
   RootStackParamList,
   "FixedSlotTemplates"
 >;
-export type FixedSlotDetailNavigationProp = NativeStackNavigationProp<
+export type FixedSlotDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
   "FixedSlotDetail"
 >;
-export type FixedSlotEditorNavigationProp = NativeStackNavigationProp<
+export type FixedSlotEditorNavigationProp = StackNavigationProp<
   RootStackParamList,
   "FixedSlotEditor"
 >;
@@ -192,7 +192,7 @@ export type FixedSlotTemplatesRouteProp = RouteProp<
   RootStackParamList,
   "FixedSlotTemplates"
 >;
-export type SupportScreenNavigationProp = NativeStackNavigationProp<
+export type SupportScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Support"
 >;
@@ -200,11 +200,11 @@ export type ReportDetailRouteProp = RouteProp<
   RootStackParamList,
   "ReportDetail"
 >;
-export type ReportDetailNavigationProp = NativeStackNavigationProp<
+export type ReportDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
   "ReportDetail"
 >;
-export type ReportScreenNavigationProp = NativeStackNavigationProp<
+export type ReportScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Report"
 >;
