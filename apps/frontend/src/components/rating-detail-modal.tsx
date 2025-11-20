@@ -283,27 +283,25 @@ export function RatingDetailModal({ isOpen, onClose, ratingId }: RatingDetailMod
                         key={reason._id}
                         className={`p-4 rounded-lg border-l-4 ${
                           reason.type === "positive"
-                            ? "bg-green-50 border-green-500"
-                            : "bg-red-50 border-red-500"
+                            ? "bg-blue-50 border-blue-500"
+                            : "bg-amber-50 border-amber-500"
                         }`}
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-semibold ${
-                              reason.type === "positive"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {reason.type === "positive" ? "Tích cực" : "Tiêu cực"}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            Applies to: <span className="font-semibold text-blue-600">{reason.applies_to}</span>
                           </span>
-                          <span className="text-xs text-gray-500">
-                            ({reason.applies_to})
+                          <span className="text-sm font-medium text-gray-700">
+                            Type: <span className={`font-semibold ${
+                              reason.type === "positive" ? "text-blue-600" : "text-amber-600"
+                            }`}>{reason.type}</span>
                           </span>
                         </div>
-                        <p className="text-gray-900 font-medium">
-                          {reason.messages.vi}
-                        </p>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium">Messages:</span> {JSON.stringify(reason.messages)}
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>
