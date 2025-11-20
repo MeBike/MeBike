@@ -6,10 +6,10 @@ const isValidObjectId = (id: string): boolean => {
 export const rentalSchema = z.object({
     bike_id : z
       .string()
-      .min(24, "Station ID must be a valid ObjectId")
-      .max(24, "Station ID must be a valid ObjectId")
+      .min(24, "Mã xe phải là một ObjectId hợp lệ")
+      .max(24, "Mã xe phải là một ObjectId hợp lệ")
       .refine(isValidObjectId, {
-        message: "Station ID must be a valid MongoDB ObjectId",
+        message: "Mã xe phải là một ObjectId hợp lệ",
       }),
 });
 export const updateRentalSchema = z.object({
@@ -17,26 +17,26 @@ export const updateRentalSchema = z.object({
   end_time: z.string(),
   end_station: z
     .string()
-    .min(24, "Station ID must be a valid ObjectId")
-    .max(24, "Station ID must be a valid ObjectId")
+    .min(24, "Mã trạm phải là một ObjectId hợp lệ")
+    .max(24, "Mã trạm phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Station ID must be a valid MongoDB ObjectId",
+      message: "Mã trạm phải là một ObjectId hợp lệ",
     }),
-  total_price: z.number().min(0, "Total price must be a non-negative number"),
-  reason: z.string().min(5, "Reason must be at least 5 characters long").max(500, "Reason must be at most 500 characters long"),
+  total_price: z.number().min(0, "Tổng giá phải là một số không âm"),
+  reason: z.string().min(5, "Lý do phải có ít nhất 5 ký tự").max(500, "Lý do phải có nhiều nhất 500 ký tự"),
 });
 export const endRentalSchema = z.object({
   end_station: z
     .string()
-    .min(24, "Station ID must be a valid ObjectId")
-    .max(24, "Station ID must be a valid ObjectId")
+    .min(24, "Mã trạm phải là một ObjectId hợp lệ")
+    .max(24, "Mã trạm phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Station ID must be a valid MongoDB ObjectId",
+      message: "Mã trạm phải là một ObjectId hợp lệ",
     }),
   reason: z
     .string()
-    .min(5, "Reason must be at least 5 characters long")
-    .max(500, "Reason must be at most 500 characters long"),
+    .min(5, "Lý do phải có ít nhất 5 ký tự")
+    .max(500, "Lý do phải có nhiều nhất 500 ký tự"),
 });
 export type EndRentalSchema = z.infer<typeof endRentalSchema>;
 export type RentalSchemaFormData = z.infer<typeof rentalSchema>;

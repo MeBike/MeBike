@@ -35,12 +35,14 @@ function MyWalletScreen() {
   useEffect(() => {
     wallet.getMyWallet();
     wallet.getMyTransaction();
+    wallet.getMyWithdrawals();
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await wallet.getMyWallet();
     await wallet.getMyTransaction();
+    await wallet.getMyWithdrawals();
     setRefreshing(false);
   };
 

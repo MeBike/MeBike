@@ -5,17 +5,17 @@ const isValidObjectId = (id: string): boolean => {
 export const assignSOSSchema = z.object({
   replaced_bike_id: z
     .string()
-    .min(24, "Bike ID must be a valid ObjectId")
-    .max(24, "Bike ID must be a valid ObjectId")
+    .min(24, "Mã xe phải là một ObjectId hợp lệ")
+    .max(24, "Mã xe phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Bike ID must be a valid MongoDB ObjectId",
+      message: "Mã xe phải là một ObjectId hợp lệ",
     }),
   sos_agent_id : z
     .string()
-    .min(24, "SOS Agent ID must be a valid ObjectId")
-    .max(24, "SOS Agent ID must be a valid ObjectId")
+    .min(24, "Mã SOS Agent phải là một ObjectId hợp lệ")
+    .max(24, "Mã SOS Agent phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "SOS Agent ID must be a valid MongoDB ObjectId",
+      message: "Mã SOS Agent phải là một ObjectId hợp lệ",
     }),
 });
 export const resolveSOSSchema = z.object({

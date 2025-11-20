@@ -42,6 +42,7 @@ export function useWallet() {
     // Actions
     getMyWallet: wallet.getMyWallet,
     getMyTransaction: wallet.getMyTransaction,
+    getMyWithdrawals: withdrawals.refetchWithdrawals,
     createWithdrawal: withdrawals.createWithdrawal,
     isCreatingWithdrawal: withdrawals.isCreating,
     createRefund: refunds.createRefund,

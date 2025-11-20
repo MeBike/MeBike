@@ -7,10 +7,10 @@ const isValidObjectId = (id: string): boolean => {
 export const bikeSchema = z.object({
   station_id: z
     .string()
-    .min(24, "Station ID must be a valid ObjectId")
-    .max(24, "Station ID must be a valid ObjectId")
+    .min(24, "Mã trạm phải là một ObjectId hợp lệ")
+    .max(24, "Mã trạm phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Station ID must be a valid MongoDB ObjectId",
+      message: "Mã trạm phải là một ObjectId hợp lệ",
     }),
   status: z.enum([
     "CÓ SẴN",
@@ -22,10 +22,10 @@ export const bikeSchema = z.object({
   ] as BikeStatus[]),
   supplier_id: z
     .string()
-    .min(24, "Supplier ID must be a valid ObjectId")
-    .max(24, "Supplier ID must be a valid ObjectId")
+    .min(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
+    .max(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Supplier ID must be a valid MongoDB ObjectId",
+      message: "Mã nhà cung cấp phải là một ObjectId hợp lệ",
     })
     .optional(),
   chip_id: z.string(),
@@ -33,18 +33,18 @@ export const bikeSchema = z.object({
 export const updateBikeSchema = z.object({
   station_id: z
     .string()
-    .min(24, "Station ID must be a valid ObjectId")
-    .max(24, "Station ID must be a valid ObjectId")
+    .min(24, "Mã trạm phải là một ObjectId hợp lệ")
+    .max(24, "Mã trạm phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Station ID must be a valid MongoDB ObjectId",
+      message: "Mã trạm phải là một ObjectId hợp lệ",
     }),
   status: z.enum(["CÓ SẴN", "ĐANG ĐƯỢC THUÊ", "BỊ HỎNG", "ĐANG BẢO TRÌ" , "ĐÃ ĐẶT TRƯỚC" , "KHÔNG CÓ SẴN"] as BikeStatus[]),
   supplier_id: z
     .string()
-    .min(24, "Supplier ID must be a valid ObjectId")
-    .max(24, "Supplier ID must be a valid ObjectId")
+    .min(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
+    .max(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Supplier ID must be a valid MongoDB ObjectId",
+      message: "Mã nhà cung cấp phải là một ObjectId hợp lệ",
     }),
   chip_id: z.string(),
 });

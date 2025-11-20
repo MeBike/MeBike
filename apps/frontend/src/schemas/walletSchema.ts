@@ -6,9 +6,9 @@ const isValidObjectId = (id: string): boolean => {
 const baseWalletSchema = z.object({
   user_id: z
     .string()
-    .min(24, "User ID must be a valid ObjectId")
+    .min(24, "Mã người dùng phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "User ID must be a valid MongoDB ObjectId",
+      message: "Mã người dùng phải là một ObjectId hợp lệ",
     }),
   amount: z
     .any()
@@ -18,7 +18,7 @@ const baseWalletSchema = z.object({
       }
       return val;
     })
-    .refine((val) => val >= 1000, "Amount must be at least 1000"),
+    .refine((val) => val >= 1000, "Số tiền phải lớn hơn hoặc bằng 1000"),
   fee: z
     .any()
     .transform((val) => {
@@ -27,19 +27,19 @@ const baseWalletSchema = z.object({
       }
       return val;
     })
-    .refine((val) => val >= 0, "Fee must be a positive number"),
+    .refine((val) => val >= 0, "Phí phải là một số không âm"),
   description: z
     .string()
-    .min(1, "Description is required")
-    .max(500, "Description must be at most 500 characters"),
-  message: z.string().min(1).max(1000, "Message must be at most 1000 characters").optional(),
+    .min(1, "Mô tả không được để trống")
+    .max(500, "Mô tả phải có nhiều nhất 500 ký tự"),
+  message: z.string().min(1).max(1000, "Tin nhắn phải có nhiều nhất 1000 ký tự").optional(),
 });
 
 
 export const topUpWalletSchema = baseWalletSchema.extend({
   transaction_hash: z
     .string()
-    .min(1, "Transaction is required"),
+    .min(1, "Mã giao dịch không được để trống"),
 });
 export const decreaseWalletSchema = baseWalletSchema.extend({
   transaction_hash: z.string().optional(),
