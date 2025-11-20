@@ -233,7 +233,10 @@ function BikeDetailScreen() {
     station.id,
   );
   const { myWallet, getMyWallet } = useWalletActions(hasToken);
-  const { data: subscriptionResponse } = useGetSubscriptionsQuery(
+  const {
+    data: subscriptionResponse,
+    refetch: refetchSubscriptions,
+  } = useGetSubscriptionsQuery(
     { status: "ĐANG HOẠT ĐỘNG" },
     hasToken,
   );
@@ -259,7 +262,10 @@ function BikeDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       refetchBikeDetail();
-    }, [refetchBikeDetail]),
+      if (hasToken) {
+        refetchSubscriptions();
+      }
+    }, [hasToken, refetchBikeDetail, refetchSubscriptions]),
   );
 
   const activeSubscriptions = useMemo(

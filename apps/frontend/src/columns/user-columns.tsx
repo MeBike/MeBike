@@ -34,13 +34,11 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   return `${id.slice(0, start)}...${id.slice(-end)}`;
 };
 
-export const userColumns = (
-  {
-    onView,
-  }: {
-    onView?: ({ id }: { id: string }) => void;
-  }
-): ColumnDef<ServiceDetailUser>[] => [
+export const userColumns = ({
+  onView,
+}: {
+  onView?: ({ id }: { id: string }) => void;
+}): ColumnDef<ServiceDetailUser>[] => [
   {
     accessorKey: "_id",
     header: "Mã người dùng",
@@ -74,7 +72,9 @@ export const userColumns = (
     header: "Vai trò",
     cell: ({ row }) => (
       <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(row.original.role)}`}
+        className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(
+          row.original.role
+        )}`}
       >
         {row.original.role}
       </span>
@@ -85,9 +85,11 @@ export const userColumns = (
     header: "Trạng thái xác thực",
     cell: ({ row }) => (
       <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(row.original.verify)}`}
+        className={`px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
+          row.original.verify
+        )}`}
       >
-        {row.original.verify}
+        {row.original.verify === "VERIFIED" ? "Đã xác thực" : "Chưa xác thực"}
       </span>
     ),
   },

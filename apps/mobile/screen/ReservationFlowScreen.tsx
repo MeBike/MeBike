@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -87,7 +87,10 @@ export default function ReservationFlowScreen() {
     autoFetch: false,
   });
 
-  const { data: subscriptionResponse } = useGetSubscriptionsQuery(
+  const {
+    data: subscriptionResponse,
+    refetch: refetchSubscriptions,
+  } = useGetSubscriptionsQuery(
     { status: "ĐANG HOẠT ĐỘNG", limit: 10 },
     hasToken,
   );
@@ -146,6 +149,14 @@ export default function ReservationFlowScreen() {
       setSelectedSubscriptionId(null);
     }
   }, [activeSubscriptions.length, mode, subscriptionsLoaded]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (hasToken) {
+        refetchSubscriptions();
+      }
+    }, [hasToken, refetchSubscriptions]),
+  );
 
   const modeOptions = useMemo(
     () =>

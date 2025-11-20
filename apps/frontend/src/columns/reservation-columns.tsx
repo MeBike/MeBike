@@ -3,7 +3,6 @@ import { Edit2, Eye, RefreshCw } from "lucide-react";
 import type { Reservation } from "@/types/Reservation";
 import type { Station } from "@/types/Station";
 import { formatDateUTC } from "@/utils/formatDateTime";
-
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
@@ -59,11 +58,11 @@ export const reservationColumn = ({
         className={`px-3 py-1 rounded-full text-xs font-medium ${
           row.original.status === "ĐANG HOẠT ĐỘNG"
             ? "bg-green-100 text-green-800"
-            : row.original.status === "ĐANG CHỜ XỬ LÝ"
-              ? "bg-yellow-100 text-yellow-800"
-              : row.original.status === "ĐÃ HẾT HẠN"
-                ? "bg-red-100 text-red-800"
-                : "bg-gray-100 text-gray-800"
+            : row.original.status === "ĐANG CHỜ XỬ LÍ"
+            ? "bg-yellow-100 text-yellow-800"
+            : row.original.status === "ĐÃ HẾT HẠN"
+            ? "bg-red-100 text-red-800"
+            : "bg-gray-100 text-gray-800"
         }`}
       >
         {row.original.status}
@@ -73,13 +72,18 @@ export const reservationColumn = ({
   {
     accessorKey: "start_time",
     header: "Thời gian bắt đầu",
-    cell: ({ row }) =>
-      formatDateUTC(row.original.start_time),
+    cell: ({ row }) => formatDateUTC(row.original.start_time),
   },
   {
     accessorKey: "end_time",
     header: "Thời gian kết thúc",
-    cell: ({ row }) => formatDateUTC(row.original.end_time),
+    cell: ({ row }) => {
+      if (row.original.end_time) {
+        return formatDateUTC(row.original.end_time);
+      } else {
+        return "Chưa kết thúc";
+      }
+    },
   },
   {
     id: "actions",
