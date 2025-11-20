@@ -997,7 +997,7 @@ class StationsService {
   async getNearestAvailableBike(query: GetStationsReqQuery) {
     const lat = Number(query.latitude);
     const lng = Number(query.longitude);
-    const maxDistance = query.maxDistance ? Number(query.maxDistance) : 20000;
+    const maxDistance = query.maxDistance ? Number(query.maxDistance) : 20000; //mặc định 20km
 
     const pipeline: Document[] = [
       {
