@@ -1,5 +1,5 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { StackNavigationProp } from "@react-navigation/stack";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -24,7 +24,7 @@ type ResetPasswordOTPRouteProp = RouteProp<
   "ResetPasswordOTP"
 >;
 
-type ResetPasswordOTPNavigationProp = NativeStackNavigationProp<
+type ResetPasswordOTPNavigationProp = StackNavigationProp<
   RootStackParamList,
   "ResetPasswordOTP"
 >;

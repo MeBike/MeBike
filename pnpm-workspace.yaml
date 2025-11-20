@@ -1,3 +1,14 @@
 packages:
-  - 'apps/*'
-  - 'packages/*'
+  - apps/*
+  - packages/*
+
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - '@scarf/scarf'
+  - bcrypt
+  - core-js
+  - esbuild
+  - msgpackr-extract
+  - protobufjs
+  - sharp
+  - unrs-resolver
