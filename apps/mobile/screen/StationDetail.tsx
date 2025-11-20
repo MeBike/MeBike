@@ -171,10 +171,16 @@ export default function StationDetailScreen() {
             <View style={styles.stationDetails}>
               <Text style={styles.stationName}>{station.name}</Text>
               <Text style={styles.stationAddress}>{station.address}</Text>
-              {station.average_rating && station.total_ratings && station.total_ratings > 0 ? (
-                <Text style={styles.stationRating}>
-                  ⭐ {station.average_rating.toFixed(1)} ({station.total_ratings} đánh giá)
-                </Text>
+              {station.total_ratings !== undefined ? (
+                station.total_ratings > 0 ? (
+                  <Text style={styles.stationRating}>
+                    ⭐ {station.average_rating?.toFixed(1)} ({station.total_ratings} đánh giá)
+                  </Text>
+                ) : (
+                  <Text style={styles.stationRating}>
+                    Chưa có đánh giá
+                  </Text>
+                )
               ) : null}
             </View>
             <View
@@ -274,10 +280,16 @@ export default function StationDetailScreen() {
                         {bike.chip_id || bike._id.slice(-4)}
                       </Text>
                       <Text style={styles.bikeType}>Xe thường</Text>
-                      {bike.average_rating && bike.total_ratings && bike.total_ratings > 0 ? (
-                        <Text style={styles.bikeRating}>
-                          ⭐ {bike.average_rating.toFixed(1)} ({bike.total_ratings})
-                        </Text>
+                      {bike.total_ratings !== undefined ? (
+                        bike.total_ratings > 0 ? (
+                          <Text style={styles.bikeRating}>
+                            ⭐ {bike.average_rating?.toFixed(1)} ({bike.total_ratings})
+                          </Text>
+                        ) : (
+                          <Text style={styles.bikeRating}>
+                            Chưa có đánh giá
+                          </Text>
+                        )
                       ) : null}
                     </View>
                   </View>

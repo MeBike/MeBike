@@ -279,7 +279,7 @@ export default function HomeScreen() {
     stations: stats ? formatNumber(stats.totalStations) : "...",
     bikes: stats ? formatNumber(stats.totalBikes) : "...",
     users: stats ? formatNumber(stats.totalUsers) : "...",
-    appRating: stats ? stats.appRating.average_rating.toFixed(1) : "...",
+    appRating: stats ? (stats.appRating.total_ratings > 0 ? stats.appRating.average_rating.toFixed(1) : "Chưa có") : "...",
   }), [stats]);
   const navigateToLogin = () => {
     navigation.navigate("Login");
