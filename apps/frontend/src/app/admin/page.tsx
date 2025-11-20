@@ -34,13 +34,7 @@ export default function DashboardPage() {
   const changePercentBike = statisticData?.result["CÓ SẴN"]
     ? Math.round((statisticData.result["CÓ SẴN"] / totalRecord || 1) * 100)
     : 0;
-  const changePercentActiveUser = newRegistrationStats
-    ? Math.round(
-        (newRegistrationStats.result.newUsersThisMonth /
-          (newRegistrationStats.result.newUsersLastMonth || 1)) *
-          100
-      )
-    : 0;  
+  
   // const formattedValue =
   //   monthlyRev && Number(monthlyRev) >= 1000000
   //     ? `${(monthlyRev / 1000000).toFixed(1)}M VND`
@@ -100,9 +94,9 @@ export default function DashboardPage() {
                   : "0"
               }
               change={`${
-                changePercentActiveUser > 1 ? "+" : ""
-              }${changePercentActiveUser}% so với tháng trước`}
-              changeType={changePercentActiveUser > 1 ? "positive" : "negative"}
+                (newRegistrationStats?.result.percentageChange ?? 0) > 1 ? "+" : ""
+              }${newRegistrationStats?.result.percentageChange ?? 0}% so với tháng trước`}
+              changeType={(newRegistrationStats?.result.percentageChange ?? 0) > 1 ? "positive" : "negative"}
               icon={Users}
             />
             {/* <StatsCard
@@ -118,8 +112,14 @@ export default function DashboardPage() {
             /> */}
             <StatsCard
               title="Doanh thu tháng này"
-              value={formatRevenue(summaryRental?.result?.thisMonthRevenue)}
+              value={formatRevenue(
+                summaryRental?.result?.monthlyRevenue.current
+              )}
               icon={DollarSign}
+              change={`${
+                (summaryRental?.result?.monthlyRevenue?.percentChange ?? 0) > 1 ? "+" : ""
+              }${summaryRental?.result?.monthlyRevenue?.percentChange ?? 0}% so với tháng trước`}
+              changeType={(summaryRental?.result?.monthlyRevenue?.percentChange ?? 0) > 1 ? "positive" : "negative"}
             />
           </div>
         </section>
