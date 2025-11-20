@@ -33,9 +33,8 @@ export interface Rating {
     status?: string;
     bike?: {
       _id: string;
-      name: string;
-      qr_code?: string;
-      model?: string;
+      chip_id: string;
+      status?: string;
     };
     start_station?: {
       _id: string;

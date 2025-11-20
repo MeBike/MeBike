@@ -155,14 +155,18 @@ export function RatingDetailModal({ isOpen, onClose, ratingId }: RatingDetailMod
                         {rating.rental.bike ? (
                           <>
                             <p className="font-medium text-gray-900">
-                              {rating.rental.bike.name}
+                              chip_id: {rating.rental.bike.chip_id}
                             </p>
-                            {rating.rental.bike.model && (
+                            {rating.rental.bike.status && (
                               <p className="text-sm text-gray-500">
-                                Model: {rating.rental.bike.model}
+                                Trạng thái: {rating.rental.bike.status}
                               </p>
                             )}
                           </>
+                        ) : rating.rental.bike_id ? (
+                          <p className="font-medium text-gray-900">
+                            ID: {rating.rental.bike_id}
+                          </p>
                         ) : (
                           <p className="font-medium text-gray-500">Không có</p>
                         )}

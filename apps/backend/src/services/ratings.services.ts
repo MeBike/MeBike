@@ -263,9 +263,8 @@ class RatingService {
               status: '$rental.status',
               bike: {
                 _id: '$bike._id',
-                name: '$bike.name',
-                qr_code: '$bike.qr_code',
-                model: '$bike.model'
+                chip_id: '$bike.chip_id',
+                status: '$bike.status'
               },
               start_station: {
                 _id: '$start_station._id',
