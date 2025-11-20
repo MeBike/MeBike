@@ -13,7 +13,7 @@ export const UpdateReportSchema = z.object({
       if (id === "") return true;
       return /^[0-9a-fA-F]{24}$/.test(id);
     },
-    { message: "Staff ID must be a valid MongoDB ObjectId or empty" }
+    { message: "Mã nhân viên phải là một ObjectId hợp lệ hoặc để trống" }
   ),
   priority: z.enum(["4 - THẤP", "3 - BÌNH THƯỜNG", "2 - CAO", "1 - KHẨN CẤP"]),
 });

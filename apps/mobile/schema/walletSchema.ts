@@ -6,32 +6,32 @@ function isValidObjectId(id: string): boolean {
 const baseWalletSchema = z.object({
   user_id: z
     .string()
-    .length(24, "User ID must be a valid ObjectId")
+    .length(24, "Mã người dùng phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "User ID must be a valid MongoDB ObjectId",
+      message: "Mã người dùng phải là một ObjectId hợp lệ",
     }),
-  amount: z.number().min(0, "Amount must be a positive number"),
-  fee: z.number().min(0, "Fee must be a positive number"),
+  amount: z.number().min(0, "Số tiền phải là một số dương"),
+  fee: z.number().min(0, "Phí phải là một số dương"),
   description: z
     .string()
-    .max(500, "Description must be at most 500 characters"),
-  message: z.string().max(1000, "Message must be at most 1000 characters"),
+    .max(500, "Mô tả không được vượt quá 500 ký tự"),
+  message: z.string().max(1000, "Tin nhắn không được vượt quá 1000 ký tự"),
 });
 
 export const topUpWalletSchema = baseWalletSchema.extend({
   transaction_hash: z
     .string()
-    .length(64, "Transaction hash must be 64 characters")
+    .length(64, "Mã giao dịch phải là 64 ký tự")
     .refine(hash => /^[0-9a-f]{64}$/i.test(hash), {
-      message: "Transaction hash must be a valid 64-character hex string",
+      message: "Mã giao dịch phải là một chuỗi hex hợp lệ gồm 64 ký tự",
     }),
 });
 export const decreaseWalletSchema = baseWalletSchema.extend({
   transaction_hash: z
     .string()
-    .length(64, "Transaction hash must be 64 characters")
+    .length(64, "Mã giao dịch phải là 64 ký tự")
     .refine(hash => /^[0-9a-f]{64}$/i.test(hash), {
-      message: "Transaction hash must be a valid 64-character hex string",
+      message: "Mã giao dịch phải là một chuỗi hex hợp lệ gồm 64 ký tự",
     }),
 });
 export type WalletSchemaFormData = z.infer<typeof baseWalletSchema>;

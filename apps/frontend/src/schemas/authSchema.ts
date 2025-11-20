@@ -68,11 +68,11 @@ export const profileUpdateSchema = z.object({
     .max(50, { message: "Địa điểm không được vượt quá 100 ký tự" }),
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters.")
-    .max(30, "Username cannot exceed 30 characters.")
+    .min(3, "Tên tài khoản phải có ít nhất 3 ký tự.")
+    .max(30, "Tên tài khoản không được vượt quá 30 ký tự.")
     .regex(
       /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores."
+      "Tên tài khoản chỉ được chứa chữ cái, số và dấu gạch dưới."
     )
     .optional()
     .or(z.literal("")),
