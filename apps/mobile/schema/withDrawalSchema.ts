@@ -4,31 +4,31 @@ export const updateWithdrawSchema = z.object({
   newStatus: z.enum([] as WithdrawStatus[]),
   reason: z
     .string()
-    .min(10, "Reason must be at least 10 characters")
-    .max(500, "Reason must be at most 500 characters")
+    .min(10, "Lý do phải ít nhất 10 ký tự")
+    .max(500, "Lý do phải nhiều nhất 500 ký tự")
     .optional(),
 });
 export const createWithdrawSchema = z.object({
   amount: z
     .number()
-    .min(10000, "Amount must be at least 10,000")
-    .max(1000000000, "Amount must be at most 1,000,000,000"),
+    .min(10000, "Số tiền phải ít nhất 10,000")
+    .max(1000000000, "Số tiền phải nhiều nhất 1,000,000,000"),
   bank: z
     .string()
-    .min(5, "Bank account must be at least 5 characters")
-    .max(30, "Bank account must be at most 30 characters"),
+    .min(5, "Tài khoản ngân hàng phải ít nhất 5 ký tự")
+    .max(30, "Tài khoản ngân hàng phải nhiều nhất 30 ký tự"),
   account: z
     .string()
-    .min(5, "Account number must be at least 5 characters")
-    .max(30, "Account number must be at most 30 characters"),
+    .min(5, "Số tài khoản phải ít nhất 5 ký tự")
+    .max(30, "Số tài khoản phải nhiều nhất 30 ký tự"),
   account_owner: z
     .string()
-    .min(5, "Account owner name must be at least 5 characters")
-    .max(50, "Account owner name must be at most 50 characters"),
+    .min(5, "Tên chủ tài khoản phải ít nhất 5 ký tự")
+    .max(50, "Tên chủ tài khoản phải nhiều nhất 50 ký tự"),
   note: z
     .string()
-    .min(10, "Reason must be at least 10 characters")
-    .max(500, "Reason must be at most 500 characters")
+    .min(10, "Lý do phải ít nhất 10 ký tự")
+    .max(500, "Lý do phải nhiều nhất 500 ký tự")
     .optional(),
 });
 export type CreateWithdrawSchemaFormData = z.infer<typeof createWithdrawSchema>;

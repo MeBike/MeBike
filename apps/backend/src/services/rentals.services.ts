@@ -1167,35 +1167,68 @@ class RentalsService {
 
     let start: Date
     let end: Date
+    let prevStart: Date
+    let prevEnd: Date
 
     if (type === SummaryPeriodType.TODAY) {
       start = new Date(now)
       start.setUTCHours(0, 0, 0, 0)
       end = new Date(now)
       end.setUTCHours(23, 59, 59, 999)
+
+      prevStart = new Date(start)
+      prevStart.setUTCDate(prevStart.getUTCDate() - 1)
+
+      prevEnd = new Date(end)
+      prevEnd.setUTCDate(prevEnd.getUTCDate() - 1)
     } else {
       start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0))
       end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999))
+
+      prevStart = new Date(Date.UTC(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0))
+      prevEnd = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999))
     }
 
-    const result = await databaseService.rentals
-      .aggregate([
-        {
-          $match: {
-            status: RentalStatus.Completed,
-            end_time: { $gte: start, $lte: end }
+    async function calculate(start: Date, end: Date) {
+      const result = await databaseService.rentals
+        .aggregate([
+          {
+            $match: {
+              status: RentalStatus.Completed,
+              end_time: { $gte: start, $lte: end }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              totalRevenue: { $sum: '$total_price' }
+            }
           }
-        },
-        {
-          $group: {
-            _id: null,
-            totalRevenue: { $sum: '$total_price' }
-          }
-        }
-      ])
-      .toArray()
+        ])
+        .toArray()
 
-    return result.length > 0 ? parseFloat(result[0].totalRevenue) : 0
+      return result.length > 0 ? parseFloat(result[0].totalRevenue.toString()) : 0
+    }
+
+    const [current, previous] = await Promise.all([calculate(start, end), calculate(prevStart, prevEnd)])
+
+    const difference = current - previous
+    let percentChange = 0
+
+    if (previous === 0 && current === 0) {
+      percentChange = 0
+    } else if (previous === 0 && current > 0) {
+      percentChange = 100
+    } else {
+      percentChange = (difference / previous) * 100
+    }
+
+    return {
+      current,
+      previous,
+      difference,
+      percentChange
+    }
   }
 
   async countRentalByStatus() {

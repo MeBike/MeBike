@@ -49,14 +49,13 @@ export const sosService = {
       | "ĐÃ TỪ CHỐI"
       | "ĐÃ HUỶ";
   }): Promise<AxiosResponse<ApiResponse<SOS[]>>> => {
+    const params: any = {};
+    if (page !== undefined) params.page = page;
+    if (limit !== undefined) params.limit = limit;
+    if (status !== undefined) params.status = status;
     const response = await fetchHttpClient.get<ApiResponse<SOS[]>>(
       SOS_ENDPOINTS.BASE,
-
-      {
-        page,
-        limit,
-        status
-      }
+      params
     );
     return response;
   },

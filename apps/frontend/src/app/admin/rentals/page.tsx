@@ -51,6 +51,8 @@ export default function RentalsPage() {
     getDetailRental,
     updateRental,
     getTodayRevenue,
+    summaryRental,
+    getSummaryRental,
   } = useRentalsActions({
     hasToken: true,
     limit,
@@ -61,12 +63,12 @@ export default function RentalsPage() {
         ? statusFilter === "active"
           ? "ĐANG THUÊ"
           : statusFilter === "completed"
-            ? "HOÀN THÀNH"
-            : statusFilter === "cancelled"
-              ? "ĐÃ HỦY"
-              : statusFilter === "reserved"
-                ? "ĐÃ ĐẶT TRƯỚC"
-                : undefined
+          ? "HOÀN THÀNH"
+          : statusFilter === "cancelled"
+          ? "ĐÃ HỦY"
+          : statusFilter === "reserved"
+          ? "ĐÃ ĐẶT TRƯỚC"
+          : undefined
         : undefined,
   });
 
@@ -79,7 +81,9 @@ export default function RentalsPage() {
     getAllStations();
     getTodayRevenue();
   }, [ getAllStations, getTodayRevenue]);
-
+  useEffect(() => {
+    getSummaryRental();
+  }, [getSummaryRental]);
   const rentals = allRentalsData || [];
 
   const handleReset = () => {
@@ -143,7 +147,9 @@ export default function RentalsPage() {
         </div>
 
         {/* Stats */}
-        <RentalStats stats={stats} />
+        {
+          summaryRental&& <RentalStats params={summaryRental.result} />
+        }
 
         {/* Filters */}
         <RentalFilters
@@ -525,7 +531,9 @@ export default function RentalsPage() {
                       Thời gian kết thúc
                     </label>
                     <p className="text-foreground text-sm">
-                      {detailData.result?.end_time ? formatDateUTC(detailData.result.end_time) : "Chưa trả"}
+                      {detailData.result?.end_time
+                        ? formatDateUTC(detailData.result.end_time)
+                        : "Chưa trả"}
                     </p>
                   </div>
                 </div>

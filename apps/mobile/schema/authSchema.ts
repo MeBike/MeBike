@@ -68,18 +68,18 @@ export const profileUpdateSchema = z.object({
     .optional(),
   username: z
     .string()
-    .min(3, "Username must be at least 3 characters.")
-    .max(30, "Username cannot exceed 30 characters.")
+    .min(3, "Tên đăng nhập phải có ít nhất 3 ký tự.")
+    .max(30, "Tên đăng nhập không được vượt quá 30 ký tự.")
     .regex(
       /^\w+$/,
-      "Username can only contain letters, numbers, and underscores.",
+      "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới.",
     )
     .or(z.literal("")),
   phone_number: z
     .string()
     .optional(),
   avatar: z
-    .url({ message: "Please enter a valid URL for the avatar." })
+    .url({ message: "URL ảnh đại diện không hợp lệ" })
     .optional()
     .or(z.literal("")),
 });

@@ -45,15 +45,18 @@ export const stationService = {
   getAllStations: async ({
     page,
     limit,
+    name
   }: {
     page?: number;
     limit?: number;
+    name?: string;
   }): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
       STATION_ENDPOINTS.ALL,
       {
         page,
         limit,
+        name
       }
     );
     return response;

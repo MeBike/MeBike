@@ -8,52 +8,37 @@ import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@/components/ui/progress";
 import { useUserActions } from "@/hooks/use-user";
 import { useBikeActions } from "@/hooks/useBikeAction";
-import { useGetRevenueQuery } from "@/hooks/query/Rent/useGetRevenueQuery";
 import { useRentalsActions } from "@/hooks/use-rental";
+import { formatRevenue } from "@/lib/formatVND";
 export default function DashboardPage() {
   const { user } = useAuth();
-  const {
-    newRegistrationStats,
-  } = useUserActions({ hasToken: true }); 
-  const { statisticData, totalRecord } = useBikeActions(true);
-  const { dashboardSummaryData, getDashboardSummary } = useRentalsActions({
+  const { newRegistrationStats, getNewRegistrationStats } = useUserActions({
+    hasToken: true,
+  }); 
+  const { statisticData, totalRecord , getStatisticsBike} = useBikeActions(true);
+  const { dashboardSummaryData, getDashboardSummary , getSummaryRental , summaryRental } = useRentalsActions({
     hasToken: true,
   });
   useEffect(() => {
     getDashboardSummary();
   }, [getDashboardSummary]);
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-  const { data: monthlyRevenue } = useGetRevenueQuery({
-    from: startOfMonth.toISOString().split('T')[0],
-    to: endOfMonth.toISOString().split('T')[0],
-    groupBy: "MONTH"
-  });
-  const { data: lastMonthlyRevenue } = useGetRevenueQuery({
-    from: startOfLastMonth.toISOString().split('T')[0],
-    to: endOfLastMonth.toISOString().split('T')[0],
-    groupBy: "MONTH"
-  });
-  const monthlyRev = monthlyRevenue?.data[0]?.totalRevenue || 0;
-  const lastMonthlyRev = lastMonthlyRevenue?.data[0]?.totalRevenue || 0;
-  const changePercent = lastMonthlyRev ? Math.round((monthlyRev - lastMonthlyRev) / lastMonthlyRev * 100) : 0;
+  useEffect(() => {
+    getStatisticsBike();
+  }, [getStatisticsBike]);
+  useEffect(() => {
+    getNewRegistrationStats();
+  }, [getNewRegistrationStats]);
+  useEffect(() => {
+    getSummaryRental();
+  }, [getSummaryRental]);
   const changePercentBike = statisticData?.result["CÓ SẴN"]
     ? Math.round((statisticData.result["CÓ SẴN"] / totalRecord || 1) * 100)
     : 0;
-  const changePercentActiveUser = newRegistrationStats
-    ? Math.round(
-        (newRegistrationStats.result.newUsersThisMonth /
-          (newRegistrationStats.result.newUsersLastMonth || 1)) *
-          100
-      )
-    : 0;  
-  const formattedValue =
-    monthlyRev && Number(monthlyRev) >= 1000000
-      ? `${(monthlyRev / 1000000).toFixed(1)}M ₫`
-      : "0 ₫";
+  
+  // const formattedValue =
+  //   monthlyRev && Number(monthlyRev) >= 1000000
+  //     ? `${(monthlyRev / 1000000).toFixed(1)}M VND`
+  //     : `${monthlyRev.toLocaleString('vi-VN')} VND`;
 
   const changeRentPercent = dashboardSummaryData?.result.revenueSummary.today.totalRentals && dashboardSummaryData?.result.revenueSummary.yesterday.totalRentals
     ? Math.round(
@@ -95,7 +80,9 @@ export default function DashboardPage() {
                   ? statisticData.result["ĐANG ĐƯỢC THUÊ"]?.toString()
                   : "0"
               }
-              change={`${changePercentBike > 1 ? "+" : ""}${changePercentBike}% so với tháng trước`}
+              change={`${
+                changePercentBike > 1 ? "+" : ""
+              }${changePercentBike}% so với tháng trước`}
               changeType={changePercentBike > 1 ? "positive" : "negative"}
               icon={TrendingUp}
             />
@@ -106,8 +93,10 @@ export default function DashboardPage() {
                   ? newRegistrationStats.result.newUsersThisMonth.toString()
                   : "0"
               }
-              change={`${changePercentActiveUser > 1 ? "+" : ""}${changePercentActiveUser}% so với tháng trước`}
-              changeType={changePercentActiveUser > 1 ? "positive" : "negative"}
+              change={`${
+                (newRegistrationStats?.result.percentageChange ?? 0) > 1 ? "+" : ""
+              }${newRegistrationStats?.result.percentageChange ?? 0}% so với tháng trước`}
+              changeType={(newRegistrationStats?.result.percentageChange ?? 0) > 1 ? "positive" : "negative"}
               icon={Users}
             />
             {/* <StatsCard
@@ -123,10 +112,14 @@ export default function DashboardPage() {
             /> */}
             <StatsCard
               title="Doanh thu tháng này"
-              value={formattedValue ? formattedValue : "0 ₫"}
-              change={`${changePercent > 1 ? "+" : ""}${changePercent}% so với tháng trước`}
-              changeType={changePercent > 1 ? "positive" : changePercent < 1 ? "negative" : "neutral"}
+              value={formatRevenue(
+                summaryRental?.result?.monthlyRevenue.current
+              )}
               icon={DollarSign}
+              change={`${
+                (summaryRental?.result?.monthlyRevenue?.percentChange ?? 0) > 1 ? "+" : ""
+              }${summaryRental?.result?.monthlyRevenue?.percentChange ?? 0}% so với tháng trước`}
+              changeType={(summaryRental?.result?.monthlyRevenue?.percentChange ?? 0) > 1 ? "positive" : "negative"}
             />
           </div>
         </section>
@@ -152,3 +145,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

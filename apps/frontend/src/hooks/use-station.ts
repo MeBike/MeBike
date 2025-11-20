@@ -46,6 +46,7 @@ interface StationActionProps {
   page?: number;
   limit?: number;
   latitude?: number;
+  name?: string;
   longitude?: number;
 }
 export const useStationActions = ({
@@ -55,6 +56,7 @@ export const useStationActions = ({
   limit,
   latitude,
   longitude,
+  name
 }: StationActionProps) => {
   const queryClient = useQueryClient();
   const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
@@ -63,7 +65,7 @@ export const useStationActions = ({
     refetch,
     data: response,
     isLoading,
-  } = useGetAllStation({ page: page, limit: limit });
+  } = useGetAllStation({ page: page, limit: limit , name: name });
   const {
     refetch: fetchingStationID,
     data: responseStationDetail,
@@ -99,7 +101,7 @@ export const useStationActions = ({
       useCreateStation.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success("Station created successfully");
+            toast.success(result.data?.message || "Đã tạo trạm thành công");
             queryClient.invalidateQueries({
               queryKey: ["stations", "all"],
             });
@@ -127,14 +129,14 @@ export const useStationActions = ({
       useSoftDeleteStation.mutate(stationId, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success("Station deleted successfully");
+            toast.success(result.data?.message || "Đã xóa trạm thành công");
             queryClient.invalidateQueries({
               queryKey: ["stations", "all"],
             });
             queryClient.invalidateQueries({ queryKey: ["station-stats"] });
           } else {
             const errorMessage =
-              result.data?.message || "Error deleting stations";
+              result.data?.message || "Lỗi khi xóa trạm";
             toast.error(errorMessage);
           }
         },
@@ -158,19 +160,19 @@ export const useStationActions = ({
       useUpdateStation.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success("Station updated successfully");
+            toast.success(result.data?.message || "Đã cập nhật trạm thành công");
             queryClient.invalidateQueries({
               queryKey: ["stations", "all"],
             });
             queryClient.invalidateQueries({ queryKey: ["station-stats"] });
           } else {
             const errorMessage =
-              result.data?.message || "Error updating stations";
+              result.data?.message || "Lỗi khi cập nhật trạm";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error updating stations");
+          const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật trạm");
           toast.error(errorMessage);
         },
       });

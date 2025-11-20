@@ -258,6 +258,8 @@ export const RENTALS_MESSAGE = {
   END_SESSION_SUCCESS: 'Kết thúc phiên thuê xe thành công',
   CARD_RENTAL_START_SUCCESS: 'Bắt đầu phiên thuê bằng thẻ thành công',
   CARD_RENTAL_END_SUCCESS: 'Kết thúc phiên thuê bằng thẻ thành công',
+  CARD_RENTAL_END_DISABLED: 'Kết thúc phiên thuê bằng thẻ không được hỗ trợ',
+  CARD_RENTAL_ACTIVE_EXISTS: 'Bạn đang có phiên thuê đang diễn ra với xe này, hãy kết thúc trước khi quẹt thẻ lại',
   GET_DETAIL_SUCCESS: 'Xem chi tiết 1 phiên thuê xe thành công',
   GET_REVENUE_SUCCESS: 'Xem thống kê doanh thu thành công',
   GET_STATION_ACTIVITY_SUCCESS: 'Xem thống kê hoạt động trạm xe thành công',

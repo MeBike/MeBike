@@ -5,17 +5,17 @@ const isValidObjectId = (id: string): boolean => {
 export const assignSOSSchema = z.object({
   replaced_bike_id: z
     .string()
-    .min(24, "Bike ID must be a valid ObjectId")
-    .max(24, "Bike ID must be a valid ObjectId")
+    .min(24, "Mã xe đạp phải là một ObjectId hợp lệ")
+    .max(24, "Mã xe đạp phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Bike ID must be a valid MongoDB ObjectId",
+      message: "Mã xe đạp phải là một ObjectId hợp lệ",
     }),
   sos_agent_id: z
     .string()
-    .min(24, "SOS Agent ID must be a valid ObjectId")
-    .max(24, "SOS Agent ID must be a valid ObjectId")
+    .min(24, "Mã SOS Agent phải là một ObjectId hợp lệ")
+    .max(24, "Mã SOS Agent phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "SOS Agent ID must be a valid MongoDB ObjectId",
+      message: "Mã SOS Agent phải là một ObjectId hợp lệ",
     }),
 });
 export const resolveSOSSchema = z.object({
@@ -32,10 +32,10 @@ export const createSOSSchema = z.object({
   longitude: z.number().min(-180).max(180),
   rental_id: z
     .string()
-    .min(24, "Bike ID must be a valid ObjectId")
-    .max(24, "Bike ID must be a valid ObjectId")
+    .min(24, "Mã xe đạp phải là một ObjectId hợp lệ")
+    .max(24, "Mã xe đạp phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Bike ID must be a valid MongoDB ObjectId",
+      message: "Mã xe đạp phải là một ObjectId hợp lệ",
     }),
   issue : z.string().min(5, "Vấn đề phải ít nhất 5 ký tự").max(1000, "Vấn đề phải nhiều nhất 1000 ký tự"),  
 });

@@ -62,11 +62,33 @@ const RENTAL_ENDPOINTS = {
   DETAIL_RENTAL: (id: string) => `${RENTAL_BASE}/${id}`,
   DASHBOARD_RENTAL_STATS: () => `${RENTAL_BASE}/dashboard-summary`,
   END_RENTAL_SOS: (id: string) => `${RENTAL_BASE}/${id}/end`,
+  SUMMARY: () => `${RENTAL_BASE}/summary`,
 };
 type RentalResponse = {
   data: RentingHistory[];
   pagination: Pagination;
 };
+export interface SummaryRental {
+  rentalList: {
+    Rented: number;
+    Completed: number;
+    Cancelled: number;
+    Reserved: number;
+  };
+  dailyRevenue: {
+    current : number;
+    previous : number;
+    difference : number;
+    percentChange : number;
+  }
+  monthlyRevenue: {
+    current : number;
+    previous : number;
+    difference : number;
+    percentChange : number;
+  }
+ 
+}
 interface ApiResponse<T> {
   data: T;
   pagination: {
@@ -234,6 +256,12 @@ export const rentalService = {
     );
     return response;
   },
+  getSummaryRental : async (): Promise<AxiosResponse<DetailApiResponse<SummaryRental>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<SummaryRental>>(
+      RENTAL_ENDPOINTS.SUMMARY()
+    );
+    return response;
+  }
   // staffAdminUpdateDetailRental: async (
   //   id: string,
   //   data: any

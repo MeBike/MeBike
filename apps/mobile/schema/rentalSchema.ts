@@ -6,26 +6,26 @@ function isValidObjectId(id: string): boolean {
 export const rentalSchema = z.object({
   bike_id: z
     .string()
-    .min(24, "Station ID must be a valid ObjectId")
-    .max(24, "Station ID must be a valid ObjectId")
+    .min(24, "Mã xe đạp phải là một ObjectId hợp lệ")
+    .max(24, "Mã xe đạp phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Station ID must be a valid MongoDB ObjectId",
+      message: "Mã xe đạp phải là một ObjectId hợp lệ",
     }),
   subscription_id: z
     .string()
-    .min(24, "Subscription ID must be a valid ObjectId")
-    .max(24, "Subscription ID must be a valid ObjectId")
+    .min(24, "Mã đăng ký phải là một ObjectId hợp lệ")
+    .max(24, "Mã đăng ký phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Subscription ID must be a valid MongoDB ObjectId",
+      message: "Mã đăng ký phải là một ObjectId hợp lệ",
     })
     .optional(),
 });
 export const endRentalSchema = z.object({
   end_station: z.string()
-    .min(24, "Station ID must be a valid ObjectId")
-    .max(24, "Station ID must be a valid ObjectId")
+    .min(24, "Mã trạm kết thúc phải là một ObjectId hợp lệ")
+    .max(24, "Mã trạm kết thúc phải là một ObjectId hợp lệ")
     .refine(isValidObjectId, {
-      message: "Station ID must be a valid MongoDB ObjectId",
+      message: "Mã trạm kết thúc phải là một ObjectId hợp lệ",
     }),
 });
 export type EndRentalSchema = z.infer<typeof endRentalSchema>;
