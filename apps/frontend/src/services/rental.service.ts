@@ -75,8 +75,19 @@ export interface SummaryRental {
     Cancelled: number;
     Reserved: number;
   };
-  todayRevenue: number;
-  thisMonthRevenue: number;
+  dailyRevenue: {
+    current : number;
+    previous : number;
+    difference : number;
+    percentChange : number;
+  }
+  monthlyRevenue: {
+    current : number;
+    previous : number;
+    difference : number;
+    percentChange : number;
+  }
+ 
 }
 interface ApiResponse<T> {
   data: T;

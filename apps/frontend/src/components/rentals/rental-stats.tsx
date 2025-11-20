@@ -87,7 +87,7 @@ export function RentalStats({params}: {params: SummaryRental}) {
           <div>
             <p className="text-sm text-muted-foreground">Doanh thu hôm nay</p>
             <p className="text-3xl font-bold text-primary mt-1">
-              {formatRevenue(params.todayRevenue) + ""}
+              {formatRevenue(params.dailyRevenue.current) + ""}
             </p>
           </div>
           <div className="p-3 bg-primary/10 rounded-lg">
@@ -103,7 +103,7 @@ export function RentalStats({params}: {params: SummaryRental}) {
               Tổng doanh thu tháng này
             </p>
             <p className="text-3xl font-bold text-accent mt-1">
-              {formatRevenue(params.thisMonthRevenue) + ""}
+              {formatRevenue(params.monthlyRevenue.current) + ""}
             </p>
           </div>
           <div className="p-3 bg-accent/10 rounded-lg">
