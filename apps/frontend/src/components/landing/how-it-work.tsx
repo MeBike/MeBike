@@ -3,24 +3,31 @@ import Image from "next/image";
 const steps = [
   {
     number: "01",
-    title: "Tải ứng dụng MeBike",
+    title: "Ứng dụng MeBike",
     description:
-      "Tải app miễn phí trên App Store hoặc Google Play. Đăng ký tài khoản chỉ trong 2 phút.",
-    image: "/smartphone-app-download-screen-with-bike-rental-in.jpg",
+      "Khám phá ứng dụng MeBike - giải pháp di chuyển xanh, tiện lợi và thân thiện với môi trường.",
+    image: "/01.ung-dung-mebike.png",
   },
   {
     number: "02",
-    title: "Tìm trạm xe gần nhất",
+    title: "Đăng ký/Đăng nhập tài khoản",
     description:
-      "Sử dụng bản đồ trong app để tìm trạm xe gần ga metro bạn đang ở. Xem số lượng xe còn trống.",
-    image: "/map-showing-metro-stations-with-bike-rental-locati.jpg",
+      "Tạo tài khoản hoặc đăng nhập để bắt đầu trải nghiệm dịch vụ thuê xe đạp thông minh.",
+    image: "/02.dang-ki-dang-nhap-tai-khoan.png",
   },
   {
     number: "03",
-    title: "Quét QR và bắt đầu",
+    title: "Tìm trạm gần nhất",
     description:
-      "Quét mã QR trên xe, mở khóa tự động. Bắt đầu hành trình khám phá thành phố của bạn.",
-    image: "/person-scanning-qr-code-on-bicycle-with-smartphone.jpg",
+      "Sử dụng bản đồ tích hợp để tìm trạm xe đạp gần vị trí của bạn nhất.",
+    image: "/03.tim-tram-gan-nhat.png",
+  },
+  {
+    number: "04",
+    title: "Đặt xe và bắt đầu",
+    description:
+      "Chọn xe yêu thích, đặt trước và bắt đầu hành trình khám phá thành phố xanh.",
+    image: "/04.dat-xe-va-bat-dau.png",
   },
 ];
 
@@ -33,7 +40,7 @@ export function HowItWorks() {
             Cách hoạt động
           </h2>
           <p className="text-lg text-muted-foreground text-pretty">
-            Chỉ 3 bước đơn giản để bắt đầu hành trình của bạn
+            Chỉ 4 bước đơn giản để bắt đầu hành trình của bạn
           </p>
         </div>
 
@@ -44,11 +51,11 @@ export function HowItWorks() {
               className={`flex flex-col ${index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"} items-center gap-12`}
             >
               <div className="flex-1">
-                <Card className="overflow-hidden">
+                <Card className="flex items-center justify-center min-h-[400px]">
                   <Image
                     src={step.image || "/placeholder.svg"}
                     alt={step.title}
-                    className="w-full h-[400px] object-cover"
+                    className="w-full h-auto object-contain max-h-[600px]"
                     width={640}
                     height={400}
                   />

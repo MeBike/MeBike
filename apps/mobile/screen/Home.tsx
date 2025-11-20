@@ -297,9 +297,9 @@ export default function HomeScreen() {
       color: BikeColors.primary,
     },
     {
-      icon: "qrcode.viewfinder",
-      title: "Quét QR để mở khóa",
-      description: "Mở khóa xe đạp chỉ bằng một lần quét mã QR",
+      icon: "creditcard",
+      title: "Thanh toán tiện lợi",
+      description: "Thanh toán nhanh chóng qua ví",
       color: BikeColors.secondary,
     },
     {
