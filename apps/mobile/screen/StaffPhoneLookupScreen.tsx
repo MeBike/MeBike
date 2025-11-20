@@ -14,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
 import { useStaffActiveRentalsByPhone } from "@hooks/query/Rent/useStaffActiveRentalsByPhone";
@@ -70,8 +70,7 @@ const getStatusText = (status: string) => {
 };
 
 function StaffPhoneLookupScreen() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [searchResults, setSearchResults] = useState<StaffActiveRental[]>([]);
   const [lastSearchedPhone, setLastSearchedPhone] = useState<string | null>(
