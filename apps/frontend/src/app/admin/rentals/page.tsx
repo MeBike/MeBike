@@ -434,7 +434,7 @@ export default function RentalsPage() {
                       Mã xe đạp
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.bike?._id}
+                      {detailData.result?.bike?._id || "Không có"}
                     </p>
                   </div>
                   <div>
@@ -442,7 +442,7 @@ export default function RentalsPage() {
                       Chip ID
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.bike?.chip_id}
+                      {detailData.result?.bike?.chip_id || "Không có"}
                     </p>
                   </div>
                 </div>
@@ -454,7 +454,7 @@ export default function RentalsPage() {
                       Trạng thái xe
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.bike?.status}
+                      {detailData.result?.bike?.status || "Không có"}
                     </p>
                   </div>
                   <div>
@@ -462,7 +462,7 @@ export default function RentalsPage() {
                       Nhà cung cấp
                     </label>
                     <p className="text-foreground font-medium">
-                      {detailData.result?.bike?.supplier_id}
+                      {detailData.result?.bike?.supplier_id || "Không có"}
                     </p>
                   </div>
                 </div>

@@ -103,8 +103,62 @@ class BikesService {
   }
 
   async getBikeById(bikeId: string) {
-    const bike = await databaseService.bikes.findOne({ _id: new ObjectId(bikeId) });
-    return bike;
+    const pipeline = [
+      { $match: { _id: new ObjectId(bikeId) } },
+      {
+        $lookup: {
+          from: 'rentals',
+          localField: '_id',
+          foreignField: 'bike_id',
+          as: 'rentals'
+        }
+      },
+      {
+        $unwind: { path: '$rentals', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'ratings',
+          localField: 'rentals._id',
+          foreignField: 'rental_id',
+          as: 'ratings'
+        }
+      },
+      {
+        $unwind: { path: '$ratings', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          bike: { $first: '$$ROOT' },
+          ratings: { $push: '$ratings.rating' }
+        }
+      },
+      {
+        $addFields: {
+          'bike.average_rating': {
+            $cond: {
+              if: { $gt: [{ $size: '$ratings' }, 0] },
+              then: { $avg: '$ratings' },
+              else: 0
+            }
+          },
+          'bike.total_ratings': { $size: { $filter: { input: '$ratings', cond: { $ne: ['$$this', null] } } } }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: '$bike' }
+      },
+      {
+        $project: {
+          rentals: 0,
+          ratings: 0
+        }
+      }
+    ];
+
+    const result = await databaseService.bikes.aggregate(pipeline).toArray();
+    return result[0] || null;
   }
 
   async updateBike(bikeId: string, payload: UpdateBikeReqBody) {

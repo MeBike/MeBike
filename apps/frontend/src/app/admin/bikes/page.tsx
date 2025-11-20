@@ -895,7 +895,10 @@ export default function BikesPage() {
                           Đánh giá trung bình
                         </p>
                         <p className="text-2xl font-bold text-gray-800">
-                          Chưa có đánh giá
+                          {detailBike.average_rating && detailBike.average_rating > 0
+                            ? `${detailBike.average_rating.toFixed(1)} ⭐ (${detailBike.total_ratings || 0} đánh giá)`
+                            : "Chưa có đánh giá"
+                          }
                         </p>
                       </div>
                     </div>
