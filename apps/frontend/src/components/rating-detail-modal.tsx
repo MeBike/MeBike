@@ -146,99 +146,127 @@ export function RatingDetailModal({ isOpen, onClose, ratingId }: RatingDetailMod
                     Thông tin phiên thuê
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {rating.rental.bike && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                          <Bike className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Xe đạp</p>
-                          <p className="font-medium text-gray-900">
-                            {rating.rental.bike.name}
-                          </p>
-                          {rating.rental.bike.model && (
-                            <p className="text-sm text-gray-500">
-                              Model: {rating.rental.bike.model}
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-50 rounded-lg">
+                        <Bike className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Xe đạp</p>
+                        {rating.rental.bike ? (
+                          <>
+                            <p className="font-medium text-gray-900">
+                              chip_id: {rating.rental.bike.chip_id}
                             </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    {rating.rental.start_station && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-50 rounded-lg">
-                          <MapPin className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Trạm bắt đầu</p>
+                            {rating.rental.bike.status && (
+                              <p className="text-sm text-gray-500">
+                                Trạng thái: {rating.rental.bike.status}
+                              </p>
+                            )}
+                          </>
+                        ) : rating.rental.bike_id ? (
                           <p className="font-medium text-gray-900">
-                            {rating.rental.start_station.name}
+                            ID: {rating.rental.bike_id}
                           </p>
-                          {rating.rental.start_station.address && (
-                            <p className="text-xs text-gray-500">
-                              {rating.rental.start_station.address}
+                        ) : (
+                          <p className="font-medium text-gray-500">Không có</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-50 rounded-lg">
+                        <MapPin className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Trạm bắt đầu</p>
+                        {rating.rental.start_station ? (
+                          <>
+                            <p className="font-medium text-gray-900">
+                              {rating.rental.start_station.name}
                             </p>
-                          )}
-                        </div>
+                            {rating.rental.start_station.address && (
+                              <p className="text-xs text-gray-500">
+                                {rating.rental.start_station.address}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="font-medium text-gray-500">Không có</p>
+                        )}
                       </div>
-                    )}
-                    {rating.rental.end_station && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-red-50 rounded-lg">
-                          <MapPin className="w-5 h-5 text-red-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Trạm kết thúc</p>
-                          <p className="font-medium text-gray-900">
-                            {rating.rental.end_station.name}
-                          </p>
-                          {rating.rental.end_station.address && (
-                            <p className="text-xs text-gray-500">
-                              {rating.rental.end_station.address}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-red-50 rounded-lg">
+                        <MapPin className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Trạm kết thúc</p>
+                        {rating.rental.end_station ? (
+                          <>
+                            <p className="font-medium text-gray-900">
+                              {rating.rental.end_station.name}
                             </p>
-                          )}
-                        </div>
+                            {rating.rental.end_station.address && (
+                              <p className="text-xs text-gray-500">
+                                {rating.rental.end_station.address}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <p className="font-medium text-gray-500">Không có</p>
+                        )}
                       </div>
-                    )}
-                    {rating.rental.start_time && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-50 rounded-lg">
-                          <Calendar className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Thời gian bắt đầu</p>
-                          <p className="font-medium text-gray-900">
-                            {formatDateVN(rating.rental.start_time)}
-                          </p>
-                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-50 rounded-lg">
+                        <Calendar className="w-5 h-5 text-purple-600" />
                       </div>
-                    )}
-                    {rating.rental.end_time && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-orange-50 rounded-lg">
-                          <Calendar className="w-5 h-5 text-orange-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Thời gian kết thúc</p>
-                          <p className="font-medium text-gray-900">
-                            {formatDateVN(rating.rental.end_time)}
-                          </p>
-                        </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Thời gian bắt đầu</p>
+                        <p className="font-medium text-gray-900">
+                          {rating.rental.start_time ? formatDateVN(rating.rental.start_time) : "Không có"}
+                        </p>
                       </div>
-                    )}
-                    {rating.rental.total_price !== undefined && (
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-yellow-50 rounded-lg">
-                          <span className="text-yellow-600 font-bold text-lg">₫</span>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Tổng tiền</p>
-                          <p className="font-medium text-gray-900">
-                            {rating.rental.total_price.toLocaleString("vi-VN")} ₫
-                          </p>
-                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-orange-50 rounded-lg">
+                        <Calendar className="w-5 h-5 text-orange-600" />
                       </div>
-                    )}
+                      <div>
+                        <p className="text-sm text-gray-500">Thời gian kết thúc</p>
+                        <p className="font-medium text-gray-900">
+                          {rating.rental.end_time ? formatDateVN(rating.rental.end_time) : "Không có"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-yellow-50 rounded-lg">
+                        <span className="text-yellow-600 font-bold text-lg">₫</span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Tổng tiền</p>
+                        <p className="font-medium text-gray-900">
+                          {(() => {
+                            // Handle Decimal128 format VND
+                            const totalPrice = rating.rental.total_price;
+                            if (totalPrice === undefined || totalPrice === null) {
+                              return "Không có";
+                            }
+
+                            let price = 0;
+
+                            if (typeof totalPrice === 'number') {
+                              price = totalPrice;
+                            } else if (typeof totalPrice === 'object' && totalPrice && '$numberDecimal' in totalPrice) {
+                              price = parseFloat((totalPrice as { $numberDecimal: string }).$numberDecimal);
+                            } else if (typeof totalPrice === 'string') {
+                              price = parseFloat(totalPrice);
+                            }
+
+                            return price.toLocaleString("vi-VN") + " ₫";
+                          })()}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -255,27 +283,25 @@ export function RatingDetailModal({ isOpen, onClose, ratingId }: RatingDetailMod
                         key={reason._id}
                         className={`p-4 rounded-lg border-l-4 ${
                           reason.type === "positive"
-                            ? "bg-green-50 border-green-500"
-                            : "bg-red-50 border-red-500"
+                            ? "bg-blue-50 border-blue-500"
+                            : "bg-amber-50 border-amber-500"
                         }`}
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-semibold ${
-                              reason.type === "positive"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {reason.type === "positive" ? "Tích cực" : "Tiêu cực"}
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            Applies to: <span className="font-semibold text-blue-600">{reason.applies_to}</span>
                           </span>
-                          <span className="text-xs text-gray-500">
-                            ({reason.applies_to})
+                          <span className="text-sm font-medium text-gray-700">
+                            Type: <span className={`font-semibold ${
+                              reason.type === "positive" ? "text-blue-600" : "text-amber-600"
+                            }`}>{reason.type}</span>
                           </span>
                         </div>
-                        <p className="text-gray-900 font-medium">
-                          {reason.messages.vi}
-                        </p>
+                        <div className="space-y-1">
+                          <p className="text-sm text-gray-700">
+                            <span className="font-medium">Messages:</span> {JSON.stringify(reason.messages)}
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>

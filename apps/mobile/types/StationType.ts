@@ -14,6 +14,8 @@ export type StationType = {
   reservedBikes: number;
   maintainedBikes: number;
   emptySlots: number;
+  average_rating?: number;
+  total_ratings?: number;
 };
 export interface StationLocation {
   type: "Point";
@@ -39,4 +41,6 @@ export interface Station {
   reservedBikes: number;
   maintainedBikes: number;
   unavailableBikes: number;
+  average_rating?: number;
+  total_ratings?: number;
 }

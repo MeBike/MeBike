@@ -5,27 +5,43 @@ import Image from "next/image";
 const stepsData = [
   {
     id: 1,
-    title: "Mở khóa",
+    title: "Ứng dụng MeBike",
     description:
-      "Chạm vào nút 'Mở khóa', quét mã QR code để mở khóa xe đạp/khóa xe.",
-    image: "https://tngo.vn/image/use-1.png", 
-    icon: "🔓",
+      "Khám phá ứng dụng MeBike - giải pháp di chuyển xanh, tiện lợi và thân thiện với môi trường.",
+    image: "/01.ung-dung-mebike.png",
+    icon: "📱",
   },
   {
     id: 2,
-    title: "Đi xe",
+    title: "Đăng ký/Đăng nhập tài khoản",
     description:
-      "Tận hưởng chuyến đi , nên đội mũ bảo hiểm và tuân thủ luật giao thông.Trong quá trình sử dụng bạn có thể tạm dừng và khóa xe tạm thời và mở lại bất cứ lúc nào bằng ứng dụng di động",
-    image: "https://tngo.vn/image/use-2.png",
-    icon: "🚴",
+      "Tạo tài khoản hoặc đăng nhập để bắt đầu trải nghiệm dịch vụ thuê xe đạp thông minh.",
+    image: "/02.dang-ki-dang-nhap-tai-khoan.png",
+    icon: "👤",
   },
   {
     id: 3,
-    title: "Trả xe",
+    title: "Tìm trạm gần nhất",
     description:
-      "Trả xe tại điểm MeBike bạn đã lấy xe ban đầu.Thực hiện đóng khóa xe và xác nhận kết thúc chuyến đi trên ứng dụng MeBike.",
-    image: "https://tngo.vn/image/use-3.png",
-    icon: "🔒",
+      "Sử dụng bản đồ tích hợp để tìm trạm xe đạp gần vị trí của bạn nhất.",
+    image: "/03.tim-tram-gan-nhat.png",
+    icon: "📍",
+  },
+  {
+    id: 4,
+    title: "Đặt xe và bắt đầu",
+    description:
+      "Chọn xe yêu thích, đặt trước và bắt đầu hành trình khám phá thành phố xanh.",
+    image: "/04.dat-xe-va-bat-dau.png",
+    icon: "🚴",
+  },
+  {
+    id: 5,
+    title: "Đưa QR cho staff để kết thúc phiên thuê",
+    description:
+      "Khi hoàn thành chuyến đi, đưa mã QR cho nhân viên để kết thúc phiên thuê xe.",
+    image: "/05.dua-qr-cho-staff-de-ket-thuc-phien-thue.png",
+    icon: "✅",
   },
 ];
 
@@ -82,7 +98,7 @@ const Stepper = () => {
                 height={1080}
                 src={stepsData[stepsData[activeStep - 1] ? activeStep - 1 : 0].image}
                 alt={stepsData[stepsData[activeStep - 1] ? activeStep - 1 : 0].title}
-                className="w-full h-full object-cover rounded-full"
+                className="w-full h-auto object-contain max-h-[500px] rounded-lg"
                 priority={activeStep === 1}
               />
             </div>
@@ -105,9 +121,11 @@ const Stepper = () => {
             {/* Action Button */}
             <div className="mt-8">
               <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors duration-300 transform hover:scale-105">
-                {activeStep === 1 && "Quét mã QR"}
-                {activeStep === 2 && "Bắt đầu đi xe"}
-                {activeStep === 3 && "Kết thúc chuyến đi"}
+                {activeStep === 1 && "Khám phá ứng dụng"}
+                {activeStep === 2 && "Đăng ký ngay"}
+                {activeStep === 3 && "Tìm trạm gần nhất"}
+                {activeStep === 4 && "Đặt xe ngay"}
+                {activeStep === 5 && "Hoàn thành chuyến đi"}
               </button>
             </div>
           </div>

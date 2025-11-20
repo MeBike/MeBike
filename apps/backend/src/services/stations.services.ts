@@ -63,7 +63,7 @@ class StationsService {
     }
 
     //Aggregation Pipeline
-    const pipeline: Document[] = [
+    const pipeline: any[] = [
       { $match: filter },
       {
         $lookup: {
@@ -162,9 +162,55 @@ class StationsService {
         },
       },
       {
+        $lookup: {
+          from: 'rentals',
+          localField: '_id',
+          foreignField: 'start_station',
+          as: 'rentals'
+        }
+      },
+      {
+        $unwind: { path: '$rentals', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'ratings',
+          localField: 'rentals._id',
+          foreignField: 'rental_id',
+          as: 'ratings'
+        }
+      },
+      {
+        $unwind: { path: '$ratings', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          station: { $first: '$$ROOT' },
+          ratings: { $push: '$ratings.rating' }
+        }
+      },
+      {
+        $addFields: {
+          'station.average_rating': {
+            $cond: {
+              if: { $gt: [{ $size: '$ratings' }, 0] },
+              then: { $avg: '$ratings' },
+              else: 0
+            }
+          },
+          'station.total_ratings': { $size: { $filter: { input: '$ratings', cond: { $ne: ['$$this', null] } } } }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: '$station' }
+      },
+      {
         //Xóa các trường đếm tạm thời và bikesData
         $project: {
-          bikesData: 0, 
+          bikesData: 0,
+          rentals: 0,
+          ratings: 0,
           availableBikesCount: 0,
           bookedBikesCount: 0,
           brokenBikesCount: 0,
@@ -186,64 +232,161 @@ class StationsService {
 
   async getStationDetailsById(stationId: string) {
     const objectId = new ObjectId(stationId);
-    
-    //lấy thông tin trạm
-    const station = await databaseService.stations.findOne({ _id: objectId });
 
-    if (!station) {
+    // Use aggregation to get station with ratings
+    const pipeline: any[] = [
+      { $match: { _id: objectId } },
+      {
+        $lookup: {
+          from: "bikes",
+          localField: "_id",
+          foreignField: "station_id",
+          as: "bikesData",
+        },
+      },
+      {
+        $addFields: {
+          totalBikes: { $size: "$bikesData" },
+          availableBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Available] },
+              },
+            },
+          },
+          bookedBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Booked] },
+              },
+            },
+          },
+          brokenBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Broken] },
+              },
+            },
+          },
+          reservedBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Reserved] },
+              },
+            },
+          },
+          maintainedBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Maintained] },
+              },
+            },
+          },
+          unavailableBikesCount: {
+            $size: {
+              $filter: {
+                input: "$bikesData", as: "bike",
+                cond: { $eq: ["$$bike.status", BikeStatus.Unavailable] },
+              },
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          emptySlots: {
+            $max: [
+              0,
+              {
+                $subtract: [
+                  { $toInt: "$capacity" },
+                  "$totalBikes",
+                ],
+              },
+            ],
+          },
+          availableBikes: "$availableBikesCount",
+          bookedBikes: "$bookedBikesCount",
+          brokenBikes: "$brokenBikesCount",
+          reservedBikes: "$reservedBikesCount",
+          maintainedBikes: "$maintainedBikesCount",
+          unavailableBikes: "$unavailableBikesCount",
+        },
+      },
+      {
+        $lookup: {
+          from: 'rentals',
+          localField: '_id',
+          foreignField: 'start_station',
+          as: 'rentals'
+        }
+      },
+      {
+        $unwind: { path: '$rentals', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'ratings',
+          localField: 'rentals._id',
+          foreignField: 'rental_id',
+          as: 'ratings'
+        }
+      },
+      {
+        $unwind: { path: '$ratings', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          station: { $first: '$$ROOT' },
+          ratings: { $push: '$ratings.rating' }
+        }
+      },
+      {
+        $addFields: {
+          'station.average_rating': {
+            $cond: {
+              if: { $gt: [{ $size: '$ratings' }, 0] },
+              then: { $avg: '$ratings' },
+              else: 0
+            }
+          },
+          'station.total_ratings': { $size: { $filter: { input: '$ratings', cond: { $ne: ['$$this', null] } } } }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: '$station' }
+      },
+      {
+        $project: {
+          bikesData: 0,
+          rentals: 0,
+          ratings: 0,
+          availableBikesCount: 0,
+          bookedBikesCount: 0,
+          brokenBikesCount: 0,
+          reservedBikesCount: 0,
+          maintainedBikesCount: 0,
+          unavailableBikesCount: 0,
+        },
+      }
+    ];
+
+    const result = await databaseService.stations.aggregate(pipeline).toArray();
+
+    if (result.length === 0) {
       throw new ErrorWithStatus({
         message: STATIONS_MESSAGE.STATION_NOT_FOUND,
         status: HTTP_STATUS.NOT_FOUND,
       });
     }
 
-    //lấy tất cả xe tại trạm (chỉ lấy trường status)
-    const bikesAtStation = await databaseService.bikes.find(
-      { station_id: objectId },
-      { projection: { status: 1 } }
-    ).toArray();
-
-    //đếm số lượng cho từng trạng thái
-    const statusCounts = new Map<string, number>();
-    for (const bike of bikesAtStation) {
-      statusCounts.set(bike.status, (statusCounts.get(bike.status) || 0) + 1);
-    }
-
-    //lấy tất cả các giá trị từ enum BikeStatus 
-    const allStatuses = Object.values(BikeStatus);
-    
-    //tạo mảng bike_statuses hoàn chỉnh, bao gồm cả count = 0
-    // const bike_statuses = allStatuses.map(status => {
-    //   const count = statusCounts.get(status) || 0;
-    //   return { status, count };
-    // });
-
-    const totalBikesAtStation = bikesAtStation.length;
-    const availableBikes = statusCounts.get(BikeStatus.Available) || 0;
-    const bookedBikes = statusCounts.get(BikeStatus.Booked) || 0;
-    const brokenBikes = statusCounts.get(BikeStatus.Broken) || 0;
-    const reservedBikes = statusCounts.get(BikeStatus.Reserved) || 0;
-    const maintainedBikes = statusCounts.get(BikeStatus.Maintained) || 0;
-    const unavailableBikes = statusCounts.get(BikeStatus.Unavailable) || 0;
-
-    //emptySlots
-    const capacityNumber = parseInt(station.capacity, 10);
-    const emptySlots = Number.isNaN(capacityNumber)
-      ? 0
-      : Math.max(0, capacityNumber - totalBikesAtStation);
-
-    return {
-      ...station,
-      totalBikes: totalBikesAtStation,
-      availableBikes,
-      bookedBikes,
-      brokenBikes,
-      reservedBikes,
-      maintainedBikes,
-      unavailableBikes,
-      emptySlots,
-    //   bike_statuses: bike_statuses,
-    };
+    return result[0];
   }
 
   async updateStation(

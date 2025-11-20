@@ -7,6 +7,8 @@ export interface Bike {
   created_at: string;
   updated_at: string;
   chip_id: string;
+  average_rating?: number;
+  total_ratings?: number;
 }
 export type BikeStatus =
   | "CÓ SẴN"

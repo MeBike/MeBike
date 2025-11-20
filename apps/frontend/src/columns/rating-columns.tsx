@@ -23,7 +23,7 @@ export const ratingColumn = ({
   {
     accessorKey: "user",
     header: "Người dùng",
-    cell: ({ row }) => row.original.user?.fullname || "N/A",
+    cell: ({ row }) => row.original.user?.fullname || "Không có tên người dùng",
   },
   {
     accessorKey: "rental_id",

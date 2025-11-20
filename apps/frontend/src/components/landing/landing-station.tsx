@@ -7,6 +7,8 @@ import { dashboardService } from "@/services/dashboard.service";
 interface StationData {
   name: string;
   availableBikes: number;
+  average_rating?: number;
+  total_ratings?: number;
 }
 
 export function Stations() {
@@ -96,6 +98,19 @@ export function Stations() {
                 <span className="text-2xl font-bold">{station.availableBikes}</span>
                 <span className="text-sm text-muted-foreground">xe có sẵn</span>
               </div>
+              {station.total_ratings !== undefined && (
+                <div className="flex items-center gap-2 mt-2">
+                  {station.total_ratings > 0 ? (
+                    <>
+                      <span className="text-yellow-500">⭐</span>
+                      <span className="text-sm font-medium">{station.average_rating?.toFixed(1)}</span>
+                      <span className="text-xs text-muted-foreground">({station.total_ratings} đánh giá)</span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Chưa có đánh giá</span>
+                  )}
+                </div>
+              )}
             </Card>
           ))}
         </div>

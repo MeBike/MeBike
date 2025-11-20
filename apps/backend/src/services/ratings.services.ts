@@ -212,7 +212,7 @@ class RatingService {
         {
           $lookup: {
             from: 'stations',
-            localField: 'rental.start_station_id',
+            localField: 'rental.start_station',
             foreignField: '_id',
             as: 'start_station'
           }
@@ -220,7 +220,7 @@ class RatingService {
         {
           $lookup: {
             from: 'stations',
-            localField: 'rental.end_station_id',
+            localField: 'rental.end_station',
             foreignField: '_id',
             as: 'end_station'
           }
@@ -263,9 +263,8 @@ class RatingService {
               status: '$rental.status',
               bike: {
                 _id: '$bike._id',
-                name: '$bike.name',
-                qr_code: '$bike.qr_code',
-                model: '$bike.model'
+                chip_id: '$bike.chip_id',
+                status: '$bike.status'
               },
               start_station: {
                 _id: '$start_station._id',

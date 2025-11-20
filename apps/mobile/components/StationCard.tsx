@@ -47,6 +47,18 @@ export function StationCard({ station, onPress }: StationCardProps) {
           </Text>
         </View>
 
+        {(station as any).total_ratings !== undefined && (
+          <View style={styles.ratingContainer}>
+            <Text style={styles.ratingText}>
+              {(station as any).total_ratings > 0 ? (
+                <>⭐ {(station as any).average_rating?.toFixed(1)} ({(station as any).total_ratings})</>
+              ) : (
+                <>Chưa có đánh giá</>
+              )}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.availabilityContainer}>
           <View style={styles.availabilityInfo}>
             <Text style={styles.availabilityLabel}>Tổng xe có sẵn:</Text>
@@ -135,6 +147,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: BikeColors.onSurfaceVariant,
     lineHeight: 20,
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  ratingText: {
+    fontSize: 14,
+    color: BikeColors.onSurfaceVariant,
   },
   availabilityContainer: {
     gap: 8,

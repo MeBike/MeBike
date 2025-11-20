@@ -7,57 +7,52 @@ import { Check } from "lucide-react";
 
 const pricingPlans = [
   {
-    name: "Thuê theo giờ",
-    price: "10.000",
-    unit: "VNĐ/giờ",
-    description: "Phù hợp cho chuyến đi ngắn",
+    name: "Gói Cơ bản",
+    price: "119.000",
+    unit: "VNĐ/30 ngày",
+    description: "30 lượt thuê trong 30 ngày",
     features: [
-      "Thuê tối thiểu 1 giờ",
-      "Trả xe tại bất kỳ trạm nào",
-      "Không cần đăng ký trước",
-      "Thanh toán qua app",
+      "30 lượt thuê xe",
+      "Thời hạn 30 ngày",
+      "Ưu tiên hỗ trợ cơ bản",
       "Bảo hiểm cơ bản",
+      "Tiết kiệm 60% so với thuê lẻ",
     ],
     popular: false,
   },
   {
-    name: "Gói ngày",
-    price: "50.000",
-    unit: "VNĐ/ngày",
-    description: "Tiết kiệm cho cả ngày khám phá",
+    name: "Gói Premium",
+    price: "199.000",
+    unit: "VNĐ/30 ngày",
+    description: "60 lượt thuê trong 30 ngày",
     features: [
-      "Thuê không giới hạn trong ngày",
-      "Trả xe tại bất kỳ trạm nào",
-      "Ưu tiên hỗ trợ",
-      "Thanh toán qua app",
+      "60 lượt thuê xe",
+      "Thời hạn 30 ngày",
+      "Ưu tiên hỗ trợ cao",
       "Bảo hiểm toàn diện",
-      "Giảm 50% so với thuê theo giờ",
+      "Tiết kiệm 70% so với thuê lẻ",
     ],
     popular: true,
   },
   {
-    name: "Gói tháng",
-    price: "500.000",
-    unit: "VNĐ/tháng",
-    description: "Tốt nhất cho người đi làm hàng ngày",
+    name: "Gói Unlimited",
+    price: "299.000",
+    unit: "VNĐ/30 ngày",
+    description: "Thuê không giới hạn trong 30 ngày",
     features: [
-      "Thuê không giới hạn cả tháng",
-      "Trả xe tại bất kỳ trạm nào",
-      "Hỗ trợ ưu tiên 24/7",
-      "Thanh toán qua app",
-      "Bảo hiểm toàn diện",
-      "Tích điểm thưởng",
-      "Giảm 67% so với thuê theo ngày",
+      "Thuê không giới hạn",
+      "Thời hạn 30 ngày",
+      "Hỗ trợ VIP 24/7",
+      "Bảo hiểm toàn diện cao cấp",
+      "Ưu tiên đặt xe cao nhất",
     ],
     popular: false,
   },
 ];
 
 const additionalServices = [
-  { name: "Mũ bảo hiểm", price: "5.000 VNĐ/lần" },
-  { name: "Khóa xe bổ sung", price: "10.000 VNĐ/lần" },
-  { name: "Giỏ xe", price: "5.000 VNĐ/lần" },
-  { name: "Bảo hiểm mở rộng", price: "20.000 VNĐ/ngày" },
+  { name: "Thuê theo lượt (Ví)", price: "2.000 VNĐ/30 phút" },
+  { name: "Phí phạt quá 24 giờ", price: "50.000 VNĐ/lần" },
 ];
 
 export default function PricingPage() {
@@ -73,7 +68,7 @@ export default function PricingPage() {
                 Bảng giá dịch vụ
               </h1>
               <p className="text-xl text-muted-foreground text-pretty">
-                Chọn gói phù hợp với nhu cầu di chuyển của bạn
+                3 gói subscription với số lượt thuê khác nhau trong 30 ngày
               </p>
             </div>
           </div>
@@ -137,7 +132,7 @@ export default function PricingPage() {
           <div className="container mx-auto px-4 lg:px-8">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
-                Dịch vụ bổ sung
+                Tùy chọn thanh toán khác
               </h2>
               <Card className="p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -169,11 +164,24 @@ export default function PricingPage() {
               <div className="space-y-6">
                 <Card className="p-6">
                   <h3 className="font-semibold text-foreground mb-2">
-                    Làm sao để thanh toán?
+                    Gói subscription hoạt động như thế nào?
                   </h3>
                   <p className="text-muted-foreground">
-                    Bạn có thể thanh toán qua app MeBike bằng thẻ tín dụng,
-                    ví điện tử (MoMo, ZaloPay) hoặc chuyển khoản ngân hàng.
+                    Gói subscription cho phép bạn thuê xe với số lượt giới hạn
+                    trong thời gian 30 ngày. Ví dụ: Gói Cơ bản (119.000 VNĐ) cho
+                    30 lượt thuê, Gói Premium (199.000 VNĐ) cho 60 lượt thuê. 1 
+                    lượt thuê được quy ước theo 10 giờ.
+                  </p>
+                </Card>
+
+                <Card className="p-6">
+                  <h3 className="font-semibold text-foreground mb-2">
+                    Thuê theo lượt (Ví) là gì?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Nếu không có gói subscription, bạn có thể thuê xe theo lượt
+                    với giá 2.000 VNĐ mỗi 30 phút. Thời gian được làm tròn lên
+                    đơn vị 30 phút gần nhất.
                   </p>
                 </Card>
 
@@ -182,30 +190,18 @@ export default function PricingPage() {
                     Có thể trả xe ở trạm khác không?
                   </h3>
                   <p className="text-muted-foreground">
-                    Có, bạn có thể trả xe tại bất kỳ trạm MeBike nào trên hệ
-                    thống. Không cần trả về trạm ban đầu.
+                    Không, bạn không thể trả xe tại trạm nào khác trạm ban đầu.
                   </p>
                 </Card>
 
                 <Card className="p-6">
                   <h3 className="font-semibold text-foreground mb-2">
-                    Nếu xe bị hỏng trong lúc thuê thì sao?
+                    Phí phạt khi trả muộn?
                   </h3>
                   <p className="text-muted-foreground">
-                    Hãy liên hệ ngay với bộ phận hỗ trợ qua app. Chúng tôi sẽ hỗ
-                    trợ bạn đổi xe hoặc sửa chữa miễn phí nếu không phải lỗi của
-                    bạn.
-                  </p>
-                </Card>
-
-                <Card className="p-6">
-                  <h3 className="font-semibold text-foreground mb-2">
-                    Có thể hủy gói đã mua không?
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Gói ngày và gói tháng có thể được hoàn tiền trong vòng 24
-                    giờ đầu tiên nếu chưa sử dụng. Vui lòng liên hệ bộ phận chăm
-                    sóc khách hàng.
+                    Nếu thời gian thuê xe vượt quá 24 giờ, bạn sẽ bị tính thêm
+                    phí phạt 50.000 VNĐ. Hãy trả xe đúng hạn để tránh phát sinh
+                    chi phí không đáng có.
                   </p>
                 </Card>
               </div>

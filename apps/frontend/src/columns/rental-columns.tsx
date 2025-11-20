@@ -30,7 +30,7 @@ export const rentalColumn = ({
   {
     accessorKey: "bike_id",
     header: "Mã xe",
-    cell: ({ row }) => row.original.bike_id,
+    cell: ({ row }) => row.original.bike_id || "Không có",
   },
   {
     accessorKey: "total_price",

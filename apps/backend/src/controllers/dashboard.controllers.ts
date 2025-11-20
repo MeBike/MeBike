@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import HTTP_STATUS from "~/constants/http-status";
 import { DASHBOARD_MESSAGES } from "~/constants/messages";
 import databaseService from "~/services/database.services";
+import ratingService from "~/services/ratings.services";
 import { BikeStatus, UserVerifyStatus } from "~/constants/enums";
 
 export const getStationsController = async (req: Request, res: Response) => {
@@ -15,10 +16,41 @@ export const getStationsController = async (req: Request, res: Response) => {
           status: BikeStatus.Available
         });
 
+        // Calculate ratings for this station
+        const ratings = await databaseService.ratings.aggregate([
+          {
+            $lookup: {
+              from: 'rentals',
+              localField: 'rental_id',
+              foreignField: '_id',
+              as: 'rental'
+            }
+          },
+          {
+            $unwind: '$rental'
+          },
+          {
+            $match: {
+              'rental.start_station': station._id
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              average_rating: { $avg: '$rating' },
+              total_ratings: { $sum: 1 }
+            }
+          }
+        ]).toArray();
+
+        const ratingData = ratings[0] || { average_rating: 0, total_ratings: 0 };
+
         return {
           name: station.name,
           address: station.address,
-          availableBikes: availableBikesCount
+          availableBikes: availableBikesCount,
+          average_rating: ratingData.average_rating,
+          total_ratings: ratingData.total_ratings
         };
       })
     );
@@ -50,10 +82,13 @@ export const getDashboardStatsController = async (req: Request, res: Response) =
       verify: { $in: activeUserStatuses }
     });
 
+    const appRating = await ratingService.getAppRating();
+
     const result = {
       totalStations,
       totalBikes,
-      totalUsers
+      totalUsers,
+      appRating
     };
 
     return res.json({

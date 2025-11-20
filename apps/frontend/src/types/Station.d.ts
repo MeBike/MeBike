@@ -18,6 +18,8 @@ export interface Station {
   description?: string;
   type?: string;
   stationNumber?: string;
+  average_rating?: number;
+  total_ratings?: number;
   bikeStation?: {
     id: string;
     stationId: number;

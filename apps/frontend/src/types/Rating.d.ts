@@ -29,13 +29,12 @@ export interface Rating {
     bike_id: string;
     start_time?: string;
     end_time?: string;
-    total_price?: number;
+    total_price?: number | { $numberDecimal: string };
     status?: string;
     bike?: {
       _id: string;
-      name: string;
-      qr_code?: string;
-      model?: string;
+      chip_id: string;
+      status?: string;
     };
     start_station?: {
       _id: string;

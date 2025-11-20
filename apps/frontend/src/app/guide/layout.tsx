@@ -23,13 +23,6 @@ export default function GuideLayout({
             Tham gia cộng đồng MeBike và trải nghiệm cách di chuyển thông
             minh nhất thành phố
           </p>
-          <Button
-            size="lg"
-            className="bg-[hsl(38_95%_49%)] text-black hover:bg-metro-yellow-light"
-            onClick={() => router.push("/customer")}
-          >
-            Bắt đầu ngay
-          </Button>
         </div>
       </section>
       <footer className=" bg-gradient-card py-8">

@@ -279,6 +279,7 @@ export default function HomeScreen() {
     stations: stats ? formatNumber(stats.totalStations) : "...",
     bikes: stats ? formatNumber(stats.totalBikes) : "...",
     users: stats ? formatNumber(stats.totalUsers) : "...",
+    appRating: stats ? (stats.appRating.total_ratings > 0 ? stats.appRating.average_rating.toFixed(1) : "Chưa có") : "...",
   }), [stats]);
   const navigateToLogin = () => {
     navigation.navigate("Login");
@@ -296,9 +297,9 @@ export default function HomeScreen() {
       color: BikeColors.primary,
     },
     {
-      icon: "qrcode.viewfinder",
-      title: "Quét QR để mở khóa",
-      description: "Mở khóa xe đạp chỉ bằng một lần quét mã QR",
+      icon: "creditcard",
+      title: "Thanh toán tiện lợi",
+      description: "Thanh toán nhanh chóng qua ví",
       color: BikeColors.secondary,
     },
     {
@@ -444,15 +445,15 @@ export default function HomeScreen() {
                     <Text style={styles.statNumber}>{displayStats.bikes}</Text>
                     <Text style={styles.statLabel}>Xe đạp</Text>
                   </View>
+<View style={styles.statCard}>
+  <Text style={styles.statNumber}>{displayStats.users}</Text>
+  <Text style={styles.statLabel}>Người dùng</Text>
+</View>
 
-                  <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>{displayStats.users}</Text>
-                    <Text style={styles.statLabel}>Người dùng</Text>
-                  </View>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>24/7</Text>
-                    <Text style={styles.statLabel}>Hoạt động</Text>
-                  </View>
+<View style={styles.statCard}>
+  <Text style={styles.statNumber}>{displayStats.appRating}</Text>
+  <Text style={styles.statLabel}>Đánh giá App</Text>
+</View>
                 </View>
               )}
         </View>
