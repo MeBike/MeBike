@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { useBikeStatusStream } from "@hooks/useBikeStatusStream";
 import type { BikeStatusUpdate } from "@hooks/useBikeStatusStream";
+import { useBikeStatusEvents } from "@hooks/useBikeStatusEvents";
 
 import type { RentalDetail } from "@/types/RentalTypes";
 
@@ -23,22 +23,21 @@ export function useRentalStatusWatcher({
   const handleRealtimeUpdate = useCallback(
     (payload: BikeStatusUpdate) => {
       if (!bikeId) return;
-      if (payload.bikeId === bikeId && payload.status === "CÓ SẴN") {
+      const isTargetBike = payload.bikeId === bikeId;
+      const isRelevantStatus =
+        payload.status === "CÓ SẴN" || payload.status === "ĐANG ĐƯỢC THUÊ";
+
+      if (isTargetBike && isRelevantStatus) {
         refetchDetail();
         queryClient.invalidateQueries({ queryKey: ["rentals"] });
         queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
+        queryClient.invalidateQueries({ queryKey: ["rentals", "detail", booking?._id] });
       }
     },
-    [bikeId, queryClient, refetchDetail]
+    [bikeId, booking?._id, queryClient, refetchDetail]
   );
 
-  useBikeStatusStream({
-    autoConnect:
-      hasToken && Boolean(bikeId) && booking?.status === "ĐANG THUÊ",
-    onUpdate: handleRealtimeUpdate,
-    onError: (error) => {
-      console.warn("[SSE] booking detail stream error", error);
-    },
+  useBikeStatusEvents(handleRealtimeUpdate, {
+    enabled: hasToken && Boolean(bikeId) && booking?.status === "ĐANG THUÊ",
   });
 }
-

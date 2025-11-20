@@ -101,7 +101,7 @@ export async function createRentalFromCardController(
 
   const { mode, rental } = await cardTapService.handleCardTap({ chip_id, card_uid })
 
-  const message = mode === 'ended' ? RENTALS_MESSAGE.CARD_RENTAL_END_SUCCESS : RENTALS_MESSAGE.CARD_RENTAL_START_SUCCESS
+  const message = RENTALS_MESSAGE.CARD_RENTAL_START_SUCCESS
 
   res.json({
     message,

@@ -3,7 +3,7 @@ import EventSource from "react-native-sse";
 import type { ErrorEvent, TimeoutEvent, ExceptionEvent } from "react-native-sse";
 
 import { API_BASE_URL } from "@lib/httpClient";
-import { getAccessToken } from "@utils/tokenManager";
+import { clearTokens, getAccessToken } from "@utils/tokenManager";
 
 export type BikeStatusUpdate = {
   bikeId: string;
@@ -26,6 +26,7 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
   const onUpdateRef = useRef<typeof onUpdate>(onUpdate);
   const onErrorRef = useRef<typeof onError>(onError);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressReconnectRef = useRef(false);
 
   useEffect(() => {
     onUpdateRef.current = onUpdate;
@@ -51,6 +52,14 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
   }, []);
 
   const connect = useCallback(async () => {
+    if (suppressReconnectRef.current) {
+      const tokenCheck = await getAccessToken();
+      if (tokenCheck) {
+        suppressReconnectRef.current = false;
+      } else {
+        return;
+      }
+    }
     try {
       disconnect();
       const token = await getAccessToken();
@@ -86,6 +95,14 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
         onErrorRef.current?.(new Error(message));
         setIsConnected(false);
         clearReconnectTimeout();
+
+        const isExpired = typeof message === "string" && message.toLowerCase().includes("jwt expired");
+        if (isExpired) {
+          suppressReconnectRef.current = true;
+          void clearTokens(); 
+          return;
+        }
+
         reconnectTimeoutRef.current = setTimeout(() => {
           reconnectTimeoutRef.current = null;
           if (autoConnect) {
@@ -99,6 +116,11 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
     catch (error) {
       onErrorRef.current?.(error as Error);
       clearReconnectTimeout();
+      if (error instanceof Error && error.message.toLowerCase?.().includes("jwt expired")) {
+        suppressReconnectRef.current = true;
+        void clearTokens();
+        return;
+      }
       reconnectTimeoutRef.current = setTimeout(() => {
         reconnectTimeoutRef.current = null;
         if (autoConnect) {
