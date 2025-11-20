@@ -186,18 +186,24 @@ export async function getAllReportController(req: Request<any, any, any>, res: R
             ],
             default: 6
           }
+        },
+        sortPriorityByPriority: {
+          $toInt: {
+            $substrCP: ['$priority', 0, 1]
+          }
         }
       }
     },
     {
       $sort: {
         sortPriority: 1,
+        sortPriorityByPriority: 1,
         created_at: -1
       }
     },
     { $skip: skip },
     { $limit: limit },
-    { $project: { sortPriority: 0 } }
+    { $project: { sortPriority: 0, sortPriorityByPriority: 0 } }
   ]
 
   const [totalRecords, data] = await Promise.all([
@@ -255,18 +261,24 @@ export async function getAllInProgressReportController(req: Request<any, any, an
               ],
               default: 6
             }
+          },
+          sortPriorityByPriority: {
+            $toInt: {
+              $substrCP: ['$priority', 0, 1]
+            }
           }
         }
       },
       {
         $sort: {
+          sortPriorityByPriority: 1,
           sortPriority: 1,
-          created_at: -1
+          created_at: -1,
         }
       },
       { $skip: skip },
       { $limit: limit },
-      { $project: { sortPriority: 0 } }
+      { $project: { sortPriority: 0, sortPriorityByPriority: 0 } }
     ]
 
     const [totalRecords, data] = await Promise.all([
