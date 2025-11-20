@@ -10,6 +10,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,6 +34,7 @@ const MySOSDetailScreen = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { sosDetail, isLoadingSOSDetail, refetchSOSDetail, cancelSOSRequest } = useSOS({
     hasToken,
@@ -40,6 +42,12 @@ const MySOSDetailScreen = () => {
     limit: 10,
     id: sosId,
   });
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refetchSOSDetail();
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     if (sosId) {
@@ -164,6 +172,7 @@ const MySOSDetailScreen = () => {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Status Card */}
         <View style={styles.card}>
@@ -351,6 +360,9 @@ const MySOSDetailScreen = () => {
             <Text style={styles.cancelButtonText}>Hủy yêu cầu SOS</Text>
           </TouchableOpacity>
         )}
+
+        {/* Spacer to ensure scrollable content */}
+        <View style={{ height: 50 }} />
       </ScrollView>
 
       {/* Cancel Modal */}
@@ -444,7 +456,6 @@ const styles = StyleSheet.create({
     width: 44,
   },
   scrollView: {
-    flex: 1,
   },
   content: {
     padding: 16,
