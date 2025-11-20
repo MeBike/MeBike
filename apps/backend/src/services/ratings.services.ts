@@ -212,7 +212,7 @@ class RatingService {
         {
           $lookup: {
             from: 'stations',
-            localField: 'rental.start_station_id',
+            localField: 'rental.start_station',
             foreignField: '_id',
             as: 'start_station'
           }
@@ -220,7 +220,7 @@ class RatingService {
         {
           $lookup: {
             from: 'stations',
-            localField: 'rental.end_station_id',
+            localField: 'rental.end_station',
             foreignField: '_id',
             as: 'end_station'
           }
