@@ -63,7 +63,7 @@ class StationsService {
     }
 
     //Aggregation Pipeline
-    const pipeline: Document[] = [
+    const pipeline: any[] = [
       { $match: filter },
       {
         $lookup: {
@@ -162,9 +162,55 @@ class StationsService {
         },
       },
       {
+        $lookup: {
+          from: 'rentals',
+          localField: '_id',
+          foreignField: 'start_station',
+          as: 'rentals'
+        }
+      },
+      {
+        $unwind: { path: '$rentals', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'ratings',
+          localField: 'rentals._id',
+          foreignField: 'rental_id',
+          as: 'ratings'
+        }
+      },
+      {
+        $unwind: { path: '$ratings', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          station: { $first: '$$ROOT' },
+          ratings: { $push: '$ratings.rating' }
+        }
+      },
+      {
+        $addFields: {
+          'station.average_rating': {
+            $cond: {
+              if: { $gt: [{ $size: '$ratings' }, 0] },
+              then: { $avg: '$ratings' },
+              else: 0
+            }
+          },
+          'station.total_ratings': { $size: { $filter: { input: '$ratings', cond: { $ne: ['$$this', null] } } } }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: '$station' }
+      },
+      {
         //Xóa các trường đếm tạm thời và bikesData
         $project: {
-          bikesData: 0, 
+          bikesData: 0,
+          rentals: 0,
+          ratings: 0,
           availableBikesCount: 0,
           bookedBikesCount: 0,
           brokenBikesCount: 0,

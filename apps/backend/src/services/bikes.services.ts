@@ -6,7 +6,7 @@ import type { CreateBikeReqBody, GetBikesReqQuery, UpdateBikeReqBody } from "~/m
 
 import { BikeStatus, RentalStatus, ReservationStatus, ReportTypeEnum } from "~/constants/enums";
 import Bike from "~/models/schemas/bike.schema";
-import { sendPaginatedResponse } from "~/utils/pagination.helper";
+import { sendPaginatedResponse, sendPaginatedAggregationResponse } from "~/utils/pagination.helper";
 import { getLocalTime } from "~/utils/date-time";
 
 import databaseService from "./database.services";
@@ -30,22 +30,76 @@ class BikesService {
 
   async getAllBikes(res: Response, next: NextFunction, query: GetBikesReqQuery) {
     const { station_id, status, supplier_id, chip_id } = query;
-    const filter: any = {};
+    const matchFilter: any = {};
 
     if (chip_id) {
-        filter.chip_id = { $regex: chip_id, $options: "i" };
+        matchFilter.chip_id = { $regex: chip_id, $options: "i" };
     }
     if (station_id) {
-      filter.station_id = new ObjectId(station_id);
+      matchFilter.station_id = new ObjectId(station_id);
     }
     if (status) {
-      filter.status = status;
+      matchFilter.status = status;
     }
     if (supplier_id) {
-      filter.supplier_id = new ObjectId(supplier_id);
+      matchFilter.supplier_id = new ObjectId(supplier_id);
     }
 
-    await sendPaginatedResponse(res, next, databaseService.bikes, query, filter);
+    const pipeline: any[] = [
+      { $match: matchFilter },
+      {
+        $lookup: {
+          from: 'rentals',
+          localField: '_id',
+          foreignField: 'bike_id',
+          as: 'rentals'
+        }
+      },
+      {
+        $unwind: { path: '$rentals', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $lookup: {
+          from: 'ratings',
+          localField: 'rentals._id',
+          foreignField: 'rental_id',
+          as: 'ratings'
+        }
+      },
+      {
+        $unwind: { path: '$ratings', preserveNullAndEmptyArrays: true }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          bike: { $first: '$$ROOT' },
+          ratings: { $push: '$ratings.rating' }
+        }
+      },
+      {
+        $addFields: {
+          'bike.average_rating': {
+            $cond: {
+              if: { $gt: [{ $size: '$ratings' }, 0] },
+              then: { $avg: '$ratings' },
+              else: 0
+            }
+          },
+          'bike.total_ratings': { $size: { $filter: { input: '$ratings', cond: { $ne: ['$$this', null] } } } }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: '$bike' }
+      },
+      {
+        $project: {
+          rentals: 0,
+          ratings: 0
+        }
+      }
+    ];
+
+    await sendPaginatedAggregationResponse(res, next, databaseService.bikes, query, pipeline);
   }
 
   async getBikeById(bikeId: string) {

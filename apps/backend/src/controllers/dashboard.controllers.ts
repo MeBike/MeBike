@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import HTTP_STATUS from "~/constants/http-status";
 import { DASHBOARD_MESSAGES } from "~/constants/messages";
 import databaseService from "~/services/database.services";
+import ratingService from "~/services/ratings.services";
 import { BikeStatus, UserVerifyStatus } from "~/constants/enums";
 
 export const getStationsController = async (req: Request, res: Response) => {
@@ -50,10 +51,13 @@ export const getDashboardStatsController = async (req: Request, res: Response) =
       verify: { $in: activeUserStatuses }
     });
 
+    const appRating = await ratingService.getAppRating();
+
     const result = {
       totalStations,
       totalBikes,
-      totalUsers
+      totalUsers,
+      appRating
     };
 
     return res.json({

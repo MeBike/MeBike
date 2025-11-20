@@ -171,6 +171,11 @@ export default function StationDetailScreen() {
             <View style={styles.stationDetails}>
               <Text style={styles.stationName}>{station.name}</Text>
               <Text style={styles.stationAddress}>{station.address}</Text>
+              {station.average_rating && station.total_ratings && station.total_ratings > 0 ? (
+                <Text style={styles.stationRating}>
+                  ⭐ {station.average_rating.toFixed(1)} ({station.total_ratings} đánh giá)
+                </Text>
+              ) : null}
             </View>
             <View
               style={[
@@ -269,6 +274,11 @@ export default function StationDetailScreen() {
                         {bike.chip_id || bike._id.slice(-4)}
                       </Text>
                       <Text style={styles.bikeType}>Xe thường</Text>
+                      {bike.average_rating && bike.total_ratings && bike.total_ratings > 0 ? (
+                        <Text style={styles.bikeRating}>
+                          ⭐ {bike.average_rating.toFixed(1)} ({bike.total_ratings})
+                        </Text>
+                      ) : null}
                     </View>
                   </View>
 
@@ -382,6 +392,11 @@ const styles = StyleSheet.create({
   },
   stationAddress: {
     fontSize: 14,
+    color: BikeColors.onSurfaceVariant,
+    marginTop: 4,
+  },
+  stationRating: {
+    fontSize: 12,
     color: BikeColors.onSurfaceVariant,
     marginTop: 4,
   },
@@ -595,6 +610,11 @@ const styles = StyleSheet.create({
   bikeStatus: {
     fontSize: 12,
     fontWeight: "500",
+  },
+  bikeRating: {
+    fontSize: 12,
+    color: BikeColors.onSurfaceVariant,
+    marginTop: 2,
   },
   // Trong styles:
   rentButton: {
