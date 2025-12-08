@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { Supplier } from "@custom-types";
 import { Plus, X } from "lucide-react";
 import { useSupplierActions } from "@/hooks/useSupplierAction";
-import { useBikeActions } from "@/hooks/useBikeAction";
+import { useBikeActions } from "@/hooks/use-bike";
 import { columns } from "@/columns/supplier-column";
 import { Loader2 } from "lucide-react";
 import {
