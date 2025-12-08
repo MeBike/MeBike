@@ -13,6 +13,7 @@ import { useGetWalletOverviewQuery } from "./query/Wallet/useGetWalletOverviewQu
 import { useGetDetailWalletQuery } from "./query/Wallet/useGetDetailWalletQuery";
 import { useUpdateStatusWalletMutation } from "./mutations/Wallet/useUpdateStatusWalletMutation";
 import { useRouter } from "next/navigation";
+import { QUERY_KEYS } from "@/constants/queryKey";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -86,10 +87,10 @@ export function useWalletActions(
           if (result.status === 200) {
             toast.success(result.data?.message || "Đã nạp tiền vào ví thành công");
             queryClient.invalidateQueries({
-              queryKey: ["all-wallet-users", page, limit],
+              queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(page, limit),
             });
             queryClient.invalidateQueries({
-              queryKey: ["wallet-overview"],
+              queryKey: QUERY_KEYS.WALLET.WALLET_OVERVIEW,
             });
           } else {
             const errorMessage =
@@ -118,10 +119,10 @@ export function useWalletActions(
           if (result.status === 200) {
             toast.success(result.data?.message || "Đã trừ tiền vào ví thành công");
             queryClient.invalidateQueries({
-              queryKey: ["all-wallet-users", page, limit],
+              queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(page, limit),
             });
             queryClient.invalidateQueries({
-              queryKey: ["wallet-overview"],
+              queryKey: QUERY_KEYS.WALLET.WALLET_OVERVIEW,
             });
           } else {
             const errorMessage =
@@ -159,9 +160,8 @@ export function useWalletActions(
           }) => {
             if (result.status === 200) {
               toast.success(result.data?.message || "Cập nhật trạng thái ví thành công");
-              // Invalidate queries to refresh data
               queryClient.invalidateQueries({
-                queryKey: ["all-wallet-users", page, limit],
+                queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(page, limit),
               });
             } else {
               const errorMessage =

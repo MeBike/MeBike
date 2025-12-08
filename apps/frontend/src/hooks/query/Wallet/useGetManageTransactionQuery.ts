@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { walletService } from "@/services/wallet.service";
+import { walletService } from "@services/wallet.service";
+import { QUERY_KEYS } from "@constants/queryKey";
 const fetchManageTransactions = async ({
   page,
   limit,
@@ -19,7 +20,7 @@ export const useGetManageTransactionQuery = ({
   limit,
 }: { page?: number; limit?: number } = {}) => {
   return useQuery({
-    queryKey: ["manage-transactions", page, limit],
+    queryKey: QUERY_KEYS.WALLET.MANAGE_TRANSACTIONS(page, limit),
     queryFn: () => fetchManageTransactions({ page, limit }),
   });
 };

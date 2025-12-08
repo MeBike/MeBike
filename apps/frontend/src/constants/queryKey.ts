@@ -66,8 +66,26 @@ export const QUERY_KEYS = {
       "station",
       stationId,
     ],
-    STATION_REVENUE:  ["station-revenue"],
-    STATION_BIKE_REVENUE:  ["station-bike-revenue"],
-    NEAREST_AVAILABLE_BIKE: (latitude: number, longitude: number) => ["nearest-available-bike", latitude, longitude],
+    STATION_REVENUE: ["station-revenue"],
+    STATION_BIKE_REVENUE: ["station-bike-revenue"],
+    NEAREST_AVAILABLE_BIKE: (latitude: number, longitude: number) => [
+      "nearest-available-bike",
+      latitude,
+      longitude,
+    ],
+  },
+  WALLET: {
+    ALL_WALLET_USER: (page?: number, limit?: number) => [
+      "all-wallet-users",
+      page,
+      limit,
+    ],
+    MANAGE_TRANSACTIONS: (page?: number, limit?: number) => [
+      "manage-transactions",
+      page,
+      limit,
+    ],
+    WALLET_OVERVIEW: ["wallet-overview"],
+    DETAIL_WALLET: (user_id: string) => ["detail-wallet", user_id],
   },
 };
