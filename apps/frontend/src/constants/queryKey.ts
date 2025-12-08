@@ -88,4 +88,13 @@ export const QUERY_KEYS = {
     WALLET_OVERVIEW: ["wallet-overview"],
     DETAIL_WALLET: (user_id: string) => ["detail-wallet", user_id],
   },
+  REFUND: {
+    ALL_REFUND_REQUESTS: (page?: number, limit?: number, status?: string) => [
+      "refund-requests",
+      page,
+      limit,
+      status,
+    ],
+    DETAIL_REFUND_REQUEST: (id: string) => ["refund-requests", id],
+  },
 };
