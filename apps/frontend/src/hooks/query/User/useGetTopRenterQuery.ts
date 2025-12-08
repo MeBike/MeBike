@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "@/services/user.service";
-
+import { QUERY_KEYS } from "@/constants/queryKey";
 const fetchTopRenter = async () => {
   try {
     const response = await userService.getTopRenter();
@@ -16,7 +16,7 @@ const fetchTopRenter = async () => {
 
 export const useGetTopRenterQuery = () => {
   return useQuery({
-    queryKey: ["user", "top-renter"],
+    queryKey: QUERY_KEYS.USER.TOP_RENTERS_STATS,
     queryFn: () => fetchTopRenter(),
     enabled: true,
   });

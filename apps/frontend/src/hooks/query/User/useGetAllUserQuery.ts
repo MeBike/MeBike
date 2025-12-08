@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { userService } from "@/services/user.service";
+import { userService } from "@services/user.service";
 import { VerifyStatus } from "@/types";
+import { QUERY_KEYS } from "@constants/queryKey";
 const fetchAllUserRequests = async ({
   page,
   limit,
@@ -41,7 +42,7 @@ export const useGetAllUserQuery = ({
   role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
 }) => {
   return useQuery({
-    queryKey: ["all", "user", page, limit, verify , role],
+    queryKey: QUERY_KEYS.USER.ALL(page, limit, verify, role),
     queryFn: () => fetchAllUserRequests({ page, limit, verify, role }),
   });
 };

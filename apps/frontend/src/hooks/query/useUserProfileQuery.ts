@@ -2,8 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { authService } from "@/services/auth.service";
 import type { DetailUser } from "@/services/auth.service";
 import { AxiosError } from "axios";
-
-export const USER_PROFILE_QUERY_KEY = ["user","me"];
+import { QUERY_KEYS } from "@/constants/queryKey";
 
 
 export const fetchUserProfile = async (): Promise<DetailUser> => {
@@ -15,7 +14,7 @@ export const fetchUserProfile = async (): Promise<DetailUser> => {
 }
 export function useUserProfileQuery(isAuthenticated: boolean) {
     return useQuery<DetailUser, AxiosError>({
-        queryKey: USER_PROFILE_QUERY_KEY,
+        queryKey: QUERY_KEYS.AUTH.USER_PROFILE_QUERY_KEY,
         queryFn: fetchUserProfile,
         enabled: isAuthenticated,
         staleTime : 0,

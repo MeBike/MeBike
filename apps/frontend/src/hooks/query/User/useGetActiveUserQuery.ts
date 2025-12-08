@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "@/services/user.service";
-
+import { QUERY_KEYS } from "@constants/queryKey";
 const fetchActiveUser = async () => {
   try {
     const response = await userService.getActiveUser();
@@ -15,7 +15,7 @@ const fetchActiveUser = async () => {
 
 export const useGetActiveUserQuery = () => {
   return useQuery({
-    queryKey: ["user", "active"],
+    queryKey: QUERY_KEYS.USER.ACTIVE_USER,
     queryFn: () => fetchActiveUser(),
   });
 };
