@@ -13,9 +13,9 @@ export const QUERY_KEYS = {
       "all",
       { page, limit, verify, role },
     ],
-    STATISTICS:  ["user", "statistics"],
-    ACTIVE_USER:  ["user", "active"],
-    NEW_REGISTRATION_STATS:  ["user", "new-registration-stats"],
+    STATISTICS: ["user", "statistics"],
+    ACTIVE_USER: ["user", "active"],
+    NEW_REGISTRATION_STATS: ["user", "new-registration-stats"],
     TOP_RENTERS_STATS: ["user", "top-renter"],
     SEARCH_USER: (query: string) => ["searchUser", query],
   },
@@ -37,11 +37,17 @@ export const QUERY_KEYS = {
       status,
     ],
     DETAIL_ADMIN: (id: string) => ["admin-rentals", "detail", id],
-    REVENUE: (from?: string, to?: string, groupBy?: "MONTH" | "YEAR" | "DAY") => [
-      "revenueStats",
-      from,
-      to,
-      groupBy,
+    REVENUE: (
+      from?: string,
+      to?: string,
+      groupBy?: "MONTH" | "YEAR" | "DAY"
+    ) => ["revenueStats", from, to, groupBy],
+  },
+  SOS: {
+    ALL: (page?: number, limit?: number, status?: string) => [
+      "sos-requests",
+      { page, limit, status },
     ],
+    DETAIL: (id: string) => ["sos-detail", id],
   },
 };
