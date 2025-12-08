@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { rentalService } from "@services/rental.service";
+import { QUERY_KEYS } from "@/constants/queryKey";
 const getRevenue = async ({
   from,
   to,
@@ -31,7 +32,7 @@ export const useGetRevenueQuery = (
   }
 ) => {
   return useQuery({
-    queryKey: ["revenueStats",  from, to, groupBy ],
+    queryKey: QUERY_KEYS.RENTAL.REVENUE(from, to, groupBy),
     queryFn: () => getRevenue({ from, to, groupBy }),
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: false,
