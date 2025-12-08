@@ -1,4 +1,3 @@
-
 export const QUERY_KEYS = {
   AUTH: {
     LOGIN: "auth_login",
@@ -103,5 +102,22 @@ export const QUERY_KEYS = {
       status,
     ],
     DETAIL_WITHDRAW_REQUEST: (id: string) => ["withdraw-requests", id],
+  },
+  REPORT: {
+    ALL_REPORTS: (page?: number, limit?: number, status?: string) => [
+      "all",
+      "report",
+      page,
+      limit,
+      status,
+    ],
+    REPORT_OVERVIEW: ["report-overview"],
+    REPORT_IN_PROGRESS: (page: number, limit: number) => [
+      "reports",
+      "in-progress",
+      page,
+      limit,
+    ],
+    DETAIL_REPORT: (id: string) => ["report", id],
   },
 };
