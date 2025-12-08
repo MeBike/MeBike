@@ -1,3 +1,4 @@
+import { ALL } from "dns";
 
 
 export const QUERY_KEYS = {
@@ -49,5 +50,24 @@ export const QUERY_KEYS = {
       { page, limit, status },
     ],
     DETAIL: (id: string) => ["sos-detail", id],
+  },
+  STATION: {
+    ALL: (page?: number, limit?: number, name?: string) => [
+      "stations",
+      "all",
+      page,
+      limit,
+      name,
+    ],
+    DETAIL: (stationId: string) => ["station", stationId],
+    RESERVATION_STATS_STATION: (stationId: string) => [
+      "reservation",
+      "stats",
+      "station",
+      stationId,
+    ],
+    STATION_REVENUE:  ["station-revenue"],
+    STATION_BIKE_REVENUE:  ["station-bike-revenue"],
+    NEAREST_AVAILABLE_BIKE: (latitude: number, longitude: number) => ["nearest-available-bike", latitude, longitude],
   },
 };
