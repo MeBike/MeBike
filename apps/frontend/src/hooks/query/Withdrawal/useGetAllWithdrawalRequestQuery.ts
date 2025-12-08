@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { withdrawalsService } from "@/services/withdrawal.service";
+import { withdrawalsService } from "@services/withdrawal.service";
 import { WithdrawStatus } from "@/types";
+import { QUERY_KEYS } from "@constants/queryKey";
 const fetchAllWithdrawRequests = async ({
   page,
   limit,
@@ -34,7 +35,7 @@ export const useGetAllWithdrawRequestQuery = ({
   status?: WithdrawStatus;
 }) => {
   return useQuery({
-    queryKey: ["withdrawRequests", page, limit, status],
+    queryKey: QUERY_KEYS.WITHDRAW.ALL_WITHDRAW_REQUESTS(page, limit, status),
     queryFn: () => fetchAllWithdrawRequests({ page, limit, status }),
   });
 };

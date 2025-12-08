@@ -1,5 +1,3 @@
-import { ALL } from "dns";
-
 
 export const QUERY_KEYS = {
   AUTH: {
@@ -96,5 +94,14 @@ export const QUERY_KEYS = {
       status,
     ],
     DETAIL_REFUND_REQUEST: (id: string) => ["refund-requests", id],
+  },
+  WITHDRAW: {
+    ALL_WITHDRAW_REQUESTS: (page?: number, limit?: number, status?: string) => [
+      "withdraw-requests",
+      page,
+      limit,
+      status,
+    ],
+    DETAIL_WITHDRAW_REQUEST: (id: string) => ["withdraw-requests", id],
   },
 };

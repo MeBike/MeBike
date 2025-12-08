@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { withdrawalsService } from "@/services/withdrawal.service";
 import axios from "axios";
 import { toast } from "sonner";
+import { QUERY_KEYS } from "@constants/queryKey";
 const fetchDetailWithdrawRequests = async ({ id }: { id: string }) => {
   try {
     const response = await withdrawalsService.getWithdrawRequestById(id);
@@ -23,7 +24,7 @@ const fetchDetailWithdrawRequests = async ({ id }: { id: string }) => {
 };
 export const useGetDetailWithdrawRequestQuery = ({ id }: { id: string }) => {
   return useQuery({
-    queryKey: ["withdrawRequests", id],
+    queryKey: QUERY_KEYS.WITHDRAW.DETAIL_WITHDRAW_REQUEST(id),
     queryFn: () => fetchDetailWithdrawRequests({ id }),
     enabled: !!id,
   });
