@@ -120,4 +120,14 @@ export const QUERY_KEYS = {
     ],
     DETAIL_REPORT: (id: string) => ["report", id],
   },
+  RESERVATION: {
+    ALL_RESERVATIONS: (page?: number, limit?: number) => [
+      "all-reservations",
+      page,
+      limit,
+    ],
+    RESERVATION_STATS: ["reservation", "stats"],
+    DETAIL_RESERVATION: (id: string) => ["detail-reservation", id],
+    
+  },
 };

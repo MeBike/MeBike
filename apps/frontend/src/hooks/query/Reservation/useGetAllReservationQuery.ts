@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { reservationService } from "@services/reservation.service";
-
+import { QUERY_KEYS } from "@/constants/queryKey";
 const fetchAllReservations = async ({page, limit} : {page?: number, limit?: number}) => {
   try {
     const response = await reservationService.getUserReservations({page, limit});
@@ -14,7 +14,7 @@ const fetchAllReservations = async ({page, limit} : {page?: number, limit?: numb
 };
 export const useGetAllReservationQuery = ({page, limit}: {page?: number, limit?: number}) => {
   return useQuery({
-    queryKey: ["all-reservations", page, limit],
+    queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, limit),
     queryFn: () => fetchAllReservations({page, limit}),
     staleTime: 5 * 60 * 1000, 
   });
