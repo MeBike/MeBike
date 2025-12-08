@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { add, clamp } from "@/math";
+import { add, clamp } from "../src";
 
 describe("math helpers", () => {
   it("adds numbers", () => {
