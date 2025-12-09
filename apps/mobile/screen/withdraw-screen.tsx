@@ -4,7 +4,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StatusBar,
   Text,
@@ -13,9 +12,9 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 
+import { ScreenHeader } from "@components/ScreenHeader";
 import { useWithdraw } from "../hooks/wallet/use-withdraw";
 import { styles } from "./withdraw-screen-styles";
 const VIETNAMESE_BANKS = [
@@ -119,23 +118,11 @@ function WithdrawScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
 
       {/* Header */}
-      <LinearGradient
-        style={styles.header}
-        colors={["#0066FF", "#00B4D8"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <Pressable
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          android_ripple={{ color: "rgba(255, 255, 255, 0.3)" }}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Rút tiền</Text>
-        <View style={styles.placeholder} />
-      </LinearGradient>
+      <ScreenHeader
+        title="Rút tiền"
+        backIconName="arrow-back"
+        onBackPress={() => navigation.goBack()}
+      />
 
       <ScrollView
         style={styles.scrollView}

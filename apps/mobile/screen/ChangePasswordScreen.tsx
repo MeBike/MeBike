@@ -1,6 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
   Alert,
@@ -11,12 +9,11 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@providers/auth-providers";
+import { ScreenHeader } from "@components/ScreenHeader";
 
 import type { ChangePasswordNavigationProp } from "../types/navigation";
 
@@ -24,7 +21,6 @@ import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
 
 function ChangePasswordScreen() {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<ChangePasswordNavigationProp>();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -62,63 +58,13 @@ function ChangePasswordScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <LinearGradient
-          colors={[BikeColors.primary, BikeColors.secondary]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            paddingTop: insets.top + 32,
-            paddingBottom: 38,
-            paddingHorizontal: 24,
-            borderBottomLeftRadius: 32,
-            borderBottomRightRadius: 32,
-            marginBottom: 8,
-            alignItems: "center",
-            elevation: 8,
-            shadowColor: BikeColors.primary,
-          }}
-        >
-          {/* Nút back nổi, căn vị trí xa nội dung */}
-          <TouchableOpacity
-            style={{
-              position: "absolute",
-              top: insets.top + 10,
-              left: 16,
-              zIndex: 12,
-              borderRadius: 30,
-              padding: 6,
-            }}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="chevron-back" size={20} color="#fff" />
-          </TouchableOpacity>
-
-          {/* Text header căn giữa, spacing đều */}
-          <View style={{ alignItems: "center", marginTop: 14 }}>
-            <Text
-              style={{
-                fontSize: 24, // to hơn cho đều với profile
-                color: "#fff",
-                fontWeight: "700",
-                marginBottom: 6,
-                letterSpacing: 0.5,
-              }}
-            >
-              Đổi mật khẩu
-            </Text>
-            <Text
-              style={{
-                fontSize: 15,
-                color: "#e0eaff",
-                fontWeight: "500",
-                marginBottom: 4,
-                textAlign: "center",
-              }}
-            >
-              Vui lòng nhập thông tin để đổi mật khẩu
-            </Text>
-          </View>
-        </LinearGradient>
+        <ScreenHeader
+          title="Đổi mật khẩu"
+          subtitle="Vui lòng nhập thông tin để đổi mật khẩu"
+          variant="hero"
+          gradientColors={[BikeColors.primary, BikeColors.secondary]}
+          onBackPress={() => navigation.goBack()}
+        />
 
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>

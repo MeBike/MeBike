@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
   StatusBar,
@@ -9,13 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+
+import { ScreenHeader } from "@components/ScreenHeader";
 import { RootStackParamList } from "../types/navigation";
 
 function StaffDashboardScreen() {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const handleScanQr = () => {
@@ -34,14 +33,11 @@ function StaffDashboardScreen() {
         translucent
       />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <LinearGradient
-          colors={["#0066FF", "#00B4D8"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.header, { paddingTop: insets.top + 32 }]}
-        >
-          <Text style={styles.headerTitle}>Công cụ nhân viên</Text>
-        </LinearGradient>
+        <ScreenHeader
+          title="Công cụ nhân viên"
+          variant="centered"
+          showBackButton={false}
+        />
 
         <View style={styles.content}>
           <Text style={styles.sectionTitle}>Chức năng nhanh</Text>
