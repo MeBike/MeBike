@@ -56,7 +56,7 @@ export const useRefundAction = ({
         onSuccess: () => {
           toast.success("Cập nhật yêu cầu hoàn tiền thành công");
           queryClient.invalidateQueries({
-            queryKey: QUERY_KEYS.REFUND.ALL_REFUND_REQUESTS(page, limit, status),
+            queryKey: QUERY_KEYS.REFUND.ALL_REFUND_REQUESTS(),
           });
           queryClient.invalidateQueries({ 
             queryKey: QUERY_KEYS.REFUND.DETAIL_REFUND_REQUEST(id || ""),

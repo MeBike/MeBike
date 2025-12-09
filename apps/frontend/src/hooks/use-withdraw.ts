@@ -56,7 +56,7 @@ export const useWithdrawAction = ({
         onSuccess: () => {
           toast.success("Cập nhật yêu cầu rút tiền thành công");
           queryClient.invalidateQueries({
-            queryKey: QUERY_KEYS.WITHDRAW.ALL_WITHDRAW_REQUESTS(page, limit, status),
+            queryKey: QUERY_KEYS.WITHDRAW.ALL_WITHDRAW_REQUESTS(),
           });
           queryClient.invalidateQueries({ 
             queryKey: QUERY_KEYS.WITHDRAW.DETAIL_WITHDRAW_REQUEST(id || ""),

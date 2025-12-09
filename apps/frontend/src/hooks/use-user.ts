@@ -175,7 +175,7 @@ export const useUserActions = ({
           if (result?.status === 201) {
             toast.success("Tạo người dùng thành công");
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.USER.ALL(page, limit, verify || "all", role || "all"),
+              queryKey: QUERY_KEYS.USER.ALL(),
             });
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
             if (searchQuery && searchQuery.length > 0) {

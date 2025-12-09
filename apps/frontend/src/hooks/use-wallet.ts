@@ -87,7 +87,7 @@ export function useWalletActions(
           if (result.status === 200) {
             toast.success(result.data?.message || "Đã nạp tiền vào ví thành công");
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(page, limit),
+              queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
             });
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.WALLET.WALLET_OVERVIEW,
@@ -119,7 +119,7 @@ export function useWalletActions(
           if (result.status === 200) {
             toast.success(result.data?.message || "Đã trừ tiền vào ví thành công");
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(page, limit),
+              queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
             });
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.WALLET.WALLET_OVERVIEW,
@@ -161,7 +161,7 @@ export function useWalletActions(
             if (result.status === 200) {
               toast.success(result.data?.message || "Cập nhật trạng thái ví thành công");
               queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(page, limit),
+                queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
               });
             } else {
               const errorMessage =

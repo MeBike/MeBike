@@ -152,7 +152,7 @@ export const useBikeActions = (
           if (result.status === 201) {
             toast.success(result.data?.message || "Xe đạp được tạo thành công");
             queryClient.invalidateQueries({
-              queryKey:QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id)
+              queryKey:QUERY_KEYS.BIKE.ALL()
             });
           } else {
             const errorMessage = result.data?.message || "Lỗi khi tạo xe đạp";
@@ -230,7 +230,7 @@ export const useBikeActions = (
         onSuccess: (result) => {
           if (result.status === 200) {
             toast.success(result.data?.message || "Xóa xe đạp thành công");
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id) });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIKE.ALL() });
           } else {
             const errorMessage = result.data?.message || "Lỗi khi xóa xe đạp";
             toast.error(errorMessage);
@@ -242,7 +242,7 @@ export const useBikeActions = (
         },
       });
     },
-    [deleteBikeMutation, hasToken, router, queryClient , page, limit, station_id, supplier_id, status]
+    [deleteBikeMutation, hasToken, router, queryClient]
   );
   const reportBike = useCallback(
     (id: string) => {

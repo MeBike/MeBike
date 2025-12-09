@@ -127,13 +127,7 @@ export function useRentalsActions({
             if (result.status === 200) {
               toast.success("Phiên thuê xe đã được cập nhật thành công");
               queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.RENTAL.ALL_ADMIN_STAFF(
-                  page,
-                  limit,
-                  start_station,
-                  end_station,
-                  status
-                ),
+                queryKey: QUERY_KEYS.RENTAL.ALL_ADMIN_STAFF(),
               });
             } else {
               const errorMessage =
