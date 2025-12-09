@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
-
+import { QUERY_KEYS } from "@/constants/queryKey";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -152,15 +152,7 @@ export const useBikeActions = (
           if (result.status === 201) {
             toast.success(result.data?.message || "Xe đạp được tạo thành công");
             queryClient.invalidateQueries({
-              queryKey: [
-                "bikes",
-                "all",
-                page,
-                limit,
-                station_id || "",
-                supplier_id || "",
-                status || "",
-              ],
+              queryKey:QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id)
             });
           } else {
             const errorMessage = result.data?.message || "Lỗi khi tạo xe đạp";
@@ -201,15 +193,7 @@ export const useBikeActions = (
             if (result.status === 200) {
               toast.success(result.data?.message || "Cập nhật xe đạp thành công");
               queryClient.invalidateQueries({
-                queryKey: [
-                  "bikes",
-                  "all",
-                  page,
-                  limit,
-                  station_id || "",
-                  supplier_id || "",
-                  status || "",
-                ],
+                queryKey:QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id)
               });
             } else {
               const errorMessage =
@@ -246,7 +230,7 @@ export const useBikeActions = (
         onSuccess: (result) => {
           if (result.status === 200) {
             toast.success(result.data?.message || "Xóa xe đạp thành công");
-            queryClient.invalidateQueries({ queryKey: ["bikes"] });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id) });
           } else {
             const errorMessage = result.data?.message || "Lỗi khi xóa xe đạp";
             toast.error(errorMessage);
@@ -258,7 +242,7 @@ export const useBikeActions = (
         },
       });
     },
-    [deleteBikeMutation, hasToken, router, queryClient]
+    [deleteBikeMutation, hasToken, router, queryClient , page, limit, station_id, supplier_id, status]
   );
   const reportBike = useCallback(
     (id: string) => {

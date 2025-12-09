@@ -17,7 +17,12 @@ export const QUERY_KEYS = {
     TOP_RENTERS_STATS: ["user", "top-renter"],
     SEARCH_USER: (query: string) => ["searchUser", query],
   },
-  BIKE: {},
+  BIKE: {
+    BIKE_ACTIVITY_STATS: (bikeId: string) => ["bike-activity-stats", bikeId],
+    BIKE_STATS: (bikeId: string) => ["bike-stats", bikeId],
+    RENTAL_BIKE: (bikeId: string) => ["bike-rentals-history", bikeId],
+    ALL: (page?: number, limit?: number, status?: string , station_id?: string, supplier_id?: string) => ["bikes", "all", page, limit, station_id, supplier_id, status]
+  },
   RENTAL: {
     ALL_ADMIN_STAFF: (
       page?: number,
@@ -128,6 +133,5 @@ export const QUERY_KEYS = {
     ],
     RESERVATION_STATS: ["reservation", "stats"],
     DETAIL_RESERVATION: (id: string) => ["detail-reservation", id],
-    
   },
 };

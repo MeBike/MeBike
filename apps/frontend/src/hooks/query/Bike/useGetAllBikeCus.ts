@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 import type { BikeStatus } from "@/types";
+import { QUERY_KEYS } from "@/constants/queryKey";
 const getAllBikes = async (
   page?: number,
   limit?: number,
@@ -38,7 +39,7 @@ export const useGetAllBikeQuery = ({
   status?: BikeStatus;
 }) => {
   return useQuery({
-    queryKey: ["bikes", "all", page, limit, station_id, supplier_id, status],
+    queryKey: QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id),
     queryFn: () => getAllBikes(page, limit, station_id, supplier_id, status),
   });
 };
