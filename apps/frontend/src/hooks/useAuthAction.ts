@@ -19,8 +19,7 @@ import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEm
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
-import { MESSAGE } from "@constants/message";
-import { QUERY_KEYS } from "@constants/queryKey";
+import { MESSAGE , QUERY_KEYS , HTTP_STATUS } from "@constants/index"
 interface ErrorResponse {
   response?: {
     data?: {
@@ -70,10 +69,14 @@ export const useAuthActions = () => {
         { old_password, password, confirm_password },
         {
           onSuccess: (result) => {
-            if (result.status === 200) {
-              toast.success(result.data?.message || MESSAGE.CHANGE_PASSWORD_SUCCESS);
+            if (result.status === HTTP_STATUS.OK) {
+              toast.success(
+                result.data?.message || MESSAGE.CHANGE_PASSWORD_SUCCESS
+              );
             } else {
-              toast.error(result.data?.message || MESSAGE.CHANGE_PASSWORD_ERROR);
+              toast.error(
+                result.data?.message || MESSAGE.CHANGE_PASSWORD_ERROR
+              );
             }
           },
           onError: (error: unknown) => {
@@ -120,7 +123,7 @@ export const useAuthActions = () => {
       return new Promise<void>((resolve, reject) => {
         useRegister.mutate(data, {
           onSuccess: async (result) => {
-            if (result.status === 200) {
+            if (result.status === HTTP_STATUS.OK) {
               const { access_token, refresh_token } = result.data.result;
               setTokens(access_token, refresh_token);
               // Dispatch token change event
@@ -153,7 +156,7 @@ export const useAuthActions = () => {
     (refresh_token: string) => {
       useLogout.mutate(refresh_token, {
         onSuccess: (result) => {
-          if (result.status === 200) {
+          if (result.status === HTTP_STATUS.OK) {
             clearTokens();
             window.dispatchEvent(
               new StorageEvent("storage", { key: "auth_tokens" })
@@ -181,7 +184,7 @@ export const useAuthActions = () => {
         useVerifyEmail.mutate({ email, otp }, {
           onSuccess: (result) => {
             console.log("verifyEmail onSuccess:", result.status);
-            if (result.status === 200) {
+            if (result.status === HTTP_STATUS.OK) {
               const accessToken = result.data.result?.access_token;
               const refreshToken = result.data.result?.refresh_token;
               if (!accessToken || !refreshToken) {
@@ -192,12 +195,12 @@ export const useAuthActions = () => {
               }
               setTokens(accessToken, refreshToken);
               window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
-              toast.success(result.data?.message || "Email đã được xác minh thành công");
-              queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+              toast.success(result.data?.message || MESSAGE.EMAIL_VERIFY_SUCCESS);
+              queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
               resolve();
             } else {
               const errorMessage =
-                result.data?.message || "Lỗi khi xác minh email";
+                result.data?.message || MESSAGE.EMAIL_VERIFY_ERROR;
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }
@@ -206,7 +209,7 @@ export const useAuthActions = () => {
             console.log("verifyEmail onError:", error);
             const errorMessage = getErrorMessage(
               error,
-              "OTP không hợp lệ hoặc đã hết hạn"
+              MESSAGE.OTP_EXPIRED
             );
             toast.error(errorMessage);
             reject(error);
@@ -220,12 +223,12 @@ export const useAuthActions = () => {
     return new Promise<void>((resolve, reject) => {
       useResendVerifyEmail.mutate(undefined, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Email xác minh đã được gửi lại thành công");
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.message || MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS);
             resolve();
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi gửi lại email xác minh";
+              result.data?.message || MESSAGE.RESEND_VERIFY_EMAIL_FAILED;
             toast.error(errorMessage);
             reject(new Error(errorMessage));
           }
@@ -233,7 +236,7 @@ export const useAuthActions = () => {
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error resending verification email"
+            MESSAGE.RESEND_VERIFY_EMAIL_FAILED
           );
           toast.error(errorMessage);
           reject(error);
@@ -245,18 +248,18 @@ export const useAuthActions = () => {
     (data: ForgotPasswordSchemaFormData) => {
       useForgotPassword.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Email đặt lại mật khẩu đã được gửi thành công");
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.message || MESSAGE.FORGOT_PASSWORD_SUCCESS);
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi gửi email đặt lại mật khẩu";
+              result.data?.message || MESSAGE.FORGOT_PASSWORD_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error sending password reset email"
+            MESSAGE.FORGOT_PASSWORD_FAILED
           );
           toast.error(errorMessage);
         },
@@ -269,12 +272,12 @@ export const useAuthActions = () => {
       return new Promise((resolve, reject) => {
         useResetPassword.mutate(data, {
           onSuccess: (result) => {
-            if (result.status === 200) {
-              toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
+            if (result.status === HTTP_STATUS.OK) {
+              toast.success(result.data?.message || MESSAGE.RESET_PASSWORD_SUCCESS);
               resolve();
             } else {
               const errorMessage =
-                result.data?.message || "Lỗi khi đặt lại mật khẩu";
+                result.data?.message || MESSAGE.RESET_PASSWORD_FAILED;
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }
@@ -282,7 +285,7 @@ export const useAuthActions = () => {
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(
               error,
-              "OTP không hợp lệ hoặc đã hết hạn"
+              MESSAGE.RESET_PASSWORD_FAILED
             );
             toast.error(errorMessage);
             reject(error);
@@ -296,17 +299,17 @@ export const useAuthActions = () => {
     (data: Partial<UpdateProfileSchemaFormData>) => {
       useUpdateProfile.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Cập nhật hồ sơ thành công");
-            queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.message || MESSAGE.UPDATE_PROFILE_SUCCESS);
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi cập nhật hồ sơ";
+              result.data?.message || MESSAGE.UPDATE_PROFILE_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật hồ sơ");
+          const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_PROFILE_FAILED);
           toast.error(errorMessage);
         },
       });
