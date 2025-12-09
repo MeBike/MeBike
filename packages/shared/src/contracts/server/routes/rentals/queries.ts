@@ -1,0 +1,342 @@
+import { createRoute } from "@hono/zod-openapi";
+
+import { z } from "../../../../zod";
+import {
+  createSuccessResponse,
+  DashboardResponseSchema,
+  MyRentalListResponseSchema,
+  PhoneNumberParamSchema,
+  RentalCountsResponseSchema,
+  rentalDateRangeWith,
+  RentalDetailSchemaOpenApi,
+  RentalErrorCodeSchema,
+  RentalErrorResponseSchema,
+  RentalIdParamSchema,
+  RentalListQuerySchema,
+  RentalListResponseSchema,
+  RentalRevenueResponseSchema,
+  RentalStatsQuerySchema,
+  RentalStatusSchema,
+  StationActivityResponseSchema,
+  UserIdParamSchema,
+} from "./shared";
+
+export const getMyRentals = createRoute({
+  method: "get",
+  path: "/v1/rentals/me",
+  tags: ["Rentals"],
+  request: {
+    query: RentalListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "User's rental list",
+      content: {
+        "application/json": {
+          schema: MyRentalListResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const getMyCurrentRentals = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/current",
+  tags: ["Rentals"],
+  request: {
+    query: RentalListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "User's current active rentals",
+      content: {
+        "application/json": {
+          schema: MyRentalListResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const getMyRentalCounts = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/counts",
+  tags: ["Rentals"],
+  request: {
+    query: z.object({
+      status: RentalStatusSchema.optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Rental counts by status",
+      content: {
+        "application/json": {
+          schema: RentalCountsResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const getMyRental = createRoute({
+  method: "get",
+  path: "/v1/rentals/me/{rentalId}",
+  tags: ["Rentals"],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "User's detailed rental",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RentalDetailSchemaOpenApi,
+            "Get rental detail response",
+          ),
+        },
+      },
+    },
+    404: {
+      description: "Rental not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+          examples: {
+            RentalNotFound: {
+              value: {
+                error: "Không tìm thấy phiên thuê nào với Id",
+                details: {
+                  code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+            AccessDenied: {
+              value: {
+                error: "Bạn không có quyền truy cập tài nguyên này",
+                details: {
+                  code: RentalErrorCodeSchema.enum.ACCESS_DENIED,
+                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const getAllRentals = createRoute({
+  method: "get",
+  path: "/v1/rentals",
+  tags: ["Rentals"],
+  request: {
+    query: RentalListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "All rentals (admin/staff view)",
+      content: {
+        "application/json": {
+          schema: RentalListResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const getRental = createRoute({
+  method: "get",
+  path: "/v1/rentals/{rentalId}",
+  tags: ["Rentals"],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Detailed rental (admin/staff view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RentalDetailSchemaOpenApi,
+            "Get rental detail response",
+          ),
+        },
+      },
+    },
+    404: {
+      description: "Rental not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+          examples: {
+            RentalNotFound: {
+              value: {
+                error: "Không tìm thấy phiên thuê nào với Id",
+                details: {
+                  code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+                  rentalId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const getRentalsByUser = createRoute({
+  method: "get",
+  path: "/v1/rentals/users/{userId}",
+  tags: ["Rentals"],
+  request: {
+    params: UserIdParamSchema,
+    query: RentalListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Rentals by user ID",
+      content: {
+        "application/json": {
+          schema: RentalListResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "User not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+          examples: {
+            UserNotFound: {
+              value: {
+                error: "Không tìm thấy người dùng với Id",
+                details: {
+                  code: RentalErrorCodeSchema.enum.USER_NOT_FOUND,
+                  userId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const getActiveRentalsByPhone = createRoute({
+  method: "get",
+  path: "/v1/rentals/by-phone/{number}/active",
+  tags: ["Rentals"],
+  request: {
+    params: PhoneNumberParamSchema,
+    query: RentalListQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Active rentals by phone number",
+      content: {
+        "application/json": {
+          schema: RentalListResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const getDashboardSummary = createRoute({
+  method: "get",
+  path: "/v1/rentals/dashboard-summary",
+  tags: ["Rentals"],
+  responses: {
+    200: {
+      description: "Dashboard summary statistics",
+      content: {
+        "application/json": {
+          schema: DashboardResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const getRentalSummary = createRoute({
+  method: "get",
+  path: "/v1/rentals/summary",
+  tags: ["Rentals"],
+  responses: {
+    200: {
+      description: "Rental summary by status",
+      content: {
+        "application/json": {
+          schema: RentalCountsResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const getRentalRevenue = createRoute({
+  method: "get",
+  path: "/v1/rentals/stats/revenue",
+  tags: ["Rentals"],
+  request: {
+    query: RentalStatsQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Rental revenue statistics",
+      content: {
+        "application/json": {
+          schema: RentalRevenueResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid date range",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+          examples: {
+            InvalidDateRange: {
+              value: {
+                error: "Invalid date range",
+                details: {
+                  code: RentalErrorCodeSchema.enum.INVALID_OBJECT_ID,
+                  from: "2025-02-10T00:00:00.000Z",
+                  to: "2025-02-01T00:00:00.000Z",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const getStationActivity = createRoute({
+  method: "get",
+  path: "/v1/rentals/stats/station-activity",
+  tags: ["Rentals"],
+  request: {
+    query: rentalDateRangeWith({
+      stationId: z.string().optional(),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Station activity statistics",
+      content: {
+        "application/json": {
+          schema: StationActivityResponseSchema,
+        },
+      },
+    },
+  },
+});
