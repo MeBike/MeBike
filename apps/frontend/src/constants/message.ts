@@ -30,4 +30,6 @@ export const MESSAGE = {
     DELETE_BIKE_FAILED: "Lỗi khi xóa xe đạp",
     REPORT_BIKE_SUCCESS: "Báo cáo xe đạp thành công",
     REPORT_BIKE_FAILED: "Lỗi khi báo cáo xe đạp",
+    UPDATE_REFUND_REQUEST_SUCCESS: "Cập nhật yêu cầu hoàn tiền thành công",
+    UPDATE_REFUND_REQUEST_FAILED: "Lỗi khi cập nhật yêu cầu hoàn tiền",
 }
