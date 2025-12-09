@@ -1,0 +1,15 @@
+export const MESSAGE = {
+    LOGIN_SUCCESS: "Đăng nhập thành công",
+    LOGIN_NOT_SUCCESS: "Đăng nhập không thành công",
+    WELCOME_BACK: "Chào mừng bạn trở lại!",
+    LOGOUT_SUCCESS: "Đăng xuất thành công",
+    LOGOUT_FAIL: "Đăng xuất không thành công",
+    REGISTER_SUCCESS: "Đăng ký thành công",
+    REGISTER_NOT_SUCCESS: "Đăng ký không thành công",
+    CHANGE_PASSWORD_SUCCESS: "Đổi mật khẩu thành công",
+    CHANGE_PASSWORD_ERROR: "Lỗi khi đổi mật khẩu",
+    ERROR_IN_CHANGE_PASSWORD: "Lỗi khi đang thay đổi mật khẩu",
+    UPDATE_PROFILE_SUCCESS: "Cập nhật thông tin cá nhân thành công",
+    FORGOT_PASSWORD_SUCCESS: "Yêu cầu đặt lại mật khẩu thành công. Vui lòng kiểm tra email của bạn.",
+    RESET_PASSWORD_SUCCESS: "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.",
+}

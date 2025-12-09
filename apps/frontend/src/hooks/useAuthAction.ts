@@ -19,6 +19,8 @@ import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEm
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
+import { MESSAGE } from "@constants/message";
+import { QUERY_KEYS } from "@constants/queryKey";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -69,15 +71,15 @@ export const useAuthActions = () => {
         {
           onSuccess: (result) => {
             if (result.status === 200) {
-              toast.success(result.data?.message || "Mật khẩu đã được thay đổi thành công");
+              toast.success(result.data?.message || MESSAGE.CHANGE_PASSWORD_SUCCESS);
             } else {
-              toast.error(result.data?.message || "Lỗi khi thay đổi mật khẩu");
+              toast.error(result.data?.message || MESSAGE.CHANGE_PASSWORD_ERROR);
             }
           },
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(
               error,
-              "Error changing password"
+              MESSAGE.CHANGE_PASSWORD_ERROR
             );
             toast.error(errorMessage);
           },
@@ -97,14 +99,14 @@ export const useAuthActions = () => {
             window.dispatchEvent(
               new StorageEvent("storage", { key: "auth_tokens" })
             );
-            await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-            toast.success(result.data?.message || "Đăng nhập thành công", {
-              description: "Chào mừng bạn trở lại!",
+            await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
+            toast.success(result.data?.message || MESSAGE.LOGIN_SUCCESS, {
+              description: MESSAGE.WELCOME_BACK,
             });
             resolve();
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, "Error logging in");
+            const errorMessage = getErrorMessage(error, MESSAGE.LOGIN_NOT_SUCCESS);
             toast.error(errorMessage);
             reject(error);
           },
@@ -125,20 +127,20 @@ export const useAuthActions = () => {
               window.dispatchEvent(new Event("token:changed"));
               // Wait for token to be set
               await new Promise(resolve => setTimeout(resolve, 100));
-              await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-              toast.success(result.data?.message || "Đăng ký thành công", {
+              await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
+              toast.success(result.data?.message || MESSAGE.REGISTER_SUCCESS, {
                 description: "Tài khoản của bạn đã được tạo.",
               });
               resolve();
               // router.push("/user/profile");
             } else {
-              const errorMessage = result.data?.message || "Error registering";
+              const errorMessage = result.data?.message || MESSAGE.REGISTER_NOT_SUCCESS;
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, "Error registering");
+            const errorMessage = getErrorMessage(error, MESSAGE.REGISTER_NOT_SUCCESS);
             toast.error(errorMessage);
             reject(error);
           },
@@ -156,17 +158,17 @@ export const useAuthActions = () => {
             window.dispatchEvent(
               new StorageEvent("storage", { key: "auth_tokens" })
             );
-            queryClient.removeQueries({ queryKey: ["user", "me"] });
+            queryClient.removeQueries({ queryKey: QUERY_KEYS.ME });
             queryClient.clear();
-            toast.success(result.data?.message || "Đăng xuất thành công");
+            toast.success(result.data?.message || MESSAGE.LOGOUT_SUCCESS);
             router.push("/auth/login");
           } else {
-            const errorMessage = result.data?.message || "Lỗi khi đăng xuất";
+            const errorMessage = result.data?.message || MESSAGE.LOGOUT_FAIL;
             toast.error(errorMessage);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi đăng xuất");
+          const errorMessage = getErrorMessage(error, MESSAGE.LOGOUT_FAIL);
           toast.error(errorMessage);
         },
       });

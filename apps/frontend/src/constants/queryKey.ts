@@ -1,4 +1,5 @@
 export const QUERY_KEYS = {
+  ME : ["user", "me"],
   AUTH: {
     LOGIN: "auth_login",
     LOGOUT: "auth_logout",
