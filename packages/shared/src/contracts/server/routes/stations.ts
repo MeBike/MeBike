@@ -3,9 +3,16 @@ import { createRoute } from "@hono/zod-openapi";
 import { z } from "../../../zod";
 import { ServerErrorResponseSchema } from "../schemas";
 import {
+  BikeRevenueResponseSchema,
+  HighestRevenueStationSchema,
+  NearestAvailableBikeSchema,
+  StationAlertsResponseSchema,
   StationDateRangeQuerySchema,
   StationErrorCodeSchema,
   StationErrorDetailSchema,
+  StationRevenueResponseSchema,
+  StationStatsResponseSchema,
+  StationSummarySchema,
 } from "../stations";
 
 const StationErrorResponseSchema = ServerErrorResponseSchema.extend({
@@ -57,73 +64,54 @@ const StationRevenueQuerySchema = StationDateRangeQuerySchema.openapi(
   },
 );
 
-const StationSummarySchema = z
-  .object({
-    _id: z.string(),
-    name: z.string(),
-    address: z.string(),
-    capacity: z.number(),
-  })
-  .openapi("StationSummary");
+const StationSummarySchemaOpenApi = StationSummarySchema.openapi(
+  "StationSummary",
+  {
+    description: "Basic station info",
+  },
+);
 
 const StationListResponseSchema = z
   .object({
-    data: z.array(StationSummarySchema),
+    data: z.array(StationSummarySchemaOpenApi),
   })
   .openapi("StationListResponse", {
     description: "Simplified station listing",
   });
 
-const StationStatsResponseSchema = z
-  .object({
-    station: StationSummarySchema,
-    period: z.object({
-      from: z.string(),
-      to: z.string(),
-    }),
-    rentals: z.object({
-      totalRentals: z.number(),
-      totalRevenue: z.number(),
-      totalDuration: z.number(),
-      avgDuration: z.number(),
-    }),
-    returns: z.object({
-      totalReturns: z.number(),
-    }),
-    currentBikes: z.record(z.string(), z.any()),
-    reports: z.record(z.string(), z.number()),
-    utilizationRate: z.number(),
-  })
-  .openapi("StationStatsResponse");
+const StationStatsResponseSchemaOpenApi = StationStatsResponseSchema.openapi(
+  "StationStatsResponse",
+  {
+    description: "Statistics for a single station in a period",
+  },
+);
 
-const StationRevenueResponseSchema = z
-  .object({
-    period: z.object({
-      from: z.string(),
-      to: z.string(),
-    }),
-    summary: z.object({
-      totalStations: z.number(),
-      totalRevenue: z.number(),
-      totalRevenueFormatted: z.string(),
-      totalRentals: z.number(),
-    }),
-    stations: z.array(
-      z.object({
-        _id: z.string(),
-        name: z.string(),
-        address: z.string(),
-        totalRevenue: z.number(),
-        totalRevenueFormatted: z.string(),
-        totalRentals: z.number(),
-        totalDuration: z.number(),
-        totalDurationFormatted: z.string(),
-        avgDuration: z.number(),
-        avgDurationFormatted: z.string(),
-      }),
-    ),
-  })
-  .openapi("StationRevenueResponse");
+const StationRevenueResponseSchemaOpenApi
+  = StationRevenueResponseSchema.openapi("StationRevenueResponse", {
+    description: "Revenue metrics grouped by station (and bikes per station)",
+  });
+
+const BikeRevenueResponseSchemaOpenApi = BikeRevenueResponseSchema.openapi(
+  "BikeRevenueResponse",
+  {
+    description: "Revenue grouped by station and bikes",
+  },
+);
+
+const HighestRevenueStationSchemaOpenApi
+  = HighestRevenueStationSchema.openapi("HighestRevenueStationResponse", {
+    description: "Top station by revenue (may be null if no data)",
+  });
+
+const NearestAvailableBikeSchemaOpenApi
+  = NearestAvailableBikeSchema.openapi("NearestAvailableBikeResponse", {
+    description: "Nearest available bike result",
+  });
+
+const StationAlertsResponseSchemaOpenApi
+  = StationAlertsResponseSchema.openapi("StationAlertsResponse", {
+    description: "Alert summary for stations",
+  });
 
 export const stationsRoutes = {
   listStations: createRoute({
@@ -177,7 +165,7 @@ export const stationsRoutes = {
       200: {
         description: "Get station details",
         content: {
-          "application/json": { schema: StationSummarySchema },
+          "application/json": { schema: StationSummarySchemaOpenApi },
         },
       },
       404: {
@@ -212,7 +200,7 @@ export const stationsRoutes = {
       200: {
         description: "Station statistics within a date range",
         content: {
-          "application/json": { schema: StationStatsResponseSchema },
+          "application/json": { schema: StationStatsResponseSchemaOpenApi },
         },
       },
       400: {
@@ -266,7 +254,7 @@ export const stationsRoutes = {
       200: {
         description: "Revenue stats for all stations",
         content: {
-          "application/json": { schema: StationRevenueResponseSchema },
+          "application/json": { schema: StationRevenueResponseSchemaOpenApi },
         },
       },
       400: {
@@ -302,7 +290,7 @@ export const stationsRoutes = {
       200: {
         description: "Revenue grouped by station and bike",
         content: {
-          "application/json": { schema: StationRevenueResponseSchema },
+          "application/json": { schema: BikeRevenueResponseSchemaOpenApi },
         },
       },
       400: {
@@ -338,7 +326,7 @@ export const stationsRoutes = {
       200: {
         description: "Top station by revenue",
         content: {
-          "application/json": { schema: StationRevenueResponseSchema },
+          "application/json": { schema: HighestRevenueStationSchemaOpenApi },
         },
       },
       400: {
@@ -410,7 +398,7 @@ export const stationsRoutes = {
       200: {
         description: "Station alerts",
         content: {
-          "application/json": { schema: z.any() },
+          "application/json": { schema: StationAlertsResponseSchemaOpenApi },
         },
       },
     },
@@ -426,7 +414,7 @@ export const stationsRoutes = {
       200: {
         description: "Nearest available bike",
         content: {
-          "application/json": { schema: z.any() },
+          "application/json": { schema: NearestAvailableBikeSchemaOpenApi },
         },
       },
       404: {
