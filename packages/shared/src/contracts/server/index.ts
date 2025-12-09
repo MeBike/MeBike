@@ -1,4 +1,5 @@
 export * from "./routes";
+export * from "./schemas";
 
 export const serverOpenApi = {
   info: {
