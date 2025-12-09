@@ -10,7 +10,9 @@ import { toast } from "sonner";
 import { useGetDashboardSummaryQuery } from "./query/Rent/useGetDashboardSummaryQuery";
 import useEndCurrentRental from "./mutations/Rentals/useEndCurrentRentalMutation";
 import { useGetSummaryRentalQuery } from "./query/Rent/useGetSummaryRental";
-import { QUERY_KEYS } from "@/constants/queryKey";
+import { QUERY_KEYS ,HTTP_STATUS , MESSAGE} from "@constants/index";
+import { Html } from "next/document";
+
 type ErrorResponse = {
   response?: {
     data?: {
@@ -124,19 +126,21 @@ export function useRentalsActions({
             status: number;
             data?: { message?: string };
           }) => {
-            if (result.status === 200) {
-              toast.success("Phiên thuê xe đã được cập nhật thành công");
+            if (result.status === HTTP_STATUS.OK) {
+              toast.success(
+                result.data?.message || MESSAGE.UPDATE_RENTAL_BIKE_SUCCESS
+              );
               queryClient.invalidateQueries({
                 queryKey: QUERY_KEYS.RENTAL.ALL_ADMIN_STAFF(),
               });
             } else {
               const errorMessage =
-                result.data?.message || "Error updating rental";
+                result.data?.message || MESSAGE.UPDATE_RENTAL_FAILED;
               toast.error(errorMessage);
             }
           },
           onError: (error) => {
-            const errorMessage = getErrorMessage(error, "Error updating rental");
+            const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_RENTAL_FAILED);
             toast.error(errorMessage);
           },
         }
@@ -173,8 +177,8 @@ export function useRentalsActions({
           status: number;
           data?: { message?: string };
         }) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Kết thúc thuê xe thành công");
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.message || MESSAGE.END_RENTAL_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.RENTAL.ALL_ADMIN_STAFF(
                 page,
@@ -186,12 +190,12 @@ export function useRentalsActions({
             });
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi kết thúc thuê xe";
+              result.data?.message || MESSAGE.END_RENTAL_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Failed to end rental");
+          const errorMessage = getErrorMessage(error, MESSAGE.END_RENTAL_FAILED);
           toast.error(errorMessage);
         },
       });
