@@ -117,6 +117,7 @@ export const stationsRoutes = {
   listStations: createRoute({
     method: "get",
     path: "/v1/stations",
+    tags: ["Stations"],
     request: {
       query: StationListQuerySchema,
     },
@@ -158,6 +159,7 @@ export const stationsRoutes = {
   getStation: createRoute({
     method: "get",
     path: "/v1/stations/{stationId}",
+    tags: ["Stations"],
     request: {
       params: StationIdParamSchema,
     },
@@ -192,6 +194,7 @@ export const stationsRoutes = {
   getStationStats: createRoute({
     method: "get",
     path: "/v1/stations/{stationId}/stats",
+    tags: ["Stations"],
     request: {
       params: StationIdParamSchema,
       query: StationRevenueQuerySchema,
@@ -247,6 +250,7 @@ export const stationsRoutes = {
   getAllStationsRevenue: createRoute({
     method: "get",
     path: "/v1/stations/revenue",
+    tags: ["Stations"],
     request: {
       query: StationRevenueQuerySchema,
     },
@@ -283,6 +287,7 @@ export const stationsRoutes = {
   getBikeRevenueByStation: createRoute({
     method: "get",
     path: "/v1/stations/bike-revenue",
+    tags: ["Stations"],
     request: {
       query: StationRevenueQuerySchema,
     },
@@ -319,6 +324,7 @@ export const stationsRoutes = {
   getHighestRevenueStation: createRoute({
     method: "get",
     path: "/v1/stations/highest-revenue",
+    tags: ["Stations"],
     request: {
       query: StationRevenueQuerySchema,
     },
@@ -353,6 +359,7 @@ export const stationsRoutes = {
   getNearbyStations: createRoute({
     method: "get",
     path: "/v1/stations/nearby",
+    tags: ["Stations"],
     request: {
       query: NearbyStationsQuerySchema,
     },
@@ -394,6 +401,7 @@ export const stationsRoutes = {
   getStationAlerts: createRoute({
     method: "get",
     path: "/v1/stations/alerts",
+    tags: ["Stations"],
     responses: {
       200: {
         description: "Station alerts",
@@ -407,6 +415,7 @@ export const stationsRoutes = {
   getNearestAvailableBike: createRoute({
     method: "get",
     path: "/v1/stations/nearest-available-bike",
+    tags: ["Stations"],
     request: {
       query: NearbyStationsQuerySchema,
     },

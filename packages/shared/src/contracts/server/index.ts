@@ -1,3 +1,4 @@
+export * from "./rentals";
 export * from "./routes";
 export * from "./schemas";
 export * from "./stations";
@@ -15,4 +16,4 @@ export const serverOpenApi = {
       description: "Local development server",
     },
   ],
-} as const;
+};
