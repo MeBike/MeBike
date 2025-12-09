@@ -2,8 +2,8 @@ import { z } from "./zod";
 
 export * as IotService from "./contracts/iot-service";
 export * from "./contracts/iot-service";
-export * as BackendContracts from "./contracts/backend";
-export * from "./contracts/backend";
+export * as ServerContracts from "./contracts/server";
+export * from "./contracts/server";
 export * as IotTopics from "./iot/topics";
 
 export * from "./iot/topics";

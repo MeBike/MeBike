@@ -1,0 +1,16 @@
+export * from "./routes";
+
+export const serverOpenApi = {
+  info: {
+    title: "Server API",
+    version: "1.0.0",
+    description: "HTTP contract for the main backend (stations, rentals, reservations, etc.).",
+  },
+  openapi: "3.1.0",
+  servers: [
+    {
+      url: "http://localhost:4000",
+      description: "Local development server",
+    },
+  ],
+} as const;
