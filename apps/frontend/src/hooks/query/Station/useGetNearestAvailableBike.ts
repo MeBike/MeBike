@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
+import { QUERY_KEYS } from "@/constants/queryKey";
 
 interface UseGetNearestAvailableBikeProps {
   latitude: number;
@@ -10,7 +11,7 @@ export const useGetNearestAvailableBike = ({
   longitude,
 }: UseGetNearestAvailableBikeProps) => {
   return useQuery({
-    queryKey: ["station", "nearest-available-bike", latitude, longitude],
+    queryKey: QUERY_KEYS.STATION.NEAREST_AVAILABLE_BIKE(latitude, longitude),
     queryFn: () =>
       stationService.getStationNearestAvailableBike({ latitude, longitude }),
     enabled: !!latitude && !!longitude,

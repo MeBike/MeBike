@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { userService } from "@/services/user.service";
+import { QUERY_KEYS } from "@constants/queryKey";
 const fetchUserStatistics = async () => {
   try {
     const response = await userService.userStatistics();
@@ -13,7 +14,7 @@ const fetchUserStatistics = async () => {
 };
 export const useGetAllStatisticsUserQuery = () => {
   return useQuery({
-    queryKey: ["user", "statistics"],
+    queryKey: QUERY_KEYS.USER.STATISTICS,
     queryFn: () => fetchUserStatistics(),
     enabled: false,
   });

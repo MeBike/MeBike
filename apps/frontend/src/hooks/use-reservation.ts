@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useGetAllReservationQuery } from "./query/Reservation/useGetAllReservationQuery";
 import { useGetReservationStatsQuery } from "./query/Reservation/useGetReservationStatsQuery";
 import { useGetDetailReservationQuery } from "./query/Reservation/useGetDetailReservationQuery";
+import { QUERY_KEYS } from "@/constants/queryKey";
 // interface ErrorResponse {
 //   response?: {
 //     data?: {
@@ -48,7 +49,7 @@ export const useReservationActions = ({ hasToken, page, limit, id }: ActionProps
       return;
     }
     queryClient.invalidateQueries({
-      queryKey: ["all-reservations", page, limit],
+      queryKey: QUERY_KEYS.RESERVATION.ALL_RESERVATIONS(page, limit),
     });
   }, [queryClient, hasToken, page, limit]);
   const fetchReservationStats = useCallback(() => {
@@ -56,7 +57,7 @@ export const useReservationActions = ({ hasToken, page, limit, id }: ActionProps
       return;
     }
     queryClient.invalidateQueries({
-      queryKey: ["reservation", "stats"],
+      queryKey: QUERY_KEYS.RESERVATION.RESERVATION_STATS,
     });
   }, [queryClient, hasToken]);
   const fetchDetailReservation = useCallback(() => {
@@ -64,7 +65,7 @@ export const useReservationActions = ({ hasToken, page, limit, id }: ActionProps
       return;
     } 
     queryClient.invalidateQueries({
-      queryKey: ["detail-reservation", id],
+      queryKey: QUERY_KEYS.RESERVATION.DETAIL_RESERVATION(id),
     });
   }, [queryClient, hasToken, id]);
   return {

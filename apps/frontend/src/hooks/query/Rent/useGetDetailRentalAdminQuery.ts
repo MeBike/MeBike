@@ -1,5 +1,6 @@
 import { rentalService } from "@/services/rental.service";
 import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/constants/queryKey";
 const fetchDetailRentalAdmin = async (id: string) => {
   try {
     const response = await rentalService.getDetailRental(id);
@@ -14,7 +15,7 @@ const fetchDetailRentalAdmin = async (id: string) => {
 
 export const useGetDetailRentalAdminQuery = (id: string) => {
   return useQuery({
-    queryKey: ["admin-rentals", "detail", id],
+    queryKey: QUERY_KEYS.RENTAL.DETAIL_ADMIN(id),
     queryFn: () => fetchDetailRentalAdmin(id),
     enabled: !!id,
   });

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { walletService } from "@/services/wallet.service";
+import { walletService } from "@services/wallet.service";
+import { QUERY_KEYS } from "@constants/queryKey";
 const fetchAllWalletUser = async (
   {page , limit} : {page?: number; limit?: number} 
 ) => {
@@ -15,7 +16,7 @@ const fetchAllWalletUser = async (
 };
 export const useGetAllWalletQuery = ({page,limit} : {page?: number; limit?: number}) => {
   return useQuery({
-    queryKey: ["all-wallet-users",  page, limit ],
+    queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(page, limit),
     queryFn: () => fetchAllWalletUser({page, limit}),
   });
 };

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { refundService } from "@services/refund.service";
 import axios from "axios";
+import { QUERY_KEYS } from "@constants/queryKey";
 import { toast } from "sonner";
 const fetchDetailRefundRequests = async ({
     id
@@ -31,7 +32,7 @@ export const useGetDetailRefundRequestQuery = ({
   id : string
 }) => {
   return useQuery({
-    queryKey: ["refundRequests", id],
+    queryKey: QUERY_KEYS.REFUND.DETAIL_REFUND_REQUEST(id),
     queryFn: () => fetchDetailRefundRequests({ id }),
     enabled: !!id
   });

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useGetDashboardSummaryQuery } from "./query/Rent/useGetDashboardSummaryQuery";
 import useEndCurrentRental from "./mutations/Rentals/useEndCurrentRentalMutation";
 import { useGetSummaryRentalQuery } from "./query/Rent/useGetSummaryRental";
+import { QUERY_KEYS } from "@/constants/queryKey";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -126,15 +127,7 @@ export function useRentalsActions({
             if (result.status === 200) {
               toast.success("Phiên thuê xe đã được cập nhật thành công");
               queryClient.invalidateQueries({
-                queryKey: [
-                  "rentals",
-                  "all-admin-staff",
-                  page,
-                  limit,
-                  start_station,
-                  end_station,
-                  status,
-                ],
+                queryKey: QUERY_KEYS.RENTAL.ALL_ADMIN_STAFF(),
               });
             } else {
               const errorMessage =
@@ -183,15 +176,13 @@ export function useRentalsActions({
           if (result.status === 200) {
             toast.success(result.data?.message || "Kết thúc thuê xe thành công");
             queryClient.invalidateQueries({
-              queryKey: [
-                "rentals",
-                "all-admin-staff",
+              queryKey: QUERY_KEYS.RENTAL.ALL_ADMIN_STAFF(
                 page,
                 limit,
                 start_station,
                 end_station,
-                status,
-              ],
+                status
+              ),
             });
           } else {
             const errorMessage =

@@ -1,6 +1,7 @@
 import { reportService } from "@/services/report.service";
 import { useQuery } from "@tanstack/react-query";
 import { ReportStatus } from "@/types";
+import { QUERY_KEYS } from "@constants/queryKey";
 const getAllManageReport = async ({
   page , limit , status
 }: {page ?: number , limit ?: number , status ?: ReportStatus
@@ -14,7 +15,7 @@ const getAllManageReport = async ({
 }
 export const useGetAllManageReportQuery = ({ page , limit , status }: { page ?: number , limit ?: number , status ?: ReportStatus }) => {
   return useQuery({
-    queryKey: ["all", "report" , { page, limit ,status}],
+    queryKey: QUERY_KEYS.REPORT.ALL_REPORTS(page, limit, status),
     queryFn: () => getAllManageReport({ page, limit, status }),
     staleTime: 5 * 60 * 1000,
   });

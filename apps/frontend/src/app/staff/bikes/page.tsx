@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { BikeStatus } from "@custom-types";
-import { useBikeActions } from "@/hooks/useBikeAction";
+import { useBikeActions } from "@/hooks/use-bike";
 import { Loader2 } from "lucide-react";
 import { bikeColumn } from "@/columns/bike-colums";
 import { DataTable } from "@/components/TableCustom";

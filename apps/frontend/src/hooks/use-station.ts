@@ -12,6 +12,7 @@ import { useGetStationStatsReservationQuery } from "./query/Station/useGetStatio
 import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeRevenue";
 import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
 import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
+import { QUERY_KEYS } from "@constants/queryKey";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -103,9 +104,8 @@ export const useStationActions = ({
           if (result.status === 200) {
             toast.success(result.data?.message || "Đã tạo trạm thành công");
             queryClient.invalidateQueries({
-              queryKey: ["stations", "all"],
+              queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
             });
-            queryClient.invalidateQueries({ queryKey: ["station-stats"] });
           } else {
             const errorMessage =
               result.data?.message || "Error creating stations";
@@ -118,7 +118,7 @@ export const useStationActions = ({
         },
       });
     },
-    [hasToken, router, queryClient, useCreateStation]
+    [hasToken, router, queryClient, useCreateStation , page, limit, name]
   );
   const deleteStation = useCallback(
     async (stationId: string) => {
@@ -131,9 +131,8 @@ export const useStationActions = ({
           if (result.status === 200) {
             toast.success(result.data?.message || "Đã xóa trạm thành công");
             queryClient.invalidateQueries({
-              queryKey: ["stations", "all"],
+              queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
             });
-            queryClient.invalidateQueries({ queryKey: ["station-stats"] });
           } else {
             const errorMessage =
               result.data?.message || "Lỗi khi xóa trạm";
@@ -149,7 +148,7 @@ export const useStationActions = ({
         },
       });
     },
-    [hasToken, router, queryClient, useSoftDeleteStation]
+    [hasToken, router, queryClient, useSoftDeleteStation , page, limit, name]
   );
   const updateStation = useCallback(
     async (data: StationSchemaFormData) => {
@@ -162,9 +161,8 @@ export const useStationActions = ({
           if (result.status === 200) {
             toast.success(result.data?.message || "Đã cập nhật trạm thành công");
             queryClient.invalidateQueries({
-              queryKey: ["stations", "all"],
+              queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
             });
-            queryClient.invalidateQueries({ queryKey: ["station-stats"] });
           } else {
             const errorMessage =
               result.data?.message || "Lỗi khi cập nhật trạm";
@@ -177,7 +175,7 @@ export const useStationActions = ({
         },
       });
     },
-    [hasToken, router, queryClient, useUpdateStation]
+    [hasToken, router, queryClient, useUpdateStation , page, limit, name]
   );
   const { data: responseStationBikeRevenue, refetch: refetchStationBikeRevenue } = useGetStationBikeRevenue();
   const getStationBikeRevenue = useCallback(() => {

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
+import { QUERY_KEYS } from "@/constants/queryKey";
 const getStationBikeRevenue = async () => {
   try {
     const response = await stationService.getStationBikeRevenue();
@@ -13,7 +14,7 @@ const getStationBikeRevenue = async () => {
 };
 export const useGetStationBikeRevenue = () => {
   return useQuery({
-    queryKey: ["station-bike-revenue"],
+    queryKey: QUERY_KEYS.STATION.STATION_BIKE_REVENUE,
     queryFn: getStationBikeRevenue,
     enabled: false,
   });

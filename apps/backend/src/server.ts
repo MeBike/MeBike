@@ -73,7 +73,7 @@ app.use('/subscriptions', subscriptionRouter)
 app.use('/fixed-slots', fixedSlotTemplateRouter)
 app.use('/events', eventsRouter)
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+app.use('/api-docs', swaggerUi.serve as any, swaggerUi.setup(swaggerDocument) as any)
 
 app.use(defaultErrorHandler)
 

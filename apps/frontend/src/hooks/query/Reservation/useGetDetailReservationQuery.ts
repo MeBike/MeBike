@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { reservationService } from "@services/reservation.service";
-
+import { QUERY_KEYS } from "@/constants/queryKey";
 const getDetailReservation = async (id: string) => {
   try {
     const response = await reservationService.getDetailReservation(id);
@@ -14,7 +14,7 @@ const getDetailReservation = async (id: string) => {
 };
 export const useGetDetailReservationQuery = (id: string) => {
   return useQuery({
-    queryKey: ["detail-reservation", id],
+    queryKey: QUERY_KEYS.RESERVATION.DETAIL_RESERVATION(id),
     queryFn: () => getDetailReservation(id),
     staleTime: 5 * 60 * 1000,
     enabled: !!id,

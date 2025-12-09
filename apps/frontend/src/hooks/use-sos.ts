@@ -12,6 +12,7 @@ import { useConfirmSOSRequestMutation } from "./mutations/SOS/useConfirmSOSReque
 import { useResolveSOSRequestMutation } from "./mutations/SOS/useResolveSOSRequestMutaiton";
 import { useCreateRentalSOSRequestMutation } from "./mutations/SOS/useCreateRentalBySOSMutation";
 import { useCancelSOSRequestMutation } from "./mutations/SOS/useCancelSOSRequestMutation";
+import { QUERY_KEYS } from "@/constants/queryKey";
 interface UseSOSProps {
   hasToken: boolean;
   page?: number;
@@ -82,7 +83,6 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
     if (!hasToken || !id) {
       throw new Error("Unauthorized");
     }
-    
     return new Promise((resolve, reject) => {
       useAssignSOSRequest.mutate(
         data,
@@ -97,7 +97,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
                   "Yêu cầu cứu hộ đã được phân công thành công"
               );
               await queryClient.invalidateQueries({
-                queryKey: ["sos-requests"],
+                queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
               });
               await refetchSOSRequest();
               await refetchSOSDetail();
@@ -119,7 +119,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
         }
       );
     });
-  }, [refetchSOSRequest, refetchSOSDetail, hasToken, id, useAssignSOSRequest, queryClient]);
+  }, [refetchSOSRequest, refetchSOSDetail, hasToken, id, useAssignSOSRequest, queryClient , page, limit, status]);
   const useConfirmSOSRequest = useConfirmSOSRequestMutation(id || "");
   const confirmSOSRequest = useCallback(
     async () => {
@@ -136,7 +136,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
             if (result.status === 200) {
               toast.success(result.data?.message || "Xác nhận yêu cầu cứu hộ thành công");
               await queryClient.invalidateQueries({
-                queryKey: ["sos-requests"],
+                queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
               });
               await refetchSOSRequest();
               await refetchSOSDetail();
@@ -164,6 +164,9 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
       hasToken,
       useConfirmSOSRequest,
       queryClient,
+      page,
+      limit,
+      status,
     ]
   );
   const useResolveSOSRequest = useResolveSOSRequestMutation(id || "");
@@ -183,7 +186,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
               result.data?.message || "Giải quyết yêu cầu cứu hộ thành công"
             );
             await queryClient.invalidateQueries({
-              queryKey: ["sos-requests"],
+              queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
             });
             await refetchSOSRequest();
             await refetchSOSDetail();
@@ -212,6 +215,9 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
     id,
     useResolveSOSRequest,
     queryClient,
+    page,
+    limit,
+    status
   ]);
   const useCreateRental = useCreateRentalSOSRequestMutation(id || "");
   const createRentalRequest = useCallback(async () => {
@@ -230,7 +236,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
               result.data?.message || "Tạo thuê xe thành công"
             );
             await queryClient.invalidateQueries({
-              queryKey: ["sos-requests"],
+              queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
             });
             await refetchSOSRequest();
             await refetchSOSDetail();
@@ -259,6 +265,9 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
     id,
     useCreateRental,
     queryClient,
+    page,
+    limit,
+    status
   ]);
   const useCancelSOSRequest = useCancelSOSRequestMutation(id || "");
   const cancelSOSRequest = useCallback(async (data: { reason: string }) => {
@@ -277,7 +286,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
               result.data?.message || "Hủy yêu cầu SOS thành công"
             );
             await queryClient.invalidateQueries({
-              queryKey: ["sos-requests"],
+              queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
             });
             await refetchSOSRequest();
             await refetchSOSDetail();
@@ -306,8 +315,11 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
     id,
     useCancelSOSRequest,
     queryClient,
+    page,
+    limit,
+    status
   ]);
-  
+
   return {
     sosRequests,
     isLoading,

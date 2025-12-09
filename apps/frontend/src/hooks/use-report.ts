@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useResolveReportMutation } from "./mutations/Report/useResolveReportMutation";
 import { useGetReportByIdQuery } from "./query/Report/useGetReportByIDQuery";
 import type { ReportStatus } from "@/types";
+import { QUERY_KEYS } from "@/constants/queryKey";
 interface ErrorWithMessage {
   message: string;
 }
@@ -99,7 +100,9 @@ export const useUserReport = ({
                 toast.error(message);
               } else {
                 toast.success("Cập nhật báo cáo thành công");
-                queryClient.invalidateQueries({ queryKey: ["all", "report"] });
+                queryClient.invalidateQueries({ queryKey: QUERY_KEYS.REPORT.ALL_REPORTS(
+                  page, limit, status
+                )});
                 refetchReports();
               }
             } else {
@@ -118,7 +121,7 @@ export const useUserReport = ({
         }
       );
     },
-    [hasToken, router, queryClient, refetchReports, useUpdateReport]
+    [hasToken, router, queryClient, refetchReports, useUpdateReport, page, limit, status]
   );
   const {
     data: reportInProgress,
@@ -152,7 +155,9 @@ export const useUserReport = ({
                 toast.error(message);
               } else {
                 toast.success("Cập nhật báo cáo thành công!");
-                queryClient.invalidateQueries({ queryKey: ["all", "report"] });
+                queryClient.invalidateQueries({ queryKey: QUERY_KEYS.REPORT.ALL_REPORTS(
+                  page, limit, status
+                )});
                 refetchReports();
               }
             }
@@ -173,6 +178,8 @@ export const useUserReport = ({
       queryClient,
       useResolveReport,
       refetchReports,
+      page
+      , limit, status
     ]
   );
   const {data : reportById , refetch: refetchReportById , isLoading: isLoadingReportById} = useGetReportByIdQuery({id : id ?? ""}); 

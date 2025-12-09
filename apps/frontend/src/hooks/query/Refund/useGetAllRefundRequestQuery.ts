@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { refundService } from "@services/refund.service";
 import { RefundStatus } from "@/types";
+import { QUERY_KEYS } from "@/constants/queryKey";
 const fetchAllRefundRequests = async ({
   page,
   limit,
@@ -34,7 +35,7 @@ export const useGetAllRefundRequestQuery = ({
   status?: RefundStatus;
 }) => {
   return useQuery({
-    queryKey: ["refundRequests", page, limit, status],
+    queryKey: QUERY_KEYS.REFUND.ALL_REFUND_REQUESTS(page, limit, status),
     queryFn: () => fetchAllRefundRequests({ page, limit, status }),
   });
 };

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
+import { QUERY_KEYS } from "@/constants/queryKey";
 const fetchBikeActivityStats = async (bikeId: string) => {
   try {
     const response = await bikeService.getBikeActivityStats(bikeId);
@@ -13,7 +14,7 @@ const fetchBikeActivityStats = async (bikeId: string) => {
 };
 export const useGetBikeActivityStatsQuery = (bikeId: string) => {
   return useQuery({
-    queryKey: ["bike-activity-stats", bikeId],  
+    queryKey: QUERY_KEYS.BIKE.BIKE_ACTIVITY_STATS(bikeId),  
     queryFn: () => fetchBikeActivityStats(bikeId),
     enabled: !!bikeId, 
   });

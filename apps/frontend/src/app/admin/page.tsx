@@ -7,7 +7,7 @@ import { Bike, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@/components/ui/progress";
 import { useUserActions } from "@/hooks/use-user";
-import { useBikeActions } from "@/hooks/useBikeAction";
+import { useBikeActions } from "@/hooks/use-bike";
 import { useRentalsActions } from "@/hooks/use-rental";
 import { formatRevenue } from "@/lib/formatVND";
 export default function DashboardPage() {

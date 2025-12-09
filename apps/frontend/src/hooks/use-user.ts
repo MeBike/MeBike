@@ -16,6 +16,7 @@ import { ResetPasswordRequest } from "@/schemas/userSchema";
 import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
+import { QUERY_KEYS } from "@/constants/queryKey";
 interface ErrorWithMessage {
   message: string;
 }
@@ -174,19 +175,12 @@ export const useUserActions = ({
           if (result?.status === 201) {
             toast.success("Tạo người dùng thành công");
             queryClient.invalidateQueries({
-              queryKey: [
-                "all",
-                "user",
-                page,
-                limit,
-                verify || "all",
-                role || "all",
-              ],
+              queryKey: QUERY_KEYS.USER.ALL(),
             });
-            queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
             if (searchQuery && searchQuery.length > 0) {
               refetchSearch();
-            } else {
+            } else {  
               refetch();
             }
           } else {
@@ -259,18 +253,15 @@ export const useUserActions = ({
             data?: { message?: string };
           }) => {
             if (result?.status === 200) {
-              // Invalidate queries phải khớp với queryKey ở useGetAllUserQuery
               queryClient.invalidateQueries({
-                queryKey: [
-                  "all",
-                  "user",
+                queryKey: QUERY_KEYS.USER.ALL(
                   page,
                   limit,
-                  verify || "",
-                  role || "",
-                ],
+                  verify || "all",
+                  role || "all"
+                ),
               });
-              queryClient.invalidateQueries({ queryKey: ["user-stats"] });
+              queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
               refetchDetailUser();
               refetch();
               toast.success("Cập nhật thông tin người dùng thành công");
