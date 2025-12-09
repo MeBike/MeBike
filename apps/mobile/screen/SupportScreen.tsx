@@ -1,10 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
   FlatList,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -14,7 +12,8 @@ import {
   RefreshControl,
   ScrollView,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { ScreenHeader } from "@components/ScreenHeader";
 
 import { useReportActions } from "@hooks/useReportActions";
 import { LoadingScreen } from "@components/LoadingScreen";
@@ -25,7 +24,6 @@ import { formatVietnamDateTime } from "@/utils/date";
 
 function SupportScreen() {
   const navigation = useNavigation<SupportScreenNavigationProp>();
-  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = React.useState(false);
   const [selectedStatus, setSelectedStatus] = React.useState<ReportStatus | undefined>(undefined);
 
@@ -157,20 +155,10 @@ function SupportScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-      <LinearGradient
-        colors={["#0066FF", "#00B4D8"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.header, { paddingTop: insets.top + 16 }]}
-      >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="chevron-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Hỗ trợ & Báo cáo</Text>
-      </LinearGradient>
+      <ScreenHeader
+        title="Hỗ trợ & Báo cáo"
+        onBackPress={() => navigation.goBack()}
+      />
 
       <View style={styles.content}>
         {/* <TouchableOpacity
