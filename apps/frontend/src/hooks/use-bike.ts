@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
-import { QUERY_KEYS } from "@/constants/queryKey";
+import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index"
 interface ErrorResponse {
   response?: {
     data?: {
@@ -149,18 +149,18 @@ export const useBikeActions = (
           status: number;
           data?: { message?: string };
         }) => {
-          if (result.status === 201) {
-            toast.success(result.data?.message || "Xe đạp được tạo thành công");
+          if (result.status === HTTP_STATUS.CREATED) {
+            toast.success(result.data?.message || MESSAGE.CREATE_BIKE_SUCCESS);
             queryClient.invalidateQueries({
               queryKey:QUERY_KEYS.BIKE.ALL()
             });
           } else {
-            const errorMessage = result.data?.message || "Lỗi khi tạo xe đạp";
+            const errorMessage = result.data?.message || MESSAGE.CREATE_BIKE_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi tạo xe đạp");
+          const errorMessage = getErrorMessage(error, MESSAGE.CREATE_BIKE_FAILED);
           toast.error(errorMessage);
         },
       });
@@ -190,19 +190,19 @@ export const useBikeActions = (
             status: number;
             data?: { message?: string };
           }) => {
-            if (result.status === 200) {
-              toast.success(result.data?.message || "Cập nhật xe đạp thành công");
+            if (result.status === HTTP_STATUS.OK) {
+              toast.success(result.data?.message || MESSAGE.UPDATE_BIKE_SUCCESS);
               queryClient.invalidateQueries({
                 queryKey:QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id)
               });
             } else {
               const errorMessage =
-                result.data?.message || "Lỗi khi cập nhật xe đạp";
+                result.data?.message || MESSAGE.UPDATE_BIKE_FAILED;
               toast.error(errorMessage);
             }
           },
           onError: (error) => {
-            const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật xe đạp");
+            const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_BIKE_FAILED);
             toast.error(errorMessage);
           },
         }
@@ -228,16 +228,16 @@ export const useBikeActions = (
       }
       deleteBikeMutation.mutate(id, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Xóa xe đạp thành công");
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.message || MESSAGE.DELETE_BIKE_SUCCESS);
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIKE.ALL() });
           } else {
-            const errorMessage = result.data?.message || "Lỗi khi xóa xe đạp";
+            const errorMessage = result.data?.message || MESSAGE.DELETE_BIKE_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi xóa xe đạp");
+          const errorMessage = getErrorMessage(error, MESSAGE.DELETE_BIKE_FAILED);
           toast.error(errorMessage);
         },
       });
@@ -252,15 +252,15 @@ export const useBikeActions = (
       }
       reportBikeMutation.mutate(id, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Báo cáo xe đạp thành công");
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.message || MESSAGE.REPORT_BIKE_SUCCESS);
           } else {
-            const errorMessage = result.data?.message || "Error reporting bike";
+            const errorMessage = result.data?.message || MESSAGE.REPORT_BIKE_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error reporting bike");
+          const errorMessage = getErrorMessage(error, MESSAGE.REPORT_BIKE_FAILED);
           toast.error(errorMessage);
         },
       });

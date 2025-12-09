@@ -22,4 +22,12 @@ export const MESSAGE = {
     TOKEN_EXPIRED: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
     OTP_EXPIRED: "Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.",
     ERROR_IN_LOGOUT: "Lỗi khi đăng xuất",
+    CREATE_BIKE_SUCCESS: "Tạo xe đạp thành công",
+    CREATE_BIKE_FAILED: "Lỗi khi tạo xe đạp",
+    UPDATE_BIKE_SUCCESS: "Cập nhật xe đạp thành công",
+    UPDATE_BIKE_FAILED: "Lỗi khi cập nhật xe đạp",
+    DELETE_BIKE_SUCCESS: "Xóa xe đạp thành công",
+    DELETE_BIKE_FAILED: "Lỗi khi xóa xe đạp",
+    REPORT_BIKE_SUCCESS: "Báo cáo xe đạp thành công",
+    REPORT_BIKE_FAILED: "Lỗi khi báo cáo xe đạp",
 }
