@@ -504,6 +504,9 @@ importers:
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
+      effect:
+        specifier: ^3.19.10
+        version: 3.19.10
       hono:
         specifier: ^4.9.4
         version: 4.10.6
@@ -5354,6 +5357,9 @@ packages:
 
   effect@3.18.4:
     resolution: {integrity: sha512-b1LXQJLe9D11wfnOKAk3PKxuqYshQ0Heez+y5pnkd3jLj1yx9QhM72zZ9uUrOQyNvrs2GZZd/3maL0ZV18YuDA==}
+
+  effect@3.19.10:
+    resolution: {integrity: sha512-kT1vSSUIgTPNOOFnnqWwb0xb7K/VYuMFOoMOm71wYv3VJGcFMl3ojCdCCKtiiGqn8fMQPk7Fl9bBShQO6bgyFg==}
 
   electron-to-chromium@1.5.254:
     resolution: {integrity: sha512-DcUsWpVhv9svsKRxnSCZ86SjD+sp32SGidNB37KpqXJncp1mfUgKbHvBomE89WJDbfVKw1mdv5+ikrvd43r+Bg==}
@@ -16185,6 +16191,11 @@ snapshots:
   ee-first@1.1.1: {}
 
   effect@3.18.4:
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      fast-check: 3.23.2
+
+  effect@3.19.10:
     dependencies:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.2
