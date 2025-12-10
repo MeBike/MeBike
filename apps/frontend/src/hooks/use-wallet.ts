@@ -84,8 +84,10 @@ export function useWalletActions(
       }
       useTopUpWallet.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || MESSAGE.TOP_UP_WALLET_SUCCESS);
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(
+              result.data?.message || MESSAGE.TOP_UP_WALLET_SUCCESS
+            );
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
             });
@@ -116,7 +118,7 @@ export function useWalletActions(
       }
       useDebitWallet.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 200) {
+          if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.message || MESSAGE.DEBIT_WALLET_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
@@ -158,7 +160,7 @@ export function useWalletActions(
             status: number;
             data?: { message?: string };
           }) => {
-            if (result.status === 200) {
+            if (result.status === HTTP_STATUS.OK) {
               toast.success(result.data?.message || MESSAGE.UPDATE_STATUS_WALLET_SUCCESS);
               queryClient.invalidateQueries({
                 queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),

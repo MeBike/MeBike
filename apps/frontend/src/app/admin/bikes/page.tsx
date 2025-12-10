@@ -10,7 +10,7 @@ import { bikeColumn } from "@/columns/bike-colums";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useStationActions } from "@/hooks/use-station";
-import { useSupplierActions } from "@/hooks/useSupplierAction";
+import { useSupplierActions } from "@/hooks/use-supplier";
 import { getStatusColor } from "@utils/bike-status";
 import { formatDateUTC } from "@/utils/formatDateTime";
 export default function BikesPage() {

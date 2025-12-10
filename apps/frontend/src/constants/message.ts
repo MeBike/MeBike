@@ -70,6 +70,10 @@ export const MESSAGE = {
   DEBIT_WALLET_SUCCESS:"Trừ tiền vào ví người dùng thành công",
   DEBIT_WALLET_FAILED:"Trừ tiền vào ví người dùng thất bại",
   UPDATE_STATUS_WALLET_SUCCESS:"Cập nhật trạng thái ví thành công",
-  UPDATE_STATUS_WALLET_FAILED:"Cập nhật trạng thái ví thất bại"
+  UPDATE_STATUS_WALLET_FAILED:"Cập nhật trạng thái ví thất bại",
+  APPROVE_WITHDRAW_SUCCESS:"Duyệt yêu cầu rút tiền thành công",
+  APPROVE_WITHDRAW_FAILED:"Duyệt yêu cầu rút tiền thất bại",
+  REJECT_WITHDRAW_SUCCESS:"Từ chối yêu cầu rút tiền thành công",
+  REJECT_WITHDRAW_FAILED:"Từ chối yêu cầu rút tiền thất bại", 
   
 };
