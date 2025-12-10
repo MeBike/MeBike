@@ -1,7 +1,6 @@
 "use client";
 
 import { Logo as MetroLogo } from "@/components/logo";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Header from "@/components/ui/layout/Header";
 export default function GuideLayout({
@@ -9,7 +8,6 @@ export default function GuideLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   return (
     <div className="min-h-screen bg-background">
       <Header />

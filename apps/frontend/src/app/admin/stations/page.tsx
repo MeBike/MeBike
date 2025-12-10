@@ -26,7 +26,6 @@ export default function StationsPage() {
   const [limit] = useState<number>(10);
   const [stationID, setStationID] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [allStation, setAllStation] = useState<number>(0);
   const {
     getAllStations,
     stations,
@@ -111,9 +110,6 @@ export default function StationsPage() {
   useEffect(() => {
     getStationRevenue();
   }, [getStationRevenue]);
-  useEffect(() => {
-    setAllStation(paginationStations?.totalRecords || 0);
-  }, [paginationStations]);
 
   // MAP FOR CREATE MODAL
   useEffect(() => {
