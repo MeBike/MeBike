@@ -513,6 +513,9 @@ importers:
       pg:
         specifier: ^8.16.3
         version: 8.16.3
+      pino:
+        specifier: ^8.21.0
+        version: 8.21.0
     devDependencies:
       '@mebike/eslint-config':
         specifier: workspace:*
@@ -529,6 +532,9 @@ importers:
       eslint:
         specifier: ^9.36.0
         version: 9.39.1(jiti@2.6.1)
+      pino-pretty:
+        specifier: ^9.4.1
+        version: 9.4.1
       prisma:
         specifier: ^7.1.0
         version: 7.1.0(@types/react@19.1.17)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)

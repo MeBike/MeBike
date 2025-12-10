@@ -23,7 +23,8 @@
     "dotenv": "^17.2.3",
     "effect": "^3.19.10",
     "hono": "^4.9.4",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "pino": "^8.21.0"
   },
   "devDependencies": {
     "@mebike/eslint-config": "workspace:*",
@@ -31,6 +32,7 @@
     "@types/node": "^24.10.1",
     "@types/pg": "^8.15.6",
     "eslint": "^9.36.0",
+    "pino-pretty": "^9.4.1",
     "prisma": "^7.1.0",
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",
