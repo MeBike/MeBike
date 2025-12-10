@@ -59,5 +59,11 @@ export const MESSAGE = {
   DELETE_STATION_FAILED:"Xóa trạm không thành công",
   UPDATE_STATION_SUCCESS:"Cập nhật trạm thành công",
   UPDATE_STATION_FAILED:"Cập nhật trạm thất bại", 
+  CREATE_USER_SUCCESS:"Tạo người dùng thành công",
+  CREATE_USER_FAILED:"Tạo người dùng thất bại",
+  UPDATE_PASSWORD_USER_SUCCESS:"Cập nhật mật khẩu người dùng thành công",
+  UPDATE_PASSWORD_USER_FAILED:"Cập nhật mật khẩu thất bại",
+  UPDATE_USER_SUCCESS:"Cập nhật người dùng thành công",
+  UPDATE_USER_FAILED:"Cập nhật người dùng thất bại",  
   
 };

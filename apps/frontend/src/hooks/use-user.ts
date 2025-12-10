@@ -16,7 +16,7 @@ import { ResetPasswordRequest } from "@/schemas/userSchema";
 import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
-import { QUERY_KEYS } from "@/constants/queryKey";
+import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
 interface ErrorWithMessage {
   message: string;
 }
@@ -172,8 +172,8 @@ export const useUserActions = ({
           status: number;
           data?: { message?: string };
         }) => {
-          if (result?.status === 201) {
-            toast.success("Tạo người dùng thành công");
+          if (result?.status === HTTP_STATUS.CREATED) {
+            toast.success(result.data?.message || MESSAGE.CREATE_USER_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.USER.ALL(),
             });
@@ -185,12 +185,12 @@ export const useUserActions = ({
             }
           } else {
             const errorMessage =
-              result?.data?.message || "Lỗi khi tạo người dùng";
+              result?.data?.message || MESSAGE.CREATE_USER_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
+          const errorMessage = getErrorMessage(error, MESSAGE.CREATE_USER_FAILED);
           toast.error(errorMessage);
         },
       });
@@ -222,12 +222,12 @@ export const useUserActions = ({
           status: number;
           data?: { message?: string };
         }) => {
-          if (result?.status === 200) {
-            toast.success("Đặt lại mật khẩu thành công");
+          if (result?.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.message || MESSAGE.UPDATE_PASSWORD_USER_SUCCESS);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
+          const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_PASSWORD_USER_FAILED);
           toast.error(errorMessage);
         },
       });
@@ -252,25 +252,20 @@ export const useUserActions = ({
             status: number;
             data?: { message?: string };
           }) => {
-            if (result?.status === 200) {
+            if (result?.status === HTTP_STATUS.OK) {
               queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.USER.ALL(
-                  page,
-                  limit,
-                  verify || "all",
-                  role || "all"
-                ),
+                queryKey: QUERY_KEYS.USER.ALL(),
               });
               queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
               refetchDetailUser();
               refetch();
-              toast.success("Cập nhật thông tin người dùng thành công");
+              toast.success(MESSAGE.UPDATE_PROFILE_SUCCESS);
             }
           },
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(
               error,
-              "Lỗi khi cập nhật người dùng"
+              MESSAGE.UPDATE_PROFILE_FAILED
             );
             toast.error(errorMessage);
           },
