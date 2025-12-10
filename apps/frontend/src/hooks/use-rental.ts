@@ -11,7 +11,7 @@ import { useGetDashboardSummaryQuery } from "./query/Rent/useGetDashboardSummary
 import useEndCurrentRental from "./mutations/Rentals/useEndCurrentRentalMutation";
 import { useGetSummaryRentalQuery } from "./query/Rent/useGetSummaryRental";
 import { QUERY_KEYS ,HTTP_STATUS , MESSAGE} from "@constants/index";
-import { Html } from "next/document";
+
 
 type ErrorResponse = {
   response?: {

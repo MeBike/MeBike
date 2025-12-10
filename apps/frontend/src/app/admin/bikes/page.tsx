@@ -18,7 +18,6 @@ export default function BikesPage() {
   const [editId, setEditId] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [limit,] = useState<number>(10);
-  const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -41,7 +40,6 @@ export default function BikesPage() {
     getStatisticsBike,
     statisticData,
     isLoadingStatistics,
-    paginationOfBikes,
     paginationBikes,
     createBike,
     updateBike,
@@ -722,7 +720,6 @@ export default function BikesPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setSearchQuery("");
                   setStatusFilter("all");
                 }}
               >
