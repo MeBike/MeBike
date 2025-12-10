@@ -244,7 +244,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
             resolve(result);
           } else {
             const errorMessage =
-              result.data?.message || MESSAGE.CREATE_BIKE_FAILED;
+              result.data?.message || MESSAGE.CREATE_SOS_FAILED;
             toast.error(errorMessage);
             reject(new Error(errorMessage));
           }
