@@ -2,7 +2,7 @@
   "extends": "@mebike/tsconfig/base.json",
   "compilerOptions": {
     "baseUrl": "./",
-    "rootDir": "./src",
+    "rootDir": "./",
     "paths": {
       "@/*": ["./src/*"]
     },
