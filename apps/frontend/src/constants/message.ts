@@ -39,8 +39,19 @@ export const MESSAGE = {
   UPDATE_RENTAL_FAILED: "Lỗi khi cập nhật phiên thuê xe",
   END_RENTAL_SUCCESS: "Kết thúc phiên thuê xe thành công",
   END_RENTAL_FAILED: "Kết thúc phiên thuê xe thất bại",
-  UPDATE_REPORT_SUCCESS:"Cập nhật báo cáo thành công",
-  UPDATE_REPORT_FAILED:"Lỗi khi cập nhật báo cáo",
-  RESOLVE_REPORT_SUCCESS:"Xử lý báo cáo thành công",
-  RESOLVE_REPORT_FAILED:"Lỗi khi xử lý báo cáo"
+  UPDATE_REPORT_SUCCESS: "Cập nhật báo cáo thành công",
+  UPDATE_REPORT_FAILED: "Lỗi khi cập nhật báo cáo",
+  RESOLVE_REPORT_SUCCESS: "Xử lý báo cáo thành công",
+  RESOLVE_REPORT_FAILED: "Lỗi khi xử lý báo cáo",
+  ASSIGN_SOS_GUEST_SUCCESS: "Yêu cầu cứu hộ đã được phân công thành công",
+  ASSIGN_SOS_GUEST_FAILED: "Yêu cầu cứu hộ đã được phân công thất bại",
+  CONFIRM_SOS_GUEST_SUCCESS: "Xác nhận yêu cầu cứu hộ thành công",
+  CONFIRM_SOS_GUEST_FAILED: "Xác nhận yêu cầu cứu hộ thất bại",
+  RESOLVE_SOS_SUCCESS:"Giải quyết cứu hộ thành công",
+  RESOLVE_SOS_FAILED:"Giải quyết cứu hộ thất bại",
+  CREATE_SOS_SUCCESS:"Tạo phiên thuê xe thành công",
+  CREATE_SOS_FAILED:"Tạo phiên thuê xe thất bại",
+  CANCEL_SOS_SUCCESS:"Hủy phiên thuê xe thành công",
+  CANCEL_SOS_FAILED:"Hủy phiên thuê xe thất bại"
+  
 };
