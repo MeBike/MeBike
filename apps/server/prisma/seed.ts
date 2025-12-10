@@ -1,0 +1,47 @@
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { randomUUID } from "node:crypto";
+import process from "node:process";
+
+import { PrismaClient } from "../generated/prisma/client";
+import { stations } from "./seed/stations.data";
+
+function getConnectionString() {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL is not set");
+  }
+  return url;
+}
+
+async function main() {
+  const connectionString = getConnectionString();
+  const adapter = new PrismaPg({ connectionString });
+  const prisma = new PrismaClient({ adapter });
+
+  // Clear existing data to ensure a fresh seed
+  await prisma.$executeRaw`TRUNCATE TABLE "stations" RESTART IDENTITY CASCADE`;
+
+  for (const station of stations) {
+    const updatedAt = new Date(station.updatedAt);
+    await prisma.$executeRaw`
+      INSERT INTO "stations" ("id", "name", "address", "capacity", "position", "updated_at")
+      VALUES (
+        ${randomUUID()}::uuid,
+        ${station.name},
+        ${station.address},
+        ${station.capacity},
+        ST_GeogFromText(${`SRID=4326;POINT(${station.longitude} ${station.latitude})`}),
+        ${updatedAt}
+      )
+      ON CONFLICT ("name") DO NOTHING;
+    `;
+  }
+
+  await prisma.$disconnect();
+}
+
+main().catch((error) => {
+  console.error("Seed failed", error);
+  process.exit(1);
+});

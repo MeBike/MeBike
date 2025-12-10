@@ -11,7 +11,8 @@
     "dev:test": "vitest --watch",
     "lint": "eslint .",
     "dev": "tsx --watch src/http/server.ts",
-    "start": "node dist/http/server.js"
+    "start": "node dist/http/server.js",
+    "seed": "pnpm prisma db seed"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.3",
@@ -37,5 +38,8 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
+  },
+  "prisma": {
+    "seed": "pnpm tsx prisma/seed.ts"
   }
 }

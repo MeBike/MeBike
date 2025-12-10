@@ -1,13 +1,9 @@
-import { serve } from "@hono/node-server";
+import { Effect } from "effect";
+import process from "node:process";
 
-import { createHttpApp } from "./app";
+import { startHonoServer } from "./bootstrap";
 
-const port = Number(process.env.PORT ?? 4000);
-const app = createHttpApp();
-
-serve({
-  fetch: app.fetch,
-  port,
+Effect.runPromise(startHonoServer).catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
 });
-
-console.log(`Server listening on http://localhost:${port} (docs at /docs)`);
