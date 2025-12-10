@@ -22,7 +22,7 @@ export const StationStatsReportsSchema = z.object({
   totalReports: z.number(),
   byType: z.record(z.string(), z.number()),
 });
-
+  
 export const StationStatsUtilizationSchema = z.object({
   rate: z.number(),
   availableMinutes: z.number(),

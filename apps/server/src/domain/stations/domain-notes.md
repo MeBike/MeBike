@@ -78,3 +78,69 @@ In the new domain-first design, this should be split into:
 - `stations` domain model + invariants (no DB, no formatting).
 - `stations` read models / analytics module (pure queries + DTOs).
 - Time & formatting helpers (separate, shared utilities).
+
+---
+
+## Rewrite Progress Checklist (Stations)
+
+### 1. Shared Contracts (`packages/shared/src/contracts/server/stations/*`)
+
+- [x] Define core models (`StationSummary`, stats, revenue, alerts, nearest bike).
+- [x] Define station-specific error codes and details.
+- [x] Define shared error envelope (`ServerErrorResponse`) and station error response.
+- [x] Define station query routes with OpenAPI metadata.
+- [ ] Define station mutation routes (create/update/delete station).
+- [ ] Define contract route for station rentals (`GET /v1/stations/{stationId}/rentals`) if kept in v2.
+- [x] Ensure all station routes use ISO-8601 date strings at the boundary.
+
+### 2. HTTP Contracts Wiring (`apps/server/src/http/app.ts`)
+
+- [x] Expose `serverOpenApi` via `/docs/openapi.json`.
+- [x] Mount Scalar UI at `/docs` and verify “Stations” tag group appears.
+- [x] Register all station routes with `app.openapi` using stub implementations.
+- [ ] Replace stubs with real handlers that call station use-cases.
+
+### 3. Stations Domain Design (`apps/server/src/domain/stations`)
+
+- [ ] Define station domain types (entities/value objects) decoupled from persistence.
+- [ ] Define repository interfaces for:
+  - [ ] Stations (lookup, list, create/update/delete).
+  - [ ] Bikes at station (counts by status, nearest available bike).
+  - [ ] Station analytics/read models (stats, revenue, alerts).
+- [ ] Define use-cases (aligned with legacy routes + contracts):
+  - [ ] `listStations` – list stations with filters (name, address, coords, capacity).
+  - [ ] `getStation` – station detail including bike status counts, ratings snapshot.
+  - [ ] `getStationStats` – stats for a station in a date range.
+  - [ ] `getAllStationsRevenue` – revenue summary for all stations.
+  - [ ] `getBikeRevenueByStation` – revenue per bike for each station.
+  - [ ] `getHighestRevenueStation` – top station by revenue in a period.
+  - [ ] `getNearbyStations` – nearby stations by lat/lng (+ pagination).
+  - [ ] `getNearestAvailableBike` – nearest AVAILABLE bike for coordinates.
+  - [ ] `getStationAlerts` – overloaded / underloaded / broken / empty alerts.
+  - [ ] `getStationRentals` – rentals at a given station (admin/staff view).
+  - [ ] `createStation` – admin station creation with validation.
+  - [ ] `updateStation` – admin station update (with invariants).
+  - [ ] `deleteStation` – admin station delete with safety checks (no bikes/rentals).
+
+### 4. Infrastructure & Persistence
+
+- [ ] Map repositories to Prisma/Postgres schemas.
+- [ ] Implement query layer for:
+  - [ ] Current bikes per station.
+  - [ ] Rentals/returns aggregation per station.
+  - [ ] Revenue and utilization metrics.
+  - [ ] Alerts thresholds (overloaded/underloaded/broken/empty).
+
+### 5. Error Mapping & Validation
+
+- [x] Decide station domain error codes and their meaning.
+- [ ] Map domain errors → HTTP errors using `StationErrorDetailSchema`.
+- [ ] Add unit tests for:
+  - [ ] Date range validation.
+  - [ ] Station not found / no available bike cases.
+
+### 6. Testing & Verification
+
+- [ ] Unit tests for station use-cases (pure domain).
+- [ ] Integration tests for HTTP layer (Hono handlers) hitting in-memory or test DB.
+- [ ] Cross-check new responses against legacy backend where behavior should match.
