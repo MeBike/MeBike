@@ -12,7 +12,7 @@ import { useGetStationStatsReservationQuery } from "./query/Station/useGetStatio
 import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeRevenue";
 import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
 import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
-import { QUERY_KEYS } from "@constants/queryKey";
+import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -101,19 +101,19 @@ export const useStationActions = ({
       }
       useCreateStation.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Đã tạo trạm thành công");
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.message || MESSAGE.CREATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
+              queryKey: QUERY_KEYS.STATION.ALL(),
             });
           } else {
             const errorMessage =
-              result.data?.message || "Error creating stations";
+              result.data?.message || MESSAGE.CREATE_STATION_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error creating bikes");
+          const errorMessage = getErrorMessage(error, MESSAGE.CREATE_STATION_FAILED);
           toast.error(errorMessage);
         },
       });
@@ -129,20 +129,20 @@ export const useStationActions = ({
       useSoftDeleteStation.mutate(stationId, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success(result.data?.message || "Đã xóa trạm thành công");
+            toast.success(result.data?.message || MESSAGE.DELETE_STATION_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
+              queryKey: QUERY_KEYS.STATION.ALL(),
             });
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi xóa trạm";
+              result.data?.message || MESSAGE.DELETE_STATION_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error deleting stations"
+            MESSAGE.DELETE_STATION_FAILED
           );
           toast.error(errorMessage);
         },
@@ -159,18 +159,18 @@ export const useStationActions = ({
       useUpdateStation.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success(result.data?.message || "Đã cập nhật trạm thành công");
+            toast.success(result.data?.message || MESSAGE.UPDATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
+              queryKey: QUERY_KEYS.STATION.ALL(),
             });
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi cập nhật trạm";
+              result.data?.message || MESSAGE.UPDATE_STATION_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật trạm");
+          const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_STATION_FAILED);
           toast.error(errorMessage);
         },
       });

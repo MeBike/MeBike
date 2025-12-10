@@ -52,6 +52,12 @@ export const MESSAGE = {
   CREATE_SOS_SUCCESS:"Tạo phiên thuê xe thành công",
   CREATE_SOS_FAILED:"Tạo phiên thuê xe thất bại",
   CANCEL_SOS_SUCCESS:"Hủy phiên thuê xe thành công",
-  CANCEL_SOS_FAILED:"Hủy phiên thuê xe thất bại"
+  CANCEL_SOS_FAILED:"Hủy phiên thuê xe thất bại",
+  CREATE_STATION_SUCCESS:"Tạo trạm thành công",
+  CREATE_STATION_FAILED:"Tạo trạm thất bại",
+  DELETE_STATION_SUCCESS:"Xóa trạm thành công",
+  DELETE_STATION_FAILED:"Xóa trạm không thành công",
+  UPDATE_STATION_SUCCESS:"Cập nhật trạm thành công",
+  UPDATE_STATION_FAILED:"Cập nhật trạm thất bại", 
   
 };
