@@ -13,7 +13,7 @@ import { useGetWalletOverviewQuery } from "./query/Wallet/useGetWalletOverviewQu
 import { useGetDetailWalletQuery } from "./query/Wallet/useGetDetailWalletQuery";
 import { useUpdateStatusWalletMutation } from "./mutations/Wallet/useUpdateStatusWalletMutation";
 import { useRouter } from "next/navigation";
-import { QUERY_KEYS } from "@/constants/queryKey";
+import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -85,7 +85,7 @@ export function useWalletActions(
       useTopUpWallet.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success(result.data?.message || "Đã nạp tiền vào ví thành công");
+            toast.success(result.data?.message || MESSAGE.TOP_UP_WALLET_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
             });
@@ -94,14 +94,14 @@ export function useWalletActions(
             });
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi nạp tiền vào ví";
+              result.data?.message || MESSAGE.TOP_UP_WALLET_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error topping up wallet"
+            MESSAGE.TOP_UP_WALLET_FAILED
           );
           toast.error(errorMessage);
         },
@@ -117,7 +117,7 @@ export function useWalletActions(
       useDebitWallet.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success(result.data?.message || "Đã trừ tiền vào ví thành công");
+            toast.success(result.data?.message || MESSAGE.DEBIT_WALLET_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
             });
@@ -126,12 +126,12 @@ export function useWalletActions(
             });
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi trừ tiền vào ví";
+              result.data?.message || MESSAGE.DEBIT_WALLET_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi trừ tiền vào ví");
+          const errorMessage = getErrorMessage(error, MESSAGE.DEBIT_WALLET_FAILED);
           toast.error(errorMessage);
         },
       });
@@ -159,20 +159,20 @@ export function useWalletActions(
             data?: { message?: string };
           }) => {
             if (result.status === 200) {
-              toast.success(result.data?.message || "Cập nhật trạng thái ví thành công");
+              toast.success(result.data?.message || MESSAGE.UPDATE_STATUS_WALLET_SUCCESS);
               queryClient.invalidateQueries({
                 queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
               });
             } else {
               const errorMessage =
-                result.data?.message || "Lỗi khi cập nhật trạng thái ví";
+                result.data?.message || MESSAGE.UPDATE_STATUS_WALLET_FAILED;
               toast.error(errorMessage);
             }
           },
           onError: (error) => {
             const errorMessage = getErrorMessage(
               error,
-              "Error updating wallet status"
+              MESSAGE.UPDATE_STATUS_WALLET_FAILED
             );
             toast.error(errorMessage);
           },

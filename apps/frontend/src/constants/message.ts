@@ -64,6 +64,12 @@ export const MESSAGE = {
   UPDATE_PASSWORD_USER_SUCCESS:"Cập nhật mật khẩu người dùng thành công",
   UPDATE_PASSWORD_USER_FAILED:"Cập nhật mật khẩu thất bại",
   UPDATE_USER_SUCCESS:"Cập nhật người dùng thành công",
-  UPDATE_USER_FAILED:"Cập nhật người dùng thất bại",  
+  UPDATE_USER_FAILED:"Cập nhật người dùng thất bại",
+  TOP_UP_WALLET_SUCCESS:"Nạp tiền vào ví người dùng thành công",
+  TOP_UP_WALLET_FAILED:"Nạp tiền vào ví người dùng thất bại",
+  DEBIT_WALLET_SUCCESS:"Trừ tiền vào ví người dùng thành công",
+  DEBIT_WALLET_FAILED:"Trừ tiền vào ví người dùng thất bại",
+  UPDATE_STATUS_WALLET_SUCCESS:"Cập nhật trạng thái ví thành công",
+  UPDATE_STATUS_WALLET_FAILED:"Cập nhật trạng thái ví thất bại"
   
 };
