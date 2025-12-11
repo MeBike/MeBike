@@ -8,7 +8,13 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503,
 };
-
+export interface GraphQLResponse<T> {
+  data: T;
+  success?: string;
+  message?:string;
+  errors?: any[];
+  statusCode?:number;
+}
 export class FetchHttpClient {
   private baseURL: string;
   private axiosInstance: AxiosInstance;
@@ -25,7 +31,7 @@ export class FetchHttpClient {
       headers: {
         "Content-Type": "application/json;charset=UTF-8",
       },
-       timeout: 30000, // Tăng lên 30 giây để đủ thời gian cho email service
+      timeout: 30000, // Tăng lên 30 giây để đủ thời gian cho email service
     });
     this.axiosInstance.interceptors.request.use((config) => {
       const access_token = getAccessToken();
@@ -37,28 +43,36 @@ export class FetchHttpClient {
 
     this.axiosInstance.interceptors.response.use(
       (response) => {
-        console.log('API Response:', response.status, response.config.url);
+        console.log("API Response:", response.status, response.config.url);
         return response;
       },
       async (error) => {
-        console.log('API Error:', error.response?.status, error.config?.url, error.response?.data);
+        console.log(
+          "API Error:",
+          error.response?.status,
+          error.config?.url,
+          error.response?.data
+        );
         const originalRequest = error.config;
-        
+
         // Các endpoint không cần retry token refresh
         const noAuthRetryEndpoints = [
-          '/users/verify-email',
-          '/users/verify-forgot-password',
-          '/users/reset-password',
-          '/users/resend-verify-email',
-          '/users/refresh-token',
-          '/users/change-password',
+          "/users/verify-email",
+          "/users/verify-forgot-password",
+          "/users/reset-password",
+          "/users/resend-verify-email",
+          "/users/refresh-token",
+          "/users/change-password",
         ];
-        
-        const shouldSkipTokenRefresh = noAuthRetryEndpoints.some(endpoint => 
+
+        const shouldSkipTokenRefresh = noAuthRetryEndpoints.some((endpoint) =>
           originalRequest?.url?.includes(endpoint)
         );
-        
-        if (error.response?.status === HTTP_STATUS.UNAUTHORIZED && !shouldSkipTokenRefresh) {
+
+        if (
+          error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
+          !shouldSkipTokenRefresh
+        ) {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
@@ -117,7 +131,7 @@ export class FetchHttpClient {
   }
   private async refreshAccessToken(): Promise<string> {
     const refreshToken = getRefreshToken();
-    console.log('Refreshing token with:', refreshToken);
+    console.log("Refreshing token with:", refreshToken);
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
@@ -126,7 +140,7 @@ export class FetchHttpClient {
       { refresh_token: refreshToken },
       { headers: { "Content-Type": "application/json" } }
     );
-    console.log('Refresh token response:', response.status, response.data);
+    console.log("Refresh token response:", response.status, response.data);
     if (response.status !== HTTP_STATUS.OK) {
       clearTokens();
       throw new Error("Refresh token expired");
@@ -146,14 +160,26 @@ export class FetchHttpClient {
     });
     this.failedQueue = [];
   }
- 
-   async get<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
-     return this.axiosInstance.get(url, {
-       params: params ? { ...params } : {},
-     });
-   }
+  private async requestGraphql<T>(
+    payload: { query: string; variables?: object },
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<GraphQLResponse<T>>> {
+    return this.axiosInstance.post<GraphQLResponse<T>>(
+      "/graphql",
+      payload,
+      config
+    );
+  }
+  async get<T>(
+    url: string,
+    params?: AxiosRequestConfig["params"]
+  ): Promise<AxiosResponse<T>> {
+    return this.axiosInstance.get(url, {
+      params: params ? { ...params } : {},
+    });
+  }
 
-   async post<T>(
+  async post<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
     config?: AxiosRequestConfig<unknown> | undefined
@@ -177,10 +203,27 @@ export class FetchHttpClient {
     return this.axiosInstance.patch(url, data, config);
   }
   //axios.delete(url[, config])
-  async delete<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
+  async delete<T>(
+    url: string,
+    params?: AxiosRequestConfig["params"]
+  ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.delete(url, {
       params: params ? { ...params } : undefined,
     });
+  }
+  async query<T>(
+    queryString: string,
+    variables: object = {},
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<GraphQLResponse<T>>> {
+    return this.requestGraphql<T>({ query: queryString, variables }, config);
+  }
+  async mutation<T>(
+    mutationString: string,
+    variables: object = {},
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<GraphQLResponse<T>>> {
+    return this.requestGraphql<T>({ query: mutationString, variables }, config);
   }
 }
 
