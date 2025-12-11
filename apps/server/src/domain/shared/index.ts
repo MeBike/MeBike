@@ -1,1 +1,1 @@
-// shared domain primitives will go here
+export * from "./pagination";
