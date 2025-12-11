@@ -10,11 +10,12 @@ export const HTTP_STATUS = {
 };
 export interface GraphQLResponse<T> {
   data: T;
-  success?: string;
+  success?: boolean;
   message?:string;
-  errors?: any[];
+  errors?: { message: string; [key: string]: any }[];
   statusCode?:number;
 }
+const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_API_GRAPH_QL;
 export class FetchHttpClient {
   private baseURL: string;
   private axiosInstance: AxiosInstance;
@@ -165,7 +166,7 @@ export class FetchHttpClient {
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<GraphQLResponse<T>>> {
     return this.axiosInstance.post<GraphQLResponse<T>>(
-      "/graphql",
+      `${GRAPHQL_ENDPOINT}`,
       payload,
       config
     );
