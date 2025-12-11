@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
@@ -16,6 +16,7 @@ type StationRow = {
   latitude: number;
   longitude: number;
 };
+type NearestStationRow = StationRow & { distance_meters: number };
 
 export function listStationsWithOffset(
   filter: StationFilter,
@@ -75,5 +76,87 @@ function toStationOrderBy(
       return { name: sortDir };
   }
 }
-export function getStationById() {}
-export function listNearestStations() {}
+export function getStationById(
+  id: string,
+): Effect.Effect<Option.Option<StationRow>, never, Prisma> {
+  return Effect.gen(function* () {
+    const { client } = yield* Prisma;
+    const station = yield* Effect.promise(() =>
+      client.station.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          capacity: true,
+          latitude: true,
+          longitude: true,
+        },
+      }),
+    );
+    return station ? Option.some(station) : Option.none<StationRow>();
+  });
+}
+
+export function listNearestStations(params: {
+  latitude: number;
+  longitude: number;
+  maxDistanceMeters?: number;
+  page?: number;
+  pageSize?: number;
+}): Effect.Effect<PageResult<NearestStationRow>, never, Prisma> {
+  const {
+    latitude,
+    longitude,
+    maxDistanceMeters,
+    page = 1,
+    pageSize = 10,
+  } = params;
+  const { page: p, pageSize: size, skip, take } = normalizedPage({ page, pageSize });
+
+  return Effect.gen(function* () {
+    const { client } = yield* Prisma;
+
+    const rows = yield* Effect.promise(() =>
+      client.$queryRaw<NearestStationRow[]>`
+        SELECT
+          id,
+          name,
+          address,
+          capacity,
+          latitude,
+          longitude,
+          ST_Distance(
+            position,
+            ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
+          ) AS distance_meters
+        FROM "stations"
+        WHERE ${maxDistanceMeters ?? null} IS NULL
+          OR ST_DWithin(
+            position,
+            ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
+            ${maxDistanceMeters ?? 0}
+          )
+        ORDER BY distance_meters
+        OFFSET ${skip}
+        LIMIT ${take}
+      `,
+    );
+
+    const total = yield* Effect.promise(() =>
+      client.$queryRaw<{ count: bigint }[]>`
+        SELECT COUNT(*)::bigint AS count
+        FROM "stations"
+        WHERE ${maxDistanceMeters ?? null} IS NULL
+          OR ST_DWithin(
+            position,
+            ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
+            ${maxDistanceMeters ?? 0}
+          )
+      `,
+    );
+    const totalCount = total.length ? Number(total[0].count) : 0;
+
+    return makePageResult(rows, totalCount, p, size);
+  });
+}
