@@ -6,6 +6,8 @@
 
 */
 -- DropForeignKey
+CREATE EXTENSION IF NOT EXISTS "postgis" WITH SCHEMA "public";
+
 ALTER TABLE "Post" DROP CONSTRAINT "Post_authorId_fkey";
 
 -- DropTable

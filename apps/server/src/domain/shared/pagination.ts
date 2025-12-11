@@ -15,14 +15,21 @@ export type PageRequest<SortField extends string = string> = {
   sortDir?: SortDirection;
 };
 
-export function normalizedPage({ page, pageSize }: PageRequest) {
-  const p = Math.max(1, page);// default to 1
+export function normalizedPage<SortField extends string>({
+  page,
+  pageSize,
+  sortBy,
+  sortDir,
+}: PageRequest<SortField>) {
+  const p = Math.max(1, page); // default to 1
   const size = Math.max(1, pageSize);
   return {
     page: p,
     pageSize: size,
     skip: (p - 1) * size,
     take: size,
+    sortBy,
+    sortDir: sortDir || "asc", // default to ascending
   };
 };
 export function makePageResult<T>(
