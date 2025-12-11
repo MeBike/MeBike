@@ -12,7 +12,7 @@ export interface GraphQLResponse<T> {
   data: T;
   success?: boolean;
   message?:string;
-  errors?: { message: string; [key: string]: any }[];
+  errors?: { message: string; [key: string]: string }[];
   statusCode?:number;
 }
 const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_API_GRAPH_QL;
