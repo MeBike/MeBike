@@ -19,18 +19,28 @@ async function main() {
   const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
 
-  // Clear existing data to ensure a fresh seed
   await prisma.$executeRaw`TRUNCATE TABLE "stations" RESTART IDENTITY CASCADE`;
 
   for (const station of stations) {
     const updatedAt = new Date(station.updatedAt);
     await prisma.$executeRaw`
-      INSERT INTO "stations" ("id", "name", "address", "capacity", "position", "updated_at")
+      INSERT INTO "stations" (
+        "id",
+        "name",
+        "address",
+        "capacity",
+        "latitude",
+        "longitude",
+        "position",
+        "updated_at"
+      )
       VALUES (
         ${randomUUID()}::uuid,
         ${station.name},
         ${station.address},
         ${station.capacity},
+        ${station.latitude},
+        ${station.longitude},
         ST_GeogFromText(${`SRID=4326;POINT(${station.longitude} ${station.latitude})`}),
         ${updatedAt}
       )

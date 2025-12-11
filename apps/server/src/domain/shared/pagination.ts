@@ -5,7 +5,15 @@ export type PageResult<T> = {
   total: number;
   totalPages: number;
 };
-export type PageRequest = { page: number; pageSize: number };
+
+export type SortDirection = "asc" | "desc";
+
+export type PageRequest<SortField extends string = string> = {
+  page: number;
+  pageSize: number;
+  sortBy?: SortField;
+  sortDir?: SortDirection;
+};
 
 export function normalizedPage({ page, pageSize }: PageRequest) {
   const p = Math.max(1, page);// default to 1

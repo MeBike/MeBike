@@ -2,6 +2,8 @@ import { Data, Effect } from "effect";
 
 import { makePrismaClient } from "@/lib/prisma";
 
+import type { PrismaClient } from "../../generated/prisma/client";
+
 export class PrismaInitError extends Data.TaggedError("PrismaInitError")<{
   readonly reason: string;
   readonly cause?: unknown;
@@ -22,6 +24,6 @@ export class Prisma extends Effect.Service<Prisma>()("Prisma", {
       client => Effect.promise(() => client.$disconnect()),
     );
 
-    return { client } as const;
+    return { client } as const satisfies { client: PrismaClient };
   }),
 }) {}
