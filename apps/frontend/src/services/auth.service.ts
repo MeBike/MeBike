@@ -8,11 +8,13 @@ import type {
   ResetPasswordSchemaFormData,
 } from "@schemas/authSchema";
 import type { AxiosResponse } from "axios";
+import { LOGIN_MUTATION } from "@/graphql";
+import { GraphQLResponse } from "@/lib/httpClient";
 interface AuthResponse {
   message: string;
   result: {
-    access_token: string;
-    refresh_token: string;
+    accessToken: string;
+    refreshToken: string;
   };
 }
 interface MessageResponse {
@@ -21,6 +23,9 @@ interface MessageResponse {
     refresh_token: string;
   };
   message: string;
+}
+export interface LoginMutationResponse {
+  authResponse: AuthResponse;
 }
 export const ROLES = ["USER", "ADMIN", "STAFF"] as const;
 export type RoleType = (typeof ROLES)[number];
@@ -47,12 +52,14 @@ export interface ProfileUserResponse {
 export const authService = {
   login: async (
     data: LoginSchemaFormData
-  ): Promise<AxiosResponse<AuthResponse>> => {
-    const response = await fetchHttpClient.post<AuthResponse>(
-      "/users/login",
-      data
-    );
-    return response;
+  ): Promise<AxiosResponse<GraphQLResponse<LoginMutationResponse>>> => {
+    return fetchHttpClient.mutation<LoginMutationResponse>(LOGIN_MUTATION, {
+      // QUAN TRỌNG: Phải bọc trong object "body" để khớp với $body trong mutation
+      body: {
+        email: data.email,
+        password: data.password,
+      },
+    });
   },
   register: async (
     data: RegisterSchemaFormData

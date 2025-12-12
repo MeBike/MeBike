@@ -166,7 +166,7 @@ export class FetchHttpClient {
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<GraphQLResponse<T>>> {
     return this.axiosInstance.post<GraphQLResponse<T>>(
-      `${GRAPHQL_ENDPOINT}`,
+      "",
       payload,
       config
     );

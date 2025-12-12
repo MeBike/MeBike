@@ -96,8 +96,8 @@ export const useAuthActions = () => {
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { access_token, refresh_token } = result.data.result;
-            setTokens(access_token, refresh_token);
+            const { accessToken, refreshToken } = result.data.data.authResponse.result;
+            setTokens(accessToken, refreshToken);
             window.dispatchEvent(new Event("token:changed"));
             window.dispatchEvent(
               new StorageEvent("storage", { key: "auth_tokens" })
