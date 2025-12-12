@@ -8,14 +8,7 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503,
 };
-export interface GraphQLResponse<T> {
-  data: T;
-  success?: boolean;
-  message?:string;
-  errors?: { message: string; [key: string]: string }[];
-  statusCode?:number;
-}
-const GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_API_GRAPH_QL;
+import { GraphQLResponse } from "@/types/GraphQL";
 export class FetchHttpClient {
   private baseURL: string;
   private axiosInstance: AxiosInstance;
