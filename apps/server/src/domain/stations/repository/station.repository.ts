@@ -10,6 +10,7 @@ import type {
   Prisma as PrismaTypes,
 } from "../../../../generated/prisma/client";
 import type {
+  NearestSearchArgs,
   NearestStationRow,
   StationRepo,
   StationSortField,
@@ -98,7 +99,7 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
       maxDistanceMeters,
       page = 1,
       pageSize = 10,
-    }) {
+    }: NearestSearchArgs) {
       const {
         page: p,
         pageSize: ps,

@@ -21,6 +21,17 @@ export type NearestStationRow = StationRow & {
   distance_meters: number;
 };
 
+export type NearestSearchArgs = {
+  latitude: number;
+  longitude: number;
+  maxDistanceMeters?: number;
+  page?: number;
+  pageSize?: number;
+};
+export type ListStationsInput = {
+  filter: StationFilter;
+  pageReq: PageRequest<StationSortField>;
+};
 export type StationRepo = {
   listWithOffset: (
     filter: StationFilter,
@@ -29,11 +40,7 @@ export type StationRepo = {
 
   getById: (id: string) => import("effect").Effect.Effect<import("effect").Option.Option<StationRow>>;
 
-  listNearest: (args: {
-    latitude: number;
-    longitude: number;
-    maxDistanceMeters?: number;
-    page?: number;
-    pageSize?: number;
-  }) => import("effect").Effect.Effect<PageResult<NearestStationRow>>;
+  listNearest: (
+    args: NearestSearchArgs,
+  ) => import("effect").Effect.Effect<PageResult<NearestStationRow>>;
 };
