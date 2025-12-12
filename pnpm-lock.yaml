@@ -538,6 +538,9 @@ importers:
       prisma:
         specifier: ^7.1.0
         version: 7.1.0(@types/react@19.1.17)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
+      tsc-alias:
+        specifier: ^1.8.16
+        version: 1.8.16
       tsx:
         specifier: ^4.20.5
         version: 4.20.6

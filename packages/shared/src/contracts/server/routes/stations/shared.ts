@@ -13,6 +13,9 @@ import {
   StationSummarySchema,
 } from "../../stations";
 
+export const StationSortFieldSchema = z.enum(["name", "capacity", "updatedAt"]);
+export const SortDirectionSchema = z.enum(["asc", "desc"]);
+
 export const StationErrorResponseSchema = ServerErrorResponseSchema.extend({
   details: StationErrorDetailSchema.optional(),
 }).openapi("StationErrorResponse", {
@@ -37,6 +40,22 @@ export const StationListQuerySchema = z
     latitude: z.number().optional(),
     longitude: z.number().optional(),
     capacity: z.number().optional(),
+    page: z.number().int().positive().optional().openapi({
+      description: "Page number (1-based)",
+      example: 1,
+    }),
+    pageSize: z.number().int().positive().optional().openapi({
+      description: "Page size",
+      example: 50,
+    }),
+    sortBy: StationSortFieldSchema.optional().openapi({
+      description: "Sort field",
+      example: "name",
+    }),
+    sortDir: SortDirectionSchema.optional().openapi({
+      description: "Sort direction",
+      example: "asc",
+    }),
   })
   .openapi("StationListQuery", {
     description: "Optional filters for listing stations",
@@ -49,6 +68,14 @@ export const NearbyStationsQuerySchema = z
     maxDistance: z.number().optional().openapi({
       description: "Max distance in meters",
       example: 20000,
+    }),
+    page: z.number().int().positive().optional().openapi({
+      description: "Page number (1-based)",
+      example: 1,
+    }),
+    pageSize: z.number().int().positive().optional().openapi({
+      description: "Page size",
+      example: 50,
     }),
   })
   .openapi("NearbyStationsQuery", {
@@ -69,12 +96,53 @@ export const StationSummarySchemaOpenApi = StationSummarySchema.openapi(
   },
 );
 
+export const PaginationSchema = z
+  .object({
+    page: z.number().int().positive().openapi({
+      description: "Current page number (1-based)",
+      example: 1,
+    }),
+    pageSize: z.number().int().positive().openapi({
+      description: "Number of items per page",
+      example: 50,
+    }),
+    total: z.number().int().nonnegative().openapi({
+      description: "Total number of items across all pages",
+      example: 150,
+    }),
+    totalPages: z.number().int().nonnegative().openapi({
+      description: "Total number of pages",
+      example: 3,
+    }),
+  })
+  .openapi("Pagination", {
+    description: "Pagination metadata for paginated responses",
+  });
+
 export const StationListResponseSchema = z
   .object({
-    data: z.array(StationSummarySchemaOpenApi),
+    pagination: PaginationSchema,
   })
   .openapi("StationListResponse", {
-    description: "Simplified station listing",
+    description: "Paginated station listing",
+    example: {
+      data: [
+        {
+          id: "665fd6e36b7e5d53f8f3d2c9",
+          name: "Central Station",
+          address: "123 Main St",
+          capacity: 20,
+          latitude: 10.762622,
+          longitude: 106.660172,
+        },
+      ],
+      pagination: {
+        page: 1,
+        pageSize: 50,
+        total: 150,
+        totalPages: 3,
+      },
+    },
   });
 
 export const StationStatsResponseSchemaOpenApi = StationStatsResponseSchema.openapi(

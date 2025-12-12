@@ -1,10 +1,12 @@
 import { z } from "../../../zod";
 
 export const StationSummarySchema = z.object({
-  _id: z.string(),
+  id: z.string(),
   name: z.string(),
   address: z.string(),
   capacity: z.number(),
+  latitude: z.number(),
+  longitude: z.number(),
 });
 
 export const StationStatsCurrentBikesSchema = z.object({
@@ -22,7 +24,7 @@ export const StationStatsReportsSchema = z.object({
   totalReports: z.number(),
   byType: z.record(z.string(), z.number()),
 });
-  
+
 export const StationStatsUtilizationSchema = z.object({
   rate: z.number(),
   availableMinutes: z.number(),

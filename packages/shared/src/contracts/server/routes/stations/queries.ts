@@ -37,16 +37,31 @@ export const listStations = createRoute({
         "application/json": {
           schema: StationErrorResponseSchema,
           examples: {
-            InvalidQuery: {
+            InvalidCapacity: {
               value: {
                 error: "Invalid query parameters",
                 details: {
-                  code: StationErrorCodeSchema.enum.INVALID_DATE_FORMAT,
+                  code: StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
                   issues: [
                     {
-                      path: "query.from",
-                      message: "from must be an ISO 8601 datetime string",
-                      code: "invalid_string",
+                      path: "query.capacity",
+                      message: "Expected number, received string",
+                      code: "invalid_type",
+                    },
+                  ],
+                },
+              },
+            },
+            InvalidPage: {
+              value: {
+                error: "Invalid query parameters",
+                details: {
+                  code: StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
+                  issues: [
+                    {
+                      path: "query.page",
+                      message: "Number must be greater than 0",
+                      code: "too_small",
                     },
                   ],
                 },
@@ -279,15 +294,30 @@ export const getNearbyStations = createRoute({
         "application/json": {
           schema: StationErrorResponseSchema,
           examples: {
-            InvalidCoordinates: {
+            MissingLatitude: {
               value: {
                 error: "Invalid coordinates",
                 details: {
-                  code: StationErrorCodeSchema.enum.INVALID_DATE_FORMAT,
+                  code: StationErrorCodeSchema.enum.INVALID_COORDINATES,
                   issues: [
                     {
                       path: "query.latitude",
-                      message: "latitude must be a number",
+                      message: "Required",
+                      code: "invalid_type",
+                    },
+                  ],
+                },
+              },
+            },
+            InvalidLongitude: {
+              value: {
+                error: "Invalid coordinates",
+                details: {
+                  code: StationErrorCodeSchema.enum.INVALID_COORDINATES,
+                  issues: [
+                    {
+                      path: "query.longitude",
+                      message: "Expected number, received string",
                       code: "invalid_type",
                     },
                   ],

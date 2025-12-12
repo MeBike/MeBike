@@ -5,13 +5,13 @@
   "private": true,
   "packageManager": "pnpm@10.6.3",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json --resolve-full-paths --resolve-full-extension .js",
     "test": "vitest run",
     "test:watch": "vitest",
     "dev:test": "vitest --watch",
     "lint": "eslint .",
     "dev": "tsx --watch src/http/server.ts",
-    "start": "node dist/http/server.js",
+    "start": "node dist/src/http/server.js",
     "seed": "pnpm prisma db seed"
   },
   "dependencies": {
@@ -35,6 +35,7 @@
     "eslint": "^9.36.0",
     "pino-pretty": "^9.4.1",
     "prisma": "^7.1.0",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.20.5",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
