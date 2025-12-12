@@ -1,7 +1,16 @@
-export interface GraphQLResponse<T> {
+export interface BaseMutationResponse<T> {
   data: T;
-  success?: boolean;
-  message?: string;
-  errors?: { message: string; [key: string]: string }[];
-  statusCode?: number;
+  errors?: { message: string; [key: string]: any }[] | null;
+  message: string;
+  statusCode: number;
+  success: boolean;
+}
+export interface GraphQLMutationResponse<MutationName extends string, Payload> {
+  data: {
+    [K in MutationName]: BaseMutationResponse<Payload>;
+  };
+}
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
 }

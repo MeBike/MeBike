@@ -8,7 +8,7 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503,
 };
-import { GraphQLResponse } from "@/types/GraphQL";
+import type { GraphQLMutationResponse } from "@/types/GraphQL";
 export class FetchHttpClient {
   private baseURL: string;
   private axiosInstance: AxiosInstance;
@@ -157,8 +157,8 @@ export class FetchHttpClient {
   private async requestGraphql<T>(
     payload: { query: string; variables?: object },
     config?: AxiosRequestConfig
-  ): Promise<AxiosResponse<GraphQLResponse<T>>> {
-    return this.axiosInstance.post<GraphQLResponse<T>>(
+  ): Promise<AxiosResponse<T>> {
+    return this.axiosInstance.post(
       "",
       payload,
       config
@@ -209,14 +209,14 @@ export class FetchHttpClient {
     queryString: string,
     variables: object = {},
     config?: AxiosRequestConfig
-  ): Promise<AxiosResponse<GraphQLResponse<T>>> {
+  ): Promise<AxiosResponse<T>> {
     return this.requestGraphql<T>({ query: queryString, variables }, config);
   }
   async mutation<T>(
     mutationString: string,
     variables: object = {},
     config?: AxiosRequestConfig
-  ): Promise<AxiosResponse<GraphQLResponse<T>>> {
+  ): Promise<AxiosResponse<T>> {
     return this.requestGraphql<T>({ query: mutationString, variables }, config);
   }
 }

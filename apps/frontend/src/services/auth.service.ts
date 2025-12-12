@@ -1,4 +1,5 @@
 import fetchHttpClient from "@/lib/httpClient";
+
 import type {
   UpdateProfileSchemaFormData,
   ChangePasswordSchemaFormData,
@@ -9,7 +10,8 @@ import type {
 } from "@schemas/authSchema";
 import type { AxiosResponse } from "axios";
 import { LOGIN_MUTATION } from "@/graphql";
-import { GraphQLResponse } from "@/lib/httpClient";
+import {print} from "graphql"
+import type { GraphQLMutationResponse , AuthTokens , BaseMutationResponse } from "@/types/GraphQL";
 interface AuthResponse {
   message: string;
   result: {
@@ -49,12 +51,12 @@ export interface ProfileUserResponse {
   message: string;
   result: DetailUser;
 }
+type LoginResponse = GraphQLMutationResponse<"LoginUser", AuthTokens>;
 export const authService = {
   login: async (
     data: LoginSchemaFormData
-  ): Promise<AxiosResponse<GraphQLResponse<LoginMutationResponse>>> => {
-    return fetchHttpClient.mutation<LoginMutationResponse>(LOGIN_MUTATION, {
-      // QUAN TRỌNG: Phải bọc trong object "body" để khớp với $body trong mutation
+  ): Promise<AxiosResponse<LoginResponse>> => {
+    return fetchHttpClient.mutation<LoginResponse>(print(LOGIN_MUTATION), {
       body: {
         email: data.email,
         password: data.password,

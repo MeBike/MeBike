@@ -96,14 +96,14 @@ export const useAuthActions = () => {
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { accessToken, refreshToken } = result.data.data.authResponse.result;
+            const { accessToken, refreshToken } = result.data.data.LoginUser.data;
             setTokens(accessToken, refreshToken);
             window.dispatchEvent(new Event("token:changed"));
             window.dispatchEvent(
               new StorageEvent("storage", { key: "auth_tokens" })
             );
             await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
-            toast.success(result.data?.message || MESSAGE.LOGIN_SUCCESS, {
+            toast.success(result.data?.data.LoginUser.message || MESSAGE.LOGIN_SUCCESS, {
               description: MESSAGE.WELCOME_BACK,
             });
             resolve();
