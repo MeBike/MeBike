@@ -9,9 +9,9 @@ import type {
   ResetPasswordSchemaFormData,
 } from "@schemas/authSchema";
 import type { AxiosResponse } from "axios";
-import { LOGIN_MUTATION } from "@/graphql";
+import { LOGIN_MUTATION, REGISTER_MUTATION } from "@/graphql";
 import {print} from "graphql"
-import type { GraphQLMutationResponse , AuthTokens , BaseMutationResponse } from "@/types/GraphQL";
+import { LoginResponse , RegisterResponse } from "@/types/auth.type";
 interface AuthResponse {
   message: string;
   result: {
@@ -51,7 +51,7 @@ export interface ProfileUserResponse {
   message: string;
   result: DetailUser;
 }
-type LoginResponse = GraphQLMutationResponse<"LoginUser", AuthTokens>;
+
 export const authService = {
   login: async (
     data: LoginSchemaFormData
@@ -65,10 +65,18 @@ export const authService = {
   },
   register: async (
     data: RegisterSchemaFormData
-  ): Promise<AxiosResponse<AuthResponse>> => {
-    const response = await fetchHttpClient.post<AuthResponse>(
-      "/users/register",
-      data
+  ): Promise<AxiosResponse<RegisterResponse>> => {
+    const response = await fetchHttpClient.mutation<RegisterResponse>(
+      print(REGISTER_MUTATION),
+      {
+        body: {
+          email: data.email,
+          name: data.name,
+          YOB: data.YOB,
+          phone: data.phone,
+          password: data.password,
+        },
+      }
     );
     return response;
   },
