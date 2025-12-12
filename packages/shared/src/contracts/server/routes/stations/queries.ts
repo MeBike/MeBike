@@ -21,6 +21,7 @@ export const listStations = createRoute({
   method: "get",
   path: "/v1/stations",
   tags: ["Stations"],
+
   request: {
     query: StationListQuerySchema,
   },

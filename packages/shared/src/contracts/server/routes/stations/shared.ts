@@ -37,14 +37,14 @@ export const StationListQuerySchema = z
   .object({
     name: z.string().optional(),
     address: z.string().optional(),
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
-    capacity: z.number().optional(),
-    page: z.number().int().positive().optional().openapi({
+    latitude: z.coerce.number().optional(),
+    longitude: z.coerce.number().optional(),
+    capacity: z.coerce.number().optional(),
+    page: z.coerce.number().int().positive().optional().openapi({
       description: "Page number (1-based)",
       example: 1,
     }),
-    pageSize: z.number().int().positive().optional().openapi({
+    pageSize: z.coerce.number().int().positive().optional().openapi({
       description: "Page size",
       example: 50,
     }),
@@ -63,17 +63,17 @@ export const StationListQuerySchema = z
 
 export const NearbyStationsQuerySchema = z
   .object({
-    latitude: z.number().openapi({ example: 10.762622 }),
-    longitude: z.number().openapi({ example: 106.660172 }),
-    maxDistance: z.number().optional().openapi({
+    latitude: z.coerce.number().openapi({ example: 10.762622 }),
+    longitude: z.coerce.number().openapi({ example: 106.660172 }),
+    maxDistance: z.coerce.number().optional().openapi({
       description: "Max distance in meters",
       example: 20000,
     }),
-    page: z.number().int().positive().optional().openapi({
+    page: z.coerce.number().int().positive().optional().openapi({
       description: "Page number (1-based)",
       example: 1,
     }),
-    pageSize: z.number().int().positive().optional().openapi({
+    pageSize: z.coerce.number().int().positive().optional().openapi({
       description: "Page size",
       example: 50,
     }),
