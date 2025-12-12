@@ -120,7 +120,7 @@ export const useUserReport = ({
         }
       );
     },
-    [hasToken, router, queryClient, refetchReports, useUpdateReport, page, limit, status]
+    [hasToken, router, queryClient, refetchReports, useUpdateReport]
   );
   const {
     data: reportInProgress,
@@ -176,8 +176,6 @@ export const useUserReport = ({
       queryClient,
       useResolveReport,
       refetchReports,
-      page
-      , limit, status
     ]
   );
   const {data : reportById , refetch: refetchReportById , isLoading: isLoadingReportById} = useGetReportByIdQuery({id : id ?? ""}); 
