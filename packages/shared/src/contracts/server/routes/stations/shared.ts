@@ -24,10 +24,13 @@ export const StationErrorResponseSchema = ServerErrorResponseSchema.extend({
 
 export const StationIdParamSchema = z
   .object({
-    stationId: z.string().openapi({
-      example: "665fd6e36b7e5d53f8f3d2c9",
-      description: "Station identifier",
-    }),
+    stationId: z.union([z.uuidv4().openapi({
+      example: "665fd6e3-6b7e-5d53-f8f3-d2c900000000",
+      description: "Station identifier (UUID v4)",
+    }), z.uuidv7().openapi({
+      example: "018fa0f9-8f3b-752c-8f3d-2c9000000000",
+      description: "Station identifier (UUID v7)",
+    })]),
   })
   .openapi("StationIdParam", {
     description: "Path params for station id",
