@@ -16,6 +16,30 @@ import {
 export const StationSortFieldSchema = z.enum(["name", "capacity", "updatedAt"]);
 export const SortDirectionSchema = z.enum(["asc", "desc"]);
 
+const requiredNumberQuery = (field: string, example?: number) =>
+  z.preprocess(
+    value => (typeof value === "string" ? Number(value) : value),
+    z
+      .number()
+      .refine(Number.isFinite, { message: `${field} must be a number` }),
+  ).openapi({ example });
+
+const optionalNumberQuery = (field: string, example?: number) =>
+  z
+    .preprocess(
+      value =>
+        value === undefined || value === null
+          ? undefined
+          : typeof value === "string"
+            ? Number(value)
+            : value,
+      z
+        .number()
+        .refine(Number.isFinite, { message: `${field} must be a number` }),
+    )
+    .optional()
+    .openapi({ example });
+
 export const StationErrorResponseSchema = ServerErrorResponseSchema.extend({
   details: StationErrorDetailSchema.optional(),
 }).openapi("StationErrorResponse", {
@@ -40,17 +64,29 @@ export const StationListQuerySchema = z
   .object({
     name: z.string().optional(),
     address: z.string().optional(),
-    latitude: z.coerce.number().optional(),
-    longitude: z.coerce.number().optional(),
-    capacity: z.coerce.number().optional(),
-    page: z.coerce.number().int().positive().optional().openapi({
-      description: "Page number (1-based)",
-      example: 1,
-    }),
-    pageSize: z.coerce.number().int().positive().optional().openapi({
-      description: "Page size",
-      example: 50,
-    }),
+    latitude: optionalNumberQuery("latitude"),
+    longitude: optionalNumberQuery("longitude"),
+    capacity: optionalNumberQuery("capacity", 20),
+    page: z
+      .preprocess(
+        v => (typeof v === "string" ? Number(v) : v),
+        z.number().int().positive(),
+      )
+      .optional()
+      .openapi({
+        description: "Page number (1-based)",
+        example: 1,
+      }),
+    pageSize: z
+      .preprocess(
+        v => (typeof v === "string" ? Number(v) : v),
+        z.number().int().positive(),
+      )
+      .optional()
+      .openapi({
+        description: "Page size",
+        example: 50,
+      }),
     sortBy: StationSortFieldSchema.optional().openapi({
       description: "Sort field",
       example: "name",
@@ -66,23 +102,35 @@ export const StationListQuerySchema = z
 
 export const NearbyStationsQuerySchema = z
   .object({
-    latitude: z.coerce.number().openapi({ example: 10.762622 }),
-    longitude: z.coerce.number().openapi({ example: 106.660172 }),
-    maxDistance: z.coerce.number().optional().openapi({
+    latitude: requiredNumberQuery("latitude", 10.762622),
+    longitude: requiredNumberQuery("longitude", 106.660172),
+    maxDistance: optionalNumberQuery("maxDistance", 20000).openapi({
       description: "Max distance in meters",
       example: 20000,
     }),
-    page: z.coerce.number().int().positive().optional().openapi({
-      description: "Page number (1-based)",
-      example: 1,
-    }),
-    pageSize: z.coerce.number().int().positive().optional().openapi({
-      description: "Page size",
-      example: 50,
-    }),
+    page: z
+      .preprocess(
+        v => (typeof v === "string" ? Number(v) : v),
+        z.number().int().positive(),
+      )
+      .optional()
+      .openapi({
+        description: "Page number (1-based)",
+        example: 1,
+      }),
+    pageSize: z
+      .preprocess(
+        v => (typeof v === "string" ? Number(v) : v),
+        z.number().int().positive(),
+      )
+      .optional()
+      .openapi({
+        description: "Page size",
+        example: 50,
+      }),
   })
   .openapi("NearbyStationsQuery", {
-    description: "Coordinates for nearby/nearest station searches",
+    description: "Coordinates for nearby/nearest station searches (optional; empty result if missing)",
   });
 
 export const StationRevenueQuerySchema = StationDateRangeQuerySchema.openapi(
@@ -124,6 +172,7 @@ export const PaginationSchema = z
 
 export const StationListResponseSchema = z
   .object({
+    data: StationSummarySchema.array(),
     pagination: PaginationSchema,
   })
   .openapi("StationListResponse", {

@@ -6,7 +6,37 @@ import { cors } from "hono/cors";
 import { registerStationRoutes } from "./routes/stations";
 
 export function createHttpApp() {
-  const app = new OpenAPIHono();
+  const app = new OpenAPIHono({
+    defaultHook: (result, c) => {
+      if (result.success) {
+        return;
+      }
+
+      const issues = result.error.issues.map((issue) => {
+        const path = Array.isArray(issue.path) && issue.path.length
+          ? issue.path.join(".")
+          : "body";
+        return {
+          path,
+          message: issue.message,
+          code: issue.code,
+          expected: (issue as any).expected,
+          received: (issue as any).received,
+        };
+      });
+
+      return c.json(
+        {
+          error: "Invalid request payload",
+          details: {
+            code: "VALIDATION_ERROR",
+            ...(issues.length ? { issues } : {}),
+          },
+        },
+        400,
+      );
+    },
+  });
   app.use("*", cors());
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(

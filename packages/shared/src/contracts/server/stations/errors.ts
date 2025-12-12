@@ -1,4 +1,5 @@
 import { z } from "../../../zod";
+import { ServerErrorDetailSchema } from "../schemas";
 
 export const stationErrorCodes = [
   "STATION_NOT_FOUND",
@@ -13,20 +14,18 @@ export const stationErrorCodes = [
 
 export const StationErrorCodeSchema = z.enum(stationErrorCodes);
 
-export const StationErrorDetailSchema = z
-  .object({
-    code: StationErrorCodeSchema,
-    stationId: z.string().optional(),
-    from: z.string().optional(),
-    to: z.string().optional(),
-  })
-  .openapi({
-    description: "Station-specific error detail",
-    example: {
-      code: "STATION_NOT_FOUND",
-      stationId: "665fd6e36b7e5d53f8f3d2c9",
-    },
-  });
+export const StationErrorDetailSchema = ServerErrorDetailSchema.extend({
+  code: StationErrorCodeSchema,
+  stationId: z.string().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+}).openapi({
+  description: "Station-specific error detail",
+  example: {
+    code: "STATION_NOT_FOUND",
+    stationId: "665fd6e36b7e5d53f8f3d2c9",
+  },
+});
 
 export type StationErrorCode = (typeof stationErrorCodes)[number];
 export type StationErrorDetail = z.infer<typeof StationErrorDetailSchema>;

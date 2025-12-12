@@ -29,6 +29,7 @@ type StationListResponse = {
 export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const stations = serverRoutes.stations;
 
+  // Register static paths before parameterized ones to avoid /nearby being captured by /:stationId
   app.openapi(stations.listStations, async (c) => {
     const query = c.req.valid("query");
     const eff = listStationsUseCase({
@@ -84,53 +85,18 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
     );
   });
 
-  app.openapi(stations.getStation, async (c) => {
-    const { stationId } = c.req.valid("param");
-    const eff = getStationDetailsUseCase(stationId).pipe(
-      Effect.provide(StationServiceLive),
-      Effect.provide(StationRepositoryLive),
-      Effect.provide(Prisma.Default),
-    );
-
-    return Effect.runPromise(
-      eff.pipe(
-        Effect.matchEffect({
-          onSuccess: value =>
-            Effect.sync(() =>
-              c.json<StationSummary, 200>(value, 200),
-            ),
-          onFailure: error =>
-            error._tag === "StationNotFound"
-              ? Effect.sync(() =>
-                  c.json<StationErrorResponse, 404>(
-                    {
-                      error: stationErrorMessages.STATION_NOT_FOUND,
-                      details: {
-                        code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
-                        stationId,
-                      },
-                    },
-                    404,
-                  ),
-                )
-              : Effect.sync(() =>
-                  c.json<StationErrorResponse, 404>(
-                    {
-                      error: stationErrorMessages.STATION_NOT_FOUND,
-                      details: {
-                        code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
-                      },
-                    },
-                    404,
-                  ),
-                ),
-        }),
-      ),
-    );
-  });
-
   app.openapi(stations.getNearbyStations, async (c) => {
     const query = c.req.valid("query");
+    if (!Number.isFinite(query.latitude) || !Number.isFinite(query.longitude)) {
+      return c.json<StationErrorResponse, 400>(
+        {
+          error: stationErrorMessages.INVALID_COORDINATES,
+          details: { code: StationErrorCodeSchema.enum.INVALID_COORDINATES },
+        },
+        400,
+      );
+    }
+
     const eff = listNearestStationsUseCase({
       latitude: query.latitude,
       longitude: query.longitude,
@@ -173,6 +139,51 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
                 400,
               ),
             ),
+        }),
+      ),
+    );
+  });
+
+  app.openapi(stations.getStation, async (c) => {
+    const { stationId } = c.req.valid("param");
+    const eff = getStationDetailsUseCase(stationId).pipe(
+      Effect.provide(StationServiceLive),
+      Effect.provide(StationRepositoryLive),
+      Effect.provide(Prisma.Default),
+    );
+
+    return Effect.runPromise(
+      eff.pipe(
+        Effect.matchEffect({
+          onSuccess: value =>
+            Effect.sync(() =>
+              c.json<StationSummary, 200>(value, 200),
+            ),
+          onFailure: error =>
+            error._tag === "StationNotFound"
+              ? Effect.sync(() =>
+                  c.json<StationErrorResponse, 404>(
+                    {
+                      error: stationErrorMessages.STATION_NOT_FOUND,
+                      details: {
+                        code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
+                        stationId,
+                      },
+                    },
+                    404,
+                  ),
+                )
+              : Effect.sync(() =>
+                  c.json<StationErrorResponse, 404>(
+                    {
+                      error: stationErrorMessages.STATION_NOT_FOUND,
+                      details: {
+                        code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
+                      },
+                    },
+                    404,
+                  ),
+                ),
         }),
       ),
     );
