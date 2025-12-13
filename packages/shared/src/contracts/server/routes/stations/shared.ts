@@ -1,5 +1,10 @@
 import { z } from "../../../../zod";
-import { ServerErrorResponseSchema } from "../../schemas";
+import {
+  paginationQueryFields,
+  PaginationSchema,
+  ServerErrorResponseSchema,
+  SortDirectionSchema,
+} from "../../schemas";
 import {
   BikeRevenueResponseSchema,
   HighestRevenueStationSchema,
@@ -13,8 +18,15 @@ import {
   StationSummarySchema,
 } from "../../stations";
 
+export {
+  PaginationSchema,
+  ServerErrorResponseSchema,
+  SortDirectionSchema,
+  StationDateRangeQuerySchema,
+  StationErrorCodeSchema,
+};
+
 export const StationSortFieldSchema = z.enum(["name", "capacity", "updatedAt"]);
-export const SortDirectionSchema = z.enum(["asc", "desc"]);
 
 function requiredNumberQuery(field: string, example?: number) {
   return z.preprocess(
@@ -69,26 +81,7 @@ export const StationListQuerySchema = z
     latitude: optionalNumberQuery("latitude"),
     longitude: optionalNumberQuery("longitude"),
     capacity: optionalNumberQuery("capacity", 20),
-    page: z
-      .preprocess(
-        v => (typeof v === "string" ? Number(v) : v),
-        z.number().int().positive(),
-      )
-      .optional()
-      .openapi({
-        description: "Page number (1-based)",
-        example: 1,
-      }),
-    pageSize: z
-      .preprocess(
-        v => (typeof v === "string" ? Number(v) : v),
-        z.number().int().positive(),
-      )
-      .optional()
-      .openapi({
-        description: "Page size",
-        example: 50,
-      }),
+    ...paginationQueryFields,
     sortBy: StationSortFieldSchema.optional().openapi({
       description: "Sort field",
       example: "name",
@@ -110,26 +103,7 @@ export const NearbyStationsQuerySchema = z
       description: "Max distance in meters",
       example: 20000,
     }),
-    page: z
-      .preprocess(
-        v => (typeof v === "string" ? Number(v) : v),
-        z.number().int().positive(),
-      )
-      .optional()
-      .openapi({
-        description: "Page number (1-based)",
-        example: 1,
-      }),
-    pageSize: z
-      .preprocess(
-        v => (typeof v === "string" ? Number(v) : v),
-        z.number().int().positive(),
-      )
-      .optional()
-      .openapi({
-        description: "Page size",
-        example: 50,
-      }),
+    ...paginationQueryFields,
   })
   .openapi("NearbyStationsQuery", {
     description: "Coordinates for nearby/nearest station searches (optional; empty result if missing)",
@@ -148,29 +122,6 @@ export const StationSummarySchemaOpenApi = StationSummarySchema.openapi(
     description: "Basic station info",
   },
 );
-
-export const PaginationSchema = z
-  .object({
-    page: z.number().int().positive().openapi({
-      description: "Current page number (1-based)",
-      example: 1,
-    }),
-    pageSize: z.number().int().positive().openapi({
-      description: "Number of items per page",
-      example: 50,
-    }),
-    total: z.number().int().nonnegative().openapi({
-      description: "Total number of items across all pages",
-      example: 150,
-    }),
-    totalPages: z.number().int().nonnegative().openapi({
-      description: "Total number of pages",
-      example: 3,
-    }),
-  })
-  .openapi("Pagination", {
-    description: "Pagination metadata for paginated responses",
-  });
 
 export const StationListResponseSchema = z
   .object({
@@ -232,9 +183,3 @@ export const StationAlertsResponseSchemaOpenApi
   = StationAlertsResponseSchema.openapi("StationAlertsResponse", {
     description: "Alert summary for stations",
   });
-
-export {
-  ServerErrorResponseSchema,
-  StationDateRangeQuerySchema,
-  StationErrorCodeSchema,
-};

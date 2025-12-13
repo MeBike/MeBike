@@ -1,7 +1,6 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { BikeNotFoundResponseSchema } from "../../bikes";
-import { ServerErrorResponseSchema } from "../../schemas";
 import {
   BikeActivityStatsSchemaOpenApi,
   BikeErrorCodeSchema,

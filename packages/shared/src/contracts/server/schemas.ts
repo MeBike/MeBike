@@ -64,3 +64,51 @@ export const ServerErrorResponseSchema = z.object({
 
 export type ServerErrorResponse = z.infer<typeof ServerErrorResponseSchema>;
 export type ServerErrorDetail = z.infer<typeof ServerErrorDetailSchema>;
+
+export const SortDirectionSchema = z.enum(["asc", "desc"]);
+
+export const PaginationSchema = z
+  .object({
+    page: z.number().int().positive().openapi({
+      description: "Current page number (1-based)",
+      example: 1,
+    }),
+    pageSize: z.number().int().positive().openapi({
+      description: "Number of items per page",
+      example: 50,
+    }),
+    total: z.number().int().nonnegative().openapi({
+      description: "Total number of items across all pages",
+      example: 150,
+    }),
+    totalPages: z.number().int().nonnegative().openapi({
+      description: "Total number of pages",
+      example: 3,
+    }),
+  })
+  .openapi("Pagination", {
+    description: "Pagination metadata for paginated responses",
+  });
+
+export const paginationQueryFields = {
+  page: z
+    .preprocess(
+      v => (typeof v === "string" ? Number(v) : v),
+      z.number().int().positive(),
+    )
+    .optional()
+    .openapi({
+      description: "Page number (1-based)",
+      example: 1,
+    }),
+  pageSize: z
+    .preprocess(
+      v => (typeof v === "string" ? Number(v) : v),
+      z.number().int().positive(),
+    )
+    .optional()
+    .openapi({
+      description: "Page size",
+      example: 50,
+    }),
+};
