@@ -219,3 +219,5 @@ export const StationRepositoryLive = Layer.effect(
     return makeStationRepository(client);
   }),
 );
+
+export const stationRepositoryFactory = makeStationRepository;
