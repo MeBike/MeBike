@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import {clearTokens,getAccessToken,getRefreshToken,setTokens} from "@utils/tokenManager"
+import {clearTokens,getRefreshToken,setTokens} from "@utils/tokenManager"
 export const HTTP_STATUS = {
   OK: 200,
   UNAUTHORIZED: 401,
@@ -16,7 +16,7 @@ export class FetchHttpClient {
   private axiosInstance: AxiosInstance;
   private isRefreshing = false;
   private failedQueue: Array<{
-    resolve: (value: string | null) => void;
+    resolve: () => void;
     reject: (reason?: unknown) => void;
   }> = [];
 
@@ -27,15 +27,10 @@ export class FetchHttpClient {
       headers: {
         "Content-Type": "application/json;charset=UTF-8",
       },
-      timeout: 30000, // Tăng lên 30 giây để đủ thời gian cho email service
+      timeout: 30000,
+      withCredentials : true,
     });
-    this.axiosInstance.interceptors.request.use((config) => {
-      const access_token = getAccessToken();
-      if (access_token && !config.headers?.Authorization) {
-        config.headers.Authorization = `Bearer ${access_token}`;
-      }
-      return config;
-    });
+
 
     this.axiosInstance.interceptors.response.use(
       (response) => {
@@ -50,8 +45,6 @@ export class FetchHttpClient {
           error.response?.data
         );
         const originalRequest = error.config;
-
-        // Các endpoint không cần retry token refresh
         const noAuthRetryEndpoints = [
           "/users/verify-email",
           "/users/verify-forgot-password",
@@ -60,41 +53,34 @@ export class FetchHttpClient {
           "/users/refresh-token",
           "/users/change-password",
         ];
-
         const shouldSkipTokenRefresh = noAuthRetryEndpoints.some((endpoint) =>
           originalRequest?.url?.includes(endpoint)
         );
 
         if (
           error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
-          !shouldSkipTokenRefresh
+          !shouldSkipTokenRefresh && !originalRequest._retry
         ) {
           if (this.isRefreshing) {
-            return new Promise((resolve, reject) => {
+            return new Promise<void>((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
             })
-              .then((token) => {
-                if (token && originalRequest.headers) {
-                  originalRequest.headers.Authorization = `Bearer ${token}`;
-                }
+              .then(() => {
                 return this.axiosInstance(originalRequest);
               })
               .catch((err) => {
                 return Promise.reject(err);
               });
           }
-
+          originalRequest._retry = true;
           this.isRefreshing = true;
           try {
-            const newToken = await this.refreshAccessToken();
-            this.processQueue(null, newToken);
+            await this.refreshAccessToken();
+            this.processQueue(null);
             window.dispatchEvent(new Event("auth:token_refreshed"));
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            }
             return this.axiosInstance(originalRequest);
           } catch (refreshError) {
-            this.processQueue(refreshError, null);
+            this.processQueue(refreshError);
             window.dispatchEvent(new Event("auth:session_expired"));
             return Promise.reject(refreshError);
           } finally {
@@ -134,29 +120,18 @@ export class FetchHttpClient {
     }
 
     try {
-      // Use 'this.mutation' instead of 'axios.post'
       const response = await this.mutation<RefreshTokenResponse>(
         print(REFRESH_TOKEN_MUTATION),
         { refreshToken: refreshToken }
       );
-
-      // Handle GraphQL errors (standard GraphQL returns status 200 even on error sometimes)
-      // Check if 'errors' exists in the body
       if ((response.data as any).errors) {
         throw new Error("GraphQL Error during refresh");
       }
-
-      // Adjust this path based on your actual GraphQL Schema Response
-      // Usually it is: response.data.data.refreshToken
       const result = response.data.data.RefreshToken.data;
-      // OR if your RefreshTokenResponse type already includes the data wrapper:
-      // const result = response.data;
-
       if (!result || !result.accessToken) {
-        throw new Error("Invalid response structure");``
+        throw new Error("Invalid response structure");
       }
-
-      setTokens(result.accessToken, refreshToken);
+      setTokens(result.accessToken, result.refreshToken);
       return result.accessToken;
     } catch (error) {
       console.error("Refresh token failed:", error);
@@ -165,12 +140,12 @@ export class FetchHttpClient {
     }
   }
 
-  private processQueue(error: unknown, token: string | null) {
+  private processQueue(error: unknown) {
     this.failedQueue.forEach(({ resolve, reject }) => {
       if (error) {
         reject(error);
       } else {
-        resolve(token);
+        resolve();
       }
     });
     this.failedQueue = [];

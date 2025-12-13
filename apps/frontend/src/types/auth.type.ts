@@ -9,7 +9,4 @@ export type RegisterResponse = GraphQLMutationResponse<
   "RegisterUser",
   RegisterResponse
 >;
-export type RefreshTokenResponse = GraphQLMutationResponse<
-  "RefreshToken",
-  AccessToken
->;
+export type RefreshTokenResponse = GraphQLMutationResponse<"RefreshToken", AuthTokens>;
