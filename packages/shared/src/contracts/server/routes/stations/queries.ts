@@ -5,6 +5,7 @@ import {
   HighestRevenueStationSchemaOpenApi,
   NearbyStationsQuerySchema,
   NearestAvailableBikeSchemaOpenApi,
+  ServerErrorResponseSchema,
   StationAlertsResponseSchemaOpenApi,
   StationErrorCodeSchema,
   StationErrorResponseSchema,
@@ -89,6 +90,31 @@ export const getStation = createRoute({
         "application/json": { schema: StationSummarySchemaOpenApi },
       },
     },
+    400: {
+      description: "Invalid path parameter",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+          examples: {
+            InvalidStationId: {
+              value: {
+                error: "Invalid request payload",
+                details: {
+                  code: "VALIDATION_ERROR",
+                  issues: [
+                    {
+                      path: "params.stationId",
+                      message: "stationId must be a UUID",
+                      code: "invalid_uuid",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     404: {
       description: "Station not found",
       content: {
@@ -100,6 +126,7 @@ export const getStation = createRoute({
                 error: "Station not found",
                 details: {
                   code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
+                  stationId: "665fd6e36b7e5d53f8f3d2c9",
                 },
               },
             },
@@ -305,6 +332,8 @@ export const getNearbyStations = createRoute({
                       path: "query.latitude",
                       message: "Required",
                       code: "invalid_type",
+                      expected: "number",
+                      received: "NaN",
                     },
                   ],
                 },

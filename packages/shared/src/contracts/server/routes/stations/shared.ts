@@ -16,16 +16,17 @@ import {
 export const StationSortFieldSchema = z.enum(["name", "capacity", "updatedAt"]);
 export const SortDirectionSchema = z.enum(["asc", "desc"]);
 
-const requiredNumberQuery = (field: string, example?: number) =>
-  z.preprocess(
+function requiredNumberQuery(field: string, example?: number) {
+  return z.preprocess(
     value => (typeof value === "string" ? Number(value) : value),
     z
       .number()
       .refine(Number.isFinite, { message: `${field} must be a number` }),
   ).openapi({ example });
+}
 
-const optionalNumberQuery = (field: string, example?: number) =>
-  z
+function optionalNumberQuery(field: string, example?: number) {
+  return z
     .preprocess(
       value =>
         value === undefined || value === null
@@ -39,6 +40,7 @@ const optionalNumberQuery = (field: string, example?: number) =>
     )
     .optional()
     .openapi({ example });
+}
 
 export const StationErrorResponseSchema = ServerErrorResponseSchema.extend({
   details: StationErrorDetailSchema.optional(),
@@ -232,6 +234,7 @@ export const StationAlertsResponseSchemaOpenApi
   });
 
 export {
+  ServerErrorResponseSchema,
   StationDateRangeQuerySchema,
   StationErrorCodeSchema,
 };
