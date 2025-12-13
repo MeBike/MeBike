@@ -1,1 +1,1 @@
-// supplier domain will go here
+export * from "./domain-errors";
