@@ -28,12 +28,7 @@ export const listBikes = createRoute({
         "application/json": { schema: BikeListResponseSchema },
       },
     },
-    500: {
-      description: "Unexpected server error",
-      content: {
-        "application/json": { schema: ServerErrorResponseSchema },
-      },
-    },
+
   },
 });
 
