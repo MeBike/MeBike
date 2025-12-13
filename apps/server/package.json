@@ -25,7 +25,8 @@
     "effect": "^3.19.10",
     "hono": "^4.9.4",
     "pg": "^8.16.3",
-    "pino": "^8.21.0"
+    "pino": "^8.21.0",
+    "uuidv7": "^1.1.0"
   },
   "devDependencies": {
     "@mebike/eslint-config": "workspace:*",
@@ -41,6 +42,7 @@
     "vitest": "^4.0.15"
   },
   "prisma": {
-    "seed": "pnpm tsx prisma/seed.ts"
+    "seed": "pnpm tsx prisma/seed.ts",
+    "schema": "./prisma"
   }
 }

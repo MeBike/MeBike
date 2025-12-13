@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { randomUUID } from "node:crypto";
 import process from "node:process";
+import { uuidv7 } from "uuidv7";
 
 import { PrismaClient } from "../generated/prisma/client";
 import { stations } from "./seed/stations.data";
@@ -19,12 +19,13 @@ async function main() {
   const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
 
-  await prisma.$executeRaw`TRUNCATE TABLE "stations" RESTART IDENTITY CASCADE`;
+  // Use the actual table name as it exists in the DB ("Station")
+  await prisma.$executeRaw`TRUNCATE TABLE "Station" RESTART IDENTITY CASCADE`;
 
   for (const station of stations) {
     const updatedAt = new Date(station.updatedAt);
     await prisma.$executeRaw`
-      INSERT INTO "stations" (
+      INSERT INTO "Station" (
         "id",
         "name",
         "address",
@@ -35,7 +36,7 @@ async function main() {
         "updated_at"
       )
       VALUES (
-        ${randomUUID()}::uuid,
+        ${uuidv7()}::uuid,
         ${station.name},
         ${station.address},
         ${station.capacity},

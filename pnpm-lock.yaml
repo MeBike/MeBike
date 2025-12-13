@@ -516,6 +516,9 @@ importers:
       pino:
         specifier: ^8.21.0
         version: 8.21.0
+      uuidv7:
+        specifier: ^1.1.0
+        version: 1.1.0
     devDependencies:
       '@mebike/eslint-config':
         specifier: workspace:*
@@ -9781,6 +9784,10 @@ packages:
 
   uuid@7.0.3:
     resolution: {integrity: sha512-DPSke0pXhTZgoF/d+WSt2QaKMCFSfx7QegxEWT+JOuHF5aWrKEn0G+ztjuJg/gG8/ItK+rbPCD/yNv8yyih6Cg==}
+    hasBin: true
+
+  uuidv7@1.1.0:
+    resolution: {integrity: sha512-2VNnOC0+XQlwogChUDzy6pe8GQEys9QFZBGOh54l6qVfwoCUwwRvk7rDTgaIsRgsF5GFa5oiNg8LqXE3jofBBg==}
     hasBin: true
 
   v8-compile-cache-lib@3.0.1:
@@ -21706,6 +21713,8 @@ snapshots:
   uuid@3.3.3: {}
 
   uuid@7.0.3: {}
+
+  uuidv7@1.1.0: {}
 
   v8-compile-cache-lib@3.0.1: {}
 
