@@ -1,0 +1,37 @@
+// Enums specific to subscriptions
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum SubscriptionPackage {
+  basic
+  premium
+  unlimited
+}
+
+// Subscriptions table
+
+model Subscription {
+  id            String               @id @default(uuid(7)) @db.Uuid
+  userId        String               @db.Uuid @map("user_id")
+  packageName   SubscriptionPackage  @map("package_name")
+  maxUsages     Int?
+  usageCount    Int                  @default(0) @map("usage_count")
+  status        SubscriptionStatus   @default(PENDING)
+  activatedAt   DateTime?            @db.Timestamptz @map("activated_at")
+  expiresAt     DateTime?            @db.Timestamptz @map("expires_at")
+  price         Decimal              @db.Decimal(12, 2)
+  createdAt     DateTime             @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt     DateTime             @default(now()) @db.Timestamptz @map("updated_at")
+
+  user          User                 @relation(fields: [userId], references: [id])
+  reservations  Reservation[]
+  rentals       Rental[]
+
+  @@index([userId], name: "idx_subscriptions_user")
+  @@index([status], name: "idx_subscriptions_status")
+  @@index([expiresAt], name: "idx_subscriptions_expires")
+}

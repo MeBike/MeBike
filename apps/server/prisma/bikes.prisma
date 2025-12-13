@@ -1,0 +1,24 @@
+enum BikeStatus {
+  AVAILABLE
+  BOOKED
+  BROKEN
+  RESERVED
+  MAINTAINED
+  UNAVAILABLE
+}
+
+
+model Bike {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  chipId      String    @unique @map("chip_id")
+  stationId   String?   @db.Uuid
+  supplierId  String?   @db.Uuid
+  status      BikeStatus
+  createdAt   DateTime  @db.Timestamptz @map("created_at")
+  updatedAt   DateTime  @db.Timestamptz @map("updated_at")
+
+  station     Station?  @relation(fields: [stationId], references: [id])
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  reservations Reservation[]
+  rentals      Rental[]
+}

@@ -1,4 +1,5 @@
 node_modules
+AGENTS.md
 .turbo
 .alchemy
 .env

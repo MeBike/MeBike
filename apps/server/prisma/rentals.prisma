@@ -1,0 +1,38 @@
+enum RentalStatus {
+  RENTED
+  COMPLETED
+  CANCELLED
+  RESERVED
+}
+
+model Rental {
+  id             String        @id @default(uuid(7)) @db.Uuid
+  userId         String        @db.Uuid @map("user_id")
+  bikeId         String?       @db.Uuid @map("bike_id")
+  startStationId String        @db.Uuid @map("start_station")
+  endStationId   String?       @db.Uuid @map("end_station")
+  startTime      DateTime      @default(now()) @db.Timestamptz @map("start_time")
+  endTime        DateTime?     @db.Timestamptz @map("end_time")
+  duration       Int?          @map("duration")
+  totalPrice     Decimal?      @db.Decimal(12, 2) @map("total_price")
+  subscriptionId String?       @db.Uuid @map("subscription_id")
+  status         RentalStatus  @default(RENTED)
+  createdAt      DateTime      @default(now()) @db.Timestamptz @map("created_at")
+  updatedAt      DateTime      @default(now()) @db.Timestamptz @map("updated_at")
+
+  user           User          @relation(fields: [userId], references: [id])
+  bike           Bike?         @relation(fields: [bikeId], references: [id])
+  startStation   Station       @relation("RentalStartStation", fields: [startStationId], references: [id])
+  endStation     Station?      @relation("RentalEndStation", fields: [endStationId], references: [id])
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  rating         Rating?
+
+  @@index([userId], name: "idx_rentals_user")
+  @@index([bikeId], name: "idx_rentals_bike")
+  @@index([status], name: "idx_rentals_status")
+  @@index([startTime], name: "idx_rentals_start_time")
+  @@index([startStationId], name: "idx_rentals_start_station")
+  @@index([userId, status], name: "idx_rentals_user_active")
+  // Partial unique index for active rentals per bike cannot be expressed in Prisma:
+  // CREATE UNIQUE INDEX idx_rentals_active_bike ON rentals(bike_id) WHERE status = 'RENTED' AND bike_id IS NOT NULL;
+}

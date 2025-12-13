@@ -1,0 +1,18 @@
+// Stations table
+
+model Station {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  name       String    @unique
+  address    String
+  capacity   Int
+  latitude   Float
+  longitude  Float
+  createdAt  DateTime  @db.Timestamptz @map("created_at")
+  updatedAt  DateTime  @db.Timestamptz @map("updated_at")
+
+  bikes          Bike[]
+  reservations   Reservation[]
+  rentalsStart   Rental[]   @relation("RentalStartStation")
+  rentalsEnd     Rental[]   @relation("RentalEndStation")
+  fixedSlots     FixedSlotTemplate[]
+}
