@@ -15,29 +15,28 @@ enum UserVerifyStatus {
 // Users table
 
 model User {
-  id                     String            @id @default(uuid(7)) @db.Uuid
-  fullname               String
-  email                  String            @unique
-  phoneNumber            String?           @unique @map("phone_number")
-  username               String?
-  passwordHash           String            @map("password_hash")
-  avatar                 String?
-  location               String?
-  nfcCardUid             String?           @map("nfc_card_uid")
-  emailVerifyOtp         String?           @map("email_verify_otp")
-  emailVerifyOtpExpires  DateTime?         @db.Timestamptz @map("email_verify_otp_expires")
-  forgotPasswordOtp      String?           @map("forgot_password_otp")
-  forgotPasswordOtpExpires DateTime?       @db.Timestamptz @map("forgot_password_otp_expires")
-  role                   UserRole          @default(USER)
-  verify                 UserVerifyStatus  @default(UNVERIFIED)
-  createdAt              DateTime          @default(now()) @db.Timestamptz @map("created_at")
-  updatedAt              DateTime          @default(now()) @db.Timestamptz @map("updated_at")
+  id                       String           @id @default(uuid(7)) @db.Uuid
+  fullname                 String
+  email                    String           @unique
+  phoneNumber              String?          @unique @map("phone_number")
+  username                 String?
+  passwordHash             String           @map("password_hash")
+  avatar                   String?
+  location                 String?
+  nfcCardUid               String?          @map("nfc_card_uid")
+  emailVerifyOtp           String?          @map("email_verify_otp")
+  emailVerifyOtpExpires    DateTime?        @map("email_verify_otp_expires") @db.Timestamptz
+  forgotPasswordOtp        String?          @map("forgot_password_otp")
+  forgotPasswordOtpExpires DateTime?        @map("forgot_password_otp_expires") @db.Timestamptz
+  role                     UserRole         @default(USER)
+  verify                   UserVerifyStatus @default(UNVERIFIED)
+  updatedAt                DateTime         @default(now()) @map("updated_at") @db.Timestamptz
 
-  subscriptions  Subscription[]
-  fixedSlots     FixedSlotTemplate[]
-  reservations   Reservation[]
-  rentals        Rental[]
-  ratings        Rating[]
+  subscriptions Subscription[]
+  fixedSlots    FixedSlotTemplate[]
+  reservations  Reservation[]
+  rentals       Rental[]
+  ratings       Rating[]
 
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")

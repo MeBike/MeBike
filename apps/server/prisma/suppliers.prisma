@@ -8,14 +8,13 @@ enum SupplierStatus {
 // Suppliers table
 
 model Supplier {
-  id           String         @id @default(uuid(7)) @db.Uuid
-  name         String
-  address      String?
-  phoneNumber  String?        @map("phone_number")
-  contractFee  Decimal?       @db.Decimal(10, 2) @map("contract_fee")
-  status       SupplierStatus
-  createdAt    DateTime       @db.Timestamptz @map("created_at")
-  updatedAt    DateTime       @db.Timestamptz @map("updated_at")
+  id          String         @id @default(uuid(7)) @db.Uuid
+  name        String
+  address     String?
+  phoneNumber String?        @map("phone_number")
+  contractFee Decimal?       @map("contract_fee") @db.Decimal(10, 2)
+  status      SupplierStatus
+  updatedAt   DateTime       @map("updated_at") @db.Timestamptz
 
-  bikes        Bike[]
+  bikes Bike[]
 }

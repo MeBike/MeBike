@@ -3,19 +3,17 @@ enum FixedSlotStatus {
   CANCELLED
 }
 
-
 model FixedSlotTemplate {
-  id         String          @id @default(uuid(7)) @db.Uuid
-  userId     String          @db.Uuid @map("user_id")
-  stationId  String          @db.Uuid @map("station_id")
-  slotStart  DateTime        @db.Time @map("slot_start")
-  status     FixedSlotStatus @default(ACTIVE)
-  createdAt  DateTime        @default(now()) @db.Timestamptz @map("created_at")
-  updatedAt  DateTime        @default(now()) @db.Timestamptz @map("updated_at")
+  id        String          @id @default(uuid(7)) @db.Uuid
+  userId    String          @map("user_id") @db.Uuid
+  stationId String          @map("station_id") @db.Uuid
+  slotStart DateTime        @map("slot_start") @db.Time
+  status    FixedSlotStatus @default(ACTIVE)
+  updatedAt DateTime        @default(now()) @map("updated_at") @db.Timestamptz
 
-  user       User            @relation(fields: [userId], references: [id])
-  station    Station         @relation(fields: [stationId], references: [id])
-  dates      FixedSlotDate[]
+  user         User            @relation(fields: [userId], references: [id])
+  station      Station         @relation(fields: [stationId], references: [id])
+  dates        FixedSlotDate[]
   reservations Reservation[]
 
   @@index([userId], name: "idx_fixed_slot_user")
@@ -24,11 +22,11 @@ model FixedSlotTemplate {
 }
 
 model FixedSlotDate {
-  id          String    @id @default(uuid(7)) @db.Uuid
-  templateId  String    @db.Uuid @map("template_id")
-  slotDate    DateTime  @db.Date @map("slot_date")
+  id         String   @id @default(uuid(7)) @db.Uuid
+  templateId String   @map("template_id") @db.Uuid
+  slotDate   DateTime @map("slot_date") @db.Date
 
-  template    FixedSlotTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template FixedSlotTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@unique([templateId, slotDate], name: "uq_fixed_slot_date")
   @@index([templateId], name: "idx_fixed_slot_dates_template")

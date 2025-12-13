@@ -15,30 +15,29 @@ enum ReservationOption {
 // Reservations
 
 model Reservation {
-  id                    String              @id @default(uuid(7)) @db.Uuid
-  userId                String              @db.Uuid @map("user_id")
-  bikeId                String?             @db.Uuid @map("bike_id")
-  stationId             String              @db.Uuid @map("station_id")
-  reservationOption     ReservationOption   @map("reservation_option")
-  fixedSlotTemplateId   String?             @db.Uuid @map("fixed_slot_template_id")
-  subscriptionId        String?             @db.Uuid @map("subscription_id")
-  startTime             DateTime            @db.Timestamptz @map("start_time")
-  endTime               DateTime?           @db.Timestamptz @map("end_time")
-  prepaid               Decimal             @default(0) @db.Decimal(12, 2)
-  status                ReservationStatus   @default(PENDING)
-  createdAt             DateTime            @default(now()) @db.Timestamptz @map("created_at")
-  updatedAt             DateTime            @default(now()) @db.Timestamptz @map("updated_at")
+  id                  String            @id @default(uuid(7)) @db.Uuid
+  userId              String            @map("user_id") @db.Uuid
+  bikeId              String?           @map("bike_id") @db.Uuid
+  stationId           String            @map("station_id") @db.Uuid
+  reservationOption   ReservationOption @map("reservation_option")
+  fixedSlotTemplateId String?           @map("fixed_slot_template_id") @db.Uuid
+  subscriptionId      String?           @map("subscription_id") @db.Uuid
+  startTime           DateTime          @map("start_time") @db.Timestamptz
+  endTime             DateTime?         @map("end_time") @db.Timestamptz
+  prepaid             Decimal           @default(0) @db.Decimal(12, 2)
+  status              ReservationStatus @default(PENDING)
+  updatedAt           DateTime          @default(now()) @map("updated_at") @db.Timestamptz
 
-  user                  User                @relation(fields: [userId], references: [id])
-  bike                  Bike?               @relation(fields: [bikeId], references: [id])
-  station               Station             @relation(fields: [stationId], references: [id])
-  fixedSlotTemplate     FixedSlotTemplate?  @relation(fields: [fixedSlotTemplateId], references: [id])
-  subscription          Subscription?       @relation(fields: [subscriptionId], references: [id])
+  user              User               @relation(fields: [userId], references: [id])
+  bike              Bike?              @relation(fields: [bikeId], references: [id])
+  station           Station            @relation(fields: [stationId], references: [id])
+  fixedSlotTemplate FixedSlotTemplate? @relation(fields: [fixedSlotTemplateId], references: [id])
+  subscription      Subscription?      @relation(fields: [subscriptionId], references: [id])
+  // Partial unique index (active reservations per bike) cannot be expressed in Prisma; add manually:
+  // CREATE UNIQUE INDEX idx_reservations_active_bike ON reservations(bike_id) WHERE status IN ('PENDING','ACTIVE') AND bike_id IS NOT NULL;
 
   @@index([userId], name: "idx_reservations_user")
   @@index([bikeId], name: "idx_reservations_bike")
   @@index([stationId], name: "idx_reservations_station")
   @@index([status], name: "idx_reservations_status")
-  // Partial unique index (active reservations per bike) cannot be expressed in Prisma; add manually:
-  // CREATE UNIQUE INDEX idx_reservations_active_bike ON reservations(bike_id) WHERE status IN ('PENDING','ACTIVE') AND bike_id IS NOT NULL;
 }
