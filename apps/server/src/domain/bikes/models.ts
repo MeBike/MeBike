@@ -8,6 +8,7 @@ export type BikeRow = {
   status: BikeStatus;
 };
 export type BikeFilter = {
+  stationId?: string;
   id?: string;
   supplierId?: string;
   status?: BikeStatus;

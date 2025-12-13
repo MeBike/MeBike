@@ -15,7 +15,7 @@ import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 export type BikeRepo = {
   getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
   listByStationWithOffset: (
-    stationId: string,
+    stationId: string | undefined,
     filter: BikeFilter,
     pageReq: PageRequest<BikeSortField>,
   ) => Effect.Effect<PageResult<BikeRow>>;
@@ -62,7 +62,7 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
       const { page, pageSize, skip, take } = normalizedPage(pageReq);
 
       const where: PrismaTypes.BikeWhereInput = {
-        stationId,
+        ...(stationId ? { stationId } : {}),
         ...(filter.status ? { status: filter.status } : {}),
         ...(filter.supplierId ? { supplierId: filter.supplierId } : {}),
         ...(filter.id ? { id: filter.id } : {}),
