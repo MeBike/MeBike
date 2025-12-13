@@ -9,9 +9,17 @@ import type {
   ResetPasswordSchemaFormData,
 } from "@schemas/authSchema";
 import type { AxiosResponse } from "axios";
-import { LOGIN_MUTATION, REGISTER_MUTATION } from "@/graphql";
+import {
+  LOGIN_MUTATION,
+  REGISTER_MUTATION,
+  REFRESH_TOKEN_MUTATION,
+} from "@/graphql";
 import {print} from "graphql"
-import { LoginResponse , RegisterResponse } from "@/types/auth.type";
+import {
+  LoginResponse,
+  RegisterResponse,
+  RefreshTokenResponse,
+} from "@/types/auth.type";
 interface AuthResponse {
   message: string;
   result: {
@@ -115,10 +123,10 @@ export const authService = {
   },
   refreshToken: async (
     refresh_token: string
-  ): Promise<AxiosResponse<AuthResponse>> => {
-    const response = await fetchHttpClient.post<AuthResponse>(
-      "/users/refresh-token",
-      { refresh_token }
+  ): Promise<AxiosResponse<RefreshTokenResponse>> => {
+    const response = await fetchHttpClient.mutation<RefreshTokenResponse>(
+      print(REFRESH_TOKEN_MUTATION) ,
+      { refreshToken: refresh_token }
     );
     return response;
   },

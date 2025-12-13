@@ -14,6 +14,9 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
 }
+export interface AccessToken {
+  accessToken : string;
+}
 export interface RegisterResponse {
   email : string;
   password : string;

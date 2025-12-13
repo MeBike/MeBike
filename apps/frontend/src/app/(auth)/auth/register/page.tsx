@@ -242,42 +242,7 @@ const RegisterPage = () => {
                     </div>
                   </div>
 
-                  {/* <div className="space-y-2">
-                    <Label
-                      htmlFor="confirm_password"
-                      className="text-sm font-medium"
-                    >
-                      Xác nhận mật khẩu
-                    </Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="confirm_password"
-                        {...register("confirm_password")}
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Nhập lại mật khẩu"
-                        className="pl-10 pr-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-5 w-4" />
-                        ) : (
-                          <Eye className="h-5 w-4" />
-                        )}
-                      </button>
-                      {errors.confirm_password && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.confirm_password.message}
-                        </p>
-                      )}
-                    </div>
-                  </div> */}
+                   */}
 
                   <div className="flex items-start space-x-3 pt-2">
                     <Checkbox

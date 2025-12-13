@@ -8,7 +8,9 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503,
 };
-import type { GraphQLMutationResponse } from "@/types/GraphQL";
+import type {RefreshTokenResponse} from "@/types/auth.type";
+import { REFRESH_TOKEN_MUTATION } from "@/graphql";
+import { print } from "graphql";
 export class FetchHttpClient {
   private baseURL: string;
   private axiosInstance: AxiosInstance;
@@ -126,22 +128,41 @@ export class FetchHttpClient {
   private async refreshAccessToken(): Promise<string> {
     const refreshToken = getRefreshToken();
     console.log("Refreshing token with:", refreshToken);
+
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
-    const response = await axios.post(
-      `${this.baseURL}/users/refresh-token`,
-      { refresh_token: refreshToken },
-      { headers: { "Content-Type": "application/json" } }
-    );
-    console.log("Refresh token response:", response.status, response.data);
-    if (response.status !== HTTP_STATUS.OK) {
+
+    try {
+      // Use 'this.mutation' instead of 'axios.post'
+      const response = await this.mutation<RefreshTokenResponse>(
+        print(REFRESH_TOKEN_MUTATION),
+        { refreshToken: refreshToken }
+      );
+
+      // Handle GraphQL errors (standard GraphQL returns status 200 even on error sometimes)
+      // Check if 'errors' exists in the body
+      if ((response.data as any).errors) {
+        throw new Error("GraphQL Error during refresh");
+      }
+
+      // Adjust this path based on your actual GraphQL Schema Response
+      // Usually it is: response.data.data.refreshToken
+      const result = response.data.data.RefreshToken.data;
+      // OR if your RefreshTokenResponse type already includes the data wrapper:
+      // const result = response.data;
+
+      if (!result || !result.accessToken) {
+        throw new Error("Invalid response structure");``
+      }
+
+      setTokens(result.accessToken, refreshToken);
+      return result.accessToken;
+    } catch (error) {
+      console.error("Refresh token failed:", error);
       clearTokens();
-      throw new Error("Refresh token expired");
+      throw new Error("Refresh token expired or failed");
     }
-    const data = response.data;
-    setTokens(data.result.access_token, data.result.refresh_token);
-    return data.result.access_token;
   }
 
   private processQueue(error: unknown, token: string | null) {
@@ -158,11 +179,7 @@ export class FetchHttpClient {
     payload: { query: string; variables?: object },
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
-    return this.axiosInstance.post(
-      "",
-      payload,
-      config
-    );
+    return this.axiosInstance.post("", payload, config);
   }
   async get<T>(
     url: string,
