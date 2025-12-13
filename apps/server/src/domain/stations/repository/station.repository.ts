@@ -1,6 +1,6 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import type { PageRequest } from "@/domain/shared/pagination";
+import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
@@ -12,9 +12,21 @@ import type {
 import type {
   NearestSearchArgs,
   NearestStationRow,
-  StationRepo,
+  StationFilter,
+  StationRow,
   StationSortField,
-} from "./station.types";
+} from "../models";
+
+export type StationRepo = {
+  listWithOffset: (
+    filter: StationFilter,
+    pageReq: PageRequest<StationSortField>,
+  ) => Effect.Effect<PageResult<StationRow>>;
+  getById: (id: string) => Effect.Effect<Option.Option<StationRow>>;
+  listNearest: (
+    args: NearestSearchArgs,
+  ) => Effect.Effect<PageResult<NearestStationRow>>;
+};
 
 export class StationRepository extends Context.Tag("StationRepository")<
   StationRepository,
@@ -48,7 +60,10 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
   } as const;
 
   return {
-    listWithOffset(filter, pageReq) {
+    listWithOffset(
+      filter: StationFilter,
+      pageReq: PageRequest<StationSortField>,
+    ) {
       const { page, pageSize, skip, take } = normalizedPage(pageReq);
 
       const where: PrismaTypes.StationWhereInput = {
@@ -81,7 +96,7 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
       });
     },
 
-    getById(id) {
+    getById(id: string) {
       return Effect.gen(function* () {
         const row = yield* Effect.promise(() =>
           client.station.findUnique({

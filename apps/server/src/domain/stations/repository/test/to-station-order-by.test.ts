@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { PageRequest, SortDirection } from "@/domain/shared/pagination";
 
-import type { StationSortField } from "../station.types";
+import type { StationSortField } from "../../models";
 
 import { toStationOrderBy } from "../station.repository";
 

@@ -8,7 +8,7 @@ import type {
   NearestSearchArgs,
   NearestStationRow,
   StationRow,
-} from "../repository/station.types";
+} from "../models";
 
 import { StationServiceTag } from "../services/station.service";
 

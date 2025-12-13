@@ -8,7 +8,7 @@ import type {
   StationFilter,
   StationRow,
   StationSortField,
-} from "../repository/station.types";
+} from "../models";
 
 import { StationNotFound } from "../errors";
 import { StationRepository } from "../repository/station.repository";
