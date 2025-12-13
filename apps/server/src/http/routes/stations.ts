@@ -1,10 +1,4 @@
-import type { StationErrorResponse, StationSummary } from "@mebike/shared";
-
-import {
-  serverRoutes,
-  StationErrorCodeSchema,
-  stationErrorMessages,
-} from "@mebike/shared";
+import { serverRoutes, StationsContracts } from "@mebike/shared";
 import { Effect } from "effect";
 
 import {
@@ -17,7 +11,7 @@ import {
 import { Prisma } from "@/infrastructure/prisma";
 
 type StationListResponse = {
-  data: StationSummary[];
+  data: StationsContracts.StationSummary[];
   pagination: {
     page: number;
     pageSize: number;
@@ -70,11 +64,11 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
             ),
           onFailure: () =>
             Effect.sync(() =>
-              c.json<StationErrorResponse, 400>(
+              c.json<StationsContracts.StationErrorResponse, 400>(
                 {
-                  error: stationErrorMessages.INVALID_QUERY_PARAMS,
+                  error: StationsContracts.stationErrorMessages.INVALID_QUERY_PARAMS,
                   details: {
-                    code: StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
+                    code: StationsContracts.StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
                   },
                 },
                 400,
@@ -88,10 +82,12 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
   app.openapi(stations.getNearbyStations, async (c) => {
     const query = c.req.valid("query");
     if (!Number.isFinite(query.latitude) || !Number.isFinite(query.longitude)) {
-      return c.json<StationErrorResponse, 400>(
+      return c.json<StationsContracts.StationErrorResponse, 400>(
         {
-          error: stationErrorMessages.INVALID_COORDINATES,
-          details: { code: StationErrorCodeSchema.enum.INVALID_COORDINATES },
+          error: StationsContracts.stationErrorMessages.INVALID_COORDINATES,
+          details: {
+            code: StationsContracts.StationErrorCodeSchema.enum.INVALID_COORDINATES,
+          },
         },
         400,
       );
@@ -129,11 +125,11 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
             ),
           onFailure: () =>
             Effect.sync(() =>
-              c.json<StationErrorResponse, 400>(
+              c.json<StationsContracts.StationErrorResponse, 400>(
                 {
-                  error: stationErrorMessages.INVALID_COORDINATES,
+                  error: StationsContracts.stationErrorMessages.INVALID_COORDINATES,
                   details: {
-                    code: StationErrorCodeSchema.enum.INVALID_COORDINATES,
+                    code: StationsContracts.StationErrorCodeSchema.enum.INVALID_COORDINATES,
                   },
                 },
                 400,
@@ -157,16 +153,16 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
         Effect.matchEffect({
           onSuccess: value =>
             Effect.sync(() =>
-              c.json<StationSummary, 200>(value, 200),
+              c.json<StationsContracts.StationSummary, 200>(value, 200),
             ),
           onFailure: error =>
             error._tag === "StationNotFound"
               ? Effect.sync(() =>
-                  c.json<StationErrorResponse, 404>(
+                  c.json<StationsContracts.StationErrorResponse, 404>(
                     {
-                      error: stationErrorMessages.STATION_NOT_FOUND,
+                      error: StationsContracts.stationErrorMessages.STATION_NOT_FOUND,
                       details: {
-                        code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
+                        code: StationsContracts.StationErrorCodeSchema.enum.STATION_NOT_FOUND,
                         stationId,
                       },
                     },
@@ -174,11 +170,11 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
                   ),
                 )
               : Effect.sync(() =>
-                  c.json<StationErrorResponse, 404>(
+                  c.json<StationsContracts.StationErrorResponse, 404>(
                     {
-                      error: stationErrorMessages.STATION_NOT_FOUND,
+                      error: StationsContracts.stationErrorMessages.STATION_NOT_FOUND,
                       details: {
-                        code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
+                        code: StationsContracts.StationErrorCodeSchema.enum.STATION_NOT_FOUND,
                       },
                     },
                     404,

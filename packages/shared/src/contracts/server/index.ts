@@ -1,7 +1,8 @@
+export * as BikesContracts from "./bikes";
 export * from "./rentals";
 export * from "./routes";
 export * from "./schemas";
-export * from "./stations";
+export * as StationsContracts from "./stations";
 
 export const serverOpenApi = {
   info: {
