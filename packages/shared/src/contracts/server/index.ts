@@ -3,6 +3,7 @@ export * from "./rentals";
 export * from "./routes";
 export * from "./schemas";
 export * as StationsContracts from "./stations";
+export * as SuppliersContracts from "./suppliers";
 
 export const serverOpenApi = {
   info: {

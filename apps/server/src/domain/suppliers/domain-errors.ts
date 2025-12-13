@@ -1,5 +1,6 @@
 import { Data } from "effect";
 
+import type { SupplierStatus } from "generated/prisma/enums";
 /**
  * Supplier not found by ID
  * Use case: GET/PUT/PATCH /suppliers/:id
@@ -25,7 +26,7 @@ export class DuplicateSupplierName extends Data.TaggedError("DuplicateSupplierNa
  */
 export class InvalidSupplierStatus extends Data.TaggedError("InvalidSupplierStatus")<{
   readonly status: string;
-  readonly allowed: readonly string[];
+  readonly allowed: readonly SupplierStatus[]; // THIS WAS ASS THE FUCK WHY THE FUCK LLM LOVE TO ASSET  STRING WHEN THE TYPE FOR IT EXISTI??
 }> {}
 
 /**
@@ -33,44 +34,7 @@ export class InvalidSupplierStatus extends Data.TaggedError("InvalidSupplierStat
  * Use case: POST /suppliers, PUT /suppliers/:id
  * Backend message: PHONE_NUMBER_INVALID
  */
-export class InvalidPhoneNumber extends Data.TaggedError("InvalidPhoneNumber")<{
-  readonly phoneNumber: string;
-}> {}
-
-/**
- * Contract fee validation failed (must be decimal with 1-2 places)
- * Use case: POST /suppliers, PUT /suppliers/:id
- * Backend message: FEE_IN_VALID
- */
-export class InvalidContractFee extends Data.TaggedError("InvalidContractFee")<{
-  readonly fee: number;
-}> {}
-
-/**
- * Supplier ID format is invalid (not a valid MongoDB ObjectId)
- * Use case: Any endpoint with :id param
- * Backend message: SUPPLIER_ID_IN_VALID
- */
-export class InvalidSupplierId extends Data.TaggedError("InvalidSupplierId")<{
-  readonly id: string;
-}> {}
-
-/**
- * Supplier name validation failed
- * Use case: POST /suppliers, PUT /suppliers/:id
- * Backend messages: NAME_IS_REQUIRED, NAME_IN_VALID, NAME_TOO_LONG
- */
-export class InvalidSupplierName extends Data.TaggedError("InvalidSupplierName")<{
-  readonly name?: string;
-  readonly reason: "required" | "invalid_type" | "too_long";
-}> {}
-
-/**
- * Supplier address validation failed
- * Use case: POST /suppliers, PUT /suppliers/:id
- * Backend messages: ADDRESS_IN_VALID, ADDRESS_TOO_LONG
- */
-export class InvalidSupplierAddress extends Data.TaggedError("InvalidSupplierAddress")<{
-  readonly address?: string;
-  readonly reason: "invalid_type" | "too_long";
-}> {}
+// NOTE:
+// Low-level input validation (ID format, name/address/phone/fee shape)
+// is handled at the HTTP contract layer via Zod + the global validation
+// handler, so we intentionally do not model those as domain errors here.
