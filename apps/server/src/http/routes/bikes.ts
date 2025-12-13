@@ -52,7 +52,7 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
       pageReq: {
         page: query.page ?? 1,
         pageSize: query.pageSize ?? 50,
-        sortBy: (query.sortBy as any) ?? "status",
+        sortBy: (query.sortBy) ?? "status",
         sortDir: query.sortDir ?? "asc",
       },
     }).pipe(

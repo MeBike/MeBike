@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 
 import { registerBikeRoutes } from "./routes/bikes";
 import { registerStationRoutes } from "./routes/stations";
+import { registerSupplierRoutes } from "./routes/suppliers";
 
 export function createHttpApp() {
   const app = new OpenAPIHono({
@@ -51,6 +52,7 @@ export function createHttpApp() {
 
   registerStationRoutes(app);
   registerBikeRoutes(app);
+  registerSupplierRoutes(app);
 
   return app;
 }

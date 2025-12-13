@@ -2,7 +2,7 @@ import { z } from "../../../zod";
 import { SupplierStatusSchema } from "./schemas";
 
 export const SupplierSummarySchema = z.object({
-  id: z.union([z.uuidv7()]),
+  id: z.uuidv7(),
   name: z.string(),
   address: z.string().nullable(),
   phoneNumber: z.string().nullable(),
@@ -12,7 +12,7 @@ export const SupplierSummarySchema = z.object({
 });
 
 export const SupplierBikeStatsSchema = z.object({
-  supplierId: z.union([z.uuidv7()]),
+  supplierId: z.uuidv7(),
   supplierName: z.string(),
   totalBikes: z.number(),
   available: z.number(),

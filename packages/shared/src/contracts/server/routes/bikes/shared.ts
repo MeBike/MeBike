@@ -23,7 +23,7 @@ export {
   SortDirectionSchema,
 };
 
-export const BikeSortFieldSchema = z.enum(["created_at", "updated_at", "status"]);
+export const BikeSortFieldSchema = z.enum(["status", "name"]);
 
 export const BikeErrorResponseSchema = ServerErrorResponseSchema.extend({
   details: BikeErrorDetailSchema.optional(),
@@ -48,7 +48,7 @@ export const BikeListQuerySchema = z
     ...paginationQueryFields,
     sortBy: BikeSortFieldSchema.optional().openapi({
       description: "Sort field",
-      example: "created_at",
+      example: "status",
     }),
     sortDir: SortDirectionSchema.optional().openapi({
       description: "Sort direction",
