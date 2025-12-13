@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "dev": "tsx --watch src/http/server.ts",
     "start": "node dist/src/http/server.js",
-    "seed": "pnpm prisma db seed"
+    "seed": "pnpm prisma db seed",
+    "seed:bikes": "tsx prisma/seed-bikes.ts"
+
   },
   "dependencies": {
     "@hono/node-server": "^1.19.3",

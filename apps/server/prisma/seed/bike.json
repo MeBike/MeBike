@@ -1,0 +1,1117 @@
+[{
+  "_id": {
+    "$oid": "68ec97b39f124ea30fd6dda7"
+  },
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d16"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-10-13T13:09:55.596Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T22:26:29.136Z"
+  },
+  "chip_id": "DF1B334D4D81"
+}, {
+  "_id": {
+    "$oid": "68efc1a7e0d1fdac1b7b1d1d"
+  },
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d16"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-10-12T20:00:54.172Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-11T13:30:44.535Z"
+  },
+  "chip_id": "6425F071C686"
+}, {
+  "_id": {
+    "$oid": "68f35be1160a395b2a456dd3"
+  },
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d16"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-10-18T16:20:33.314Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-12T21:24:22.222Z"
+  },
+  "chip_id": "6425F071C6862"
+}, {
+  "_id": {
+    "$oid": "68f5b074918e8aa7c8c82c17"
+  },
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-10-12T20:00:54.172Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T01:11:52.345Z"
+  },
+  "chip_id": "C82E188DF059"
+}, {
+  "_id": {
+    "$oid": "68f7aa878a2cc91ee04994d8"
+  },
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-10-19T20:39:23.294Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T03:59:12.984Z"
+  },
+  "chip_id": "xecuatruongle"
+}, {
+  "_id": {
+    "$oid": "68f7aaab8a2cc91ee04994d9"
+  },
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d16"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-10-19T20:39:23.294Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T03:33:12.161Z"
+  },
+  "chip_id": "xekhongcochip"
+}, {
+  "_id": {
+    "$oid": "68fb4464c543160e20cb360c"
+  },
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d16"
+  },
+  "status": "ĐÃ ĐẶT TRƯỚC",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-10-12T20:00:54.172Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-11T12:33:11.993Z"
+  },
+  "chip_id": "C82E188DF071"
+}, {
+  "_id": {
+    "$oid": "69021d83c627540d9faab6c9"
+  },
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d16"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-10-29T20:58:27.028Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T12:24:46.642Z"
+  },
+  "chip_id": "SE173412"
+}, {
+  "_id": {
+    "$oid": "690d65a1371cd95c7dda51ce"
+  },
+  "chip_id": "SE173411",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d16"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-07T10:21:05.935Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T12:26:10.610Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6912cb655849377dff914c21"
+  },
+  "chip_id": "xecuaan",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-11T12:36:37.048Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T14:48:15.529Z"
+  }
+}, {
+  "_id": {
+    "$oid": "69182e521934822cf46cd8f4"
+  },
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-10-13T13:09:55.596Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-16T19:02:29.482Z"
+  },
+  "chip_id": "DF1B334D4D00"
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc694"
+  },
+  "chip_id": "cbc9861a-6013-4a60-85f4-079a44b88cd1",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-16T19:56:36.353Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc695"
+  },
+  "chip_id": "44459ff6-de5e-4ffb-9eca-560194c7b8e5",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d18"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-16T19:55:50.052Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc696"
+  },
+  "chip_id": "83eec6d4-be31-446a-b06f-ca71946345bd",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1a"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T22:24:42.154Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc697"
+  },
+  "chip_id": "38beff25-2c1f-4ebc-ad41-936097ce0373",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1d"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-16T19:33:35.357Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc698"
+  },
+  "chip_id": "d087b45b-7449-4cfc-a54c-806845b5f31b",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T15:17:52.436Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc699"
+  },
+  "chip_id": "99f207ab-7ba5-4161-a1f7-3532b777c96f",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d12"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-17T19:39:56.333Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc69a"
+  },
+  "chip_id": "8459f45b-a420-4513-a1ad-0b290d463021",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d19"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc69b"
+  },
+  "chip_id": "9163e073-a35c-4823-a5bc-9733adfb4951",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1b"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc69c"
+  },
+  "chip_id": "cda790b1-63cb-4bab-affb-26fd54490bee",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.118Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T21:50:55.076Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc69d"
+  },
+  "chip_id": "f60b7502-ed66-4bc7-a131-47b3af80bc55",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1d"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-18T22:52:33.821Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc69e"
+  },
+  "chip_id": "5b13ac77-3169-4e68-9c9e-5a3753a216db",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1c"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc69f"
+  },
+  "chip_id": "6bfaeafd-553e-422c-a87d-8ed72587c6c2",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d11"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a0"
+  },
+  "chip_id": "3f5fbb64-5043-4de3-85e0-ca9c5fe6e351",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d13"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a1"
+  },
+  "chip_id": "f39d7cf0-fcb9-4f00-8e99-f50626dae3e6",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1a"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-27T17:32:56.216Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a2"
+  },
+  "chip_id": "57f2c796-5a51-4fc4-8a42-4036fe86b892",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d18"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T22:42:34.307Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a3"
+  },
+  "chip_id": "7386f4fe-c6ff-4822-a4bc-11f5511162d2",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d18"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-21T06:56:59.236Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a4"
+  },
+  "chip_id": "f12e10c0-46c1-4a78-a9a5-41fba243e8f6",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1a"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-26T20:08:20.826Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a5"
+  },
+  "chip_id": "530ee6c6-7ff6-407f-89e4-0e7aed5d0f5f",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1d"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a6"
+  },
+  "chip_id": "df11e04b-61b1-4772-a959-1754f0e26f8a",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-21T01:01:14.094Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a7"
+  },
+  "chip_id": "bb4b29d9-4312-4720-a20e-f38fb9616b97",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d12"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a8"
+  },
+  "chip_id": "f3835257-531d-4231-a99f-37ba079d3a76",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d19"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6a9"
+  },
+  "chip_id": "71254872-cc5d-4916-91dd-2cb42e45e187",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1b"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T23:11:58.167Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6aa"
+  },
+  "chip_id": "3619b7ea-089e-49b9-81c1-0493a0b98096",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d18"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-21T06:56:28.726Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6ab"
+  },
+  "chip_id": "63fc12a9-3371-49c3-b2fd-d863c9e5caa7",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1d"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-18T23:28:12.401Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6ac"
+  },
+  "chip_id": "f703b48a-4729-4217-95fc-13f128997521",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1c"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T22:24:56.837Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6ad"
+  },
+  "chip_id": "0d3b8c63-f90f-4b67-b37a-d50b73fb39d0",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d11"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6ae"
+  },
+  "chip_id": "095ca225-14f7-4cfe-89a5-9db0c89d0996",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d13"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6af"
+  },
+  "chip_id": "8a0331a3-3b13-47f3-9bc3-79a9889398eb",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d18"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T22:24:28.497Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b0"
+  },
+  "chip_id": "5262c109-1035-416c-b74b-5a49295c938b",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d18"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-21T06:56:06.701Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b1"
+  },
+  "chip_id": "bd95c4aa-6f12-45e8-a706-3fae9a6ad94a",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d18"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-17T20:27:18.659Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b2"
+  },
+  "chip_id": "b1732fd9-98fd-4a1f-82ea-fbae523a83bc",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1a"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-21T06:56:43.968Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b3"
+  },
+  "chip_id": "927a4ecf-d56c-4aa9-8937-8deafb6a3c93",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1d"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-18T22:42:57.592Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b4"
+  },
+  "chip_id": "3dae72b1-1b46-4248-b0e4-288f5e79b031",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b5"
+  },
+  "chip_id": "8a3739c6-b8e1-4a23-891d-d81b92c2d70a",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d12"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b6"
+  },
+  "chip_id": "b0e934c4-c5b4-44a7-a5d4-6110fb30df34",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d19"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-21T09:33:25.124Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b7"
+  },
+  "chip_id": "1c7d5a55-e4a4-4a4e-ac5b-cb69a26e783e",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1b"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b8"
+  },
+  "chip_id": "96004650-3f66-4cb1-a4fd-002c2c8f5aaf",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d14"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-21T09:27:31.869Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6b9"
+  },
+  "chip_id": "8d4059ad-db03-434c-894c-4d3863b05dc0",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1d"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-21T06:57:11.838Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6ba"
+  },
+  "chip_id": "c3737475-fcd2-4071-9698-96acf4e8201a",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1c"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-17T11:49:04.910Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6bb"
+  },
+  "chip_id": "904cae75-e003-487f-82cc-a6b54337e337",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d11"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6bc"
+  },
+  "chip_id": "1a272421-2e3b-4939-9e9f-71cb9c7ae32a",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d13"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-16T21:29:15.706Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6bd"
+  },
+  "chip_id": "25244590-bbfb-4530-b496-15ef490f6577",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d15"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-16T21:26:03.942Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6be"
+  },
+  "chip_id": "5cdd6bec-4ee7-4c5a-839f-b1cde2dbd8da",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d18"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-16T20:01:22.246Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6bf"
+  },
+  "chip_id": "8b3aa574-6a15-4a2f-ad46-c6cfe985059c",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d18"
+  },
+  "status": "ĐANG ĐƯỢC THUÊ",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-17T19:31:46.834Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6c0"
+  },
+  "chip_id": "bbe12d51-a676-469e-9de8-424c7d4f8713",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1a"
+  },
+  "status": "BỊ HỎNG",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-17T20:14:13.373Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6c1"
+  },
+  "chip_id": "dfb3206b-92ed-4b15-8446-5a6bd6ddf0c0",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1d"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T22:23:48.823Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6c2"
+  },
+  "chip_id": "a0f174a0-426e-438c-a651-04ca2074cc8f",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6c3"
+  },
+  "chip_id": "ce6d8679-fdcd-49f9-a7e8-5a5286e41627",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d12"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6c4"
+  },
+  "chip_id": "e80c7c98-e59b-42a6-a075-7d95c228cc27",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d19"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "68e260a5d04813da448c56f1"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-20T22:24:03.750Z"
+  }
+}, {
+  "_id": {
+    "$oid": "6918a4799decbf73eadbc6c5"
+  },
+  "chip_id": "4a15cf1d-c7c8-4ec3-b0c2-a3caec6fe5fb",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d1b"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "691183a5f3d1e2af52f54ae8"
+  },
+  "created_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-15T23:04:09.119Z"
+  }
+}, {
+  "_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a1"
+  },
+  "chip_id": "C82E188DF058",
+  "station_id": {
+    "$oid": "68e0b2ae63beb4054de09d10"
+  },
+  "status": "CÓ SẴN",
+  "supplier_id": {
+    "$oid": "60d5f1b3e7b3c9a4b4f4b3a2"
+  },
+  "created_at": {
+    "$date": "2025-11-20T12:44:39.551Z"
+  },
+  "updated_at": {
+    "$date": "2025-11-21T05:37:49.870Z"
+  }
+}]

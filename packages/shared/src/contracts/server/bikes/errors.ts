@@ -8,6 +8,7 @@ export const bikeErrorCodes = [
   "BIKE_CURRENTLY_RENTED",
   "BIKE_CURRENTLY_RESERVED",
   "BIKE_NOT_RENTED_BY_USER",
+  "INVALID_QUERY_PARAMS",
 ] as const;
 
 export const BikeErrorCodeSchema = z.enum(bikeErrorCodes);
@@ -98,4 +99,5 @@ export const bikeErrorMessages: Record<BikeErrorCode, string> = {
   BIKE_CURRENTLY_RENTED: "Bike is currently rented and cannot be modified/deleted",
   BIKE_CURRENTLY_RESERVED: "Bike is currently reserved and cannot be modified/deleted",
   BIKE_NOT_RENTED_BY_USER: "User is not currently renting this bike",
+  INVALID_QUERY_PARAMS: "Invalid query parameters",
 };

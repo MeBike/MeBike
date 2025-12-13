@@ -4,6 +4,8 @@ import { BikeNotFoundResponseSchema } from "../../bikes";
 import { ServerErrorResponseSchema } from "../../schemas";
 import {
   BikeActivityStatsSchemaOpenApi,
+  BikeErrorCodeSchema,
+  BikeErrorResponseSchema,
   BikeIdParamSchema,
   BikeListQuerySchema,
   BikeListResponseSchema,
@@ -28,7 +30,50 @@ export const listBikes = createRoute({
         "application/json": { schema: BikeListResponseSchema },
       },
     },
-
+    400: {
+      description: "Invalid query",
+      content: {
+        "application/json": {
+          schema: BikeErrorResponseSchema,
+          examples: {
+            InvalidPage: {
+              value: {
+                error: "Invalid query parameters",
+                details: {
+                  code: BikeErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
+                  issues: [
+                    {
+                      path: "page",
+                      message: "Invalid input: expected number, received NaN",
+                      code: "invalid_type",
+                      expected: "number",
+                      received: "NaN",
+                    },
+                  ],
+                },
+              },
+            },
+            InvalidPageSize: {
+              value: {
+                error: "Invalid query parameters",
+                details: {
+                  code: BikeErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
+                  issues: [
+                    {
+                      path: "pageSize",
+                      message: "Invalid input: expected number, received NaN",
+                      code: "invalid_type",
+                      expected: "number",
+                      received: "NaN",
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 });
 

@@ -1,6 +1,7 @@
 import { z } from "../../../../zod";
 import {
   BikeActivityStatsSchema,
+  BikeErrorCodeSchema,
   BikeErrorDetailSchema,
   BikeRentalHistoryItemSchema,
   BikeRentalStatsSchema,
@@ -9,6 +10,11 @@ import {
   HighestRevenueBikeSchema,
 } from "../../bikes";
 import { ServerErrorResponseSchema } from "../../schemas";
+
+export {
+  BikeErrorCodeSchema,
+  ServerErrorResponseSchema,
+};
 
 // --- Helpers ---
 export const BikeSortFieldSchema = z.enum(["created_at", "updated_at", "status"]);
@@ -23,7 +29,7 @@ export const BikeErrorResponseSchema = ServerErrorResponseSchema.extend({
 
 export const BikeIdParamSchema = z
   .object({
-    id: z.string().describe("Bike ID (MongoDB ObjectId or UUID)"),
+    id: z.uuidv7().describe("Bike ID (UUID)"),
   })
   .openapi("BikeIdParam", {
     description: "Path params for bike id",
@@ -54,9 +60,9 @@ export const PaginationSchema = z
 
 export const BikeListQuerySchema = z
   .object({
-    id: z.string().optional(),
-    station_id: z.string().optional(),
-    supplier_id: z.string().optional(),
+    id: z.uuidv7().optional(),
+    station_id: z.uuidv7().optional(),
+    supplier_id: z.uuidv7().optional(),
     // TODO: add chip_id filter when we support it; removed for now to match implementation
     status: BikeStatusSchema.optional(),
     page: z
@@ -121,15 +127,15 @@ export const BikeRentalHistoryQuerySchema = z
 
 export const CreateBikeBodySchema = z.object({
   chip_id: z.string().min(1),
-  station_id: z.string().min(1),
-  supplier_id: z.string().min(1),
+  station_id: z.uuidv7(),
+  supplier_id: z.uuidv7(),
   status: BikeStatusSchema.optional(),
 }).openapi("CreateBikeBody");
 
 export const UpdateBikeBodySchema = z.object({
   chip_id: z.string().optional(),
-  station_id: z.string().optional(),
-  supplier_id: z.string().optional(),
+  station_id: z.uuidv7().optional(),
+  supplier_id: z.uuidv7().optional(),
   status: BikeStatusSchema.optional(),
 }).openapi("UpdateBikeBody");
 

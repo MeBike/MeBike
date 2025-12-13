@@ -2,31 +2,31 @@ import { z } from "../../../zod";
 import { BikeStatusSchema } from "./schemas";
 
 export const BikeSummarySchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   chipId: z.string(),
-  stationId: z.string().nullable(),
-  supplierId: z.string().nullable(),
+  stationId: z.uuidv7().nullable(),
+  supplierId: z.uuidv7().nullable(),
   status: BikeStatusSchema,
   // Ratings & station info omitted until implemented in backend
 });
 
 export const BikeRentalHistoryItemSchema = z.object({
-  _id: z.string(),
+  _id: z.uuidv7(),
   start_time: z.string(),
   end_time: z.string().optional(),
   duration: z.number().optional(),
   total_price: z.number().optional(),
   user: z.object({
-    _id: z.string(),
+    _id: z.uuidv7(),
     fullname: z.string(),
   }),
   start_station: z.object({
-    _id: z.string(),
+    _id: z.uuidv7(),
     name: z.string(),
   }),
   end_station: z
     .object({
-      _id: z.string(),
+      _id: z.uuidv7(),
       name: z.string(),
     })
     .optional(),
@@ -55,12 +55,12 @@ export const BikeRentalStatsSchema = z.object({
 });
 
 export const HighestRevenueBikeSchema = z.object({
-  bike_id: z.string(),
+  bike_id: z.uuidv7(),
   bike_chip_id: z.string(),
   total_revenue: z.number(),
   rental_count: z.number(),
   station: z.object({
-    _id: z.string(),
+    _id: z.uuidv7(),
     name: z.string(),
   }),
 });
