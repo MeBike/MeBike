@@ -1,5 +1,5 @@
 import { serverRoutes, SuppliersContracts } from "@mebike/shared";
-import { Effect } from "effect";
+import { Effect, Match } from "effect";
 
 import {
   createSupplierUseCase,
@@ -95,28 +95,28 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
       withSupplierDeps(eff).pipe(Effect.either),
     );
 
-    if (result._tag === "Right") {
-      return c.json<SupplierSummary, 200>(
-        toSupplierSummary(result.right),
-        200,
-      );
-    }
-
-    const left = result.left;
-    if (left._tag === "SupplierNotFound") {
-      return c.json<SupplierErrorResponse, 404>(
-        {
-          error: supplierErrorMessages[SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND],
-          details: {
-            code: SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND,
-            supplierId,
-          },
-        },
-        404,
-      );
-    }
-
-    throw left;
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<SupplierSummary, 200>(toSupplierSummary(right), 200)),
+      Match.tag("Left", ({ left }) =>
+        Match.value(left).pipe(
+          Match.tag("SupplierNotFound", () =>
+            c.json<SupplierErrorResponse, 404>(
+              {
+                error: supplierErrorMessages[SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND],
+                details: {
+                  code: SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND,
+                  supplierId,
+                },
+              },
+              404,
+            )),
+          Match.orElse(() => {
+            throw left;
+          }),
+        )),
+      Match.exhaustive,
+    );
   });
 
   app.openapi(suppliers.createSupplier, async (c) => {
@@ -137,28 +137,28 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
       withSupplierDeps(eff).pipe(Effect.either),
     );
 
-    if (result._tag === "Right") {
-      return c.json<SupplierSummary, 201>(
-        toSupplierSummary(result.right),
-        201,
-      );
-    }
-
-    const left = result.left;
-    if (left._tag === "DuplicateSupplierName") {
-      return c.json<SupplierErrorResponse, 400>(
-        {
-          error: supplierErrorMessages[SupplierErrorCodeSchema.enum.DUPLICATE_SUPPLIER_NAME],
-          details: {
-            code: SupplierErrorCodeSchema.enum.DUPLICATE_SUPPLIER_NAME,
-            name: body.name,
-          },
-        },
-        400,
-      );
-    }
-
-    throw left;
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<SupplierSummary, 201>(toSupplierSummary(right), 201)),
+      Match.tag("Left", ({ left }) =>
+        Match.value(left).pipe(
+          Match.tag("DuplicateSupplierName", () =>
+            c.json<SupplierErrorResponse, 400>(
+              {
+                error: supplierErrorMessages[SupplierErrorCodeSchema.enum.DUPLICATE_SUPPLIER_NAME],
+                details: {
+                  code: SupplierErrorCodeSchema.enum.DUPLICATE_SUPPLIER_NAME,
+                  name: body.name,
+                },
+              },
+              400,
+            )),
+          Match.orElse(() => {
+            throw left;
+          }),
+        )),
+      Match.exhaustive,
+    );
   });
 
   app.openapi(suppliers.updateSupplier, async (c) => {
@@ -180,40 +180,39 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
       withSupplierDeps(eff).pipe(Effect.either),
     );
 
-    if (result._tag === "Right") {
-      return c.json<SupplierSummary, 200>(
-        toSupplierSummary(result.right),
-        200,
-      );
-    }
-
-    const left = result.left;
-    if (left._tag === "DuplicateSupplierName") {
-      return c.json<SupplierErrorResponse, 400>(
-        {
-          error: supplierErrorMessages[SupplierErrorCodeSchema.enum.DUPLICATE_SUPPLIER_NAME],
-          details: {
-            code: SupplierErrorCodeSchema.enum.DUPLICATE_SUPPLIER_NAME,
-            name: body.name ?? "",
-          },
-        },
-        400,
-      );
-    }
-    if (left._tag === "SupplierNotFound") {
-      return c.json<SupplierErrorResponse, 404>(
-        {
-          error: supplierErrorMessages[SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND],
-          details: {
-            code: SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND,
-            supplierId,
-          },
-        },
-        404,
-      );
-    }
-
-    throw left;
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<SupplierSummary, 200>(toSupplierSummary(right), 200)),
+      Match.tag("Left", ({ left }) =>
+        Match.value(left).pipe(
+          Match.tag("DuplicateSupplierName", () =>
+            c.json<SupplierErrorResponse, 400>(
+              {
+                error: supplierErrorMessages[SupplierErrorCodeSchema.enum.DUPLICATE_SUPPLIER_NAME],
+                details: {
+                  code: SupplierErrorCodeSchema.enum.DUPLICATE_SUPPLIER_NAME,
+                  name: body.name ?? "",
+                },
+              },
+              400,
+            )),
+          Match.tag("SupplierNotFound", () =>
+            c.json<SupplierErrorResponse, 404>(
+              {
+                error: supplierErrorMessages[SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND],
+                details: {
+                  code: SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND,
+                  supplierId,
+                },
+              },
+              404,
+            )),
+          Match.orElse(() => {
+            throw left;
+          }),
+        )),
+      Match.exhaustive,
+    );
   });
 
   app.openapi(suppliers.updateSupplierStatus, async (c) => {
@@ -226,40 +225,39 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
       withSupplierDeps(eff).pipe(Effect.either),
     );
 
-    if (result._tag === "Right") {
-      return c.json<SupplierSummary, 200>(
-        toSupplierSummary(result.right),
-        200,
-      );
-    }
-
-    const left = result.left;
-    if (left._tag === "InvalidSupplierStatus") {
-      return c.json<SupplierErrorResponse, 400>(
-        {
-          error: supplierErrorMessages[SupplierErrorCodeSchema.enum.INVALID_SUPPLIER_STATUS],
-          details: {
-            code: SupplierErrorCodeSchema.enum.INVALID_SUPPLIER_STATUS,
-            status: body.status,
-          },
-        },
-        400,
-      );
-    }
-    if (left._tag === "SupplierNotFound") {
-      return c.json<SupplierErrorResponse, 404>(
-        {
-          error: supplierErrorMessages[SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND],
-          details: {
-            code: SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND,
-            supplierId,
-          },
-        },
-        404,
-      );
-    }
-
-    throw left;
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<SupplierSummary, 200>(toSupplierSummary(right), 200)),
+      Match.tag("Left", ({ left }) =>
+        Match.value(left).pipe(
+          Match.tag("InvalidSupplierStatus", () =>
+            c.json<SupplierErrorResponse, 400>(
+              {
+                error: supplierErrorMessages[SupplierErrorCodeSchema.enum.INVALID_SUPPLIER_STATUS],
+                details: {
+                  code: SupplierErrorCodeSchema.enum.INVALID_SUPPLIER_STATUS,
+                  status: body.status,
+                },
+              },
+              400,
+            )),
+          Match.tag("SupplierNotFound", () =>
+            c.json<SupplierErrorResponse, 404>(
+              {
+                error: supplierErrorMessages[SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND],
+                details: {
+                  code: SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND,
+                  supplierId,
+                },
+              },
+              404,
+            )),
+          Match.orElse(() => {
+            throw left;
+          }),
+        )),
+      Match.exhaustive,
+    );
   });
 
   app.openapi(suppliers.getAllSupplierStats, async (c) => {
@@ -280,24 +278,27 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
       withSupplierDeps(eff).pipe(Effect.either),
     );
 
-    if (result._tag === "Right") {
-      return c.json<SupplierStats, 200>(result.right, 200);
-    }
-
-    const left = result.left;
-    if (left._tag === "SupplierNotFound") {
-      return c.json<SupplierErrorResponse, 404>(
-        {
-          error: supplierErrorMessages[SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND],
-          details: {
-            code: SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND,
-            supplierId,
-          },
-        },
-        404,
-      );
-    }
-
-    throw left;
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<SupplierStats, 200>(right, 200)),
+      Match.tag("Left", ({ left }) =>
+        Match.value(left).pipe(
+          Match.tag("SupplierNotFound", () =>
+            c.json<SupplierErrorResponse, 404>(
+              {
+                error: supplierErrorMessages[SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND],
+                details: {
+                  code: SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND,
+                  supplierId,
+                },
+              },
+              404,
+            )),
+          Match.orElse(() => {
+            throw left;
+          }),
+        )),
+      Match.exhaustive,
+    );
   });
 }
