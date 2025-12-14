@@ -35,16 +35,26 @@ export const StationServiceLive = Layer.effect(
   Effect.gen(function* () {
     const repo = yield* StationRepository;
     const service: StationService = {
-      listStations: (filter, page) => repo.listWithOffset(filter, page),
+      listStations: (filter, page) =>
+        repo.listWithOffset(filter, page).pipe(
+          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        ),
       getStationById: id =>
         Effect.gen(function* () {
-          const maybe = yield* repo.getById(id);
+          const maybe = yield* repo
+            .getById(id)
+            .pipe(
+              Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+            );
           if (Option.isNone(maybe)) {
             return yield* Effect.fail(new StationNotFound({ id }));
           }
           return maybe.value;
         }),
-      listNearestStations: args => repo.listNearest(args),
+      listNearestStations: args =>
+        repo.listNearest(args).pipe(
+          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        ),
     };
     return service;
   }),

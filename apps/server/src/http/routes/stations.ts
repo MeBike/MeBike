@@ -1,6 +1,7 @@
 import { serverRoutes, StationsContracts } from "@mebike/shared";
 import { Effect } from "effect";
 
+import { withLoggedCause } from "@/domain/shared";
 import {
   getStationDetailsUseCase,
   listNearestStationsUseCase,
@@ -10,38 +11,30 @@ import {
 } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 
-type StationListResponse = {
-  data: StationsContracts.StationSummary[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-};
-
 export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const stations = serverRoutes.stations;
 
-  // Register static paths before parameterized ones to avoid /nearby being captured by /:stationId
   app.openapi(stations.listStations, async (c) => {
     const query = c.req.valid("query");
-    const eff = listStationsUseCase({
-      filter: {
-        name: query.name,
-        address: query.address,
-        capacity: query.capacity,
-      },
-      pageReq: {
-        page: query.page ?? 1,
-        pageSize: query.pageSize ?? 50,
-        sortBy: query.sortBy ?? "name",
-        sortDir: query.sortDir ?? "asc",
-      },
-    }).pipe(
-      Effect.provide(StationServiceLive),
-      Effect.provide(StationRepositoryLive),
-      Effect.provide(Prisma.Default),
+    const eff = withLoggedCause(
+      listStationsUseCase({
+        filter: {
+          name: query.name,
+          address: query.address,
+          capacity: query.capacity,
+        },
+        pageReq: {
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 50,
+          sortBy: query.sortBy ?? "name",
+          sortDir: query.sortDir ?? "asc",
+        },
+      }).pipe(
+        Effect.provide(StationServiceLive),
+        Effect.provide(StationRepositoryLive),
+        Effect.provide(Prisma.Default),
+      ),
+      "GET /v1/stations",
     );
 
     return Effect.runPromise(
@@ -49,7 +42,7 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
         Effect.matchEffect({
           onSuccess: value =>
             Effect.sync(() =>
-              c.json<StationListResponse, 200>(
+              c.json<StationsContracts.StationListResponse, 200>(
                 {
                   data: value.items,
                   pagination: {
@@ -99,18 +92,20 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
       maxDistanceMeters: query.maxDistance,
       page: query.page ?? 1,
       pageSize: query.pageSize ?? 50,
-    }).pipe(
-      Effect.provide(StationServiceLive),
-      Effect.provide(StationRepositoryLive),
-      Effect.provide(Prisma.Default),
-    );
+    })
+      .pipe(
+        Effect.provide(StationServiceLive),
+        Effect.provide(StationRepositoryLive),
+        Effect.provide(Prisma.Default),
+      )
+      .pipe(effect => withLoggedCause(effect, "GET /v1/stations/nearby"));
 
     return Effect.runPromise(
       eff.pipe(
         Effect.matchEffect({
           onSuccess: value =>
             Effect.sync(() =>
-              c.json<StationListResponse, 200>(
+              c.json<StationsContracts.StationListResponse, 200>(
                 {
                   data: value.items,
                   pagination: {

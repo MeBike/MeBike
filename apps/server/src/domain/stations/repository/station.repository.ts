@@ -17,15 +17,19 @@ import type {
   StationSortField,
 } from "../models";
 
+import { StationRepositoryError } from "../errors";
+
 export type StationRepo = {
   listWithOffset: (
     filter: StationFilter,
     pageReq: PageRequest<StationSortField>,
-  ) => Effect.Effect<PageResult<StationRow>>;
-  getById: (id: string) => Effect.Effect<Option.Option<StationRow>>;
+  ) => Effect.Effect<PageResult<StationRow>, StationRepositoryError>;
+  getById: (
+    id: string,
+  ) => Effect.Effect<Option.Option<StationRow>, StationRepositoryError>;
   listNearest: (
     args: NearestSearchArgs,
-  ) => Effect.Effect<PageResult<NearestStationRow>>;
+  ) => Effect.Effect<PageResult<NearestStationRow>, StationRepositoryError>;
 };
 
 export class StationRepository extends Context.Tag("StationRepository")<
@@ -80,16 +84,29 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
 
       return Effect.gen(function* () {
         const [total, items] = yield* Effect.all([
-          Effect.promise(() => client.station.count({ where })),
-          Effect.promise(() =>
-            client.station.findMany({
-              where,
-              skip,
-              take,
-              orderBy,
-              select: stationSelect,
-            }),
-          ),
+          Effect.tryPromise({
+            try: () => client.station.count({ where }),
+            catch: e =>
+              new StationRepositoryError({
+                operation: "listWithOffset.count",
+                cause: e,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.station.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                select: stationSelect,
+              }),
+            catch: e =>
+              new StationRepositoryError({
+                operation: "listWithOffset.findMany",
+                cause: e,
+              }),
+          }),
         ]);
 
         return makePageResult(items, total, page, pageSize);
@@ -98,12 +115,18 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
 
     getById(id: string) {
       return Effect.gen(function* () {
-        const row = yield* Effect.promise(() =>
-          client.station.findUnique({
-            where: { id },
-            select: stationSelect,
-          }),
-        );
+        const row = yield* Effect.tryPromise({
+          try: () =>
+            client.station.findUnique({
+              where: { id },
+              select: stationSelect,
+            }),
+          catch: e =>
+            new StationRepositoryError({
+              operation: "getById",
+              cause: e,
+            }),
+        });
         return Option.fromNullable(row);
       });
     },
@@ -128,53 +151,69 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
       return Effect.gen(function* () {
         const whereRadius
           = maxDistanceMeters != null
-            ? Effect.promise<NearestStationRow[]>(
-                () =>
-                  client.$queryRaw`
-                    SELECT
-                      id,
-                      name,
-                      address,
-                      capacity,
-                      latitude,
-                      longitude,
-                      ST_Distance(
-                        position,
-                        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
-                      ) AS distance_meters
-                    FROM "stations"
-                    WHERE ST_DWithin(
+            ? Effect.tryPromise(() =>
+                client.$queryRaw<NearestStationRow[]>`
+                  SELECT
+                    id,
+                    name,
+                    address,
+                    capacity,
+                    latitude,
+                    longitude,
+                    ST_Distance(
                       position,
-                      ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
-                      ${maxDistanceMeters}
-                    )
-                    ORDER BY distance_meters
-                    OFFSET ${skip} LIMIT ${take};
-                  `,
+                      ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
+                    ) AS distance_meters
+                  FROM "stations"
+                  WHERE ST_DWithin(
+                    position,
+                    ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
+                    ${maxDistanceMeters}
+                  )
+                  ORDER BY distance_meters
+                  OFFSET ${skip} LIMIT ${take};
+                `,
+              ).pipe(
+                Effect.catchAll(e =>
+                  Effect.fail(
+                    new StationRepositoryError({
+                      operation: "listNearest.queryWithRadius",
+                      cause: e,
+                    }),
+                  ),
+                ),
               )
-            : Effect.promise<NearestStationRow[]>(
-                () =>
-                  client.$queryRaw`
-                    SELECT
-                      id,
-                      name,
-                      address,
-                      capacity,
-                      latitude,
-                      longitude,
-                      ST_Distance(
-                        position,
-                        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
-                      ) AS distance_meters
-                    FROM "stations"
-                    ORDER BY distance_meters
-                    OFFSET ${skip} LIMIT ${take};
-                  `,
+            : Effect.tryPromise(() =>
+                client.$queryRaw<NearestStationRow[]>`
+                  SELECT
+                    id,
+                    name,
+                    address,
+                    capacity,
+                    latitude,
+                    longitude,
+                    ST_Distance(
+                      position,
+                      ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
+                    ) AS distance_meters
+                  FROM "stations"
+                  ORDER BY distance_meters
+                  OFFSET ${skip} LIMIT ${take};
+                `,
+              ).pipe(
+                Effect.catchAll(e =>
+                  Effect.fail(
+                    new StationRepositoryError({
+                      operation: "listNearest.queryAll",
+                      cause: e,
+                    }),
+                  ),
+                ),
               );
 
         const countEffect
           = maxDistanceMeters != null
-            ? Effect.promise<number>(() =>
+            ? Effect.tryPromise(() =>
                 client
                   .$queryRawUnsafe(
                     `
@@ -193,8 +232,17 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
                   .then((rows: unknown) =>
                     Number((rows as any[])[0]?.count ?? 0),
                   ),
+              ).pipe(
+                Effect.catchAll(e =>
+                  Effect.fail(
+                    new StationRepositoryError({
+                      operation: "listNearest.countWithRadius",
+                      cause: e,
+                    }),
+                  ),
+                ),
               )
-            : Effect.promise<number>(() =>
+            : Effect.tryPromise(() =>
                 client
                   .$queryRawUnsafe(
                     "SELECT COUNT(*)::int AS count FROM \"stations\"",
@@ -202,6 +250,15 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
                   .then((rows: unknown) =>
                     Number((rows as any[])[0]?.count ?? 0),
                   ),
+              ).pipe(
+                Effect.catchAll(e =>
+                  Effect.fail(
+                    new StationRepositoryError({
+                      operation: "listNearest.countAll",
+                      cause: e,
+                    }),
+                  ),
+                ),
               );
 
         const [items, total] = yield* Effect.all([whereRadius, countEffect]);
