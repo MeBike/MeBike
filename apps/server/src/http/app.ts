@@ -3,6 +3,8 @@ import { serverOpenApi } from "@mebike/shared";
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 
+import logger from "@/lib/logger";
+
 import { registerBikeRoutes } from "./routes/bikes";
 import { registerStationRoutes } from "./routes/stations";
 import { registerSupplierRoutes } from "./routes/suppliers";
@@ -53,6 +55,25 @@ export function createHttpApp() {
   registerStationRoutes(app);
   registerBikeRoutes(app);
   registerSupplierRoutes(app);
+
+  app.onError((err, c) => {
+    const isProd = process.env.NODE_ENV === "production";
+
+    // Log with stack for observability
+    logger.error("Unhandled error", err);
+
+    const body = isProd
+      ? { error: "Internal Server Error" }
+      : {
+          error: "Internal Server Error",
+          details: {
+            message: err?.message ?? String(err),
+            stack: err instanceof Error ? err.stack : undefined,
+          },
+        };
+
+    return c.json(body, 500);
+  });
 
   return app;
 }

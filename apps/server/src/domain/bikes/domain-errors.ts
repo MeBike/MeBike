@@ -1,5 +1,11 @@
 import { Data } from "effect";
 
+import type { WithGenericError } from "@/domain/shared";
+
+export class BikeRepositoryError extends Data.TaggedError("BikeRepositoryError")<
+  WithGenericError
+> {}
+
 export class BikeNotFound extends Data.TaggedError("BikeNotFound")<{
   readonly id: string;
 }> {}

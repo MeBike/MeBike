@@ -64,16 +64,29 @@ export const BikeServiceLive = Layer.effect(
 
     const service: BikeService = {
       listBikes: (filter, pageReq) =>
-        repo.listByStationWithOffset(filter.stationId, filter, pageReq),
+        repo
+          .listByStationWithOffset(filter.stationId, filter, pageReq)
+          .pipe(
+            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+          ),
 
-      getBikeDetail: (bikeId: string) => repo.getById(bikeId),
+      getBikeDetail: (bikeId: string) =>
+        repo.getById(bikeId).pipe(
+          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+        ),
 
       reportBrokenBike: (bikeId: string) =>
-        repo.updateStatus(bikeId, "BROKEN"),
+        repo.updateStatus(bikeId, "BROKEN").pipe(
+          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+        ),
 
       adminUpdateBike: (bikeId, patch) =>
         Effect.gen(function* () {
-          const current = yield* repo.getById(bikeId);
+          const current = yield* repo
+            .getById(bikeId)
+            .pipe(
+              Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+            );
           if (Option.isNone(current)) {
             return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
           }
@@ -130,7 +143,11 @@ export const BikeServiceLive = Layer.effect(
 
       softDeleteBike: (bikeId: string) =>
         Effect.gen(function* () {
-          const current = yield* repo.getById(bikeId);
+          const current = yield* repo
+            .getById(bikeId)
+            .pipe(
+              Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+            );
           if (Option.isNone(current)) {
             return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
           }
@@ -159,7 +176,9 @@ export const BikeServiceLive = Layer.effect(
             );
           }
 
-          const updated = yield* repo.updateStatus(bikeId, "UNAVAILABLE");
+          const updated = yield* repo.updateStatus(bikeId, "UNAVAILABLE").pipe(
+            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+          );
           return updated;
         }),
     };

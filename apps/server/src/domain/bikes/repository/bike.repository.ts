@@ -12,17 +12,19 @@ import type {
 } from "../../../../generated/prisma/client";
 import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 
+import { BikeRepositoryError } from "../domain-errors";
+
 export type BikeRepo = {
-  getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>>;
+  getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
   listByStationWithOffset: (
     stationId: string | undefined,
     filter: BikeFilter,
     pageReq: PageRequest<BikeSortField>,
-  ) => Effect.Effect<PageResult<BikeRow>>;
+  ) => Effect.Effect<PageResult<BikeRow>, BikeRepositoryError>;
   updateStatus: (
     bikeId: string,
     status: BikeStatus,
-  ) => Effect.Effect<Option.Option<BikeRow>>;
+  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
 };
 export class BikeRepository extends Context.Tag("BikeRepository")<
   BikeRepository,
@@ -54,9 +56,16 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
 
   return {
     getById: (bikeId: string) =>
-      Effect.promise(() =>
-        client.bike.findUnique({ where: { id: bikeId }, select }),
-      ).pipe(Effect.map(Option.fromNullable)),
+      Effect.tryPromise({
+        try: () =>
+          client.bike.findUnique({ where: { id: bikeId }, select }),
+        catch: e =>
+          new BikeRepositoryError({
+            operation: "getById",
+            cause: e,
+            message: "Failed to fetch bike by id",
+          }),
+      }).pipe(Effect.map(Option.fromNullable)),
 
     listByStationWithOffset: (stationId, filter, pageReq) => {
       const { page, pageSize, skip, take } = normalizedPage(pageReq);
@@ -72,10 +81,25 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
 
       return Effect.gen(function* () {
         const [total, items] = yield* Effect.all([
-          Effect.promise(() => client.bike.count({ where })),
-          Effect.promise(() =>
-            client.bike.findMany({ where, skip, take, orderBy, select }),
-          ),
+          Effect.tryPromise({
+            try: () => client.bike.count({ where }),
+            catch: e =>
+              new BikeRepositoryError({
+                operation: "listByStationWithOffset.count",
+                cause: e,
+                message: "Failed to count bikes",
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.bike.findMany({ where, skip, take, orderBy, select }),
+            catch: e =>
+              new BikeRepositoryError({
+                operation: "listByStationWithOffset.findMany",
+                cause: e,
+                message: "Failed to list bikes",
+              }),
+          }),
         ]);
 
         return makePageResult(items, total, page, pageSize);
@@ -84,20 +108,34 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
 
     updateStatus: (bikeId, status) =>
       Effect.gen(function* () {
-        const updated = yield* Effect.promise(() =>
-          client.bike.updateMany({
-            where: { id: bikeId },
-            data: { status },
-          }),
-        );
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            client.bike.updateMany({
+              where: { id: bikeId },
+              data: { status },
+            }),
+          catch: e =>
+            new BikeRepositoryError({
+              operation: "updateStatus.updateMany",
+              cause: e,
+              message: "Failed to update bike status",
+            }),
+        });
 
         if (updated.count === 0) {
           return Option.none<BikeRow>();
         }
 
-        const row = yield* Effect.promise(() =>
-          client.bike.findUnique({ where: { id: bikeId }, select }),
-        );
+        const row = yield* Effect.tryPromise({
+          try: () =>
+            client.bike.findUnique({ where: { id: bikeId }, select }),
+          catch: e =>
+            new BikeRepositoryError({
+              operation: "updateStatus.findUnique",
+              cause: e,
+              message: "Failed to fetch bike after status update",
+            }),
+        });
 
         return Option.fromNullable(row);
       }),

@@ -1,6 +1,11 @@
 import { Data } from "effect";
 
+import type { WithGenericError } from "@/domain/shared";
 import type { SupplierStatus } from "generated/prisma/enums";
+
+export class SupplierRepositoryError extends Data.TaggedError("SupplierRepositoryError")<
+  WithGenericError
+> {}
 /**
  * Supplier not found by ID
  * Use case: GET/PUT/PATCH /suppliers/:id
