@@ -154,7 +154,7 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
       return Effect.gen(function* () {
         const { page, pageSize, skip, take } = normalizedPage(pageReq);
 
-        const where = toMyRentalsWhere(userId, { status: "RENTED" as RentalStatus });
+        const where = toMyRentalsWhere(userId, { status: "RENTED" });
         const orderBy = toRentalOrderBy(pageReq);
 
         const [total, items] = yield* Effect.all([
