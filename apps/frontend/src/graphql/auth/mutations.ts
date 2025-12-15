@@ -29,17 +29,18 @@ export const REGISTER_MUTATION = gql`
   }
 `;
 export const REFRESH_TOKEN_MUTATION = gql`
-  mutation RefreshToken($refreshToken: String!) {
-    RefreshToken(refreshToken: $refreshToken) {
+  mutation RefreshToken {
+    RefreshToken {
       success
       message
       data {
         accessToken
+        refreshToken
       }
       errors
       statusCode
     }
-  }
+  } 
 `;
 export const GET_ME = gql`
   query Query {

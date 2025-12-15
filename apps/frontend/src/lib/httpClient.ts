@@ -15,6 +15,7 @@ import type { RefreshTokenResponse } from "@/types/auth.type";
 import { REFRESH_TOKEN_MUTATION } from "@/graphql";
 import { print } from "graphql";
 
+// Constants
 export const HTTP_STATUS = {
   OK: 200,
   UNAUTHORIZED: 401,
@@ -24,17 +25,37 @@ export const HTTP_STATUS = {
   SERVICE_UNAVAILABLE: 503,
 };
 
-export class FetchHttpClient {
-  private baseURL: string;
+const NO_RETRY_URLS = [
+  "/users/verify-email",
+  "/users/verify-forgot-password",
+  "/users/reset-password",
+  "/users/resend-verify-email",
+  "/users/refresh-token",
+  "/users/change-password",
+];
+
+// Types
+interface CustomAxiosError extends AxiosError {
+  zresponse?: {
+    data: any;
+    status: number;
+    statusText: string;
+    headers: any;
+    config: InternalAxiosRequestConfig;
+  };
+}
+
+interface QueueItem {
+  resolve: (value: any) => void;
+  reject: (error: any) => void;
+}
+
+export class HttpClient {
   private axiosInstance: AxiosInstance;
   private isRefreshing = false;
-  private failedQueue: Array<{
-    resolve: (value: void | PromiseLike<void>) => void;
-    reject: (reason?: unknown) => void;
-  }> = [];
+  private failedQueue: QueueItem[] = [];
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
+  constructor(private baseURL: string) {
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
       headers: {
@@ -44,213 +65,268 @@ export class FetchHttpClient {
       withCredentials: true,
     });
 
+    this.setupInterceptors();
+  }
 
+  private setupInterceptors() {
     this.axiosInstance.interceptors.request.use(
-      async (config) => {
-        const access_token = getAccessToken();
-        if (access_token) {
-          config.headers = config.headers || {};
-          config.headers.Authorization = `Bearer ${access_token}`;
-        }
-        return config;
-      },
+      this.handleRequest,
       (error) => Promise.reject(error)
     );
 
     this.axiosInstance.interceptors.response.use(
-      (response) => response,
-      async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & {
-          _retry?: boolean;
-        };
-        let isAuthRequest = false;
-        if (originalRequest.data) {
-          try {
-            const payload =
-              typeof originalRequest.data === "string"
-                ? JSON.parse(originalRequest.data)
-                : originalRequest.data;
-
-            if (
-              payload.query &&
-              payload.query.includes("mutation RefreshToken")
-            ) {
-              isAuthRequest = true;
-            }
-            if (
-              payload.query &&
-              (payload.query.includes("mutation LoginUser") ||
-                payload.query.includes("mutation RegisterUser") ||
-                payload.query.includes("mutation RefreshToken"))
-            ) {
-              isAuthRequest = true;
-            }
-          } catch (e) {
-          }
-        }
-        const noAuthRetryUrls = [
-          "/users/verify-email",
-          "/users/verify-forgot-password",
-          "/users/reset-password",
-          "/users/resend-verify-email",
-          "/users/refresh-token",
-          "/users/change-password",
-        ];
-        const isIgnoredUrl =
-          originalRequest.url &&
-          noAuthRetryUrls.some((url) => originalRequest.url?.includes(url));
-        console.log("isAuthRequest", isAuthRequest);
-        const shouldSkipTokenRefresh = isAuthRequest || isIgnoredUrl;
-        if (
-          error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
-          !shouldSkipTokenRefresh && 
-          !originalRequest._retry
-        ) {
-          if (this.isRefreshing) {
-            return new Promise<void>((resolve, reject) => {
-              this.failedQueue.push({ resolve, reject });
-            })
-              .then(() => {
-                const newToken = getAccessToken();
-                if (newToken) {
-                  originalRequest.headers = originalRequest.headers || {};
-                  originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                }
-                return this.axiosInstance(originalRequest);
-              })
-              .catch((err) => Promise.reject(err));
-          }
-          originalRequest._retry = true;
-          this.isRefreshing = true;
-          try {
-            await this.refreshAccessToken();
-            const newToken = getAccessToken();
-            if (newToken) {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            }
-            this.processQueue(null);
-            if (typeof window !== "undefined") {
-              window.dispatchEvent(new Event("auth:token_refreshed"));
-            }
-            return this.axiosInstance(originalRequest);
-          } catch (refreshError) {
-            this.processQueue(refreshError);
-
-            if (typeof window !== "undefined") {
-              window.dispatchEvent(new Event("auth:session_expired"));
-            }
-            return Promise.reject(refreshError);
-          } finally {
-            this.isRefreshing = false;  
-          }
-        }
-        return Promise.reject(error);
-      }
+      this.handleResponseSuccess,
+      this.handleResponseError
     );
   }
+
+  // --- Interceptors ---
+
+  private handleRequest = (
+    config: InternalAxiosRequestConfig
+  ): InternalAxiosRequestConfig => {
+    const accessToken = getAccessToken();
+    const isRefreshTokenRequest = this.checkIsRefreshTokenRequest(config);
+    if (accessToken && !isRefreshTokenRequest) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
+  };
+
+  private handleResponseSuccess = (response: AxiosResponse): any => {
+    const { data, status } = response;
+
+    // Detect "Internal Payload Error" (GraphQL errors with 200 OK)
+    if (
+      status === HTTP_STATUS.OK &&
+      data?.errors?.length > 0
+    ) {
+      const unauthorizedError = data.errors.find(
+        (err: any) => err.statusCode === HTTP_STATUS.UNAUTHORIZED
+      );
+
+      if (unauthorizedError) {
+        // Construct a CustomAxiosError to trigger the error interceptor
+        const error = new AxiosError(
+          "Unauthorized (Internal Payload Error)",
+          "UNAUTHORIZED",
+          response.config,
+          response.request,
+          response
+        ) as CustomAxiosError;
+
+        error.zresponse = {
+          data: response.data,
+          status: HTTP_STATUS.UNAUTHORIZED,
+          statusText: "Unauthorized",
+          headers: response.headers,
+          config: response.config,
+        };
+
+        return this.handleResponseError(error);
+      }
+    }
+
+    return response;
+  };
+
+  private handleResponseError = async (error: CustomAxiosError | any) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    
+    // Determine if it's a 401 Unauthorized error
+    const isUnauthorized =
+      error.response?.status === HTTP_STATUS.UNAUTHORIZED ||
+      error.zresponse?.status === HTTP_STATUS.UNAUTHORIZED;
+
+    // Check if we should skip retry
+    if (
+      !isUnauthorized ||
+      !originalRequest ||
+      originalRequest._retry ||
+      this.shouldSkipTokenRefresh(originalRequest)
+    ) {
+      // If it's a GraphQL error (zresponse), we might want to return the data instead of rejecting
+      // depending on how the app handles it. For now, we propagate the error.
+      return Promise.reject(error);
+    }
+
+    // --- Token Refresh Logic ---
+
+    if (this.isRefreshing) {
+      // If already refreshing, queue the request
+      return new Promise((resolve, reject) => {
+        this.failedQueue.push({ resolve, reject });
+      })
+        .then((token) => {
+          if (token) {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+          }
+          return this.axiosInstance(originalRequest);
+        })
+        .catch((err) => Promise.reject(err));
+    }
+
+    originalRequest._retry = true;
+    this.isRefreshing = true;
+
+    try {
+      const newToken = await this.refreshAccessToken();
+      
+      this.processQueue(null, newToken);
+      this.dispatchAuthEvent("auth:token_refreshed");
+
+      originalRequest.headers.Authorization = `Bearer ${newToken}`;
+      return this.axiosInstance(originalRequest);
+    } catch (refreshError) {
+      this.processQueue(refreshError, null);
+      this.dispatchAuthEvent("auth:session_expired");
+      return Promise.reject(refreshError);
+    } finally {
+      this.isRefreshing = false;
+    }
+  };
+
+  // --- Helpers ---
+
+  private checkIsRefreshTokenRequest(config: InternalAxiosRequestConfig): boolean {
+    if (!config.data) return false;
+    try {
+      const payload = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
+      return payload.query && payload.query.includes("mutation RefreshToken");
+    } catch {
+      return false;
+    }
+  }
+
+  private shouldSkipTokenRefresh(config: InternalAxiosRequestConfig): boolean {
+    // Check if it's an auth request (login/register)
+    if (this.checkIsAuthRequest(config)) return true;
+
+    // Check against ignored URLs
+    if (config.url && NO_RETRY_URLS.some((url) => config.url?.includes(url))) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private checkIsAuthRequest(config: InternalAxiosRequestConfig): boolean {
+    if (!config.data) return false;
+    try {
+      const payload = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
+      return (
+        payload.query &&
+        (payload.query.includes("mutation LoginUser") ||
+          payload.query.includes("mutation RegisterUser"))
+      );
+    } catch {
+      return false;
+    }
+  }
+
   private async refreshAccessToken(): Promise<string> {
     const refreshToken = getRefreshToken();
-    console.log("Refreshing token...");
-
     if (!refreshToken) {
-      throw new Error("No refresh token available via Cookies");
+      throw new Error("No refresh token available");
     }
 
     try {
-      const response = await this.mutation<RefreshTokenResponse>(
-        print(REFRESH_TOKEN_MUTATION),
-        { refreshToken: refreshToken }
-      );
+      // FIX: Inject refresh_token into the body for backend middleware validation
+      const payload = {
+        query: print(REFRESH_TOKEN_MUTATION),
+        variables: {},
+        refresh_token: refreshToken, 
+      };
 
-      if ((response.data as any).errors) {
+      const response = await this.axiosInstance.post<any>("", payload);
+
+      // Check for GraphQL errors in response
+      if (response.data.errors) {
         throw new Error("GraphQL Error during refresh");
       }
 
       const result = response.data.data?.RefreshToken?.data;
-      if (!result || !result.accessToken) {
-        throw new Error("Invalid response structure");
+      if (!result?.accessToken || !result?.refreshToken) {
+        throw new Error("Invalid refresh response structure");
       }
-      setTokens(result.accessToken, result.refreshToken);
 
+      setTokens(result.accessToken, result.refreshToken);
       return result.accessToken;
     } catch (error) {
-      console.error("Refresh token failed:", error);
       clearTokens();
       throw error;
     }
   }
 
-  private processQueue(error: unknown) {
-    this.failedQueue.forEach(({ resolve, reject }) => {
+  private processQueue(error: any, token: string | null = null) {
+    this.failedQueue.forEach((prom) => {
       if (error) {
-        reject(error);
+        prom.reject(error);
       } else {
-        resolve(undefined);
+        prom.resolve(token);
       }
     });
     this.failedQueue = [];
   }
 
-  // --- Các hàm wrapper giữ nguyên ---
-  private async requestGraphql<T>(
-    payload: { query: string; variables?: object },
-    config?: AxiosRequestConfig
-  ): Promise<AxiosResponse<T>> {
-    return this.axiosInstance.post("", payload, config);
+  private dispatchAuthEvent(eventName: string) {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event(eventName));
+    }
   }
-  async get<T>(
-    url: string,
-    params?: AxiosRequestConfig["params"]
-  ): Promise<AxiosResponse<T>> {
-    return this.axiosInstance.get(url, { params: params ? { ...params } : {} });
+
+  // --- Public API ---
+
+  async get<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
+    return this.axiosInstance.get(url, { params });
   }
+
   async post<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown>
+    config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.post(url, data, config);
   }
+
   async put<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown>
+    config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.put(url, data, config);
   }
+
   async patch<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown>
+    config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.patch(url, data, config);
   }
-  async delete<T>(
-    url: string,
-    params?: AxiosRequestConfig["params"]
-  ): Promise<AxiosResponse<T>> {
-    return this.axiosInstance.delete(url, {
-      params: params ? { ...params } : undefined,
-    });
+
+  async delete<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
+    return this.axiosInstance.delete(url, { params });
   }
+
   async query<T>(
     queryString: string,
     variables: object = {},
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
-    return this.requestGraphql<T>({ query: queryString, variables }, config);
+    return this.axiosInstance.post("", { query: queryString, variables }, config);
   }
+
   async mutation<T>(
     mutationString: string,
     variables: object = {},
     config?: AxiosRequestConfig
   ): Promise<AxiosResponse<T>> {
-    return this.requestGraphql<T>({ query: mutationString, variables }, config);
+    return this.query<T>(mutationString, variables, config);
   }
 }
 
-const fetchHttpClient = new FetchHttpClient(
-  process.env.NEXT_PUBLIC_API_BASE_URL || ""
-);
+const httpClient = new HttpClient(process.env.NEXT_PUBLIC_API_BASE_URL || "");
 
-export default fetchHttpClient;
+export default httpClient;

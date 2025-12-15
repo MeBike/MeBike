@@ -1,6 +1,6 @@
 import Cookies from "js-cookie"
-const ACCESS_TOKEN = 'access_token';
-const REFRESH_TOKEN = 'refresh_token';
+const ACCESS_TOKEN = 'accessToken';
+const REFRESH_TOKEN = 'refreshToken';
 const isBrowser = typeof window !== 'undefined';
 
 export const getAccessToken = (): string | null => {
@@ -19,7 +19,7 @@ export const setTokens = (
 ): void => {
   if (!isBrowser) return;
   Cookies.set(ACCESS_TOKEN, access_token, {
-    expires: 1 / 96, // 15 minutes
+    expires: 1, 
     secure: window.location.protocol === 'https:',
     sameSite: "strict",
     path: '/',
