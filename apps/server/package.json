@@ -14,7 +14,6 @@
     "start": "node dist/src/http/server.js",
     "seed": "pnpm prisma db seed",
     "seed:bikes": "tsx prisma/seed-bikes.ts"
-
   },
   "dependencies": {
     "@hono/node-server": "^1.19.3",
@@ -26,6 +25,7 @@
     "dotenv": "^17.2.3",
     "effect": "^3.19.10",
     "hono": "^4.9.4",
+    "ioredis": "5.8.2",
     "pg": "^8.16.3",
     "pino": "^8.21.0",
     "uuidv7": "^1.1.0"

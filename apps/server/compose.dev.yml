@@ -30,6 +30,16 @@ services:
     volumes:
       - pgadmin-data:/var/lib/pgadmin
 
+  redis:
+    image: redis:8.4-bookworm
+    container_name: mebike_redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+
 volumes:
   postgres-data:
   pgadmin-data:
+  redis-data:
