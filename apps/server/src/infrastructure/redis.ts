@@ -5,7 +5,7 @@ import { Data, Effect, Schedule } from "effect";
 import { makeRedisClient } from "@/lib/redis";
 
 export class RedisInitError extends Data.TaggedError("RedisInitError")<{
-  readonly reason: string;
+  readonly message: string;
   readonly cause?: unknown;
 }> {}
 
@@ -24,7 +24,7 @@ export class Redis extends Effect.Service<Redis>()("Redis", {
       },
       catch: cause =>
         new RedisInitError({
-          reason:
+          message:
             "Failed to initialize Redis. Check REDIS_URL and that Redis is running (docker compose -f apps/server/compose.dev.yml up redis).",
           cause,
         }),
