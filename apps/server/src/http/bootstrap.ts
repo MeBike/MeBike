@@ -1,7 +1,7 @@
 import { serve } from "@hono/node-server";
 import { Effect } from "effect";
-import process from "node:process";
 
+import { env } from "@/config/env";
 import { Email } from "@/infrastructure/email";
 import { Prisma } from "@/infrastructure/prisma";
 import { Redis } from "@/infrastructure/redis";
@@ -13,7 +13,7 @@ export const startHonoServer = Effect.gen(function* () {
   yield* Prisma;
   yield* Redis;
   yield* Email;
-  const port = Number(process.env.PORT ?? 4000);
+  const port = env.PORT;
   serve({
     fetch: createHttpApp().fetch,
     port,

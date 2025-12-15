@@ -1,5 +1,6 @@
-import process from "node:process";
 import nodemailer from "nodemailer";
+
+import { env } from "@/config/env";
 
 export type EmailConfig = {
   readonly user?: string;
@@ -8,8 +9,8 @@ export type EmailConfig = {
 };
 
 export function makeEmailTransporter(config: EmailConfig = {}) {
-  const user = config.user ?? process.env.EMAIL_APP;
-  const pass = config.pass ?? process.env.EMAIL_PASSWORD_APP;
+  const user = config.user ?? env.EMAIL_APP;
+  const pass = config.pass ?? env.EMAIL_PASSWORD_APP;
 
   if (!user || !pass) {
     throw new Error(

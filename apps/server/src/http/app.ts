@@ -3,6 +3,7 @@ import { serverOpenApi } from "@mebike/shared";
 import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 
+import { env } from "@/config/env";
 import logger from "@/lib/logger";
 
 import { registerBikeRoutes } from "./routes/bikes";
@@ -59,9 +60,8 @@ export function createHttpApp() {
   registerSupplierRoutes(app);
 
   app.onError((err, c) => {
-    const isProd = process.env.NODE_ENV === "production";
+    const isProd = env.NODE_ENV === "production";
 
-    // Log with stack for observability
     logger.error("Unhandled error", err);
 
     const body = isProd
