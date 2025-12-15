@@ -30,7 +30,7 @@ model User {
   forgotPasswordOtpExpires DateTime?        @map("forgot_password_otp_expires") @db.Timestamptz
   role                     UserRole         @default(USER)
   verify                   UserVerifyStatus @default(UNVERIFIED)
-  updatedAt                DateTime         @default(now()) @map("updated_at") @db.Timestamptz
+  updatedAt                DateTime         @updatedAt @map("updated_at") @db.Timestamptz
 
   subscriptions Subscription[]
   fixedSlots    FixedSlotTemplate[]
