@@ -8,9 +8,9 @@ import type {
 } from "../domain-errors";
 import type {
   MyRentalFilter,
-  RentalCountsRow,
   RentalRow,
   RentalSortField,
+  RentalStatusCounts,
 } from "../models";
 import type { RentalRepo } from "../repository/rental.repository";
 
@@ -43,7 +43,7 @@ export type RentalService = {
 
   getMyRentalCounts: (
     userId: string,
-  ) => Effect.Effect<readonly RentalCountsRow[], never>;
+  ) => Effect.Effect<RentalStatusCounts, never>;
 
   // Core behaviors - fail with domain errors
   startRental: (args: {
@@ -89,6 +89,20 @@ function makeRentalService(repo: RentalRepo): RentalService {
     getMyRentalCounts(userId) {
       return repo.getMyRentalCounts(userId).pipe(
         Effect.catchTag("RentalRepositoryError", error => Effect.die(error)),
+        Effect.map((rows) => {
+          const counts: RentalStatusCounts = {
+            RENTED: 0,
+            COMPLETED: 0,
+            CANCELLED: 0,
+            RESERVED: 0,
+          };
+
+          for (const row of rows) {
+            counts[row.status] = row.count;
+          }
+
+          return counts;
+        }),
       );
     },
 
