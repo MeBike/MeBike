@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import type { RentalServiceFailure } from "../domain-errors";
-import type { RentalCountsRow, RentalRow, RentalSortField } from "../models";
+import type { RentalCountsRow, RentalRow, RentalSortField, RentalStatusCounts } from "../models";
 import type {
   EndRentalInput,
   ListMyRentalsInput,
@@ -45,10 +45,15 @@ export function getMyRentalUseCase(
 
 export function getMyRentalCountsUseCase(
   userId: string,
-): Effect.Effect<readonly RentalCountsRow[], never, RentalServiceTag> {
+): Effect.Effect<RentalStatusCounts, never, RentalServiceTag> {
   return Effect.gen(function* () {
     const service = yield* RentalServiceTag;
-    return yield* service.getMyRentalCounts(userId);
+    const rows = yield* service.getMyRentalCounts(userId);
+    
+    return rows.reduce<RentalStatusCounts>(
+      (acc, row) => ({ ...acc, [row.status]: row.count }),
+      { RENTED: 0, COMPLETED: 0, CANCELLED: 0, RESERVED: 0 }
+    );
   });
 }
 

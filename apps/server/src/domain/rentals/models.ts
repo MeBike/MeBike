@@ -28,3 +28,11 @@ export type RentalCountsRow = {
   status: RentalStatus;
   count: number;
 };
+
+export type RentalStatusCounts = {
+  RENTED: number;
+  COMPLETED: number;
+  CANCELLED: number;
+  RESERVED: number;
+};
+

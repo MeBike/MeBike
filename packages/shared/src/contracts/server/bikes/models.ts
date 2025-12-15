@@ -7,60 +7,59 @@ export const BikeSummarySchema = z.object({
   stationId: z.uuidv7().nullable(),
   supplierId: z.uuidv7().nullable(),
   status: BikeStatusSchema,
-  // Ratings & station info omitted until implemented in backend
 });
 
 export const BikeRentalHistoryItemSchema = z.object({
-  _id: z.uuidv7(),
-  start_time: z.string(),
-  end_time: z.string().optional(),
+  id: z.uuidv7(),
+  startTime: z.string(),
+  endTime: z.string().optional(),
   duration: z.number().optional(),
-  total_price: z.number().optional(),
+  totalPrice: z.number().optional(),
   user: z.object({
-    _id: z.uuidv7(),
+    id: z.uuidv7(),
     fullname: z.string(),
   }),
-  start_station: z.object({
-    _id: z.uuidv7(),
+  startStation: z.object({
+    id: z.uuidv7(),
     name: z.string(),
   }),
-  end_station: z
+  endStation: z
     .object({
-      _id: z.uuidv7(),
+      id: z.uuidv7(),
       name: z.string(),
     })
     .optional(),
 });
 
 export const BikeActivityStatsSchema = z.object({
-  bike_id: z.string(),
-  total_minutes_active: z.number(),
-  total_reports: z.number(),
-  uptime_percentage: z.number(),
-  monthly_stats: z.array(
+  bikeId: z.string(),
+  totalMinutesActive: z.number(),
+  totalReports: z.number(),
+  uptimePercentage: z.number(),
+  monthlyStats: z.array(
     z.object({
       year: z.number(),
       month: z.number(),
-      rentals_count: z.number(),
-      minutes_active: z.number(),
+      rentalsCount: z.number(),
+      minutesActive: z.number(),
       revenue: z.number(),
     }),
   ),
 });
 
 export const BikeRentalStatsSchema = z.object({
-  total_active_bikes: z.number(),
-  rented_bikes: z.number(),
+  totalActiveBikes: z.number(),
+  rentedBikes: z.number(),
   percentage: z.number(),
 });
 
 export const HighestRevenueBikeSchema = z.object({
-  bike_id: z.uuidv7(),
-  bike_chip_id: z.string(),
-  total_revenue: z.number(),
-  rental_count: z.number(),
+  bikeId: z.uuidv7(),
+  bikeChipId: z.string(),
+  totalRevenue: z.number(),
+  rentalCount: z.number(),
   station: z.object({
-    _id: z.uuidv7(),
+    id: z.uuidv7(),
     name: z.string(),
   }),
 });

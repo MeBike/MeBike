@@ -5,6 +5,7 @@ export * from "./routes";
 export * from "./schemas";
 export * as StationsContracts from "./stations";
 export * as SuppliersContracts from "./suppliers";
+export * as UsersContracts from "./users";
 
 export const serverOpenApi = {
   info: {

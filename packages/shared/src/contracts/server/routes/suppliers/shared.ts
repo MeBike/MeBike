@@ -108,3 +108,5 @@ export {
   SupplierStatusSchema,
   SupplierSummarySchema,
 };
+
+export type SupplierListResponse = z.infer<typeof SupplierListResponseSchema>;

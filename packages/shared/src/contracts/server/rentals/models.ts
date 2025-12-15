@@ -1,5 +1,6 @@
 import { z } from "../../../zod";
 import { BikeStatusSchema } from "../bikes";
+import { UserRoleSchema, VerifyStatusSchema } from "../users";
 
 export const RentalStatusSchema = z.enum([
   "RENTED",
@@ -8,157 +9,131 @@ export const RentalStatusSchema = z.enum([
   "RESERVED",
 ]);
 
-export const UserRoleSchema = z.enum([
-  "USER",
-  "STAFF",
-  "ADMIN",
-  "SOS",
-]);
-
-export const VerifyStatusSchema = z.enum([
-  "UNVERIFIED",
-  "VERIFIED",
-  "BANNED",
-]);
-
-// export const BikeStatusSchema = z.enum([
-//   "CÓ SẴN",
-//   "ĐANG ĐƯỢC THUÊ",
-//   "BỊ HỎNG",
-//   "ĐÃ ĐẶT TRƯỚC",
-//   "ĐANG BẢO TRÌ",
-//   "KHÔNG CÓ SẮN",
-// ]);
+export const RentalIsoDateTimeSchema = z.iso.datetime();
 
 // Core rental base schema
 export const RentalSchema = z.object({
-  _id: z.string(),
-  user_id: z.string(),
-  bike_id: z.string().optional(),
-  start_station: z.string(),
-  end_station: z.string().optional(),
-  start_time: z.string(), // ISO date string
-  end_time: z.string().optional(), // ISO date string
+  id: z.string(),
+  userId: z.string(),
+  bikeId: z.string().optional(),
+  startStation: z.string(),
+  endStation: z.string().optional(),
+  startTime: z.iso.datetime(),
+  endTime: z.iso.datetime().optional(),
   duration: z.number(),
-  total_price: z.number().optional(),
-  subscription_id: z.string().optional(),
+  totalPrice: z.number().optional(),
+  subscriptionId: z.string().optional(),
   status: RentalStatusSchema,
-  created_at: z.string(), // ISO date string
-  updated_at: z.string(), // ISO date string
+  updatedAt: z.iso.datetime(),
 });
 
 // User info subset for rental lists
 export const RentalUserSummarySchema = z.object({
-  _id: z.string(),
+  id: z.string(),
   fullname: z.string(),
 });
 
 // Full user info for detailed rentals
 export const RentalUserDetailSchema = z.object({
-  _id: z.string(),
+  id: z.string(),
   fullname: z.string(),
   email: z.string(),
   verify: VerifyStatusSchema,
   location: z.string(),
   username: z.string(),
-  phone_number: z.string(),
+  phoneNumber: z.string(),
   avatar: z.string(),
   role: UserRoleSchema,
-  nfc_card_uid: z.string().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
+  nfcCardUid: z.string().optional(),
+  updatedAt: z.iso.datetime(),
 });
 
 // Bike info for rentals
 export const RentalBikeSchema = z.object({
-  _id: z.string(),
-  chip_id: z.string(),
+  id: z.string(),
+  chipId: z.string(),
   status: BikeStatusSchema,
-  supplier_id: z.string().optional(),
-  created_at: z.string(),
-  updated_at: z.string(),
+  supplierId: z.string().optional(),
+  updatedAt: z.iso.datetime(),
 });
 
 // Station info for rentals
 export const RentalStationSchema = z.object({
-  _id: z.string(),
+  id: z.string(),
   name: z.string(),
   address: z.string(),
   latitude: z.string(),
   longitude: z.string(),
   capacity: z.string(),
-  created_at: z.string(),
-  updated_at: z.string(),
-  location_geo: z.object({
+  updatedAt: z.iso.datetime(),
+  locationGeo: z.object({
     type: z.literal("Point"),
-    coordinates: z.tuple([z.number(), z.number()]), // [longitude, latitude]
+    coordinates: z.tuple([z.number(), z.number()]),
   }).optional(),
 });
 
 // Rental with price (for creation/response)
 export const RentalWithPriceSchema = RentalSchema.extend({
-  total_price: z.number(),
+  totalPrice: z.number(),
 });
 
 // Rental list item (for paginated lists)
 export const RentalListItemSchema = z.object({
-  _id: z.string(),
+  id: z.string(),
   user: RentalUserSummarySchema,
-  bike_id: z.string(),
+  bikeId: z.string(),
   status: RentalStatusSchema,
-  start_station: z.string(),
-  end_station: z.string().optional(),
-  start_time: z.string(),
-  end_time: z.string().optional(),
+  startStation: z.string(),
+  endStation: z.string().optional(),
+  startTime: z.iso.datetime(),
+  endTime: z.iso.datetime().optional(),
   duration: z.number(),
-  total_price: z.number(),
-  created_at: z.string(),
-  updated_at: z.string(),
+  totalPrice: z.number(),
+  updatedAt: z.iso.datetime(),
 });
 
 // Detailed rental with populated data
 export const RentalDetailSchema = z.object({
-  _id: z.string(),
+  id: z.string(),
   user: RentalUserDetailSchema,
   bike: RentalBikeSchema.nullable(),
-  start_station: RentalStationSchema,
-  end_station: RentalStationSchema.nullable(),
-  start_time: z.string(),
-  end_time: z.string().optional(),
+  startStation: RentalStationSchema,
+  endStation: RentalStationSchema.nullable(),
+  startTime: z.iso.datetime(),
+  endTime: z.iso.datetime().optional(),
   duration: z.number(),
-  total_price: z.number(),
-  subscription_id: z.string().optional(),
+  totalPrice: z.number(),
+  subscriptionId: z.string().optional(),
   status: RentalStatusSchema,
-  created_at: z.string(),
-  updated_at: z.string(),
+  updatedAt: z.iso.datetime(),
 });
 
 // Enhanced rental with pricing details (for end rental responses)
 export const RentalWithPricingSchema = RentalDetailSchema.extend({
-  total_price: z.number(),
-  extra_hours: z.number().optional(),
-  duration_hours: z.number().optional(),
-  total_sub_usages: z.number().optional(),
-  origin_price: z.number().optional(),
-  is_reservation: z.boolean().optional(),
+  totalPrice: z.number(),
+  extraHours: z.number().optional(),
+  durationHours: z.number().optional(),
+  totalSubUsages: z.number().optional(),
+  originPrice: z.number().optional(),
+  isReservation: z.boolean().optional(),
   prepaid: z.number().optional(),
-  penalty_amount: z.number().optional(),
-  refund_usage: z.number().optional(),
+  penaltyAmount: z.number().optional(),
+  refundUsage: z.number().optional(),
 });
 
 // Revenue analytics models
 export const RentalRevenueItemSchema = z.object({
-  date: z.string(),
+  date: z.iso.datetime(),
   totalRevenue: z.number(),
   totalRentals: z.number(),
 });
 
 export const RentalRevenueResponseSchema = z.object({
   period: z.object({
-    from: z.string(),
-    to: z.string(),
+    from: z.iso.datetime(),
+    to: z.iso.datetime(),
   }),
-  groupBy: z.enum(["NGÀY", "THÁNG", "NĂM"]),
+  groupBy: z.enum(["DAY", "MONTH", "YEAR"]),
   data: z.array(RentalRevenueItemSchema),
 });
 
@@ -175,8 +150,8 @@ export const StationActivityItemSchema = z.object({
 
 export const StationActivityResponseSchema = z.object({
   period: z.object({
-    from: z.string(),
-    to: z.string(),
+    from: z.iso.datetime(),
+    to: z.iso.datetime(),
   }),
   data: z.array(StationActivityItemSchema),
 });
@@ -196,9 +171,9 @@ export const DashboardSummarySchema = z.object({
   today: DashboardRevenueSummarySchema,
   yesterday: DashboardRevenueSummarySchema,
   revenueChange: z.number(),
-  revenueTrend: z.enum(["Tăng", "Giảm", "Không đổi"]),
+  revenueTrend: z.enum(["UP", "DOWN", "STABLE"]),
   rentalChange: z.number(),
-  rentalTrend: z.enum(["Tăng", "Giảm", "Không đổi"]),
+  rentalTrend: z.enum(["UP", "DOWN", "STABLE"]),
 });
 
 export const DashboardResponseSchema = z.object({
@@ -219,33 +194,31 @@ export const RentalCountsResponseSchema = z.object({
   result: RentalStatusCountsSchema,
 });
 
-// Create rental request schemas
 export const CreateRentalRequestSchema = z.object({
-  bike_id: z.string(),
-  subscription_id: z.string().optional(),
+  bikeId: z.string(),
+  subscriptionId: z.string().optional(),
 });
 
 export const StaffCreateRentalRequestSchema = CreateRentalRequestSchema.extend({
-  user_id: z.string(),
+  userId: z.string(),
 });
 
 export const CardTapRentalRequestSchema = z.object({
-  chip_id: z.string(),
-  card_uid: z.string(),
+  chipId: z.string(),
+  cardUid: z.string(),
 });
 
-// End rental request schemas
 export const EndRentalRequestSchema = z.object({
-  end_station: z.string(),
-  end_time: z.string().optional(),
+  endStation: z.string(),
+  endTime: z.iso.datetime().optional(),
   reason: z.string(),
 });
 
 export const UpdateRentalRequestSchema = z.object({
-  end_station: z.string().optional(),
-  end_time: z.string().optional(),
+  endStation: z.string().optional(),
+  endTime: z.iso.datetime().optional(),
   status: RentalStatusSchema.optional(),
-  total_price: z.number().optional(),
+  totalPrice: z.number().optional(),
   reason: z.string(),
 });
 
@@ -254,11 +227,28 @@ export const CancelRentalRequestSchema = z.object({
   reason: z.string(),
 });
 
+export const RentalListResponseSchema = z.object({
+  data: z.array(RentalListItemSchema),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }),
+});
+
+export const MyRentalListResponseSchema = z.object({
+  data: z.array(RentalSchema),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }),
+});
+
 // TypeScript types
 export type RentalStatus = z.infer<typeof RentalStatusSchema>;
-export type UserRole = z.infer<typeof UserRoleSchema>;
-export type VerifyStatus = z.infer<typeof VerifyStatusSchema>;
-export type BikeStatus = z.infer<typeof BikeStatusSchema>;
 export type Rental = z.infer<typeof RentalSchema>;
 export type RentalWithPrice = z.infer<typeof RentalWithPriceSchema>;
 export type RentalListItem = z.infer<typeof RentalListItemSchema>;
@@ -275,3 +265,5 @@ export type CardTapRentalRequest = z.infer<typeof CardTapRentalRequestSchema>;
 export type EndRentalRequest = z.infer<typeof EndRentalRequestSchema>;
 export type UpdateRentalRequest = z.infer<typeof UpdateRentalRequestSchema>;
 export type CancelRentalRequest = z.infer<typeof CancelRentalRequestSchema>;
+export type RentalListResponse = z.infer<typeof RentalListResponseSchema>;
+export type MyRentalListResponse = z.infer<typeof MyRentalListResponseSchema>;

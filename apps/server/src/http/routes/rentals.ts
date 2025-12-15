@@ -21,18 +21,17 @@ function toContractRental(
   row: import("@/domain/rentals").RentalRow,
 ): RentalsContracts.MyRentalListResponse["data"][number] {
   return {
-    _id: row.id,
-    user_id: row.userId,
-    bike_id: row.bikeId ?? undefined,
-    start_station: row.startStationId,
-    end_station: row.endStationId ?? undefined,
-    start_time: row.startTime.toISOString(),
-    end_time: row.endTime ? row.endTime.toISOString() : undefined,
+    id: row.id,
+    userId: row.userId,
+    bikeId: row.bikeId ?? undefined,
+    startStation: row.startStationId,
+    endStation: row.endStationId ?? undefined,
+    startTime: row.startTime.toISOString(),
+    endTime: row.endTime ? row.endTime.toISOString() : undefined,
     duration: row.durationMinutes ?? 0,
-    total_price: row.totalPrice ?? undefined,
+    totalPrice: row.totalPrice ?? undefined,
     status: row.status,
-    created_at: row.startTime.toISOString(),
-    updated_at: row.updatedAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 
@@ -67,7 +66,7 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
       data: value.items.map(toContractRental),
       pagination: toContractPage(value),
     };
-    return c.json<typeof response, 200>(response, 200);
+    return c.json<RentalsContracts.MyRentalListResponse, 200>(response, 200);
   });
 
   app.openapi(rentals.getMyCurrentRentals, async (c) => {
@@ -92,7 +91,7 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
       data: value.items.map(toContractRental),
       pagination: toContractPage(value),
     };
-    return c.json<typeof response, 200>(response, 200);
+    return c.json<RentalsContracts.MyRentalListResponse, 200>(response, 200);
   });
 
   app.openapi(rentals.getMyRental, async (c) => {
@@ -132,25 +131,11 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
       "GET /v1/rentals/me/counts",
     );
 
-    const rows = await Effect.runPromise(eff);
-    const result: RentalsContracts.RentalCountsResponse["result"] = {
-      RENTED: 0,
-      COMPLETED: 0,
-      CANCELLED: 0,
-      RESERVED: 0,
-    };
-    for (const row of rows) {
-      const key = row.status;
-      if (key in result) {
-        result[key as keyof typeof result] = row.count;
-      }
-    }
-
-    const response: RentalsContracts.RentalCountsResponse = {
-      message: "OK",
-      result,
-    };
-    return c.json<typeof response, 200>(response, 200);
+    const result = await Effect.runPromise(eff);
+    return c.json<RentalsContracts.RentalCountsResponse, 200>(
+      { message: "OK", result },
+      200,
+    );
   });
 
   app.openapi(rentals.endMyRental, async (c) => {
@@ -162,7 +147,7 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
         endRentalUseCase({
           userId: userIdPlaceholder,
           rentalId,
-          endStationId: body.end_station,
+          endStationId: body.endStation,
           endTime: new Date(),
         }),
       ),

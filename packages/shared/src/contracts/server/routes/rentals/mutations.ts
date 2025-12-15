@@ -6,49 +6,20 @@ import {
   CardTapRentalRequestSchema,
   CreateRentalRequestSchema,
   EndRentalRequestSchema,
-  RentalDetailSchema,
   RentalErrorCodeSchema,
-  RentalErrorDetailSchema,
-  RentalSchema,
-  RentalWithPriceSchema,
-  RentalWithPricingSchema,
   StaffCreateRentalRequestSchema,
   UpdateRentalRequestSchema,
 } from "../../rentals";
-import { ServerErrorResponseSchema } from "../../schemas";
 import {
   createSuccessResponse,
+  RentalDetailSchemaOpenApi,
+  RentalErrorResponseSchema,
   RentalIdParamSchema,
+  RentalSchemaOpenApi,
+  RentalWithPriceSchemaOpenApi,
+  RentalWithPricingSchemaOpenApi,
   SOSIdParamSchema,
 } from "./shared";
-
-const RentalErrorResponseSchema = ServerErrorResponseSchema.extend({
-  details: RentalErrorDetailSchema.optional(),
-}).openapi("RentalErrorResponse", {
-  description: "Standard error payload for rental endpoints",
-});
-
-const RentalSchemaOpenApi = RentalSchema.openapi("Rental", {
-  description: "Basic rental information",
-});
-
-const RentalWithPriceSchemaOpenApi = RentalWithPriceSchema.openapi(
-  "RentalWithPrice",
-  {
-    description: "Rental with calculated pricing",
-  },
-);
-
-const RentalDetailSchemaOpenApi = RentalDetailSchema.openapi("RentalDetail", {
-  description: "Detailed rental with populated user, bike, and station data",
-});
-
-const RentalWithPricingSchemaOpenApi = RentalWithPricingSchema.openapi(
-  "RentalWithPricing",
-  {
-    description: "Detailed rental with enhanced pricing information",
-  },
-);
 
 export const createRental = createRoute({
   method: "post",
@@ -92,7 +63,7 @@ export const createRental = createRoute({
             },
             InsufficientBalance: {
               value: {
-                error: "Tài khoản của bạn không đủ để bắt đầu phiên thuê",
+                error: "Insufficient balance to start rental",
                 details: {
                   code: RentalErrorCodeSchema.enum.NOT_ENOUGH_BALANCE_TO_RENT,
                   requiredBalance: 5000,
@@ -118,7 +89,7 @@ export const endMyRental = createRoute({
         "application/json": {
           schema: z
             .object({
-              end_station: z.string(),
+              endStation: z.string(),
             })
             .openapi("EndMyRentalRequest"),
         },
@@ -145,7 +116,7 @@ export const endMyRental = createRoute({
           examples: {
             RentalNotFound: {
               value: {
-                error: "Không tìm thấy phiên thuê nào đang diễn ra",
+                error: "No active rental found",
                 details: {
                   code: RentalErrorCodeSchema.enum.NOT_FOUND_RENTED_RENTAL,
                   rentalId: "665fd6e36b7e5d53f8f3d2c9",
@@ -154,7 +125,7 @@ export const endMyRental = createRoute({
             },
             AccessDenied: {
               value: {
-                error: "Bạn không có quyền kết thúc phiên thuê của người khác",
+                error: "Cannot end another user's rental",
                 details: {
                   code: RentalErrorCodeSchema.enum.CANNOT_END_OTHER_RENTAL,
                   rentalId: "665fd6e36b7e5d53f8f3d2c9",
@@ -233,7 +204,7 @@ export const createRentalFromSOS = createRoute({
           examples: {
             SOSNotFound: {
               value: {
-                error: "Không tìm thấy yêu cầu cứu hộ nào",
+                error: "SOS request not found",
                 details: {
                   code: RentalErrorCodeSchema.enum.SOS_NOT_FOUND,
                   sosId: "665fd6e36b7e5d53f8f3d2c9",
@@ -242,7 +213,7 @@ export const createRentalFromSOS = createRoute({
             },
             InvalidSOSStatus: {
               value: {
-                error: "Nhân viên chỉ có thể tạo phiên thuê bởi yêu cầu mà người cứu hộ không xử lí được",
+                error: "Cannot create rental from SOS with this status",
                 details: {
                   code: RentalErrorCodeSchema.enum.CANNOT_CREATE_RENTAL_WITH_SOS_STATUS,
                   sosId: "665fd6e36b7e5d53f8f3d2c9",
@@ -290,11 +261,11 @@ export const updateRental = createRoute({
           examples: {
             CannotEditWithStatus: {
               value: {
-                error: "Không thể chỉnh sửa phiên thuê đang ở trạng thái",
+                error: "Cannot edit rental in this status",
                 details: {
                   code: RentalErrorCodeSchema.enum.CANNOT_EDIT_THIS_RENTAL_WITH_STATUS,
                   rentalId: "665fd6e36b7e5d53f8f3d2c9",
-                  status: "HOÀN THÀNH",
+                  status: "COMPLETED",
                 },
               },
             },
@@ -376,11 +347,11 @@ export const cancelRental = createRoute({
           examples: {
             CannotCancelWithStatus: {
               value: {
-                error: "Không thể huỷ phiên thuê đang ở trạng thái",
+                error: "Cannot cancel rental in this status",
                 details: {
                   code: RentalErrorCodeSchema.enum.CANNOT_CANCEL_THIS_RENTAL_WITH_STATUS,
                   rentalId: "665fd6e36b7e5d53f8f3d2c9",
-                  status: "HOÀN THÀNH",
+                  status: "COMPLETED",
                 },
               },
             },

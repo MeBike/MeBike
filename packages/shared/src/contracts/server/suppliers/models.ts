@@ -25,15 +25,3 @@ export const SupplierBikeStatsSchema = z.object({
 
 export type SupplierSummary = z.infer<typeof SupplierSummarySchema>;
 export type SupplierBikeStats = z.infer<typeof SupplierBikeStatsSchema>;
-
-export const SupplierListResponseSchema = z.object({
-  data: z.array(SupplierSummarySchema),
-  pagination: z.object({
-    page: z.number(),
-    pageSize: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-  }),
-});
-
-export type SupplierListResponse = z.infer<typeof SupplierListResponseSchema>;
