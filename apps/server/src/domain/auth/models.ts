@@ -9,6 +9,7 @@ export type RefreshTokenPayload = {
   userId: string;
   tokenType: "refresh";
   verifyStatus: "UNVERIFIED" | "VERIFIED" | "BANNED";
+  jti?: string;
 };
 
 export type RefreshSession = {

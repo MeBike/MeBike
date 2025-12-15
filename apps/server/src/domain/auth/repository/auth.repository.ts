@@ -58,20 +58,24 @@ function ttlFromDate(date: Date): number {
   const ttlMs = date.getTime() - Date.now();
   return Math.max(1, Math.floor(ttlMs / 1000));
 }
+// TODO : IF somewhere or someone start using it EXPOT THIS oUT
+const sessionKey = (sid: string) => `auth:session:${sid}`;
+const userSessionsKey = (uid: string) => `auth:user-sessions:${uid}`;
+const otpKey = (kind: EmailOtpKind, uid: string) => `auth:otp:${kind}:${uid}`;
 
 function makeAuthRepository(client: import("ioredis").default): AuthRepo {
   return {
     saveSession: session =>
       Effect.tryPromise({
         try: async () => {
-          const sessionKey = `auth:session:${session.sessionId}`;
-          const userSessionsKey = `auth:user-sessions:${session.userId}`;
+          const sessionRedisKey = sessionKey(session.sessionId);
+          const userSessionsRedisKey = userSessionsKey(session.userId);
           const ttl = ttlFromDate(session.expiresAt);
           const sessionJson = JSON.stringify(session);
 
-          await client.setex(sessionKey, ttl, sessionJson);
-          await client.sadd(userSessionsKey, session.sessionId);
-          await client.expire(userSessionsKey, ttl);
+          await client.setex(sessionRedisKey, ttl, sessionJson);
+          await client.sadd(userSessionsRedisKey, session.sessionId);
+          await client.expire(userSessionsRedisKey, ttl);
         },
         catch: cause =>
           new AuthRepositoryError({
@@ -83,8 +87,8 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
     getSession: sessionId =>
       Effect.tryPromise({
         try: async () => {
-          const sessionKey = `auth:session:${sessionId}`;
-          const json = await client.get(sessionKey);
+          const redisKey = sessionKey(sessionId);
+          const json = await client.get(redisKey);
           return json == null ? Option.none() : Option.some(parseSession(json));
         },
         catch: cause =>
@@ -97,8 +101,8 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
     deleteSession: sessionId =>
       Effect.tryPromise({
         try: async () => {
-          const sessionKey = `auth:session:${sessionId}`;
-          await client.del(sessionKey);
+          const redisKey = sessionKey(sessionId);
+          await client.del(redisKey);
         },
         catch: cause =>
           new AuthRepositoryError({
@@ -110,8 +114,8 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
     deleteAllSessionsForUser: userId =>
       Effect.tryPromise({
         try: async () => {
-          const userSessionsKey = `auth:user-sessions:${userId}`;
-          const sessionIds = await client.smembers(userSessionsKey);
+          const userSessionsRedisKey = userSessionsKey(userId);
+          const sessionIds = await client.smembers(userSessionsRedisKey);
 
           if (sessionIds.length === 0) {
             return;
@@ -121,10 +125,10 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
           const pipeline = client.pipeline();
 
           for (const sessionId of sessionIds) {
-            pipeline.del(`auth:session:${sessionId}`);
+            pipeline.del(sessionKey(sessionId));
           }
 
-          pipeline.del(userSessionsKey);
+          pipeline.del(userSessionsRedisKey);
 
           await pipeline.exec();
         },
@@ -138,11 +142,11 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
     saveEmailOtp: record =>
       Effect.tryPromise({
         try: async () => {
-          const otpKey = `auth:otp:${record.kind}:${record.userId}`;
+          const redisKey = otpKey(record.kind, record.userId);
           const ttl = ttlFromDate(record.expiresAt);
           const recordJson = JSON.stringify(record);
 
-          await client.setex(otpKey, ttl, recordJson);
+          await client.setex(redisKey, ttl, recordJson);
         },
         catch: cause =>
           new AuthRepositoryError({
@@ -154,9 +158,9 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
     consumeEmailOtp: ({ userId, kind }) =>
       Effect.tryPromise({
         try: async () => {
-          const otpKey = `auth:otp:${kind}:${userId}`;
+          const redisKey = otpKey(kind, userId);
 
-          const json = await client.get(otpKey);
+          const json = await client.get(redisKey);
 
           if (json == null) {
             return Option.none();
@@ -164,7 +168,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
 
           const record = parseEmailOtpRecord(json);
 
-          await client.del(otpKey);
+          await client.del(redisKey);
 
           return Option.some(record);
         },
