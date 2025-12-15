@@ -1,5 +1,20 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import {clearTokens,getRefreshToken,setTokens} from "@utils/tokenManager"
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+  AxiosError,
+} from "axios";
+import {
+  clearTokens,
+  setTokens,
+  getAccessToken,
+  getRefreshToken,
+} from "@utils/tokenManager";
+import type { RefreshTokenResponse } from "@/types/auth.type";
+import { REFRESH_TOKEN_MUTATION } from "@/graphql";
+import { print } from "graphql";
+
 export const HTTP_STATUS = {
   OK: 200,
   UNAUTHORIZED: 401,
@@ -8,15 +23,13 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503,
 };
-import type {RefreshTokenResponse} from "@/types/auth.type";
-import { REFRESH_TOKEN_MUTATION } from "@/graphql";
-import { print } from "graphql";
+
 export class FetchHttpClient {
   private baseURL: string;
   private axiosInstance: AxiosInstance;
   private isRefreshing = false;
   private failedQueue: Array<{
-    resolve: () => void;
+    resolve: (value: void | PromiseLike<void>) => void;
     reject: (reason?: unknown) => void;
   }> = [];
 
@@ -28,24 +41,54 @@ export class FetchHttpClient {
         "Content-Type": "application/json;charset=UTF-8",
       },
       timeout: 30000,
-      withCredentials : true,
+      withCredentials: true,
     });
 
 
-    this.axiosInstance.interceptors.response.use(
-      (response) => {
-        console.log("API Response:", response.status, response.config.url);
-        return response;
+    this.axiosInstance.interceptors.request.use(
+      async (config) => {
+        const access_token = getAccessToken();
+        if (access_token) {
+          config.headers = config.headers || {};
+          config.headers.Authorization = `Bearer ${access_token}`;
+        }
+        return config;
       },
-      async (error) => {
-        console.log(
-          "API Error:",
-          error.response?.status,
-          error.config?.url,
-          error.response?.data
-        );
-        const originalRequest = error.config;
-        const noAuthRetryEndpoints = [
+      (error) => Promise.reject(error)
+    );
+
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      async (error: AxiosError) => {
+        const originalRequest = error.config as InternalAxiosRequestConfig & {
+          _retry?: boolean;
+        };
+        let isAuthRequest = false;
+        if (originalRequest.data) {
+          try {
+            const payload =
+              typeof originalRequest.data === "string"
+                ? JSON.parse(originalRequest.data)
+                : originalRequest.data;
+
+            if (
+              payload.query &&
+              payload.query.includes("mutation RefreshToken")
+            ) {
+              isAuthRequest = true;
+            }
+            if (
+              payload.query &&
+              (payload.query.includes("mutation LoginUser") ||
+                payload.query.includes("mutation RegisterUser") ||
+                payload.query.includes("mutation RefreshToken"))
+            ) {
+              isAuthRequest = true;
+            }
+          } catch (e) {
+          }
+        }
+        const noAuthRetryUrls = [
           "/users/verify-email",
           "/users/verify-forgot-password",
           "/users/reset-password",
@@ -53,70 +96,64 @@ export class FetchHttpClient {
           "/users/refresh-token",
           "/users/change-password",
         ];
-        const shouldSkipTokenRefresh = noAuthRetryEndpoints.some((endpoint) =>
-          originalRequest?.url?.includes(endpoint)
-        );
-
+        const isIgnoredUrl =
+          originalRequest.url &&
+          noAuthRetryUrls.some((url) => originalRequest.url?.includes(url));
+        console.log("isAuthRequest", isAuthRequest);
+        const shouldSkipTokenRefresh = isAuthRequest || isIgnoredUrl;
         if (
           error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
-          !shouldSkipTokenRefresh && !originalRequest._retry
+          !shouldSkipTokenRefresh && 
+          !originalRequest._retry
         ) {
           if (this.isRefreshing) {
             return new Promise<void>((resolve, reject) => {
               this.failedQueue.push({ resolve, reject });
             })
               .then(() => {
+                const newToken = getAccessToken();
+                if (newToken) {
+                  originalRequest.headers = originalRequest.headers || {};
+                  originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                }
                 return this.axiosInstance(originalRequest);
               })
-              .catch((err) => {
-                return Promise.reject(err);
-              });
+              .catch((err) => Promise.reject(err));
           }
           originalRequest._retry = true;
           this.isRefreshing = true;
           try {
             await this.refreshAccessToken();
+            const newToken = getAccessToken();
+            if (newToken) {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            }
             this.processQueue(null);
-            window.dispatchEvent(new Event("auth:token_refreshed"));
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new Event("auth:token_refreshed"));
+            }
             return this.axiosInstance(originalRequest);
           } catch (refreshError) {
             this.processQueue(refreshError);
-            window.dispatchEvent(new Event("auth:session_expired"));
+
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new Event("auth:session_expired"));
+            }
             return Promise.reject(refreshError);
           } finally {
-            this.isRefreshing = false;
+            this.isRefreshing = false;  
           }
         }
-        // switch (error.response?.status) {
-        //   case HTTP_STATUS.FORBIDDEN:
-        //     console.log("API: 403 Forbidden");
-        //     window.location.href = `/error/${HTTP_STATUS.FORBIDDEN}`;
-        //     break;
-        //   case HTTP_STATUS.NOT_FOUND:
-        //     console.log("API: 404 Not Found");
-        //     break;
-        //   // case HTTP_STATUS.INTERNAL_SERVER_ERROR:
-        //   //   console.log("API: 500 Internal Server Error");
-        //   //   window.location.href = `/error/${HTTP_STATUS.INTERNAL_SERVER_ERROR}`;
-        //   //   break;
-        //   case HTTP_STATUS.SERVICE_UNAVAILABLE:
-        //     console.log("API: 503 Service Unavailable");
-        //     window.location.href = `/error/${HTTP_STATUS.SERVICE_UNAVAILABLE}`;
-        //     break;
-        //   default:
-        //     console.error(`API Error: ${error.response?.status}`);
-        // }
-
         return Promise.reject(error);
       }
     );
   }
   private async refreshAccessToken(): Promise<string> {
     const refreshToken = getRefreshToken();
-    console.log("Refreshing token with:", refreshToken);
+    console.log("Refreshing token...");
 
     if (!refreshToken) {
-      throw new Error("No refresh token available");
+      throw new Error("No refresh token available via Cookies");
     }
 
     try {
@@ -124,19 +161,22 @@ export class FetchHttpClient {
         print(REFRESH_TOKEN_MUTATION),
         { refreshToken: refreshToken }
       );
+
       if ((response.data as any).errors) {
         throw new Error("GraphQL Error during refresh");
       }
-      const result = response.data.data.RefreshToken.data;
+
+      const result = response.data.data?.RefreshToken?.data;
       if (!result || !result.accessToken) {
         throw new Error("Invalid response structure");
       }
       setTokens(result.accessToken, result.refreshToken);
+
       return result.accessToken;
     } catch (error) {
       console.error("Refresh token failed:", error);
       clearTokens();
-      throw new Error("Refresh token expired or failed");
+      throw error;
     }
   }
 
@@ -145,11 +185,13 @@ export class FetchHttpClient {
       if (error) {
         reject(error);
       } else {
-        resolve();
+        resolve(undefined);
       }
     });
     this.failedQueue = [];
   }
+
+  // --- Các hàm wrapper giữ nguyên ---
   private async requestGraphql<T>(
     payload: { query: string; variables?: object },
     config?: AxiosRequestConfig
@@ -160,35 +202,29 @@ export class FetchHttpClient {
     url: string,
     params?: AxiosRequestConfig["params"]
   ): Promise<AxiosResponse<T>> {
-    return this.axiosInstance.get(url, {
-      params: params ? { ...params } : {},
-    });
+    return this.axiosInstance.get(url, { params: params ? { ...params } : {} });
   }
-
   async post<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown> | undefined
+    config?: AxiosRequestConfig<unknown>
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.post(url, data, config);
   }
-  //axios.put(url[, data[, config]])
   async put<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown> | undefined
+    config?: AxiosRequestConfig<unknown>
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.put(url, data, config);
   }
-  //axios.patch(url[, data[, config]])
   async patch<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown> | undefined
+    config?: AxiosRequestConfig<unknown>
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.patch(url, data, config);
   }
-  //axios.delete(url[, config])
   async delete<T>(
     url: string,
     params?: AxiosRequestConfig["params"]
