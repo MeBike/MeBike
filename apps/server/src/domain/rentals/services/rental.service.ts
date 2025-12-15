@@ -140,8 +140,10 @@ function makeRentalService(repo: RentalRepo): RentalService {
           startStationId,
           startTime,
         }).pipe(
+          Effect.catchTag("RentalUniqueViolation", () =>
+            Effect.fail(new BikeAlreadyRented({ bikeId }))),
           Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
+            Effect.die(error)), // hopeless
         );
 
         return rental;

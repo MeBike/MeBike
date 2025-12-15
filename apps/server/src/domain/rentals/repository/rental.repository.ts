@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option } from "effect";
+import { Context, Effect, Layer, Match, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
@@ -7,9 +7,9 @@ import { Prisma } from "@/infrastructure/prisma";
 
 import type {
   PrismaClient,
-  Prisma as PrismaTypes,
   RentalStatus,
 } from "../../../../generated/prisma/client";
+import type { RentalRepoError } from "../domain-errors";
 import type {
   MyRentalFilter,
   RentalCountsRow,
@@ -17,7 +17,10 @@ import type {
   RentalSortField,
 } from "../models";
 
-import { RentalRepositoryError } from "../domain-errors";
+import {
+  Prisma as PrismaTypes,
+} from "../../../../generated/prisma/client";
+import { RentalRepositoryError, RentalUniqueViolation } from "../domain-errors";
 
 export type CreateRentalInput = {
   userId: string;
@@ -69,7 +72,7 @@ export type RentalRepo = {
   // Core rental operations
   createRental: (
     data: CreateRentalInput,
-  ) => Effect.Effect<RentalRow, RentalRepositoryError>;
+  ) => Effect.Effect<RentalRow, RentalRepoError>;
 
   updateRentalOnEnd: (
     data: UpdateRentalOnEndInput,
@@ -104,6 +107,15 @@ function toRentalOrderBy(
     default:
       return { startTime: sortDir };
   }
+}
+
+function isPrismaUniqueViolation(
+  error: unknown,
+): error is PrismaTypes.PrismaClientKnownRequestError & { code: "P2002" } {
+  return (
+    error instanceof PrismaTypes.PrismaClientKnownRequestError
+    && error.code === "P2002"
+  );
 }
 
 export function makeRentalRepository(client: PrismaClient): RentalRepo {
@@ -305,11 +317,20 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
             },
             select,
           }),
-        catch: e =>
-          new RentalRepositoryError({
-            operation: "createRental",
-            cause: e,
-          }),
+        catch: error =>
+          Match.value(error).pipe(
+            Match.when(isPrismaUniqueViolation, e =>
+              new RentalUniqueViolation({
+                operation: "createRental",
+                constraint: e.meta?.target as string[] | undefined,
+                cause: e,
+              })),
+            Match.orElse(e =>
+              new RentalRepositoryError({
+                operation: "createRental",
+                cause: e,
+              })),
+          ),
       }).pipe(Effect.map(mapToRentalRow));
     },
 

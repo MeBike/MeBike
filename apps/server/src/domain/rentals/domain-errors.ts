@@ -3,9 +3,12 @@ import { Data } from "effect";
 import type { WithGenericError } from "@/domain/shared";
 import type { RentalStatus } from "generated/prisma/enums";
 
-// Infra-level error
 export class RentalRepositoryError extends Data.TaggedError("RentalRepositoryError")<
   WithGenericError
+> {}
+
+export class RentalUniqueViolation extends Data.TaggedError("RentalUniqueViolation")<
+  WithGenericError<{ constraint?: string | string[] }>
 > {}
 
 // User-level domain errors
@@ -48,3 +51,6 @@ export type RentalServiceFailure
     | BikeAlreadyRented
     | InvalidRentalState
     | EndStationMismatch;
+
+// Repository-level error union
+export type RentalRepoError = RentalRepositoryError | RentalUniqueViolation;
