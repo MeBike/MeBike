@@ -13,12 +13,14 @@ import {
   LOGIN_MUTATION,
   REGISTER_MUTATION,
   REFRESH_TOKEN_MUTATION,
+  GET_ME
 } from "@/graphql";
 import {print} from "graphql"
 import {
   LoginResponse,
   RegisterResponse,
   RefreshTokenResponse,
+  GetMeResponse,
 } from "@/types/auth.type";
 interface AuthResponse {
   message: string;
@@ -116,9 +118,9 @@ export const authService = {
     );
     return response;
   },
-  getMe: async (): Promise<AxiosResponse<ProfileUserResponse>> => {
+  getMe: async (): Promise<AxiosResponse<GetMeResponse>> => {
     const response =
-      await fetchHttpClient.get<ProfileUserResponse>("/users/me");
+      await fetchHttpClient.query<GetMeResponse>(print(GET_ME));
     return response;
   },
   refreshToken: async (

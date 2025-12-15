@@ -22,3 +22,21 @@ export interface RegisterResponse {
   password : string;
   id : string
 }
+export interface Me {
+  id: string;
+  accountId: string;
+  name: string;
+  YOB: number;
+  role: string;
+  verify: string;
+  status: string;
+  phone: string;
+  avatar : string;
+  userAccount : {
+    email : string;
+    id : string;
+    password : string;
+  };
+  location?: string;
+  username?: string;
+}

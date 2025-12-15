@@ -59,7 +59,7 @@ export const changePasswordSchema = z
     path: ["confirm_password"],
   });
 export const profileUpdateSchema = z.object({
-  fullname: z
+  name: z
     .string()
     .min(3, { message: "Họ và tên phải có ít nhất 3 ký tự" })
     .max(50, { message: "Họ và tên không được vượt quá 50 ký tự" }),
@@ -77,14 +77,17 @@ export const profileUpdateSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
-  phone_number: z
+  phone: z
     .string()
-    .regex(vietnamesePhoneNumberRegex, {  
+    .regex(vietnamesePhoneNumberRegex, {
       message: "Số điện thoại không hợp lệ",
     })
     .optional()
     .or(z.literal("")),
-  avatar : z.string().url({ message: "Avatar phải là một URL hợp lệ" }).optional(),  
+  avatar: z
+    .string()
+    .url({ message: "Avatar phải là một URL hợp lệ" })
+    .optional(),
 });
 export const resetPasswordSchema = z.object({
   password: z

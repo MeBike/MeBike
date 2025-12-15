@@ -41,3 +41,28 @@ export const REFRESH_TOKEN_MUTATION = gql`
     }
   }
 `;
+export const GET_ME = gql`
+  query Query {
+    User {
+      success
+      message
+      data {
+        id
+        accountId
+        name
+        YOB
+        role
+        verify
+        status
+        phone
+        userAccount {
+          email
+          id
+          password
+        }
+      }
+      errors
+      statusCode
+    }
+  }
+`;
