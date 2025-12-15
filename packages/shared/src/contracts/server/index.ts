@@ -1,4 +1,5 @@
 export * as BikesContracts from "./bikes";
+export * as RentalsContracts from "./rentals";
 export * from "./rentals";
 export * from "./routes";
 export * from "./schemas";

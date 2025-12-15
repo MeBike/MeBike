@@ -6,6 +6,7 @@ import { cors } from "hono/cors";
 import logger from "@/lib/logger";
 
 import { registerBikeRoutes } from "./routes/bikes";
+import { registerRentalRoutes } from "./routes/rentals";
 import { registerStationRoutes } from "./routes/stations";
 import { registerSupplierRoutes } from "./routes/suppliers";
 
@@ -54,6 +55,7 @@ export function createHttpApp() {
 
   registerStationRoutes(app);
   registerBikeRoutes(app);
+  registerRentalRoutes(app);
   registerSupplierRoutes(app);
 
   app.onError((err, c) => {

@@ -19,6 +19,22 @@ import type {
 
 import { RentalRepositoryError } from "../domain-errors";
 
+export type CreateRentalInput = {
+  userId: string;
+  bikeId: string;
+  startStationId: string;
+  startTime: Date;
+};
+
+export type UpdateRentalOnEndInput = {
+  rentalId: string;
+  endStationId: string;
+  endTime: Date;
+  durationMinutes: number;
+  totalPrice: number | null;
+  newStatus: RentalStatus;
+};
+
 export type RentalRepo = {
   // User "/me" views
   listMyRentals: (
@@ -49,6 +65,15 @@ export type RentalRepo = {
   findActiveByUserId: (
     userId: string,
   ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+
+  // Core rental operations
+  createRental: (
+    data: CreateRentalInput,
+  ) => Effect.Effect<RentalRow, RentalRepositoryError>;
+
+  updateRentalOnEnd: (
+    data: UpdateRentalOnEndInput,
+  ) => Effect.Effect<RentalRow, RentalRepositoryError>;
 };
 
 function toMyRentalsWhere(
@@ -265,6 +290,51 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
 
         return Option.fromNullable(raw ? mapToRentalRow(raw) : null);
       });
+    },
+
+    createRental(data) {
+      return Effect.tryPromise({
+        try: () =>
+          client.rental.create({
+            data: {
+              userId: data.userId,
+              bikeId: data.bikeId,
+              startStationId: data.startStationId,
+              startTime: data.startTime,
+              status: "RENTED" as RentalStatus,
+            },
+            select,
+          }),
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "createRental",
+            cause: e,
+          }),
+      }).pipe(Effect.map(mapToRentalRow));
+    },
+
+    updateRentalOnEnd(data) {
+      return Effect.tryPromise({
+        try: () =>
+          client.rental.update({
+            where: { id: data.rentalId },
+            data: {
+              endStationId: data.endStationId,
+              endTime: data.endTime,
+              duration: data.durationMinutes,
+              totalPrice: data.totalPrice
+                ? String(data.totalPrice)
+                : null,
+              status: data.newStatus,
+            },
+            select,
+          }),
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "updateRentalOnEnd",
+            cause: e,
+          }),
+      }).pipe(Effect.map(mapToRentalRow));
     },
   };
 }

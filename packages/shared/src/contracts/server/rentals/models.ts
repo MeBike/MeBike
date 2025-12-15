@@ -1,10 +1,11 @@
 import { z } from "../../../zod";
+import { BikeStatusSchema } from "../bikes";
 
 export const RentalStatusSchema = z.enum([
-  "ĐANG THUÊ",
-  "HOÀN THÀNH",
-  "ĐÃ HỦY",
-  "ĐÃ ĐẶT TRƯỚC",
+  "RENTED",
+  "COMPLETED",
+  "CANCELLED",
+  "RESERVED",
 ]);
 
 export const UserRoleSchema = z.enum([
@@ -20,14 +21,14 @@ export const VerifyStatusSchema = z.enum([
   "BANNED",
 ]);
 
-export const BikeStatusSchema = z.enum([
-  "CÓ SẴN",
-  "ĐANG ĐƯỢC THUÊ",
-  "BỊ HỎNG",
-  "ĐÃ ĐẶT TRƯỚC",
-  "ĐANG BẢO TRÌ",
-  "KHÔNG CÓ SẮN",
-]);
+// export const BikeStatusSchema = z.enum([
+//   "CÓ SẴN",
+//   "ĐANG ĐƯỢC THUÊ",
+//   "BỊ HỎNG",
+//   "ĐÃ ĐẶT TRƯỚC",
+//   "ĐANG BẢO TRÌ",
+//   "KHÔNG CÓ SẮN",
+// ]);
 
 // Core rental base schema
 export const RentalSchema = z.object({
@@ -207,10 +208,10 @@ export const DashboardResponseSchema = z.object({
 
 // Rental status counts
 export const RentalStatusCountsSchema = z.object({
-  "ĐANG THUÊ": z.number(),
-  "HOÀN THÀNH": z.number(),
-  "ĐÃ HỦY": z.number(),
-  "ĐÃ ĐẶT TRƯỚC": z.number(),
+  RENTED: z.number(),
+  COMPLETED: z.number(),
+  CANCELLED: z.number(),
+  RESERVED: z.number(),
 });
 
 export const RentalCountsResponseSchema = z.object({

@@ -8,13 +8,13 @@ import {
   PhoneNumberParamSchema,
   RentalCountsResponseSchema,
   rentalDateRangeWith,
-  RentalDetailSchemaOpenApi,
   RentalErrorCodeSchema,
   RentalErrorResponseSchema,
   RentalIdParamSchema,
   RentalListQuerySchema,
   RentalListResponseSchema,
   RentalRevenueResponseSchema,
+  RentalSchemaOpenApi,
   RentalStatsQuerySchema,
   RentalStatusSchema,
   StationActivityResponseSchema,
@@ -93,7 +93,7 @@ export const getMyRental = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponse(
-            RentalDetailSchemaOpenApi,
+            RentalSchemaOpenApi,
             "Get rental detail response",
           ),
         },
@@ -162,7 +162,7 @@ export const getRental = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponse(
-            RentalDetailSchemaOpenApi,
+            RentalSchemaOpenApi,
             "Get rental detail response",
           ),
         },

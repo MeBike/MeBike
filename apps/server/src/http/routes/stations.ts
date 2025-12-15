@@ -11,7 +11,9 @@ import {
 } from "@/domain/stations";
 import { Prisma } from "@/infrastructure/prisma";
 
-export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
+export function registerStationRoutes(
+  app: import("@hono/zod-openapi").OpenAPIHono,
+) {
   const stations = serverRoutes.stations;
 
   app.openapi(stations.listStations, async (c) => {
@@ -59,9 +61,11 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
             Effect.sync(() =>
               c.json<StationsContracts.StationErrorResponse, 400>(
                 {
-                  error: StationsContracts.stationErrorMessages.INVALID_QUERY_PARAMS,
+                  error:
+                    StationsContracts.stationErrorMessages.INVALID_QUERY_PARAMS,
                   details: {
-                    code: StationsContracts.StationErrorCodeSchema.enum.INVALID_QUERY_PARAMS,
+                    code: StationsContracts.StationErrorCodeSchema.enum
+                      .INVALID_QUERY_PARAMS,
                   },
                 },
                 400,
@@ -79,7 +83,8 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
         {
           error: StationsContracts.stationErrorMessages.INVALID_COORDINATES,
           details: {
-            code: StationsContracts.StationErrorCodeSchema.enum.INVALID_COORDINATES,
+            code: StationsContracts.StationErrorCodeSchema.enum
+              .INVALID_COORDINATES,
           },
         },
         400,
@@ -122,9 +127,11 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
             Effect.sync(() =>
               c.json<StationsContracts.StationErrorResponse, 400>(
                 {
-                  error: StationsContracts.stationErrorMessages.INVALID_COORDINATES,
+                  error:
+                    StationsContracts.stationErrorMessages.INVALID_COORDINATES,
                   details: {
-                    code: StationsContracts.StationErrorCodeSchema.enum.INVALID_COORDINATES,
+                    code: StationsContracts.StationErrorCodeSchema.enum
+                      .INVALID_COORDINATES,
                   },
                 },
                 400,
@@ -155,9 +162,12 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
               ? Effect.sync(() =>
                   c.json<StationsContracts.StationErrorResponse, 404>(
                     {
-                      error: StationsContracts.stationErrorMessages.STATION_NOT_FOUND,
+                      error:
+                        StationsContracts.stationErrorMessages
+                          .STATION_NOT_FOUND,
                       details: {
-                        code: StationsContracts.StationErrorCodeSchema.enum.STATION_NOT_FOUND,
+                        code: StationsContracts.StationErrorCodeSchema.enum
+                          .STATION_NOT_FOUND,
                         stationId,
                       },
                     },
@@ -167,9 +177,12 @@ export function registerStationRoutes(app: import("@hono/zod-openapi").OpenAPIHo
               : Effect.sync(() =>
                   c.json<StationsContracts.StationErrorResponse, 404>(
                     {
-                      error: StationsContracts.stationErrorMessages.STATION_NOT_FOUND,
+                      error:
+                        StationsContracts.stationErrorMessages
+                          .STATION_NOT_FOUND,
                       details: {
-                        code: StationsContracts.StationErrorCodeSchema.enum.STATION_NOT_FOUND,
+                        code: StationsContracts.StationErrorCodeSchema.enum
+                          .STATION_NOT_FOUND,
                       },
                     },
                     404,

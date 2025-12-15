@@ -131,7 +131,7 @@ export const endMyRental = createRoute({
       content: {
         "application/json": {
           schema: createSuccessResponse(
-            RentalWithPricingSchemaOpenApi,
+            RentalSchemaOpenApi,
             "End rental response",
           ),
         },

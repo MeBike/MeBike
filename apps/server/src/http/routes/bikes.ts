@@ -3,15 +3,13 @@ import { Effect, Match } from "effect";
 
 import {
   adminUpdateBikeUseCase,
-  BikeRepositoryLive,
-  BikeServiceLive,
   getBikeDetailUseCase,
   listBikesUseCase,
   reportBrokenBikeUseCase,
   softDeleteBikeUseCase,
 } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
-import { Prisma } from "@/infrastructure/prisma";
+import { withBikeDeps } from "@/http/shared/providers";
 
 type BikeSummary = BikesContracts.BikeSummary;
 type BikeNotFoundResponse = BikesContracts.BikeNotFoundResponse;
@@ -44,23 +42,21 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const query = c.req.valid("query");
 
     const eff = withLoggedCause(
-      listBikesUseCase({
-        filter: {
-          id: query.id,
-          stationId: query.station_id,
-          supplierId: query.supplier_id,
-          status: query.status,
-        },
-        pageReq: {
-          page: query.page ?? 1,
-          pageSize: query.pageSize ?? 50,
-          sortBy: (query.sortBy) ?? "status",
-          sortDir: query.sortDir ?? "asc",
-        },
-      }).pipe(
-        Effect.provide(BikeServiceLive),
-        Effect.provide(BikeRepositoryLive),
-        Effect.provide(Prisma.Default),
+      withBikeDeps(
+        listBikesUseCase({
+          filter: {
+            id: query.id,
+            stationId: query.station_id,
+            supplierId: query.supplier_id,
+            status: query.status,
+          },
+          pageReq: {
+            page: query.page ?? 1,
+            pageSize: query.pageSize ?? 50,
+            sortBy: (query.sortBy) ?? "status",
+            sortDir: query.sortDir ?? "asc",
+          },
+        }),
       ),
       "GET /v1/bikes",
     );
@@ -83,11 +79,7 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   app.openapi(bikes.getBike, async (c) => {
     const { id } = c.req.valid("param");
 
-    const eff = getBikeDetailUseCase(id).pipe(
-      Effect.provide(BikeServiceLive),
-      Effect.provide(BikeRepositoryLive),
-      Effect.provide(Prisma.Default),
-    );
+    const eff = withBikeDeps(getBikeDetailUseCase(id));
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
     if (result._tag === "Right") {
@@ -115,15 +107,13 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const { id } = c.req.valid("param");
     const body = c.req.valid("json");
 
-    const eff = adminUpdateBikeUseCase(id, {
-      ...(body.chip_id ? { chipId: body.chip_id } : {}),
-      ...(body.station_id ? { stationId: body.station_id } : {}),
-      ...(body.status ? { status: body.status } : {}),
-      ...(body.supplier_id !== undefined ? { supplierId: body.supplier_id } : {}),
-    }).pipe(
-      Effect.provide(BikeServiceLive),
-      Effect.provide(BikeRepositoryLive),
-      Effect.provide(Prisma.Default),
+    const eff = withBikeDeps(
+      adminUpdateBikeUseCase(id, {
+        ...(body.chip_id ? { chipId: body.chip_id } : {}),
+        ...(body.station_id ? { stationId: body.station_id } : {}),
+        ...(body.status ? { status: body.status } : {}),
+        ...(body.supplier_id !== undefined ? { supplierId: body.supplier_id } : {}),
+      }),
     );
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
@@ -180,11 +170,7 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   app.openapi(bikes.reportBrokenBike, async (c) => {
     const { id } = c.req.valid("param");
 
-    const eff = reportBrokenBikeUseCase(id).pipe(
-      Effect.provide(BikeServiceLive),
-      Effect.provide(BikeRepositoryLive),
-      Effect.provide(Prisma.Default),
-    );
+    const eff = withBikeDeps(reportBrokenBikeUseCase(id));
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
     if (result._tag === "Right") {
@@ -207,11 +193,7 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   app.openapi(bikes.deleteBike, async (c) => {
     const { id } = c.req.valid("param");
 
-    const eff = softDeleteBikeUseCase(id).pipe(
-      Effect.provide(BikeServiceLive),
-      Effect.provide(BikeRepositoryLive),
-      Effect.provide(Prisma.Default),
-    );
+    const eff = withBikeDeps(softDeleteBikeUseCase(id));
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
     if (result._tag === "Right") {

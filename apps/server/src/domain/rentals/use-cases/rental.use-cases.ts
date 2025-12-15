@@ -1,0 +1,71 @@
+import type { Option } from "effect";
+
+import { Effect } from "effect";
+
+import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+
+import type { RentalServiceFailure } from "../domain-errors";
+import type { RentalCountsRow, RentalRow, RentalSortField } from "../models";
+import type {
+  EndRentalInput,
+  ListMyRentalsInput,
+  StartRentalInput,
+} from "../types";
+
+import { RentalServiceTag } from "../services/rental.service";
+
+export function listMyRentalsUseCase(
+  input: ListMyRentalsInput,
+): Effect.Effect<PageResult<RentalRow>, never, RentalServiceTag> {
+  return Effect.gen(function* () {
+    const service = yield* RentalServiceTag;
+    return yield* service.listMyRentals(input.userId, input.filter, input.pageReq);
+  });
+}
+
+export function listMyCurrentRentalsUseCase(
+  userId: string,
+  pageReq: PageRequest<RentalSortField>,
+): Effect.Effect<PageResult<RentalRow>, never, RentalServiceTag> {
+  return Effect.gen(function* () {
+    const service = yield* RentalServiceTag;
+    return yield* service.listMyCurrentRentals(userId, pageReq);
+  });
+}
+
+export function getMyRentalUseCase(
+  userId: string,
+  rentalId: string,
+): Effect.Effect<Option.Option<RentalRow>, never, RentalServiceTag> {
+  return Effect.gen(function* () {
+    const service = yield* RentalServiceTag;
+    return yield* service.getMyRentalById(userId, rentalId);
+  });
+}
+
+export function getMyRentalCountsUseCase(
+  userId: string,
+): Effect.Effect<readonly RentalCountsRow[], never, RentalServiceTag> {
+  return Effect.gen(function* () {
+    const service = yield* RentalServiceTag;
+    return yield* service.getMyRentalCounts(userId);
+  });
+}
+
+export function startRentalUseCase(
+  input: StartRentalInput,
+): Effect.Effect<RentalRow, RentalServiceFailure, RentalServiceTag> {
+  return Effect.gen(function* () {
+    const service = yield* RentalServiceTag;
+    return yield* service.startRental(input);
+  });
+}
+
+export function endRentalUseCase(
+  input: EndRentalInput,
+): Effect.Effect<RentalRow, RentalServiceFailure, RentalServiceTag> {
+  return Effect.gen(function* () {
+    const service = yield* RentalServiceTag;
+    return yield* service.endRental(input);
+  });
+}

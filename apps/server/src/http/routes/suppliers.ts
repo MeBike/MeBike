@@ -10,9 +10,7 @@ import {
   updateSupplierStatusUseCase,
   updateSupplierUseCase,
 } from "@/domain/suppliers";
-import { SupplierRepositoryLive } from "@/domain/suppliers/repository/supplier.repository";
-import { SupplierServiceLive } from "@/domain/suppliers/services/supplier.service";
-import { Prisma } from "@/infrastructure/prisma";
+import { withSupplierDeps } from "@/http/shared/providers";
 
 import { Prisma as PrismaTypes } from "../../../generated/prisma/client";
 
@@ -20,25 +18,7 @@ type SupplierSummary = SuppliersContracts.SupplierSummary;
 type SupplierErrorResponse = SuppliersContracts.SupplierErrorResponse;
 type SupplierStats = SuppliersContracts.SupplierBikeStats;
 
-type SupplierListResponse = {
-  data: SupplierSummary[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-};
-
 const { SupplierErrorCodeSchema, supplierErrorMessages } = SuppliersContracts;
-
-function withSupplierDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(SupplierServiceLive),
-    Effect.provide(SupplierRepositoryLive),
-    Effect.provide(Prisma.Default),
-  );
-}
 
 export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const suppliers = serverRoutes.suppliers;
@@ -72,7 +52,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
 
     const result = await Effect.runPromise(withSupplierDeps(eff));
 
-    return c.json<SupplierListResponse, 200>(
+    return c.json<SuppliersContracts.SupplierListResponse, 200>(
       {
         data: result.items.map(toSupplierSummary),
         pagination: {
