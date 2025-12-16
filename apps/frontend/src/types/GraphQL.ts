@@ -1,11 +1,11 @@
-export interface BaseMutationResponse<T> {
-  data: T;
+export interface BaseMutationResponse<T = null  > {
+  data: T | null;
   errors?: { message: string; [key: string]: any }[] | null;
   message: string;
   statusCode: number;
   success: boolean;
 }
-export interface GraphQLMutationResponse<MutationName extends string, Payload> {
+export interface GraphQLMutationResponse<MutationName extends string, Payload = null> {
   data: {
     [K in MutationName]: BaseMutationResponse<Payload>;
   };

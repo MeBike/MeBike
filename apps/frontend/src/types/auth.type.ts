@@ -12,3 +12,4 @@ export type RegisterResponse = GraphQLMutationResponse<
 >;
 export type RefreshTokenResponse = GraphQLMutationResponse<"RefreshToken", AuthTokens>;
 export type GetMeResponse = GraphQLMutationResponse<"User", Me>;
+export type LogOutResponse = GraphQLMutationResponse<"LogoutUser">;

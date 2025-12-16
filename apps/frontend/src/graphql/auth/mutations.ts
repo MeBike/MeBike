@@ -40,7 +40,7 @@ export const REFRESH_TOKEN_MUTATION = gql`
       errors
       statusCode
     }
-  } 
+  }
 `;
 export const GET_ME = gql`
   query Query {
@@ -62,6 +62,17 @@ export const GET_ME = gql`
           password
         }
       }
+      errors
+      statusCode
+    }
+  }
+`;
+export const LOGOUT_MUTATION = gql`
+  mutation LogoutUser {
+    LogoutUser {
+      success
+      
+      message
       errors
       statusCode
     }

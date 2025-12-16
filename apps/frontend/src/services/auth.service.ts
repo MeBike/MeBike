@@ -13,7 +13,8 @@ import {
   LOGIN_MUTATION,
   REGISTER_MUTATION,
   REFRESH_TOKEN_MUTATION,
-  GET_ME
+  GET_ME,
+  LOGOUT_MUTATION
 } from "@/graphql";
 import {print} from "graphql"
 import {
@@ -21,6 +22,7 @@ import {
   RegisterResponse,
   RefreshTokenResponse,
   GetMeResponse,
+  LogOutResponse,
 } from "@/types/auth.type";
 interface AuthResponse {
   message: string;
@@ -90,12 +92,9 @@ export const authService = {
     );
     return response;
   },
-  logout: async (
-    refresh_token: string
-  ): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>(
-      "/users/logout",
-      { refresh_token }
+  logout: async (): Promise<AxiosResponse<LogOutResponse>> => {
+    const response = await fetchHttpClient.mutation<LogOutResponse> (
+      print(LOGOUT_MUTATION),
     );
     return response;
   },
@@ -119,15 +118,14 @@ export const authService = {
     return response;
   },
   getMe: async (): Promise<AxiosResponse<GetMeResponse>> => {
-    const response =
-      await fetchHttpClient.query<GetMeResponse>(print(GET_ME));
+    const response = await fetchHttpClient.query<GetMeResponse>(print(GET_ME));
     return response;
   },
   refreshToken: async (
     refresh_token: string
   ): Promise<AxiosResponse<RefreshTokenResponse>> => {
     const response = await fetchHttpClient.mutation<RefreshTokenResponse>(
-      print(REFRESH_TOKEN_MUTATION) ,
+      print(REFRESH_TOKEN_MUTATION),
       { refreshToken: refresh_token }
     );
     return response;

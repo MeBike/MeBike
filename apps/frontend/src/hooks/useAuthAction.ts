@@ -20,6 +20,7 @@ import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPa
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import { MESSAGE , QUERY_KEYS , HTTP_STATUS } from "@constants/index"
+import { AuthTokens } from "@/types/GraphQL";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -96,7 +97,7 @@ export const useAuthActions = () => {
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { accessToken, refreshToken } = result.data.data.LoginUser.data;
+            const { accessToken, refreshToken } = result.data.data.LoginUser.data as AuthTokens;
             setTokens(accessToken, refreshToken);
             window.dispatchEvent(new Event("token:changed"));
             window.dispatchEvent(
@@ -153,8 +154,8 @@ export const useAuthActions = () => {
     [useRegister, queryClient]
   );
   const logOut = useCallback(
-    (refresh_token: string) => {
-      useLogout.mutate(refresh_token, {
+    () => {
+      useLogout.mutate(undefined,{
         onSuccess: (result) => {
           if (result.status === HTTP_STATUS.OK) {
             clearTokens();
@@ -163,16 +164,14 @@ export const useAuthActions = () => {
             );
             queryClient.removeQueries({ queryKey: QUERY_KEYS.ME });
             queryClient.clear();
-            toast.success(result.data?.message || MESSAGE.LOGOUT_SUCCESS);
+            toast.success(MESSAGE.LOGOUT_SUCCESS);
             router.push("/auth/login");
           } else {
-            const errorMessage = result.data?.message || MESSAGE.LOGOUT_FAIL;
-            toast.error(errorMessage);
+            toast.error(MESSAGE.LOGOUT_FAIL);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.LOGOUT_FAIL);
-          toast.error(errorMessage);
+          toast.error(MESSAGE.LOGOUT_FAIL);
         },
       });
     },
