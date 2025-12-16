@@ -175,27 +175,19 @@ export class HttpClient {
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
-
     try {
-      // FIX: Inject refresh_token into the body for backend middleware validation
       const payload = {
         query: print(REFRESH_TOKEN_MUTATION),
         variables: {},
-        refresh_token: refreshToken, 
       };
-
-      const response = await this.axiosInstance.post<any>("", payload);
-
-      // Check for GraphQL errors in response
+      const response = await this.axiosInstance.post("", payload);
       if (response.data.errors) {
         throw new Error("GraphQL Error during refresh");
       }
-
       const result = response.data.data?.RefreshToken?.data;
       if (!result?.accessToken || !result?.refreshToken) {
         throw new Error("Invalid refresh response structure");
       }
-
       setTokens(result.accessToken, result.refreshToken);
       return result.accessToken;
     } catch (error) {
