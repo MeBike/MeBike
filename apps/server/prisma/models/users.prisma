@@ -24,10 +24,6 @@ model User {
   avatar                   String?
   location                 String?
   nfcCardUid               String?          @map("nfc_card_uid")
-  emailVerifyOtp           String?          @map("email_verify_otp")
-  emailVerifyOtpExpires    DateTime?        @map("email_verify_otp_expires") @db.Timestamptz
-  forgotPasswordOtp        String?          @map("forgot_password_otp")
-  forgotPasswordOtpExpires DateTime?        @map("forgot_password_otp_expires") @db.Timestamptz
   role                     UserRole         @default(USER)
   verify                   UserVerifyStatus @default(UNVERIFIED)
   updatedAt                DateTime         @updatedAt @map("updated_at") @db.Timestamptz
