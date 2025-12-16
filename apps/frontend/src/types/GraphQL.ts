@@ -5,10 +5,19 @@ export interface BaseMutationResponse<T = null  > {
   statusCode: number;
   success: boolean;
 }
-export interface GraphQLMutationResponse<MutationName extends string, Payload = null> {
-  data: {
+export interface GraphQLMutationResponse<
+  MutationName extends string,
+  Payload = null,
+> {
+ data: {
     [K in MutationName]: BaseMutationResponse<Payload>;
-  };
+  } | null;
+  errors?: {
+    message: string;
+    statusCode: number;
+    success: boolean;
+    errors: string[];
+  }[];
 }
 export interface AuthTokens {
   accessToken: string;

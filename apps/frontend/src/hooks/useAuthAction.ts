@@ -97,23 +97,37 @@ export const useAuthActions = () => {
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { accessToken, refreshToken } = result.data.data.LoginUser.data as AuthTokens;
-            setTokens(accessToken, refreshToken);
-            window.dispatchEvent(new Event("token:changed"));
-            window.dispatchEvent(
-              new StorageEvent("storage", { key: "auth_tokens" })
-            );
-            await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
-            toast.success(result.data?.data.LoginUser.message || MESSAGE.LOGIN_SUCCESS, {
-              description: MESSAGE.WELCOME_BACK,
-            });
-            resolve();
+            if(result.data?.data?.LoginUser.statusCode !== HTTP_STATUS.OK){
+              const errorMessage = getErrorMessage(
+                result.data?.data?.LoginUser.errors,
+                MESSAGE.LOGIN_NOT_SUCCESS
+              );
+              toast.error(errorMessage);
+              reject(errorMessage);
+            }
+            else {
+              const { accessToken, refreshToken } = result.data.data.LoginUser
+                .data as AuthTokens;
+              setTokens(accessToken, refreshToken);
+              window.dispatchEvent(new Event("token:changed"));
+              window.dispatchEvent(
+                new StorageEvent("storage", { key: "auth_tokens" })
+              );
+              await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
+              toast.success(
+                result.data?.data.LoginUser.message || MESSAGE.LOGIN_SUCCESS,
+                {
+                  description: MESSAGE.WELCOME_BACK,
+                }
+              );
+              resolve();
+            }
           },
-          onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, MESSAGE.LOGIN_NOT_SUCCESS);
-            toast.error(errorMessage);
-            reject(error);
-          },
+          // onError: (error: unknown) => {
+          //   const errorMessage = getErrorMessage(error, MESSAGE.LOGIN_NOT_SUCCESS);
+          //   toast.error(errorMessage);
+          //   reject(error);
+          // },
         });
       });
     },
@@ -132,13 +146,13 @@ export const useAuthActions = () => {
               // Wait for token to be set
               await new Promise(resolve => setTimeout(resolve, 100));
               await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
-              toast.success(result.data?.message || MESSAGE.REGISTER_SUCCESS, {
+              toast.success(MESSAGE.REGISTER_SUCCESS, {
                 description: "Tài khoản của bạn đã được tạo.",
               });
               resolve();
               // router.push("/user/profile");
             } else {
-              const errorMessage = result.data?.message || MESSAGE.REGISTER_NOT_SUCCESS;
+              const errorMessage = MESSAGE.REGISTER_NOT_SUCCESS;
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }

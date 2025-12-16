@@ -71,7 +71,6 @@ export const LOGOUT_MUTATION = gql`
   mutation LogoutUser {
     LogoutUser {
       success
-      
       message
       errors
       statusCode

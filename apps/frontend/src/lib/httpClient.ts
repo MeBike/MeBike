@@ -35,15 +35,7 @@ const NO_RETRY_URLS = [
 ];
 
 // Types
-interface CustomAxiosError extends AxiosError {
-  zresponse?: {
-    data: any;
-    status: number;
-    statusText: string;
-    headers: any;
-    config: InternalAxiosRequestConfig;
-  };
-}
+
 
 interface QueueItem {
   resolve: (value: any) => void;
@@ -80,7 +72,6 @@ export class HttpClient {
     );
   }
 
-  // --- Interceptors ---
 
   private handleRequest = (
     config: InternalAxiosRequestConfig
@@ -95,66 +86,20 @@ export class HttpClient {
   };
 
   private handleResponseSuccess = (response: AxiosResponse): any => {
-    const { data, status } = response;
-
-    // Detect "Internal Payload Error" (GraphQL errors with 200 OK)
-    if (
-      status === HTTP_STATUS.OK &&
-      data?.errors?.length > 0
-    ) {
-      const unauthorizedError = data.errors.find(
-        (err: any) => err.statusCode === HTTP_STATUS.UNAUTHORIZED
-      );
-
-      if (unauthorizedError) {
-        // Construct a CustomAxiosError to trigger the error interceptor
-        const error = new AxiosError(
-          "Unauthorized (Internal Payload Error)",
-          "UNAUTHORIZED",
-          response.config,
-          response.request,
-          response
-        ) as CustomAxiosError;
-
-        error.zresponse = {
-          data: response.data,
-          status: HTTP_STATUS.UNAUTHORIZED,
-          statusText: "Unauthorized",
-          headers: response.headers,
-          config: response.config,
-        };
-
-        return this.handleResponseError(error);
-      }
-    }
-
     return response;
   };
 
-  private handleResponseError = async (error: CustomAxiosError | any) => {
+  private handleResponseError = async (error: AxiosError | any) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-    
-    // Determine if it's a 401 Unauthorized error
-    const isUnauthorized =
-      error.response?.status === HTTP_STATUS.UNAUTHORIZED ||
-      error.zresponse?.status === HTTP_STATUS.UNAUTHORIZED;
-
-    // Check if we should skip retry
     if (
-      !isUnauthorized ||
       !originalRequest ||
       originalRequest._retry ||
-      this.shouldSkipTokenRefresh(originalRequest)
+      this.shouldSkipTokenRefresh(originalRequest) ||
+      error.response?.status !== 401
     ) {
-      // If it's a GraphQL error (zresponse), we might want to return the data instead of rejecting
-      // depending on how the app handles it. For now, we propagate the error.
       return Promise.reject(error);
     }
-
-    // --- Token Refresh Logic ---
-
     if (this.isRefreshing) {
-      // If already refreshing, queue the request
       return new Promise((resolve, reject) => {
         this.failedQueue.push({ resolve, reject });
       })
