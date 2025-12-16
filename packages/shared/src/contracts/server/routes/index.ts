@@ -1,9 +1,11 @@
+import { authRoutes } from "./auth";
 import { bikesRoutes } from "./bikes";
 import { rentalsRoutes } from "./rentals";
 import { reservationsRoutes } from "./reservations";
 import { stationsRoutes } from "./stations";
 import { suppliersRoutes } from "./suppliers";
 
+export * from "./auth";
 export * from "./bikes";
 export * from "./rentals";
 export * from "./reservations";
@@ -11,6 +13,7 @@ export * from "./stations";
 export * from "./suppliers";
 
 export const serverRoutes = {
+  auth: authRoutes,
   rentals: rentalsRoutes,
   reservations: reservationsRoutes,
   stations: stationsRoutes,

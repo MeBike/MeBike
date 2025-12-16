@@ -1,3 +1,4 @@
+export * as AuthContracts from "./auth";
 export * as BikesContracts from "./bikes";
 export * as RentalsContracts from "./rentals";
 export * from "./rentals";
