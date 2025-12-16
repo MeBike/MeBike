@@ -3,6 +3,12 @@ import { Context, Effect, Layer, Option } from "effect";
 import jwt from "jsonwebtoken";
 import { uuidv7 } from "uuidv7";
 
+import type {
+  DuplicateUserEmail,
+  DuplicateUserPhoneNumber,
+  UserRepositoryError,
+} from "@/domain/users";
+
 import { UserRepository } from "@/domain/users/repository/user.repository";
 import { Email } from "@/infrastructure/email";
 
@@ -19,7 +25,6 @@ import {
   InvalidCredentials,
   InvalidOtp,
   InvalidRefreshToken,
-  UserNotVerified,
 } from "../domain-errors";
 import {
   makeSessionFromRefreshToken,
@@ -30,6 +35,12 @@ import { generateOtp, isOtpExpired } from "../otp";
 import { AuthRepository } from "../repository/auth.repository";
 
 export type AuthService = {
+  register: (args: {
+    fullname: string;
+    email: string;
+    password: string;
+    phoneNumber?: string | null;
+  }) => Effect.Effect<Tokens, DuplicateUserEmail | DuplicateUserPhoneNumber | UserRepositoryError>;
   loginWithPassword: (args: {
     email: string;
     password: string;
@@ -81,22 +92,72 @@ export const AuthServiceLive = Layer.effect(
     const userRepo = yield* UserRepository;
     const email = yield* Email;
 
+    const register: AuthService["register"] = ({
+      fullname,
+      email: addr,
+      password,
+      phoneNumber,
+    }) =>
+      Effect.gen(function* () {
+        const passwordHash = yield* Effect.promise(() => bcrypt.hash(password, 10));
+        const user = yield* userRepo.createUser({
+          fullname,
+          email: addr,
+          passwordHash,
+          phoneNumber: phoneNumber ?? null,
+        }).pipe(
+          Effect.catchTag("UserRepositoryError", err => Effect.fail(err)),
+        );
+
+        const otp = generateOtp();
+        const expiresAt = new Date(Date.now() + VERIFY_OTP_TTL_MS);
+        const record: EmailOtpRecord = {
+          userId: user.id,
+          email: addr,
+          kind: "verify-email",
+          otp,
+          expiresAt,
+        };
+
+        yield* authRepo.saveEmailOtp(record).pipe(
+          Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        );
+
+        const html = `<p>Hi ${fullname},</p><p>Your verification code is <strong>${otp}</strong>. It expires in 10 minutes.</p>`;
+        yield* email.send({
+          to: addr,
+          subject: "Verify your email",
+          html,
+        }).pipe(Effect.catchAll(err => Effect.die(err)));
+
+        const sessionId = uuidv7();
+        const tokens = makeTokensForUser(user, sessionId);
+        const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
+
+        yield* authRepo.saveSession(session).pipe(
+          Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+        );
+
+        return tokens;
+      });
+
     const loginWithPassword: AuthService["loginWithPassword"] = ({ email: addr, password }) =>
       Effect.gen(function* () {
         const userOpt = yield* userRepo.findByEmail(addr).pipe(
           Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
         );
         if (Option.isNone(userOpt)) {
+          yield* Effect.promise(() =>
+            bcrypt.compare(password, "$2b$10$C/.BkQrbVHwLsNweXs55we5OK4N9AYaqCrxrDG3lqF7DRgt21FiSG"),
+          ).pipe(Effect.ignore);
           return yield* Effect.fail(new InvalidCredentials({}));
         }
         const user = userOpt.value;
 
         const ok = yield* Effect.promise(() => bcrypt.compare(password, user.passwordHash));
+
         if (!ok) {
           return yield* Effect.fail(new InvalidCredentials({}));
-        }
-        if (user.verify !== "VERIFIED") {
-          return yield* Effect.fail(new UserNotVerified({ userId: user.id }));
         }
 
         const sessionId = uuidv7();
@@ -279,6 +340,7 @@ export const AuthServiceLive = Layer.effect(
       });
 
     const service: AuthService = {
+      register,
       loginWithPassword,
       refreshTokens,
       logout,

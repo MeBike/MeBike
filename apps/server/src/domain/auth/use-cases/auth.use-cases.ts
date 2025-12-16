@@ -1,12 +1,34 @@
 import { Effect } from "effect";
 
 import type {
+  DuplicateUserEmail,
+  DuplicateUserPhoneNumber,
+  UserRepositoryError,
+} from "@/domain/users";
+
+import type {
   AuthFailure,
   InvalidOtp,
 } from "../domain-errors";
 import type { Tokens } from "../jwt";
 
 import { AuthServiceTag } from "../services/auth.service";
+
+export function registerUseCase(args: {
+  fullname: string;
+  email: string;
+  password: string;
+  phoneNumber?: string | null;
+}): Effect.Effect<
+  Tokens,
+  DuplicateUserEmail | DuplicateUserPhoneNumber | UserRepositoryError,
+  AuthServiceTag
+> {
+  return Effect.gen(function* () {
+    const service = yield* AuthServiceTag;
+    return yield* service.register(args);
+  });
+}
 
 export function loginWithPasswordUseCase(args: {
   email: string;

@@ -45,7 +45,6 @@ export function makeTokensForUser(user: UserRow, sessionId: string): Tokens {
     }),
     refreshToken: jwt.sign(refreshPayload, secret, {
       expiresIn: REFRESH_TOKEN_EXPIRES_IN,
-      jwtid: sessionId,
     }),
   };
 }

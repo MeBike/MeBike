@@ -203,8 +203,6 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
               where: { id },
               data: {
                 passwordHash,
-                forgotPasswordOtp: null,
-                forgotPasswordOtpExpires: null,
               },
               select: selectUserRow,
             }),
@@ -238,8 +236,6 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
               where: { id },
               data: {
                 verify: UserVerifyStatus.VERIFIED,
-                emailVerifyOtp: null,
-                emailVerifyOtpExpires: null,
               },
               select: selectUserRow,
             }),
