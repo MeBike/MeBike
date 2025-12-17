@@ -11,13 +11,12 @@ export const UserDetailSchema = z.object({
   fullname: z.string(),
   email: z.string(),
   verify: VerifyStatusSchema,
-  location: z.string(),
-  username: z.string(),
-  phoneNumber: z.string(),
-  avatar: z.string(),
+  location: z.string().nullable(),
+  username: z.string().nullable(),
+  phoneNumber: z.string().nullable(),
+  avatar: z.string().nullable(),
   role: UserRoleSchema,
-  nfcCardUid: z.string().optional(),
-  createdAt: z.string(),
+  nfcCardUid: z.string().nullable(),
   updatedAt: z.string(),
 });
 

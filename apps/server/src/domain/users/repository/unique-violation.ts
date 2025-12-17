@@ -1,13 +1,4 @@
-import { Prisma as PrismaTypes } from "../../../../generated/prisma/client";
-
-export function isPrismaUniqueViolation(
-  error: unknown,
-): error is PrismaTypes.PrismaClientKnownRequestError & { code: "P2002" } {
-  return (
-    error instanceof PrismaTypes.PrismaClientKnownRequestError
-    && error.code === "P2002"
-  );
-}
+import type { Prisma as PrismaTypes } from "../../../../generated/prisma/client";
 
 export function uniqueTargets(error: PrismaTypes.PrismaClientKnownRequestError): string[] {
   const target = error.meta?.target;

@@ -1,6 +1,7 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import { Prisma } from "@/infrastructure/prisma";
+import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 import type { PrismaClient } from "../../../../generated/prisma/client";
 import type {
@@ -18,7 +19,6 @@ import {
 import {
   isEmailTarget,
   isPhoneTarget,
-  isPrismaUniqueViolation,
   uniqueTargets,
 } from "./unique-violation";
 import { selectUserRow, toUserRow } from "./user.mappers";
@@ -71,7 +71,11 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
             operation: "findById",
             cause: err,
           }),
-      }).pipe(Effect.map(row => Option.fromNullable(row ? toUserRow(row) : null))),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toUserRow)),
+        ),
+      ),
 
     findByEmail: email =>
       Effect.tryPromise({
@@ -85,7 +89,11 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
             operation: "findByEmail",
             cause: err,
           }),
-      }).pipe(Effect.map(row => Option.fromNullable(row ? toUserRow(row) : null))),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toUserRow)),
+        ),
+      ),
 
     createUser: data =>
       Effect.tryPromise({

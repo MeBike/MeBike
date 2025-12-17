@@ -7,11 +7,12 @@ import { logger as honoLogger } from "hono/logger";
 import { env } from "@/config/env";
 import logger from "@/lib/logger";
 
-import { registerBikeRoutes } from "./routes/bikes";
 import { registerAuthRoutes } from "./routes/auth";
+import { registerBikeRoutes } from "./routes/bikes";
 import { registerRentalRoutes } from "./routes/rentals";
 import { registerStationRoutes } from "./routes/stations";
 import { registerSupplierRoutes } from "./routes/suppliers";
+import { registerUserRoutes } from "./routes/users";
 
 export function createHttpApp() {
   const app = new OpenAPIHono({
@@ -46,7 +47,7 @@ export function createHttpApp() {
     },
   });
   app.use("*", cors());
-  app.use("*", honoLogger((message) => logger.info(message)));
+  app.use("*", honoLogger(message => logger.info(message)));
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(
@@ -63,6 +64,7 @@ export function createHttpApp() {
   registerRentalRoutes(app);
   registerSupplierRoutes(app);
   registerAuthRoutes(app);
+  registerUserRoutes(app);
 
   app.onError((err, c) => {
     const isProd = env.NODE_ENV === "production";

@@ -16,7 +16,7 @@ import {
   SupplierRepositoryLive,
   SupplierServiceLive,
 } from "@/domain/suppliers";
-import { UserRepositoryLive } from "@/domain/users";
+import { UserRepositoryLive, UserServiceLive } from "@/domain/users";
 import { Email } from "@/infrastructure/email";
 import { Prisma } from "@/infrastructure/prisma";
 import { Redis } from "@/infrastructure/redis";
@@ -49,9 +49,18 @@ export function withAuthDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(
     Effect.provide(AuthServiceLive),
     Effect.provide(AuthRepositoryLive),
+    Effect.provide(UserServiceLive),
     Effect.provide(UserRepositoryLive),
     Effect.provide(Email.Default),
     Effect.provide(Redis.Default),
+    Effect.provide(Prisma.Default),
+  );
+}
+
+export function withUserDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(
+    Effect.provide(UserServiceLive),
+    Effect.provide(UserRepositoryLive),
     Effect.provide(Prisma.Default),
   );
 }
