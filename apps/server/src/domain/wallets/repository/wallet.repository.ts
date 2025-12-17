@@ -1,0 +1,247 @@
+import { Context, Effect, Layer, Option } from "effect";
+
+import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+
+import { toPrismaDecimal } from "@/domain/shared/decimal";
+import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
+import { Prisma } from "@/infrastructure/prisma";
+import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+
+import type {
+  PrismaClient,
+  WalletTransactionStatus,
+  WalletTransactionType,
+} from "../../../../generated/prisma/client";
+import type {
+  DecreaseBalanceInput,
+  IncreaseBalanceInput,
+  WalletDecimal,
+  WalletRow,
+  WalletTransactionRow,
+} from "../models";
+
+import {
+  WalletBalanceConstraint,
+  WalletRecordNotFound,
+  WalletRepositoryError,
+  WalletUniqueViolation,
+} from "../domain-errors";
+import { selectWalletRow, selectWalletTransactionRow, toWalletRow, toWalletTransactionRow } from "./wallet.mappers";
+
+export type WalletRepo = {
+  findByUserId: (userId: string) => Effect.Effect<Option.Option<WalletRow>, WalletRepositoryError>;
+  createForUser: (userId: string) => Effect.Effect<WalletRow, WalletUniqueViolation | WalletRepositoryError>;
+  increaseBalance: (input: IncreaseBalanceInput) => Effect.Effect<WalletRow, WalletRecordNotFound | WalletRepositoryError>;
+  decreaseBalance: (input: DecreaseBalanceInput) => Effect.Effect<
+    WalletRow,
+    WalletRecordNotFound | WalletBalanceConstraint | WalletRepositoryError
+  >;
+  listTransactions: (
+    walletId: string,
+    pageReq: PageRequest<"createdAt">,
+  ) => Effect.Effect<PageResult<WalletTransactionRow>, WalletRepositoryError>;
+};
+
+export class WalletRepository extends Context.Tag("WalletRepository")<
+  WalletRepository,
+  WalletRepo
+>() {}
+
+export function makeWalletRepository(client: PrismaClient): WalletRepo {
+  return {
+    findByUserId: userId =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await client.wallet.findUnique({
+            where: { userId },
+            select: selectWalletRow,
+          });
+          return Option.fromNullable(row ? toWalletRow(row) : null);
+        },
+        catch: err =>
+          new WalletRepositoryError({
+            operation: "findByUserId",
+            cause: err,
+          }),
+      }),
+
+    createForUser: userId =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await client.wallet.create({
+            data: {
+              userId,
+            },
+            select: selectWalletRow,
+          });
+          return toWalletRow(row);
+        },
+        catch: (err) => {
+          if (isPrismaUniqueViolation(err)) {
+            return new WalletUniqueViolation({ operation: "createForUser", constraint: "wallet.userId", userId });
+          }
+          return new WalletRepositoryError({ operation: "createForUser", cause: err });
+        },
+      }),
+
+    increaseBalance: input =>
+      Effect.tryPromise({
+        try: async () => {
+          const amount = toPrismaDecimal(input.amount) as WalletDecimal;
+          const fee = toPrismaDecimal(input.fee ?? "0") as WalletDecimal;
+          const net = amount.sub(fee);
+          const txType: WalletTransactionType = input.type ?? "DEPOSIT";
+          const txStatus: WalletTransactionStatus = "SUCCESS";
+
+          const updated = await client.$transaction(async (tx) => {
+            const wallet = await tx.wallet.findUnique({
+              where: { userId: input.userId },
+              select: selectWalletRow,
+            });
+            if (!wallet) {
+              throw new WalletRecordNotFound({ operation: "increaseBalance.findWallet", userId: input.userId });
+            }
+
+            const bumped = await tx.wallet.update({
+              where: { id: wallet.id },
+              data: {
+                balance: { increment: net },
+              },
+              select: selectWalletRow,
+            });
+
+            await tx.walletTransaction.create({
+              data: {
+                walletId: wallet.id,
+                amount,
+                fee,
+                description: input.description ?? null,
+                hash: input.hash ?? null,
+                type: txType,
+                status: txStatus,
+              },
+              select: { id: true },
+            });
+
+            return bumped;
+          });
+
+          return toWalletRow(updated);
+        },
+        catch: (err) => {
+          if (err instanceof WalletRecordNotFound)
+            return err;
+          return new WalletRepositoryError({ operation: "increaseBalance", cause: err });
+        },
+      }),
+
+    decreaseBalance: input =>
+      Effect.tryPromise({
+        try: async () => {
+          const amount = toPrismaDecimal(input.amount) as WalletDecimal;
+          const txType: WalletTransactionType = input.type ?? "DEBIT";
+          const txStatus: WalletTransactionStatus = "SUCCESS";
+
+          const updated = await client.$transaction(async (tx) => {
+            const wallet = await tx.wallet.findUnique({
+              where: { userId: input.userId },
+              select: selectWalletRow,
+            });
+            if (!wallet) {
+              throw new WalletRecordNotFound({ operation: "decreaseBalance.findWallet", userId: input.userId });
+            }
+
+            const changed = await tx.wallet.updateMany({
+              where: {
+                id: wallet.id,
+                balance: { gte: amount },
+              },
+              data: {
+                balance: { decrement: amount },
+              },
+            });
+
+            if (changed.count === 0) {
+              throw new WalletBalanceConstraint({
+                operation: "decreaseBalance.updateBalance",
+                walletId: wallet.id,
+                userId: input.userId,
+                balance: Number(wallet.balance.toString()),
+                attemptedDebit: Number(amount.toString()),
+              });
+            }
+
+            const refreshed = await tx.wallet.findUnique({
+              where: { id: wallet.id },
+              select: selectWalletRow,
+            });
+
+            await tx.walletTransaction.create({
+              data: {
+                walletId: wallet.id,
+                amount,
+                fee: toPrismaDecimal(0) as WalletDecimal,
+                description: input.description ?? null,
+                hash: input.hash ?? null,
+                type: txType,
+                status: txStatus,
+              },
+              select: { id: true },
+            });
+
+            return refreshed;
+          });
+
+          return toWalletRow(updated!);
+        },
+        catch: (err) => {
+          if (err instanceof WalletRecordNotFound || err instanceof WalletBalanceConstraint) {
+            return err;
+          }
+          return new WalletRepositoryError({ operation: "decreaseBalance", cause: err });
+        },
+      }),
+
+    listTransactions: (walletId, pageReq) => {
+      const { page, pageSize, skip, take } = normalizedPage(pageReq);
+
+      return Effect.gen(function* () {
+        const [total, rows] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.walletTransaction.count({ where: { walletId } }),
+            catch: err =>
+              new WalletRepositoryError({
+                operation: "listTransactions.count",
+                cause: err,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.walletTransaction.findMany({
+                where: { walletId },
+                orderBy: { createdAt: "desc" },
+                skip,
+                take,
+                select: selectWalletTransactionRow,
+              }),
+            catch: err =>
+              new WalletRepositoryError({
+                operation: "listTransactions.findMany",
+                cause: err,
+              }),
+          }),
+        ]);
+
+        return makePageResult(rows.map(toWalletTransactionRow), total, page, pageSize);
+      });
+    },
+  };
+}
+
+export const WalletRepositoryLive = Layer.effect(
+  WalletRepository,
+  Effect.gen(function* () {
+    const { client } = yield* Prisma;
+    return makeWalletRepository(client);
+  }),
+);

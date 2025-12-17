@@ -33,6 +33,7 @@ model User {
   reservations  Reservation[]
   rentals       Rental[]
   ratings       Rating[]
+  wallet        Wallet?
 
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")

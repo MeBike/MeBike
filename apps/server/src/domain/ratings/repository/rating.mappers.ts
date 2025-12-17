@@ -1,4 +1,4 @@
-import type { Rating } from "../../../../generated/prisma/client";
+// import type { Rating } from "../../../../generated/prisma/client";
 import type { RatingRow } from "../models";
 
 export const selectRatingRow = {

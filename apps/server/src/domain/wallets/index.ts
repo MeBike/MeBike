@@ -1,1 +1,3 @@
-// wallet domain will go here
+export * from "./domain-errors";
+export * from "./models";
+export * from "./repository/wallet.repository";
