@@ -37,18 +37,20 @@ export const useAuthActions = () => {
   const useResetPassword = useResetPasswordMutation();
   const useResendVerifyEmail = useResendVerifyEmailMutation();
   const changePassword = useCallback(
-    (old_password: string, password: string, confirm_password: string) => {
+    (oldPassword: string, newPassword: string, confirmPassword : string) => {
       useChangePassword.mutate(
-        { old_password, password, confirm_password },
+        { oldPassword, newPassword, confirmPassword },
         {
           onSuccess: (result) => {
             if (result.status === HTTP_STATUS.OK) {
+              const messsage = getErrorMessage(result.data?.data?.ChangePassword.errors, MESSAGE.CHANGE_PASSWORD_SUCCESS);
               toast.success(
-                result.data?.message || MESSAGE.CHANGE_PASSWORD_SUCCESS
+                messsage
               );
             } else {
-              toast.error(
-                result.data?.message || MESSAGE.CHANGE_PASSWORD_ERROR
+              const messsage = getErrorMessage(result.data?.data?.ChangePassword.errors, MESSAGE.CHANGE_PASSWORD_ERROR);
+              toast.error(  
+                messsage
               );
             }
           },

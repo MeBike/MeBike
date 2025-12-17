@@ -138,4 +138,10 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Hide native password reveal on Edge/IE */
+  input::-ms-reveal,
+  input::-ms-clear {
+    display: none;
+  }
 }

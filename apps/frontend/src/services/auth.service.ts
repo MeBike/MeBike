@@ -14,7 +14,8 @@ import {
   REGISTER_MUTATION,
   REFRESH_TOKEN_MUTATION,
   GET_ME,
-  LOGOUT_MUTATION
+  LOGOUT_MUTATION,
+  CHANGE_PASSWORD_MUTATION
 } from "@/graphql";
 import {print} from "graphql"
 import {
@@ -23,6 +24,7 @@ import {
   RefreshTokenResponse,
   GetMeResponse,
   LogOutResponse,
+  ChangePasswordResponse,
 } from "@/types/auth.type";
 interface AuthResponse {
   message: string;
@@ -94,8 +96,8 @@ export const authService = {
     return response;
   },
   logout: async (): Promise<AxiosResponse<LogOutResponse>> => {
-    const response = await fetchHttpClient.mutation<LogOutResponse> (
-      print(LOGOUT_MUTATION),
+    const response = await fetchHttpClient.mutation<LogOutResponse>(
+      print(LOGOUT_MUTATION)
     );
     return response;
   },
@@ -142,10 +144,16 @@ export const authService = {
   },
   changePassword: async (
     data: ChangePasswordSchemaFormData
-  ): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.put<MessageResponse>(
-      "/users/change-password",
-      data
+  ): Promise<AxiosResponse<ChangePasswordResponse>> => {
+    const response = await fetchHttpClient.mutation<ChangePasswordResponse>(
+      print(CHANGE_PASSWORD_MUTATION),
+      {
+        body: {
+          oldPassword : data.oldPassword,
+          newPassword : data.newPassword,
+          confirmPassword : data.confirmPassword
+        },
+      }
     );
     return response;
   },

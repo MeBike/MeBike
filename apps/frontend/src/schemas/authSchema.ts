@@ -44,22 +44,22 @@ export const forgotPasswordSchema = z.object({
 });
 export const changePasswordSchema = z
   .object({
-    old_password: z
+    oldPassword: z
       .string()
       .min(8, { message: "Mật khẩu cũ phải có ít nhất 8 ký tự" })
       .max(30, { message: "Mật khẩu cũ không được vượt quá 32 ký tự" }),
-    password: z
+    newPassword: z
       .string()
       .min(8, { message: "Mật khẩu mới phải có ít nhất 8 ký tự" })
       .max(30, { message: "Mật khẩu không được vượt quá 32 ký tự" }),
-    confirm_password: z
+    confirmPassword: z
       .string()
       .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" })
       .max(30, { message: "Mật khẩu không được vượt quá 30 ký tự" }),
   })
-  .refine((data) => data.password === data.confirm_password, {
+  .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Mật khẩu xác nhận không khớp",
-    path: ["confirm_password"],
+    path: ["confirmPassword"],
   });
 export const profileUpdateSchema = z.object({
   name: z

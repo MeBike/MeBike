@@ -76,3 +76,13 @@ export const LOGOUT_MUTATION = gql`
     }
   }
 `;
+export const CHANGE_PASSWORD_MUTATION = gql`
+  mutation ChangePassword($body: ChangePasswordInput!) {
+    ChangePassword(body: $body) {
+      success
+      message
+      errors
+      statusCode
+    }
+  }
+`;
