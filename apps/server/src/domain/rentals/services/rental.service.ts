@@ -20,6 +20,7 @@ import {
   EndStationMismatch,
   InvalidRentalState,
   RentalNotFound,
+  UnauthorizedRentalAccess,
 } from "../domain-errors";
 import { RentalRepository } from "../repository/rental.repository";
 
@@ -59,6 +60,10 @@ export type RentalService = {
     endStationId: string;
     endTime: Date;
   }) => Effect.Effect<RentalRow, RentalServiceFailure>;
+
+  getByIdForUser: (
+    args: { rentalId: string; userId: string },
+  ) => Effect.Effect<RentalRow, RentalNotFound | UnauthorizedRentalAccess>;
 };
 
 export class RentalServiceTag extends Context.Tag("RentalService")<
@@ -215,6 +220,24 @@ function makeRentalService(repo: RentalRepo): RentalService {
         return updated;
       });
     },
+
+    getByIdForUser: ({ rentalId, userId }) =>
+      Effect.gen(function* () {
+        const rentalOpt = yield* repo.getMyRentalById(userId, rentalId).pipe(
+          Effect.catchTag("RentalRepositoryError", error => Effect.die(error)),
+        );
+
+        if (Option.isNone(rentalOpt)) {
+          return yield* Effect.fail(new RentalNotFound({ rentalId, userId }));
+        }
+
+        const rental = rentalOpt.value;
+        if (rental.userId !== userId) {
+          return yield* Effect.fail(new UnauthorizedRentalAccess({ rentalId, userId }));
+        }
+
+        return rental;
+      }),
   };
 }
 

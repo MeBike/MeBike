@@ -4,9 +4,11 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
+import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 import type {
   PrismaClient,
+  Prisma as PrismaTypes,
   RentalStatus,
 } from "../../../../generated/prisma/client";
 import type { RentalRepoError } from "../domain-errors";
@@ -17,9 +19,6 @@ import type {
   RentalSortField,
 } from "../models";
 
-import {
-  Prisma as PrismaTypes,
-} from "../../../../generated/prisma/client";
 import { RentalRepositoryError, RentalUniqueViolation } from "../domain-errors";
 
 export type CreateRentalInput = {
@@ -77,6 +76,10 @@ export type RentalRepo = {
   updateRentalOnEnd: (
     data: UpdateRentalOnEndInput,
   ) => Effect.Effect<RentalRow, RentalRepositoryError>;
+
+  findById: (
+    rentalId: string,
+  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
 };
 
 function toMyRentalsWhere(
@@ -107,15 +110,6 @@ function toRentalOrderBy(
     default:
       return { startTime: sortDir };
   }
-}
-
-function isPrismaUniqueViolation(
-  error: unknown,
-): error is PrismaTypes.PrismaClientKnownRequestError & { code: "P2002" } {
-  return (
-    error instanceof PrismaTypes.PrismaClientKnownRequestError
-    && error.code === "P2002"
-  );
 }
 
 export function makeRentalRepository(client: PrismaClient): RentalRepo {
@@ -356,6 +350,25 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
             cause: e,
           }),
       }).pipe(Effect.map(mapToRentalRow));
+    },
+
+    findById(rentalId) {
+      return Effect.tryPromise({
+        try: () =>
+          client.rental.findUnique({
+            where: { id: rentalId },
+            select,
+          }),
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "findById",
+            cause: e,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
+        ),
+      );
     },
   };
 }
