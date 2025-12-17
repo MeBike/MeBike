@@ -40,7 +40,7 @@ const RegisterPage = () => {
       password: "",
       phone: "",
       YOB: 2000,
-      // confirm_password: "",
+      confirmPassword: "",
     },
   });
 
@@ -49,7 +49,12 @@ const RegisterPage = () => {
       toast.error("Vui lòng đồng ý với điều khoản sử dụng!");
       return;
     }
+    if (data.password !== data.confirmPassword) {
+      toast.error("Mật khẩu và xác nhận mật khẩu không khớp!");
+      return;
+    }
     const registerData = { ...data };
+    console.log("Register data:", registerData);
     // if (!registerData.phone || registerData.phone.trim() === "") {
     //   delete registerData.phone;
     // }
@@ -241,8 +246,39 @@ const RegisterPage = () => {
                       )}
                     </div>
                   </div>
-
-                   */}
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm font-medium">
+                      Xác nhận mật khẩu
+                    </Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="confirmPassword"
+                        {...register("confirmPassword")}
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Tối thiếu 8 ký tự"
+                        className="pl-10 pr-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-5 w-4" />
+                        ) : (
+                          <Eye className="h-5 w-4" />
+                        )}
+                      </button>
+                      {errors.confirmPassword && (
+                        <p className="text-sm text-red-500 mt-1">
+                          {errors.confirmPassword.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="flex items-start space-x-3 pt-2">
                     <Checkbox

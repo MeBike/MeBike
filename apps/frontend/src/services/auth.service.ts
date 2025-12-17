@@ -87,6 +87,7 @@ export const authService = {
           YOB: data.YOB,
           phone: data.phone,
           password: data.password,
+          confirmPassword: data.confirmPassword,
         },
       }
     );

@@ -97,16 +97,7 @@ export const useAuthActions = () => {
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            if(result.data?.data?.LoginUser.statusCode !== HTTP_STATUS.OK){
-              const errorMessage = getErrorMessage(
-                result.data?.data?.LoginUser.errors,
-                MESSAGE.LOGIN_NOT_SUCCESS
-              );
-              toast.error(errorMessage);
-              reject(errorMessage);
-            }
-            else {
-              const { accessToken, refreshToken } = result.data.data.LoginUser
+              const { accessToken, refreshToken } = result.data.data?.LoginUser
                 .data as AuthTokens;
               setTokens(accessToken, refreshToken);
               window.dispatchEvent(new Event("token:changed"));
@@ -115,19 +106,18 @@ export const useAuthActions = () => {
               );
               await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
               toast.success(
-                result.data?.data.LoginUser.message || MESSAGE.LOGIN_SUCCESS,
+                result.data?.data?.LoginUser.message || MESSAGE.LOGIN_SUCCESS,
                 {
                   description: MESSAGE.WELCOME_BACK,
                 }
               );
               resolve();
-            }
           },
-          // onError: (error: unknown) => {
-          //   const errorMessage = getErrorMessage(error, MESSAGE.LOGIN_NOT_SUCCESS);
-          //   toast.error(errorMessage);
-          //   reject(error);
-          // },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(error, MESSAGE.LOGIN_NOT_SUCCESS);
+            toast.error(errorMessage);
+            reject(error);
+          },
         });
       });
     },
@@ -139,8 +129,8 @@ export const useAuthActions = () => {
         useRegister.mutate(data, {
           onSuccess: async (result) => {
             if (result.status === HTTP_STATUS.OK) {
-              const { access_token, refresh_token } = result.data.result;
-              setTokens(access_token, refresh_token);
+              const { accessToken, refreshToken } = result.data.data?.RegisterUser.data as AuthTokens;
+              setTokens(accessToken, refreshToken);
               // Dispatch token change event
               window.dispatchEvent(new Event("token:changed"));
               // Wait for token to be set

@@ -18,7 +18,10 @@ export const registerSchema = z
       .min(1, { message: "Họ không được để trống" })
       .max(30, { message: "Họ không được vượt quá 30 ký tự" }),
     email: z.email({ message: "Email không hợp lệ" }),
-    YOB : z.number().min(1900, { message: "Năm sinh không hợp lệ" }).max(2025, { message: "Năm sinh không hợp lệ" } ),
+    YOB: z
+      .number()
+      .min(1900, { message: "Năm sinh không hợp lệ" })
+      .max(2025, { message: "Năm sinh không hợp lệ" }),
     password: z
       .string()
       .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
@@ -28,14 +31,14 @@ export const registerSchema = z
         message: "Số điện thoại không hợp lệ",
       })
       .or(z.literal("")),
-    // confirm_password: z
-    //   .string()
-    //   .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
+    confirmPassword: z
+      .string()
+      .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
   })
-  // .refine((data) => data.password === data.confirm_password, {
-  //   message: "Mật khẩu xác nhận không khớp",
-  //   path: ["confirm_password"],
-  // });
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["confirmPassword"],
+  });
 export const forgotPasswordSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
 });

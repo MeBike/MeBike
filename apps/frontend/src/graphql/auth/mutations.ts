@@ -16,15 +16,14 @@ export const LOGIN_MUTATION = gql`
 export const REGISTER_MUTATION = gql`
   mutation RegisterUser($body: RegisterUserInput!) {
     RegisterUser(body: $body) {
-      success
-      message
       data {
-        id
-        email
-        password
+        accessToken
+        refreshToken
       }
-      errors
+      message
       statusCode
+      success
+      errors
     }
   }
 `;
