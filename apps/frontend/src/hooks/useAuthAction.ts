@@ -21,36 +21,8 @@ import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPass
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import { MESSAGE , QUERY_KEYS , HTTP_STATUS } from "@constants/index"
 import { AuthTokens } from "@/types/GraphQL";
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
+import { getErrorMessage } from "@/utils/message";
 
-interface ErrorWithMessage {
-  message: string;
-}
-
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-
-  return defaultMessage;
-};
 
 export const useAuthActions = () => {
   const router = useRouter();
@@ -129,18 +101,16 @@ export const useAuthActions = () => {
         useRegister.mutate(data, {
           onSuccess: async (result) => {
             if (result.status === HTTP_STATUS.OK) {
-              const { accessToken, refreshToken } = result.data.data?.RegisterUser.data as AuthTokens;
+              const { accessToken, refreshToken } = result.data.data
+                ?.RegisterUser.data as AuthTokens;
               setTokens(accessToken, refreshToken);
-              // Dispatch token change event
               window.dispatchEvent(new Event("token:changed"));
-              // Wait for token to be set
-              await new Promise(resolve => setTimeout(resolve, 100));
+              await new Promise((resolve) => setTimeout(resolve, 100));
               await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
               toast.success(MESSAGE.REGISTER_SUCCESS, {
-                description: "Tài khoản của bạn đã được tạo.",
+                description:"Tài khoản của bạn đã được tạo.",
               });
               resolve();
-              // router.push("/user/profile");
             } else {
               const errorMessage = MESSAGE.REGISTER_NOT_SUCCESS;
               toast.error(errorMessage);
@@ -148,7 +118,10 @@ export const useAuthActions = () => {
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, MESSAGE.REGISTER_NOT_SUCCESS);
+            const errorMessage = getErrorMessage(
+              error,
+              MESSAGE.REGISTER_NOT_SUCCESS
+            );
             toast.error(errorMessage);
             reject(error);
           },
