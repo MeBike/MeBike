@@ -15,6 +15,7 @@ import { registerRentalRoutes } from "./routes/rentals";
 import { registerStationRoutes } from "./routes/stations";
 import { registerSupplierRoutes } from "./routes/suppliers";
 import { registerUserRoutes } from "./routes/users";
+import { registerWalletRoutes } from "./routes/wallets";
 
 export function createHttpApp() {
   const app = new OpenAPIHono({
@@ -53,6 +54,7 @@ export function createHttpApp() {
   app.use("*", currentUserMiddleware);
   app.use("/v1/users/*", requireAuthMiddleware);
   app.use("/v1/ratings/*", requireAuthMiddleware);
+  app.use("/v1/wallets/*", requireAuthMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(
@@ -71,6 +73,7 @@ export function createHttpApp() {
   registerAuthRoutes(app);
   registerUserRoutes(app);
   registerRatingRoutes(app);
+  registerWalletRoutes(app);
 
   app.onError((err, c) => {
     const isProd = env.NODE_ENV === "production";

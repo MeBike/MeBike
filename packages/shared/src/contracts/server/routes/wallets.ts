@@ -1,0 +1,1 @@
+export { walletsRoutes } from "../wallets";

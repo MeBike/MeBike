@@ -6,6 +6,7 @@ import { reservationsRoutes } from "./reservations";
 import { stationsRoutes } from "./stations";
 import { suppliersRoutes } from "./suppliers";
 import { usersRoutes } from "./users";
+import { walletsRoutes } from "./wallets";
 
 export * from "./auth";
 export * from "./bikes";
@@ -15,6 +16,7 @@ export * from "./reservations";
 export * from "./stations";
 export * from "./suppliers";
 export * from "./users";
+export * from "./wallets";
 
 export const serverRoutes = {
   auth: authRoutes,
@@ -25,6 +27,7 @@ export const serverRoutes = {
   suppliers: suppliersRoutes,
   users: usersRoutes,
   ratings: ratingsRoutes,
+  wallets: walletsRoutes,
 } as const;
 
 export type ServerRouteKey = keyof typeof serverRoutes;

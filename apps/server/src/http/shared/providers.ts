@@ -22,6 +22,10 @@ import {
   SupplierServiceLive,
 } from "@/domain/suppliers";
 import { UserRepositoryLive, UserServiceLive } from "@/domain/users";
+import {
+  WalletRepositoryLive,
+  WalletServiceLive,
+} from "@/domain/wallets";
 import { Email } from "@/infrastructure/email";
 import { Prisma } from "@/infrastructure/prisma";
 import { Redis } from "@/infrastructure/redis";
@@ -77,6 +81,14 @@ export function withRatingDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
     Effect.provide(RatingReasonRepositoryLive),
     Effect.provide(RentalServiceLive),
     Effect.provide(RentalRepositoryLive),
+    Effect.provide(Prisma.Default),
+  );
+}
+
+export function withWalletDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(
+    Effect.provide(WalletServiceLive),
+    Effect.provide(WalletRepositoryLive),
     Effect.provide(Prisma.Default),
   );
 }
