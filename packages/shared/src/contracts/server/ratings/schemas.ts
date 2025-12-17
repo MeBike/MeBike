@@ -1,5 +1,4 @@
-import { z } from "../../zod";
-
+import { z } from "../../../zod";
 import { RatingDetailSchema } from "./models";
 
 export const RatingErrorCodeSchema = z.enum([

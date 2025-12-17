@@ -1,20 +1,20 @@
 import { authRoutes } from "./auth";
 import { bikesRoutes } from "./bikes";
+import { ratingsRoutes } from "./ratings";
 import { rentalsRoutes } from "./rentals";
 import { reservationsRoutes } from "./reservations";
 import { stationsRoutes } from "./stations";
 import { suppliersRoutes } from "./suppliers";
 import { usersRoutes } from "./users";
-import { ratingsRoutes } from "./ratings";
 
 export * from "./auth";
 export * from "./bikes";
+export * from "./ratings";
 export * from "./rentals";
 export * from "./reservations";
 export * from "./stations";
 export * from "./suppliers";
 export * from "./users";
-export * from "./ratings";
 
 export const serverRoutes = {
   auth: authRoutes,

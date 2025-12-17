@@ -65,6 +65,29 @@ export const ServerErrorResponseSchema = z.object({
 export type ServerErrorResponse = z.infer<typeof ServerErrorResponseSchema>;
 export type ServerErrorDetail = z.infer<typeof ServerErrorDetailSchema>;
 
+export const UnauthorizedErrorCodeSchema = z
+  .enum(["UNAUTHORIZED"])
+  .openapi("UnauthorizedErrorCode", { description: "Authentication is required" });
+
+export const unauthorizedErrorMessages = {
+  UNAUTHORIZED: "Unauthorized",
+} as const;
+
+export const UnauthorizedErrorResponseSchema = z.object({
+  error: z.string(),
+  details: z.object({
+    code: UnauthorizedErrorCodeSchema,
+  }),
+}).openapi("UnauthorizedErrorResponse", {
+  description: "Authentication is required",
+  example: {
+    error: unauthorizedErrorMessages.UNAUTHORIZED,
+    details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+  },
+});
+
+export type UnauthorizedErrorResponse = z.infer<typeof UnauthorizedErrorResponseSchema>;
+
 export const SortDirectionSchema = z.enum(["asc", "desc"]);
 
 export const PaginationSchema = z

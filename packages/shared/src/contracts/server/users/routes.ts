@@ -1,5 +1,10 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
+import {
+  UnauthorizedErrorCodeSchema,
+  unauthorizedErrorMessages,
+  UnauthorizedErrorResponseSchema,
+} from "../schemas";
 import { UserDetailSchema, UserErrorCodeSchema, userErrorMessages } from "./schemas";
 
 export const MeResponseSchema = z.object({
@@ -26,6 +31,22 @@ export const meRoute = createRoute({
       content: {
         "application/json": {
           schema: MeResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
         },
       },
     },
@@ -72,6 +93,22 @@ export const updateMeRoute = createRoute({
       content: {
         "application/json": {
           schema: UpdateMeResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
         },
       },
     },

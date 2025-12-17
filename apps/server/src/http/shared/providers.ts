@@ -9,6 +9,11 @@ import {
   BikeServiceLive,
 } from "@/domain/bikes";
 import {
+  RatingReasonRepositoryLive,
+  RatingRepositoryLive,
+  RatingServiceLive,
+} from "@/domain/ratings";
+import {
   RentalRepositoryLive,
   RentalServiceLive,
 } from "@/domain/rentals";
@@ -61,6 +66,17 @@ export function withUserDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(
     Effect.provide(UserServiceLive),
     Effect.provide(UserRepositoryLive),
+    Effect.provide(Prisma.Default),
+  );
+}
+
+export function withRatingDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(
+    Effect.provide(RatingServiceLive),
+    Effect.provide(RatingRepositoryLive),
+    Effect.provide(RatingReasonRepositoryLive),
+    Effect.provide(RentalServiceLive),
+    Effect.provide(RentalRepositoryLive),
     Effect.provide(Prisma.Default),
   );
 }

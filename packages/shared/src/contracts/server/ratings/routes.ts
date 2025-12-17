@@ -1,6 +1,11 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
 import {
+  UnauthorizedErrorCodeSchema,
+  unauthorizedErrorMessages,
+  UnauthorizedErrorResponseSchema,
+} from "../schemas";
+import {
   CreateRatingRequestSchema,
   CreateRatingResponseSchema,
   RatingErrorCodeSchema,
@@ -30,6 +35,22 @@ export const createRatingRoute = createRoute({
       content: {
         "application/json": {
           schema: CreateRatingResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
         },
       },
     },
@@ -147,6 +168,22 @@ export const getRatingByRentalRoute = createRoute({
       content: {
         "application/json": {
           schema: RatingResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
         },
       },
     },
