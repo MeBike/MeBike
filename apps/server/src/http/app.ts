@@ -5,10 +5,12 @@ import { cors } from "hono/cors";
 import { logger as honoLogger } from "hono/logger";
 
 import { env } from "@/config/env";
+import { currentUserMiddleware, requireAuthMiddleware } from "@/http/middlewares/auth";
 import logger from "@/lib/logger";
 
 import { registerAuthRoutes } from "./routes/auth";
 import { registerBikeRoutes } from "./routes/bikes";
+import { registerRatingRoutes } from "./routes/ratings";
 import { registerRentalRoutes } from "./routes/rentals";
 import { registerStationRoutes } from "./routes/stations";
 import { registerSupplierRoutes } from "./routes/suppliers";
@@ -48,6 +50,9 @@ export function createHttpApp() {
   });
   app.use("*", cors());
   app.use("*", honoLogger(message => logger.info(message)));
+  app.use("*", currentUserMiddleware);
+  app.use("/v1/users/*", requireAuthMiddleware);
+  app.use("/v1/ratings/*", requireAuthMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(
@@ -65,6 +70,7 @@ export function createHttpApp() {
   registerSupplierRoutes(app);
   registerAuthRoutes(app);
   registerUserRoutes(app);
+  registerRatingRoutes(app);
 
   app.onError((err, c) => {
     const isProd = env.NODE_ENV === "production";

@@ -1,4 +1,4 @@
-import type { RatingReasonType, AppliesToEnum } from "../../../generated/prisma/enums";
+import type { AppliesToEnum, RatingReasonType } from "../../../generated/prisma/enums";
 
 export type RatingRow = {
   readonly id: string;
@@ -6,6 +6,7 @@ export type RatingRow = {
   readonly rentalId: string;
   readonly rating: number;
   readonly comment: string | null;
+  readonly reasonIds: readonly string[];
   readonly updatedAt: Date;
 };
 

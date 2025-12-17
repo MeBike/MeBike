@@ -1,6 +1,4 @@
-import type { Context } from "hono";
-
-import { serverRoutes, UsersContracts } from "@mebike/shared";
+import { serverRoutes, UnauthorizedErrorCodeSchema, unauthorizedErrorMessages, UsersContracts } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
@@ -9,13 +7,6 @@ import {
   updateProfileUseCase,
 } from "@/domain/users";
 import { withUserDeps } from "@/http/shared/providers";
-
-// TODO: replace with real auth middleware to get current user
-// Temporary helper: read userId from header for now
-function getCurrentUserId(c: Context): string | null {
-  const header = c.req.header("x-user-id");
-  return header ?? null;
-}
 
 function pickDefined<T extends Record<string, unknown>>(input: T): Partial<T> {
   return Object.fromEntries(
@@ -27,12 +18,12 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   const users = serverRoutes.users;
 
   app.openapi(users.me, async (c) => {
-    const userId = getCurrentUserId(c);
+    const userId = c.var.currentUser?.userId;
     if (!userId) {
-      return c.json<UsersContracts.UserErrorResponse, 404>({
-        error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
-        details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
-      }, 404);
+      return c.json({
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      }, 401);
     }
 
     const eff = withLoggedCause(withUserDeps(getUserByIdUseCase(userId)), "GET /v1/users/me");
@@ -52,12 +43,12 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   });
 
   app.openapi(users.updateMe, async (c) => {
-    const userId = getCurrentUserId(c);
+    const userId = c.var.currentUser?.userId;
     if (!userId) {
-      return c.json<UsersContracts.UserErrorResponse, 404>({
-        error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
-        details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
-      }, 404);
+      return c.json({
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      }, 401);
     }
 
     const body = c.req.valid("json");
