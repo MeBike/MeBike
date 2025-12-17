@@ -9,23 +9,33 @@ export const getErrorMessage = <MutationName extends string = string>(
     const axiosError = error as AxiosError<
       GraphQLMutationResponse<MutationName>
     >;
-    const responseData = axiosError.zresponse?.data;
+    const responseData = (axiosError as any).response?.data;
+    console.log(responseData);
     if (responseData?.errors?.length) {
       return responseData.errors
-        .flatMap((err) => (err.errors?.length ? err.errors : err.message))
+        .map((e: any) =>
+          typeof e === "string" ? e : e.message || JSON.stringify(e)
+        )
         .join(", ");
     }
     const mutationData = responseData?.data;
+    console.log(mutationData);
     if (mutationData) {
-      const firstKey = Object.keys(mutationData)[0] as MutationName;
-      const result = mutationData[firstKey];
+      const allErrors: string[] = [];
+      Object.values(mutationData).forEach((result: any) => {
+        if (result?.errors?.length) {
+          allErrors.push(
+            ...result.errors.map((e: any) =>
+              typeof e === "string" ? e : e.message || JSON.stringify(e)
+            )
+          );
+        } else if (result?.message) {
+          allErrors.push(result.message);
+        }
+      });
 
-      if (result?.errors?.length) {
-        return result.errors.map((err) => err.message).join(", ");
-      }
-
-      if (result?.message) {
-        return result.message;
+      if (allErrors.length > 0) {
+        return allErrors.join(", ");
       }
     }
   }

@@ -86,7 +86,8 @@ export const useAuthActions = () => {
               resolve();
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, MESSAGE.LOGIN_NOT_SUCCESS);
+            console.log(error);
+            const errorMessage = getErrorMessage<"LoginUser">(error, MESSAGE.LOGIN_NOT_SUCCESS);
             toast.error(errorMessage);
             reject(error);
           },
@@ -118,7 +119,7 @@ export const useAuthActions = () => {
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(
+            const errorMessage = getErrorMessage<"RegisterUser">(
               error,
               MESSAGE.REGISTER_NOT_SUCCESS
             );
