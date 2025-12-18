@@ -38,6 +38,7 @@ export interface Me {
   YOB: number;
   role: string;
   verify: string;
+  email:string;
   status: string;
   phone: string;
   userAccount: {
