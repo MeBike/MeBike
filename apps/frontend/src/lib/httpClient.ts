@@ -34,7 +34,7 @@ const NO_RETRY_URLS = [
 ];
 
 interface QueueItem {
-  resolve: (value: any) => void;
+  resolve: (value: unknown) => void;
   reject: (error: AxiosError | null) => void;
 }
 
@@ -61,7 +61,6 @@ export class HttpClient {
       this.handleRequest,
       (error) => Promise.reject(error)
     );
-
     this.axiosInstance.interceptors.response.use(
       this.handleResponseSuccess,
       this.handleResponseError
@@ -107,16 +106,12 @@ export class HttpClient {
         })
         .catch((err) => Promise.reject(err));
     }
-
     originalRequest._retry = true;
     this.isRefreshing = true;
-
     try {
       const newToken = await this.refreshAccessToken();
-      
       this.processQueue(null, newToken);
       this.dispatchAuthEvent("auth:token_refreshed");
-
       originalRequest.headers.Authorization = `Bearer ${newToken}`;
       return this.axiosInstance(originalRequest);
     } catch (refreshError) {
@@ -128,7 +123,6 @@ export class HttpClient {
     }
   };
 
-  // --- Helpers ---
 
   private checkIsRefreshTokenRequest(config: InternalAxiosRequestConfig): boolean {
     if (!config.data) return false;
@@ -141,10 +135,7 @@ export class HttpClient {
   }
 
   private shouldSkipTokenRefresh(config: InternalAxiosRequestConfig): boolean {
-    // Check if it's an auth request (login/register)
     if (this.checkIsAuthRequest(config)) return true;
-
-    // Check against ignored URLs
     if (config.url && NO_RETRY_URLS.some((url) => config.url?.includes(url))) {
       return true;
     }
