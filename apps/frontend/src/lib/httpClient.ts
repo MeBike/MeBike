@@ -11,7 +11,6 @@ import {
   getAccessToken,
   getRefreshToken,
 } from "@utils/tokenManager";
-import type { RefreshTokenResponse } from "@/types/auth.type";
 import { REFRESH_TOKEN_MUTATION } from "@/graphql";
 import { print } from "graphql";
 
@@ -34,12 +33,9 @@ const NO_RETRY_URLS = [
   "/users/change-password",
 ];
 
-// Types
-
-
 interface QueueItem {
   resolve: (value: any) => void;
-  reject: (error: any) => void;
+  reject: (error: AxiosError | null) => void;
 }
 
 export class HttpClient {
@@ -85,11 +81,11 @@ export class HttpClient {
     return config;
   };
 
-  private handleResponseSuccess = (response: AxiosResponse): any => {
+  private handleResponseSuccess = (response: AxiosResponse) => {
     return response;
   };
 
-  private handleResponseError = async (error: AxiosError | any) => {
+  private handleResponseError = async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     if (
       !originalRequest ||
@@ -124,7 +120,7 @@ export class HttpClient {
       originalRequest.headers.Authorization = `Bearer ${newToken}`;
       return this.axiosInstance(originalRequest);
     } catch (refreshError) {
-      this.processQueue(refreshError, null);
+      this.processQueue(refreshError as AxiosError, null);
       this.dispatchAuthEvent("auth:session_expired");
       return Promise.reject(refreshError);
     } finally {
@@ -196,7 +192,7 @@ export class HttpClient {
     }
   }
 
-  private processQueue(error: any, token: string | null = null) {
+  private processQueue(error: AxiosError | null, token: string | null = null) {
     this.failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);
