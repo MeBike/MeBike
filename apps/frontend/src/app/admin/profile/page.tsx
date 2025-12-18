@@ -140,9 +140,8 @@ export default function ProfilePage() {
     const updatedData = fields.reduce<Partial<UpdateProfileSchemaFormData>>((acc, field) => {
       const newValue = formData[field];
       const oldValue = user[field as keyof Me];
-
       if (newValue !== oldValue) {
-        (acc as any)[field] = newValue;
+        (acc as Record<string, unknown>)[field] = newValue;
       }
       return acc;
     }, {});
