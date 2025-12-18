@@ -279,11 +279,11 @@ export const useAuthActions = () => {
       useUpdateProfile.mutate(data, {
         onSuccess: (result) => {
           if (result.status === HTTP_STATUS.OK) {
-            toast.success(result.data?.message || MESSAGE.UPDATE_PROFILE_SUCCESS);
+            toast.success(result.data?.data?.UpdateProfile.message || MESSAGE.UPDATE_PROFILE_SUCCESS);
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
           } else {
             const errorMessage =
-              result.data?.message || MESSAGE.UPDATE_PROFILE_FAILED;
+              result.data?.data?.UpdateProfile.message || MESSAGE.UPDATE_PROFILE_FAILED;
             toast.error(errorMessage);
           }
         },

@@ -55,11 +55,16 @@ export const GET_ME = gql`
         verify
         status
         phone
+        address
+        avatarUrl
+        nfcCardUid
         userAccount {
           email
           id
           password
         }
+        createdAt
+        updatedAt
       }
       errors
       statusCode
@@ -81,6 +86,36 @@ export const CHANGE_PASSWORD_MUTATION = gql`
     ChangePassword(body: $body) {
       success
       message
+      errors
+      statusCode
+    }
+  }
+`;
+export const UPDATE_PROFILE = gql`
+  mutation Mutation($data: UpdateUserInput!) {
+    UpdateProfile(data: $data) {
+      success
+      message
+      data {
+        id
+        accountId
+        name
+        YOB
+        role
+        verify
+        status
+        phone
+        avatarUrl
+        nfcCardUid
+        address
+        userAccount {
+          id
+          email
+          password
+        }
+        createdAt
+        updatedAt
+      }
       errors
       statusCode
     }

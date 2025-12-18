@@ -15,7 +15,8 @@ import {
   REFRESH_TOKEN_MUTATION,
   GET_ME,
   LOGOUT_MUTATION,
-  CHANGE_PASSWORD_MUTATION
+  CHANGE_PASSWORD_MUTATION,
+  UPDATE_PROFILE,
 } from "@/graphql";
 import {print} from "graphql"
 import {
@@ -25,6 +26,7 @@ import {
   GetMeResponse,
   LogOutResponse,
   ChangePasswordResponse,
+  UpdateProfileResponse,
 } from "@/types/auth.type";
 interface AuthResponse {
   message: string;
@@ -135,10 +137,12 @@ export const authService = {
   },
   updateProfile: async (
     data: Partial<UpdateProfileSchemaFormData>
-  ): Promise<AxiosResponse<ProfileUserResponse>> => {
-    const response = await fetchHttpClient.patch<ProfileUserResponse>(
-      "/users/me",
-      data
+  ): Promise<AxiosResponse<UpdateProfileResponse>> => {
+    const response = await fetchHttpClient.mutation<UpdateProfileResponse>(
+      print(UPDATE_PROFILE),
+      {
+        data,
+      }
     );
     return response;
   },

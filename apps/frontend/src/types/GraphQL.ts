@@ -35,14 +35,16 @@ export interface Me {
   verify: string;
   status: string;
   phone: string;
-  avatar : string;
-  userAccount : {
-    email : string;
-    id : string;
-    password : string;
+  userAccount: {
+    email: string;
+    id: string;
+    password: string;
   };
+  address : string;
   location?: string;
+  avatarUrl?: string;
   username?: string;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  nfcCardUid?: string;
+  updatedAt?: string;
 }

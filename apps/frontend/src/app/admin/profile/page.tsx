@@ -1,9 +1,7 @@
 "use client";
 
 import type React from "react";
-
 import { useEffect, useState } from "react";
-import type { DetailUser } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +16,7 @@ import Link from "next/link";
 import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 import { uploadImageToFirebase } from "@/lib/firebase";
 import { Me } from "@/types/GraphQL";
+import { formatToVNTime } from "@/lib/formateVNDate";
 type FormDataWithAvatar = Me & { avatarFile?: File };
 
 // Compress image function
@@ -73,7 +72,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState<FormDataWithAvatar>(
     () => user || ({} as Me)
   );
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? "");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
@@ -83,7 +82,7 @@ export default function ProfilePage() {
     if (user) {
       setData(user);
       setFormData(user as Me);
-      setAvatarPreview(user.avatar ?? "");
+      setAvatarPreview(user.avatarUrl ?? "");
       console.log(user);
     }
   }, [user]);
@@ -131,20 +130,22 @@ export default function ProfilePage() {
     
     const fields: (keyof UpdateProfileSchemaFormData)[] = [
       "name",
-      "username",
+      "YOB",
+      "avatarUrl",
+      "nfcCardUid",
       "phone",
-      "location",
+      "address",
     ];
 
-    const updatedData = fields.reduce((acc, field) => {
+    const updatedData = fields.reduce<Partial<UpdateProfileSchemaFormData>>((acc, field) => {
       const newValue = formData[field];
-      const oldValue = user[field as keyof Me] ?? "";
+      const oldValue = user[field as keyof Me];
 
       if (newValue !== oldValue) {
-        acc[field] = newValue || "";
+        (acc as any)[field] = newValue;
       }
       return acc;
-    }, {} as UpdateProfileSchemaFormData);
+    }, {});
 
     // Upload ảnh lên Firebase khi Save (nếu có file mới)
     if (formData.avatarFile) {
@@ -153,7 +154,7 @@ export default function ProfilePage() {
         // Compress ảnh trước khi upload
         const compressedFile = await compressImage(formData.avatarFile);
         const imageUrl = await uploadImageToFirebase(compressedFile, "avatars");
-        updatedData.avatar = imageUrl;
+        updatedData.avatarUrl = imageUrl;
       } catch (error) {
         console.error("Error uploading avatar:", error);
         alert("Lỗi khi tải ảnh lên. Vui lòng thử lại.");
@@ -163,9 +164,12 @@ export default function ProfilePage() {
       } finally {
         setIsUploadingAvatar(false);
       }
-    } else if (formData.avatar !== user.avatar && !avatarPreview.startsWith("data:")) {
+    } else if (
+      formData.avatarUrl !== user.avatarUrl &&
+      !avatarPreview.startsWith("data:")
+    ) {
       // Avatar đã thay đổi và đã là URL Firebase
-      updatedData.avatar = formData.avatar;
+      updatedData.avatarUrl = formData.avatarUrl;
     }
 
     // Nếu có field nào thay đổi mới gọi API
@@ -187,7 +191,7 @@ export default function ProfilePage() {
   const handleCancel = () => {
     if (data) {
       setFormData(data as Me);
-      setAvatarPreview(data.avatar || "");
+      setAvatarPreview(data.avatarUrl || "");
     }
     setIsEditing(false);
   };
@@ -393,16 +397,16 @@ export default function ProfilePage() {
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label
-                    htmlFor="location"
+                    htmlFor="address"
                     className="text-sm font-medium text-foreground"
                   >
                     Địa chỉ
                   </Label>
                   <Input
-                    id="location"
-                    value={formData?.location || ""}
+                    id="address"
+                    value={formData?.address || ""}
                     onChange={(e) =>
-                      handleInputChange("location", e.target.value)
+                      handleInputChange("address", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(
@@ -436,20 +440,16 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">Ngày tạo tài khoản</p>
                     <p className="font-medium text-foreground mt-1">
-                      {formData?.created_at
-                        ? new Date(formData.created_at).toLocaleDateString(
-                            "vi-VN"
-                          )
+                      {formData?.createdAt
+                        ? formatToVNTime(formData.createdAt)
                         : "Chưa có thông tin"}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Cập nhật lần cuối</p>
                     <p className="font-medium text-foreground mt-1">
-                      {formData?.updated_at
-                        ? new Date(formData.updated_at).toLocaleDateString(
-                            "vi-VN"
-                          )
+                      {formData?.updatedAt
+                        ? formatToVNTime(formData.updatedAt)
                         : "Chưa có thông tin"}
                     </p>
                   </div>
