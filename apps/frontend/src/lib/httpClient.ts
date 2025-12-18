@@ -220,7 +220,6 @@ export class HttpClient {
   }
 
   async post<T>(
-  async post<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
     config?: AxiosRequestConfig

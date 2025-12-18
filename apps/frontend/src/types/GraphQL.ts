@@ -1,6 +1,11 @@
-export interface BaseMutationResponse<T = null  > {
+export interface ErrorObject {
+  message: string;
+  [key: string]: unknown;
+}
+
+export interface BaseMutationResponse<T = null> {
   data: T | null;
-  errors?: string[] | null;
+  errors?: (string | ErrorObject)[] | null;
   message: string;
   statusCode: number;
   success: boolean;
@@ -9,10 +14,10 @@ export interface GraphQLMutationResponse<
   MutationName extends string,
   Payload = null,
 > {
- data: {
+  data: {
     [K in MutationName]: BaseMutationResponse<Payload>;
   } | null;
-  errors?: string[] | null;
+  errors?: (string | ErrorObject)[] | null;
 }
 export interface AuthTokens {
   accessToken: string;

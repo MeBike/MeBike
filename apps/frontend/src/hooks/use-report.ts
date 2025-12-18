@@ -144,7 +144,7 @@ export const useUserReport = ({
           onSuccess: (result: {
             status: number;
             data?: { message?: string };
-          }) => {k
+          }) => {
             if (result?.status === HTTP_STATUS.OK) {
               const message = result?.data?.message;
               if (
