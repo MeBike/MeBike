@@ -41,7 +41,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 </div>
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted">
                   <Image
-                    src={user?.avatar || "/placeholder.svg"}
+                    src={user?.avatarUrl || "/placeholder.svg"}
                     alt={user?.name || "User"}
                     fill
                     className="object-cover"

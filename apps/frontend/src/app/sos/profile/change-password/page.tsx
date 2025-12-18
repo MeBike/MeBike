@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import type { DetailUser } from "@/services/auth.service";
+import type { Me } from "@/types/GraphQL";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,19 +20,19 @@ import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [data, setData] = useState<DetailUser | null>(null);
-  const [formData, setFormData] = useState<DetailUser>(
-    () => user || ({} as DetailUser)
+  const [data, setData] = useState<Me | null>(null);
+  const [formData, setFormData] = useState<Me>(
+    () => user || ({} as Me)
   );
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? "");
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
   const { resendVerifyEmail, verifyEmail } = useAuthActions();
   useEffect(() => {
     if (user) {
       setData(user);
-      setFormData(user as DetailUser);
-      setAvatarPreview(user.avatar ?? "");
+      setFormData(user);
+      setAvatarPreview(user.avatarUrl ?? "");
       console.log(user);
     }
   }, [user]);
@@ -43,7 +43,7 @@ export default function ProfilePage() {
       </div>
     );
   }
-  const handleInputChange = (field: keyof DetailUser, value: string) => {
+  const handleInputChange = (field: keyof Me, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,18 +59,17 @@ export default function ProfilePage() {
   const handleSave = () => {
     if (!user) return;
     const fields: (keyof UpdateProfileSchemaFormData)[] = [
-      "fullname",
-      "username",
-      "phone_number",
-      "location",
+      "name",
+      "phone",
+      "address",
     ];
 
     const updatedData = fields.reduce((acc, field) => {
       const newValue = formData[field];
-      const oldValue = user[field as keyof DetailUser] ?? "";
+      const oldValue = user[field as keyof Me] ?? "";
 
       if (newValue !== oldValue) {
-        acc[field] = newValue || "";
+        (acc as Record<string, unknown>)[field] = newValue;
       }
       return acc;
     }, {} as UpdateProfileSchemaFormData);
@@ -85,8 +84,8 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     if (data) {
-      setFormData(data as DetailUser);
-      setAvatarPreview(data.avatar || "");
+      setFormData(data);
+      setAvatarPreview(data.avatarUrl || "");
     }
     setIsEditing(false);
   };
@@ -179,7 +178,7 @@ export default function ProfilePage() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">
-                  {formData?.fullname || "Chưa có tên"}
+                  {formData?.name || "Chưa có tên"}
                 </p>
                 <p
                   className={cn(
@@ -198,16 +197,16 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label
-                    htmlFor="fullname"
+                    htmlFor="name"
                     className="text-sm font-medium text-foreground"
                   >
                     Họ và tên
                   </Label>
                   <Input
-                    id="fullname"
-                    value={formData?.fullname || ""}
+                    id="name"
+                    value={formData?.name || ""}
                     onChange={(e) =>
-                      handleInputChange("fullname", e.target.value)
+                      handleInputChange("name", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(
@@ -229,10 +228,10 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       handleInputChange("username", e.target.value)
                     }
-                    disabled={!isEditing}
+                    disabled={true}
                     className={cn(
                       "bg-background border-border",
-                      !isEditing && "opacity-70 cursor-not-allowed"
+                      true && "opacity-70 cursor-not-allowed"
                     )}
                   />
                 </div>
@@ -248,8 +247,8 @@ export default function ProfilePage() {
                   <Input
                     id="email"
                     type="email"
-                    value={formData?.email || ""}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    value={formData?.userAccount?.email || ""}
+                    onChange={() => {}}
                     disabled
                     className={cn(
                       "bg-background border-border",
@@ -266,9 +265,9 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="phone"
-                    value={formData?.phone_number || ""}
+                    value={formData?.phone || ""}
                     onChange={(e) =>
-                      handleInputChange("phone_number", e.target.value)
+                      handleInputChange("phone", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(
@@ -279,16 +278,16 @@ export default function ProfilePage() {
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label
-                    htmlFor="location"
+                    htmlFor="address"
                     className="text-sm font-medium text-foreground"
                   >
                     Địa chỉ
                   </Label>
                   <Input
-                    id="location"
-                    value={formData?.location || ""}
+                    id="address"
+                    value={formData?.address || ""}
                     onChange={(e) =>
-                      handleInputChange("location", e.target.value)
+                      handleInputChange("address", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(
@@ -322,8 +321,8 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">Ngày tạo tài khoản</p>
                     <p className="font-medium text-foreground mt-1">
-                      {formData?.created_at
-                        ? new Date(formData.created_at).toLocaleDateString(
+                      {formData?.createdAt
+                        ? new Date(formData.createdAt).toLocaleDateString(
                             "vi-VN"
                           )
                         : "Chưa có thông tin"}
@@ -332,8 +331,8 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">Cập nhật lần cuối</p>
                     <p className="font-medium text-foreground mt-1">
-                      {formData?.updated_at
-                        ? new Date(formData.updated_at).toLocaleDateString(
+                      {formData?.updatedAt
+                        ? new Date(formData.updatedAt).toLocaleDateString(
                             "vi-VN"
                           )
                         : "Chưa có thông tin"}
@@ -342,7 +341,7 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">ID tài khoản</p>
                     <p className="font-medium text-foreground mt-1 font-mono text-xs">
-                      {formData?._id || "Chưa có ID"}
+                      {formData?.id || "Chưa có ID"}
                     </p>
                   </div>
                 </div>

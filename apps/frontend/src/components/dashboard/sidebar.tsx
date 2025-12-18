@@ -185,7 +185,7 @@ export function Sidebar() {
   const handleLogout = () => {
     const refreshToken = getRefreshToken();
     if (refreshToken) {
-      logOut(refreshToken);
+      logOut();
       console.log(user?.email + " đã đăng xuất " + isAuthenticated);
     }
   };
