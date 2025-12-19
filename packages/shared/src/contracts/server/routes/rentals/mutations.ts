@@ -11,6 +11,11 @@ import {
   UpdateRentalRequestSchema,
 } from "../../rentals";
 import {
+  UnauthorizedErrorCodeSchema,
+  unauthorizedErrorMessages,
+  UnauthorizedErrorResponseSchema,
+} from "../../schemas";
+import {
   createSuccessResponse,
   RentalDetailSchemaOpenApi,
   RentalErrorResponseSchema,
@@ -105,6 +110,22 @@ export const endMyRental = createRoute({
             RentalSchemaOpenApi,
             "End rental response",
           ),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
         },
       },
     },

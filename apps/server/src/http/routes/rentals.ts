@@ -37,14 +37,14 @@ function toContractRental(
 
 export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const rentals = serverRoutes.rentals;
-  const userIdPlaceholder = "todo-user"; // TODO: replace with real auth or context
 
   app.openapi(rentals.getMyRentals, async (c) => {
+    const userId = c.var.currentUser!.userId;
     const query = c.req.valid("query");
     const eff = withLoggedCause(
       withRentalDeps(
         listMyRentalsUseCase({
-          userId: userIdPlaceholder,
+          userId,
           filter: {
             status: query.status,
             startStationId: query.start_station,
@@ -70,11 +70,12 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   });
 
   app.openapi(rentals.getMyCurrentRentals, async (c) => {
+    const userId = c.var.currentUser!.userId;
     const query = c.req.valid("query");
     const eff = withLoggedCause(
       withRentalDeps(
         listMyCurrentRentalsUseCase(
-          userIdPlaceholder,
+          userId,
           {
             page: Number(query.page ?? 1),
             pageSize: Number(query.limit ?? 50),
@@ -95,10 +96,11 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   });
 
   app.openapi(rentals.getMyRental, async (c) => {
+    const userId = c.var.currentUser!.userId;
     const { rentalId } = c.req.valid("param");
 
     const eff = withLoggedCause(
-      withRentalDeps(getMyRentalUseCase(userIdPlaceholder, rentalId)),
+      withRentalDeps(getMyRentalUseCase(userId, rentalId)),
       "GET /v1/rentals/me/{rentalId}",
     );
 
@@ -126,8 +128,9 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   });
 
   app.openapi(rentals.getMyRentalCounts, async (c) => {
+    const userId = c.var.currentUser!.userId;
     const eff = withLoggedCause(
-      withRentalDeps(getMyRentalCountsUseCase(userIdPlaceholder)),
+      withRentalDeps(getMyRentalCountsUseCase(userId)),
       "GET /v1/rentals/me/counts",
     );
 
@@ -139,13 +142,14 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   });
 
   app.openapi(rentals.endMyRental, async (c) => {
+    const userId = c.var.currentUser!.userId;
     const { rentalId } = c.req.valid("param");
     const body = c.req.valid("json");
 
     const eff = withLoggedCause(
       withRentalDeps(
         endRentalUseCase({
-          userId: userIdPlaceholder,
+          userId,
           rentalId,
           endStationId: body.endStation,
           endTime: new Date(),

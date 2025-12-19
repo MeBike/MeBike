@@ -52,6 +52,7 @@ export function createHttpApp() {
   app.use("*", cors());
   app.use("*", honoLogger(message => logger.info(message)));
   app.use("*", currentUserMiddleware);
+  app.use("/v1/rentals/*", requireAuthMiddleware);
   app.use("/v1/users/*", requireAuthMiddleware);
   app.use("/v1/ratings/*", requireAuthMiddleware);
   app.use("/v1/wallets/*", requireAuthMiddleware);
