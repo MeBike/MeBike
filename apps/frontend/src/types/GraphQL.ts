@@ -1,3 +1,5 @@
+import { UserRole } from "./Customer";
+
 export interface ErrorObject {
   message: string;
   [key: string]: unknown;
@@ -40,7 +42,7 @@ export interface Me {
   accountId: string;
   name: string;
   YOB: number;
-  role: string;
+  role: UserRole;
   verify: string;
   email:string;
   status: string;

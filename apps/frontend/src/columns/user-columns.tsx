@@ -1,9 +1,10 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import type { UserRole } from "@/types";
-import type { DetailUser as ServiceDetailUser } from "@/services/auth.service";
-import { formatDateUTC } from "@/utils/formatDateTime";
+import { formatDateOnlyVN } from "@/utils/dateFormat";
+import { formatDateUTC, } from "@/utils/formatDateTime";
 import { Me } from "@/types/GraphQL";
+import { formatToVNTime } from "@/lib/formateVNDate";
 export const getVerifyStatusColor = (status: string) => {
   switch (status) {
     case "VERIFIED":
@@ -58,7 +59,7 @@ export const userColumns = ({
     accessorKey: "email",
     header: "Email",
     cell: ({ row }) => {
-      return row.original.email || "Không có";
+      return row.original.userAccount.email || "Không có";
     },
   },
   {
@@ -68,25 +69,25 @@ export const userColumns = ({
       return row.original.phone || "Không có";
     },
   },
-  // {
-  //   accessorKey: "role",
-  //   header: "Vai trò",
-  //   cell: ({ row }) => (
-  //     <span
-  //       className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(
-  //         row.original.role
-  //       )}`}
-  //     >
-  //       {row.original.role}
-  //     </span>
-  //   ),
-  // },
+  {
+    accessorKey: "role",
+    header: "Vai trò",
+    cell: ({ row }) => (
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(
+          row.original.role
+        )}`}
+      >
+        {row.original.role}
+      </span>
+    ),
+  },
   {
     accessorKey: "verify",
     header: "Trạng thái xác thực",
     cell: ({ row }) => (
       <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
+        className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getVerifyStatusColor(
           row.original.verify
         )}`}
       >
@@ -98,14 +99,18 @@ export const userColumns = ({
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.createdAt ? row.original.createdAt : "");
+      return row.original.createdAt
+        ? formatToVNTime(row.original.createdAt)
+        : "Chưa có";
     },
   },
   {
     accessorKey: "updatedAt",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.updatedAt ? row.original.updatedAt : "");
+      return row.original.updatedAt
+        ? formatToVNTime(row.original.updatedAt)
+        : "Chưa có";
     },
   },
   {
