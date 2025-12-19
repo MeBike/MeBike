@@ -6,7 +6,11 @@ import {
   unauthorizedErrorMessages,
   UnauthorizedErrorResponseSchema,
 } from "../schemas";
-import { WalletDetailSchema, WalletTransactionDetailSchema } from "./models";
+import {
+  WalletDetailSchema,
+  WalletTransactionDetailSchema,
+  WalletTransactionTypeSchema,
+} from "./models";
 
 export const WalletErrorCodeSchema = z
   .enum([
@@ -33,6 +37,25 @@ export const GetMyWalletResponseSchema = z.object({
   data: WalletDetailSchema,
 }).openapi("GetMyWalletResponse");
 
+export const WalletMutationResponseSchema = z.object({
+  data: WalletDetailSchema,
+}).openapi("WalletMutationResponse");
+
+export const WalletCreditRequestSchema = z.object({
+  amount: z.string().openapi({ example: "100000.00" }),
+  fee: z.string().optional().openapi({ example: "0.00" }),
+  description: z.string().optional().nullable(),
+  hash: z.string().optional().nullable(),
+  type: WalletTransactionTypeSchema.optional(),
+}).openapi("WalletCreditRequest");
+
+export const WalletDebitRequestSchema = z.object({
+  amount: z.string().openapi({ example: "50000.00" }),
+  description: z.string().optional().nullable(),
+  hash: z.string().optional().nullable(),
+  type: WalletTransactionTypeSchema.optional(),
+}).openapi("WalletDebitRequest");
+
 export const ListMyWalletTransactionsQuerySchema = z.object({
   ...paginationQueryFields,
 }).openapi("ListMyWalletTransactionsQuery");
@@ -44,6 +67,9 @@ export const ListMyWalletTransactionsResponseSchema = z.object({
 
 export type WalletErrorResponse = z.infer<typeof WalletErrorResponseSchema>;
 export type GetMyWalletResponse = z.infer<typeof GetMyWalletResponseSchema>;
+export type WalletMutationResponse = z.infer<typeof WalletMutationResponseSchema>;
+export type WalletCreditRequest = z.infer<typeof WalletCreditRequestSchema>;
+export type WalletDebitRequest = z.infer<typeof WalletDebitRequestSchema>;
 export type ListMyWalletTransactionsResponse = z.infer<typeof ListMyWalletTransactionsResponseSchema>;
 export {
   UnauthorizedErrorCodeSchema,

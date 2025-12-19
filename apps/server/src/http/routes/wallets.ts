@@ -2,7 +2,10 @@ import { serverRoutes, UnauthorizedErrorCodeSchema, unauthorizedErrorMessages, W
 import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
+import { toPrismaDecimal } from "@/domain/shared/decimal";
 import {
+  creditWalletUseCase,
+  debitWalletUseCase,
   getRequiredWalletByUserIdUseCase,
   listWalletTransactionsForUserUseCase,
 } from "@/domain/wallets";
@@ -107,6 +110,105 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
           },
         }, 200)),
       Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("WalletNotFound", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WALLET_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+          }, 404)),
+        Match.orElse(() =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WALLET_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+          }, 404)),
+      )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(wallets.creditMyWallet, async (c) => {
+    const userId = c.var.currentUser?.userId ?? null;
+    if (!userId) {
+      return c.json({
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      }, 401);
+    }
+
+    const body = c.req.valid("json");
+    const amount = toPrismaDecimal(body.amount);
+    const fee = body.fee !== undefined ? toPrismaDecimal(body.fee) : undefined;
+
+    const eff = withLoggedCause(
+      withWalletDeps(creditWalletUseCase({
+        userId,
+        amount,
+        fee,
+        description: body.description ?? null,
+        hash: body.hash ?? null,
+        type: body.type,
+      })),
+      "POST /v1/wallets/me/credit",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<WalletsContracts.WalletMutationResponse, 200>({
+          data: mapWalletDetail(right),
+        }, 200)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("WalletNotFound", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WALLET_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+          }, 404)),
+        Match.orElse(() =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WALLET_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+          }, 404)),
+      )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(wallets.debitMyWallet, async (c) => {
+    const userId = c.var.currentUser?.userId ?? null;
+    if (!userId) {
+      return c.json({
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      }, 401);
+    }
+
+    const body = c.req.valid("json");
+    const amount = toPrismaDecimal(body.amount);
+
+    const eff = withLoggedCause(
+      withWalletDeps(debitWalletUseCase({
+        userId,
+        amount,
+        description: body.description ?? null,
+        hash: body.hash ?? null,
+        type: body.type,
+      })),
+      "POST /v1/wallets/me/debit",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<WalletsContracts.WalletMutationResponse, 200>({
+          data: mapWalletDetail(right),
+        }, 200)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("InsufficientWalletBalance", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 400>({
+            error: walletErrorMessages.INSUFFICIENT_BALANCE,
+            details: { code: WalletErrorCodeSchema.enum.INSUFFICIENT_BALANCE },
+          }, 400)),
         Match.tag("WalletNotFound", () =>
           c.json<WalletsContracts.WalletErrorResponse, 404>({
             error: walletErrorMessages.WALLET_NOT_FOUND,
