@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@apollo/client": "^4.0.10",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.3",
@@ -30,6 +31,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "firebase": "^12.5.0",
+    "graphql": "^16.12.0",
+    "js-cookie": "^3.0.5",
     "lucide": "^0.544.0",
     "lucide-react": "^0.544.0",
     "next": "15.5.3",
@@ -50,6 +53,7 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/css-modules": "^1.0.5",
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.2",
     "@types/react": "^19",

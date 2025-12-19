@@ -7,8 +7,8 @@ import { DataTable } from "@/components/TableCustom";
 import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { userProfileSchema, UserProfile } from "@schemas/userSchema";
-import { resetPasswordSchema, ResetPasswordSchemaFormData, profileUpdateSchema, UpdateProfileSchemaFormData } from "@schemas/authSchema";
+import { userProfileSchema, UserProfile, adminUpdateUserSchema, AdminUpdateUserSchemaFormData } from "@schemas/userSchema";
+import { resetPasswordSchema, ResetPasswordSchemaFormData } from "@schemas/authSchema";
 import type { VerifyStatus, UserRole } from "@custom-types";
 import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
@@ -40,8 +40,8 @@ export default function CustomersPage() {
     formState: { errors: errorsUpdateProfile },
     reset: resetUpdateProfile,
     setValue: setValueUpdateProfile,
-  } = useForm<UpdateProfileSchemaFormData>({
-    resolver: zodResolver(profileUpdateSchema),
+  } = useForm<AdminUpdateUserSchemaFormData>({
+    resolver: zodResolver(adminUpdateUserSchema),
   });
 
   const [searchQuery, setSearchQuery] = useState("");

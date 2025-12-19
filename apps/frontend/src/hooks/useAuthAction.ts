@@ -20,36 +20,9 @@ import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPa
 import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import { MESSAGE , QUERY_KEYS , HTTP_STATUS } from "@constants/index"
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
+import { AuthTokens } from "@/types/GraphQL";
+import { getErrorMessage } from "@/utils/message";
 
-interface ErrorWithMessage {
-  message: string;
-}
-
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-
-  return defaultMessage;
-};
 
 export const useAuthActions = () => {
   const router = useRouter();
@@ -64,18 +37,20 @@ export const useAuthActions = () => {
   const useResetPassword = useResetPasswordMutation();
   const useResendVerifyEmail = useResendVerifyEmailMutation();
   const changePassword = useCallback(
-    (old_password: string, password: string, confirm_password: string) => {
+    (oldPassword: string, newPassword: string, confirmPassword : string) => {
       useChangePassword.mutate(
-        { old_password, password, confirm_password },
+        { oldPassword, newPassword, confirmPassword },
         {
           onSuccess: (result) => {
             if (result.status === HTTP_STATUS.OK) {
+              const messsage = getErrorMessage(result.data?.data?.ChangePassword.errors, MESSAGE.CHANGE_PASSWORD_SUCCESS);
               toast.success(
-                result.data?.message || MESSAGE.CHANGE_PASSWORD_SUCCESS
+                messsage
               );
             } else {
-              toast.error(
-                result.data?.message || MESSAGE.CHANGE_PASSWORD_ERROR
+              const messsage = getErrorMessage(result.data?.data?.ChangePassword.errors, MESSAGE.CHANGE_PASSWORD_ERROR);
+              toast.error(  
+                messsage
               );
             }
           },
@@ -96,20 +71,25 @@ export const useAuthActions = () => {
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { access_token, refresh_token } = result.data.result;
-            setTokens(access_token, refresh_token);
-            window.dispatchEvent(new Event("token:changed"));
-            window.dispatchEvent(
-              new StorageEvent("storage", { key: "auth_tokens" })
-            );
-            await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
-            toast.success(result.data?.message || MESSAGE.LOGIN_SUCCESS, {
-              description: MESSAGE.WELCOME_BACK,
-            });
-            resolve();
+              const { accessToken, refreshToken } = result.data.data?.LoginUser
+                .data as AuthTokens;
+              setTokens(accessToken, refreshToken);
+              window.dispatchEvent(new Event("token:changed"));
+              window.dispatchEvent(
+                new StorageEvent("storage", { key: "auth_tokens" })
+              );
+              await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
+              toast.success(
+                result.data?.data?.LoginUser.message || MESSAGE.LOGIN_SUCCESS,
+                {
+                  description: MESSAGE.WELCOME_BACK,
+                }
+              );
+              resolve();
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, MESSAGE.LOGIN_NOT_SUCCESS);
+            console.log(error);
+            const errorMessage = getErrorMessage<"LoginUser">(error, MESSAGE.LOGIN_NOT_SUCCESS);
             toast.error(errorMessage);
             reject(error);
           },
@@ -124,26 +104,27 @@ export const useAuthActions = () => {
         useRegister.mutate(data, {
           onSuccess: async (result) => {
             if (result.status === HTTP_STATUS.OK) {
-              const { access_token, refresh_token } = result.data.result;
-              setTokens(access_token, refresh_token);
-              // Dispatch token change event
+              const { accessToken, refreshToken } = result.data.data
+                ?.RegisterUser.data as AuthTokens;
+              setTokens(accessToken, refreshToken);
               window.dispatchEvent(new Event("token:changed"));
-              // Wait for token to be set
-              await new Promise(resolve => setTimeout(resolve, 100));
+              await new Promise((resolve) => setTimeout(resolve, 100));
               await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
-              toast.success(result.data?.message || MESSAGE.REGISTER_SUCCESS, {
-                description: "Tài khoản của bạn đã được tạo.",
+              toast.success(MESSAGE.REGISTER_SUCCESS, {
+                description:"Tài khoản của bạn đã được tạo.",
               });
               resolve();
-              // router.push("/user/profile");
             } else {
-              const errorMessage = result.data?.message || MESSAGE.REGISTER_NOT_SUCCESS;
+              const errorMessage = MESSAGE.REGISTER_NOT_SUCCESS;
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, MESSAGE.REGISTER_NOT_SUCCESS);
+            const errorMessage = getErrorMessage<"RegisterUser">(
+              error,
+              MESSAGE.REGISTER_NOT_SUCCESS
+            );
             toast.error(errorMessage);
             reject(error);
           },
@@ -153,8 +134,8 @@ export const useAuthActions = () => {
     [useRegister, queryClient]
   );
   const logOut = useCallback(
-    (refresh_token: string) => {
-      useLogout.mutate(refresh_token, {
+    () => {
+      useLogout.mutate(undefined,{
         onSuccess: (result) => {
           if (result.status === HTTP_STATUS.OK) {
             clearTokens();
@@ -163,16 +144,14 @@ export const useAuthActions = () => {
             );
             queryClient.removeQueries({ queryKey: QUERY_KEYS.ME });
             queryClient.clear();
-            toast.success(result.data?.message || MESSAGE.LOGOUT_SUCCESS);
+            toast.success(MESSAGE.LOGOUT_SUCCESS);
             router.push("/auth/login");
           } else {
-            const errorMessage = result.data?.message || MESSAGE.LOGOUT_FAIL;
-            toast.error(errorMessage);
+            toast.error(MESSAGE.LOGOUT_FAIL);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.LOGOUT_FAIL);
-          toast.error(errorMessage);
+          toast.error(MESSAGE.LOGOUT_FAIL);
         },
       });
     },
@@ -300,11 +279,11 @@ export const useAuthActions = () => {
       useUpdateProfile.mutate(data, {
         onSuccess: (result) => {
           if (result.status === HTTP_STATUS.OK) {
-            toast.success(result.data?.message || MESSAGE.UPDATE_PROFILE_SUCCESS);
+            toast.success(result.data?.data?.UpdateProfile.message || MESSAGE.UPDATE_PROFILE_SUCCESS);
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
           } else {
             const errorMessage =
-              result.data?.message || MESSAGE.UPDATE_PROFILE_FAILED;
+              result.data?.data?.UpdateProfile.message || MESSAGE.UPDATE_PROFILE_FAILED;
             toast.error(errorMessage);
           }
         },

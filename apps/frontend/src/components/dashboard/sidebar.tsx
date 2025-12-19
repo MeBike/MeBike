@@ -40,6 +40,12 @@ const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
       roles: ["STAFF"],
     },
     {
+      title: "Hồ sơ cá nhân",
+      icon: User2,
+      href: "/admin/profile",
+      roles: ["ADMIN"],
+    },
+    {
       title: "Tổng quan",
       icon: LayoutDashboard,
       href: baseUrl,
@@ -179,7 +185,7 @@ export function Sidebar() {
   const handleLogout = () => {
     const refreshToken = getRefreshToken();
     if (refreshToken) {
-      logOut(refreshToken);
+      logOut();
       console.log(user?.email + " đã đăng xuất " + isAuthenticated);
     }
   };

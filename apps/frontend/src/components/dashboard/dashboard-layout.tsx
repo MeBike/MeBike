@@ -3,17 +3,17 @@
 import type React from "react";
 import { useState } from "react";
 import { Sidebar } from "./sidebar";
-import type { DetailUser } from "@/services/auth.service";
+import { Me } from "@/types/GraphQL";
 import Image from "next/image";
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  user: DetailUser;
+  user: Me;
 }
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const [sidebarCollapsed,] = useState(false);
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar  />
+      <Sidebar />
       <div
         className={`transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64"}`}
       >
@@ -33,7 +33,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               <div className="flex items-center gap-3 pl-4 border-l border-border">
                 <div className="text-right hidden md:block">
                   <p className="text-sm font-medium text-foreground">
-                    {user?.fullname || "Chưa có tên"}
+                    {user?.name || "Chưa có tên"}
                   </p>
                   <p className="text-xs text-muted-foreground capitalize">
                     {user?.role || "user"}
@@ -41,8 +41,8 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 </div>
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted">
                   <Image
-                    src={user?.avatar || "/placeholder.svg"}
-                    alt={user?.fullname || "User"}
+                    src={user?.avatarUrl || "/placeholder.svg"}
+                    alt={user?.name || "User"}
                     fill
                     className="object-cover"
                   />
