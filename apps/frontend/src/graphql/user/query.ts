@@ -33,3 +33,33 @@ export const GET_USERS = gql`
     }
   }
 `;
+export const GET_DETAIL_USER = gql`
+  query User($params: String) {
+    User(params: $params) {
+      data {
+        id
+        accountId
+        name
+        YOB
+        role
+        verify
+        status
+        phone
+        userAccount {
+          id
+          email
+          password
+        }
+        address
+        avatarUrl
+        nfcCardUid
+        createdAt
+        updatedAt
+      }
+      message
+      statusCode
+      success
+      errors
+    }
+  }
+`;

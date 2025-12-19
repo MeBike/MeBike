@@ -131,7 +131,7 @@ export const useUserActions = ({
       return;
     }
     refetchDetailUser();
-  }, [hasToken, router, refetchDetailUser]);
+  }, [hasToken, router, refetchDetailUser , id]);
   const getNewRegistrationStats = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -340,7 +340,7 @@ export const useUserActions = ({
     isLoadingSearch,
     totalRecordUser: data?.data?.Users?.total || 0,
     getDetailUser,
-    detailUserData,
+    detailUserData : detailUserData?.data.data?.User?.data,
     isLoadingDetailUser,
     dashboardStatsData,
     resetPassword,

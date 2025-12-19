@@ -15,6 +15,8 @@ import { useUserActions } from "@/hooks/use-user";
 import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { formatDateUTC } from "@/utils/formatDateTime";
+import { formatToVNTime } from "@/lib/formateVNDate";
+
 export default function CustomersPage() {
   const {
     register,
@@ -104,6 +106,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     if (selectedUserId) {
+      console.log(selectedUserId);
       getDetailUser();
     }
   }, [selectedUserId, getDetailUser]);
@@ -145,10 +148,10 @@ export default function CustomersPage() {
   const handleUpdateProfile = handleSubmitUpdateProfile((data) => {
     updateProfileUser({
       fullname: data.fullname,
-      email: detailUserData?.data?.result?.email || "",
+      email: detailUserData?.userAccount.email|| "",
       phone_number: data.phone_number || "",
       password: "",
-      role: detailUserData?.data?.result?.role || "USER",
+      role: detailUserData?.role || "USER",
       location: data.location || "",
       username: data.username || "",
     } as UserProfile);
@@ -240,7 +243,7 @@ export default function CustomersPage() {
             title="Danh sách người dùng"
             columns={userColumns({
               onView: (user) => {
-                setSelectedUserId(user.id);
+                setSelectedUserId(String(user.accountId));
                 setIsDetailModalOpen(true);
               },
             })}
@@ -367,7 +370,7 @@ export default function CustomersPage() {
                         <div>
                           <p className="text-sm text-muted-foreground">ID</p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?._id}
+                            {detailUserData.accountId}
                           </p>
                         </div>
 
@@ -376,32 +379,23 @@ export default function CustomersPage() {
                             Họ tên
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.fullname}
+                            {detailUserData.name}
                           </p>
                         </div>
 
-                        <div>
+                        {/* <div>
                           <p className="text-sm text-muted-foreground">Email</p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.email}
+                            {detailUserData.userAccount.email}
                           </p>
-                        </div>
+                        </div> */}
 
                         <div>
                           <p className="text-sm text-muted-foreground">
                             Số điện thoại
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.phone_number}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-sm text-muted-foreground">
-                            Username
-                          </p>
-                          <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.username}
+                            {detailUserData.phone}
                           </p>
                         </div>
 
@@ -411,16 +405,16 @@ export default function CustomersPage() {
                           </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData?.data?.result?.role === "ADMIN"
+                              detailUserData.role=== "ADMIN"
                                 ? "bg-red-100 text-red-800"
-                                : detailUserData?.data?.result?.role === "STAFF"
+                                : detailUserData.role=== "STAFF"
                                   ? "bg-blue-100 text-blue-800"
-                                  : detailUserData?.data?.result?.role === "SOS"
+                                  : detailUserData.role=== "SOS"
                                     ? "bg-orange-100 text-orange-800"
                                     : "bg-green-100 text-green-800"
                             }`}
                           >
-                            {detailUserData?.data?.result?.role}
+                            {detailUserData.role}
                           </span>
                         </div>
 
@@ -430,16 +424,16 @@ export default function CustomersPage() {
                           </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData?.data?.result?.verify ===
-                              "VERIFIED"
+                              detailUserData.verify ===
+                              "Verified"
                                 ? "bg-green-100 text-green-800"
-                                : detailUserData?.data?.result?.verify ===
-                                    "UNVERIFIED"
+                                : detailUserData.verify ===
+                                    "Unverified"
                                   ? "bg-yellow-100 text-yellow-800"
                                   : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {detailUserData?.data?.result?.verify}
+                            {detailUserData.verify}
                           </span>
                         </div>
 
@@ -448,7 +442,7 @@ export default function CustomersPage() {
                             Địa chỉ
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.location ||
+                            {detailUserData.address ||
                               "Chưa có"}
                           </p>
                         </div>
@@ -458,7 +452,7 @@ export default function CustomersPage() {
                             NFC Card UID
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.nfc_card_uid ||
+                            {detailUserData.nfcCardUid ||
                               "Chưa có"}
                           </p>
                         </div>
@@ -468,7 +462,7 @@ export default function CustomersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {formatDateUTC(detailUserData?.data?.result?.created_at) || "-"}
+                            {detailUserData.createdAt ? formatToVNTime(detailUserData.createdAt) : "-"}
                           </p>
                         </div>
 
@@ -477,7 +471,7 @@ export default function CustomersPage() {
                             Lần cập nhật cuối
                           </p>
                           <p className="text-foreground font-medium">
-                            {formatDateUTC(detailUserData?.data?.result?.updated_at) || "-"}
+                            {detailUserData.updatedAt ? formatToVNTime(detailUserData.updatedAt) : "-"}
                           </p>
                         </div>
                       </div>
@@ -495,7 +489,7 @@ export default function CustomersPage() {
                     )}
 
                     {/* Tab: Stats */}
-                    {detailTab === "stats" && (
+                    {/* {detailTab === "stats" && (
                       <div className="space-y-3">
                         <div className="bg-muted rounded-lg p-4">
                           <div className="grid grid-cols-2 gap-3">
@@ -557,7 +551,7 @@ export default function CustomersPage() {
                           </div>
                         </div>
                       </div>
-                    )}
+                    )} */}
                   </>
                 )}
 
@@ -574,11 +568,11 @@ export default function CustomersPage() {
                   </Button>
                   <Button
                     onClick={() => {
-                      if (detailUserData?.data?.result) {
-                        setValueUpdateProfile("fullname", detailUserData.data.result.fullname || "");
-                        setValueUpdateProfile("location", detailUserData.data.result.location || "");
-                        setValueUpdateProfile("username", detailUserData.data.result.username || "");
-                        setValueUpdateProfile("phone_number", detailUserData.data.result.phone_number || "");
+                      if (detailUserData) {
+                        setValueUpdateProfile("fullname", detailUserData.name || "");
+                        setValueUpdateProfile("location", detailUserData.address || "");
+                       
+                        setValueUpdateProfile("phone_number", detailUserData.phone || "");
                       }
                       setIsEditProfileModalOpen(true);
                     }}
@@ -748,14 +742,13 @@ export default function CustomersPage() {
                   Chỉnh sửa thông tin người dùng
                 </h2>
 
-                {detailUserData?.data?.result && (
+                {detailUserData && (
                   <div className="mb-4 p-3 bg-muted rounded-lg text-sm">
                     <p className="text-muted-foreground mb-2"><strong>Thông tin hiện tại:</strong></p>
                     <div className="space-y-1 text-xs">
-                      <p><strong>Họ tên:</strong> {detailUserData.data.result.fullname}</p>
-                      <p><strong>Username:</strong> {detailUserData.data.result.username || "Chưa có"}</p>
-                      <p><strong>SĐT:</strong> {detailUserData.data.result.phone_number || "Chưa có"}</p>
-                      <p><strong>Địa chỉ:</strong> {detailUserData.data.result.location || "Chưa có"}</p>
+                      <p><strong>Họ tên:</strong> {detailUserData.name}</p>
+                      <p><strong>SĐT:</strong> {detailUserData.phone || "Chưa có"}</p>
+                      <p><strong>Địa chỉ:</strong> {detailUserData.address|| "Chưa có"}</p>
                     </div>
                   </div>
                 )}

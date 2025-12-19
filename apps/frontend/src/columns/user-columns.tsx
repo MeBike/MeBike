@@ -39,13 +39,20 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 export const userColumns = ({
   onView,
 }: {
-  onView?: ({ id }: { id: string }) => void;
+  onView?: ({ accountId }: { accountId: string }) => void;
 }): ColumnDef<Me>[] => [
   {
     accessorKey: "id",
     header: "Mã người dùng",
     cell: ({ row }) => {
       return shortenId(row.original.id) || "Không có";
+    },
+  },
+  {
+    accessorKey: "accountId",
+    header: "Mã tài khoản",
+    cell: ({ row }) => {
+      return shortenId(row.original.accountId) || "Không có";
     },
   },
   {
@@ -99,18 +106,26 @@ export const userColumns = ({
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return row.original.createdAt
-        ? formatToVNTime(row.original.createdAt)
-        : "Chưa có";
+      return (
+        <span className={`whitespace-nowrap`}>
+          {row.original.createdAt
+            ? formatToVNTime(row.original.createdAt)
+            : "Chưa có"}
+        </span>
+      );
     },
   },
   {
     accessorKey: "updatedAt",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return row.original.updatedAt
-        ? formatToVNTime(row.original.updatedAt)
-        : "Chưa có";
+      return (
+        <span className={`whitespace-nowrap`}>
+          {row.original.updatedAt
+            ? formatToVNTime(row.original.updatedAt)
+            : "Chưa có"}
+        </span>
+      );
     },
   },
   {
@@ -123,7 +138,7 @@ export const userColumns = ({
           title="Xem chi tiết"
           onClick={() => {
             if (onView) {
-              onView({ id: row.original.id });
+              onView({accountId:row.original.accountId});
             }
           }}
         >

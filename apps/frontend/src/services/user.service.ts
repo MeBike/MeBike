@@ -2,10 +2,10 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
 import { UserProfile } from "@/schemas/userSchema";
-import { GET_USERS } from "@/graphql";
+import { GET_USERS, GET_DETAIL_USER } from "@/graphql";
 import { print } from "graphql";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
-import { GetUsersResponse } from "@/types/auth.type";
+import { GetUsersResponse, GetDetailUserResponse } from "@/types/auth.type";
 interface ApiReponse<T> {
   data: T;
   pagination?: {
@@ -93,25 +93,23 @@ export const userService = {
     verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
     role?: "ADMIN" | "USER" | "STAFF" | "";
   }): Promise<AxiosResponse<GetUsersResponse>> => {
-    return fetchHttpClient.query<GetUsersResponse>(
-      print(GET_USERS),
-      {
-        variables: {
-          params: {
-            page: page,
-            limit: limit,
-            verify: verify === "" ? undefined : verify,
-            role: role === "" ? undefined : role,
-          },
-        },
-      } 
-    );  
+    return fetchHttpClient.query<GetUsersResponse>(print(GET_USERS), {
+      params: {
+        page: page,
+        limit: limit,
+        verify: verify === "" ? undefined : verify,
+        role: role === "" ? undefined : role,
+      },
+    });
   },
   getDetailUser: async (
     id: string
-  ): Promise<ApiReponse<DetailUserResponse<DetailUser>>> => {
-    const response = await fetchHttpClient.get<DetailUserResponse<DetailUser>>(
-      USER_ENDPOINTS.BY_ID(id)
+  ): Promise<AxiosResponse<GetDetailUserResponse>> => {
+    const response = await fetchHttpClient.query<GetDetailUserResponse>(
+      print(GET_DETAIL_USER),
+      {
+        params: id,
+      }
     );
     return response;
   },
