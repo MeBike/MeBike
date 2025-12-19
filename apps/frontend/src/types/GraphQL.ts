@@ -9,6 +9,10 @@ export interface BaseMutationResponse<T = null> {
   message: string;
   statusCode: number;
   success: boolean;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?:number
 }
 export interface GraphQLMutationResponse<
   MutationName extends string,
@@ -18,7 +22,7 @@ export interface GraphQLMutationResponse<
     [K in MutationName]: BaseMutationResponse<Payload>;
   } | null;
   errors?: (string | ErrorObject)[] | null;
-}
+  }
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;

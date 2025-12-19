@@ -233,7 +233,7 @@ export default function CustomersPage() {
 
         <div>
           <p className="text-sm text-muted-foreground mb-4">
-            Hiển thị {paginationUser?.currentPage ?? 1} /{" "}
+            Hiển thị {paginationUser?.page ?? 1} /{" "}
             {paginationUser?.totalPages ?? 1} trang
           </p>
           <DataTable

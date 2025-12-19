@@ -2,7 +2,10 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
 import { UserProfile } from "@/schemas/userSchema";
+import { GET_USERS } from "@/graphql";
+import { print } from "graphql";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
+import { GetUsersResponse } from "@/types/auth.type";
 interface ApiReponse<T> {
   data: T;
   pagination?: {
@@ -89,17 +92,20 @@ export const userService = {
     limit?: number;
     verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
     role?: "ADMIN" | "USER" | "STAFF" | "";
-  }): Promise<AxiosResponse<ApiReponse<DetailUser[]>>> => {
-    const response = await fetchHttpClient.get<ApiReponse<DetailUser[]>>(
-      USER_ENDPOINTS.MANAGE_USER,
+  }): Promise<AxiosResponse<GetUsersResponse>> => {
+    return fetchHttpClient.query<GetUsersResponse>(
+      print(GET_USERS),
       {
-        page: page,
-        limit: limit,
-        verify: verify,
-        role: role,
-      }
-    );
-    return response;
+        variables: {
+          params: {
+            page: page,
+            limit: limit,
+            verify: verify === "" ? undefined : verify,
+            role: role === "" ? undefined : role,
+          },
+        },
+      } 
+    );  
   },
   getDetailUser: async (
     id: string
@@ -211,5 +217,5 @@ export const userService = {
       DetailUserResponse<DetailUser>
     >(USER_ENDPOINTS.UPDATE_PROFILE_ADMIN(id), data);
     return response;
-  }
+  },
 };

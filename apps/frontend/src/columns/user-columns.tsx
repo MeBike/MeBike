@@ -3,6 +3,7 @@ import { Eye } from "lucide-react";
 import type { UserRole } from "@/types";
 import type { DetailUser as ServiceDetailUser } from "@/services/auth.service";
 import { formatDateUTC } from "@/utils/formatDateTime";
+import { Me } from "@/types/GraphQL";
 export const getVerifyStatusColor = (status: string) => {
   switch (status) {
     case "VERIFIED":
@@ -38,19 +39,19 @@ export const userColumns = ({
   onView,
 }: {
   onView?: ({ id }: { id: string }) => void;
-}): ColumnDef<ServiceDetailUser>[] => [
+}): ColumnDef<Me>[] => [
   {
-    accessorKey: "_id",
+    accessorKey: "id",
     header: "Mã người dùng",
     cell: ({ row }) => {
-      return shortenId(row.original._id) || "Không có";
+      return shortenId(row.original.id) || "Không có";
     },
   },
   {
-    accessorKey: "fullname",
+    accessorKey: "name",
     header: "Họ tên",
     cell: ({ row }) => {
-      return row.original.fullname || "Không có";
+      return row.original.name || "Không có";
     },
   },
   {
@@ -61,25 +62,25 @@ export const userColumns = ({
     },
   },
   {
-    accessorKey: "phone_number",
+    accessorKey: "phone",
     header: "Số điện thoại",
     cell: ({ row }) => {
-      return row.original.phone_number || "Không có";
+      return row.original.phone || "Không có";
     },
   },
-  {
-    accessorKey: "role",
-    header: "Vai trò",
-    cell: ({ row }) => (
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(
-          row.original.role
-        )}`}
-      >
-        {row.original.role}
-      </span>
-    ),
-  },
+  // {
+  //   accessorKey: "role",
+  //   header: "Vai trò",
+  //   cell: ({ row }) => (
+  //     <span
+  //       className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(
+  //         row.original.role
+  //       )}`}
+  //     >
+  //       {row.original.role}
+  //     </span>
+  //   ),
+  // },
   {
     accessorKey: "verify",
     header: "Trạng thái xác thực",
@@ -94,17 +95,17 @@ export const userColumns = ({
     ),
   },
   {
-    accessorKey: "created_at",
+    accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.created_at);
+      return formatDateUTC(row.original.createdAt ? row.original.createdAt : "");
     },
   },
   {
-    accessorKey: "updated_at",
+    accessorKey: "updatedAt",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.updated_at);
+      return formatDateUTC(row.original.updatedAt ? row.original.updatedAt : "");
     },
   },
   {
@@ -117,7 +118,7 @@ export const userColumns = ({
           title="Xem chi tiết"
           onClick={() => {
             if (onView) {
-              onView({ id: row.original._id });
+              onView({ id: row.original.id });
             }
           }}
         >

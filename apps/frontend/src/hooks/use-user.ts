@@ -17,6 +17,8 @@ import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordM
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
 import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
+import type { Me } from "@/types/GraphQL";
+import type { DetailUser } from "@/services/auth.service";
 interface ErrorWithMessage {
   message: string;
 }
@@ -159,8 +161,32 @@ export const useUserActions = ({
     }
     refetchSearch();
   }, [hasToken, router, refetchSearch]);
-  const users =
-    searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
+  const users: Me[] =
+    searchQuery && searchQuery.length > 0
+      ? (searchData?.data || []).map((user: DetailUser) => ({
+          id: user._id,
+          accountId: user._id,
+          name: user.fullname,
+          YOB: 0,
+          role: user.role,
+          verify: user.verify,
+          email: user.email,
+          status: "active",
+          phone: user.phone_number,
+          userAccount: {
+            email: user.email,
+            id: user._id,
+            password: "",
+          },
+          address: user.location,
+          location: user.location,
+          avatarUrl: user.avatar,
+          username: user.username,
+          createdAt: user.created_at,
+          nfcCardUid: user.nfc_card_uid,
+          updatedAt: user.updated_at,
+        }))
+      : data?.data?.Users.data || [];
   const createUser = useCallback(
     async (userData: UserProfile) => {
       if (!hasToken) {
@@ -310,9 +336,9 @@ export const useUserActions = ({
     isLoadingTopRenter,
     getSearchUsers,
     createUser,
-    paginationUser: data?.pagination,
+    paginationUser: data?.data?.Users,
     isLoadingSearch,
-    totalRecordUser: data?.pagination?.totalRecords || 0,
+    totalRecordUser: data?.data?.Users?.total || 0,
     getDetailUser,
     detailUserData,
     isLoadingDetailUser,
