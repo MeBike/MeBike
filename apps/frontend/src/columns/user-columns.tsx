@@ -42,15 +42,8 @@ export const userColumns = ({
   onView?: ({ accountId }: { accountId: string }) => void;
 }): ColumnDef<Me>[] => [
   {
-    accessorKey: "id",
-    header: "Mã người dùng",
-    cell: ({ row }) => {
-      return shortenId(row.original.id) || "Không có";
-    },
-  },
-  {
     accessorKey: "accountId",
-    header: "Mã tài khoản",
+    header: "ID người dùng",
     cell: ({ row }) => {
       return shortenId(row.original.accountId) || "Không có";
     },
@@ -71,7 +64,7 @@ export const userColumns = ({
   },
   {
     accessorKey: "phone",
-    header: "Số điện thoại",
+    header: "SĐT",
     cell: ({ row }) => {
       return row.original.phone || "Không có";
     },
@@ -91,7 +84,7 @@ export const userColumns = ({
   },
   {
     accessorKey: "verify",
-    header: "Trạng thái xác thực",
+    header: "Trạng thái",
     cell: ({ row }) => (
       <span
         className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getVerifyStatusColor(
