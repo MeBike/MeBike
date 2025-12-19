@@ -10,6 +10,7 @@ import type {
   Tokens,
   VerifyEmailOtpRequest,
 } from "./models";
+import { OptionalTrimmedNullableStringSchema } from "../schemas";
 
 export const TokensSchema = z.object({
   accessToken: z.string(),
@@ -29,7 +30,7 @@ export const RegisterRequestSchema = z.object({
   fullname: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(1),
-  phoneNumber: z.string().optional().nullable(),
+  phoneNumber: OptionalTrimmedNullableStringSchema,
 }).openapi("RegisterRequest") satisfies z.ZodType<RegisterRequest>;
 
 export const RefreshRequestSchema = z.object({

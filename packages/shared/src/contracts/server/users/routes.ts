@@ -1,6 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 
 import {
+  OptionalTrimmedNullableStringSchema,
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,
   UnauthorizedErrorResponseSchema,
@@ -13,7 +14,7 @@ export const MeResponseSchema = z.object({
 
 export const UpdateMeRequestSchema = z.object({
   fullname: z.string().min(1).optional(),
-  phoneNumber: z.string().optional().nullable(),
+  phoneNumber: OptionalTrimmedNullableStringSchema,
   username: z.string().optional().nullable(),
   avatar: z.string().url().optional().nullable(),
   location: z.string().optional().nullable(),
@@ -25,6 +26,7 @@ export const meRoute = createRoute({
   method: "get",
   path: "/v1/users/me",
   tags: ["Users"],
+  security: [{ bearerAuth: [] }],
   responses: {
     200: {
       description: "Current user profile",
@@ -78,6 +80,7 @@ export const updateMeRoute = createRoute({
   method: "patch",
   path: "/v1/users/me",
   tags: ["Users"],
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {

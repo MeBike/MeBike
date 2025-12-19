@@ -30,6 +30,7 @@ export const getMyRentals = createRoute({
   method: "get",
   path: "/v1/rentals/me",
   tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
   request: {
     query: RentalListQuerySchema,
   },
@@ -65,6 +66,7 @@ export const getMyCurrentRentals = createRoute({
   method: "get",
   path: "/v1/rentals/me/current",
   tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
   request: {
     query: RentalListQuerySchema,
   },
@@ -100,6 +102,7 @@ export const getMyRentalCounts = createRoute({
   method: "get",
   path: "/v1/rentals/me/counts",
   tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
   request: {
     query: z.object({
       status: RentalStatusSchema.optional(),
@@ -137,6 +140,7 @@ export const getMyRental = createRoute({
   method: "get",
   path: "/v1/rentals/me/{rentalId}",
   tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
   request: {
     params: RentalIdParamSchema,
   },

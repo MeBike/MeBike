@@ -88,6 +88,12 @@ export function createHttpApp() {
           details: {
             message: err?.message ?? String(err),
             stack: err instanceof Error ? err.stack : undefined,
+            cause: (err as { cause?: unknown })?.cause instanceof Error
+              ? {
+                  message: (err as { cause: Error }).cause.message,
+                  stack: (err as { cause: Error }).cause.stack,
+                }
+              : (err as { cause?: unknown })?.cause,
           },
         };
 

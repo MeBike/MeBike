@@ -90,6 +90,15 @@ export type UnauthorizedErrorResponse = z.infer<typeof UnauthorizedErrorResponse
 
 export const SortDirectionSchema = z.enum(["asc", "desc"]);
 
+export const OptionalTrimmedNullableStringSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    return trimmed === "" ? null : trimmed;
+  },
+  z.string().optional().nullable(),
+);
+
 export const PaginationSchema = z
   .object({
     page: z.number().int().positive().openapi({

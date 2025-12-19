@@ -6,7 +6,6 @@ import { uuidv7 } from "uuidv7";
 import type {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
-  UserRepositoryError,
 } from "@/domain/users";
 
 import { UserRepository } from "@/domain/users/repository/user.repository";
@@ -40,7 +39,7 @@ export type AuthService = {
     email: string;
     password: string;
     phoneNumber?: string | null;
-  }) => Effect.Effect<Tokens, DuplicateUserEmail | DuplicateUserPhoneNumber | UserRepositoryError>;
+  }) => Effect.Effect<Tokens, DuplicateUserEmail | DuplicateUserPhoneNumber>;
   loginWithPassword: (args: {
     email: string;
     password: string;
@@ -106,7 +105,7 @@ export const AuthServiceLive = Layer.effect(
           passwordHash,
           phoneNumber: phoneNumber ?? null,
         }).pipe(
-          Effect.catchTag("UserRepositoryError", err => Effect.fail(err)),
+          Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
         );
 
         const otp = generateOtp();

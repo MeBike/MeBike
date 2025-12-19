@@ -23,4 +23,13 @@ export const serverOpenApi = {
       description: "Local development server",
     },
   ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+    },
+  },
 };

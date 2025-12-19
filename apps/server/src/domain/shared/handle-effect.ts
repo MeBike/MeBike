@@ -1,4 +1,4 @@
-import { Cause, Effect } from "effect";
+import { Cause, Effect, Option } from "effect";
 
 import logger from "@/lib/logger";
 
@@ -9,13 +9,12 @@ export function withLoggedCause<A, E, R>(
   return eff.pipe(
     Effect.tapErrorCause(cause =>
       Effect.sync(() => {
-        logger.error(
-          {
-            context,
-            cause: Cause.pretty(cause),
-          },
-          "Effect failure",
-        );
+        const failure = Cause.failureOption(cause);
+        logger.error({
+          context,
+          cause: Cause.pretty(cause),
+          ...(Option.isSome(failure) ? { err: failure.value } : {}),
+        }, "Effect failure");
       }),
     ),
   );

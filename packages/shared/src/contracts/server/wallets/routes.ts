@@ -20,6 +20,7 @@ export const getMyWalletRoute = createRoute({
   method: "get",
   path: "/v1/wallets/me",
   tags: ["Wallets"],
+  security: [{ bearerAuth: [] }],
   responses: {
     200: {
       description: "Current user's wallet",
@@ -73,6 +74,7 @@ export const listMyWalletTransactionsRoute = createRoute({
   method: "get",
   path: "/v1/wallets/me/transactions",
   tags: ["Wallets"],
+  security: [{ bearerAuth: [] }],
   request: {
     query: ListMyWalletTransactionsQuerySchema,
   },
@@ -129,6 +131,7 @@ export const creditMyWalletRoute = createRoute({
   method: "post",
   path: "/v1/wallets/me/credit",
   tags: ["Wallets"],
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {
@@ -191,6 +194,7 @@ export const debitMyWalletRoute = createRoute({
   method: "post",
   path: "/v1/wallets/me/debit",
   tags: ["Wallets"],
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {

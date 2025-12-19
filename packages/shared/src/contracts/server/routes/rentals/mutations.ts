@@ -87,6 +87,7 @@ export const endMyRental = createRoute({
   method: "put",
   path: "/v1/rentals/me/{rentalId}/end",
   tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
   request: {
     params: RentalIdParamSchema,
     body: {

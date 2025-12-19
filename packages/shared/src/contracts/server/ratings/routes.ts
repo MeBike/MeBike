@@ -17,6 +17,7 @@ export const createRatingRoute = createRoute({
   method: "post",
   path: "/v1/ratings/{rentalId}",
   tags: ["Ratings"],
+  security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
       rentalId: z.string(),
@@ -157,6 +158,7 @@ export const getRatingByRentalRoute = createRoute({
   method: "get",
   path: "/v1/ratings/{rentalId}",
   tags: ["Ratings"],
+  security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
       rentalId: z.string(),

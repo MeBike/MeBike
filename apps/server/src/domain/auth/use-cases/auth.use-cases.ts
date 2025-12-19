@@ -3,7 +3,6 @@ import { Effect } from "effect";
 import type {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
-  UserRepositoryError,
 } from "@/domain/users";
 
 import type {
@@ -21,7 +20,7 @@ export function registerUseCase(args: {
   phoneNumber?: string | null;
 }): Effect.Effect<
   Tokens,
-  DuplicateUserEmail | DuplicateUserPhoneNumber | UserRepositoryError,
+  DuplicateUserEmail | DuplicateUserPhoneNumber,
   AuthServiceTag
 > {
   return Effect.gen(function* () {

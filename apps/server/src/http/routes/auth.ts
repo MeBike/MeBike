@@ -40,11 +40,9 @@ export function registerAuthRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
           error: authErrorMessages.DUPLICATE_PHONE_NUMBER,
           details: { code: AuthContracts.AuthErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
         }, 409)),
-      Match.orElse(() =>
-        c.json<AuthContracts.AuthErrorResponse, 409>({
-          error: authErrorMessages.DUPLICATE_EMAIL,
-          details: { code: AuthContracts.AuthErrorCodeSchema.enum.DUPLICATE_EMAIL },
-        }, 409)),
+      Match.orElse((left) => {
+        throw left;
+      }),
     );
   });
 
