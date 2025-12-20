@@ -1,5 +1,5 @@
 import { UserRole } from "./Customer";
-
+import { Pagination } from "./Pagination";
 export interface ErrorObject {
   message: string;
   [key: string]: unknown;
@@ -12,9 +12,7 @@ export interface BaseMutationResponse<T = null> {
   statusCode: number;
   success: boolean;
   total?: number;
-  page?: number;
-  limit?: number;
-  totalPages?:number
+  pagination?: Pagination;
 }
 export interface GraphQLMutationResponse<
   MutationName extends string,

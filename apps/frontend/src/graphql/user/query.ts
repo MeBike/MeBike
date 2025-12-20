@@ -56,6 +56,12 @@ export const GET_DETAIL_USER = gql`
         createdAt
         updatedAt
       }
+      pagination {
+        totalPages
+        totalRecords
+        limit
+        currentPage
+      }
       message
       statusCode
       success

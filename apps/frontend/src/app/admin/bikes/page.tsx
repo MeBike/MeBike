@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Bike, BikeRentalHistory, BikeStatus } from "@custom-types";
-import { Plus } from "lucide-react";
+import { CloudCog, Plus } from "lucide-react";
 import { useBikeActions } from "@/hooks/use-bike";
 import { Loader2 } from "lucide-react";
 import { bikeColumn } from "@/columns/bike-colums";
@@ -53,7 +53,7 @@ export default function BikesPage() {
     isFetchingRentalBikes,
     getRentalBikes,
     getBikeStats,
-    
+    getBikes,
   } = useBikeActions(
     true,
     detailId,
@@ -92,40 +92,44 @@ export default function BikesPage() {
     }
   }
   useEffect(() => {
+    getBikes();
+    console.log(data?.data?.Bikes.data);
+  }, [page, limit, statusFilter, getBikes]);
+  useEffect(() => {
     if (!isLoadingDetail && detailBike && editId) {
       setEditBike(detailBike);
       setIsEditModalOpen(true);
     }
   }, [isLoadingDetail, detailBike, editId]);
-  const handleUpdateBike = () => {
-    if (!editBike) return;
-    updateBike({
-      station_id: editBike.station_id,
-      supplier_id: editBike.supplier_id || "",
-      status: editBike.status,
-      chip_id: editBike.chip_id,
-    }, editBike._id);
-    setIsEditModalOpen(false);
-  };
-  const handleCreateBike = () => {
-    if (!newBike.station_id || !newBike.chip_id) {
-      alert("Vui lòng điền đầy đủ thông tin");
-      return;
-    }
-    createBike({
-      station_id: newBike.station_id,
-      supplier_id: newBike.supplier_id,
-      status: newBike.status,
-      chip_id: newBike.chip_id,
-    });
-    setIsCreateModalOpen(false);
-    setNewBike({
-      station_id: "",
-      supplier_id: "",
-      chip_id: "",
-      status: "CÓ SẴN",
-    });
-  };
+  // const handleUpdateBike = () => {
+  //   if (!editBike) return;
+  //   updateBike({
+  //     station_id: editBike.station_id,
+  //     supplier_id: editBike.supplier_id || "",
+  //     status: editBike.status,
+  //     chip_id: editBike.chip_id,
+  //   }, editBike._id);
+  //   setIsEditModalOpen(false);
+  // };
+  // const handleCreateBike = () => {
+  //   if (!newBike.station_id || !newBike.chip_id) {
+  //     alert("Vui lòng điền đầy đủ thông tin");
+  //     return;
+  //   }
+  //   createBike({
+  //     station_id: newBike.station_id,
+  //     supplier_id: newBike.supplier_id,
+  //     status: newBike.status,
+  //     chip_id: newBike.chip_id,
+  //   });
+  //   setIsCreateModalOpen(false);
+  //   setNewBike({
+  //     station_id: "",
+  //     supplier_id: "",
+  //     chip_id: "",
+  //     status: "CÓ SẴN",
+  //   });
+  // };
   useEffect(() => {
     getStatisticsBike();
   }, [getStatisticsBike]);
@@ -742,17 +746,17 @@ export default function BikesPage() {
                 stations: stations,
                 suppliers: allSupplier?.data || [],
               })}
-              data={data?.data || []}
+              data={data?.data?.Bikes.data || []}
             />
             <PaginationDemo
-              currentPage={paginationBikes?.currentPage ?? 1}
+              currentPage={paginationBikes?.page ?? 1}
               onPageChange={setPage}
               totalPages={paginationBikes?.totalPages ?? 1}
             />
           </div>
 
           <p className="text-sm text-muted-foreground">
-            Trang {paginationBikes?.currentPage} / {paginationBikes?.totalPages}{" "}
+            Trang {paginationBikes?.page} / {paginationBikes?.totalPages}{" "}
             xe đạp
           </p>
         </div>
@@ -948,7 +952,7 @@ export default function BikesPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Ngày tạo</p>
                     <p className="text-foreground font-medium">
-                      {formatDateUTC(detailBike.created_at)}
+                      {formatDateUTC(detailBike.createdAt)}
                     </p>
                   </div>
                   <div>
@@ -956,7 +960,7 @@ export default function BikesPage() {
                       Ngày cập nhật
                     </p>
                     <p className="text-foreground font-medium">
-                      {formatDateUTC(detailBike.updated_at)}
+                      {formatDateUTC(detailBike.updatedAt)}
                     </p>
                   </div>
                 </div>
@@ -1194,7 +1198,7 @@ export default function BikesPage() {
             </div>
           </div>
         )}
-        {isEditModalOpen && detailBike && (
+        {/* {isEditModalOpen && detailBike && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
               <h2 className="text-xl font-bold text-foreground mb-4">
@@ -1309,7 +1313,7 @@ export default function BikesPage() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     );
 }

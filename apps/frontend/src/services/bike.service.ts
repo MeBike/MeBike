@@ -118,32 +118,18 @@ export const bikeService = {
     return response;
   },
   getAllBikes: async ({
-    page,
     limit,
-    station_id,
-    supplier_id,
-    bike_id,
-    status,
-    search,
+    page,
   }: {
-    page?: number;
     limit?: number;
-    station_id?: string;
-    supplier_id?: string;
-    bike_id?: string;
-    status?: BikeStatus;
-    search?: string;
+    page?: number;
   }): Promise<AxiosResponse<GetBikesResponse>> => {
     const response = await fetchHttpClient.query<GetBikesResponse>(
       print(GET_BIKES),
       {
         params: {
-          limit: limit,
-          page: page,
-          search: search,
-          station_id: station_id,
-          supplier_id: supplier_id,
-          status: status,
+          limit: limit ?? 10,
+          page: page ?? 1,
         },
       }
     );

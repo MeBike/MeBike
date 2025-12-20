@@ -104,9 +104,6 @@ export const useBikeActions = (
   } = useGetAllBikeQuery({
     page: page,
     limit: limit,
-    station_id: station_id || "",
-    supplier_id: supplier_id || "",
-    status: status,
   });
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
@@ -279,7 +276,7 @@ export const useBikeActions = (
     deleteBike,
     reportBike,
     getBikeByID,
-    paginationBikes: data?.pagination,
+    paginationBikes: data?.data?.Bikes.pagination,
     isFetchingBikeDetail: isLoading,
     isLoadingDetail,
     detailBike: detailBike?.result,
@@ -292,7 +289,7 @@ export const useBikeActions = (
     getStatisticsBike,
     isLoadingStatistics,
     statisticData,
-    paginationOfBikes: data?.pagination,
+    paginationOfBikes: data?.data?.Bikes.pagination,
     bikeActivityStats: bikeActivityStats?.result,
     getBikeActivityStats,
     isFetchingBikeActivityStats,
@@ -302,6 +299,6 @@ export const useBikeActions = (
     bikeRentals: bikeRentals?.result.data,
     getRentalBikes,
     isFetchingRentalBikes,
-    totalRecord: data?.pagination.totalRecords || 0,
+    totalRecord: data?.data?.Bikes.pagination?.total || 0,
   };
 };

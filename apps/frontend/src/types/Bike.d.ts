@@ -59,7 +59,7 @@ export interface BikeRentalHistory {
   };
 }
 
-export type BikeStatus = "Available" | "InUse" | "Maintenance" | "Inactive";
+export type BikeStatus = "Available" | "Booked" | "Broken" | "Reserved" | "Maintained" | "Unavailable";
 
 export interface Bike {
   id: string;
