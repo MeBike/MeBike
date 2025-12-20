@@ -108,15 +108,6 @@ export const bikeService = {
     );
     return response;
   },
-  //all
-  getBikeByIdForAll: async (
-    id: string
-  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Bike>>(
-      BIKE_ENDPOINTS.BY_ID_FOR_ALL(id)
-    );
-    return response;
-  },
   getAllBikes: async ({
     limit,
     page,
@@ -131,6 +122,17 @@ export const bikeService = {
           limit: limit ?? 10,
           page: page ?? 1,
         },
+      }
+    );
+    return response;
+  },
+  getDetailBike: async (
+    id: string
+  ): Promise<AxiosResponse<GetDetailBikeResponse>> => {
+    const response = await fetchHttpClient.query<GetDetailBikeResponse>(
+      print(GET_DETAIL_BIKES),
+      {
+       bikeId: id ,
       }
     );
     return response;

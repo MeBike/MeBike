@@ -17,6 +17,8 @@
 //   | "ĐANG BẢO TRÌ"
 //   | "KHÔNG CÓ SẴN"
 //   | "";
+import type { Station } from "./Station";
+import type { Supplier } from "./Supplier";
 export interface BikeActivityStats {
   bike_id: string;
   total_minutes_active: number;
@@ -75,4 +77,13 @@ export interface Bike {
   };
   createdAt: string;
   updatedAt: string;
+}
+export type DetailBike = {
+  id: string;
+  chipId: string;
+  status: BikeStatus;
+  createdAt: string;
+  updatedAt: string;
+  station : Station;
+  supplier : Supplier;
 }

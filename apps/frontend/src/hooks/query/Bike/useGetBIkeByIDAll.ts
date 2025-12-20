@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 const getBikeByIDForAll = async (id: string) => {
     try {
-        const response = await bikeService.getBikeByIdForAll(id);
+        const response = await bikeService.getDetailBike(id);
         if (response.status === 200) {
             return response.data;
         }

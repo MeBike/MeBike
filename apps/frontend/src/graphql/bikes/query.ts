@@ -36,19 +36,34 @@ export const GET_DETAIL_BIKES = gql`
     success
     message
     data {
-      chipId
-      createdAt
       id
+      chipId
       station {
-        id
         name
+        id
+        longitude
+        latitude
+        updatedAt
+        distance
+        createdAt
+        capacity
+        address
       }
-      status
-      updatedAt
       supplier {
         name
         id
+        status
+        contactInfo {
+          phone
+          address
+        }
+        createdAt
+        contactFee
+        updatedAt
       }
+      status
+      createdAt
+      updatedAt
     }
     errors
     statusCode

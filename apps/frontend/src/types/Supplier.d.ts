@@ -1,13 +1,14 @@
 export interface Supplier {
-  _id: string;
+  id: string;
   name: string;
   contact_info: {
     address: string;
     phone_number: string;
   };
   contract_fee: string;
-  status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG";
-  created_at: string;
+  status: "Active" | "Inactive";
+  createdAt: string;
+  updatedAt: string;
 }
 export interface StatsSupplierBike {
   supplier_id: string;
