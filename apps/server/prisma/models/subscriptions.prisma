@@ -27,6 +27,8 @@ model Subscription {
   user         User          @relation(fields: [userId], references: [id])
   reservations Reservation[]
   rentals      Rental[]
+  // Partial unique index for active subscriptions per user cannot be expressed in Prisma:
+  // CREATE UNIQUE INDEX idx_subscriptions_active_user ON "Subscription"("user_id") WHERE status = 'ACTIVE';
 
   @@index([userId], name: "idx_subscriptions_user")
   @@index([status], name: "idx_subscriptions_status")

@@ -13,6 +13,7 @@ import { registerBikeRoutes } from "./routes/bikes";
 import { registerRatingRoutes } from "./routes/ratings";
 import { registerRentalRoutes } from "./routes/rentals";
 import { registerStationRoutes } from "./routes/stations";
+import { registerSubscriptionRoutes } from "./routes/subscriptions";
 import { registerSupplierRoutes } from "./routes/suppliers";
 import { registerUserRoutes } from "./routes/users";
 import { registerWalletRoutes } from "./routes/wallets";
@@ -56,6 +57,7 @@ export function createHttpApp() {
   app.use("/v1/users/*", requireAuthMiddleware);
   app.use("/v1/ratings/*", requireAuthMiddleware);
   app.use("/v1/wallets/*", requireAuthMiddleware);
+  app.use("/v1/subscriptions/*", requireAuthMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(
@@ -75,6 +77,7 @@ export function createHttpApp() {
   registerUserRoutes(app);
   registerRatingRoutes(app);
   registerWalletRoutes(app);
+  registerSubscriptionRoutes(app);
 
   app.onError((err, c) => {
     const isProd = env.NODE_ENV === "production";
