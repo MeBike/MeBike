@@ -9,6 +9,7 @@ import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 import type {
   PrismaClient,
+  Prisma as PrismaTypes,
   WalletTransactionStatus,
   WalletTransactionType,
 } from "../../../../generated/prisma/client";
@@ -31,8 +32,23 @@ import { selectWalletRow, selectWalletTransactionRow, toWalletRow, toWalletTrans
 export type WalletRepo = {
   findByUserId: (userId: string) => Effect.Effect<Option.Option<WalletRow>, WalletRepositoryError>;
   createForUser: (userId: string) => Effect.Effect<WalletRow, WalletUniqueViolation | WalletRepositoryError>;
+  createForUserInTx: (
+    tx: PrismaTypes.TransactionClient,
+    userId: string,
+  ) => Effect.Effect<WalletRow, WalletUniqueViolation | WalletRepositoryError>;
   increaseBalance: (input: IncreaseBalanceInput) => Effect.Effect<WalletRow, WalletRecordNotFound | WalletRepositoryError>;
+  increaseBalanceInTx: (
+    tx: PrismaTypes.TransactionClient,
+    input: IncreaseBalanceInput,
+  ) => Effect.Effect<WalletRow, WalletRecordNotFound | WalletRepositoryError>;
   decreaseBalance: (input: DecreaseBalanceInput) => Effect.Effect<
+    WalletRow,
+    WalletRecordNotFound | WalletBalanceConstraint | WalletRepositoryError
+  >;
+  decreaseBalanceInTx: (
+    tx: PrismaTypes.TransactionClient,
+    input: DecreaseBalanceInput,
+  ) => Effect.Effect<
     WalletRow,
     WalletRecordNotFound | WalletBalanceConstraint | WalletRepositoryError
   >;
@@ -48,14 +64,45 @@ export class WalletRepository extends Context.Tag("WalletRepository")<
 >() {}
 
 export function makeWalletRepository(client: PrismaClient): WalletRepo {
+  const findWalletByUserId = async (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    userId: string,
+  ) =>
+    tx.wallet.findUnique({
+      where: { userId },
+      select: selectWalletRow,
+    });
+
+  const createTransaction = async (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    args: {
+      walletId: string;
+      amount: WalletDecimal;
+      fee: WalletDecimal;
+      description?: string | null;
+      hash?: string | null;
+      type: WalletTransactionType;
+      status: WalletTransactionStatus;
+    },
+  ) =>
+    tx.walletTransaction.create({
+      data: {
+        walletId: args.walletId,
+        amount: args.amount,
+        fee: args.fee,
+        description: args.description ?? null,
+        hash: args.hash ?? null,
+        type: args.type,
+        status: args.status,
+      },
+      select: { id: true },
+    });
+
   return {
     findByUserId: userId =>
       Effect.tryPromise({
         try: async () => {
-          const row = await client.wallet.findUnique({
-            where: { userId },
-            select: selectWalletRow,
-          });
+          const row = await findWalletByUserId(client, userId);
           return Option.fromNullable(row ? toWalletRow(row) : null);
         },
         catch: err =>
@@ -84,6 +131,25 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
         },
       }),
 
+    createForUserInTx: (tx, userId) =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await tx.wallet.create({
+            data: {
+              userId,
+            },
+            select: selectWalletRow,
+          });
+          return toWalletRow(row);
+        },
+        catch: (err) => {
+          if (isPrismaUniqueViolation(err)) {
+            return new WalletUniqueViolation({ operation: "createForUserInTx", constraint: "wallet.userId", userId });
+          }
+          return new WalletRepositoryError({ operation: "createForUserInTx", cause: err });
+        },
+      }),
+
     increaseBalance: input =>
       Effect.tryPromise({
         try: async () => {
@@ -94,10 +160,7 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
           const txStatus: WalletTransactionStatus = "SUCCESS";
 
           const updated = await client.$transaction(async (tx) => {
-            const wallet = await tx.wallet.findUnique({
-              where: { userId: input.userId },
-              select: selectWalletRow,
-            });
+            const wallet = await findWalletByUserId(tx, input.userId);
             if (!wallet) {
               throw new WalletRecordNotFound({ operation: "increaseBalance.findWallet", userId: input.userId });
             }
@@ -110,17 +173,14 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
               select: selectWalletRow,
             });
 
-            await tx.walletTransaction.create({
-              data: {
-                walletId: wallet.id,
-                amount,
-                fee,
-                description: input.description ?? null,
-                hash: input.hash ?? null,
-                type: txType,
-                status: txStatus,
-              },
-              select: { id: true },
+            await createTransaction(tx, {
+              walletId: wallet.id,
+              amount,
+              fee,
+              description: input.description ?? null,
+              hash: input.hash ?? null,
+              type: txType,
+              status: txStatus,
             });
 
             return bumped;
@@ -135,6 +195,47 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
         },
       }),
 
+    increaseBalanceInTx: (tx, input) =>
+      Effect.tryPromise({
+        try: async () => {
+          const amount = toPrismaDecimal(input.amount) as WalletDecimal;
+          const fee = toPrismaDecimal(input.fee ?? "0") as WalletDecimal;
+          const net = amount.sub(fee);
+          const txType: WalletTransactionType = input.type ?? "DEPOSIT";
+          const txStatus: WalletTransactionStatus = "SUCCESS";
+
+          const wallet = await findWalletByUserId(tx, input.userId);
+          if (!wallet) {
+            throw new WalletRecordNotFound({ operation: "increaseBalanceInTx.findWallet", userId: input.userId });
+          }
+
+          const bumped = await tx.wallet.update({
+            where: { id: wallet.id },
+            data: {
+              balance: { increment: net },
+            },
+            select: selectWalletRow,
+          });
+
+          await createTransaction(tx, {
+            walletId: wallet.id,
+            amount,
+            fee,
+            description: input.description ?? null,
+            hash: input.hash ?? null,
+            type: txType,
+            status: txStatus,
+          });
+
+          return toWalletRow(bumped);
+        },
+        catch: (err) => {
+          if (err instanceof WalletRecordNotFound)
+            return err;
+          return new WalletRepositoryError({ operation: "increaseBalanceInTx", cause: err });
+        },
+      }),
+
     decreaseBalance: input =>
       Effect.tryPromise({
         try: async () => {
@@ -143,10 +244,7 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
           const txStatus: WalletTransactionStatus = "SUCCESS";
 
           const updated = await client.$transaction(async (tx) => {
-            const wallet = await tx.wallet.findUnique({
-              where: { userId: input.userId },
-              select: selectWalletRow,
-            });
+            const wallet = await findWalletByUserId(tx, input.userId);
             if (!wallet) {
               throw new WalletRecordNotFound({ operation: "decreaseBalance.findWallet", userId: input.userId });
             }
@@ -176,17 +274,14 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
               select: selectWalletRow,
             });
 
-            await tx.walletTransaction.create({
-              data: {
-                walletId: wallet.id,
-                amount,
-                fee: toPrismaDecimal(0) as WalletDecimal,
-                description: input.description ?? null,
-                hash: input.hash ?? null,
-                type: txType,
-                status: txStatus,
-              },
-              select: { id: true },
+            await createTransaction(tx, {
+              walletId: wallet.id,
+              amount,
+              fee: toPrismaDecimal(0) as WalletDecimal,
+              description: input.description ?? null,
+              hash: input.hash ?? null,
+              type: txType,
+              status: txStatus,
             });
 
             return refreshed;
@@ -199,6 +294,63 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
             return err;
           }
           return new WalletRepositoryError({ operation: "decreaseBalance", cause: err });
+        },
+      }),
+
+    decreaseBalanceInTx: (tx, input) =>
+      Effect.tryPromise({
+        try: async () => {
+          const amount = toPrismaDecimal(input.amount) as WalletDecimal;
+          const txType: WalletTransactionType = input.type ?? "DEBIT";
+          const txStatus: WalletTransactionStatus = "SUCCESS";
+
+          const wallet = await findWalletByUserId(tx, input.userId);
+          if (!wallet) {
+            throw new WalletRecordNotFound({ operation: "decreaseBalanceInTx.findWallet", userId: input.userId });
+          }
+
+          const changed = await tx.wallet.updateMany({
+            where: {
+              id: wallet.id,
+              balance: { gte: amount },
+            },
+            data: {
+              balance: { decrement: amount },
+            },
+          });
+
+          if (changed.count === 0) {
+            throw new WalletBalanceConstraint({
+              operation: "decreaseBalanceInTx.updateBalance",
+              walletId: wallet.id,
+              userId: input.userId,
+              balance: Number(wallet.balance.toString()),
+              attemptedDebit: Number(amount.toString()),
+            });
+          }
+
+          const refreshed = await tx.wallet.findUnique({
+            where: { id: wallet.id },
+            select: selectWalletRow,
+          });
+
+          await createTransaction(tx, {
+            walletId: wallet.id,
+            amount,
+            fee: toPrismaDecimal(0) as WalletDecimal,
+            description: input.description ?? null,
+            hash: input.hash ?? null,
+            type: txType,
+            status: txStatus,
+          });
+
+          return toWalletRow(refreshed!);
+        },
+        catch: (err) => {
+          if (err instanceof WalletRecordNotFound || err instanceof WalletBalanceConstraint) {
+            return err;
+          }
+          return new WalletRepositoryError({ operation: "decreaseBalanceInTx", cause: err });
         },
       }),
 
