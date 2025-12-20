@@ -18,6 +18,10 @@ import {
   RentalServiceLive,
 } from "@/domain/rentals";
 import {
+  SubscriptionRepositoryLive,
+  SubscriptionServiceLive,
+} from "@/domain/subscriptions";
+import {
   SupplierRepositoryLive,
   SupplierServiceLive,
 } from "@/domain/suppliers";
@@ -89,6 +93,19 @@ export function withWalletDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(
     Effect.provide(WalletServiceLive),
     Effect.provide(WalletRepositoryLive),
+    Effect.provide(Prisma.Default),
+  );
+}
+
+export function withSubscriptionDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(
+    Effect.provide(SubscriptionServiceLive),
+    Effect.provide(SubscriptionRepositoryLive),
+    Effect.provide(WalletServiceLive),
+    Effect.provide(WalletRepositoryLive),
+    Effect.provide(UserServiceLive),
+    Effect.provide(UserRepositoryLive),
+    Effect.provide(Email.Default),
     Effect.provide(Prisma.Default),
   );
 }
