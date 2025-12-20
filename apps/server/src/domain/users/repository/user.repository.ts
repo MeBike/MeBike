@@ -3,7 +3,7 @@ import { Context, Effect, Layer, Option } from "effect";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
-import type { PrismaClient } from "../../../../generated/prisma/client";
+import type { PrismaClient, Prisma as PrismaTypes } from "../../../../generated/prisma/client";
 import type {
   CreateUserInput,
   UpdateUserProfilePatch,
@@ -31,6 +31,13 @@ export type UserRepo = {
     email: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
   readonly createUser: (
+    data: CreateUserInput,
+  ) => Effect.Effect<
+    UserRow,
+    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
+  >;
+  readonly createUserInTx: (
+    tx: PrismaTypes.TransactionClient,
     data: CreateUserInput,
   ) => Effect.Effect<
     UserRow,
@@ -128,6 +135,44 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
           }
           return new UserRepositoryError({
             operation: "createUser",
+            cause: err,
+          });
+        },
+      }).pipe(Effect.map(toUserRow)),
+
+    createUserInTx: (tx, data) =>
+      Effect.tryPromise({
+        try: () =>
+          tx.user.create({
+            data: {
+              fullname: data.fullname,
+              email: data.email,
+              passwordHash: data.passwordHash,
+              phoneNumber: data.phoneNumber ?? null,
+              username: data.username ?? null,
+              avatar: data.avatar ?? null,
+              location: data.location ?? null,
+              role: data.role ?? UserRole.USER,
+              verify: data.verify ?? UserVerifyStatus.UNVERIFIED,
+              nfcCardUid: data.nfcCardUid ?? null,
+            },
+            select: selectUserRow,
+          }),
+        catch: (err) => {
+          if (isPrismaUniqueViolation(err)) {
+            const targets = uniqueTargets(err);
+            if (targets.some(isEmailTarget)) {
+              return new DuplicateUserEmail({ email: data.email });
+            }
+
+            if (targets.some(isPhoneTarget)) {
+              return new DuplicateUserPhoneNumber({
+                phoneNumber: data.phoneNumber ?? "unknown",
+              });
+            }
+          }
+          return new UserRepositoryError({
+            operation: "createUserInTx",
             cause: err,
           });
         },

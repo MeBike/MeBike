@@ -64,6 +64,7 @@ export function withAuthDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
     Effect.provide(AuthRepositoryLive),
     Effect.provide(UserServiceLive),
     Effect.provide(UserRepositoryLive),
+    Effect.provide(WalletRepositoryLive),
     Effect.provide(Email.Default),
     Effect.provide(Redis.Default),
     Effect.provide(Prisma.Default),

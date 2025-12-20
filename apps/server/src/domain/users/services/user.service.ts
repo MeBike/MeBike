@@ -1,13 +1,16 @@
-import { Context, Effect, Layer, Option } from "effect";
+import type { Option } from "effect";
 
-import type { UserRow } from "../models";
-import type { UserRepo } from "../repository/user.repository";
-import { UserRepository } from "../repository/user.repository";
+import { Context, Effect, Layer } from "effect";
+
 import type {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
   UserRepositoryError,
 } from "../domain-errors";
+import type { UserRow } from "../models";
+import type { UserRepo } from "../repository/user.repository";
+
+import { UserRepository } from "../repository/user.repository";
 
 export type UserService = {
   getById: (

@@ -3,10 +3,7 @@ import { Context, Effect, Layer, Option } from "effect";
 import jwt from "jsonwebtoken";
 import { uuidv7 } from "uuidv7";
 
-import type {
-  DuplicateUserEmail,
-  DuplicateUserPhoneNumber,
-} from "@/domain/users";
+import type { UserRow } from "@/domain/users";
 
 import { UserRepository } from "@/domain/users/repository/user.repository";
 import { Email } from "@/infrastructure/email";
@@ -18,6 +15,7 @@ import type {
   Tokens,
 } from "../jwt";
 import type { EmailOtpRecord, RefreshTokenPayload } from "../models";
+import type { AuthRepo } from "../repository/auth.repository";
 
 import { RESET_OTP_TTL_MS, VERIFY_OTP_TTL_MS } from "../config";
 import {
@@ -34,12 +32,6 @@ import { generateOtp, isOtpExpired } from "../otp";
 import { AuthRepository } from "../repository/auth.repository";
 
 export type AuthService = {
-  register: (args: {
-    fullname: string;
-    email: string;
-    password: string;
-    phoneNumber?: string | null;
-  }) => Effect.Effect<Tokens, DuplicateUserEmail | DuplicateUserPhoneNumber>;
   loginWithPassword: (args: {
     email: string;
     password: string;
@@ -66,6 +58,27 @@ export class AuthServiceTag extends Context.Tag("AuthService")<
   AuthService
 >() {}
 
+export function hashPassword(password: string): Effect.Effect<string> {
+  return Effect.promise(() => bcrypt.hash(password, 10));
+}
+
+export function createSessionForUser(
+  authRepo: AuthRepo,
+  user: UserRow,
+): Effect.Effect<Tokens, never> {
+  return Effect.gen(function* () {
+    const sessionId = uuidv7();
+    const tokens = makeTokensForUser(user, sessionId);
+    const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
+
+    yield* authRepo.saveSession(session).pipe(
+      Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+    );
+
+    return tokens;
+  });
+}
+
 function verifyRefreshToken(token: string): Effect.Effect<
   RefreshTokenPayload & jwt.JwtPayload,
   InvalidRefreshToken,
@@ -91,27 +104,12 @@ export const AuthServiceLive = Layer.effect(
     const userRepo = yield* UserRepository;
     const email = yield* Email;
 
-    const register: AuthService["register"] = ({
-      fullname,
-      email: addr,
-      password,
-      phoneNumber,
-    }) =>
+    const sendVerifyEmail: AuthService["sendVerifyEmail"] = ({ userId, email: addr, fullName }) =>
       Effect.gen(function* () {
-        const passwordHash = yield* Effect.promise(() => bcrypt.hash(password, 10));
-        const user = yield* userRepo.createUser({
-          fullname,
-          email: addr,
-          passwordHash,
-          phoneNumber: phoneNumber ?? null,
-        }).pipe(
-          Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-        );
-
         const otp = generateOtp();
         const expiresAt = new Date(Date.now() + VERIFY_OTP_TTL_MS);
         const record: EmailOtpRecord = {
-          userId: user.id,
+          userId,
           email: addr,
           kind: "verify-email",
           otp,
@@ -122,22 +120,13 @@ export const AuthServiceLive = Layer.effect(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );
 
-        const html = `<p>Hi ${fullname},</p><p>Your verification code is <strong>${otp}</strong>. It expires in 10 minutes.</p>`;
+        const html = `<p>Hi ${fullName},</p><p>Your verification code is <strong>${otp}</strong>. It expires in 10 minutes.</p>`;
+        // TODO: use templated email content and map EmailSendError to domain errors if needed
         yield* email.send({
           to: addr,
           subject: "Verify your email",
           html,
         }).pipe(Effect.catchAll(err => Effect.die(err)));
-
-        const sessionId = uuidv7();
-        const tokens = makeTokensForUser(user, sessionId);
-        const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
-
-        yield* authRepo.saveSession(session).pipe(
-          Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
-        );
-
-        return tokens;
       });
 
     const loginWithPassword: AuthService["loginWithPassword"] = ({ email: addr, password }) =>
@@ -222,31 +211,6 @@ export const AuthServiceLive = Layer.effect(
       authRepo.deleteAllSessionsForUser(userId).pipe(
         Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
       );
-
-    const sendVerifyEmail: AuthService["sendVerifyEmail"] = ({ userId, email: addr, fullName }) =>
-      Effect.gen(function* () {
-        const otp = generateOtp();
-        const expiresAt = new Date(Date.now() + VERIFY_OTP_TTL_MS);
-        const record: EmailOtpRecord = {
-          userId,
-          email: addr,
-          kind: "verify-email",
-          otp,
-          expiresAt,
-        };
-
-        yield* authRepo.saveEmailOtp(record).pipe(
-          Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
-        );
-
-        const html = `<p>Hi ${fullName},</p><p>Your verification code is <strong>${otp}</strong>. It expires in 10 minutes.</p>`;
-        // TODO: use templated email content and map EmailSendError to domain errors if needed
-        yield* email.send({
-          to: addr,
-          subject: "Verify your email",
-          html,
-        }).pipe(Effect.catchAll(err => Effect.die(err)));
-      });
 
     const verifyEmailOtp: AuthService["verifyEmailOtp"] = ({ userId, otp }) =>
       Effect.gen(function* () {
@@ -339,7 +303,6 @@ export const AuthServiceLive = Layer.effect(
       });
 
     const service: AuthService = {
-      register,
       loginWithPassword,
       refreshTokens,
       logout,
