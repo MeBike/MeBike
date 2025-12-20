@@ -32,26 +32,26 @@ export const GET_BIKES = gql`
 `;
 export const GET_DETAIL_BIKES = gql`
   query Bike($bikeId: String!) {
-    Bike(id: $bikeId) {
-      success
-      message
-      data {
+  Bike(id: $bikeId) {
+    success
+    message
+    data {
+      chipId
+      createdAt
+      id
+      station {
         id
-        chipId
-        station {
-          id
-          name
-        }
-        supplier {
-          id
-          name
-        }
-        status
-        createdAt
-        updatedAt
+        name
       }
-      errors
-      statusCode
+      status
+      updatedAt
+      supplier {
+        name
+        id
+      }
     }
+    errors
+    statusCode
   }
+}
 `;

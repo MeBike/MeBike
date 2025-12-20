@@ -151,7 +151,7 @@ export default function BikesPage() {
   const renting = statisticData?.result["ĐANG ĐƯỢC THUÊ"] || 0;
   const broken = statisticData?.result["BỊ HỎNG"] || 0;
   const reserved = statisticData?.result["ĐÃ ĐẶT TRƯỚC"] || 0;
-  const total =
+  const total = data?.data?.Bikes.pagination?.total || 0;
   Number(available) + Number(renting) + Number(broken) + Number(reserved);
   if (isLoadingStatistics) {
     return (
