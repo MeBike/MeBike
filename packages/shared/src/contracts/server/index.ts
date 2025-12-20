@@ -6,6 +6,7 @@ export * from "./rentals";
 export * from "./routes";
 export * from "./schemas";
 export * as StationsContracts from "./stations";
+export * as SubscriptionsContracts from "./subscriptions";
 export * as SuppliersContracts from "./suppliers";
 export * as UsersContracts from "./users";
 export * as WalletsContracts from "./wallets";
