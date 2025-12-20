@@ -1,23 +1,22 @@
-
-export interface Bike {
-  _id: string;
-  station_id: string;
-  status: BikeStatus;
-  supplier_id: string | null;
-  created_at: string;
-  updated_at: string;
-  chip_id: string;
-  average_rating?: number;
-  total_ratings?: number;
-}
-export type BikeStatus =
-  | "CÓ SẴN"
-  | "ĐANG ĐƯỢC THUÊ"
-  | "BỊ HỎNG"
-  | "ĐÃ ĐẶT TRƯỚC"
-  | "ĐANG BẢO TRÌ"
-  | "KHÔNG CÓ SẴN"
-  | "";
+// export interface Bike {
+//   _id: string;
+//   station_id: string;
+//   status: BikeStatus;
+//   supplier_id: string | null;
+//   created_at: string;
+//   updated_at: string;
+//   chip_id: string;
+//   average_rating?: number;
+//   total_ratings?: number;
+// }
+// export type BikeStatus =
+//   | "CÓ SẴN"
+//   | "ĐANG ĐƯỢC THUÊ"
+//   | "BỊ HỎNG"
+//   | "ĐÃ ĐẶT TRƯỚC"
+//   | "ĐANG BẢO TRÌ"
+//   | "KHÔNG CÓ SẴN"
+//   | "";
 export interface BikeActivityStats {
   bike_id: string;
   total_minutes_active: number;
@@ -58,4 +57,22 @@ export interface BikeRentalHistory {
     _id: string;
     fullname: string;
   };
+}
+
+export type BikeStatus = "Available" | "InUse" | "Maintenance" | "Inactive";
+
+export interface Bike {
+  id: string;
+  chipId: string;
+  status: BikeStatus;
+  station: {
+    id : string;
+    name:string;
+  };
+  supplier: {
+    id : string;
+    name:string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }

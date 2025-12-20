@@ -4,7 +4,7 @@ import type {
   AccessToken,
   Me,
 } from "@/types/GraphQL";
-
+import type { Bike } from "./Bike";
 export type LoginResponse = GraphQLMutationResponse<"LoginUser", AuthTokens>;
 export type RegisterResponse = GraphQLMutationResponse<
   "RegisterUser",
@@ -17,3 +17,5 @@ export type ChangePasswordResponse = GraphQLMutationResponse<"ChangePassword">;
 export type UpdateProfileResponse = GraphQLMutationResponse<"UpdateProfile", Me>;
 export type GetUsersResponse = GraphQLMutationResponse<"Users", Me[]>;  
 export type GetDetailUserResponse = GraphQLMutationResponse<"User", Me>;
+export type GetBikesResponse = GraphQLMutationResponse<"Bikes", Bike[]>;  
+export type GetDetailBikeResponse = GraphQLMutationResponse<"Bike", Me>;  

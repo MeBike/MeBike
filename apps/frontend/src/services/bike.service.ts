@@ -8,6 +8,9 @@ import { Bike, BikeRentalHistory } from "@custom-types";
 import { BikeStatus } from "@custom-types";
 import { BikeActivityStats } from "@custom-types";
 import { BikeStats } from "@custom-types";
+import { GET_BIKES, GET_DETAIL_BIKES } from "@/graphql";
+import { GetBikesResponse, GetDetailBikeResponse } from "@/types/auth.type";
+import { print } from "graphql";
 interface ApiResponse<T> {
   data: T;
   pagination: {
@@ -119,22 +122,29 @@ export const bikeService = {
     limit,
     station_id,
     supplier_id,
+    bike_id,
     status,
+    search,
   }: {
     page?: number;
     limit?: number;
     station_id?: string;
     supplier_id?: string;
+    bike_id?: string;
     status?: BikeStatus;
-  }): Promise<AxiosResponse<ApiResponse<Bike[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Bike[]>>(
-      BIKE_ENDPOINTS.BASE,
+    search?: string;
+  }): Promise<AxiosResponse<GetBikesResponse>> => {
+    const response = await fetchHttpClient.query<GetBikesResponse>(
+      print(GET_BIKES),
       {
-        page,
-        limit,
-        station_id,
-        supplier_id,
-        status,
+        params: {
+          limit: limit,
+          page: page,
+          search: search,
+          station_id: station_id,
+          supplier_id: supplier_id,
+          status: status,
+        },
       }
     );
     return response;

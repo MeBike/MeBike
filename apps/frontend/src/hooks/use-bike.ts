@@ -106,7 +106,7 @@ export const useBikeActions = (
     limit: limit,
     station_id: station_id || "",
     supplier_id: supplier_id || "",
-    status: status || "",
+    status: status,
   });
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
