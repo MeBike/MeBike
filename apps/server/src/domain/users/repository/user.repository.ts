@@ -4,13 +4,19 @@ import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "../../../../generated/prisma/client";
+import type { PageRequest, PageResult } from "../../shared/pagination";
 import type {
   CreateUserInput,
+  UpdateUserAdminPatch,
   UpdateUserProfilePatch,
+  UserFilter,
+  UserOrderBy,
   UserRow,
+  UserSortField,
 } from "../models";
 
 import { UserRole, UserVerifyStatus } from "../../../../generated/prisma/enums";
+import { makePageResult, normalizedPage } from "../../shared/pagination";
 import {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
@@ -50,6 +56,13 @@ export type UserRepo = {
     Option.Option<UserRow>,
     UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
   >;
+  readonly updateAdminById: (
+    id: string,
+    patch: UpdateUserAdminPatch,
+  ) => Effect.Effect<
+    Option.Option<UserRow>,
+    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
+  >;
   readonly updatePassword: (
     id: string,
     passwordHash: string,
@@ -57,6 +70,13 @@ export type UserRepo = {
   readonly markVerified: (
     id: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  readonly listWithOffset: (
+    filter: UserFilter,
+    pageReq: PageRequest<UserSortField>,
+  ) => Effect.Effect<PageResult<UserRow>, UserRepositoryError>;
+  readonly searchByQuery: (
+    query: string,
+  ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
 };
 
 export class UserRepository extends Context.Tag("UserRepository")<
@@ -65,6 +85,37 @@ export class UserRepository extends Context.Tag("UserRepository")<
 >() {}
 
 export function makeUserRepository(client: PrismaClient): UserRepo {
+  const toOrderBy = (
+    pageReq: PageRequest<UserSortField>,
+  ): UserOrderBy => {
+    const sortBy = pageReq.sortBy ?? "fullname";
+    const sortDir = pageReq.sortDir ?? "asc";
+    switch (sortBy) {
+      case "email":
+        return { email: sortDir };
+      case "role":
+        return { role: sortDir };
+      case "verify":
+        return { verify: sortDir };
+      case "updatedAt":
+        return { updatedAt: sortDir };
+      case "fullname":
+      default:
+        return { fullname: sortDir };
+    }
+  };
+
+  const toWhere = (filter: UserFilter) => ({
+    ...(filter.fullname
+      ? { fullname: { contains: filter.fullname, mode: "insensitive" as const } }
+      : {}),
+    ...(filter.email
+      ? { email: { contains: filter.email, mode: "insensitive" as const } }
+      : {}),
+    ...(filter.verify ? { verify: filter.verify } : {}),
+    ...(filter.role ? { role: filter.role } : {}),
+  });
+
   return {
     findById: id =>
       Effect.tryPromise({
@@ -236,6 +287,69 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
         return Option.some(toUserRow(updated));
       }),
 
+    updateAdminById: (id, patch) =>
+      Effect.gen(function* () {
+        const existing = yield* Effect.tryPromise({
+          try: () =>
+            client.user.findUnique({
+              where: { id },
+              select: { id: true, phoneNumber: true },
+            }),
+          catch: err =>
+            new UserRepositoryError({
+              operation: "updateAdminById.findExisting",
+              cause: err,
+            }),
+        });
+        if (!existing) {
+          return Option.none<UserRow>();
+        }
+
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            client.user.update({
+              where: { id },
+              data: {
+                ...(patch.fullname !== undefined ? { fullname: patch.fullname } : {}),
+                ...(patch.email !== undefined ? { email: patch.email } : {}),
+                ...(patch.phoneNumber !== undefined
+                  ? { phoneNumber: patch.phoneNumber }
+                  : {}),
+                ...(patch.username !== undefined ? { username: patch.username } : {}),
+                ...(patch.avatar !== undefined ? { avatar: patch.avatar } : {}),
+                ...(patch.location !== undefined ? { location: patch.location } : {}),
+                ...(patch.role !== undefined ? { role: patch.role } : {}),
+                ...(patch.verify !== undefined ? { verify: patch.verify } : {}),
+                ...(patch.nfcCardUid !== undefined
+                  ? { nfcCardUid: patch.nfcCardUid }
+                  : {}),
+              },
+              select: selectUserRow,
+            }),
+          catch: (err) => {
+            if (isPrismaUniqueViolation(err)) {
+              const targets = uniqueTargets(err);
+              if (targets.some(isEmailTarget)) {
+                return new DuplicateUserEmail({
+                  email: patch.email ?? "unknown",
+                });
+              }
+              if (targets.some(isPhoneTarget)) {
+                return new DuplicateUserPhoneNumber({
+                  phoneNumber: patch.phoneNumber ?? existing.phoneNumber ?? "unknown",
+                });
+              }
+            }
+            return new UserRepositoryError({
+              operation: "updateAdminById",
+              cause: err,
+            });
+          },
+        });
+
+        return Option.some(toUserRow(updated));
+      }),
+
     updatePassword: (id, passwordHash) =>
       Effect.gen(function* () {
         const existing = yield* Effect.tryPromise({
@@ -301,6 +415,65 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
 
         return Option.some(toUserRow(updated));
       }),
+
+    listWithOffset: (filter, pageReq) =>
+      Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage(pageReq);
+        const where = toWhere(filter);
+        const orderBy = toOrderBy(pageReq);
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.user.count({ where }),
+            catch: err =>
+              new UserRepositoryError({
+                operation: "listWithOffset.count",
+                cause: err,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.user.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                select: selectUserRow,
+              }),
+            catch: err =>
+              new UserRepositoryError({
+                operation: "listWithOffset.findMany",
+                cause: err,
+              }),
+          }),
+        ]);
+
+        return makePageResult(
+          items.map(toUserRow),
+          total,
+          page,
+          pageSize,
+        );
+      }),
+
+    searchByQuery: query =>
+      Effect.tryPromise({
+        try: () =>
+          client.user.findMany({
+            where: {
+              OR: [
+                { email: { contains: query, mode: "insensitive" } },
+                { phoneNumber: { contains: query } },
+              ],
+            },
+            select: selectUserRow,
+          }),
+        catch: err =>
+          new UserRepositoryError({
+            operation: "searchByQuery",
+            cause: err,
+          }),
+      }).pipe(Effect.map(rows => rows.map(toUserRow))),
   };
 }
 

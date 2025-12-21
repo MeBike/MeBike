@@ -3,7 +3,12 @@ import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
 import {
+  adminCreateUserUseCase,
+  adminResetPasswordUseCase,
   getUserByIdUseCase,
+  listAdminUsersUseCase,
+  searchAdminUsersUseCase,
+  updateAdminUserUseCase,
   updateProfileUseCase,
 } from "@/domain/users";
 import { withUserDeps } from "@/http/shared/providers";
@@ -89,6 +94,192 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
           details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
         }, 404)),
       )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(users.adminList, async (c) => {
+    const query = c.req.valid("query");
+    const eff = withLoggedCause(
+      withUserDeps(listAdminUsersUseCase({
+        filter: {
+          fullname: query.fullname,
+          role: query.role,
+          verify: query.verify,
+        },
+        page: {
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 50,
+          sortBy: query.sortBy,
+          sortDir: query.sortDir,
+        },
+      })),
+      "GET /v1/users/manage-users/get-all",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<UsersContracts.AdminUserListResponse, 200>(
+          {
+            data: right.items.map(mapUserDetail),
+            pagination: {
+              page: right.page,
+              pageSize: right.pageSize,
+              total: right.total,
+              totalPages: right.totalPages,
+            },
+          },
+          200,
+        )),
+      Match.tag("Left", ({ left }) => {
+        throw left;
+      }),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(users.adminSearch, async (c) => {
+    const query = c.req.valid("query");
+    const eff = withLoggedCause(
+      withUserDeps(searchAdminUsersUseCase(query.q)),
+      "GET /v1/users/manage-users/search",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<UsersContracts.AdminUserSearchResponse, 200>(
+          { data: right.map(mapUserDetail) },
+          200,
+        )),
+      Match.tag("Left", ({ left }) => {
+        throw left;
+      }),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(users.adminDetail, async (c) => {
+    const { userId } = c.req.valid("param");
+    const eff = withLoggedCause(
+      withUserDeps(getUserByIdUseCase(userId)),
+      "GET /v1/users/manage-users/{userId}",
+    );
+
+    const result = await Effect.runPromise(eff);
+    if (result._tag === "Some") {
+      return c.json<UsersContracts.AdminUserDetailResponse, 200>(
+        { data: mapUserDetail(result.value) },
+        200,
+      );
+    }
+
+    return c.json<UsersContracts.UserErrorResponse, 404>({
+      error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
+      details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
+    }, 404);
+  });
+
+  app.openapi(users.adminUpdate, async (c) => {
+    const { userId } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const eff = withLoggedCause(
+      withUserDeps(updateAdminUserUseCase({
+        userId,
+        patch: pickDefined(body),
+      })),
+      "PATCH /v1/users/manage-users/{userId}",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) => {
+        if (right._tag === "Some") {
+          return c.json<UsersContracts.AdminUserDetailResponse, 200>(
+            { data: mapUserDetail(right.value) },
+            200,
+          );
+        }
+        return c.json<UsersContracts.UserErrorResponse, 404>({
+          error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
+          details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
+        }, 404);
+      }),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("DuplicateUserEmail", () => c.json<UsersContracts.UserErrorResponse, 409>({
+          error: UsersContracts.userErrorMessages.DUPLICATE_EMAIL,
+          details: { code: UsersContracts.UserErrorCodeSchema.enum.DUPLICATE_EMAIL },
+        }, 409)),
+        Match.tag("DuplicateUserPhoneNumber", () => c.json<UsersContracts.UserErrorResponse, 409>({
+          error: UsersContracts.userErrorMessages.DUPLICATE_PHONE_NUMBER,
+          details: { code: UsersContracts.UserErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
+        }, 409)),
+        Match.orElse(() => c.json<UsersContracts.UserErrorResponse, 404>({
+          error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
+          details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
+        }, 404)),
+      )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(users.adminCreate, async (c) => {
+    const body = c.req.valid("json");
+    const eff = withLoggedCause(
+      withUserDeps(adminCreateUserUseCase(body)),
+      "POST /v1/users/manage-users/create",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<UsersContracts.AdminUserDetailResponse, 201>(
+          { data: mapUserDetail(right) },
+          201,
+        )),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("DuplicateUserEmail", () => c.json<UsersContracts.UserErrorResponse, 409>({
+          error: UsersContracts.userErrorMessages.DUPLICATE_EMAIL,
+          details: { code: UsersContracts.UserErrorCodeSchema.enum.DUPLICATE_EMAIL },
+        }, 409)),
+        Match.tag("DuplicateUserPhoneNumber", () => c.json<UsersContracts.UserErrorResponse, 409>({
+          error: UsersContracts.userErrorMessages.DUPLICATE_PHONE_NUMBER,
+          details: { code: UsersContracts.UserErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
+        }, 409)),
+        Match.orElse((err) => {
+          throw err;
+        }),
+      )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(users.adminResetPassword, async (c) => {
+    const { userId } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const eff = withLoggedCause(
+      withUserDeps(adminResetPasswordUseCase({
+        userId,
+        newPassword: body.newPassword,
+      })),
+      "POST /v1/users/manage-users/admin-reset-password/{userId}",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) => {
+        if (right._tag === "Some") {
+          return c.json<undefined, 200>(undefined, 200);
+        }
+        return c.json<UsersContracts.UserErrorResponse, 404>({
+          error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
+          details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
+        }, 404);
+      }),
+      Match.tag("Left", ({ left }) => {
+        throw left;
+      }),
       Match.exhaustive,
     );
   });

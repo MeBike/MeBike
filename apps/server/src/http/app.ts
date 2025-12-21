@@ -5,7 +5,12 @@ import { cors } from "hono/cors";
 import { logger as honoLogger } from "hono/logger";
 
 import { env } from "@/config/env";
-import { currentUserMiddleware, requireAdminMiddleware, requireAuthMiddleware } from "@/http/middlewares/auth";
+import {
+  currentUserMiddleware,
+  requireAdminMiddleware,
+  requireAdminOrStaffMiddleware,
+  requireAuthMiddleware,
+} from "@/http/middlewares/auth";
 import logger from "@/lib/logger";
 
 import { registerAuthRoutes } from "./routes/auth";
@@ -59,6 +64,9 @@ export function createHttpApp() {
   app.use("/v1/wallets/*", requireAuthMiddleware);
   app.use("/v1/subscriptions/*", requireAuthMiddleware);
   app.use("/v1/suppliers*", requireAdminMiddleware);
+  app.use("/v1/users/manage-users/*", requireAdminOrStaffMiddleware);
+  app.use("/v1/users/manage-users/create", requireAdminMiddleware);
+  app.use("/v1/users/manage-users/admin-reset-password/*", requireAdminMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(

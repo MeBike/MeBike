@@ -43,6 +43,18 @@ export type UpdateUserProfilePatch = Partial<{
   nfcCardUid: string | null;
 }>;
 
+export type UpdateUserAdminPatch = Partial<{
+  fullname: string;
+  email: string;
+  phoneNumber: string | null;
+  username: string | null;
+  avatar: string | null;
+  location: string | null;
+  role: UserRole;
+  verify: UserVerifyStatus;
+  nfcCardUid: string | null;
+}>;
+
 export type UserFilter = {
   readonly fullname?: string;
   readonly email?: string;
