@@ -1,10 +1,13 @@
 import { UnauthorizedErrorCodeSchema, unauthorizedErrorMessages } from "@mebike/shared";
+import { Effect, Option } from "effect";
 import { createMiddleware } from "hono/factory";
 import jwt from "jsonwebtoken";
 
 import type { AccessTokenPayload } from "@/domain/auth";
 
 import { requireJwtSecret } from "@/domain/auth";
+import { getUserByIdUseCase } from "@/domain/users";
+import { withUserDeps } from "@/http/shared/providers";
 
 const unauthorizedBody = {
   error: unauthorizedErrorMessages.UNAUTHORIZED,
@@ -14,6 +17,7 @@ const unauthorizedBody = {
 export type AuthEnv = {
   Variables: {
     currentUser?: AccessTokenPayload;
+    authFailure?: "forbidden";
   };
 };
 
@@ -40,12 +44,29 @@ function verifyAccessToken(token: string): AccessTokenPayload | null {
   }
 }
 
+async function loadUser(userId: string) {
+  return await Effect.runPromise(withUserDeps(getUserByIdUseCase(userId)));
+}
+
 export const currentUserMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
   const token = parseBearerToken(c.req.header("Authorization"));
   if (token) {
     const payload = verifyAccessToken(token);
     if (payload) {
-      c.set("currentUser", payload);
+      const userOpt = await loadUser(payload.userId);
+      if (Option.isNone(userOpt) || userOpt.value.verify === "BANNED") {
+        c.set("authFailure", "forbidden");
+      }
+      else {
+        const user = userOpt.value;
+        const role = user.role === "SOS" ? "USER" : user.role;
+        c.set("currentUser", {
+          userId: user.id,
+          role,
+          verifyStatus: user.verify,
+          tokenType: "access",
+        });
+      }
     }
   }
   await next();
@@ -54,6 +75,9 @@ export const currentUserMiddleware = createMiddleware<AuthEnv>(async (c, next) =
 export const requireAuthMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
   const user = c.var.currentUser;
   if (!user) {
+    if (c.var.authFailure === "forbidden") {
+      return c.json(unauthorizedBody, 403);
+    }
     return c.json(unauthorizedBody, 401);
   }
   await next();
