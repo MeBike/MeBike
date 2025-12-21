@@ -229,8 +229,67 @@ export const updateSupplierStatus = createRoute({
   },
 });
 
+export const deleteSupplier = createRoute({
+  method: "delete",
+  path: "/v1/suppliers/{supplierId}",
+  tags: ["Suppliers"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: SupplierIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Supplier deleted",
+      content: {
+        "application/json": { schema: SupplierSummarySchema },
+      },
+    },
+    404: {
+      description: "Supplier not found",
+      content: {
+        "application/json": {
+          schema: SupplierErrorResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
 export const suppliersMutations = {
   createSupplier,
   updateSupplier,
   updateSupplierStatus,
+  deleteSupplier,
 } as const;

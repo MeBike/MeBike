@@ -3,6 +3,7 @@ import { Effect, Match } from "effect";
 
 import {
   createSupplierUseCase,
+  deleteSupplierUseCase,
   getAllSupplierStatsUseCase,
   getSupplierDetailsUseCase,
   getSupplierStatsUseCase,
@@ -221,6 +222,39 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
               },
               400,
             )),
+          Match.tag("SupplierNotFound", () =>
+            c.json<SupplierErrorResponse, 404>(
+              {
+                error: supplierErrorMessages[SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND],
+                details: {
+                  code: SupplierErrorCodeSchema.enum.SUPPLIER_NOT_FOUND,
+                  supplierId,
+                },
+              },
+              404,
+            )),
+          Match.orElse(() => {
+            throw left;
+          }),
+        )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(suppliers.deleteSupplier, async (c) => {
+    const { supplierId } = c.req.valid("param");
+
+    const eff = deleteSupplierUseCase(supplierId);
+
+    const result = await Effect.runPromise(
+      withSupplierDeps(eff).pipe(Effect.either),
+    );
+
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<SupplierSummary, 200>(toSupplierSummary(right), 200)),
+      Match.tag("Left", ({ left }) =>
+        Match.value(left).pipe(
           Match.tag("SupplierNotFound", () =>
             c.json<SupplierErrorResponse, 404>(
               {

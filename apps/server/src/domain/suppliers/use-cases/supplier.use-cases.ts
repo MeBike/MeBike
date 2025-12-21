@@ -48,6 +48,13 @@ export function updateSupplierStatusUseCase(id: string, status: SupplierRow["sta
   });
 }
 
+export function deleteSupplierUseCase(id: string) {
+  return Effect.gen(function* () {
+    const svc = yield* SupplierServiceTag;
+    return yield* svc.updateSupplierStatus(id, "TERMINATED");
+  });
+}
+
 export function getAllSupplierStatsUseCase() {
   return Effect.gen(function* () {
     const svc = yield* SupplierServiceTag;
