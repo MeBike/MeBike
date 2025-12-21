@@ -5,7 +5,7 @@ import { cors } from "hono/cors";
 import { logger as honoLogger } from "hono/logger";
 
 import { env } from "@/config/env";
-import { currentUserMiddleware, requireAuthMiddleware } from "@/http/middlewares/auth";
+import { currentUserMiddleware, requireAdminMiddleware, requireAuthMiddleware } from "@/http/middlewares/auth";
 import logger from "@/lib/logger";
 
 import { registerAuthRoutes } from "./routes/auth";
@@ -58,6 +58,7 @@ export function createHttpApp() {
   app.use("/v1/ratings/*", requireAuthMiddleware);
   app.use("/v1/wallets/*", requireAuthMiddleware);
   app.use("/v1/subscriptions/*", requireAuthMiddleware);
+  app.use("/v1/suppliers*", requireAdminMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(
