@@ -196,6 +196,7 @@ export const RentalCountsResponseSchema = z.object({
 
 export const CreateRentalRequestSchema = z.object({
   bikeId: z.string(),
+  startStationId: z.string(),
   subscriptionId: z.string().optional(),
 });
 
@@ -251,6 +252,10 @@ export const MyRentalListResponseSchema = z.object({
 export type RentalStatus = z.infer<typeof RentalStatusSchema>;
 export type Rental = z.infer<typeof RentalSchema>;
 export type RentalWithPrice = z.infer<typeof RentalWithPriceSchema>;
+export type CreateRentalResponse = {
+  message: string;
+  result: RentalWithPrice;
+};
 export type RentalListItem = z.infer<typeof RentalListItemSchema>;
 export type RentalDetail = z.infer<typeof RentalDetailSchema>;
 export type RentalWithPricing = z.infer<typeof RentalWithPricingSchema>;

@@ -4,7 +4,7 @@ import {
   RentalCountsResponseSchema,
   RentalDetailSchema,
   RentalErrorCodeSchema,
-  RentalErrorDetailSchema,
+  RentalErrorResponseSchema,
   RentalIsoDateTimeStringSchema,
   RentalListItemSchema,
   RentalRevenueResponseSchema,
@@ -14,13 +14,8 @@ import {
   RentalWithPricingSchema,
   StationActivityResponseSchema,
 } from "../../rentals";
-import { ServerErrorResponseSchema } from "../../schemas";
 
-export const RentalErrorResponseSchema = ServerErrorResponseSchema.extend({
-  details: RentalErrorDetailSchema.optional(),
-}).openapi("RentalErrorResponse", {
-  description: "Standard error payload for rental endpoints",
-});
+export { RentalErrorResponseSchema };
 
 export function rentalDateRangeWith<T extends z.ZodRawShape>(extra: T) {
   const base = z.object({

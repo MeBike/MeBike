@@ -7,6 +7,7 @@ import {
   getMyRentalUseCase,
   listMyCurrentRentalsUseCase,
   listMyRentalsUseCase,
+  startRentalUseCase,
 } from "@/domain/rentals";
 import { withLoggedCause } from "@/domain/shared";
 import { toContractPage } from "@/http/shared/pagination";
@@ -35,8 +36,132 @@ function toContractRental(
   };
 }
 
+function toContractRentalWithPrice(
+  row: import("@/domain/rentals").RentalRow,
+): RentalsContracts.RentalWithPrice {
+  return {
+    id: row.id,
+    userId: row.userId,
+    bikeId: row.bikeId ?? undefined,
+    startStation: row.startStationId,
+    endStation: row.endStationId ?? undefined,
+    startTime: row.startTime.toISOString(),
+    endTime: row.endTime ? row.endTime.toISOString() : undefined,
+    duration: row.durationMinutes ?? 0,
+    totalPrice: row.totalPrice ?? 0,
+    status: row.status,
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
 export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const rentals = serverRoutes.rentals;
+
+  app.openapi(rentals.createRental, async (c) => {
+    const userId = c.var.currentUser!.userId;
+    const body = c.req.valid("json");
+
+    const eff = withLoggedCause(
+      withRentalDeps(startRentalUseCase({
+        userId,
+        bikeId: body.bikeId,
+        startStationId: body.startStationId,
+        startTime: new Date(),
+      })),
+      "POST /v1/rentals",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<RentalsContracts.CreateRentalResponse, 200>({
+          message: "Rental created successfully",
+          result: toContractRentalWithPrice(right),
+        }, 200)),
+      Match.tag("Left", ({ left }) =>
+        Match.value(left).pipe(
+          Match.tag("ActiveRentalExists", () =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.CARD_RENTAL_ACTIVE_EXISTS,
+              details: { code: RentalErrorCodeSchema.enum.CARD_RENTAL_ACTIVE_EXISTS },
+            }, 400)),
+          Match.tag("BikeNotFound", ({ bikeId }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.BIKE_NOT_FOUND,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_NOT_FOUND, bikeId },
+            }, 400)),
+          Match.tag("BikeMissingStation", ({ bikeId }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.BIKE_MISSING_STATION,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_MISSING_STATION, bikeId },
+            }, 400)),
+          Match.tag("BikeNotFoundInStation", ({ bikeId, stationId }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.BIKE_NOT_FOUND_IN_STATION,
+              details: {
+                code: RentalErrorCodeSchema.enum.BIKE_NOT_FOUND_IN_STATION,
+                bikeId,
+                stationId,
+              },
+            }, 400)),
+          Match.tag("BikeAlreadyRented", () =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.BIKE_IN_USE,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IN_USE },
+            }, 400)),
+          Match.tag("BikeIsBroken", () =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.BIKE_IS_BROKEN,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_BROKEN },
+            }, 400)),
+          Match.tag("BikeIsMaintained", () =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.BIKE_IS_MAINTAINED,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_MAINTAINED },
+            }, 400)),
+          Match.tag("BikeIsReserved", () =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.BIKE_IS_RESERVED,
+              details: { code: RentalErrorCodeSchema.enum.BIKE_IS_RESERVED },
+            }, 400)),
+          Match.tag("BikeUnavailable", () =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.UNAVAILABLE_BIKE,
+              details: { code: RentalErrorCodeSchema.enum.UNAVAILABLE_BIKE },
+            }, 400)),
+          Match.tag("InvalidBikeStatus", ({ status }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.INVALID_BIKE_STATUS,
+              details: {
+                code: RentalErrorCodeSchema.enum.INVALID_BIKE_STATUS,
+                bikeStatus: status,
+              },
+            }, 400)),
+          Match.tag("UserWalletNotFound", ({ userId: missingUserId }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.USER_NOT_HAVE_WALLET,
+              details: {
+                code: RentalErrorCodeSchema.enum.USER_NOT_HAVE_WALLET,
+                userId: missingUserId,
+              },
+            }, 400)),
+          Match.tag("InsufficientBalanceToRent", ({ requiredBalance, currentBalance }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.NOT_ENOUGH_BALANCE_TO_RENT,
+              details: {
+                code: RentalErrorCodeSchema.enum.NOT_ENOUGH_BALANCE_TO_RENT,
+                requiredBalance,
+                currentBalance,
+              },
+            }, 400)),
+          Match.orElse(() => {
+            throw left;
+          }),
+        )),
+      Match.exhaustive,
+    );
+  });
 
   app.openapi(rentals.getMyRentals, async (c) => {
     const userId = c.var.currentUser!.userId;

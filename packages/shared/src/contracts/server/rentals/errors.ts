@@ -1,4 +1,5 @@
 import { z } from "../../../zod";
+import { ServerErrorDetailSchema, ServerErrorResponseSchema } from "../schemas";
 
 export const rentalErrorCodes = [
   // Access & Permission Errors
@@ -65,41 +66,46 @@ export const rentalErrorCodes = [
 
 export const RentalErrorCodeSchema = z.enum(rentalErrorCodes);
 
-export const RentalErrorDetailSchema = z
-  .object({
-    code: RentalErrorCodeSchema,
-    rentalId: z.string().optional(),
-    bikeId: z.string().optional(),
-    userId: z.string().optional(),
-    stationId: z.string().optional(),
-    sosId: z.string().optional(),
-    cardUid: z.string().optional(),
-    chipId: z.string().optional(),
-    from: z.string().optional(),
-    to: z.string().optional(),
-    endTime: z.string().optional(),
-    startTime: z.string().optional(),
-    requiredBalance: z.number().optional(),
-    currentBalance: z.number().optional(),
-    status: z.string().optional(),
-    bikeStatus: z.string().optional(),
-    startStationId: z.string().optional(),
-    endStationId: z.string().optional(),
-    fieldName: z.string().optional(),
-    value: z.string().optional(),
-    requestedStatus: z.string().optional(),
-    requestedBikeStatus: z.string().optional(),
-  })
-  .openapi({
-    description: "Rental-specific error detail",
-    example: {
-      code: "RENTAL_NOT_FOUND",
-      rentalId: "665fd6e36b7e5d53f8f3d2c9",
-    },
-  });
+export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
+  code: RentalErrorCodeSchema,
+  rentalId: z.string().optional(),
+  bikeId: z.string().optional(),
+  userId: z.string().optional(),
+  stationId: z.string().optional(),
+  sosId: z.string().optional(),
+  cardUid: z.string().optional(),
+  chipId: z.string().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+  endTime: z.string().optional(),
+  startTime: z.string().optional(),
+  requiredBalance: z.number().optional(),
+  currentBalance: z.number().optional(),
+  status: z.string().optional(),
+  bikeStatus: z.string().optional(),
+  startStationId: z.string().optional(),
+  endStationId: z.string().optional(),
+  fieldName: z.string().optional(),
+  value: z.string().optional(),
+  requestedStatus: z.string().optional(),
+  requestedBikeStatus: z.string().optional(),
+}).openapi({
+  description: "Rental-specific error detail",
+  example: {
+    code: "RENTAL_NOT_FOUND",
+    rentalId: "665fd6e36b7e5d53f8f3d2c9",
+  },
+});
+
+export const RentalErrorResponseSchema = ServerErrorResponseSchema.extend({
+  details: RentalErrorDetailSchema.optional(),
+}).openapi("RentalErrorResponse", {
+  description: "Standard error payload for rental endpoints",
+});
 
 export type RentalErrorCode = (typeof rentalErrorCodes)[number];
 export type RentalErrorDetail = z.infer<typeof RentalErrorDetailSchema>;
+export type RentalErrorResponse = z.infer<typeof RentalErrorResponseSchema>;
 
 // Basic message map (feel free to localize downstream)
 export const rentalErrorMessages: Record<RentalErrorCode, string> = {

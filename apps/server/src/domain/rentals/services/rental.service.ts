@@ -15,8 +15,6 @@ import type {
 import type { RentalRepo } from "../repository/rental.repository";
 
 import {
-  ActiveRentalExists,
-  BikeAlreadyRented,
   EndStationMismatch,
   InvalidRentalState,
   RentalNotFound,
@@ -25,7 +23,6 @@ import {
 import { RentalRepository } from "../repository/rental.repository";
 
 export type RentalService = {
-  // User-facing methods - can fail with repo errors
   listMyRentals: (
     userId: string,
     filter: MyRentalFilter,
@@ -46,14 +43,6 @@ export type RentalService = {
     userId: string,
   ) => Effect.Effect<RentalStatusCounts, never>;
 
-  // Core behaviors - fail with domain errors
-  startRental: (args: {
-    userId: string;
-    bikeId: string;
-    startStationId: string;
-    startTime: Date;
-  }) => Effect.Effect<RentalRow, RentalServiceFailure>;
-
   endRental: (args: {
     userId: string;
     rentalId: string;
@@ -71,7 +60,9 @@ export class RentalServiceTag extends Context.Tag("RentalService")<
   RentalService
 >() {}
 
-function makeRentalService(repo: RentalRepo): RentalService {
+function makeRentalService(
+  repo: RentalRepo,
+): RentalService {
   return {
     listMyRentals(userId, filter, pageReq) {
       return repo.listMyRentals(userId, filter, pageReq).pipe(
@@ -109,50 +100,6 @@ function makeRentalService(repo: RentalRepo): RentalService {
           return counts;
         }),
       );
-    },
-
-    startRental({ userId, bikeId, startStationId, startTime }) {
-      return Effect.gen(function* () {
-        // 1. Enforce "one active rental per user"
-        const existingByUser = yield* repo.findActiveByUserId(userId).pipe(
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
-        );
-        if (Option.isSome(existingByUser)) {
-          return yield* Effect.fail(
-            new ActiveRentalExists({ userId }),
-          );
-        }
-
-        // 2. Enforce "one active rental per bike"
-        const existingByBike = yield* repo.findActiveByBikeId(bikeId).pipe(
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
-        );
-        if (Option.isSome(existingByBike)) {
-          return yield* Effect.fail(
-            new BikeAlreadyRented({ bikeId }),
-          );
-        }
-
-        // 3. TODO: Check bike availability/status via bike service (stubbed for now)
-        // TODO: Check wallet balance (stubbed for now)
-
-        // 4. Create rental
-        const rental = yield* repo.createRental({
-          userId,
-          bikeId,
-          startStationId,
-          startTime,
-        }).pipe(
-          Effect.catchTag("RentalUniqueViolation", () =>
-            Effect.fail(new BikeAlreadyRented({ bikeId }))),
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)), // hopeless
-        );
-
-        return rental;
-      });
     },
 
     endRental({ userId, rentalId, endStationId, endTime }) {
@@ -201,7 +148,11 @@ function makeRentalService(repo: RentalRepo): RentalService {
           ),
         );
 
-        // 4. TODO: Implement pricing logic (placeholder)
+        // 4. TODO: Implement pricing logic (legacy behaviors depend on multiple domains):
+        //    - Subscription pricing / extra-hour charging (subscriptions.useOne + package rules)
+        //    - Reservation prepaid deduction (reservation domain)
+        //    - Penalty rules (duration thresholds)
+        //    - SOS/unsolvable exemptions (SOS domain)
         const totalPrice = null; // Will be calculated later
 
         // 5. Update rental

@@ -46,6 +46,10 @@ export function withRentalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(
     Effect.provide(RentalServiceLive),
     Effect.provide(RentalRepositoryLive),
+    Effect.provide(BikeServiceLive),
+    Effect.provide(BikeRepositoryLive),
+    Effect.provide(WalletServiceLive),
+    Effect.provide(WalletRepositoryLive),
     Effect.provide(Prisma.Default),
   );
 }
@@ -86,6 +90,10 @@ export function withRatingDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
     Effect.provide(RatingReasonRepositoryLive),
     Effect.provide(RentalServiceLive),
     Effect.provide(RentalRepositoryLive),
+    Effect.provide(BikeServiceLive),
+    Effect.provide(BikeRepositoryLive),
+    Effect.provide(WalletServiceLive),
+    Effect.provide(WalletRepositoryLive),
     Effect.provide(Prisma.Default),
   );
 }

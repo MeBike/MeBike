@@ -30,6 +30,7 @@ export const createRental = createRoute({
   method: "post",
   path: "/v1/rentals",
   tags: ["Rentals"],
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {
@@ -74,6 +75,39 @@ export const createRental = createRoute({
                   requiredBalance: 5000,
                   currentBalance: 2000,
                 },
+              },
+            },
+            WalletMissing: {
+              value: {
+                error: "User does not have a wallet",
+                details: {
+                  code: RentalErrorCodeSchema.enum.USER_NOT_HAVE_WALLET,
+                },
+              },
+            },
+            BikeMissingStation: {
+              value: {
+                error: "Bike is missing station information",
+                details: {
+                  code: RentalErrorCodeSchema.enum.BIKE_MISSING_STATION,
+                  bikeId: "665fd6e36b7e5d53f8f3d2c9",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
               },
             },
           },

@@ -13,6 +13,7 @@ const envSchema = z.object({
   EMAIL_PASSWORD_APP: z.string().min(1, "EMAIL_PASSWORD_APP is required"),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   LOG_LEVEL: z.string().default("info"),
+  MIN_WALLET_BALANCE_TO_RENT: z.coerce.number().default(2000),
   EXPIRE_AFTER_DAYS: z.coerce.number().default(30),
   AUTO_ACTIVATE_IN_DAYS: z.coerce.number().default(10),
 });
