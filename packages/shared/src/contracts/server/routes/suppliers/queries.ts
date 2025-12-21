@@ -1,6 +1,11 @@
 import { createRoute } from "@hono/zod-openapi";
 
-import { ServerErrorResponseSchema } from "../../schemas";
+import {
+  ServerErrorResponseSchema,
+  UnauthorizedErrorCodeSchema,
+  unauthorizedErrorMessages,
+  UnauthorizedErrorResponseSchema,
+} from "../../schemas";
 import {
   SupplierErrorCodeSchema,
   SupplierErrorResponseSchema,
@@ -16,6 +21,7 @@ export const listSuppliers = createRoute({
   method: "get",
   path: "/v1/suppliers",
   tags: ["Suppliers"],
+  security: [{ bearerAuth: [] }],
   request: {
     query: SupplierListQuerySchema,
   },
@@ -51,6 +57,38 @@ export const listSuppliers = createRoute({
         },
       },
     },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 });
 
@@ -58,6 +96,7 @@ export const getSupplier = createRoute({
   method: "get",
   path: "/v1/suppliers/{supplierId}",
   tags: ["Suppliers"],
+  security: [{ bearerAuth: [] }],
   request: {
     params: SupplierIdParamSchema,
   },
@@ -94,6 +133,38 @@ export const getSupplier = createRoute({
         },
       },
     },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 });
 
@@ -101,11 +172,44 @@ export const getAllSupplierStats = createRoute({
   method: "get",
   path: "/v1/suppliers/stats",
   tags: ["Suppliers"],
+  security: [{ bearerAuth: [] }],
   responses: {
     200: {
       description: "Bike stats for all suppliers",
       content: {
         "application/json": { schema: SupplierStatsListResponseSchema },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
       },
     },
   },
@@ -115,6 +219,7 @@ export const getSupplierStats = createRoute({
   method: "get",
   path: "/v1/suppliers/{supplierId}/stats",
   tags: ["Suppliers"],
+  security: [{ bearerAuth: [] }],
   request: {
     params: SupplierIdParamSchema,
   },
@@ -130,6 +235,38 @@ export const getSupplierStats = createRoute({
       content: {
         "application/json": {
           schema: SupplierErrorResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
         },
       },
     },
