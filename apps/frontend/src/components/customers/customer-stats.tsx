@@ -10,7 +10,7 @@ export function CustomerStats({ stats }: { stats: UserStats }) {
       <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Tổng khách hàng</p>
+            <p className="text-sm text-muted-foreground">Accounts</p>
             <p className="text-3xl font-bold text-primary mt-1">
               {stats.totalUsers}
             </p>
@@ -20,13 +20,25 @@ export function CustomerStats({ stats }: { stats: UserStats }) {
           </div>
         </div>
       </Card>
-
       <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Đang hoạt động</p>
+            <p className="text-sm text-muted-foreground">Verify User</p>
             <p className="text-3xl font-bold text-green-500 mt-1">
-              {"Chưa có"}
+              {stats.totalUserUnverfied}
+            </p>
+          </div>
+          <div className="p-3 bg-green-500/10 rounded-lg">
+            <UserCheck className="w-6 h-6 text-green-500" />
+          </div>
+        </div>
+      </Card>
+      <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">User</p>
+            <p className="text-3xl font-bold text-green-500 mt-1">
+              {stats.totalUser}
             </p>
           </div>
           <div className="p-3 bg-green-500/10 rounded-lg">
@@ -60,19 +72,7 @@ export function CustomerStats({ stats }: { stats: UserStats }) {
           </div>
         </div>
       </Card>
-      <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">VERIFY USER</p>
-            <p className="text-3xl font-bold text-green-500 mt-1">
-              {stats.totalUserUnverfied}
-            </p>
-          </div>
-          <div className="p-3 bg-green-500/10 rounded-lg">
-            <UserCheck className="w-6 h-6 text-green-500" />
-          </div>
-        </div>
-      </Card>
+
       {/* <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
         <div className="flex items-center justify-between">
           <div>

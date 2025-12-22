@@ -183,8 +183,8 @@ export default function CustomersPage() {
           </div>
         </div>
 
-        {dashboardStatsData && (
-          <CustomerStats stats={dashboardStatsData.data?.GetUserStats.data} />
+        {dashboardStatsData?.data?.GetUserStats?.data && (
+          <CustomerStats stats={dashboardStatsData.data.GetUserStats.data} />
         )}
 
         {/* Filters */}
