@@ -69,3 +69,20 @@ export const GET_DETAIL_USER = gql`
     }
   }
 `;
+export const GET_USER_STATS = gql`
+query GetUserStats {
+  GetUserStats {
+    success
+    message
+    data {
+      totalUsers
+      totalUser
+      totalUserUnverfied
+      totalStaff
+      totalAdmin
+      totalSos
+    }
+    errors
+    statusCode
+  }
+}`

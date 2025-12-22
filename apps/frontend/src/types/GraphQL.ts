@@ -6,7 +6,7 @@ export interface ErrorObject {
 }
 
 export interface BaseMutationResponse<T = null> {
-  data: T | null;
+  data?: T | null;
   errors?: (string | ErrorObject)[] | null;
   message: string;
   statusCode: number;

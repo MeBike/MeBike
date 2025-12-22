@@ -41,36 +41,6 @@ export const REFRESH_TOKEN_MUTATION = gql`
     }
   }
 `;
-export const GET_ME = gql`
-  query Query {
-    User {
-      success
-      message
-      data {
-        id
-        accountId
-        name
-        YOB
-        role
-        verify
-        status
-        phone
-        address
-        avatarUrl
-        nfcCardUid
-        userAccount {
-          email
-          id
-          password
-        }
-        createdAt
-        updatedAt
-      }
-      errors
-      statusCode
-    }
-  }
-`;
 export const LOGOUT_MUTATION = gql`
   mutation LogoutUser {
     LogoutUser {
