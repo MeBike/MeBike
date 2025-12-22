@@ -1,3 +1,5 @@
+import type { Kysely } from "kysely";
+
 import { Context, Effect, Layer } from "effect";
 import { sql } from "kysely";
 
@@ -6,6 +8,7 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import { db } from "@/database";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 
+import type { DB } from "../../../../generated/prisma/types";
 import type {
   ActiveUsersSeriesRow,
   DashboardStatsRaw,
@@ -66,7 +69,7 @@ type VipCustomerRowRaw = {
   total_duration: number;
 };
 
-export function makeUserStatsRepository(): UserStatsRepo {
+export function makeUserStatsRepository(db: Kysely<DB>): UserStatsRepo {
   const withOp = <A>(operation: string, run: () => Promise<A>) =>
     Effect.tryPromise({
       try: run,
@@ -83,7 +86,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
                 .selectFrom("User")
                 .select(sql<number>`count(*)`.as("count"))
                 .executeTakeFirst();
-              return row?.count ?? 0;
+              return Number(row?.count ?? 0);
             }),
             withOp("stats.totalVerified", async () => {
               const row = await db
@@ -91,7 +94,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
                 .select(sql<number>`count(*)`.as("count"))
                 .where("verify", "=", UserVerifyStatus.VERIFIED)
                 .executeTakeFirst();
-              return row?.count ?? 0;
+              return Number(row?.count ?? 0);
             }),
             withOp("stats.totalUnverified", async () => {
               const row = await db
@@ -99,7 +102,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
                 .select(sql<number>`count(*)`.as("count"))
                 .where("verify", "=", UserVerifyStatus.UNVERIFIED)
                 .executeTakeFirst();
-              return row?.count ?? 0;
+              return Number(row?.count ?? 0);
             }),
             withOp("stats.totalBanned", async () => {
               const row = await db
@@ -107,7 +110,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
                 .select(sql<number>`count(*)`.as("count"))
                 .where("verify", "=", UserVerifyStatus.BANNED)
                 .executeTakeFirst();
-              return row?.count ?? 0;
+              return Number(row?.count ?? 0);
             }),
           ]);
 
@@ -140,7 +143,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
         Effect.map(rows =>
           rows.map(row => ({
             date: row.bucket.toISOString().slice(0, 10),
-            activeUsersCount: row.active_users_count,
+            activeUsersCount: Number(row.active_users_count),
           })),
         ),
       );
@@ -190,9 +193,9 @@ export function makeUserStatsRepository(): UserStatsRepo {
             .offset(skip)
             .execute() as Promise<TopRenterRowRaw[]>);
 
-        const totalRecords = rows.length > 0 ? rows[0].total_records : 0;
+        const totalRecords = rows.length > 0 ? Number(rows[0].total_records) : 0;
         const items: TopRenterRow[] = rows.map(row => ({
-          totalRentals: row.total_rentals,
+          totalRentals: Number(row.total_rentals),
           user: {
             id: row.user_id,
             fullname: row.fullname,
@@ -216,7 +219,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
               .where("created_at", ">=", thisMonthStart)
               .where("created_at", "<=", thisMonthEnd)
               .executeTakeFirst();
-            return row?.count ?? 0;
+            return Number(row?.count ?? 0);
           }),
           withOp("stats.newUsers.lastMonth", async () => {
             const row = await db
@@ -225,7 +228,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
               .where("created_at", ">=", lastMonthStart)
               .where("created_at", "<=", lastMonthEnd)
               .executeTakeFirst();
-            return row?.count ?? 0;
+            return Number(row?.count ?? 0);
           }),
         ]);
 
@@ -247,7 +250,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
               .select(sql<number>`count(*)`.as("count"))
               .where("role", "=", UserRole.USER)
               .executeTakeFirst();
-            return row?.count ?? 0;
+            return Number(row?.count ?? 0);
           }),
           withOp("stats.dashboard.activeCustomers", async () => {
             const row = await db
@@ -256,7 +259,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
               .where("role", "=", UserRole.USER)
               .where("verify", "=", UserVerifyStatus.VERIFIED)
               .executeTakeFirst();
-            return row?.count ?? 0;
+            return Number(row?.count ?? 0);
           }),
           withOp("stats.dashboard.newCustomersThisMonth", async () => {
             const row = await db
@@ -266,7 +269,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
               .where("created_at", ">=", monthStart)
               .where("created_at", "<=", monthEnd)
               .executeTakeFirst();
-            return row?.count ?? 0;
+            return Number(row?.count ?? 0);
           }),
           withOp("stats.dashboard.totalRevenue", async () => {
             const row = await db
@@ -276,7 +279,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
               )
               .where("status", "=", "COMPLETED")
               .executeTakeFirst();
-            return row?.total_revenue ?? 0;
+            return Number(row?.total_revenue ?? 0);
           }),
           withOp("stats.dashboard.vipCustomer", () =>
             db
@@ -303,7 +306,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
             ? {
                 userId: vipRows[0].user_id,
                 fullname: vipRows[0].fullname,
-                totalDuration: vipRows[0].total_duration,
+                totalDuration: Number(vipRows[0].total_duration),
               }
             : null;
 
@@ -318,7 +321,7 @@ export function makeUserStatsRepository(): UserStatsRepo {
   };
 }
 
-export const UserStatsRepositoryLive = Layer.effect(
+export const UserStatsRepositoryLive = Layer.succeed(
   UserStatsRepository,
-  Effect.sync(() => makeUserStatsRepository()),
+  makeUserStatsRepository(db),
 );
