@@ -279,7 +279,7 @@ export const useBikeActions = (
     paginationBikes: data?.data?.Bikes.pagination,
     isFetchingBikeDetail: isLoading,
     isLoadingDetail,
-    detailBike: detailBike?.result,
+    detailBike: detailBike?.data?.Bike.data,
     isReportingBike: reportBikeMutation.isPending,
     isDeletingBike: deleteBikeMutation.isPending,
     isUpdatingBike: updateBikeMutation.isPending,

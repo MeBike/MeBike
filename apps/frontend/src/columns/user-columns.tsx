@@ -125,14 +125,20 @@ export const userColumns = ({
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative z-10">
         <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          type="button"
+          className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer relative z-10"
           title="Xem chi tiết"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
             if (onView) {
               onView({accountId:row.original.accountId});
             }
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />

@@ -1,22 +1,6 @@
-// export interface Bike {
-//   _id: string;
-//   station_id: string;
-//   status: BikeStatus;
-//   supplier_id: string | null;
-//   created_at: string;
-//   updated_at: string;
-//   chip_id: string;
-//   average_rating?: number;
-//   total_ratings?: number;
-// }
-// export type BikeStatus =
-//   | "CÓ SẴN"
-//   | "ĐANG ĐƯỢC THUÊ"
-//   | "BỊ HỎNG"
-//   | "ĐÃ ĐẶT TRƯỚC"
-//   | "ĐANG BẢO TRÌ"
-//   | "KHÔNG CÓ SẴN"
-//   | "";
+import type {
+  GraphQLMutationResponse,
+} from "@/types/GraphQL";
 import type { Station } from "./Station";
 import type { Supplier } from "./Supplier";
 export interface BikeActivityStats {
@@ -61,19 +45,25 @@ export interface BikeRentalHistory {
   };
 }
 
-export type BikeStatus = "Available" | "Booked" | "Broken" | "Reserved" | "Maintained" | "Unavailable";
+export type BikeStatus =
+  | "Available"
+  | "Booked"
+  | "Broken"
+  | "Reserved"
+  | "Maintained"
+  | "Unavailable";
 
 export interface Bike {
   id: string;
   chipId: string;
   status: BikeStatus;
   station: {
-    id : string;
-    name:string;
+    id: string;
+    name: string;
   };
   supplier: {
-    id : string;
-    name:string;
+    id: string;
+    name: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -84,6 +74,9 @@ export type DetailBike = {
   status: BikeStatus;
   createdAt: string;
   updatedAt: string;
-  station : Station;
-  supplier : Supplier;
-}
+  station: Station;
+  supplier: Supplier;
+};
+export type GetBikesResponse = GraphQLMutationResponse<"Bikes", Bike[]>;
+export type GetDetailBikeResponse = GraphQLMutationResponse<"Bike", DetailBike>;
+export type CreateBikeResponse = GraphQLMutationResponse<"CreateBike", Bike>;

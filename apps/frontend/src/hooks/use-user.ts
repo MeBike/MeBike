@@ -336,7 +336,7 @@ export const useUserActions = ({
     isLoadingTopRenter,
     getSearchUsers,
     createUser,
-    paginationUser: data?.data?.Users,
+    paginationUser: data?.data?.Users.pagination,
     isLoadingSearch,
     totalRecordUser: data?.data?.Users?.total || 0,
     getDetailUser,

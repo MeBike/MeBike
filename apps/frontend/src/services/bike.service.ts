@@ -9,7 +9,7 @@ import { BikeStatus } from "@custom-types";
 import { BikeActivityStats } from "@custom-types";
 import { BikeStats } from "@custom-types";
 import { GET_BIKES, GET_DETAIL_BIKES } from "@/graphql";
-import { GetBikesResponse, GetDetailBikeResponse } from "@/types/auth.type";
+import { GetBikesResponse, GetDetailBikeResponse } from "@/types/Bike.type";
 import { print } from "graphql";
 interface ApiResponse<T> {
   data: T;

@@ -2,7 +2,7 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
 import { UserProfile } from "@/schemas/userSchema";
-import { GET_USERS, GET_DETAIL_USER } from "@/graphql";
+import { GET_DETAIL_USER ,  GET_USERS} from "@/graphql";
 import { print } from "graphql";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
 import { GetUsersResponse, GetDetailUserResponse } from "@/types/auth.type";

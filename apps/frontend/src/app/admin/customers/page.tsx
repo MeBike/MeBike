@@ -248,54 +248,11 @@ export default function CustomersPage() {
               },
             })}
             data={users || []}
-            // filterPlaceholder="Tìm kiếm người dùng..."
+            searchValue={searchQuery}
+            filterPlaceholder="Tìm kiếm người dùng"
+            onSearchChange={setSearchQuery}
           />
 
-          {/* {totalPages >= 1 && (
-            <div className="flex items-center justify-between mt-6 pt-6 border-t border-border">
-              <div className="text-sm text-muted-foreground">
-                Trang {currentPage} / {paginationUser?.totalPages ?? 1}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePreviousPage}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Trước
-                </Button>
-
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    const page = Math.max(1, currentPage - 2) + i;
-                    if (page > totalPages) return null;
-                    return (
-                      <Button
-                        key={page}
-                        variant={currentPage === page ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                        className="w-8 h-8 p-0"
-                      >
-                        {page}
-                      </Button>
-                    );
-                  })}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNextPage}
-                  disabled={currentPage === (paginationUser?.totalPages ?? 1)}
-                >
-                  Sau
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          )} */}
           <div className="pt-3">
             <PaginationDemo
               currentPage={currentPage}
@@ -305,7 +262,7 @@ export default function CustomersPage() {
           </div>
 
           {/* Detail User Modal */}
-          {isDetailModalOpen && detailUserData && (
+          {isDetailModalOpen && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh]">
                 <div className="flex items-center justify-between mb-4">
@@ -328,7 +285,7 @@ export default function CustomersPage() {
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="animate-spin w-8 h-8 text-primary" />
                   </div>
-                ) : (
+                ) : detailUserData ? (
                   <>
                     {/* Tabs for different sections */}
                     <div className="flex gap-2 mb-6 border-b border-border">
@@ -405,11 +362,11 @@ export default function CustomersPage() {
                           </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData.role=== "ADMIN"
+                              detailUserData.role === "ADMIN"
                                 ? "bg-red-100 text-red-800"
-                                : detailUserData.role=== "STAFF"
+                                : detailUserData.role === "STAFF"
                                   ? "bg-blue-100 text-blue-800"
-                                  : detailUserData.role=== "SOS"
+                                  : detailUserData.role === "SOS"
                                     ? "bg-orange-100 text-orange-800"
                                     : "bg-green-100 text-green-800"
                             }`}
@@ -424,11 +381,9 @@ export default function CustomersPage() {
                           </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData.verify ===
-                              "Verified"
+                              detailUserData.verify === "Verified"
                                 ? "bg-green-100 text-green-800"
-                                : detailUserData.verify ===
-                                    "Unverified"
+                                : detailUserData.verify === "Unverified"
                                   ? "bg-yellow-100 text-yellow-800"
                                   : "bg-red-100 text-red-800"
                             }`}
@@ -442,8 +397,7 @@ export default function CustomersPage() {
                             Địa chỉ
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData.address ||
-                              "Chưa có"}
+                            {detailUserData.address || "Chưa có"}
                           </p>
                         </div>
 
@@ -452,8 +406,7 @@ export default function CustomersPage() {
                             NFC Card UID
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData.nfcCardUid ||
-                              "Chưa có"}
+                            {detailUserData.nfcCardUid || "Chưa có"}
                           </p>
                         </div>
 
@@ -462,7 +415,9 @@ export default function CustomersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData.createdAt ? formatToVNTime(detailUserData.createdAt) : "-"}
+                            {detailUserData.createdAt
+                              ? formatToVNTime(detailUserData.createdAt)
+                              : "-"}
                           </p>
                         </div>
 
@@ -471,7 +426,9 @@ export default function CustomersPage() {
                             Lần cập nhật cuối
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData.updatedAt ? formatToVNTime(detailUserData.updatedAt) : "-"}
+                            {detailUserData.updatedAt
+                              ? formatToVNTime(detailUserData.updatedAt)
+                              : "-"}
                           </p>
                         </div>
                       </div>
@@ -553,6 +510,10 @@ export default function CustomersPage() {
                       </div>
                     )} */}
                   </>
+                ) : (
+                  <div className="flex items-center justify-center py-8">
+                    <p className="text-muted-foreground">Không tìm thấy thông tin người dùng</p>
+                  </div>
                 )}
 
                 <div className="flex gap-3 mt-6">
@@ -566,30 +527,41 @@ export default function CustomersPage() {
                   >
                     Đóng
                   </Button>
-                  <Button
-                    onClick={() => {
-                      if (detailUserData) {
-                        setValueUpdateProfile("fullname", detailUserData.name || "");
-                        setValueUpdateProfile("location", detailUserData.address || "");
-                       
-                        setValueUpdateProfile("phone_number", detailUserData.phone || "");
-                      }
-                      setIsEditProfileModalOpen(true);
-                    }}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Chỉnh sửa
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setIsResetPasswordModalOpen(true);
-                    }}
-                    variant="outline"
-                    className="flex-1"
-                  >
-                    Đặt lại mật khẩu
-                  </Button>
+                  {detailUserData && (
+                    <>
+                      <Button
+                        onClick={() => {
+                          setValueUpdateProfile(
+                            "fullname",
+                            detailUserData.name || ""
+                          );
+                          setValueUpdateProfile(
+                            "location",
+                            detailUserData.address || ""
+                          );
+
+                          setValueUpdateProfile(
+                            "phone_number",
+                            detailUserData.phone || ""
+                          );
+                          setIsEditProfileModalOpen(true);
+                        }}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Chỉnh sửa
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setIsResetPasswordModalOpen(true);
+                        }}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Đặt lại mật khẩu
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -744,11 +716,21 @@ export default function CustomersPage() {
 
                 {detailUserData && (
                   <div className="mb-4 p-3 bg-muted rounded-lg text-sm">
-                    <p className="text-muted-foreground mb-2"><strong>Thông tin hiện tại:</strong></p>
+                    <p className="text-muted-foreground mb-2">
+                      <strong>Thông tin hiện tại:</strong>
+                    </p>
                     <div className="space-y-1 text-xs">
-                      <p><strong>Họ tên:</strong> {detailUserData.name}</p>
-                      <p><strong>SĐT:</strong> {detailUserData.phone || "Chưa có"}</p>
-                      <p><strong>Địa chỉ:</strong> {detailUserData.address|| "Chưa có"}</p>
+                      <p>
+                        <strong>Họ tên:</strong> {detailUserData.name}
+                      </p>
+                      <p>
+                        <strong>SĐT:</strong>{" "}
+                        {detailUserData.phone || "Chưa có"}
+                      </p>
+                      <p>
+                        <strong>Địa chỉ:</strong>{" "}
+                        {detailUserData.address || "Chưa có"}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -825,7 +807,6 @@ export default function CustomersPage() {
                       </p>
                     )}
                   </div>
-
                 </form>
 
                 <div className="flex gap-3 mt-6">
