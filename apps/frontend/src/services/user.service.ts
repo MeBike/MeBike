@@ -2,10 +2,11 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
 import { UserProfile } from "@/schemas/userSchema";
-import { GET_DETAIL_USER ,  GET_USERS} from "@/graphql";
+import { GET_DETAIL_USER ,  GET_USERS , GET_USER_STATS} from "@/graphql";
 import { print } from "graphql";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
 import { GetUsersResponse, GetDetailUserResponse } from "@/types/auth.type";
+import { GetUserStatsResponse } from "@/types/user.type";
 interface ApiReponse<T> {
   data: T;
   pagination?: {
@@ -191,12 +192,11 @@ export const userService = {
     return response;
   },
   getDashboardUserStats: async (): Promise<
-    AxiosResponse<DetailUserResponse<DashboardUserStats>>
+    AxiosResponse<GetUserStatsResponse>
   > => {
-    const response = await fetchHttpClient.get<
-      DetailUserResponse<DashboardUserStats>
-    >(USER_ENDPOINTS.DASHBOARD_USER_STATS);
-    return response;
+    return fetchHttpClient.query<GetUserStatsResponse>(
+      print(GET_USER_STATS)
+    );
   },
   postResetPassword: async (
     id: string,
