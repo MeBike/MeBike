@@ -5,7 +5,7 @@ import { CreateSupplierSchema } from "@/schemas/supplier.schema";
 import type { StatsSupplierBike } from "@custom-types";
 import {GET_ALL_SUPPLIER,GET_DETAIL_SUPPLIER} from "@/graphql"
 import { print } from "graphql";
-import { GetSupplierResponse } from "../types/supplier.type";
+import { GetSupplierResponse , GetDetailSupplierResponse } from "../types/supplier.type";
 interface ApiResponse<T> {
   data: T[];
   pagination: {
@@ -41,9 +41,12 @@ export const supplierService = {
     );
     return response;
   },
-  getSupplierById: async (id: string): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.WITH_ID(id)
+  getSupplierById: async (id: string): Promise<AxiosResponse <GetDetailSupplierResponse> > => {
+    const response = await fetchHttpClient.query<GetDetailSupplierResponse>(
+      print(GET_DETAIL_SUPPLIER),
+      {
+        supplierId : id
+      }
     );
     return response;
   },

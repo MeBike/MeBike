@@ -12,3 +12,4 @@ export interface Supplier {
   };
 }
 export type GetSupplierResponse = GraphQLMutationResponse<"Suppliers", Supplier[]>;
+export type GetDetailSupplierResponse = GraphQLMutationResponse<"Supplier",Supplier>;

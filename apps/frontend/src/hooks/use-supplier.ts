@@ -79,7 +79,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
       }
       useCreateSupplier.mutate(supplierData, {
         onSuccess: (result) => {
-          if (result.status === 200) {
+          if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.message || MESSAGE.CREATE_SUPPLIER_SUCCESS );
             queryClient.invalidateQueries({
               queryKey: ["suppliers", "all", 1, 10],
@@ -109,7 +109,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
         { id, newStatus },
         {
           onSuccess: (result) => {
-            if (result.status === 200) {
+            if (result.status === HTTP_STATUS.OK) {
               toast.success(result.data?.message || MESSAGE.CHANGE_STATUS_SUPPLIER_SUCCESS);
               queryClient.invalidateQueries({
                 queryKey: ["suppliers", "all", 1, 10],
@@ -140,7 +140,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     }
     useUpdateSupplier.mutate({ id: id, data }, {
       onSuccess: (result) => {
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success(result.data?.message || MESSAGE.UPDATE_SUPPLIER_SUCCESS);
           queryClient.invalidateQueries({
             queryKey: ["suppliers", "all", 1, 10],
@@ -186,7 +186,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     changeStatusSupplier,
     getUpdateSupplier,
     fetchDetailSupplier,
-    detailSupplier : detailSupplier?.result,
+    detailSupplier : detailSupplier?.data?.Supplier.data,
     isLoadingDetailSupplier,
   };
 };
