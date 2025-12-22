@@ -65,3 +65,48 @@ export type UserFilter = {
 export type UserSortField = "fullname" | "email" | "role" | "verify" | "updatedAt";
 
 export type UserOrderBy = PrismaTypes.UserOrderByWithRelationInput;
+
+export type UserStatsOverview = {
+  totalUsers: number;
+  totalVerified: number;
+  totalUnverified: number;
+  totalBanned: number;
+};
+
+export type ActiveUsersSeriesRow = {
+  date: string;
+  activeUsersCount: number;
+};
+
+export type TopRenterUser = {
+  id: string;
+  fullname: string;
+  email: string;
+  avatar: string | null;
+  phoneNumber: string | null;
+  location: string | null;
+};
+
+export type TopRenterRow = {
+  totalRentals: number;
+  user: TopRenterUser;
+};
+
+export type NewUsersCounts = {
+  thisMonth: number;
+  lastMonth: number;
+};
+
+export type VipCustomer = {
+  userId: string;
+  fullname: string;
+  totalDuration: number;
+} | null;
+
+export type DashboardStatsRaw = {
+  totalCustomers: number;
+  activeCustomers: number;
+  newCustomersThisMonth: number;
+  vipCustomer: VipCustomer;
+  totalRevenue: number;
+};

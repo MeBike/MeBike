@@ -29,9 +29,11 @@
     "hono": "^4.9.4",
     "ioredis": "5.8.2",
     "jsonwebtoken": "^9.0.2",
+    "kysely": "^0.28.9",
     "nodemailer": "^6.10.1",
     "pg": "^8.16.3",
     "pino": "^8.21.0",
+    "prisma-kysely": "^2.2.1",
     "uuidv7": "^1.1.0",
     "zod": "^4.1.11"
   },

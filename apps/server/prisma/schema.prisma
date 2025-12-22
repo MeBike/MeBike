@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client"
+  // provider = "prisma-client"
+  provider = "prisma-kysely"
+
   output   = "../generated/prisma"
 }
 

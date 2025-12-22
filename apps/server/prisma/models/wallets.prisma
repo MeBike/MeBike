@@ -24,27 +24,27 @@ model Wallet {
   createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz
 
-  user          User                 @relation(fields: [userId], references: [id])
-  transactions  WalletTransaction[]
+  user         User                @relation(fields: [userId], references: [id])
+  transactions WalletTransaction[]
 
-  @@map("wallets")
   @@index([status], name: "idx_wallets_status")
+  @@map("wallets")
 }
 
 model WalletTransaction {
-  id          String                   @id @default(uuid(7)) @db.Uuid
-  walletId    String                   @map("wallet_id") @db.Uuid
-  amount      Decimal                  @db.Decimal(14, 2)
-  fee         Decimal                  @default(0) @db.Decimal(14, 2)
-  description String?                  @db.Text
-  hash        String?                  @db.Text
+  id          String                  @id @default(uuid(7)) @db.Uuid
+  walletId    String                  @map("wallet_id") @db.Uuid
+  amount      Decimal                 @db.Decimal(14, 2)
+  fee         Decimal                 @default(0) @db.Decimal(14, 2)
+  description String?                 @db.Text
+  hash        String?                 @db.Text
   type        WalletTransactionType
-  status      WalletTransactionStatus  @default(SUCCESS)
-  createdAt   DateTime                 @default(now()) @map("created_at") @db.Timestamptz
+  status      WalletTransactionStatus @default(SUCCESS)
+  createdAt   DateTime                @default(now()) @map("created_at") @db.Timestamptz
 
   wallet Wallet @relation(fields: [walletId], references: [id])
 
-  @@map("wallet_transactions")
   @@index([walletId], name: "idx_wallet_tx_wallet")
   @@index([type], name: "idx_wallet_tx_type")
+  @@map("wallet_transactions")
 }

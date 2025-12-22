@@ -11,7 +11,6 @@ enum SubscriptionPackage {
   unlimited
 }
 
-
 model Subscription {
   id          String              @id @default(uuid(7)) @db.Uuid
   userId      String              @map("user_id") @db.Uuid
