@@ -47,6 +47,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
   const {
     refetch: refetchAllSuppliers,
     data: allSupplier,
+    isLoading:isLoadingAllSupplier
   } = useGetAllSupplierQuery();
   const { data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier , refetch : fetchAllStatsSupplier } =
     useGetAllStatsSupplierQuery();
@@ -169,7 +170,9 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
   return {
     useGetAllSupplierQuery,
     getAllSuppliers,
-    allSupplier,
+    allSupplier : allSupplier?.data?.Suppliers.data,
+    paginationAllSupplier: allSupplier?.data?.Suppliers.pagination,
+    isLoadingAllSupplier,
     createSupplier,
     isCreatingSupplier: useCreateSupplier.isPending,
     useGetAllStatsSupplierQuery,

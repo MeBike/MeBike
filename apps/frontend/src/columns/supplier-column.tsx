@@ -1,8 +1,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Edit2,  Recycle } from "lucide-react";
-import type { Supplier } from "@/types";
-const getStatusColor = (status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
-  return status === "HOẠT ĐỘNG"
+import type { Supplier } from "@/types/supplier.type";
+import { formatToVNTime } from "@/lib/formateVNDate";
+const getStatusColor = (status: "Active" | "Inactive") => {
+  return status === "Active"
     ? "bg-green-100 text-green-800"
     : "bg-red-100 text-red-800";
 };
@@ -16,26 +17,45 @@ export const columns = ({
   onView?: (supplier: Supplier) => void;
   setIsDetailModalOpen?: (isOpen: boolean) => void;
   onEdit?: (data: Supplier) => void;
-  onChangeStatus?: (id: string, newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => void;
+  onChangeStatus?: (
+    id: string,
+    newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG"
+  ) => void;
 }): ColumnDef<Supplier>[] => [
+  {
+    accessorKey: "id",
+    header: "ID",
+    cell: ({ row }) => row.original.id,
+  },
   {
     accessorKey: "name",
     header: "Tên nhà cung cấp",
+    cell: ({ row }) => row.original.name,
   },
   {
-    accessorKey: "contact_info.address",
+    accessorKey: "contact_info",
     header: "Địa chỉ",
-    cell: ({ row }) => row.original.contact_info.address,
+    cell: ({ row }) => row.original.contactInfo.address,
   },
   {
     accessorKey: "contact_info.phone_number",
     header: "Số điện thoại",
-    cell: ({ row }) => row.original.contact_info.phone_number,
+    cell: ({ row }) => row.original.contactInfo.phone,
   },
   {
     accessorKey: "contract_fee",
     header: "Phí hợp đồng",
-    cell: ({ row }) => `${row.original.contract_fee}`,
+    cell: ({ row }) => `${row.original.contactFee}`,
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Ngày được tạo",
+    cell: ({ row }) => `${formatToVNTime(row.original.createdAt)}`,
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Ngày được cập nhật",
+    cell: ({ row }) => `${formatToVNTime(row.original.updatedAt)}`,
   },
   {
     accessorKey: "status",
@@ -80,10 +100,19 @@ export const columns = ({
         </button>
         <button
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title={row.original.status === "HOẠT ĐỘNG" ? "Ngưng hoạt động" : "Kích hoạt"}
+          title={
+            row.original.status === "Active"
+              ? "Ngưng hoạt động"
+              : "Kích hoạt"
+          }
           onClick={() => {
             if (onChangeStatus) {
-              onChangeStatus(row.original._id, row.original.status === "HOẠT ĐỘNG" ? "NGƯNG HOẠT ĐỘNG" : "HOẠT ĐỘNG");
+              onChangeStatus(
+                row.original.id,
+                row.original.status === "Active"
+                  ? "NGƯNG HOẠT ĐỘNG"
+                  : "HOẠT ĐỘNG"
+              );
             }
           }}
         >

@@ -3,6 +3,9 @@ import type { AxiosResponse } from "axios";
 import type { Supplier } from "@/types/Supplier";
 import { CreateSupplierSchema } from "@/schemas/supplier.schema";
 import type { StatsSupplierBike } from "@custom-types";
+import {GET_ALL_SUPPLIER,GET_DETAIL_SUPPLIER} from "@/graphql"
+import { print } from "graphql";
+import { GetSupplierResponse } from "../types/supplier.type";
 interface ApiResponse<T> {
   data: T[];
   pagination: {
@@ -32,14 +35,9 @@ export const supplierService = {
     page?: number;
     limit?: number;
     status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | "";
-  }): Promise<AxiosResponse<ApiResponse<Supplier>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.BASE,
-      {
-        page: page,
-        limit: limit,
-        status: status,
-      }
+  }): Promise<AxiosResponse<GetSupplierResponse>> => {
+    const response = await fetchHttpClient.query<GetSupplierResponse>(
+      print(GET_ALL_SUPPLIER)
     );
     return response;
   },

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { Supplier } from "@custom-types";
+import type { Supplier } from "@/types/supplier.type";
 import { Plus, X } from "lucide-react";
 import { useSupplierActions } from "@/hooks/use-supplier";
 import { useBikeActions } from "@/hooks/use-bike";
@@ -16,11 +16,8 @@ import {
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@components/PaginationCustomer";
 import { Input } from "@/components/ui/input";
-const getStatusColor = (status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
-  return status === "HOẠT ĐỘNG"
-    ? "bg-green-100 text-green-800"
-    : "bg-red-100 text-red-800";
-};
+import { getStatusColor } from "@/utils/status-style";
+import { formatToVNTime } from "@/lib/formateVNDate";
 
 export default function SuppliersPage() {
   const {
@@ -55,7 +52,7 @@ export default function SuppliersPage() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
-    "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
+    "Active" | "Inactive" | ""
   >("");
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
@@ -74,21 +71,22 @@ export default function SuppliersPage() {
     changeStatusSupplier,
     isLoadingAllStatsSupplier,
     getAllStatsSupplier,
+    isLoadingAllSupplier,
     getUpdateSupplier,
-  } = useSupplierActions(true, selectedSupplier?._id);
+    paginationAllSupplier,
+    allSupplier,
+  } = useSupplierActions(true, selectedSupplier?.id);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data: supplierData, isLoading: isLoadingGetAllSuppliers } =
-    useGetAllSupplierQuery(page, limit, statusFilter);
   useEffect(() => {
     setPage(1);
     setLimit(10);
   }, [statusFilter, searchQuery]);
-  const { data: bikeData, isLoading: isLoadingBike } = useGetAllBikeQuery({
-    page: 1,
-    limit: 1000,
-    supplier_id: selectedSupplier?._id,
-  });
+  // const { data: bikeData, isLoading: isLoadingBike } = useGetAllBikeQuery({
+  //   page: 1,
+  //   limit: 1000,
+  //   supplier_id: selectedSupplier?._id,
+  // });
   const handleAddSupplier = (data: CreateSupplierSchema) => {
     console.log("[v0] Adding supplier:", data);
     createSupplier({
@@ -102,14 +100,14 @@ export default function SuppliersPage() {
   };
 
   const handleChangeStatusFilter = (
-    status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
+    status: "Active" | "Inactive" | ""
   ) => {
     setStatusFilter(status);
   };
 
   const handleViewSupplier = (supplier: Supplier) => {
     if (!supplier) return;
-    if (selectedSupplier?._id === supplier._id && !isDetailModalOpen) {
+    if (selectedSupplier?.id === supplier.id && !isDetailModalOpen) {
       setIsDetailModalOpen(true);
       return;
     }
@@ -151,7 +149,7 @@ export default function SuppliersPage() {
   const handleUpdateSupplier = (data: CreateSupplierSchema) => {
     if (!editingSupplier) return;
     getUpdateSupplier({
-      id: editingSupplier._id,
+      id: editingSupplier.id,
       data: {
         name: data.name,
         address: data.address,
@@ -165,9 +163,7 @@ export default function SuppliersPage() {
   };
   return (
     <div>
-      {isLoadingGetAllSuppliers ||
-      isLoadingBike ||
-      isLoadingBikeStatsSupplier ? (
+      {isLoadingAllSupplier ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
           <Loader2 className="animate-spin w-16 h-16 text-primary" />
         </div>
@@ -197,10 +193,10 @@ export default function SuppliersPage() {
             <div className="bg-card border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Tổng nhà cung cấp</p>
               <p className="text-2xl font-bold text-foreground mt-1">
-                {supplierData?.pagination.totalRecords || 0}
+                {paginationAllSupplier?.total || 0}
               </p>
             </div>
-            <div className="bg-card border border-border rounded-lg p-4">
+            {/* <div className="bg-card border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Đang hoạt động</p>
               <p className="text-2xl font-bold text-green-500 mt-1">
                 {supplierData?.data?.filter((s) => s.status === "HOẠT ĐỘNG")
@@ -212,7 +208,7 @@ export default function SuppliersPage() {
               <p className="text-2xl font-bold text-blue-500 mt-1">
                 {bikeData?.pagination.totalRecords || 0}
               </p>
-            </div>
+            </div> */}
           </div>
 
           <div className="bg-card border border-border rounded-lg p-4 space-y-4">
@@ -228,7 +224,7 @@ export default function SuppliersPage() {
                 value={statusFilter}
                 onChange={(e) =>
                   handleChangeStatusFilter(
-                    e.target.value as "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
+                    e.target.value as "Active" | "Inactive" | ""
                   )
                 }
                 className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
@@ -260,18 +256,18 @@ export default function SuppliersPage() {
                   setEditingSupplier(supplier);
                   resetEditForm({
                     name: supplier.name,
-                    address: supplier.contact_info.address,
-                    phone_number: supplier.contact_info.phone_number,
-                    contract_fee: supplier.contract_fee,
+                    address: supplier.contactInfo.address,
+                    phone_number: supplier.contactInfo.phone,
+                    contract_fee: supplier.contactFee,
                   });
                   setIsEditModalOpen(true);
                 },
               })}
-              data={supplierData?.data ?? []}
+              data={allSupplier ?? []}
             />
             <PaginationDemo
-              totalPages={supplierData?.pagination?.totalPages ?? 1}
-              currentPage={supplierData?.pagination?.currentPage ?? 1}
+              totalPages={paginationAllSupplier?.totalPages ?? 1}
+              currentPage={paginationAllSupplier?.page ?? 1}
               onPageChange={setPage}
             />
           </div>
@@ -336,10 +332,10 @@ export default function SuppliersPage() {
                 ))}
               </div>
             </div>
-            <p className="text-sm text-muted-foreground">
+            {/* <p className="text-sm text-muted-foreground">
               Hiển thị {supplierData?.pagination.totalRecords} /{" "}
               {supplierData?.pagination.totalRecords} nhà cung cấp
-            </p>
+            </p> */}
           </div>
 
           {isModalOpen && (
@@ -473,7 +469,7 @@ export default function SuppliersPage() {
                             Địa chỉ
                           </p>
                           <p className="text-foreground font-medium">
-                            {selectedSupplier.contact_info.address}
+                            {selectedSupplier.contactInfo.address}
                           </p>
                         </div>
                         <div>
@@ -481,7 +477,7 @@ export default function SuppliersPage() {
                             Số điện thoại
                           </p>
                           <p className="text-foreground font-medium">
-                            {selectedSupplier.contact_info.phone_number}
+                            {selectedSupplier.contactInfo.phone}
                           </p>
                         </div>
                         <div>
@@ -489,7 +485,7 @@ export default function SuppliersPage() {
                             Phí hợp đồng
                           </p>
                           <p className="text-foreground font-medium">
-                            {selectedSupplier.contract_fee} VND
+                            {selectedSupplier.contactFee} VND
                           </p>
                         </div>
                         <div>
@@ -507,9 +503,8 @@ export default function SuppliersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {new Date(
-                              selectedSupplier.created_at
-                            ).toLocaleDateString("vi-VN")}
+                            {selectedSupplier.createdAt ??
+                              formatToVNTime(selectedSupplier.createdAt)}
                           </p>
                         </div>
                       </div>
