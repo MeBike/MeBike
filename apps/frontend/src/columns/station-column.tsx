@@ -46,7 +46,7 @@ export const stationColumns = ({
     header: () => <div className="text-center">Availability</div>,
     cell: ({ row }) => {
       const percentage =
-        (200 / 200) * 100;
+        (row.original.availableBike / row.original.capacity) * 100;
       return (
         <div className="flex flex-col items-center gap-1.5">
           <div className="flex items-center gap-2">

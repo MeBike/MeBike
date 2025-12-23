@@ -76,7 +76,7 @@ export const useStationActions = ({
           if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.data?.CreateStation.message || MESSAGE.CREATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(),
+              queryKey: ["stations", "all"],
             });
           }
         },
@@ -99,7 +99,7 @@ export const useStationActions = ({
           if (result.status === 200) {
             toast.success(result.data?.message || MESSAGE.DELETE_STATION_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(),
+              queryKey: ["stations", "all"],
             });
           } else {
             const errorMessage =
@@ -129,7 +129,7 @@ export const useStationActions = ({
           if (result.status === 200) {
             toast.success(result.data?.message || MESSAGE.UPDATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(),
+              queryKey: ["stations", "all"],
             });
           } else {
             const errorMessage =

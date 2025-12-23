@@ -19,12 +19,6 @@ export const stationSchema = z.object({
     .refine((val) => !isNaN(parseFloat(val)), {
       message: "Kinh độ phải là một số",
     }),
-  capacity: z
-    .string({
-      error: "Sức chứa không được để trống",
-    })
-    .refine((val) => !isNaN(parseInt(val)), {
-      message: "Sức chứa phải là một số nguyên",
-    }),
+  capacity: z.number().min(10, "Sức chứa tối thiểu là 10").max(300, "Sức chứa nhiều nhất 300"),
 });
 export type StationSchemaFormData = z.infer<typeof stationSchema>;

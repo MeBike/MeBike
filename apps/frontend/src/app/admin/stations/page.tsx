@@ -64,7 +64,7 @@ export default function StationsPage() {
       address: "",
       latitude: "",
       longitude: "",
-      capacity: "",
+      capacity: 0,
     },
   });
   const {
@@ -80,7 +80,7 @@ export default function StationsPage() {
       address: "",
       latitude: "",
       longitude: "",
-      capacity: "",
+      capacity: 0,
     },
   });
 
@@ -597,8 +597,8 @@ export default function StationsPage() {
                 Sức chứa (số xe)
               </label>
               <Input
-                type="text"
-                {...createRegister("capacity")}
+                type="number"
+                {...createRegister("capacity", { valueAsNumber: true })}
                 placeholder="Nhập sức chứa"
               />
               {createErrors.capacity && (
@@ -702,8 +702,8 @@ export default function StationsPage() {
                   Sức chứa (số xe)
                 </label>
                 <Input
-                  type="text"
-                  {...editRegister("capacity")}
+                  type="number"
+                  {...editRegister("capacity", { valueAsNumber: true })}
                   placeholder="Nhập sức chứa"
                 />
                 {editErrors.capacity && (
