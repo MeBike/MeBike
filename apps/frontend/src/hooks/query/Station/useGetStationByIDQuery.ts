@@ -4,8 +4,8 @@ import { QUERY_KEYS } from "@constants/queryKey";
 const fetchStationByID = async (id: string) => {
   try {
     const response = await stationService.getStationById(id);
-    if (response.status === 200 && response.data?.result) {
-      return response.data.result;
+    if (response.status === 200 && response.data?.data?.Stations) {
+      return response.data.data.Stations.data;
     }
     return null;
   } catch (error) {

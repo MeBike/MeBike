@@ -64,7 +64,7 @@ export const useStationActions = ({
       return;
     }
     fetchingStationID();
-  }, [fetchingStationID, hasToken]);
+  }, [fetchingStationID, hasToken , stationId]);
   const createStation = useCallback(
     async (data: StationSchemaFormData) => {
       if (!hasToken) {

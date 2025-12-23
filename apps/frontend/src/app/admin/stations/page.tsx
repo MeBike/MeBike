@@ -90,8 +90,8 @@ export default function StationsPage() {
 
   useEffect(() => {
     if (stationID) {
+      console.log("stationID", stationID);
       getStationByID();
-      getReservationStats();
     }
   }, [stationID, getStationByID, getReservationStats]);
 
@@ -807,7 +807,7 @@ export default function StationsPage() {
                     </label>
                     <p className="text-foreground text-sm">
                       {new Date(
-                        responseStationDetail?.created_at || ""
+                        responseStationDetail?.createdAt || ""
                       ).toLocaleDateString("vi-VN")}
                     </p>
                   </div>
@@ -817,14 +817,14 @@ export default function StationsPage() {
                     </label>
                     <p className="text-foreground text-sm">
                       {new Date(
-                        responseStationDetail?.updated_at || ""
+                        responseStationDetail?.updatedAt || ""
                       ).toLocaleDateString("vi-VN")}
                     </p>
                   </div>
                 </div>
 
-                {/* Reservation Stats */}
-                {responseStationReservationStats?.result && (
+                
+                {/* {responseStationReservationStats?.result && (
                   <div className="space-y-4 pt-4 border-t border-border">
                     <h3 className="text-lg font-semibold text-foreground">
                       Thống kê đặt chỗ
@@ -866,14 +866,6 @@ export default function StationsPage() {
                             .Expired || "0"}
                         </p>
                       </div>
-                      {/* <div>
-                        <label className="block text-sm font-medium text-muted-foreground mb-1">
-                          Đã hết hạn
-                        </label>
-                        <p className="text-foreground font-medium">
-                          {responseStationReservationStats.result.status_counts["ĐÃ HẾT HẠN"]}
-                        </p>
-                      </div> */}
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1">
                           Xe đang đặt trước
@@ -887,10 +879,10 @@ export default function StationsPage() {
                       </div>
                     </div>
                   </div>
-                )}
+                )} */}
 
-                {/* Rating Stats */}
-                {(responseStationDetail?.average_rating !== undefined ||
+                
+                {/* {(responseStationDetail?.average_rating !== undefined ||
                   responseStationDetail?.total_ratings !== undefined) && (
                   <div className="space-y-4 pt-4 border-t border-border">
                     <h3 className="text-lg font-semibold text-foreground">
@@ -923,7 +915,7 @@ export default function StationsPage() {
                       </div>
                     </div>
                   </div>
-                )}
+                )} */}
 
                 <div className="pt-4">
                   <Button
