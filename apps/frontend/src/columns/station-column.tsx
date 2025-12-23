@@ -46,7 +46,7 @@ export const stationColumns = ({
     header: () => <div className="text-center">Availability</div>,
     cell: ({ row }) => {
       const percentage =
-        (row.original.availableBike / row.original.capacity) * 100;
+        (200 / 200) * 100;
       return (
         <div className="flex flex-col items-center gap-1.5">
           <div className="flex items-center gap-2">
@@ -59,7 +59,6 @@ export const stationColumns = ({
               / {row.original.capacity}
             </span>
           </div>
-          {/* Optional: Modern Mini Progress Bar */}
           <div className="w-16 h-1.5 bg-secondary rounded-full overflow-hidden">
             <div
               className={`h-full ${percentage < 20 ? "bg-red-500" : "bg-green-500"}`}
