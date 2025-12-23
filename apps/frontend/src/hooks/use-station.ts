@@ -13,35 +13,7 @@ import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeReven
 import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
 import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
 import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
-interface ErrorWithMessage {
-  message: string;
-}
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-
-  return defaultMessage;
-};
-interface StationActionProps {
+import { getErrorMessage } from "@/utils/message";interface StationActionProps {
   hasToken?: boolean;
   stationId?: string;
   page?: number;
@@ -102,14 +74,10 @@ export const useStationActions = ({
       useCreateStation.mutate(data, {
         onSuccess: (result) => {
           if (result.status === HTTP_STATUS.OK) {
-            toast.success(result.data?.message || MESSAGE.CREATE_STATION_SUCCESS);
+            toast.success(result.data?.data?.CreateStation.message || MESSAGE.CREATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.STATION.ALL(),
             });
-          } else {
-            const errorMessage =
-              result.data?.message || MESSAGE.CREATE_STATION_FAILED;
-            toast.error(errorMessage);
           }
         },
         onError: (error) => {
@@ -209,8 +177,8 @@ export const useStationActions = ({
     useGetAllStation,
     deleteStation,
     updateStation,
-    stations: response?.data || [],
-    paginationStations: response?.pagination,
+    stations: response?.data?.Stations.data || [],
+    paginationStations: response?.data?.Stations.pagination,
     isLoadingGetAllStations: isLoading,
     fetchingStationID,
     responseStationDetail,

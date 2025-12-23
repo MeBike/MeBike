@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Edit2, Trash2 } from "lucide-react";
-import type { Station } from "@custom-types";
+import { Eye, Edit2, Trash2, MapPin, Bike, AlertCircle } from "lucide-react";
+import type { Station } from "@/types/station.type";
+import { Badge } from "@/components/ui/badge"; // Assuming shadcn/ui
 import {
   Dialog,
   DialogTrigger,
@@ -10,18 +11,8 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-export function formatDateVN(dateString: string) {
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return ""; // Nếu date không hợp lệ trả về rỗng
-  return date.toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
+import { formatToVNTime } from "@/lib/formateVNDate";
+
 export const stationColumns = ({
   onView,
   setIsDetailModalOpen,
@@ -35,103 +26,143 @@ export const stationColumns = ({
 }): ColumnDef<Station>[] => [
   {
     accessorKey: "name",
-    header: "Tên trạm",
-    cell: ({ row }) => row.original.name,
+    header: "Station Detail",
+    cell: ({ row }) => (
+      <div className="flex flex-col gap-1 min-w-[200px]">
+        <div className="font-bold text-foreground capitalize tracking-tight">
+          {row.original.name}
+        </div>
+        <div className="flex items-center text-xs text-muted-foreground italic">
+          <MapPin className="mr-1 h-3 w-3 shrink-0" />
+          <span className="truncate max-w-[180px]" title={row.original.address}>
+            {row.original.address}
+          </span>
+        </div>
+      </div>
+    ),
   },
   {
-    accessorKey: "address",
-    header: "Địa chỉ",
-    cell: ({ row }) => row.original.address,
+    accessorKey: "availableBike",
+    header: () => <div className="text-center">Availability</div>,
+    cell: ({ row }) => {
+      const percentage =
+        (row.original.availableBike / row.original.capacity) * 100;
+      return (
+        <div className="flex flex-col items-center gap-1.5">
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-sm font-bold ${percentage < 20 ? "text-red-500" : "text-green-600"}`}
+            >
+              {row.original.availableBike}
+            </span>
+            <span className="text-muted-foreground text-xs">
+              / {row.original.capacity}
+            </span>
+          </div>
+          {/* Optional: Modern Mini Progress Bar */}
+          <div className="w-16 h-1.5 bg-secondary rounded-full overflow-hidden">
+            <div
+              className={`h-full ${percentage < 20 ? "bg-red-500" : "bg-green-500"}`}
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+        </div>
+      );
+    },
   },
   {
-    accessorKey: "latitude",
-    header: "Vĩ độ",
-    cell: ({ row }) => row.original.latitude,
+    id: "inventory",
+    header: "Bike Status",
+    cell: ({ row }) => (
+      <div className="flex flex-wrap gap-1 max-w-[150px]">
+        {row.original.bookedBike > 0 && (
+          <Badge
+            variant="outline"
+            className="text-[10px] px-1.5 py-0 border-blue-200 text-blue-600 bg-blue-50"
+          >
+            {row.original.bookedBike} Booked
+          </Badge>
+        )}
+        {row.original.brokenBike > 0 && (
+          <Badge
+            variant="outline"
+            className="text-[10px] px-1.5 py-0 border-destructive/30 text-destructive bg-destructive/5"
+          >
+            {row.original.brokenBike} Broken
+          </Badge>
+        )}
+        {row.original.maintanedBike > 0 && (
+          <Badge
+            variant="outline"
+            className="text-[10px] px-1.5 py-0 border-amber-200 text-amber-600 bg-amber-50"
+          >
+            {row.original.maintanedBike} Maint.
+          </Badge>
+        )}
+      </div>
+    ),
   },
   {
-    accessorKey: "longitude",
-    header: "Kinh độ",
-    cell: ({ row }) => row.original.longitude,
-  },
-  {
-    accessorKey: "capacity",
-    header: "Sức chứa",
-    cell: ({ row }) => row.original.capacity,
-  },
-  {
-    accessorKey: "created_at",
-    header: "Ngày tạo",
-    cell: ({ row }) => formatDateVN(row.original.created_at),
-  },
-  {
-    accessorKey: "updated_at",
-    header: "Ngày cập nhật",
-    cell: ({ row }) => formatDateVN(row.original.updated_at),
+    accessorKey: "updatedAt",
+    header: "Last Activity",
+    cell: ({ row }) => (
+      <div className="text-xs text-muted-foreground whitespace-nowrap">
+        {formatToVNTime(row.original.updatedAt)}
+      </div>
+    ),
   },
   {
     id: "actions",
-    header: "Hành động",
+    header: () => <div className="text-right pr-4">Actions</div>,
     cell: ({ row }) => (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-end gap-1">
         <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Xem chi tiết"
+          className="p-2 hover:bg-primary/10 hover:text-primary rounded-md transition-all group"
           onClick={() => {
-            if (onView) {
-              onView({ id: row.original._id });
-            }
-            if (setIsDetailModalOpen) {
-              setIsDetailModalOpen(true);
-            }
+            onView?.({ id: row.original.id });
+            setIsDetailModalOpen?.(true);
           }}
         >
-          <Eye className="w-4 h-4 text-muted-foreground" />
+          <Eye className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
         </button>
+
         <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Chỉnh sửa"
-          onClick={() => {
-            if (onEdit) {
-              onEdit({ id: row.original._id });
-            }
-          }}
+          className="p-2 hover:bg-primary/10 hover:text-primary rounded-md transition-all group"
+          onClick={() => onEdit?.({ id: row.original.id })}
         >
-          <Edit2 className="w-4 h-4 text-muted-foreground" />
+          <Edit2 className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
         </button>
+
         <Dialog>
           <DialogTrigger asChild>
-            <button
-              className="p-2 hover:bg-muted rounded-lg transition-colors"
-              title="Xóa"
-              type="button"
-            >
-              <Trash2 className="w-4 h-4 text-red-500" />
+            <button className="p-2 hover:bg-destructive/10 hover:text-destructive rounded-md transition-all group">
+              <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-destructive" />
             </button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Bạn có chắc muốn xóa trạm này?</DialogTitle>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertCircle className="h-5 w-5" />
+                Confirm Deletion
+              </DialogTitle>
             </DialogHeader>
-            <div>
-              Tên trạm: <b>{row.original.name}</b>
+            <div className="py-4 text-sm text-muted-foreground">
+              Are you sure you want to delete{" "}
+              <b className="text-foreground">{row.original.name}</b>? This
+              action cannot be undone.
             </div>
-            <DialogFooter className="gap-2 flex">
+            <DialogFooter>
               <DialogClose asChild>
-                <button className="px-4 py-2 rounded border" type="button">
-                  Hủy
+                <button className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-secondary">
+                  Cancel
                 </button>
               </DialogClose>
-              <DialogClose asChild>
-                <button
-                  className="px-4 py-2 bg-red-600 text-white rounded"
-                  type="button"
-                  onClick={() => {
-                    if (onDelete) onDelete({ id: row.original._id });
-                  }}
-                >
-                  Xóa
-                </button>
-              </DialogClose>
+              <button
+                className="px-4 py-2 text-sm font-medium bg-destructive text-white rounded-md hover:bg-destructive/90"
+                onClick={() => onDelete?.({ id: row.original.id })}
+              >
+                Delete Station
+              </button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
