@@ -2,6 +2,13 @@ import fetchHttpClient from "@lib/httpClient";
 import { AxiosResponse } from "axios";
 import { Station, NearestStationResponse } from "@/types";
 import { StationSchemaFormData } from "@/schemas/stationSchema";
+import {
+  GetAllStationsResponse,
+  GetDetailStationResponse,
+  CreateStationResponse,
+} from "@/types/station.type";
+import { GET_STATIONS , GET_DETAIL_STATION , CREARTE_STATION } from "@/graphql";
+import { print } from "graphql";
 import type {
   StationBikeRevenue,
   StationStatisticsResponse,
@@ -45,36 +52,56 @@ export const stationService = {
   getAllStations: async ({
     page,
     limit,
-    name
+    name,
+    latitude,
+    longitude,
+    search
   }: {
     page?: number;
     limit?: number;
     name?: string;
-  }): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
-      STATION_ENDPOINTS.ALL,
+    latitude?: string;
+    longitude?: string;
+    search?: string
+  }): Promise<AxiosResponse<GetAllStationsResponse>> => {
+    const response = await fetchHttpClient.mutation<GetAllStationsResponse>(
+      print(GET_STATIONS),
       {
         page,
         limit,
-        name
+        name,
+        latitude,
+        longitude,
+        search
       }
     );
     return response;
   },
   getStationById: async (
     stationId: string
-  ): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
-    const response = await fetchHttpClient.get<ApiDetailResponse<Station>>(
-      STATION_ENDPOINTS.DETAIL(stationId)
+  ): Promise<AxiosResponse<GetDetailStationResponse>> => {
+    const response = await fetchHttpClient.mutation<GetDetailStationResponse>(
+      print(GET_DETAIL_STATION),
+      {
+        staionId : stationId
+      }
     );
     return response;
   },
   createStation: async (
     stationData: StationSchemaFormData
-  ): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
-    const response = await fetchHttpClient.post<ApiDetailResponse<Station>>(
-      STATION_ENDPOINTS.BASE,
-      stationData
+  ): Promise<AxiosResponse<CreateStationResponse>> => {
+    const response = await fetchHttpClient.mutation<CreateStationResponse>(
+      print(CREARTE_STATION),
+      {
+        body: {
+          address: stationData.address,
+          capacity: stationData.capacity,
+          latitude: stationData.latitude,
+          longitude: stationData.longitude,
+          name: stationData.name,
+        },
+      }
     );
     return response;
   },
