@@ -73,6 +73,13 @@ export function startRentalUseCase(
   RentalRepository | BikeServiceTag | WalletServiceTag
 > {
   return Effect.gen(function* () {
+    // TODO(architecture): This use-case currently calls `RentalRepository` directly for active-rental checks + creation.
+    // Move this orchestration into `RentalService` (or a dedicated RentalWorkflow service) and expose it via `RentalServiceTag`,
+    // so use-cases depend on domain services instead of persistence adapters.
+    // TODO(race): This flow does "read wallet balance -> create rental" without an atomic transaction/lock.
+    // Two concurrent start-rental requests can both pass the balance check (double-spending / double-rent).
+    // Fix by performing an atomic debit + rental creation inside a single DB transaction (wallet row lock / compare-and-update),
+    // and treat wallet debit as the gate.
     const repo = yield* RentalRepository;
     const bikeService = yield* BikeServiceTag;
     const walletService = yield* WalletServiceTag;

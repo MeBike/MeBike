@@ -15,3 +15,17 @@ export class DuplicateUserPhoneNumber extends Data.TaggedError(
 )<{
     readonly phoneNumber: string;
   }> {}
+
+export class UserStatsServiceError extends Data.TaggedError("UserStatsServiceError")<{
+  readonly message: string;
+  readonly cause?: unknown;
+}> {}
+
+export class InvalidStatsRange extends Data.TaggedError("InvalidStatsRange")<{
+  readonly startDate: Date;
+  readonly endDate: Date;
+}> {}
+
+export class InvalidStatsGroupBy extends Data.TaggedError("InvalidStatsGroupBy")<{
+  readonly groupBy: string;
+}> {}

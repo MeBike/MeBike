@@ -1,4 +1,13 @@
-import { serverRoutes, UnauthorizedErrorCodeSchema, unauthorizedErrorMessages, UsersContracts } from "@mebike/shared";
+import type {
+  ServerErrorResponse,
+} from "@mebike/shared";
+
+import {
+  serverRoutes,
+  UnauthorizedErrorCodeSchema,
+  unauthorizedErrorMessages,
+  UsersContracts,
+} from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
@@ -10,8 +19,9 @@ import {
   searchAdminUsersUseCase,
   updateAdminUserUseCase,
   updateProfileUseCase,
+  UserStatsServiceTag,
 } from "@/domain/users";
-import { withUserDeps } from "@/http/shared/providers";
+import { withUserDeps, withUserStatsDeps } from "@/http/shared/providers";
 
 function pickDefined<T extends Record<string, unknown>>(input: T): Partial<T> {
   return Object.fromEntries(
@@ -283,6 +293,121 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
       Match.exhaustive,
     );
   });
+
+  app.openapi(users.adminStats, async (c) => {
+    const eff = withLoggedCause(
+      withUserStatsDeps(Effect.gen(function* () {
+        const service = yield* UserStatsServiceTag;
+        return yield* service.getOverviewStats();
+      })),
+      "GET /v1/users/manage-users/stats",
+    );
+
+    const data = await Effect.runPromise(eff);
+    return c.json<UsersContracts.AdminUserStatsResponse, 200>({ data }, 200);
+  });
+
+  app.openapi(users.adminActiveUsers, async (c) => {
+    const query = c.req.valid("query");
+    const startDate = new Date(query.startDate);
+    const endDate = new Date(query.endDate);
+
+    const eff = withLoggedCause(
+      withUserStatsDeps(Effect.gen(function* () {
+        const service = yield* UserStatsServiceTag;
+        return yield* service.getActiveUsersSeries({
+          groupBy: query.groupBy,
+          startDate,
+          endDate,
+        });
+      })),
+      "GET /v1/users/manage-users/stats/active-users",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<UsersContracts.ActiveUsersSeriesResponse, 200>(
+          { data: Array.from(right) },
+          200,
+        )),
+      Match.tag("Left", ({ left }) =>
+        Match.value(left).pipe(
+          Match.tag("InvalidStatsRange", () =>
+            c.json<ServerErrorResponse, 400>(
+              {
+                error: "Invalid date range",
+                details: { code: "INVALID_DATE_RANGE" },
+              },
+              400,
+            )),
+          Match.tag("InvalidStatsGroupBy", () =>
+            c.json<ServerErrorResponse, 400>(
+              {
+                error: "Invalid groupBy value",
+                details: { code: "INVALID_GROUP_BY" },
+              },
+              400,
+            )),
+          Match.orElse(() => {
+            throw left;
+          }),
+        )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(users.adminTopRenters, async (c) => {
+    const query = c.req.valid("query");
+    const eff = withLoggedCause(
+      withUserStatsDeps(Effect.gen(function* () {
+        const service = yield* UserStatsServiceTag;
+        return yield* service.getTopRenters({
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 50,
+        });
+      })),
+      "GET /v1/users/manage-users/stats/top-renters",
+    );
+
+    const data = await Effect.runPromise(eff);
+    return c.json<UsersContracts.TopRentersResponse, 200>(
+      { data: data.items, pagination: {
+        page: data.page,
+        pageSize: data.pageSize,
+        total: data.total,
+        totalPages: data.totalPages,
+      } },
+      200,
+    );
+  });
+
+  app.openapi(users.adminNewUsers, async (c) => {
+    const eff = withLoggedCause(
+      withUserStatsDeps(Effect.gen(function* () {
+        const service = yield* UserStatsServiceTag;
+        return yield* service.getNewUsersStats(new Date());
+      })),
+      "GET /v1/users/manage-users/stats/new-users",
+    );
+
+    const data = await Effect.runPromise(eff);
+    return c.json<UsersContracts.NewUsersStatsResponse, 200>({ data }, 200);
+  });
+
+  app.openapi(users.adminDashboardStats, async (c) => {
+    const eff = withLoggedCause(
+      withUserStatsDeps(Effect.gen(function* () {
+        const service = yield* UserStatsServiceTag;
+        return yield* service.getDashboardStats(new Date());
+      })),
+      "GET /v1/users/manage-users/dashboard-stats",
+    );
+
+    const data = await Effect.runPromise(eff);
+    return c.json<UsersContracts.DashboardStatsResponse, 200>({ data }, 200);
+  });
 }
 
 function mapUserDetail(row: import("@/domain/users").UserRow): UsersContracts.UserDetail {
@@ -291,12 +416,12 @@ function mapUserDetail(row: import("@/domain/users").UserRow): UsersContracts.Us
     fullname: row.fullname,
     email: row.email,
     verify: row.verify,
-    location: row.location ?? "",
-    username: row.username ?? "",
-    phoneNumber: row.phoneNumber ?? "",
-    avatar: row.avatar ?? "",
+    location: row.location,
+    username: row.username,
+    phoneNumber: row.phoneNumber,
+    avatar: row.avatar,
     role: row.role,
-    nfcCardUid: row.nfcCardUid ?? "",
+    nfcCardUid: row.nfcCardUid,
     updatedAt: row.updatedAt.toISOString(),
   };
 }

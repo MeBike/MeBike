@@ -25,7 +25,12 @@ import {
   SupplierRepositoryLive,
   SupplierServiceLive,
 } from "@/domain/suppliers";
-import { UserRepositoryLive, UserServiceLive } from "@/domain/users";
+import {
+  UserRepositoryLive,
+  UserServiceLive,
+  UserStatsRepositoryLive,
+  UserStatsServiceLive,
+} from "@/domain/users";
 import {
   WalletRepositoryLive,
   WalletServiceLive,
@@ -80,6 +85,13 @@ export function withUserDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
     Effect.provide(UserServiceLive),
     Effect.provide(UserRepositoryLive),
     Effect.provide(Prisma.Default),
+  );
+}
+
+export function withUserStatsDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(
+    Effect.provide(UserStatsServiceLive),
+    Effect.provide(UserStatsRepositoryLive),
   );
 }
 

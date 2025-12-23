@@ -77,6 +77,9 @@ export function createSubscriptionUseCase(args: {
 
     const created = yield* Effect.tryPromise({
       try: () => client.$transaction(async (tx) => {
+        // TODO(effect-env): Avoid `Effect.runPromise` inside `$transaction` callbacks when the Effect depends on Context/Layer.
+        // `runPromise` starts a new runtime without the outer environment, which can fail with "Service not found".
+        // Prefer tx-only repo functions (no Tag dependencies), or provide the captured Context explicitly.
         const existing = await service.findCurrentForUserInTx(
           tx,
           args.userId,

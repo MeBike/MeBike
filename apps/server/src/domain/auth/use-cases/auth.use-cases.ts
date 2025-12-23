@@ -28,6 +28,9 @@ export function registerUseCase(args: {
 > {
   return Effect.gen(function* () {
     const authService = yield* AuthServiceTag;
+    // TODO(architecture): This use-case reaches into `UserRepository`/`WalletRepository` (and Prisma tx) directly.
+    // Consider moving "register user + create wallet + start session" orchestration into an AuthService method
+    // (or an AuthRegistrationService) so the use-case only depends on domain services (not persistence adapters).
     const authRepo = yield* AuthRepository;
     const userRepo = yield* UserRepository;
     const walletRepo = yield* WalletRepository;

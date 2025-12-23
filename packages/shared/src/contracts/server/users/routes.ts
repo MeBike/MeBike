@@ -4,16 +4,22 @@ import {
   OptionalTrimmedNullableStringSchema,
   paginationQueryFields,
   PaginationSchema,
+  ServerErrorResponseSchema,
   SortDirectionSchema,
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,
   UnauthorizedErrorResponseSchema,
 } from "../schemas";
 import {
+  ActiveUsersSeriesRowSchema,
+  DashboardStatsSchema,
+  NewUsersStatsSchema,
+  TopRenterRowSchema,
   UserDetailSchema,
   UserErrorCodeSchema,
   userErrorMessages,
   UserRoleSchema,
+  UserStatsOverviewSchema,
   VerifyStatusSchema,
 } from "./schemas";
 
@@ -80,6 +86,37 @@ const AdminResetPasswordRequestSchema = z.object({
   newPassword: z.string().min(8),
   confirmNewPassword: z.string().min(8),
 }).openapi("AdminResetPasswordRequest");
+
+const AdminUserStatsResponseSchema = z.object({
+  data: UserStatsOverviewSchema,
+}).openapi("AdminUserStatsResponse");
+
+const ActiveUsersSeriesResponseSchema = z.object({
+  data: z.array(ActiveUsersSeriesRowSchema),
+}).openapi("ActiveUsersSeriesResponse");
+
+const TopRentersResponseSchema = z.object({
+  data: z.array(TopRenterRowSchema),
+  pagination: PaginationSchema,
+}).openapi("TopRentersResponse");
+
+const NewUsersStatsResponseSchema = z.object({
+  data: NewUsersStatsSchema,
+}).openapi("NewUsersStatsResponse");
+
+const DashboardStatsResponseSchema = z.object({
+  data: DashboardStatsSchema,
+}).openapi("DashboardStatsResponse");
+
+const ActiveUsersQuerySchema = z.object({
+  groupBy: z.enum(["day", "month"]),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+});
+
+const StatsPaginationQuerySchema = z.object({
+  ...paginationQueryFields,
+});
 
 export const meRoute = createRoute({
   method: "get",
@@ -642,6 +679,265 @@ export const adminResetPasswordRoute = createRoute({
   },
 });
 
+export const adminStatsRoute = createRoute({
+  method: "get",
+  path: "/v1/users/manage-users/stats",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "User stats overview",
+      content: {
+        "application/json": {
+          schema: AdminUserStatsResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const adminActiveUsersRoute = createRoute({
+  method: "get",
+  path: "/v1/users/manage-users/stats/active-users",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: ActiveUsersQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Active users series",
+      content: {
+        "application/json": {
+          schema: ActiveUsersSeriesResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid query",
+      content: {
+        "application/json": {
+          schema: ServerErrorResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const adminTopRentersRoute = createRoute({
+  method: "get",
+  path: "/v1/users/manage-users/stats/top-renters",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: StatsPaginationQuerySchema,
+  },
+  responses: {
+    200: {
+      description: "Top renters stats",
+      content: {
+        "application/json": {
+          schema: TopRentersResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const adminNewUsersRoute = createRoute({
+  method: "get",
+  path: "/v1/users/manage-users/stats/new-users",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "New users stats",
+      content: {
+        "application/json": {
+          schema: NewUsersStatsResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const adminDashboardStatsRoute = createRoute({
+  method: "get",
+  path: "/v1/users/manage-users/dashboard-stats",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "User dashboard stats",
+      content: {
+        "application/json": {
+          schema: DashboardStatsResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Forbidden",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Forbidden: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
 export const usersRoutes = {
   me: meRoute,
   updateMe: updateMeRoute,
@@ -651,6 +947,11 @@ export const usersRoutes = {
   adminUpdate: adminUpdateUserRoute,
   adminCreate: adminCreateUserRoute,
   adminResetPassword: adminResetPasswordRoute,
+  adminStats: adminStatsRoute,
+  adminActiveUsers: adminActiveUsersRoute,
+  adminTopRenters: adminTopRentersRoute,
+  adminNewUsers: adminNewUsersRoute,
+  adminDashboardStats: adminDashboardStatsRoute,
 } as const;
 
 export type MeResponse = z.infer<typeof MeResponseSchema>;
@@ -661,6 +962,11 @@ export type AdminUserDetailResponse = z.infer<typeof AdminUserDetailResponseSche
 export type AdminCreateUserRequest = z.infer<typeof AdminCreateUserRequestSchema>;
 export type AdminUpdateUserRequest = z.infer<typeof AdminUpdateUserRequestSchema>;
 export type AdminResetPasswordRequest = z.infer<typeof AdminResetPasswordRequestSchema>;
+export type AdminUserStatsResponse = z.infer<typeof AdminUserStatsResponseSchema>;
+export type ActiveUsersSeriesResponse = z.infer<typeof ActiveUsersSeriesResponseSchema>;
+export type TopRentersResponse = z.infer<typeof TopRentersResponseSchema>;
+export type NewUsersStatsResponse = z.infer<typeof NewUsersStatsResponseSchema>;
+export type DashboardStatsResponse = z.infer<typeof DashboardStatsResponseSchema>;
 export type UserErrorResponse = {
   error: string;
   details: {

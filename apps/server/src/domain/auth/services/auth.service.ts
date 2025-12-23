@@ -71,6 +71,8 @@ export function createSessionForUser(
     const tokens = makeTokensForUser(user, sessionId);
     const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
 
+    // TODO(auth-event): After session issuance, insert `AuthEvent(type=SESSION_ISSUED, occurredAt=now, userId=user.id)`
+    // so `/v1/users/manage-users/stats/active-users` can be computed from Postgres (legacy-compatible behavior).
     yield* authRepo.saveSession(session).pipe(
       Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
     );
@@ -152,6 +154,7 @@ export const AuthServiceLive = Layer.effect(
         const tokens = makeTokensForUser(user, sessionId);
         const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
 
+        // TODO(auth-event): record `AuthEvent(type=SESSION_ISSUED)` for "active users" analytics.
         yield* authRepo.saveSession(session).pipe(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );
@@ -192,6 +195,7 @@ export const AuthServiceLive = Layer.effect(
           newSessionId,
         );
 
+        // TODO(auth-event): record `AuthEvent(type=SESSION_ISSUED)` for refresh-token rotation (counts as activity in legacy).
         yield* authRepo.saveSession(newSession).pipe(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );

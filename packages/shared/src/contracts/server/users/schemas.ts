@@ -19,4 +19,14 @@ export const userErrorMessages = {
   DUPLICATE_PHONE_NUMBER: "Phone number already in use",
 } as const;
 
-export { UserDetailSchema, UserSummarySchema } from "./models";
+export {
+  ActiveUsersSeriesRowSchema,
+  DashboardStatsSchema,
+  NewUsersStatsSchema,
+  TopRenterRowSchema,
+  TopRenterUserSchema,
+  UserDetailSchema,
+  UserStatsOverviewSchema,
+  UserSummarySchema,
+  VipCustomerSchema,
+} from "./models";

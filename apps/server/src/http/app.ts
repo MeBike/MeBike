@@ -63,7 +63,8 @@ export function createHttpApp() {
   app.use("/v1/ratings/*", requireAuthMiddleware);
   app.use("/v1/wallets/*", requireAuthMiddleware);
   app.use("/v1/subscriptions/*", requireAuthMiddleware);
-  app.use("/v1/suppliers*", requireAdminMiddleware);
+  app.use("/v1/suppliers", requireAdminMiddleware);
+  app.use("/v1/suppliers/*", requireAdminMiddleware);
   app.use("/v1/users/manage-users/*", requireAdminOrStaffMiddleware);
   app.use("/v1/users/manage-users/create", requireAdminMiddleware);
   app.use("/v1/users/manage-users/admin-reset-password/*", requireAdminMiddleware);

@@ -97,6 +97,12 @@ export type NewUsersCounts = {
   lastMonth: number;
 };
 
+export type NewUsersStats = {
+  newUsersThisMonth: number;
+  newUsersLastMonth: number;
+  percentageChange: number;
+};
+
 export type VipCustomer = {
   userId: string;
   fullname: string;
@@ -109,4 +115,8 @@ export type DashboardStatsRaw = {
   newCustomersThisMonth: number;
   vipCustomer: VipCustomer;
   totalRevenue: number;
+};
+
+export type DashboardStats = DashboardStatsRaw & {
+  averageSpending: number;
 };

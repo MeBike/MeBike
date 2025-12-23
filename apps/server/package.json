@@ -17,6 +17,7 @@
     "seed:bikes": "tsx prisma/seed-bikes.ts"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.4.1",
     "@hono/node-server": "^1.19.3",
     "@hono/zod-openapi": "^1.1.3",
     "@mebike/shared": "workspace:*",
@@ -25,6 +26,8 @@
     "@scalar/hono-api-reference": "^0.9.19",
     "@types/nodemailer": "^7.0.3",
     "bcrypt": "^6.0.0",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "dotenv": "^17.2.3",
     "effect": "^3.19.10",
     "hono": "^4.9.4",
