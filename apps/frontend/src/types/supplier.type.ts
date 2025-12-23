@@ -5,7 +5,7 @@ export interface Supplier {
   status: "Active" | "Inactive";
   updatedAt: string;
   createdAt: string;
-  contactFee: string;
+  contactFee: number;
   contactInfo: {
     address: string;
     phone: string
@@ -13,3 +13,4 @@ export interface Supplier {
 }
 export type GetSupplierResponse = GraphQLMutationResponse<"Suppliers", Supplier[]>;
 export type GetDetailSupplierResponse = GraphQLMutationResponse<"Supplier",Supplier>;
+export type CreateSupplierResponse = GraphQLMutationResponse<"CreateSupplier">

@@ -1,5 +1,5 @@
 "use client";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,8 +30,8 @@ export default function SuppliersPage() {
     defaultValues: {
       name: "",
       address: "",
-      phone_number: "",
-      contract_fee: "",
+      phone: "",
+      contactFee: 0,
     },
   });
   
@@ -45,8 +45,8 @@ export default function SuppliersPage() {
     defaultValues: {
       name: "",
       address: "",
-      phone_number: "",
-      contract_fee: "",
+      phone: "",
+      contactFee: 0,
     },
   });
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
@@ -75,7 +75,7 @@ export default function SuppliersPage() {
     getUpdateSupplier,
     paginationAllSupplier,
     allSupplier,
-  } = useSupplierActions(true, selectedSupplier?.id);
+  } = useSupplierActions({hasToken:true, supplier_id : selectedSupplier?.id , limit : limit , page : page });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   useEffect(() => {
@@ -87,13 +87,13 @@ export default function SuppliersPage() {
   //   limit: 1000,
   //   supplier_id: selectedSupplier?._id,
   // });
-  const handleAddSupplier = (data: CreateSupplierSchema) => {
+  const handleAddSupplier: SubmitHandler<CreateSupplierSchema> = (data) => {
     console.log("[v0] Adding supplier:", data);
     createSupplier({
       name: data.name,
       address: data.address,
-      phone_number: data.phone_number,
-      contract_fee: data.contract_fee,
+      phone: data.phone,
+      contactFee: data.contactFee,
     });
     resetForm();
     setIsModalOpen(false);
@@ -146,15 +146,15 @@ export default function SuppliersPage() {
     allStatsSupplier,
   ]);
 
-  const handleUpdateSupplier = (data: CreateSupplierSchema) => {
+  const handleUpdateSupplier: SubmitHandler<CreateSupplierSchema> = (data) => {
     if (!editingSupplier) return;
     getUpdateSupplier({
       id: editingSupplier.id,
       data: {
         name: data.name,
         address: data.address,
-        phone_number: data.phone_number,
-        contract_fee: data.contract_fee,
+        phone: data.phone,
+        contactFee: data.contactFee,
       },
     });
     resetEditForm();
@@ -257,8 +257,8 @@ export default function SuppliersPage() {
                   resetEditForm({
                     name: supplier.name,
                     address: supplier.contactInfo.address,
-                    phone_number: supplier.contactInfo.phone,
-                    contract_fee: supplier.contactFee,
+                    phone: supplier.contactInfo.phone,
+                    contactFee: supplier.contactFee,
                   });
                   setIsEditModalOpen(true);
                 },
@@ -363,7 +363,7 @@ export default function SuppliersPage() {
                         Tên nhà cung cấp
                       </label>
                       <Input
-                        id="full_name"
+                        id="name"
                         {...create("name")}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập tên nhà cung cấp"
@@ -394,8 +394,8 @@ export default function SuppliersPage() {
                       </label>
                       <Input
                         type="text"
-                        id="phone_number"
-                        {...create("phone_number")}
+                        id="phone"
+                        {...create("phone")}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập số điện thoại"
                       />
@@ -407,17 +407,17 @@ export default function SuppliersPage() {
                       </label>
                       <Input
                         type="number"
-                        id="contract_fee"
+                        id="contactFee"
                         step="0.01"
                         min="0"
                         max="1"
-                        {...create("contract_fee")}
+                        {...create("contactFee", { valueAsNumber: true })}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập phí hợp đồng (ví dụ: 0.1)"
                       />
-                      {errors.contract_fee && (
+                      {errors.contactFee && (
                         <p className="text-sm text-red-500 mt-1">
-                          {errors.contract_fee.message}
+                          {errors.contactFee.message}
                         </p>
                       )}
                     </div>
@@ -641,13 +641,13 @@ export default function SuppliersPage() {
                       </label>
                       <Input
                         type="text"
-                        {...editRegister("phone_number")}
+                        {...editRegister("phone")}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập số điện thoại"
                       />
-                      {editErrors.phone_number && (
+                      {editErrors.phone && (
                         <p className="text-sm text-red-500 mt-1">
-                          {editErrors.phone_number.message}
+                          {editErrors.phone.message}
                         </p>
                       )}
                     </div>
@@ -661,13 +661,13 @@ export default function SuppliersPage() {
                         step="0.01"
                         min="0"
                         max="1"
-                        {...editRegister("contract_fee")}
+                        {...editRegister("contactFee", { valueAsNumber: true })}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập phí hợp đồng (ví dụ: 0.1)"
                       />
-                      {editErrors.contract_fee && (
+                      {editErrors.contactFee && (
                         <p className="text-sm text-red-500 mt-1">
-                          {editErrors.contract_fee.message}
+                          {editErrors.contactFee.message}
                         </p>
                       )}
                     </div>

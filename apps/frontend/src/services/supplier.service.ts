@@ -3,9 +3,13 @@ import type { AxiosResponse } from "axios";
 import type { Supplier } from "@/types/Supplier";
 import { CreateSupplierSchema } from "@/schemas/supplier.schema";
 import type { StatsSupplierBike } from "@custom-types";
-import {GET_ALL_SUPPLIER,GET_DETAIL_SUPPLIER} from "@/graphql"
+import {GET_ALL_SUPPLIER,GET_DETAIL_SUPPLIER,CREATE_SUPPLIER} from "@/graphql"
 import { print } from "graphql";
-import { GetSupplierResponse , GetDetailSupplierResponse } from "../types/supplier.type";
+import {
+  GetSupplierResponse,
+  GetDetailSupplierResponse,
+  CreateSupplierResponse,
+} from "../types/supplier.type";
 interface ApiResponse<T> {
   data: T[];
   pagination: {
@@ -52,10 +56,17 @@ export const supplierService = {
   },
   createSupplier: async (
     supplierData: CreateSupplierSchema
-  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.BASE,
-      supplierData
+  ): Promise<AxiosResponse<CreateSupplierResponse>> => {
+    const response = await fetchHttpClient.mutation<CreateSupplierResponse>(
+      print(CREATE_SUPPLIER),
+      {
+        body: {
+          address: supplierData.address,
+          contactFee: supplierData.contactFee,
+          name: supplierData.name,
+          phone: supplierData.phone
+        },
+      }
     );
     return response;
   },
