@@ -117,7 +117,7 @@ export const useStationActions = ({
       }
       useSoftDeleteStation.mutate(stationId, {
         onSuccess: (result) => {
-          if (result.status === 200) {
+          if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.message || MESSAGE.DELETE_STATION_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: ["stations", "all"],
@@ -146,7 +146,7 @@ export const useStationActions = ({
       }
       useUpdateStation.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 200) {
+          if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.data?.UpdateStation.message || MESSAGE.UPDATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: ["stations", "all"],

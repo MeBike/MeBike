@@ -2,7 +2,7 @@ export * from "./Station";
 export * from "./User";
 export * from "./Customer";
 export * from "./Rental";
-export * from "./Bike.type"
+export * from "./bike.type"
 export * from "./Supplier";
 export * from "./Withdrawal";
 export * from "./Refund";

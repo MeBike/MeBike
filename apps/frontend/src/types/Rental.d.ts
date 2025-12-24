@@ -1,4 +1,4 @@
-import { Bike } from "./Bike.type";
+import { Bike } from "./bike.type";
 import { DetailUser } from "./Customer";
 import { Station } from "./Station";
 

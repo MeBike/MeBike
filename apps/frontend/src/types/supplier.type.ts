@@ -27,3 +27,4 @@ export type GetSupplierResponse = GraphQLMutationResponse<"Suppliers", Supplier[
 export type GetDetailSupplierResponse = GraphQLMutationResponse<"Supplier",Supplier>;
 export type CreateSupplierResponse = GraphQLMutationResponse<"CreateSupplier">
 export type GetStatsSupplierResponse = GraphQLMutationResponse<"GetSupplierStats",StatSupplier>;
+export type UpdateSupplierResponse = GraphQLMutationResponse<"UpdateSupplier">;
