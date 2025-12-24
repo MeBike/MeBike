@@ -147,14 +147,10 @@ export const useStationActions = ({
       useUpdateStation.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success(result.data?.message || MESSAGE.UPDATE_STATION_SUCCESS);
+            toast.success(result.data?.data?.UpdateStation.message || MESSAGE.UPDATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: ["stations", "all"],
             });
-          } else {
-            const errorMessage =
-              result.data?.message || MESSAGE.UPDATE_STATION_FAILED;
-            toast.error(errorMessage);
           }
         },
         onError: (error) => {
@@ -211,5 +207,6 @@ export const useStationActions = ({
     getStationRevenue,
     responseNearestAvailableBike,
     getNearestAvailableBike,
+    updateStatusStation,
   };
 };

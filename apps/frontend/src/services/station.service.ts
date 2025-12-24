@@ -7,6 +7,7 @@ import {
   GetDetailStationResponse,
   CreateStationResponse,
   UpdateStationStatusResponse,
+  UpdateStationResponse,
 } from "@/types/station.type";
 import {
   GET_STATIONS,
@@ -123,15 +124,24 @@ export const stationService = {
     return response;
   },
   updateStation: async ({
-    stationID,
+    id,
     stationData,
   }: {
-    stationID: string;
+    id: string;
     stationData: StationSchemaFormData;
-  }): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
-    const response = await fetchHttpClient.put<ApiDetailResponse<Station>>(
-      STATION_ENDPOINTS.ID(stationID),
-      stationData
+  }): Promise<AxiosResponse<UpdateStationResponse>> => {
+    const response = await fetchHttpClient.mutation<UpdateStationResponse>(
+      print(UPDATE_STATION),
+      {
+        body: {
+          address: stationData.address,
+          capacity: stationData.capacity,
+          latitude: stationData.latitude,
+          longitude: stationData.longitude,
+          name: stationData.name,
+        },
+        updateStationId : id
+      }
     );
     return response;
   },

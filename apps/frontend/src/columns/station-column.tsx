@@ -133,14 +133,6 @@ export const stationColumns = ({
         >
           <Eye className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
         </button>
-
-        <button
-          className="p-2 hover:bg-primary/10 hover:text-primary rounded-md transition-all group"
-          onClick={() => onEdit?.({ id: row.original.id })}
-        >
-          <Edit2 className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
-        </button>
-
         <Dialog>
           <DialogTrigger asChild>
             <button className="p-2 hover:bg-destructive/10 hover:text-destructive rounded-md transition-all group">
