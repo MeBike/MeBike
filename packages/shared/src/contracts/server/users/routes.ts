@@ -4,7 +4,6 @@ import {
   OptionalTrimmedNullableStringSchema,
   paginationQueryFields,
   PaginationSchema,
-  ServerErrorResponseSchema,
   SortDirectionSchema,
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,
@@ -19,6 +18,9 @@ import {
   UserErrorCodeSchema,
   userErrorMessages,
   UserRoleSchema,
+  UserStatsErrorCodeSchema,
+  userStatsErrorMessages,
+  UserStatsErrorResponseSchema,
   UserStatsOverviewSchema,
   VerifyStatusSchema,
 } from "./schemas";
@@ -749,7 +751,21 @@ export const adminActiveUsersRoute = createRoute({
       description: "Invalid query",
       content: {
         "application/json": {
-          schema: ServerErrorResponseSchema,
+          schema: UserStatsErrorResponseSchema,
+          examples: {
+            InvalidDateRange: {
+              value: {
+                error: userStatsErrorMessages.INVALID_DATE_RANGE,
+                details: { code: UserStatsErrorCodeSchema.enum.INVALID_DATE_RANGE },
+              },
+            },
+            InvalidGroupBy: {
+              value: {
+                error: userStatsErrorMessages.INVALID_GROUP_BY,
+                details: { code: UserStatsErrorCodeSchema.enum.INVALID_GROUP_BY },
+              },
+            },
+          },
         },
       },
     },

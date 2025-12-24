@@ -1,7 +1,3 @@
-import type {
-  ServerErrorResponse,
-} from "@mebike/shared";
-
 import {
   serverRoutes,
   UnauthorizedErrorCodeSchema,
@@ -297,7 +293,6 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   app.openapi(users.adminActiveUsers, async (c) => {
     const query = c.req.valid("query");
-    // TODO(datetime): contracts enforce `z.string().datetime()` (with timezone) — avoid date-only / tz-less strings here.
     const startDate = new Date(query.startDate);
     const endDate = new Date(query.endDate);
 
@@ -324,18 +319,22 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
       Match.tag("Left", ({ left }) =>
         Match.value(left).pipe(
           Match.tag("InvalidStatsRange", () =>
-            c.json<ServerErrorResponse, 400>(
+            c.json<UsersContracts.UserStatsErrorResponse, 400>(
               {
-                error: "Invalid date range",
-                details: { code: "INVALID_DATE_RANGE" },
+                error: UsersContracts.userStatsErrorMessages.INVALID_DATE_RANGE,
+                details: {
+                  code: UsersContracts.UserStatsErrorCodeSchema.enum.INVALID_DATE_RANGE,
+                },
               },
               400,
             )),
           Match.tag("InvalidStatsGroupBy", () =>
-            c.json<ServerErrorResponse, 400>(
+            c.json<UsersContracts.UserStatsErrorResponse, 400>(
               {
-                error: "Invalid groupBy value",
-                details: { code: "INVALID_GROUP_BY" }, // HARDCODE SHIT FIXME: MOVE TO the contract
+                error: UsersContracts.userStatsErrorMessages.INVALID_GROUP_BY,
+                details: {
+                  code: UsersContracts.UserStatsErrorCodeSchema.enum.INVALID_GROUP_BY,
+                },
               },
               400,
             )),
