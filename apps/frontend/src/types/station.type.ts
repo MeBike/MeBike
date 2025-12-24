@@ -21,3 +21,4 @@ export interface Station {
 export type GetAllStationsResponse = GraphQLMutationResponse<"Stations",Station[]>;
 export type GetDetailStationResponse = GraphQLMutationResponse<"Stations",Station>;
 export type CreateStationResponse = GraphQLMutationResponse<"CreateStation">;
+export type UpdateStationStatusResponse = GraphQLMutationResponse<"UpdateStationStatus">; 

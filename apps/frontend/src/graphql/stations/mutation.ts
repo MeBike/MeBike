@@ -22,7 +22,7 @@ export const UPDATE_STATION = gql`
     }
   }
 `;
-export const UPDATE_STATUS_STATION = gql`
+export const UPDATE_STATUS_STATION_STATUS = gql`
   mutation UpdateStationStatus($body: UpdateStationStatusInput!) {
     UpdateStationStatus(body: $body) {
       errors

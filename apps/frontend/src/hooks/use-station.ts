@@ -11,6 +11,7 @@ import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQu
 import { useGetStationStatsReservationQuery } from "./query/Station/useGetStationStatsReservation";
 import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeRevenue";
 import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
+import { useUpdateStatusStationMutation } from "./mutations/Station/useUpdateStatusStationMutation";
 import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
 import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
 import { getErrorMessage } from "@/utils/message";interface StationActionProps {
@@ -47,6 +48,26 @@ export const useStationActions = ({
   const useCreateStation = useCreateSupplierMutation();
   const useSoftDeleteStation = useSoftDeleteStationMutation();
   const useUpdateStation = useUpdateStationMutation(stationId || "");
+  const useUpdateStatusStation = useUpdateStatusStationMutation();
+  const updateStatusStation = useCallback(() => {
+    if (!hasToken || !stationId) {
+      return;
+    }
+    useUpdateStatusStation.mutate({id: stationId} , {
+      onSuccess: (result) => {
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success(result.data?.data?.UpdateStationStatus.message || MESSAGE.UPDATE_STATION_STATUS_SUCCESS);
+          queryClient.invalidateQueries({
+            queryKey: ["stations", "all"],
+          });
+        }
+      },
+      onError: (error) => {
+        const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_STATION_STATUS_FAILED);
+        toast.error(errorMessage);
+      },  
+    });
+  }, [hasToken, stationId, useUpdateStatusStation]);  
   const getReservationStats = useCallback(() => {
     if (!hasToken || !stationId) {
       return;
@@ -110,8 +131,7 @@ export const useStationActions = ({
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            MESSAGE.DELETE_STATION_FAILED
-          );
+            MESSAGE.DELETE_STATION_FAILED);
           toast.error(errorMessage);
         },
       });

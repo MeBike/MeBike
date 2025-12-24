@@ -6,13 +6,14 @@ import {
   GetAllStationsResponse,
   GetDetailStationResponse,
   CreateStationResponse,
+  UpdateStationStatusResponse,
 } from "@/types/station.type";
 import {
   GET_STATIONS,
   GET_DETAIL_STATION,
   CREATE_STATION,
   UPDATE_STATION,
-  UPDATE_STATUS_STATION,
+  UPDATE_STATUS_STATION_STATUS,
 } from "@/graphql";
 import { print } from "graphql";
 import type {
@@ -61,14 +62,14 @@ export const stationService = {
     name,
     latitude,
     longitude,
-    search
+    search,
   }: {
     page?: number;
     limit?: number;
     name?: string;
     latitude?: string;
     longitude?: string;
-    search?: string
+    search?: string;
   }): Promise<AxiosResponse<GetAllStationsResponse>> => {
     const response = await fetchHttpClient.mutation<GetAllStationsResponse>(
       print(GET_STATIONS),
@@ -78,7 +79,7 @@ export const stationService = {
         name,
         latitude,
         longitude,
-        search
+        search,
       }
     );
     return response;
@@ -89,7 +90,7 @@ export const stationService = {
     const response = await fetchHttpClient.mutation<GetDetailStationResponse>(
       print(GET_DETAIL_STATION),
       {
-        staionId : stationId
+        staionId: stationId,
       }
     );
     return response;
@@ -166,6 +167,22 @@ export const stationService = {
       longitude: longitude,
       maxDistance: maxDistance,
     });
+    return response;
+  },
+  updateStationStatus: async ({
+    id,
+  }: {
+    id: string;
+  }): Promise<AxiosResponse<UpdateStationStatusResponse>> => {
+    const response =
+      await fetchHttpClient.mutation<UpdateStationStatusResponse>(
+        print(UPDATE_STATUS_STATION_STATUS),
+        {
+          body: {
+            id : id,
+          },
+        }
+      );
     return response;
   },
 };
