@@ -1,17 +1,17 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-
-import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
-import { Prisma } from "@/infrastructure/prisma";
-import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
-
 import type {
   PrismaClient,
   Prisma as PrismaTypes,
   SubscriptionPackage,
   SubscriptionStatus,
-} from "../../../../generated/prisma/client";
+} from "generated/prisma/client";
+
+import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
+import { Prisma } from "@/infrastructure/prisma";
+import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+
 import type { SubscriptionFilter, SubscriptionRow, SubscriptionSortField } from "../models";
 
 import { ActiveSubscriptionExists, SubscriptionRepositoryError } from "../domain-errors";

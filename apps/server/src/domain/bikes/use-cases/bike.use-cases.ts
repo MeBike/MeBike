@@ -3,8 +3,8 @@ import type { Option } from "effect";
 import { Effect } from "effect";
 
 import type { PageRequest } from "@/domain/shared/pagination";
+import type { BikeStatus } from "generated/prisma/types";
 
-import type { BikeStatus } from "../../../../generated/prisma/client";
 import type {
   BikeCurrentlyRented,
   BikeCurrentlyReserved,

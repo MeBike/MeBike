@@ -1,4 +1,6 @@
-import type { Prisma as PrismaTypes, SupplierStatus } from "../../../generated/prisma/client";
+import type { Prisma as PrismaTypes } from "generated/prisma/client";
+import type { SupplierStatus } from "generated/prisma/types";
+
 import type { DuplicateSupplierName } from "./domain-errors";
 
 export type SupplierDecimal = PrismaTypes.Decimal;

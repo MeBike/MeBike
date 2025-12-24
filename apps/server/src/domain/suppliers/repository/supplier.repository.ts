@@ -1,15 +1,18 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-
-import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
-import { Prisma } from "@/infrastructure/prisma";
-
 import type {
   BikeStatus,
   PrismaClient,
   SupplierStatus,
-} from "../../../../generated/prisma/client";
+} from "generated/prisma/client";
+
+import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
+import { Prisma } from "@/infrastructure/prisma";
+import {
+  Prisma as PrismaTypes,
+} from "generated/prisma/client";
+
 import type {
   CreateSupplierInput,
   SupplierError,
@@ -19,9 +22,6 @@ import type {
   UpdateSupplierInput,
 } from "../models";
 
-import {
-  Prisma as PrismaTypes,
-} from "../../../../generated/prisma/client";
 import { DuplicateSupplierName } from "../domain-errors";
 
 export type SupplierRepo = {

@@ -1,4 +1,4 @@
-import type { BikeStatus } from "../../../generated/prisma/client";
+import type { BikeStatus } from "generated/prisma/types";
 
 export type BikeRow = {
   id: string;

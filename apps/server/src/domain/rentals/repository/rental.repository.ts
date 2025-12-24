@@ -1,16 +1,13 @@
 import { Context, Effect, Layer, Match, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
+import type { RentalStatus } from "generated/prisma/types";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
-import type {
-  PrismaClient,
-  Prisma as PrismaTypes,
-  RentalStatus,
-} from "../../../../generated/prisma/client";
 import type { RentalRepoError } from "../domain-errors";
 import type {
   MyRentalFilter,

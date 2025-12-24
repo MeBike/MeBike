@@ -1,11 +1,13 @@
 import { Context, Effect, Layer, Option } from "effect";
 
-import { Prisma } from "@/infrastructure/prisma";
+import type { PrismaClient } from "generated/prisma/client";
 
-import type { PrismaClient } from "../../../../generated/prisma/client";
-import type { CreateRatingInput, RatingRow } from "../models";
-import { RatingAlreadyExists, RatingRepositoryError } from "../domain-errors";
+import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+
+import type { CreateRatingInput, RatingRow } from "../models";
+
+import { RatingAlreadyExists, RatingRepositoryError } from "../domain-errors";
 import { selectRatingRow, toRatingRow } from "./rating.mappers";
 
 export type RatingRepo = {

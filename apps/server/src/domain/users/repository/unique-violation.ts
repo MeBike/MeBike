@@ -1,4 +1,4 @@
-import type { Prisma as PrismaTypes } from "../../../../generated/prisma/client";
+import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 export function uniqueTargets(error: PrismaTypes.PrismaClientKnownRequestError): string[] {
   const meta = error.meta as {

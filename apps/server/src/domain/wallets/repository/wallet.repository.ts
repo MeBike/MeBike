@@ -1,18 +1,18 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type {
+  PrismaClient,
+  Prisma as PrismaTypes,
+  WalletTransactionStatus,
+  WalletTransactionType,
+} from "generated/prisma/client";
 
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
-import type {
-  PrismaClient,
-  Prisma as PrismaTypes,
-  WalletTransactionStatus,
-  WalletTransactionType,
-} from "../../../../generated/prisma/client";
 import type {
   DecreaseBalanceInput,
   IncreaseBalanceInput,

@@ -19,7 +19,7 @@ export type SubscriptionService = {
   ) => Effect.Effect<SubscriptionRow, SubscriptionRepositoryError>;
 
   createPendingInTx: (
-    tx: import("../../../../generated/prisma/client").Prisma.TransactionClient,
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
     input: Parameters<SubscriptionRepo["createPendingInTx"]>[1],
   ) => Effect.Effect<SubscriptionRow, SubscriptionRepositoryError>;
 
@@ -33,7 +33,7 @@ export type SubscriptionService = {
   ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
 
   findCurrentForUserInTx: (
-    tx: import("../../../../generated/prisma/client").Prisma.TransactionClient,
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
     userId: string,
     statuses: Parameters<SubscriptionRepo["findCurrentForUserInTx"]>[2],
   ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;

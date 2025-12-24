@@ -4,11 +4,12 @@ import { Context, Effect, Layer } from "effect";
 import { sql } from "kysely";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { DB } from "generated/prisma/types";
 
 import { db } from "@/database";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
+import { UserRole, UserVerifyStatus } from "generated/prisma/client";
 
-import type { DB } from "../../../../generated/prisma/types";
 import type {
   ActiveUsersSeriesRow,
   DashboardStatsRaw,
@@ -17,7 +18,6 @@ import type {
   UserStatsOverview,
 } from "../models";
 
-import { UserRole, UserVerifyStatus } from "../../../../generated/prisma/client";
 import { UserRepositoryError } from "../domain-errors";
 
 export type UserStatsRepo = {

@@ -1,11 +1,12 @@
 import { Effect, Option } from "effect";
 
+import type { SubscriptionPackage } from "generated/prisma/types";
+
 import { env } from "@/config/env";
 import { WalletServiceTag } from "@/domain/wallets";
 import { Email } from "@/infrastructure/email";
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { SubscriptionPackage } from "../../../../generated/prisma/client";
 import type {
   ActiveSubscriptionExists,
   SubscriptionExpired,

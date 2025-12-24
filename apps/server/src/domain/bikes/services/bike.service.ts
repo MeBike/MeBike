@@ -1,10 +1,10 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { BikeStatus } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { BikeStatus } from "../../../../generated/prisma/client";
 import type {
   BikeFilter,
   BikeRow,

@@ -34,7 +34,7 @@ export type WalletService = {
   ) => Effect.Effect<WalletRow, WalletNotFound | WalletRepositoryError>;
 
   creditWalletInTx: (
-    tx: import("../../../../generated/prisma/client").Prisma.TransactionClient,
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
     input: IncreaseBalanceInput,
   ) => Effect.Effect<WalletRow, WalletNotFound | WalletRepositoryError>;
 
@@ -46,7 +46,7 @@ export type WalletService = {
   >;
 
   debitWalletInTx: (
-    tx: import("../../../../generated/prisma/client").Prisma.TransactionClient,
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
     input: DecreaseBalanceInput,
   ) => Effect.Effect<
     WalletRow,

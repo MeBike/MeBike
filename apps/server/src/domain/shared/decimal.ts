@@ -1,4 +1,4 @@
-import { Prisma as PrismaNS } from "../../../generated/prisma/client";
+import { Prisma as PrismaNS } from "generated/prisma/client";
 
 export type Decimalish = PrismaNS.Decimal | number | string | undefined;
 

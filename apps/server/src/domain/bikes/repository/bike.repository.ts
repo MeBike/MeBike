@@ -1,15 +1,11 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { BikeStatus, PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 
-import type {
-  BikeStatus,
-  PrismaClient,
-  Prisma as PrismaTypes,
-} from "../../../../generated/prisma/client";
 import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 
 import { BikeRepositoryError } from "../domain-errors";

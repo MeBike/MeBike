@@ -1,4 +1,5 @@
-import type { Wallet, WalletTransaction } from "../../../../generated/prisma/client";
+import type { Wallet, WalletTransaction } from "generated/prisma/client";
+
 import type { WalletRow, WalletTransactionRow } from "../models";
 
 export const selectWalletRow = {

@@ -1,11 +1,8 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { BikeStatus, SupplierStatus } from "generated/prisma/types";
 
-import type {
-  BikeStatus,
-  SupplierStatus,
-} from "../../../../generated/prisma/client";
 import type {
   DuplicateSupplierName,
 } from "../domain-errors";

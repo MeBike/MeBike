@@ -1,4 +1,4 @@
-import type { RentalStatus } from "../../../generated/prisma/client";
+import type { RentalStatus } from "generated/prisma/types";
 
 export type RentalRow = {
   id: string;
@@ -35,4 +35,3 @@ export type RentalStatusCounts = {
   CANCELLED: number;
   RESERVED: number;
 };
-

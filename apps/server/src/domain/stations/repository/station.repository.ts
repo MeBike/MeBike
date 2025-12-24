@@ -1,14 +1,14 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type {
+  PrismaClient,
+  Prisma as PrismaTypes,
+} from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 
-import type {
-  PrismaClient,
-  Prisma as PrismaTypes,
-} from "../../../../generated/prisma/client";
 import type {
   NearestSearchArgs,
   NearestStationRow,

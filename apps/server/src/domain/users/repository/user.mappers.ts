@@ -1,4 +1,5 @@
-import type { Prisma as PrismaTypes } from "../../../../generated/prisma/client";
+import type { Prisma as PrismaTypes } from "generated/prisma/client";
+
 import type { UserRow } from "../models";
 
 export const selectUserRow = {

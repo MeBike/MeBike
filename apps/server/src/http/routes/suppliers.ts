@@ -12,8 +12,7 @@ import {
   updateSupplierUseCase,
 } from "@/domain/suppliers";
 import { withSupplierDeps } from "@/http/shared/providers";
-
-import { Prisma as PrismaTypes } from "../../../generated/prisma/client";
+import { Prisma as PrismaTypes } from "generated/prisma/client";
 
 type SupplierSummary = SuppliersContracts.SupplierSummary;
 type SupplierErrorResponse = SuppliersContracts.SupplierErrorResponse;

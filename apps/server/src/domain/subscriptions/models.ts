@@ -1,8 +1,5 @@
-import type {
-  Prisma as PrismaTypes,
-  SubscriptionPackage,
-  SubscriptionStatus,
-} from "../../../generated/prisma/client";
+import type { Prisma as PrismaTypes } from "generated/prisma/client";
+import type { SubscriptionPackage, SubscriptionStatus } from "generated/prisma/types";
 
 export type SubscriptionDecimal = PrismaTypes.Decimal;
 

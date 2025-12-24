@@ -1,9 +1,11 @@
 import { Context, Effect, Layer } from "effect";
 
+import type { PrismaClient } from "generated/prisma/client";
+
 import { Prisma } from "@/infrastructure/prisma";
 
-import type { PrismaClient } from "../../../../generated/prisma/client";
 import type { RatingReasonRow } from "../models";
+
 import { RatingRepositoryError } from "../domain-errors";
 
 export type RatingReasonRepo = {

@@ -1,9 +1,14 @@
 generator client {
-  // provider = "prisma-client"
-  provider = "prisma-kysely"
+  provider = "prisma-client"
+  // provider = "prisma-kysely"
 
   output   = "../generated/prisma"
 }
+generator kysely {
+  provider = "kysely-generator"
+  output   = "../generated/kysely"
+}
+
 
 datasource db {
   provider = "postgresql"

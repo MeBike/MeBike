@@ -1,9 +1,9 @@
+import type { Prisma as PrismaTypes } from "generated/prisma/client";
 import type {
-  Prisma as PrismaTypes,
   WalletStatus,
   WalletTransactionStatus,
   WalletTransactionType,
-} from "../../../generated/prisma/client";
+} from "generated/prisma/types";
 
 export type WalletDecimal = PrismaTypes.Decimal;
 

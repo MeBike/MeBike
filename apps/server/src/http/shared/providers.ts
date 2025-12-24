@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 
 import {
+  AuthEventRepositoryLive,
   AuthRepositoryLive,
   AuthServiceLive,
 } from "@/domain/auth";
@@ -71,6 +72,7 @@ export function withAuthDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(
     Effect.provide(AuthServiceLive),
     Effect.provide(AuthRepositoryLive),
+    Effect.provide(AuthEventRepositoryLive),
     Effect.provide(UserServiceLive),
     Effect.provide(UserRepositoryLive),
     Effect.provide(WalletRepositoryLive),

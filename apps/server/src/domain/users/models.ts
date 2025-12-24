@@ -1,8 +1,5 @@
-import type {
-  Prisma as PrismaTypes,
-  UserRole,
-  UserVerifyStatus,
-} from "../../../generated/prisma/client";
+import type { Prisma as PrismaTypes } from "generated/prisma/client";
+import type { UserRole, UserVerifyStatus } from "generated/prisma/types";
 
 export type UserRow = {
   readonly id: string;
