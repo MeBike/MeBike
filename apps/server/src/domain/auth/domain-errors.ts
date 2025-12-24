@@ -6,6 +6,10 @@ export class AuthRepositoryError extends Data.TaggedError("AuthRepositoryError")
   WithGenericError
 > {}
 
+export class AuthEventRepositoryError extends Data.TaggedError("AuthEventRepositoryError")<
+  WithGenericError
+> {}
+
 export class SessionNotFound extends Data.TaggedError("SessionNotFound")<{
   readonly sessionId: string;
 }> {}

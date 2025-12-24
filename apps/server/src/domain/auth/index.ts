@@ -3,6 +3,7 @@ export * from "./domain-errors";
 export * from "./jwt";
 export * from "./models";
 export * from "./otp";
+export * from "./repository/auth-event.repository";
 export * from "./repository/auth.repository";
 export * from "./services/auth.service";
 export * from "./use-cases/auth.use-cases";

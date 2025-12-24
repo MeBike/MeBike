@@ -7,6 +7,7 @@ import type { UserRow } from "@/domain/users";
 
 import { UserRepository } from "@/domain/users/repository/user.repository";
 import { Email } from "@/infrastructure/email";
+import logger from "@/lib/logger";
 
 import type {
   AuthFailure,
@@ -15,6 +16,7 @@ import type {
   Tokens,
 } from "../jwt";
 import type { EmailOtpRecord, RefreshTokenPayload } from "../models";
+import type { AuthEventRepo } from "../repository/auth-event.repository";
 import type { AuthRepo } from "../repository/auth.repository";
 
 import { RESET_OTP_TTL_MS, VERIFY_OTP_TTL_MS } from "../config";
@@ -29,6 +31,7 @@ import {
   requireJwtSecret,
 } from "../jwt";
 import { generateOtp, isOtpExpired } from "../otp";
+import { AuthEventRepository } from "../repository/auth-event.repository";
 import { AuthRepository } from "../repository/auth.repository";
 
 export type AuthService = {
@@ -58,12 +61,30 @@ export class AuthServiceTag extends Context.Tag("AuthService")<
   AuthService
 >() {}
 
+function recordSessionIssued(
+  authEventRepo: AuthEventRepo,
+  userId: string,
+): Effect.Effect<void, never> {
+  return authEventRepo.recordSessionIssued({
+    userId,
+    occurredAt: new Date(),
+  }).pipe(
+    Effect.tapError(err =>
+      Effect.sync(() => {
+        logger.warn({ err, userId }, "Failed to write AuthEvent for active-user stats");
+      }),
+    ),
+    Effect.catchAll(() => Effect.succeed(undefined)),
+  );
+}
+
 export function hashPassword(password: string): Effect.Effect<string> {
   return Effect.promise(() => bcrypt.hash(password, 10));
 }
 
 export function createSessionForUser(
   authRepo: AuthRepo,
+  authEventRepo: AuthEventRepo,
   user: UserRow,
 ): Effect.Effect<Tokens, never> {
   return Effect.gen(function* () {
@@ -71,11 +92,11 @@ export function createSessionForUser(
     const tokens = makeTokensForUser(user, sessionId);
     const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
 
-    // TODO(auth-event): After session issuance, insert `AuthEvent(type=SESSION_ISSUED, occurredAt=now, userId=user.id)`
-    // so `/v1/users/manage-users/stats/active-users` can be computed from Postgres (legacy-compatible behavior).
     yield* authRepo.saveSession(session).pipe(
       Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
     );
+
+    yield* recordSessionIssued(authEventRepo, user.id);
 
     return tokens;
   });
@@ -103,6 +124,7 @@ export const AuthServiceLive = Layer.effect(
   AuthServiceTag,
   Effect.gen(function* () {
     const authRepo = yield* AuthRepository;
+    const authEventRepo = yield* AuthEventRepository;
     const userRepo = yield* UserRepository;
     const email = yield* Email;
 
@@ -154,10 +176,11 @@ export const AuthServiceLive = Layer.effect(
         const tokens = makeTokensForUser(user, sessionId);
         const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
 
-        // TODO(auth-event): record `AuthEvent(type=SESSION_ISSUED)` for "active users" analytics.
         yield* authRepo.saveSession(session).pipe(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );
+
+        yield* recordSessionIssued(authEventRepo, user.id);
 
         return tokens;
       });
@@ -195,10 +218,10 @@ export const AuthServiceLive = Layer.effect(
           newSessionId,
         );
 
-        // TODO(auth-event): record `AuthEvent(type=SESSION_ISSUED)` for refresh-token rotation (counts as activity in legacy).
         yield* authRepo.saveSession(newSession).pipe(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );
+        yield* recordSessionIssued(authEventRepo, user.id);
         yield* authRepo.deleteSession(sessionId).pipe(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );

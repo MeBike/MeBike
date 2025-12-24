@@ -1,8 +1,8 @@
 import { Data, Effect } from "effect";
 
-import { makePrismaClient } from "@/lib/prisma";
+import type { PrismaClient } from "generated/prisma/client";
 
-import type { PrismaClient } from "../../generated/prisma/client";
+import { makePrismaClient } from "@/lib/prisma";
 
 export class PrismaInitError extends Data.TaggedError("PrismaInitError")<{
   readonly reason: string;

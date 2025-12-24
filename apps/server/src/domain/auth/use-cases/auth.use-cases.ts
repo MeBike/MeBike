@@ -13,6 +13,7 @@ import type {
 } from "../domain-errors";
 import type { Tokens } from "../jwt";
 
+import { AuthEventRepository } from "../repository/auth-event.repository";
 import { AuthRepository } from "../repository/auth.repository";
 import { AuthServiceTag, createSessionForUser, hashPassword } from "../services/auth.service";
 
@@ -24,7 +25,7 @@ export function registerUseCase(args: {
 }): Effect.Effect<
   Tokens,
   DuplicateUserEmail | DuplicateUserPhoneNumber,
-  AuthServiceTag | AuthRepository | UserRepository | WalletRepository | Prisma
+  AuthServiceTag | AuthRepository | AuthEventRepository | UserRepository | WalletRepository | Prisma
 > {
   return Effect.gen(function* () {
     const authService = yield* AuthServiceTag;
@@ -32,6 +33,7 @@ export function registerUseCase(args: {
     // Consider moving "register user + create wallet + start session" orchestration into an AuthService method
     // (or an AuthRegistrationService) so the use-case only depends on domain services (not persistence adapters).
     const authRepo = yield* AuthRepository;
+    const authEventRepo = yield* AuthEventRepository;
     const userRepo = yield* UserRepository;
     const walletRepo = yield* WalletRepository;
     const { client } = yield* Prisma;
@@ -82,7 +84,7 @@ export function registerUseCase(args: {
       fullName: user.fullname,
     });
 
-    return yield* createSessionForUser(authRepo, user);
+    return yield* createSessionForUser(authRepo, authEventRepo, user);
   });
 }
 
