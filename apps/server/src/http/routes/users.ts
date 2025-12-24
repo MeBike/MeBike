@@ -10,18 +10,15 @@ import {
 } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
+import { hashPassword } from "@/domain/auth/services/auth.service";
 import { withLoggedCause } from "@/domain/shared";
 import {
   adminCreateUserUseCase,
-  adminResetPasswordUseCase,
-  getUserByIdUseCase,
-  listAdminUsersUseCase,
-  searchAdminUsersUseCase,
-  updateAdminUserUseCase,
-  updateProfileUseCase,
+  UserServiceTag,
   UserStatsServiceTag,
 } from "@/domain/users";
 import { withUserDeps, withUserStatsDeps } from "@/http/shared/providers";
+import { routeContext } from "@/http/shared/route-context";
 
 function pickDefined<T extends Record<string, unknown>>(input: T): Partial<T> {
   return Object.fromEntries(
@@ -41,7 +38,13 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
       }, 401);
     }
 
-    const eff = withLoggedCause(withUserDeps(getUserByIdUseCase(userId)), "GET /v1/users/me");
+    const eff = withLoggedCause(
+      withUserDeps(Effect.gen(function* () {
+        const service = yield* UserServiceTag;
+        return yield* service.getById(userId);
+      })),
+      routeContext(users.me),
+    );
     const result = await Effect.runPromise(eff);
 
     if (result._tag === "Some") {
@@ -68,11 +71,11 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
     const body = c.req.valid("json");
     const eff = withLoggedCause(
-      withUserDeps(updateProfileUseCase({
-        userId,
-        patch: pickDefined(body),
+      withUserDeps(Effect.gen(function* () {
+        const service = yield* UserServiceTag;
+        return yield* service.updateProfile(userId, pickDefined(body));
       })),
-      "PATCH /v1/users/me",
+      routeContext(users.updateMe),
     );
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
@@ -111,70 +114,62 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   app.openapi(users.adminList, async (c) => {
     const query = c.req.valid("query");
     const eff = withLoggedCause(
-      withUserDeps(listAdminUsersUseCase({
-        filter: {
+      withUserDeps(Effect.gen(function* () {
+        const service = yield* UserServiceTag;
+        return yield* service.listWithOffset({
           fullname: query.fullname,
           role: query.role,
           verify: query.verify,
-        },
-        page: {
+        }, {
           page: query.page ?? 1,
           pageSize: query.pageSize ?? 50,
           sortBy: query.sortBy,
           sortDir: query.sortDir,
-        },
+        });
       })),
-      "GET /v1/users/manage-users/get-all",
+      routeContext(users.adminList),
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
-    return Match.value(result).pipe(
-      Match.tag("Right", ({ right }) =>
-        c.json<UsersContracts.AdminUserListResponse, 200>(
-          {
-            data: right.items.map(mapUserDetail),
-            pagination: {
-              page: right.page,
-              pageSize: right.pageSize,
-              total: right.total,
-              totalPages: right.totalPages,
-            },
-          },
-          200,
-        )),
-      Match.tag("Left", ({ left }) => {
-        throw left;
-      }),
-      Match.exhaustive,
+    const data = await Effect.runPromise(eff);
+    return c.json<UsersContracts.AdminUserListResponse, 200>(
+      {
+        data: data.items.map(mapUserDetail),
+        pagination: {
+          page: data.page,
+          pageSize: data.pageSize,
+          total: data.total,
+          totalPages: data.totalPages,
+        },
+      },
+      200,
     );
   });
 
   app.openapi(users.adminSearch, async (c) => {
     const query = c.req.valid("query");
     const eff = withLoggedCause(
-      withUserDeps(searchAdminUsersUseCase(query.q)),
-      "GET /v1/users/manage-users/search",
+      withUserDeps(Effect.gen(function* () {
+        const service = yield* UserServiceTag;
+        return yield* service.searchByQuery(query.q);
+      })),
+      routeContext(users.adminSearch),
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
-    return Match.value(result).pipe(
-      Match.tag("Right", ({ right }) =>
-        c.json<UsersContracts.AdminUserSearchResponse, 200>(
-          { data: right.map(mapUserDetail) },
-          200,
-        )),
-      Match.tag("Left", ({ left }) => {
-        throw left;
-      }),
-      Match.exhaustive,
+    const data = await Effect.runPromise(eff);
+    return c.json<UsersContracts.AdminUserSearchResponse, 200>(
+      { data: data.map(mapUserDetail) },
+      200,
     );
   });
 
   app.openapi(users.adminDetail, async (c) => {
     const { userId } = c.req.valid("param");
     const eff = withLoggedCause(
-      withUserDeps(getUserByIdUseCase(userId)),
-      "GET /v1/users/manage-users/{userId}",
+      withUserDeps(Effect.gen(function* () {
+        const service = yield* UserServiceTag;
+        return yield* service.getById(userId);
+      })),
+      routeContext(users.adminDetail),
     );
 
     const result = await Effect.runPromise(eff);
@@ -195,11 +190,11 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const { userId } = c.req.valid("param");
     const body = c.req.valid("json");
     const eff = withLoggedCause(
-      withUserDeps(updateAdminUserUseCase({
-        userId,
-        patch: pickDefined(body),
+      withUserDeps(Effect.gen(function* () {
+        const service = yield* UserServiceTag;
+        return yield* service.updateAdminById(userId, pickDefined(body));
       })),
-      "PATCH /v1/users/manage-users/{userId}",
+      routeContext(users.adminUpdate),
     );
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
@@ -238,7 +233,7 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const body = c.req.valid("json");
     const eff = withLoggedCause(
       withUserDeps(adminCreateUserUseCase(body)),
-      "POST /v1/users/manage-users/create",
+      routeContext(users.adminCreate),
     );
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
@@ -269,29 +264,22 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const { userId } = c.req.valid("param");
     const body = c.req.valid("json");
     const eff = withLoggedCause(
-      withUserDeps(adminResetPasswordUseCase({
-        userId,
-        newPassword: body.newPassword,
+      withUserDeps(Effect.gen(function* () {
+        const service = yield* UserServiceTag;
+        const passwordHash = yield* hashPassword(body.newPassword);
+        return yield* service.updatePassword(userId, passwordHash);
       })),
-      "POST /v1/users/manage-users/admin-reset-password/{userId}",
+      routeContext(users.adminResetPassword),
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
-    return Match.value(result).pipe(
-      Match.tag("Right", ({ right }) => {
-        if (right._tag === "Some") {
-          return c.json<undefined, 200>(undefined, 200);
-        }
-        return c.json<UsersContracts.UserErrorResponse, 404>({
-          error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
-          details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
-        }, 404);
-      }),
-      Match.tag("Left", ({ left }) => {
-        throw left;
-      }),
-      Match.exhaustive,
-    );
+    const result = await Effect.runPromise(eff);
+    if (result._tag === "Some") {
+      return c.json<undefined, 200>(undefined, 200);
+    }
+    return c.json<UsersContracts.UserErrorResponse, 404>({
+      error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
+      details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
+    }, 404);
   });
 
   app.openapi(users.adminStats, async (c) => {
@@ -300,7 +288,7 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
         const service = yield* UserStatsServiceTag;
         return yield* service.getOverviewStats();
       })),
-      "GET /v1/users/manage-users/stats",
+      routeContext(users.adminStats),
     );
 
     const data = await Effect.runPromise(eff);
@@ -309,6 +297,7 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   app.openapi(users.adminActiveUsers, async (c) => {
     const query = c.req.valid("query");
+    // TODO(datetime): contracts enforce `z.string().datetime()` (with timezone) — avoid date-only / tz-less strings here.
     const startDate = new Date(query.startDate);
     const endDate = new Date(query.endDate);
 
@@ -321,7 +310,7 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
           endDate,
         });
       })),
-      "GET /v1/users/manage-users/stats/active-users",
+      routeContext(users.adminActiveUsers),
     );
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
@@ -346,7 +335,7 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
             c.json<ServerErrorResponse, 400>(
               {
                 error: "Invalid groupBy value",
-                details: { code: "INVALID_GROUP_BY" },
+                details: { code: "INVALID_GROUP_BY" }, // HARDCODE SHIT FIXME: MOVE TO the contract
               },
               400,
             )),
@@ -368,7 +357,7 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
           pageSize: query.pageSize ?? 50,
         });
       })),
-      "GET /v1/users/manage-users/stats/top-renters",
+      routeContext(users.adminTopRenters),
     );
 
     const data = await Effect.runPromise(eff);
@@ -389,7 +378,7 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
         const service = yield* UserStatsServiceTag;
         return yield* service.getNewUsersStats(new Date());
       })),
-      "GET /v1/users/manage-users/stats/new-users",
+      routeContext(users.adminNewUsers),
     );
 
     const data = await Effect.runPromise(eff);
@@ -402,7 +391,7 @@ export function registerUserRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
         const service = yield* UserStatsServiceTag;
         return yield* service.getDashboardStats(new Date());
       })),
-      "GET /v1/users/manage-users/dashboard-stats",
+      routeContext(users.adminDashboardStats),
     );
 
     const data = await Effect.runPromise(eff);

@@ -6,7 +6,7 @@ import jwt from "jsonwebtoken";
 import type { AccessTokenPayload } from "@/domain/auth";
 
 import { requireJwtSecret } from "@/domain/auth";
-import { getUserByIdUseCase } from "@/domain/users";
+import { UserServiceTag } from "@/domain/users";
 import { withUserDeps } from "@/http/shared/providers";
 
 const unauthorizedBody = {
@@ -45,7 +45,10 @@ function verifyAccessToken(token: string): AccessTokenPayload | null {
 }
 
 async function loadUser(userId: string) {
-  return await Effect.runPromise(withUserDeps(getUserByIdUseCase(userId)));
+  return await Effect.runPromise(withUserDeps(Effect.gen(function* () {
+    const service = yield* UserServiceTag;
+    return yield* service.getById(userId);
+  })));
 }
 
 export const currentUserMiddleware = createMiddleware<AuthEnv>(async (c, next) => {

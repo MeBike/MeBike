@@ -14,7 +14,7 @@ import {
   activateSubscriptionUseCase,
   createSubscriptionUseCase,
 } from "@/domain/subscriptions";
-import { getUserByIdUseCase } from "@/domain/users";
+import { UserServiceTag } from "@/domain/users";
 import { withSubscriptionDeps } from "@/http/shared/providers";
 
 class AuthenticatedUserMissing extends Data.TaggedError("AuthenticatedUserMissing")<Record<string, never>> {}
@@ -49,7 +49,8 @@ export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").Open
 
     const eff = withLoggedCause(
       withSubscriptionDeps(Effect.gen(function* () {
-        const userOpt = yield* getUserByIdUseCase(userId);
+        const service = yield* UserServiceTag;
+        const userOpt = yield* service.getById(userId);
         if (Option.isNone(userOpt)) {
           return yield* Effect.fail(new AuthenticatedUserMissing({}));
         }
