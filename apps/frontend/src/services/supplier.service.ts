@@ -98,12 +98,10 @@ export const supplierService = {
     >(SUPPLIER_ENDPOINTS.WITH_STATS_BIKE(id));
     return response;
   },
-  statsSupplier: async (): Promise<
-    AxiosResponse<DetailApiResponse<StatsSupplierBike[]>>
-  > => {
-    const response = await fetchHttpClient.get<
-      DetailApiResponse<StatsSupplierBike[]>
-    >(SUPPLIER_ENDPOINTS.STATS);
+  statsSupplier: async (): Promise<AxiosResponse<GetStatsSupplierResponse>> => {
+    const response = await fetchHttpClient.query<GetStatsSupplierResponse>(
+      print(GET_STATS_SUPPLIER)
+    );
     return response;
   },
   changeStatusSupplier: async (
@@ -111,7 +109,7 @@ export const supplierService = {
     newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG"
   ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.patch<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.WITH_ID(id),
+      print(GET_STATS_SUPPLIER),
       { newStatus }
     );
     return response;

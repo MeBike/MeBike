@@ -191,9 +191,21 @@ export default function SuppliersPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">Tổng nhà cung cấp</p>
-              <p className="text-2xl font-bold text-foreground mt-1">
-                {paginationAllSupplier?.total || 0}
+              <p className="text-sm text-muted-foreground">Total suppliers</p>
+              <p className="text-2xl font-bold text-foreground mt-1 text-blue-500">
+                {allStatsSupplier?.data?.GetSupplierStats.data?.totalSupplier || 0}
+              </p>
+            </div>
+            <div className="bg-card border border-border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground">Total active suppliers</p>
+              <p className="text-2xl font-bold text-foreground mt-1 text-green-500">
+                {allStatsSupplier?.data?.GetSupplierStats.data?.totalSupplierActive || 0}
+              </p>
+            </div>
+            <div className="bg-card border border-border rounded-lg p-4">
+              <p className="text-sm text-muted-foreground">Total inactive suppliers </p>
+              <p className="text-2xl font-bold text-foreground mt-1 text-red-500">
+                {allStatsSupplier?.data?.GetSupplierStats.data?.totalSupplierInactive || 0}
               </p>
             </div>
             {/* <div className="bg-card border border-border rounded-lg p-4">
@@ -273,7 +285,7 @@ export default function SuppliersPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               <h2 className="text-xl font-bold text-foreground">
                 Thống kê xe đạp theo nhà cung cấp
               </h2>
@@ -331,11 +343,11 @@ export default function SuppliersPage() {
                   </div>
                 ))}
               </div>
-            </div>
-            {/* <p className="text-sm text-muted-foreground">
-              Hiển thị {supplierData?.pagination.totalRecords} /{" "}
-              {supplierData?.pagination.totalRecords} nhà cung cấp
-            </p> */}
+            </div> */}
+            <p className="text-sm text-muted-foreground">
+              Hiển thị {paginationAllSupplier?.total} /{" "}
+              {paginationAllSupplier?.total} nhà cung cấp
+            </p>
           </div>
 
           {isModalOpen && (
