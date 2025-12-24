@@ -9,3 +9,13 @@ export const CREATE_SUPPLIER = gql`
     }
   }
 `;
+export const UPDATE_SUPPLIER = gql`
+  mutation Mutation($body: UpdateSupplierInput!, $updateSupplierId: String!) {
+    UpdateSupplier(body: $body, id: $updateSupplierId) {
+      success
+      message
+      errors
+      statusCode
+    }
+  }
+`;

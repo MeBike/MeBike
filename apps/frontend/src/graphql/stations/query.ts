@@ -19,6 +19,7 @@ export const GET_STATIONS = gql`
         maintanedBike
         unavailable
         distance
+        status
         createdAt
         updatedAt
       }

@@ -16,6 +16,7 @@ export interface Station {
   distance: number;
   createdAt: string;
   updatedAt: string;
+  status : "Active" | "Inactive";
 }
 export type GetAllStationsResponse = GraphQLMutationResponse<"Stations",Station[]>;
 export type GetDetailStationResponse = GraphQLMutationResponse<"Stations",Station>;

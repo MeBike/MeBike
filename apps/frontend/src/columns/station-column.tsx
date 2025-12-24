@@ -12,7 +12,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { formatToVNTime } from "@/lib/formateVNDate";
-
+import { getStatusColor } from "@/utils/status-style";
 export const stationColumns = ({
   onView,
   setIsDetailModalOpen,
@@ -108,6 +108,15 @@ export const stationColumns = ({
       <div className="text-xs text-muted-foreground whitespace-nowrap">
         {formatToVNTime(row.original.updatedAt)}
       </div>
+    ),
+  },
+  {
+    accessorKey:"status",
+    header:"Status",
+    cell: ({ row }) => (
+      <Badge className={`text-xs ${getStatusColor(row.original.status)}`}>
+        {row.original.status}
+      </Badge>
     ),
   },
   {

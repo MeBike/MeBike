@@ -30,7 +30,7 @@ export default function BikesPage() {
   const {responseStationBikeRevenue, getStationBikeRevenue} = useStationActions({ hasToken: true });
   const [editBike, setEditBike] = useState<Bike | null>(null);
   const { stations } = useStationActions({ hasToken: true });
-  const { allSupplier } = useSupplierActions(true);
+  const { allSupplier } = useSupplierActions({ hasToken: true });
   const [detailTab, setDetailTab] = useState<
     "info" | "rentals" | "stats" | "activity"
   >("info");

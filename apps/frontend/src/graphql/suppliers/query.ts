@@ -49,3 +49,25 @@ export const GET_DETAIL_SUPPLIER = gql`
     }
   }
 `;
+export const GET_STATS_SUPPLIER = gql`
+  query Query {
+    GetSupplierStats {
+      success
+      message
+      data {
+        totalSupplier
+        totalSupplierActive
+        totalSupplierInactive
+        totalBike
+        totalAvailableBike
+        totalBookedBike
+        totalBrokenBike
+        totalReservedBike
+        totalMaintainedBike
+        totalUnAvailableBike
+      }
+      errors
+      statusCode
+    }
+  }
+`;

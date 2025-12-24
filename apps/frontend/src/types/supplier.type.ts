@@ -11,6 +11,19 @@ export interface Supplier {
     phone: string
   };
 }
+export interface StatSupplier {
+  totalSupplier : number;
+  totalSupplierActive : number;
+  totalSupplierInactive : number;
+  totalBike : number;
+  totalAvailableBike : number;
+  totalBookedBike : number;
+  totalBrokenBike : number;
+  totalReservedBike : number;
+  totalMaintainedBike : number;
+  totalUnAvailableBike : number;
+}
 export type GetSupplierResponse = GraphQLMutationResponse<"Suppliers", Supplier[]>;
 export type GetDetailSupplierResponse = GraphQLMutationResponse<"Supplier",Supplier>;
 export type CreateSupplierResponse = GraphQLMutationResponse<"CreateSupplier">
+export type GetStatsSupplierResponse = GraphQLMutationResponse<"GetSupplierStats",StatSupplier>;

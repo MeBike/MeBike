@@ -7,7 +7,13 @@ import {
   GetDetailStationResponse,
   CreateStationResponse,
 } from "@/types/station.type";
-import { GET_STATIONS , GET_DETAIL_STATION , CREARTE_STATION } from "@/graphql";
+import {
+  GET_STATIONS,
+  GET_DETAIL_STATION,
+  CREATE_STATION,
+  UPDATE_STATION,
+  UPDATE_STATUS_STATION,
+} from "@/graphql";
 import { print } from "graphql";
 import type {
   StationBikeRevenue,
@@ -92,7 +98,7 @@ export const stationService = {
     stationData: StationSchemaFormData
   ): Promise<AxiosResponse<CreateStationResponse>> => {
     const response = await fetchHttpClient.mutation<CreateStationResponse>(
-      print(CREARTE_STATION),
+      print(CREATE_STATION),
       {
         body: {
           address: stationData.address,

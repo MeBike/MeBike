@@ -3,12 +3,13 @@ import type { AxiosResponse } from "axios";
 import type { Supplier } from "@/types/Supplier";
 import { CreateSupplierSchema } from "@/schemas/supplier.schema";
 import type { StatsSupplierBike } from "@custom-types";
-import {GET_ALL_SUPPLIER,GET_DETAIL_SUPPLIER,CREATE_SUPPLIER} from "@/graphql"
+import {GET_ALL_SUPPLIER,GET_DETAIL_SUPPLIER,CREATE_SUPPLIER,GET_STATS_SUPPLIER} from "@/graphql"
 import { print } from "graphql";
 import {
   GetSupplierResponse,
   GetDetailSupplierResponse,
   CreateSupplierResponse,
+  GetStatsSupplierResponse,
 } from "../types/supplier.type";
 interface ApiResponse<T> {
   data: T[];
