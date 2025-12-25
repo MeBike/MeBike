@@ -11,7 +11,30 @@ export type OutboxJob = {
   readonly dedupeKey: string | null;
 };
 
+export type OutboxRetryOptions = {
+  readonly maxAttempts: number;
+  readonly baseDelayMs: number;
+  readonly backoff: "exponential" | "fixed";
+  readonly maxDelayMs: number;
+};
+
 const DEFAULT_LOCK_TTL_MS = 5 * 60 * 1000;
+const DEFAULT_RETRY_OPTIONS: OutboxRetryOptions = {
+  maxAttempts: 5,
+  baseDelayMs: 30_000,
+  backoff: "exponential",
+  maxDelayMs: 15 * 60 * 1000,
+};
+
+function computeRetryDelayMs(
+  attempts: number,
+  options: OutboxRetryOptions,
+): number {
+  const attemptIndex = Math.max(0, attempts - 1);
+  const multiplier = options.backoff === "exponential" ? 2 ** attemptIndex : 1;
+  const delay = options.baseDelayMs * multiplier;
+  return Math.min(delay, options.maxDelayMs);
+}
 
 export async function claimOutboxJobs(
   db: Kysely<DB>,
@@ -125,4 +148,49 @@ export async function markOutboxFailed(
     .where("id", "=", args.id)
     .where("locked_by", "=", args.workerId)
     .execute();
+}
+
+export async function rescheduleOutboxOnFailure(
+  db: Kysely<DB>,
+  args: {
+    readonly id: string;
+    readonly workerId: string;
+    readonly error: string;
+    readonly attempts: number;
+    readonly retry?: Partial<OutboxRetryOptions>;
+    readonly now?: Date;
+  },
+): Promise<
+  | { readonly outcome: "RESCHEDULED"; readonly runAt: Date; readonly maxAttempts: number }
+  | { readonly outcome: "FAILED"; readonly maxAttempts: number }
+> {
+  const now = args.now ?? new Date();
+  const retry = { ...DEFAULT_RETRY_OPTIONS, ...args.retry };
+
+  if (args.attempts >= retry.maxAttempts) {
+    await markOutboxFailed(db, {
+      id: args.id,
+      workerId: args.workerId,
+      error: args.error,
+      now,
+    });
+    return { outcome: "FAILED", maxAttempts: retry.maxAttempts };
+  }
+
+  const runAt = new Date(now.getTime() + computeRetryDelayMs(args.attempts, retry));
+  await db
+    .updateTable("job_outbox")
+    .set({
+      status: "PENDING",
+      run_at: runAt,
+      last_error: args.error,
+      locked_at: null,
+      locked_by: null,
+      updated_at: now,
+    })
+    .where("id", "=", args.id)
+    .where("locked_by", "=", args.workerId)
+    .execute();
+
+  return { outcome: "RESCHEDULED", runAt, maxAttempts: retry.maxAttempts };
 }

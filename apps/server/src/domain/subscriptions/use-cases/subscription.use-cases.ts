@@ -4,7 +4,6 @@ import type { SubscriptionPackage } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { WalletServiceTag } from "@/domain/wallets";
-import { Email } from "@/infrastructure/email";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { Prisma } from "@/infrastructure/prisma";
 
@@ -73,14 +72,20 @@ export function createSubscriptionUseCase(args: {
 }): Effect.Effect<
   SubscriptionRow,
   CreateSubscriptionFailure,
-  SubscriptionServiceTag | WalletServiceTag | Prisma | Email
+  SubscriptionServiceTag | WalletServiceTag | Prisma
 > {
   return Effect.gen(function* () {
     const service = yield* SubscriptionServiceTag;
     const walletService = yield* WalletServiceTag;
     const { client } = yield* Prisma;
-    const emailer = yield* Email; // all the le dependencies are resolved here
     const now = args.now ?? new Date();
+    const createdOn = now.toISOString().slice(0, 10);
+    const html = [
+      `<p>Hi ${args.fullName},</p>`,
+      `<p>Your subscription (${args.packageName}) was created on ${createdOn}.</p>`,
+      "<p>We will activate it shortly. Thank you for choosing MeBike.</p>",
+      "<!-- TODO: replace with real email template -->",
+    ].join("");
 
     const created = yield* Effect.tryPromise({
       try: () => client.$transaction(async (tx) => {
@@ -121,24 +126,23 @@ export function createSubscriptionUseCase(args: {
           },
         });
 
+        await tx.jobOutbox.create({
+          data: {
+            type: JobTypes.EmailSend,
+            dedupeKey: `subscription-created:${pending.id}`,
+            payload: {
+              to: args.email,
+              subject: "Subscription created",
+              html,
+            },
+            runAt: now,
+          },
+        });
+
         return pending;
       }),
       catch: err => err as CreateSubscriptionFailure,
     });
-
-    const createdOn = now.toISOString().slice(0, 10);
-    const html = [
-      `<p>Hi ${args.fullName},</p>`,
-      `<p>Your subscription (${args.packageName}) was created on ${createdOn}.</p>`,
-      "<p>We will activate it shortly. Thank you for choosing MeBike.</p>",
-      "<!-- TODO: replace with real email template -->",
-    ].join("");
-
-    yield* emailer.send({
-      to: args.email,
-      subject: "Subscription created",
-      html,
-    }).pipe(Effect.catchAll(err => Effect.die(err)));
 
     return created;
   });

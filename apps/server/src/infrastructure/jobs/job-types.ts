@@ -1,4 +1,5 @@
 export const JobTypes = {
+  EmailSend: "emails.send",
   SubscriptionAutoActivate: "subscriptions.autoActivate",
   SubscriptionExpireSweep: "subscriptions.expireSweep",
 } as const;

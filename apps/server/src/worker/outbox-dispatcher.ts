@@ -1,12 +1,14 @@
 import type { Kysely } from "kysely";
 import type { PgBoss } from "pg-boss";
 
+import type { OutboxRetryOptions } from "@/infrastructure/jobs/outbox";
 import type { DB } from "generated/kysely/types";
 
 import {
   claimOutboxJobs,
-  markOutboxFailed,
   markOutboxSent,
+
+  rescheduleOutboxOnFailure,
 } from "@/infrastructure/jobs/outbox";
 import logger from "@/lib/logger";
 
@@ -16,6 +18,7 @@ type DispatcherOptions = {
   readonly workerId: string;
   readonly pollIntervalMs?: number;
   readonly batchSize?: number;
+  readonly retryOptions?: Partial<OutboxRetryOptions>;
 };
 
 const DEFAULT_POLL_INTERVAL_MS = 1000;
@@ -39,6 +42,7 @@ export async function dispatchOutboxOnce(options: {
   readonly boss: PgBoss;
   readonly workerId: string;
   readonly batchSize?: number;
+  readonly retryOptions?: Partial<OutboxRetryOptions>;
 }): Promise<void> {
   const batchSize = options.batchSize ?? DEFAULT_BATCH_SIZE;
 
@@ -47,8 +51,19 @@ export async function dispatchOutboxOnce(options: {
     workerId: options.workerId,
   });
 
+  if (jobs.length > 0) {
+    logger.info(
+      { workerId: options.workerId, count: jobs.length },
+      "Claimed outbox jobs",
+    );
+  }
+
   for (const job of jobs) {
     try {
+      logger.info(
+        { jobId: job.id, jobType: job.type, attempts: job.attempts },
+        "Dispatching outbox job to pg-boss",
+      );
       await options.boss.send(job.type, toBossData(job.payload), {
         singletonKey: job.dedupeKey ?? undefined,
       });
@@ -56,6 +71,10 @@ export async function dispatchOutboxOnce(options: {
         id: job.id,
         workerId: options.workerId,
       });
+      logger.info(
+        { jobId: job.id, jobType: job.type },
+        "Outbox job dispatched and marked SENT",
+      );
     }
     catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -67,11 +86,37 @@ export async function dispatchOutboxOnce(options: {
         },
         "Outbox dispatch failed",
       );
-      await markOutboxFailed(options.db, {
+      const result = await rescheduleOutboxOnFailure(options.db, {
         id: job.id,
         workerId: options.workerId,
         error: message,
+        attempts: job.attempts,
+        retry: options.retryOptions,
       });
+
+      if (result.outcome === "RESCHEDULED") {
+        logger.warn(
+          {
+            jobId: job.id,
+            jobType: job.type,
+            attempts: job.attempts,
+            maxAttempts: result.maxAttempts,
+            nextRunAt: result.runAt.toISOString(),
+          },
+          "Outbox job rescheduled after dispatch failure",
+        );
+      }
+      else {
+        logger.error(
+          {
+            jobId: job.id,
+            jobType: job.type,
+            attempts: job.attempts,
+            maxAttempts: result.maxAttempts,
+          },
+          "Outbox job marked FAILED (max attempts reached)",
+        );
+      }
     }
   }
 }
@@ -93,6 +138,7 @@ export function startOutboxDispatcher(options: DispatcherOptions): () => void {
         boss: options.boss,
         workerId: options.workerId,
         batchSize,
+        retryOptions: options.retryOptions,
       });
     }
     finally {
