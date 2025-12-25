@@ -17,6 +17,7 @@ import {
   LOGOUT_MUTATION,
   CHANGE_PASSWORD_MUTATION,
   UPDATE_PROFILE,
+  CREATE_FORGOT_PASSWORD_REQUEST,
 } from "@/graphql";
 import {print} from "graphql"
 import {
@@ -27,6 +28,7 @@ import {
   LogOutResponse,
   ChangePasswordResponse,
   UpdateProfileResponse,
+  ForgotPasswordRequestResponse,
 } from "@/types/auth.type";
 interface AuthResponse {
   message: string;
@@ -153,9 +155,9 @@ export const authService = {
       print(CHANGE_PASSWORD_MUTATION),
       {
         body: {
-          oldPassword : data.oldPassword,
-          newPassword : data.newPassword,
-          confirmPassword : data.confirmPassword
+          oldPassword: data.oldPassword,
+          newPassword: data.newPassword,
+          confirmPassword: data.confirmPassword,
         },
       }
     );
@@ -163,11 +165,14 @@ export const authService = {
   },
   forgotPassword: async (
     data: ForgotPasswordSchemaFormData
-  ): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>(
-      "/users/forgot-password",
-      data
-    );
+  ): Promise<AxiosResponse<ForgotPasswordRequestResponse>> => {
+    const response =
+      await fetchHttpClient.mutation<ForgotPasswordRequestResponse>(
+        print(CREATE_FORGOT_PASSWORD_REQUEST),
+        {
+          email: data.email,
+        }
+      );
     return response;
   },
   verifyForgotPassword: async (

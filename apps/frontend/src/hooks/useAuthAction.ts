@@ -228,11 +228,7 @@ export const useAuthActions = () => {
       useForgotPassword.mutate(data, {
         onSuccess: (result) => {
           if (result.status === HTTP_STATUS.OK) {
-            toast.success(result.data?.message || MESSAGE.FORGOT_PASSWORD_SUCCESS);
-          } else {
-            const errorMessage =
-              result.data?.message || MESSAGE.FORGOT_PASSWORD_FAILED;
-            toast.error(errorMessage);
+            toast.success(result.data?.data?.ResetPasswordRequest.data || MESSAGE.FORGOT_PASSWORD_SUCCESS);
           }
         },
         onError: (error: unknown) => {

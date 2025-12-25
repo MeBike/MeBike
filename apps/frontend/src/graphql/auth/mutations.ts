@@ -91,3 +91,13 @@ export const UPDATE_PROFILE = gql`
     }
   }
 `;
+export const CREATE_FORGOT_PASSWORD_REQUEST = gql`
+  mutation ResetPasswordRequest($email: String!) {
+    ResetPasswordRequest(email: $email) {
+      errors
+      message
+      statusCode
+      success
+    }
+  }
+`;
