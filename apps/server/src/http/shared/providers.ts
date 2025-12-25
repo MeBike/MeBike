@@ -42,27 +42,29 @@ import { Email } from "@/infrastructure/email";
 import { Prisma } from "@/infrastructure/prisma";
 import { Redis } from "@/infrastructure/redis";
 
+const BikeReposLive = BikeRepositoryLive.pipe(
+  Layer.provide(Prisma.Default),
+);
+
+const BikeServiceLayer = BikeServiceLive.pipe(
+  Layer.provide(BikeReposLive),
+  Layer.provide(Prisma.Default),
+);
+
+const BikeStatsServiceLayer = BikeStatsServiceLive.pipe(
+  Layer.provide(BikeStatsRepositoryLive),
+  Layer.provide(BikeReposLive),
+);
+
+export const BikeDepsLive = Layer.mergeAll(
+  BikeReposLive,
+  BikeStatsRepositoryLive,
+  BikeServiceLayer,
+  BikeStatsServiceLayer,
+  Prisma.Default,
+);
+
 export function withBikeDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  const BikeReposLive = Layer.mergeAll(
-    BikeRepositoryLive,
-    BikeStatsRepositoryLive,
-  ).pipe(
-    Layer.provide(Prisma.Default),
-  );
-
-  const BikeServicesLive = Layer.mergeAll(
-    BikeServiceLive,
-    BikeStatsServiceLive,
-  ).pipe(
-    Layer.provide(BikeReposLive),
-    Layer.provide(Prisma.Default),
-  );
-
-  const BikeDepsLive = Layer.mergeAll(
-    BikeReposLive,
-    BikeServicesLive,
-  );
-
   return eff.pipe(Effect.provide(BikeDepsLive));
 }
 
