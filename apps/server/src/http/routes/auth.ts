@@ -1,4 +1,6 @@
-import { AuthContracts, serverRoutes } from "@mebike/shared";
+import type { UnauthorizedErrorResponse } from "@mebike/shared";
+
+import { AuthContracts, serverRoutes, UnauthorizedErrorCodeSchema, unauthorizedErrorMessages } from "@mebike/shared";
 import { Effect, Match } from "effect";
 
 import { AuthServiceTag } from "@/domain/auth";
@@ -111,7 +113,22 @@ export function registerAuthRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   });
 
   app.openapi(auth.logoutAll, async (c) => {
-    // TODO: wire to auth middleware once we have CurrentUser and call logoutAllUseCase.
+    const userId = c.var.currentUser?.userId ?? null;
+    if (!userId) {
+      return c.json<UnauthorizedErrorResponse, 401>({
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      }, 401);
+    }
+
+    const eff = withLoggedCause(
+      withAuthDeps(Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.logoutAll({ userId });
+      })),
+      "POST /v1/auth/logout-all",
+    ).pipe(Effect.orDie);
+    await Effect.runPromise(eff);
     return c.json<undefined, 200>(undefined, 200);
   });
 

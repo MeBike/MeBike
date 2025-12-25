@@ -4,6 +4,7 @@ import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/clien
 
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+import { UserRole, UserVerifyStatus } from "generated/prisma/types";
 
 import type { PageRequest, PageResult } from "../../shared/pagination";
 import type {
@@ -16,7 +17,6 @@ import type {
   UserSortField,
 } from "../models";
 
-import { UserRole, UserVerifyStatus } from "../../../../generated/prisma/enums";
 import { makePageResult, normalizedPage } from "../../shared/pagination";
 import {
   DuplicateUserEmail,
