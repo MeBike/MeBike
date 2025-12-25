@@ -92,7 +92,8 @@ export const SortDirectionSchema = z.enum(["asc", "desc"]);
 
 export const OptionalTrimmedNullableStringSchema = z.preprocess(
   (value) => {
-    if (typeof value !== "string") return value;
+    if (typeof value !== "string")
+      return value;
     const trimmed = value.trim();
     return trimmed === "" ? null : trimmed;
   },

@@ -1,7 +1,19 @@
-import { walletsRoutes as definitions } from "../../wallets/routes";
+import {
+  creditMyWalletRoute,
+  debitMyWalletRoute,
+} from "./mutations";
+import {
+  getMyWalletRoute,
+  listMyWalletTransactionsRoute,
+} from "./queries";
 
-export * from "../../wallets/routes";
+export * from "../../wallets/schemas";
+export * from "./mutations";
+export * from "./queries";
 
 export const walletsRoutes = {
-  ...definitions,
+  getMyWallet: getMyWalletRoute,
+  listMyWalletTransactions: listMyWalletTransactionsRoute,
+  creditMyWallet: creditMyWalletRoute,
+  debitMyWallet: debitMyWalletRoute,
 } as const;

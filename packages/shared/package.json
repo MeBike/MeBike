@@ -54,6 +54,7 @@
     "dist"
   ],
   "scripts": {
+    "prebuild": "pnpm clean",
     "build": "tsc -p tsconfig.build.json",
     "clean": "rm -rf dist"
   },

@@ -1,7 +1,19 @@
-import { subscriptionsRoutes as definitions } from "../../subscriptions/routes";
+import {
+  activateSubscriptionRoute,
+  createSubscriptionRoute,
+} from "./mutations";
+import {
+  getSubscriptionRoute,
+  listSubscriptionsRoute,
+} from "./queries";
 
-export * from "../../subscriptions/routes";
+export * from "../../subscriptions/schemas";
+export * from "./mutations";
+export * from "./queries";
 
 export const subscriptionsRoutes = {
-  ...definitions,
+  createSubscription: createSubscriptionRoute,
+  activateSubscription: activateSubscriptionRoute,
+  getSubscription: getSubscriptionRoute,
+  listSubscriptions: listSubscriptionsRoute,
 } as const;

@@ -32,3 +32,12 @@ export const CreateRatingResponseSchema = z.object({
 export const RatingResponseSchema = CreateRatingResponseSchema;
 
 export { RatingDetailSchema } from "./models";
+
+export type CreateRatingResponse = z.infer<typeof CreateRatingResponseSchema>;
+export type RatingResponse = z.infer<typeof RatingResponseSchema>;
+export type RatingErrorResponse = {
+  error: string;
+  details: {
+    code: z.infer<typeof RatingErrorCodeSchema>;
+  };
+};
