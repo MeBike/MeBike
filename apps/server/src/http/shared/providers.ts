@@ -68,24 +68,55 @@ export function withBikeDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(Effect.provide(BikeDepsLive));
 }
 
+const RentalReposLive = RentalRepositoryLive.pipe(
+  Layer.provide(Prisma.Default),
+);
+
+const RentalServiceLayer = RentalServiceLive.pipe(
+  Layer.provide(RentalReposLive),
+);
+
+const WalletReposLive = WalletRepositoryLive.pipe(
+  Layer.provide(Prisma.Default),
+);
+
+const WalletServiceLayer = WalletServiceLive.pipe(
+  Layer.provide(WalletReposLive),
+);
+
+export const WalletDepsLive = Layer.mergeAll(
+  WalletReposLive,
+  WalletServiceLayer,
+  Prisma.Default,
+);
+
+export const RentalDepsLive = Layer.mergeAll(
+  RentalReposLive,
+  RentalServiceLayer,
+  BikeDepsLive,
+  WalletDepsLive,
+);
+
 export function withRentalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(RentalServiceLive),
-    Effect.provide(RentalRepositoryLive),
-    Effect.provide(BikeServiceLive),
-    Effect.provide(BikeRepositoryLive),
-    Effect.provide(WalletServiceLive),
-    Effect.provide(WalletRepositoryLive),
-    Effect.provide(Prisma.Default),
-  );
+  return eff.pipe(Effect.provide(RentalDepsLive));
 }
 
+const SupplierReposLive = SupplierRepositoryLive.pipe(
+  Layer.provide(Prisma.Default),
+);
+
+const SupplierServiceLayer = SupplierServiceLive.pipe(
+  Layer.provide(SupplierReposLive),
+);
+
+export const SupplierDepsLive = Layer.mergeAll(
+  SupplierReposLive,
+  SupplierServiceLayer,
+  Prisma.Default,
+);
+
 export function withSupplierDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(SupplierServiceLive),
-    Effect.provide(SupplierRepositoryLive),
-    Effect.provide(Prisma.Default),
-  );
+  return eff.pipe(Effect.provide(SupplierDepsLive));
 }
 
 const AuthReposLive = Layer.mergeAll(
@@ -103,14 +134,14 @@ const AuthServiceLayer = AuthServiceLive.pipe(
   Layer.provide(Email.Default),
 );
 
-const UserServiceLayer = UserServiceLive.pipe(
+const AuthUserServiceLayer = UserServiceLive.pipe(
   Layer.provide(AuthReposLive),
 );
 
 export const AuthDepsLive = Layer.mergeAll(
   AuthReposLive,
   AuthServiceLayer,
-  UserServiceLayer,
+  AuthUserServiceLayer,
   Email.Default,
   Redis.Default,
   Prisma.Default,
@@ -120,53 +151,82 @@ export function withAuthDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(Effect.provide(AuthDepsLive));
 }
 
+const UserReposLive = UserRepositoryLive.pipe(
+  Layer.provide(Prisma.Default),
+);
+
+const UserServiceLayer = UserServiceLive.pipe(
+  Layer.provide(UserReposLive),
+);
+
+export const UserDepsLive = Layer.mergeAll(
+  UserReposLive,
+  UserServiceLayer,
+  Prisma.Default,
+);
+
 export function withUserDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(UserServiceLive),
-    Effect.provide(UserRepositoryLive),
-    Effect.provide(Prisma.Default),
-  );
+  return eff.pipe(Effect.provide(UserDepsLive));
 }
+
+const UserStatsServiceLayer = UserStatsServiceLive.pipe(
+  Layer.provide(UserStatsRepositoryLive),
+);
+
+export const UserStatsDepsLive = Layer.mergeAll(
+  UserStatsRepositoryLive,
+  UserStatsServiceLayer,
+);
 
 export function withUserStatsDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(UserStatsServiceLive),
-    Effect.provide(UserStatsRepositoryLive),
-  );
+  return eff.pipe(Effect.provide(UserStatsDepsLive));
 }
 
+const RatingReposLive = Layer.mergeAll(
+  RatingRepositoryLive,
+  RatingReasonRepositoryLive,
+).pipe(
+  Layer.provide(Prisma.Default),
+);
+
+const RatingServiceLayer = RatingServiceLive.pipe(
+  Layer.provide(RatingRepositoryLive),
+  Layer.provide(Prisma.Default),
+);
+
+export const RatingDepsLive = Layer.mergeAll(
+  RatingReposLive,
+  RatingServiceLayer,
+  RentalReposLive,
+  RentalServiceLayer,
+  Prisma.Default,
+);
+
 export function withRatingDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(RatingServiceLive),
-    Effect.provide(RatingRepositoryLive),
-    Effect.provide(RatingReasonRepositoryLive),
-    Effect.provide(RentalServiceLive),
-    Effect.provide(RentalRepositoryLive),
-    Effect.provide(BikeServiceLive),
-    Effect.provide(BikeRepositoryLive),
-    Effect.provide(WalletServiceLive),
-    Effect.provide(WalletRepositoryLive),
-    Effect.provide(Prisma.Default),
-  );
+  return eff.pipe(Effect.provide(RatingDepsLive));
 }
 
 export function withWalletDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(WalletServiceLive),
-    Effect.provide(WalletRepositoryLive),
-    Effect.provide(Prisma.Default),
-  );
+  return eff.pipe(Effect.provide(WalletDepsLive));
 }
 
+const SubscriptionReposLive = SubscriptionRepositoryLive.pipe(
+  Layer.provide(Prisma.Default),
+);
+
+const SubscriptionServiceLayer = SubscriptionServiceLive.pipe(
+  Layer.provide(SubscriptionReposLive),
+);
+
+export const SubscriptionDepsLive = Layer.mergeAll(
+  SubscriptionReposLive,
+  SubscriptionServiceLayer,
+  WalletDepsLive,
+  UserDepsLive,
+  Email.Default,
+  Prisma.Default,
+);
+
 export function withSubscriptionDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(SubscriptionServiceLive),
-    Effect.provide(SubscriptionRepositoryLive),
-    Effect.provide(WalletServiceLive),
-    Effect.provide(WalletRepositoryLive),
-    Effect.provide(UserServiceLive),
-    Effect.provide(UserRepositoryLive),
-    Effect.provide(Email.Default),
-    Effect.provide(Prisma.Default),
-  );
+  return eff.pipe(Effect.provide(SubscriptionDepsLive));
 }
