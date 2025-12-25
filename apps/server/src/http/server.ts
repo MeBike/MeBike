@@ -1,9 +1,6 @@
 import { Effect } from "effect";
-import process from "node:process";
 
 import { startHonoServer } from "./bootstrap";
+import { handleStartupExit } from "./shared/startup-failure";
 
-Effect.runPromise(startHonoServer).catch((error) => {
-  console.error("Failed to start server:", error);
-  process.exit(1);
-});
+Effect.runPromiseExit(startHonoServer).then(handleStartupExit);

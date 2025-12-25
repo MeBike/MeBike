@@ -12,12 +12,17 @@ export class PrismaInitError extends Data.TaggedError("PrismaInitError")<{
 export class Prisma extends Effect.Service<Prisma>()("Prisma", {
   scoped: Effect.gen(function* () {
     const client = yield* Effect.acquireRelease(
-      Effect.try({
-        try: () => makePrismaClient(),
+      Effect.tryPromise({
+        try: async () => {
+          const client = makePrismaClient();
+          await client.$connect();
+          await client.$queryRaw`SELECT 1`;
+          return client;
+        },
         catch: cause =>
           new PrismaInitError({
             reason:
-                "Failed to initialize Prisma. Check DATABASE_URL and that Postgres is running (docker compose -f apps/server/compose.dev.yml up db).",
+              "Failed to initialize Prisma. Check DATABASE_URL and that Postgres is running (docker compose -f apps/server/compose.dev.yml up db).",
             cause,
           }),
       }),
