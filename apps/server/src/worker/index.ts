@@ -19,6 +19,7 @@ import logger from "@/lib/logger";
 
 import { handleEmailJob } from "./email-worker";
 import { startOutboxDispatcher } from "./outbox-dispatcher";
+import { attachPgBossEventLogging, WorkerLog } from "./worker-logging";
 // run effect with required dependencies
 function runSubscriptionEffect<A, E>(
   eff: Effect.Effect<A, E, SubscriptionServiceTag | Prisma>,
@@ -79,69 +80,56 @@ async function handleExpireSweep(jobs: ReadonlyArray<Job<unknown>>) {
 
 async function main() {
   const boss = makePgBoss();
-  boss.on("error", err => logger.error({ err }, "pg-boss error"));
-  boss.on("warning", warning => logger.warn({ warning }, "pg-boss warning"));
+  attachPgBossEventLogging(boss);
   await boss.start();
-  logger.info("pg-boss started");
+  WorkerLog.bossStarted();
 
   const email = makeEmailTransporter({ fromName: "MeBike" });
   await email.transporter.verify();
-  logger.info("Email transporter verified");
+  WorkerLog.emailVerified();
 
   await boss.createQueue(
     JobTypes.SubscriptionAutoActivate,
     resolveQueueOptions(JobTypes.SubscriptionAutoActivate),
   );
-  logger.info({ queue: JobTypes.SubscriptionAutoActivate }, "Queue ensured");
+  WorkerLog.queueEnsured(JobTypes.SubscriptionAutoActivate);
   await boss.createQueue(
     JobTypes.SubscriptionExpireSweep,
     resolveQueueOptions(JobTypes.SubscriptionExpireSweep),
   );
-  logger.info({ queue: JobTypes.SubscriptionExpireSweep }, "Queue ensured");
+  WorkerLog.queueEnsured(JobTypes.SubscriptionExpireSweep);
   await boss.createQueue(
     JobTypes.EmailSend,
     resolveQueueOptions(JobTypes.EmailSend),
   );
-  logger.info({ queue: JobTypes.EmailSend }, "Queue ensured");
+  WorkerLog.queueEnsured(JobTypes.EmailSend);
 
   await boss.schedule(JobTypes.SubscriptionExpireSweep, "*/5 * * * *");
-  logger.info(
-    { queue: JobTypes.SubscriptionExpireSweep, cron: "*/5 * * * *" },
-    "Schedule ensured",
-  );
+  WorkerLog.scheduleEnsured(JobTypes.SubscriptionExpireSweep, "*/5 * * * *");
 
   const autoActivateWorkerId = await boss.work(
     JobTypes.SubscriptionAutoActivate,
     handleAutoActivate,
   );
-  logger.info(
-    { queue: JobTypes.SubscriptionAutoActivate, workerId: autoActivateWorkerId },
-    "Worker registered",
-  );
+  WorkerLog.workerRegistered(JobTypes.SubscriptionAutoActivate, autoActivateWorkerId);
 
   const expireSweepWorkerId = await boss.work(
     JobTypes.SubscriptionExpireSweep,
     handleExpireSweep,
   );
-  logger.info(
-    { queue: JobTypes.SubscriptionExpireSweep, workerId: expireSweepWorkerId },
-    "Worker registered",
-  );
+  WorkerLog.workerRegistered(JobTypes.SubscriptionExpireSweep, expireSweepWorkerId);
 
   const emailWorkerId = await boss.work(JobTypes.EmailSend, async (jobs) => {
     await handleEmailJob(jobs[0], email);
   });
-  logger.info(
-    { queue: JobTypes.EmailSend, workerId: emailWorkerId },
-    "Worker registered",
-  );
+  WorkerLog.workerRegistered(JobTypes.EmailSend, emailWorkerId);
 
   const stopDispatcher = startOutboxDispatcher({
     db,
     boss,
     workerId: `worker-${process.pid}`,
   });
-  logger.info("Outbox dispatcher started");
+  WorkerLog.outboxDispatcherStarted();
 
   const shutdown = async () => {
     stopDispatcher();
