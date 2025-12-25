@@ -80,8 +80,8 @@ export const SOSIdParamSchema = z
 
 export const RentalListQuerySchema = z
   .object({
-    start_station: z.string().optional(),
-    end_station: z.string().optional(),
+    startStation: z.string().optional(),
+    endStation: z.string().optional(),
     status: RentalStatusSchema.optional(),
     page: z.string().optional(),
     limit: z.string().optional(),
@@ -91,7 +91,7 @@ export const RentalListQuerySchema = z
   });
 
 export const RentalStatsQuerySchema = rentalDateRangeWith({
-  groupBy: z.enum(["NGÀY", "THÁNG", "NĂM"]).optional(),
+  groupBy: z.enum(["DAY", "MONTH", "YEAR"]).optional(),
 }).openapi("RentalStatsQuery", {
   description: "Query parameters for rental statistics",
 });

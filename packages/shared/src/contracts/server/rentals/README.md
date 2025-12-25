@@ -14,19 +14,19 @@ This directory contains the comprehensive type-safe contracts for the MeBike ren
 ### Base Rental Schema
 ```typescript
 interface Rental {
-  _id: string;
-  user_id: string;
-  bike_id?: string;
-  start_station: string;
-  end_station?: string;
-  start_time: string; // ISO datetime
-  end_time?: string; // ISO datetime
+  id: string;
+  userId: string;
+  bikeId?: string;
+  startStation: string;
+  endStation?: string;
+  startTime: string; // ISO datetime
+  endTime?: string; // ISO datetime
   duration: number; // minutes
-  total_price?: number;
-  subscription_id?: string;
-  status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY" | "ĐÃ ĐẶT TRƯỚC";
-  created_at: string;
-  updated_at: string;
+  totalPrice?: number;
+  subscriptionId?: string;
+  status: "RENTED" | "COMPLETED" | "CANCELLED" | "RESERVED";
+  createdAt: string;
+  updatedAt: string;
 }
 ```
 
@@ -146,8 +146,8 @@ The rental system uses comprehensive error codes with detailed context:
 - **Date → ISO string**: Dates remain Date objects, serialize as ISO strings
 
 ### Status Enums
-- **RentalStatus**: Vietnamese status strings ("ĐANG THUÊ", "HOÀN THÀNH", etc.)
-- **BikeStatus**: Vietnamese bike status strings ("CÓ SẺN", "BỊ HỎNG", etc.)
+- **RentalStatus**: English status strings ("RENTED", "COMPLETED", "CANCELLED", "RESERVED")
+- **BikeStatus**: English bike status strings ("AVAILABLE", "BROKEN", etc.)
 - **UserRole**: English role strings ("USER", "STAFF", "ADMIN", "SOS")
 - **VerifyStatus**: English verification strings ("UNVERIFIED", "VERIFIED", "BANNED")
 
@@ -157,7 +157,7 @@ The rental system uses comprehensive error codes with detailed context:
 2. **Pagination**: Uses standard MongoDB pagination with page/limit/total
 3. **Response Envelope**: Follows standard `{message, result}` or `{data, pagination}` patterns
 4. **Error Envelope**: Standard `{error, details}` with typed error codes
-5. **Vietnamese Messages**: Most user-facing messages in Vietnamese, error codes in English
+5. **Messages**: Error codes in English; user-facing messages can be localized by clients
 
 ## Usage Example
 
@@ -170,8 +170,8 @@ import {
 
 // Type-safe rental creation
 const createRentalRequest: CreateRentalRequest = {
-  bike_id: "665fd6e36b7e5d53f8f3d2c9",
-  subscription_id: "optional-subscription-id"
+  bikeId: "665fd6e36b7e5d53f8f3d2c9",
+  subscriptionId: "optional-subscription-id"
 };
 
 // Type-safe error handling

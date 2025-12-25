@@ -172,8 +172,8 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
           userId,
           filter: {
             status: query.status,
-            startStationId: query.start_station,
-            endStationId: query.end_station,
+            startStationId: query.startStation,
+            endStationId: query.endStation,
           },
           pageReq: {
             page: Number(query.page ?? 1),

@@ -84,7 +84,7 @@ export const StationRevenueResponseSchema = z.object({
 
 export const BikeRevenueItemSchema = z.object({
   _id: z.string(),
-  chip_id: z.string(),
+  chipId: z.string(),
   totalRevenue: z.number(),
   totalRevenueFormatted: z.string(),
   totalRentals: z.number(),
@@ -138,19 +138,19 @@ export const HighestRevenueStationSchema = z.object({
 });
 
 export const NearbyStationSchema = StationSummarySchema.extend({
-  distance_meters: z.number().optional(),
-  distance_km: z.number().optional(),
+  distanceMeters: z.number().optional(),
+  distanceKm: z.number().optional(),
 });
 
 export const NearestAvailableBikeSchema = z.object({
-  bike_id: z.string(),
-  chip_id: z.string(),
+  bikeId: z.string(),
+  chipId: z.string(),
   status: z.string(),
-  station_id: z.string(),
-  station_name: z.string(),
-  station_address: z.string(),
-  distance_meters: z.number(),
-  distance_km: z.number(),
+  stationId: z.string(),
+  stationName: z.string(),
+  stationAddress: z.string(),
+  distanceMeters: z.number(),
+  distanceKm: z.number(),
 });
 
 const AlertItemBaseSchema = z.object({

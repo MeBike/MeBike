@@ -62,9 +62,9 @@ export const RentalStationSchema = z.object({
   id: z.string(),
   name: z.string(),
   address: z.string(),
-  latitude: z.string(),
-  longitude: z.string(),
-  capacity: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+  capacity: z.number(),
   updatedAt: z.iso.datetime(),
   locationGeo: z.object({
     type: z.literal("Point"),

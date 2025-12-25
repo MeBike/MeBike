@@ -46,8 +46,8 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
         listBikesUseCase({
           filter: {
             id: query.id,
-            stationId: query.station_id,
-            supplierId: query.supplier_id,
+            stationId: query.stationId,
+            supplierId: query.supplierId,
             status: query.status,
           },
           pageReq: {
@@ -109,10 +109,10 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
     const eff = withBikeDeps(
       adminUpdateBikeUseCase(id, {
-        ...(body.chip_id ? { chipId: body.chip_id } : {}),
-        ...(body.station_id ? { stationId: body.station_id } : {}),
+        ...(body.chipId ? { chipId: body.chipId } : {}),
+        ...(body.stationId ? { stationId: body.stationId } : {}),
         ...(body.status ? { status: body.status } : {}),
-        ...(body.supplier_id !== undefined ? { supplierId: body.supplier_id } : {}),
+        ...(body.supplierId !== undefined ? { supplierId: body.supplierId } : {}),
       }),
     );
 

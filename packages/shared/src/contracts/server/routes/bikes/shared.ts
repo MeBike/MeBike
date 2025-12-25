@@ -42,8 +42,8 @@ export const BikeIdParamSchema = z
 export const BikeListQuerySchema = z
   .object({
     id: z.uuidv7().optional(),
-    station_id: z.uuidv7().optional(),
-    supplier_id: z.uuidv7().optional(),
+    stationId: z.uuidv7().optional(),
+    supplierId: z.uuidv7().optional(),
     status: BikeStatusSchema.optional(),
     ...paginationQueryFields,
     sortBy: BikeSortFieldSchema.optional().openapi({
@@ -68,16 +68,16 @@ export const BikeRentalHistoryQuerySchema = z
   });
 
 export const CreateBikeBodySchema = z.object({
-  chip_id: z.string().min(1),
-  station_id: z.uuidv7(),
-  supplier_id: z.uuidv7(),
+  chipId: z.string().min(1),
+  stationId: z.uuidv7(),
+  supplierId: z.uuidv7(),
   status: BikeStatusSchema.optional(),
 }).openapi("CreateBikeBody");
 
 export const UpdateBikeBodySchema = z.object({
-  chip_id: z.string().optional(),
-  station_id: z.uuidv7().optional(),
-  supplier_id: z.uuidv7().optional(),
+  chipId: z.string().optional(),
+  stationId: z.uuidv7().optional(),
+  supplierId: z.uuidv7().optional(),
   status: BikeStatusSchema.optional(),
 }).openapi("UpdateBikeBody");
 
