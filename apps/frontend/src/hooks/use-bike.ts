@@ -18,33 +18,7 @@ import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivitySta
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
 import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index"
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
-interface ErrorWithMessage {
-  message: string;
-}
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-  return defaultMessage;
-};
+import { getErrorMessage } from "@/utils/message";
 export const useBikeActions = (
   hasToken: boolean,
   bike_detail_id?: string,
@@ -142,18 +116,12 @@ export const useBikeActions = (
         return;
       }
       useCreateBike.mutate(data, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
+        onSuccess: (result) => {
           if (result.status === HTTP_STATUS.CREATED) {
-            toast.success(result.data?.message || MESSAGE.CREATE_BIKE_SUCCESS);
+            toast.success(result.data?.data?.CreateBike.message || MESSAGE.CREATE_BIKE_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey:QUERY_KEYS.BIKE.ALL()
+              queryKey:["bikes","all"]
             });
-          } else {
-            const errorMessage = result.data?.message || MESSAGE.CREATE_BIKE_FAILED;
-            toast.error(errorMessage);
           }
         },
         onError: (error) => {
@@ -190,7 +158,7 @@ export const useBikeActions = (
             if (result.status === HTTP_STATUS.OK) {
               toast.success(result.data?.message || MESSAGE.UPDATE_BIKE_SUCCESS);
               queryClient.invalidateQueries({
-                queryKey:QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id)
+                queryKey:["bikes","all"]
               });
             } else {
               const errorMessage =
