@@ -4,13 +4,40 @@ import type { JobType } from "./job-types";
 
 import { JobTypes } from "./job-types";
 
-const EmailSendPayloadV1Schema = z.object({
+const EmailSendRawPayloadV1Schema = z.object({
   version: z.literal(1),
+  kind: z.literal("raw"),
   to: z.string().min(1),
   subject: z.string().min(1),
   html: z.string().min(1),
   from: z.string().min(1).optional(),
 });
+
+const EmailSendVerifyOtpPayloadV1Schema = z.object({
+  version: z.literal(1),
+  kind: z.literal("auth.verifyOtp"),
+  to: z.string().min(1),
+  fullName: z.string().min(1),
+  otp: z.string().min(1),
+  expiresInMinutes: z.number().int().positive(),
+  from: z.string().min(1).optional(),
+});
+
+const EmailSendResetOtpPayloadV1Schema = z.object({
+  version: z.literal(1),
+  kind: z.literal("auth.resetOtp"),
+  to: z.string().min(1),
+  fullName: z.string().min(1),
+  otp: z.string().min(1),
+  expiresInMinutes: z.number().int().positive(),
+  from: z.string().min(1).optional(),
+});
+
+const EmailSendPayloadV1Schema = z.discriminatedUnion("kind", [
+  EmailSendRawPayloadV1Schema,
+  EmailSendVerifyOtpPayloadV1Schema,
+  EmailSendResetOtpPayloadV1Schema,
+]);
 
 const SubscriptionAutoActivatePayloadV1Schema = z.object({
   version: z.literal(1),

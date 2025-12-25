@@ -132,6 +132,7 @@ const AuthReposLive = Layer.mergeAll(
 const AuthServiceLayer = AuthServiceLive.pipe(
   Layer.provide(AuthReposLive),
   Layer.provide(Email.Default),
+  Layer.provide(Prisma.Default),
 );
 
 const AuthUserServiceLayer = UserServiceLive.pipe(

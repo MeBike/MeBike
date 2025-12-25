@@ -7,6 +7,7 @@ import { WalletServiceTag } from "@/domain/wallets";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
+import { buildSubscriptionCreatedEmail } from "@/lib/email-templates";
 
 import type {
   ActiveSubscriptionExists,
@@ -81,12 +82,14 @@ export function createSubscriptionUseCase(args: {
     const { client } = yield* Prisma;
     const now = args.now ?? new Date();
     const createdOn = now.toISOString().slice(0, 10);
-    const html = [
-      `<p>Hi ${args.fullName},</p>`,
-      `<p>Your subscription (${args.packageName}) was created on ${createdOn}.</p>`,
-      "<p>We will activate it shortly. Thank you for choosing MeBike.</p>",
-      "<!-- TODO: replace with real email template -->",
-    ].join("");
+    const subscriptionEmail = buildSubscriptionCreatedEmail({
+      fullName: args.fullName,
+      packageName: args.packageName,
+      price: args.price,
+      maxUsages: args.maxUsages,
+      createdOn,
+      // TODO: Provide a real callback URL once we standardize a `FRONTEND_URL`/`APP_WEB_URL` env.
+    });
 
     const created = yield* Effect.tryPromise({
       try: () => client.$transaction(async (tx) => {
@@ -132,8 +135,9 @@ export function createSubscriptionUseCase(args: {
           payload: {
             version: 1,
             to: args.email,
-            subject: "Subscription created",
-            html,
+            kind: "raw",
+            subject: subscriptionEmail.subject,
+            html: subscriptionEmail.html,
           },
           runAt: now,
         });

@@ -45,8 +45,6 @@ export async function claimOutboxJobs(
     readonly lockTtlMs?: number;
   },
 ): Promise<readonly OutboxJob[]> {
-  // TODO(jobs-retry): Implement retry/backoff. Currently, failed outbox rows are marked FAILED and never re-queued.
-  // Options: reschedule by setting status=PENDING + run_at=now+backoff, or keep FAILED and have a separate retry command.
   const now = args.now ?? new Date();
   const lockTtlMs = args.lockTtlMs ?? DEFAULT_LOCK_TTL_MS;
   const lockExpiredAt = new Date(now.getTime() - lockTtlMs);

@@ -6,7 +6,9 @@ import { uuidv7 } from "uuidv7";
 import type { UserRow } from "@/domain/users";
 
 import { UserRepository } from "@/domain/users/repository/user.repository";
-import { Email } from "@/infrastructure/email";
+import { JobTypes } from "@/infrastructure/jobs/job-types";
+import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
+import { Prisma } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
 
 import type {
@@ -126,7 +128,7 @@ export const AuthServiceLive = Layer.effect(
     const authRepo = yield* AuthRepository;
     const authEventRepo = yield* AuthEventRepository;
     const userRepo = yield* UserRepository;
-    const email = yield* Email;
+    const { client } = yield* Prisma;
 
     const sendVerifyEmail: AuthService["sendVerifyEmail"] = ({ userId, email: addr, fullName }) =>
       Effect.gen(function* () {
@@ -144,12 +146,24 @@ export const AuthServiceLive = Layer.effect(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );
 
-        const html = `<p>Hi ${fullName},</p><p>Your verification code is <strong>${otp}</strong>. It expires in 10 minutes.</p>`;
-        // TODO: use templated email content and map EmailSendError to domain errors if needed
-        yield* email.send({
-          to: addr,
-          subject: "Verify your email",
-          html,
+        const expiresInMinutes = Math.max(1, Math.ceil(VERIFY_OTP_TTL_MS / 60000));
+        // TODO: use templated email content and map enqueue failures to domain errors if needed
+        yield* Effect.tryPromise({
+          try: () =>
+            client.$transaction(tx =>
+              enqueueOutboxJob(tx, {
+                type: JobTypes.EmailSend,
+                payload: {
+                  version: 1,
+                  to: addr,
+                  kind: "auth.verifyOtp",
+                  fullName,
+                  otp,
+                  expiresInMinutes,
+                },
+                runAt: new Date(),
+              })),
+          catch: err => err as unknown,
         }).pipe(Effect.catchAll(err => Effect.die(err)));
       });
 
@@ -287,12 +301,25 @@ export const AuthServiceLive = Layer.effect(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );
 
-        const html = `<p>Hi ${user.fullname},</p><p>Your password reset code is <strong>${otp}</strong>. It expires in 5 minutes.</p>`;
-        // TODO: use templated email content and map EmailSendError to domain errors if needed
-        yield* email.send({
-          to: addr,
-          subject: "Reset your password",
-          html,
+        const expiresInMinutes = Math.max(1, Math.ceil(RESET_OTP_TTL_MS / 60000));
+        // TODO: use templated email content and map enqueue failures to domain errors if needed I wonder if this thing
+        // could fail we are writing to outbox after all
+        yield* Effect.tryPromise({
+          try: () =>
+            client.$transaction(tx =>
+              enqueueOutboxJob(tx, {
+                type: JobTypes.EmailSend,
+                payload: {
+                  version: 1,
+                  to: addr,
+                  kind: "auth.resetOtp",
+                  fullName: user.fullname,
+                  otp,
+                  expiresInMinutes,
+                },
+                runAt: new Date(),
+              })),
+          catch: err => err as unknown,
         }).pipe(Effect.catchAll(err => Effect.die(err)));
       });
 

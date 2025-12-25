@@ -3,6 +3,7 @@ import type { Job } from "pg-boss";
 
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 
+import { buildAuthOtpEmail } from "@/lib/email-templates";
 import logger from "@/lib/logger";
 
 export type EmailJobPayload = JobPayload<typeof JobTypes.EmailSend>;
@@ -37,18 +38,59 @@ export async function handleEmailJob(
     throw err;
   }
 
+  const message = buildEmailMessage(data);
   logger.info(
-    { jobId: job.id, to: data.to, subject: data.subject },
+    { jobId: job.id, to: message.to, subject: message.subject, kind: data.kind },
     "Sending email job",
   );
   await email.transporter.sendMail({
-    from: data.from ?? email.defaultFrom,
-    to: data.to,
-    subject: data.subject,
-    html: data.html,
+    from: message.from ?? email.defaultFrom,
+    to: message.to,
+    subject: message.subject,
+    html: message.html,
   });
   logger.info(
-    { jobId: job.id, to: data.to, subject: data.subject },
+    { jobId: job.id, to: message.to, subject: message.subject, kind: data.kind },
     "Email job sent",
   );
+}
+
+function buildEmailMessage(
+  data: EmailJobPayload,
+): { to: string; subject: string; html: string; from?: string } {
+  switch (data.kind) {
+    case "raw":
+      return {
+        to: data.to,
+        subject: data.subject,
+        html: data.html,
+        from: data.from,
+      };
+    case "auth.verifyOtp":
+      return {
+        to: data.to,
+        ...buildAuthOtpEmail({
+          kind: data.kind,
+          fullName: data.fullName,
+          otp: data.otp,
+          expiresInMinutes: data.expiresInMinutes,
+        }),
+        from: data.from,
+      };
+    case "auth.resetOtp":
+      return {
+        to: data.to,
+        ...buildAuthOtpEmail({
+          kind: data.kind,
+          fullName: data.fullName,
+          otp: data.otp,
+          expiresInMinutes: data.expiresInMinutes,
+        }),
+        from: data.from,
+      };
+    default: {
+      const _exhaustive: never = data;
+      return _exhaustive;
+    }
+  }
 }
