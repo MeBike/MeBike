@@ -1,8 +1,7 @@
 import { Data } from "effect";
 
+import type { RentalNotFound, RentalRepositoryError, UnauthorizedRentalAccess } from "@/domain/rentals";
 import type { WithGenericError } from "@/domain/shared";
-import type { RentalNotFound, RentalRepositoryError } from "@/domain/rentals";
-import type { UnauthorizedRentalAccess } from "@/domain/rentals";
 
 export class RatingRepositoryError extends Data.TaggedError("RatingRepositoryError")<
   WithGenericError
@@ -36,14 +35,14 @@ export class RatingReasonNotFound extends Data.TaggedError("RatingReasonNotFound
   readonly missingIds: readonly string[];
 }> {}
 
-export type CreateRatingFailure =
-  | RatingRepositoryError
-  | RatingAlreadyExists
-  | RatingNotFound
-  | CannotRateUncompletedRental
-  | CannotRateOthersRental
-  | RatingExpired
-  | RatingReasonNotFound
-  | RentalNotFound
-  | RentalRepositoryError
-  | UnauthorizedRentalAccess;
+export type CreateRatingFailure
+  = | RatingRepositoryError
+    | RatingAlreadyExists
+    | RatingNotFound
+    | CannotRateUncompletedRental
+    | CannotRateOthersRental
+    | RatingExpired
+    | RatingReasonNotFound
+    | RentalNotFound
+    | RentalRepositoryError
+    | UnauthorizedRentalAccess;

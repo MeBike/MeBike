@@ -5,7 +5,7 @@ generator client {
   output   = "../generated/prisma"
 }
 generator kysely {
-  provider = "kysely-generator"
+  provider = "prisma-kysely"
   output   = "../generated/kysely"
 }
 

@@ -1,0 +1,29 @@
+enum JobOutboxStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+model JobOutbox {
+  id        String          @id @default(uuid(7)) @db.Uuid
+  type      String
+  dedupeKey String?         @map("dedupe_key")
+  payload   Json            @db.JsonB
+  runAt     DateTime        @map("run_at") @db.Timestamptz
+  status    JobOutboxStatus @default(PENDING)
+  attempts  Int             @default(0)
+  lockedAt  DateTime?       @map("locked_at") @db.Timestamptz
+  lockedBy  String?         @map("locked_by")
+  lastError String?         @map("last_error")
+  sentAt    DateTime?       @map("sent_at") @db.Timestamptz
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime        @default(now()) @map("updated_at") @db.Timestamptz
+
+  @@index([status, runAt], name: "idx_job_outbox_status_run_at")
+  @@index([type, status], name: "idx_job_outbox_type_status")
+  // TODO(jobs-dedupe): consider a partial unique index on (type, dedupe_key)
+  // where status IN ('PENDING','SENT') to prevent double-enqueue.
+  @@map("job_outbox")
+}
+
