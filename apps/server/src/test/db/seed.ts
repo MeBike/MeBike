@@ -2,7 +2,7 @@ import type { Kysely } from "kysely";
 
 import { sql } from "kysely";
 
-import type { DB } from "../../../generated/prisma/types";
+import type { DB } from "generated/kysely/types";
 
 import { authEvents, rentals, stations, users } from "../fixtures/users-stats.seed";
 

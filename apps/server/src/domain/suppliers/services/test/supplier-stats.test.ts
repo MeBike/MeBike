@@ -1,7 +1,7 @@
 import { Cause, Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
-import type { BikeStatus } from "generated/prisma/types";
+import type { BikeStatus } from "generated/prisma/client";
 
 import type { SupplierCountRow, SupplierStatusCountRow } from "../supplier.service";
 

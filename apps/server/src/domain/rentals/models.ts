@@ -1,4 +1,4 @@
-import type { RentalStatus } from "generated/prisma/types";
+import type { RentalStatus } from "generated/prisma/enums";
 
 export type RentalRow = {
   id: string;

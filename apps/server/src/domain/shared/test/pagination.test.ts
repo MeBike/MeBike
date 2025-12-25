@@ -384,7 +384,7 @@ describe("pagination Utilities", () => {
     });
   });
 
-  describe("Sorting Types", () => {
+  describe("sorting Types", () => {
     it("should only accept valid sort directions", () => {
       const validDirections: SortDirection[] = ["asc", "desc"];
       validDirections.forEach((direction) => {
@@ -517,7 +517,7 @@ describe("pagination Utilities", () => {
     });
   });
 
-  describe("Sorting Edge Cases", () => {
+  describe("sorting Edge Cases", () => {
     it("should handle sorting with extreme pagination values", () => {
       const testCases = [
         { page: 0, pageSize: 0, sortBy: "name" as const },

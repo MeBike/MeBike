@@ -1,4 +1,4 @@
-import type { BikeStatus } from "generated/prisma/types";
+import type { BikeStatus } from "generated/prisma/enums";
 
 export type BikeRow = {
   id: string;

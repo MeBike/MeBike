@@ -1,5 +1,4 @@
-import type { Prisma as PrismaTypes } from "generated/prisma/client";
-import type { SupplierStatus } from "generated/prisma/types";
+import type { Prisma as PrismaTypes, SupplierStatus } from "generated/prisma/client";
 
 import type { DuplicateSupplierName } from "./domain-errors";
 

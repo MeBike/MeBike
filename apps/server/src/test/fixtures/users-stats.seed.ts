@@ -1,13 +1,13 @@
 import type { Insertable } from "kysely";
 
-import type { DB } from "../../../generated/prisma/types";
+import type { DB } from "generated/kysely/types";
 
 import {
   AuthEventType,
   RentalStatus,
   UserRole,
   UserVerifyStatus,
-} from "../../../generated/prisma/types";
+} from "generated/kysely/types";
 
 export const USER_VERIFIED_ID = "018d4529-6880-77a8-8e6f-4d2c88d22301";
 export const USER_UNVERIFIED_ID = "018d4529-6880-77a8-8e6f-4d2c88d22302";

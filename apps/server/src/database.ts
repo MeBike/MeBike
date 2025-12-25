@@ -1,9 +1,9 @@
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 
-import { env } from "@/config/env";
+import type { DB } from "generated/kysely/types";
 
-import type { DB } from "../generated/prisma/types";
+import { env } from "@/config/env";
 
 const dialect = new PostgresDialect({
   pool: new Pool({

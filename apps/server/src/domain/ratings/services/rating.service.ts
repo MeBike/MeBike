@@ -1,9 +1,11 @@
-import { Context, Effect, Layer, Option } from "effect";
+import type { Option } from "effect";
 
-import type { RatingRow, CreateRatingInput } from "../models";
-import { RatingRepository } from "../repository/rating.repository";
-import type { RatingRepo } from "../repository/rating.repository";
+import { Context, Effect, Layer } from "effect";
+
 import type { RatingAlreadyExists, RatingRepositoryError } from "../domain-errors";
+import type { CreateRatingInput, RatingRow } from "../models";
+
+import { RatingRepository } from "../repository/rating.repository";
 
 export type RatingService = {
   create: (

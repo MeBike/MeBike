@@ -540,6 +540,9 @@ importers:
       pg:
         specifier: ^8.16.3
         version: 8.16.3
+      pg-boss:
+        specifier: ^12.5.4
+        version: 12.5.4
       pino:
         specifier: ^8.21.0
         version: 8.21.0
@@ -5447,6 +5450,10 @@ packages:
     resolution: {integrity: sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q==}
     engines: {node: '>=12.0.0'}
 
+  cron-parser@5.4.0:
+    resolution: {integrity: sha512-HxYB8vTvnQFx4dLsZpGRa0uHp6X3qIzS3ZJgJ9v6l/5TJMgeWQbLkR5yiJ5hOxGbc9+jCADDnydIe15ReLZnJA==}
+    engines: {node: '>=18'}
+
   cron@4.4.0:
     resolution: {integrity: sha512-fkdfq+b+AHI4cKdhZlppHveI/mgz2qpiYxcm+t5E5TsxX7QrLS1VE0+7GENEk9z0EeGPcpSciGv6ez24duWhwQ==}
     engines: {node: '>=18.x'}
@@ -8591,6 +8598,10 @@ packages:
   perfect-debounce@1.0.0:
     resolution: {integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==}
 
+  pg-boss@12.5.4:
+    resolution: {integrity: sha512-I52Gkpda6lLNZNDZVKN5sWYO2YKndI3bBwOGAHY7xC+UBYMHI3m2tWSmDGjuq/odf6zpGoFSKVUUukTEaBZocA==}
+    engines: {node: '>=22.12.0'}
+
   pg-cloudflare@1.2.7:
     resolution: {integrity: sha512-YgCtzMH0ptvZJslLM1ffsY4EuGaU0cx4XSdXLRFae8bPP4dS5xL1tNB3k2o/N64cHJpwU7dxKli/nZ2lUa5fLg==}
 
@@ -9361,6 +9372,10 @@ packages:
 
   seq-queue@0.0.5:
     resolution: {integrity: sha512-hr3Wtp/GZIc/6DAGPDcV4/9WoZhjrkXsi5B/07QgX8tsdc6ilr7BFM6PM6rbdAX1kFSDYeZGLipIZZKyQP0O5Q==}
+
+  serialize-error@12.0.0:
+    resolution: {integrity: sha512-ZYkZLAvKTKQXWuh5XpBw7CdbSzagarX39WyZ2H07CDLC5/KfsRGlIXV8d4+tfqX1M7916mRqR1QfNHSij+c9Pw==}
+    engines: {node: '>=18'}
 
   serialize-error@2.1.0:
     resolution: {integrity: sha512-ghgmKt5o4Tly5yEG/UJp8qTd0AN7Xalw4XBtDEKP655B699qMEtra1WlXeE6WIvdEG481JvRxULKsInq/iNysw==}
@@ -16751,6 +16766,10 @@ snapshots:
     dependencies:
       luxon: 3.7.2
 
+  cron-parser@5.4.0:
+    dependencies:
+      luxon: 3.7.2
+
   cron@4.4.0:
     dependencies:
       '@types/luxon': 3.7.1
@@ -20820,6 +20839,14 @@ snapshots:
 
   perfect-debounce@1.0.0: {}
 
+  pg-boss@12.5.4:
+    dependencies:
+      cron-parser: 5.4.0
+      pg: 8.16.3
+      serialize-error: 12.0.0
+    transitivePeerDependencies:
+      - pg-native
+
   pg-cloudflare@1.2.7:
     optional: true
 
@@ -21711,6 +21738,10 @@ snapshots:
       - supports-color
 
   seq-queue@0.0.5: {}
+
+  serialize-error@12.0.0:
+    dependencies:
+      type-fest: 4.41.0
 
   serialize-error@2.1.0: {}
 

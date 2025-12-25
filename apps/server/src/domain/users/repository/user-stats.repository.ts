@@ -4,7 +4,7 @@ import { Context, Effect, Layer } from "effect";
 import { sql } from "kysely";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { DB } from "generated/prisma/types";
+import type { DB } from "generated/kysely/types";
 
 import { db } from "@/database";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";

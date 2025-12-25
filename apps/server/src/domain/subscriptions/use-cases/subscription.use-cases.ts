@@ -1,6 +1,6 @@
 import { Effect, Option } from "effect";
 
-import type { SubscriptionPackage } from "generated/prisma/types";
+import type { SubscriptionPackage } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { WalletServiceTag } from "@/domain/wallets";
