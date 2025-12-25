@@ -12,6 +12,9 @@
     "dev:test": "vitest --watch",
     "lint": "eslint .",
     "dev": "tsx --watch src/http/server.ts",
+    "worker": "tsx src/worker/index.ts",
+    "worker:dispatch-once": "tsx src/worker/commands/dispatch-outbox-once.ts",
+    "worker:subscriptions-expire-sweep-once": "tsx src/worker/commands/subscriptions-expire-sweep-once.ts",
     "start": "node dist/src/http/server.js",
     "seed": "pnpm prisma db seed",
     "seed:bikes": "tsx prisma/seed-bikes.ts"

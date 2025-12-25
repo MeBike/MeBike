@@ -5,6 +5,7 @@ import type { SubscriptionPackage } from "generated/prisma/client";
 import { env } from "@/config/env";
 import { WalletServiceTag } from "@/domain/wallets";
 import { Email } from "@/infrastructure/email";
+import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type {
@@ -51,9 +52,14 @@ export type ActivateSubscriptionFailure
     | ActiveSubscriptionExists;
 
 const EXPIRE_AFTER_MS = env.EXPIRE_AFTER_DAYS * 24 * 60 * 60 * 1000;
+const AUTO_ACTIVATE_MS = env.AUTO_ACTIVATE_IN_DAYS * 24 * 60 * 60 * 1000;
 
 function computeExpiresAt(now: Date): Date {
   return new Date(now.getTime() + EXPIRE_AFTER_MS);
+}
+
+function computeAutoActivateAt(now: Date): Date {
+  return new Date(now.getTime() + AUTO_ACTIVATE_MS);
 }
 
 export function createSubscriptionUseCase(args: {
@@ -103,6 +109,17 @@ export function createSubscriptionUseCase(args: {
           description: `Subscription payment ${pending.id}`,
           type: "DEBIT",
         }).pipe(Effect.runPromise);
+
+        await tx.jobOutbox.create({
+          data: {
+            type: JobTypes.SubscriptionAutoActivate,
+            dedupeKey: pending.id,
+            payload: {
+              subscriptionId: pending.id,
+            },
+            runAt: computeAutoActivateAt(now),
+          },
+        });
 
         return pending;
       }),
