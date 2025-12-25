@@ -1,1 +1,0 @@
-export { subscriptionsRoutes } from "../subscriptions";
