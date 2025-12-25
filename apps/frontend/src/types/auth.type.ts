@@ -15,3 +15,5 @@ export type ChangePasswordResponse = GraphQLMutationResponse<"ChangePassword">;
 export type UpdateProfileResponse = GraphQLMutationResponse<"UpdateProfile", Me>;
 export type GetUsersResponse = GraphQLMutationResponse<"Users", Me[]>;  
 export type GetDetailUserResponse = GraphQLMutationResponse<"User", Me>;
+export type CreateUserResponse = GraphQLMutationResponse<"CreateUser">;
+export type ChangeStatusUserResponse = GraphQLMutationResponse<"ChangeUserStatus">;

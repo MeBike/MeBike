@@ -2,11 +2,12 @@ import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
 import { UserProfile } from "@/schemas/userSchema";
-import { GET_DETAIL_USER ,  GET_USERS , GET_USER_STATS} from "@/graphql";
+import { GET_DETAIL_USER ,  GET_USERS , GET_USER_STATS , CHANGE_STATUS_USER , CREATE_USER} from "@/graphql";
 import { print } from "graphql";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
-import { GetUsersResponse, GetDetailUserResponse } from "@/types/auth.type";
+import { GetUsersResponse, GetDetailUserResponse , CreateUserResponse} from "@/types/auth.type";
 import { GetUserStatsResponse } from "@/types/user.type";
+import { ChangeStatusUserResponse } from "@/types/auth.type";
 interface ApiReponse<T> {
   data: T;
   pagination?: {
@@ -168,10 +169,18 @@ export const userService = {
   },
   createUser: async (
     data: UserProfile
-  ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
-    const response = await fetchHttpClient.post<DetailUserResponse<DetailUser>>(
-      USER_ENDPOINTS.CREATE_USER,
-      data
+  ): Promise<AxiosResponse<CreateUserResponse>> => {
+    const response = await fetchHttpClient.mutation<CreateUserResponse>(
+      print(CREATE_USER),
+      {
+        body: {
+          YOB: data.YOB,
+          email: data.email,
+          name: data.name,
+          phone: data.phone,
+          role: data.role,
+        },
+      }
     );
     return response;
   },
@@ -194,9 +203,7 @@ export const userService = {
   getDashboardUserStats: async (): Promise<
     AxiosResponse<GetUserStatsResponse>
   > => {
-    return fetchHttpClient.query<GetUserStatsResponse>(
-      print(GET_USER_STATS)
-    );
+    return fetchHttpClient.query<GetUserStatsResponse>(print(GET_USER_STATS));
   },
   postResetPassword: async (
     id: string,
@@ -214,6 +221,24 @@ export const userService = {
     const response = await fetchHttpClient.patch<
       DetailUserResponse<DetailUser>
     >(USER_ENDPOINTS.UPDATE_PROFILE_ADMIN(id), data);
+    return response;
+  },
+  changeStatus: async ({
+    accountId,
+    status
+  }: {
+    accountId: string;
+    status: "Active" | "Inactive";
+  }): Promise<AxiosResponse<ChangeStatusUserResponse>> => {
+    const response = await fetchHttpClient.mutation<ChangeStatusUserResponse>(
+      print(CHANGE_STATUS_USER),
+      {
+        data: {
+          accountId : accountId,
+          status : status,
+        },
+      }
+    );
     return response;
   },
 };

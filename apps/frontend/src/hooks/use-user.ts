@@ -17,37 +17,10 @@ import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordM
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
 import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
+import { getErrorMessage } from "@/utils/message";
 import type { Me } from "@/types/GraphQL";
 import type { DetailUser } from "@/services/auth.service";
-interface ErrorWithMessage {
-  message: string;
-}
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
-
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-
-  return defaultMessage;
-};
+import { useChangeStatusMutation } from "./mutations/User/useChangeStatusMutation";
 export const useUserActions = ({
   hasToken,
   verify,
@@ -194,12 +167,9 @@ export const useUserActions = ({
         return;
       }
       useCreateUser.mutate(userData, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
+        onSuccess: (result) => {
           if (result?.status === HTTP_STATUS.CREATED) {
-            toast.success(result.data?.message || MESSAGE.CREATE_USER_SUCCESS);
+            toast.success(result.data?.data?.CreateUser.message || MESSAGE.CREATE_USER_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.USER.ALL(),
             });
@@ -209,10 +179,6 @@ export const useUserActions = ({
             } else {  
               refetch();
             }
-          } else {
-            const errorMessage =
-              result?.data?.message || MESSAGE.CREATE_USER_FAILED;
-            toast.error(errorMessage);
           }
         },
         onError: (error: unknown) => {
@@ -263,6 +229,49 @@ export const useUserActions = ({
       router,
       id,
       useResetPassword,
+    ]
+  );
+  const useChangeStatusUser = useChangeStatusMutation();
+  const changeStatusUser = useCallback(
+    async ({accountId , status}: {accountId : string , status : "Active" | "Inactive"}) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useChangeStatusUser.mutate(
+        { accountId: accountId || "", status: status },
+        {
+          onSuccess: (result) => {
+            if (result?.status === HTTP_STATUS.OK) {
+              queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.USER.ALL(),
+              });
+              queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.USER.STATISTICS,
+              });
+              refetchDetailUser();
+              refetch();
+              toast.success(MESSAGE.UPDATE_PROFILE_SUCCESS);
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              MESSAGE.UPDATE_PROFILE_FAILED
+            );
+            toast.error(errorMessage);
+          },
+        }
+      );
+    },
+    [
+      hasToken,
+      router,
+      id,
+      useChangeStatusUser,
+      queryClient,
+      refetchDetailUser,
+      refetch,
     ]
   );
   const updateProfileUser = useCallback(
@@ -340,11 +349,12 @@ export const useUserActions = ({
     isLoadingSearch,
     totalRecordUser: data?.data?.Users?.total || 0,
     getDetailUser,
-    detailUserData : detailUserData?.data.data?.User?.data,
+    detailUserData: detailUserData?.data.data?.User?.data,
     isLoadingDetailUser,
     dashboardStatsData,
     resetPassword,
     updateProfileUser,
     getRefetchDashboardStats,
+    changeStatusUser,
   };
 };
