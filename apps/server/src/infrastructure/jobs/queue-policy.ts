@@ -4,18 +4,33 @@ import type { JobType } from "./job-types";
 
 import { JobTypes } from "./job-types";
 
-const DEFAULT_QUEUE_OPTIONS: Record<JobType, QueueOptions> = {
+export type QueueOptionsWithDeadLetter = QueueOptions & { deadLetter?: string };
+
+export const JobDeadLetters: Partial<Record<JobType, string>> = {
+  [JobTypes.EmailSend]: "emails.dlq",
+  [JobTypes.SubscriptionAutoActivate]: "subscriptions.autoActivate.dlq",
+};
+
+export function listDlqQueues(): readonly string[] {
+  return Object.values(JobDeadLetters).filter(
+    (queue): queue is string => typeof queue === "string",
+  );
+}
+
+const DEFAULT_QUEUE_OPTIONS: Record<JobType, QueueOptionsWithDeadLetter> = {
   [JobTypes.EmailSend]: {
     retryLimit: 10,
     retryDelay: 30,
     retryBackoff: true,
     retryDelayMax: 15 * 60,
+    deadLetter: JobDeadLetters[JobTypes.EmailSend],
   },
   [JobTypes.SubscriptionAutoActivate]: {
     retryLimit: 10,
     retryDelay: 60,
     retryBackoff: true,
     retryDelayMax: 60 * 60,
+    deadLetter: JobDeadLetters[JobTypes.SubscriptionAutoActivate],
   },
   [JobTypes.SubscriptionExpireSweep]: {
     retryLimit: 3,
@@ -27,8 +42,8 @@ const DEFAULT_QUEUE_OPTIONS: Record<JobType, QueueOptions> = {
 
 export function resolveQueueOptions(
   type: JobType,
-  overrides?: QueueOptions,
-): QueueOptions {
+  overrides?: QueueOptionsWithDeadLetter,
+): QueueOptionsWithDeadLetter {
   return {
     ...DEFAULT_QUEUE_OPTIONS[type],
     ...overrides,

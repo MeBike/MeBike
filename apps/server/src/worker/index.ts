@@ -1,5 +1,7 @@
+import type { JobPayload } from "@mebike/shared/contracts/server/jobs";
 import type { Job } from "pg-boss";
 
+import { parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 import { Effect } from "effect";
 import process from "node:process";
 
@@ -12,7 +14,7 @@ import {
 } from "@/domain/subscriptions";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { makePgBoss } from "@/infrastructure/jobs/pgboss";
-import { resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
+import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import { Prisma } from "@/infrastructure/prisma";
 import { makeEmailTransporter } from "@/lib/email";
 import logger from "@/lib/logger";
@@ -40,21 +42,21 @@ async function handleAutoActivate(jobs: ReadonlyArray<Job<unknown>>) {
     return;
   }
   logger.info({ jobId: job.id }, "Handling subscriptions.autoActivate job");
-  // for first job check data for subscriptionId then run activate use case with deps of course
-  const data = job?.data;
-  const subscriptionId
-    = typeof data === "object" && data !== null
-      ? (data as { subscriptionId?: unknown }).subscriptionId
-      : undefined;
-
-  if (typeof subscriptionId !== "string" || subscriptionId.length === 0) {
-    logger.error({ jobId: job?.id }, "Missing subscriptionId for auto-activate job");
-    return;
+  let payload: JobPayload<typeof JobTypes.SubscriptionAutoActivate>;
+  try {
+    payload = parseJobPayload(JobTypes.SubscriptionAutoActivate, job.data);
+  }
+  catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger.error({ jobId: job.id, error: message }, "Invalid auto-activate payload");
+    throw err;
   }
 
-  await runSubscriptionEffect(activateSubscriptionUseCase({ subscriptionId }));
+  await runSubscriptionEffect(
+    activateSubscriptionUseCase({ subscriptionId: payload.subscriptionId }),
+  );
   logger.info(
-    { jobId: job.id, subscriptionId },
+    { jobId: job.id, subscriptionId: payload.subscriptionId },
     "subscriptions.autoActivate completed",
   );
 }
@@ -66,6 +68,14 @@ async function handleExpireSweep(jobs: ReadonlyArray<Job<unknown>>) {
   }
   const job = jobs[0];
   logger.info({ jobId: job?.id }, "Handling subscriptions.expireSweep job");
+  try {
+    parseJobPayload(JobTypes.SubscriptionExpireSweep, job?.data);
+  }
+  catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger.error({ jobId: job?.id, error: message }, "Invalid expire-sweep payload");
+    throw err;
+  }
   const expiredCount = await runSubscriptionEffect(
     Effect.gen(function* () {
       const service = yield* SubscriptionServiceTag;
@@ -88,6 +98,17 @@ async function main() {
   await email.transporter.verify();
   WorkerLog.emailVerified();
 
+  const emailDlq = JobDeadLetters[JobTypes.EmailSend];
+  if (emailDlq) {
+    await boss.createQueue(emailDlq);
+    WorkerLog.queueEnsured(emailDlq);
+  }
+  const autoActivateDlq = JobDeadLetters[JobTypes.SubscriptionAutoActivate];
+  if (autoActivateDlq) {
+    await boss.createQueue(autoActivateDlq);
+    WorkerLog.queueEnsured(autoActivateDlq);
+  }
+
   await boss.createQueue(
     JobTypes.SubscriptionAutoActivate,
     resolveQueueOptions(JobTypes.SubscriptionAutoActivate),
@@ -104,7 +125,11 @@ async function main() {
   );
   WorkerLog.queueEnsured(JobTypes.EmailSend);
 
-  await boss.schedule(JobTypes.SubscriptionExpireSweep, "*/5 * * * *");
+  await boss.schedule(
+    JobTypes.SubscriptionExpireSweep,
+    "*/5 * * * *",
+    { version: 1 },
+  );
   WorkerLog.scheduleEnsured(JobTypes.SubscriptionExpireSweep, "*/5 * * * *");
 
   const autoActivateWorkerId = await boss.work(
@@ -124,6 +149,34 @@ async function main() {
   });
   WorkerLog.workerRegistered(JobTypes.EmailSend, emailWorkerId);
 
+  if (emailDlq) {
+    const dlqWorkerId = await boss.work(
+      emailDlq,
+      async (jobs) => {
+        const job = jobs[0];
+        logger.error(
+          { jobId: job?.id, data: job?.data },
+          "Email job moved to DLQ",
+        );
+      },
+    );
+    WorkerLog.workerRegistered(emailDlq, dlqWorkerId);
+  }
+
+  if (autoActivateDlq) {
+    const dlqWorkerId = await boss.work(
+      autoActivateDlq,
+      async (jobs) => {
+        const job = jobs[0];
+        logger.error(
+          { jobId: job?.id, data: job?.data },
+          "Subscription auto-activate job moved to DLQ",
+        );
+      },
+    );
+    WorkerLog.workerRegistered(autoActivateDlq, dlqWorkerId);
+  }
+
   const stopDispatcher = startOutboxDispatcher({
     db,
     boss,
@@ -131,17 +184,22 @@ async function main() {
   });
   WorkerLog.outboxDispatcherStarted();
 
-  const shutdown = async () => {
+  const shutdown = async (signal?: string) => {
+    if (signal) {
+      logger.info({ signal }, "Worker shutdown initiated");
+    }
     stopDispatcher();
-    await boss.stop({ close: true });
+    await boss.stop({ graceful: true, timeout: 30_000 });
     if (typeof email.transporter.close === "function") {
       email.transporter.close();
     }
     await db.destroy();
   };
 
-  process.on("SIGINT", () => void shutdown().finally(() => process.exit(0)));
-  process.on("SIGTERM", () => void shutdown().finally(() => process.exit(0)));
+  process.on("SIGINT", () =>
+    void shutdown("SIGINT").finally(() => process.exit(0)));
+  process.on("SIGTERM", () =>
+    void shutdown("SIGTERM").finally(() => process.exit(0)));
 
   logger.info("Worker started");
 }

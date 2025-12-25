@@ -46,6 +46,12 @@
       "require": "./dist/sdk/iot-service/schemas/index.js",
       "default": "./dist/sdk/iot-service/schemas/index.js"
     },
+    "./contracts/server/jobs": {
+      "types": "./dist/contracts/server/jobs/index.d.ts",
+      "import": "./dist/contracts/server/jobs/index.js",
+      "require": "./dist/contracts/server/jobs/index.js",
+      "default": "./dist/contracts/server/jobs/index.js"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",

@@ -2,7 +2,7 @@ import process from "node:process";
 
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { makePgBoss } from "@/infrastructure/jobs/pgboss";
-import { resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
+import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import { makeEmailTransporter } from "@/lib/email";
 import logger from "@/lib/logger";
 
@@ -13,6 +13,11 @@ async function main() {
   const boss = makePgBoss();
   attachPgBossEventLogging(boss);
   await boss.start();
+  const emailDlq = JobDeadLetters[JobTypes.EmailSend];
+  if (emailDlq) {
+    await boss.createQueue(emailDlq);
+    WorkerLog.queueEnsured(emailDlq);
+  }
   await boss.createQueue(
     JobTypes.EmailSend,
     resolveQueueOptions(JobTypes.EmailSend),

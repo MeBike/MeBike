@@ -1,13 +1,11 @@
+import type { JobPayload } from "@mebike/shared/contracts/server/jobs";
 import type { Job } from "pg-boss";
+
+import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 
 import logger from "@/lib/logger";
 
-export type EmailJobPayload = {
-  readonly to: string;
-  readonly subject: string;
-  readonly html: string;
-  readonly from?: string;
-};
+export type EmailJobPayload = JobPayload<typeof JobTypes.EmailSend>;
 
 export type EmailTransport = {
   readonly defaultFrom: string;
@@ -21,19 +19,6 @@ export type EmailTransport = {
   };
 };
 
-export function isEmailJobPayload(data: unknown): data is EmailJobPayload {
-  if (typeof data !== "object" || data === null) {
-    return false;
-  }
-  const payload = data as Record<string, unknown>;
-  return (
-    typeof payload.to === "string"
-    && typeof payload.subject === "string"
-    && typeof payload.html === "string"
-    && (payload.from === undefined || typeof payload.from === "string")
-  );
-}
-
 export async function handleEmailJob(
   job: Job<unknown> | undefined,
   email: EmailTransport,
@@ -42,11 +27,14 @@ export async function handleEmailJob(
     logger.warn("Email worker received empty batch");
     return;
   }
-  const data = job.data;
-  if (!isEmailJobPayload(data)) {
-    const message = "Invalid email job payload";
-    logger.error({ jobId: job.id, data }, message);
-    throw new Error(message);
+  let data: EmailJobPayload;
+  try {
+    data = parseJobPayload(JobTypes.EmailSend, job.data);
+  }
+  catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    logger.error({ jobId: job.id, error: message }, "Invalid email job payload");
+    throw err;
   }
 
   logger.info(

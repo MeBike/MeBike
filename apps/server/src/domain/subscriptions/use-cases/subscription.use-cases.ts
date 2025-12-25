@@ -5,6 +5,7 @@ import type { SubscriptionPackage } from "generated/prisma/client";
 import { env } from "@/config/env";
 import { WalletServiceTag } from "@/domain/wallets";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
+import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type {
@@ -115,28 +116,26 @@ export function createSubscriptionUseCase(args: {
           type: "DEBIT",
         }).pipe(Effect.runPromise);
 
-        await tx.jobOutbox.create({
-          data: {
-            type: JobTypes.SubscriptionAutoActivate,
-            dedupeKey: pending.id,
-            payload: {
-              subscriptionId: pending.id,
-            },
-            runAt: computeAutoActivateAt(now),
+        await enqueueOutboxJob(tx, {
+          type: JobTypes.SubscriptionAutoActivate,
+          dedupeKey: pending.id,
+          payload: {
+            version: 1,
+            subscriptionId: pending.id,
           },
+          runAt: computeAutoActivateAt(now),
         });
 
-        await tx.jobOutbox.create({
-          data: {
-            type: JobTypes.EmailSend,
-            dedupeKey: `subscription-created:${pending.id}`,
-            payload: {
-              to: args.email,
-              subject: "Subscription created",
-              html,
-            },
-            runAt: now,
+        await enqueueOutboxJob(tx, {
+          type: JobTypes.EmailSend,
+          dedupeKey: `subscription-created:${pending.id}`,
+          payload: {
+            version: 1,
+            to: args.email,
+            subject: "Subscription created",
+            html,
           },
+          runAt: now,
         });
 
         return pending;
