@@ -11,6 +11,22 @@ export type StationRow = {
   longitude: number;
 };
 
+export type CreateStationInput = {
+  name: string;
+  address: string;
+  capacity: number;
+  latitude: number;
+  longitude: number;
+};
+
+export type UpdateStationInput = {
+  name?: string;
+  address?: string;
+  capacity?: number;
+  latitude?: number;
+  longitude?: number;
+};
+
 export type StationFilter = {
   name?: string;
   address?: string;

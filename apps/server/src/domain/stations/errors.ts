@@ -9,3 +9,11 @@ export class StationRepositoryError extends Data.TaggedError("StationRepositoryE
 export class StationNotFound extends Data.TaggedError("StationNotFound")<{
   readonly id: string;
 }> {}
+
+export class StationNameAlreadyExists extends Data.TaggedError("StationNameAlreadyExists")<{
+  readonly name: string;
+}> {}
+
+export class StationHasBikes extends Data.TaggedError("StationHasBikes")<{
+  readonly stationId: string;
+}> {}

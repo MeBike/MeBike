@@ -18,6 +18,7 @@ export const createBike = createRoute({
   method: "post",
   path: "/v1/bikes",
   tags: ["Bikes"],
+  security: [{ bearerAuth: [] }],
   request: {
     body: {
       content: {
@@ -57,6 +58,7 @@ export const updateBike = createRoute({
   method: "patch",
   path: "/v1/bikes/{id}",
   tags: ["Bikes"],
+  security: [{ bearerAuth: [] }],
   request: {
     params: BikeIdParamSchema,
     body: {
@@ -103,6 +105,7 @@ export const deleteBike = createRoute({
   method: "delete",
   path: "/v1/bikes/{id}",
   tags: ["Bikes"],
+  security: [{ bearerAuth: [] }],
   request: {
     params: BikeIdParamSchema,
   },

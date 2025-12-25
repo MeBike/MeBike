@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 
 import {
   AuthEventRepositoryLive,
@@ -8,6 +8,8 @@ import {
 import {
   BikeRepositoryLive,
   BikeServiceLive,
+  BikeStatsRepositoryLive,
+  BikeStatsServiceLive,
 } from "@/domain/bikes";
 import {
   RatingReasonRepositoryLive,
@@ -41,11 +43,27 @@ import { Prisma } from "@/infrastructure/prisma";
 import { Redis } from "@/infrastructure/redis";
 
 export function withBikeDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(BikeServiceLive),
-    Effect.provide(BikeRepositoryLive),
-    Effect.provide(Prisma.Default),
+  const BikeReposLive = Layer.mergeAll(
+    BikeRepositoryLive,
+    BikeStatsRepositoryLive,
+  ).pipe(
+    Layer.provide(Prisma.Default),
   );
+
+  const BikeServicesLive = Layer.mergeAll(
+    BikeServiceLive,
+    BikeStatsServiceLive,
+  ).pipe(
+    Layer.provide(BikeReposLive),
+    Layer.provide(Prisma.Default),
+  );
+
+  const BikeDepsLive = Layer.mergeAll(
+    BikeReposLive,
+    BikeServicesLive,
+  );
+
+  return eff.pipe(Effect.provide(BikeDepsLive));
 }
 
 export function withRentalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
@@ -68,18 +86,36 @@ export function withSupplierDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   );
 }
 
+const AuthReposLive = Layer.mergeAll(
+  AuthRepositoryLive,
+  AuthEventRepositoryLive,
+  UserRepositoryLive,
+  WalletRepositoryLive,
+).pipe(
+  Layer.provide(Prisma.Default),
+  Layer.provide(Redis.Default),
+);
+
+const AuthServiceLayer = AuthServiceLive.pipe(
+  Layer.provide(AuthReposLive),
+  Layer.provide(Email.Default),
+);
+
+const UserServiceLayer = UserServiceLive.pipe(
+  Layer.provide(AuthReposLive),
+);
+
+export const AuthDepsLive = Layer.mergeAll(
+  AuthReposLive,
+  AuthServiceLayer,
+  UserServiceLayer,
+  Email.Default,
+  Redis.Default,
+  Prisma.Default,
+);
+
 export function withAuthDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(
-    Effect.provide(AuthServiceLive),
-    Effect.provide(AuthRepositoryLive),
-    Effect.provide(AuthEventRepositoryLive),
-    Effect.provide(UserServiceLive),
-    Effect.provide(UserRepositoryLive),
-    Effect.provide(WalletRepositoryLive),
-    Effect.provide(Email.Default),
-    Effect.provide(Redis.Default),
-    Effect.provide(Prisma.Default),
-  );
+  return eff.pipe(Effect.provide(AuthDepsLive));
 }
 
 export function withUserDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {

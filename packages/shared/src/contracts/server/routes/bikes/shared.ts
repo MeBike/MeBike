@@ -24,6 +24,12 @@ export {
 };
 
 export const BikeSortFieldSchema = z.enum(["status", "name"]);
+export const BikeRentalHistorySortFieldSchema = z.enum([
+  "endTime",
+  "startTime",
+  "totalPrice",
+  "duration",
+]);
 
 export const BikeErrorResponseSchema = ServerErrorResponseSchema.extend({
   details: BikeErrorDetailSchema.optional(),
@@ -62,6 +68,14 @@ export const BikeListQuerySchema = z
 export const BikeRentalHistoryQuerySchema = z
   .object({
     ...paginationQueryFields,
+    sortBy: BikeRentalHistorySortFieldSchema.optional().openapi({
+      description: "Sort field",
+      example: "endTime",
+    }),
+    sortDir: SortDirectionSchema.optional().openapi({
+      description: "Sort direction",
+      example: "desc",
+    }),
   })
   .openapi("BikeRentalHistoryQuery", {
     description: "Pagination for rental history",

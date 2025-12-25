@@ -1,4 +1,11 @@
+import * as mutations from "./mutations";
 import * as queries from "./queries";
+
+export {
+  createStation,
+  deleteStation,
+  updateStation,
+} from "./mutations";
 
 export {
   getAllStationsRevenue,
@@ -13,5 +20,6 @@ export {
 } from "./queries";
 
 export const stationsRoutes = {
+  ...mutations,
   ...queries,
 } as const;

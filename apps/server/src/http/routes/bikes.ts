@@ -82,24 +82,20 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const eff = withBikeDeps(getBikeDetailUseCase(id));
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
-    if (result._tag === "Right") {
-      const value = result.right;
-      return value._tag === "Some"
-        ? c.json<BikeSummary, 200>(toBikeSummary(value.value), 200)
-        : c.json<BikeNotFoundResponse, 404>(
-            {
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        right._tag === "Some"
+          ? c.json<BikeSummary, 200>(toBikeSummary(right.value), 200)
+          : c.json<BikeNotFoundResponse, 404>({
               error: bikeErrorMessages.BIKE_NOT_FOUND,
               details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-            },
-            404,
-          );
-    }
-    return c.json<BikeNotFoundResponse, 404>(
-      {
-        error: bikeErrorMessages.BIKE_NOT_FOUND,
-        details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-      },
-      404,
+            }, 404)),
+      Match.tag("Left", () =>
+        c.json<BikeNotFoundResponse, 404>({
+          error: bikeErrorMessages.BIKE_NOT_FOUND,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
+        }, 404)),
+      Match.exhaustive,
     );
   });
 
@@ -117,53 +113,37 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     );
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
-    if (result._tag === "Right") {
-      const value = result.right;
-      return value._tag === "Some"
-        ? c.json<BikeSummary, 200>(toBikeSummary(value.value), 200)
-        : c.json<BikeNotFoundResponse, 404>(
-            {
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        right._tag === "Some"
+          ? c.json<BikeSummary, 200>(toBikeSummary(right.value), 200)
+          : c.json<BikeNotFoundResponse, 404>({
               error: bikeErrorMessages.BIKE_NOT_FOUND,
               details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-            },
-            404,
-          );
-    }
-
-    return Match.value(result.left).pipe(
-      Match.tag("BikeCurrentlyRented", () =>
-        c.json<BikeUpdateConflictResponse, 400>(
-          {
+            }, 404)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("BikeCurrentlyRented", () =>
+          c.json<BikeUpdateConflictResponse, 400>({
             error: bikeErrorMessages.BIKE_CURRENTLY_RENTED,
             details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_RENTED },
-          },
-          400,
-        )),
-      Match.tag("BikeCurrentlyReserved", () =>
-        c.json<BikeUpdateConflictResponse, 400>(
-          {
+          }, 400)),
+        Match.tag("BikeCurrentlyReserved", () =>
+          c.json<BikeUpdateConflictResponse, 400>({
             error: bikeErrorMessages.BIKE_CURRENTLY_RESERVED,
             details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_RESERVED },
-          },
-          400,
-        )),
-      Match.tag("BikeNotFound", () =>
-        c.json<BikeNotFoundResponse, 404>(
-          {
+          }, 400)),
+        Match.tag("BikeNotFound", () =>
+          c.json<BikeNotFoundResponse, 404>({
             error: bikeErrorMessages.BIKE_NOT_FOUND,
             details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-          },
-          404,
-        )),
-      Match.orElse(() =>
-        c.json<BikeNotFoundResponse, 404>(
-          {
+          }, 404)),
+        Match.orElse(() =>
+          c.json<BikeNotFoundResponse, 404>({
             error: bikeErrorMessages.BIKE_NOT_FOUND,
             details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-          },
-          404,
-        ),
-      ),
+          }, 404)),
+      )),
+      Match.exhaustive,
     );
   });
 
@@ -173,21 +153,19 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const eff = withBikeDeps(reportBrokenBikeUseCase(id));
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
-    if (result._tag === "Right") {
-      const value = result.right;
-      return value._tag === "Some"
-        ? c.json<BikeSummary, 200>(toBikeSummary(value.value), 200)
-        : c.json<BikeNotFoundResponse, 404>(
-            {
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        right._tag === "Some"
+          ? c.json<BikeSummary, 200>(toBikeSummary(right.value), 200)
+          : c.json<BikeNotFoundResponse, 404>({
               error: bikeErrorMessages.BIKE_NOT_FOUND,
               details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-            },
-            404,
-          );
-    }
-
-    // No domain failures are expected today; bubble infrastructure errors.
-    throw result.left;
+            }, 404)),
+      Match.tag("Left", ({ left }) => {
+        throw left;
+      }),
+      Match.exhaustive,
+    );
   });
 
   app.openapi(bikes.deleteBike, async (c) => {
@@ -196,53 +174,37 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const eff = withBikeDeps(softDeleteBikeUseCase(id));
 
     const result = await Effect.runPromise(eff.pipe(Effect.either));
-    if (result._tag === "Right") {
-      const value = result.right;
-      return value._tag === "Some"
-        ? c.json<{ message: string }, 200>({ message: "Bike deleted" }, 200)
-        : c.json<BikeNotFoundResponse, 404>(
-            {
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        right._tag === "Some"
+          ? c.json<{ message: string }, 200>({ message: "Bike deleted" }, 200)
+          : c.json<BikeNotFoundResponse, 404>({
               error: bikeErrorMessages.BIKE_NOT_FOUND,
               details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-            },
-            404,
-          );
-    }
-
-    return Match.value(result.left).pipe(
-      Match.tag("BikeCurrentlyRented", () =>
-        c.json<BikeUpdateConflictResponse, 400>(
-          {
+            }, 404)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("BikeCurrentlyRented", () =>
+          c.json<BikeUpdateConflictResponse, 400>({
             error: bikeErrorMessages.BIKE_CURRENTLY_RENTED,
             details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_RENTED },
-          },
-          400,
-        )),
-      Match.tag("BikeCurrentlyReserved", () =>
-        c.json<BikeUpdateConflictResponse, 400>(
-          {
+          }, 400)),
+        Match.tag("BikeCurrentlyReserved", () =>
+          c.json<BikeUpdateConflictResponse, 400>({
             error: bikeErrorMessages.BIKE_CURRENTLY_RESERVED,
             details: { code: BikeErrorCodeSchema.enum.BIKE_CURRENTLY_RESERVED },
-          },
-          400,
-        )),
-      Match.tag("BikeNotFound", () =>
-        c.json<BikeNotFoundResponse, 404>(
-          {
+          }, 400)),
+        Match.tag("BikeNotFound", () =>
+          c.json<BikeNotFoundResponse, 404>({
             error: bikeErrorMessages.BIKE_NOT_FOUND,
             details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-          },
-          404,
-        )),
-      Match.orElse(() =>
-        c.json<BikeNotFoundResponse, 404>(
-          {
+          }, 404)),
+        Match.orElse(() =>
+          c.json<BikeNotFoundResponse, 404>({
             error: bikeErrorMessages.BIKE_NOT_FOUND,
             details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-          },
-          404,
-        ),
-      ),
+          }, 404)),
+      )),
+      Match.exhaustive,
     );
   });
 

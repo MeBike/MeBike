@@ -95,6 +95,34 @@ export const StationListQuerySchema = z
     description: "Optional filters for listing stations",
   });
 
+export const CreateStationBodySchema = z.object({
+  name: z.string().min(1),
+  address: z.string().min(1),
+  capacity: z.number().refine(Number.isFinite, {
+    message: "capacity must be a number",
+  }),
+  latitude: z.number().refine(Number.isFinite, {
+    message: "latitude must be a number",
+  }),
+  longitude: z.number().refine(Number.isFinite, {
+    message: "longitude must be a number",
+  }),
+}).openapi("CreateStationBody");
+
+export const UpdateStationBodySchema = z.object({
+  name: z.string().min(1).optional(),
+  address: z.string().min(1).optional(),
+  capacity: z.number().refine(Number.isFinite, {
+    message: "capacity must be a number",
+  }).optional(),
+  latitude: z.number().refine(Number.isFinite, {
+    message: "latitude must be a number",
+  }).optional(),
+  longitude: z.number().refine(Number.isFinite, {
+    message: "longitude must be a number",
+  }).optional(),
+}).openapi("UpdateStationBody");
+
 export const NearbyStationsQuerySchema = z
   .object({
     latitude: requiredNumberQuery("latitude", 10.762622),
