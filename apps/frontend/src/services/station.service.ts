@@ -91,7 +91,7 @@ export const stationService = {
     const response = await fetchHttpClient.mutation<GetDetailStationResponse>(
       print(GET_DETAIL_STATION),
       {
-        staionId: stationId,
+        stationId: stationId,
       }
     );
     return response;

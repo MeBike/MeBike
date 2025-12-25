@@ -19,7 +19,7 @@ export interface Station {
   status : "Active" | "Inactive";
 }
 export type GetAllStationsResponse = GraphQLMutationResponse<"Stations",Station[]>;
-export type GetDetailStationResponse = GraphQLMutationResponse<"Stations",Station>;
+export type GetDetailStationResponse = GraphQLMutationResponse<"Station",Station>;
 export type CreateStationResponse = GraphQLMutationResponse<"CreateStation">;
 export type UpdateStationStatusResponse = GraphQLMutationResponse<"UpdateStationStatus">; 
 export type UpdateStationResponse = GraphQLMutationResponse<"UpdateStation">;

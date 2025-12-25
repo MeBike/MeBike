@@ -33,7 +33,7 @@ export const useStationActions = ({
   name
 }: StationActionProps) => {
   const queryClient = useQueryClient();
-  const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
+  // const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
   const router = useRouter();
   const {
     refetch,
@@ -68,12 +68,12 @@ export const useStationActions = ({
       },  
     });
   }, [hasToken, stationId, useUpdateStatusStation]);  
-  const getReservationStats = useCallback(() => {
-    if (!hasToken || !stationId) {
-      return;
-    }
-    refetchStationReservationStats();
-  }, [refetchStationReservationStats, hasToken, stationId]);
+  // const getReservationStats = useCallback(() => {
+  //   if (!hasToken || !stationId) {
+  //     return;
+  //   }
+  //   refetchStationReservationStats();
+  // }, [refetchStationReservationStats, hasToken, stationId]);
   const getAllStations = useCallback(() => {
     if (!hasToken) {
       return;
@@ -161,30 +161,30 @@ export const useStationActions = ({
     },
     [hasToken, router, queryClient, useUpdateStation , page, limit, name]
   );
-  const { data: responseStationBikeRevenue, refetch: refetchStationBikeRevenue } = useGetStationBikeRevenue();
-  const getStationBikeRevenue = useCallback(() => {
-    if (!hasToken) {
-      return;
-    }
-    refetchStationBikeRevenue();
-  }, [refetchStationBikeRevenue, hasToken]);
-  const {data : responseStationRevenue , refetch : refetchStationRevenue } = useGetStationRevenue();
-  const getStationRevenue = useCallback(() => {
-    if (!hasToken) {
-      return;
-    }
-    refetchStationRevenue();
-  }, [refetchStationRevenue, hasToken]);
-  const { data : responseNearestAvailableBike , refetch : refetchNearestAvailableBike} = useGetNearestAvailableBike({
-    latitude: latitude ?? 0,
-    longitude: longitude ?? 0,
-  });
-  const getNearestAvailableBike = useCallback(() => {
-    if (!hasToken) {
-      return;
-    }
-    refetchNearestAvailableBike();
-  }, [refetchNearestAvailableBike, hasToken]);
+  // const { data: responseStationBikeRevenue, refetch: refetchStationBikeRevenue } = useGetStationBikeRevenue();
+  // const getStationBikeRevenue = useCallback(() => {
+  //   if (!hasToken) {
+  //     return;
+  //   }
+  //   refetchStationBikeRevenue();
+  // }, [refetchStationBikeRevenue, hasToken]);
+  // const {data : responseStationRevenue , refetch : refetchStationRevenue } = useGetStationRevenue();
+  // const getStationRevenue = useCallback(() => {
+  //   if (!hasToken) {
+  //     return;
+  //   }
+  //   refetchStationRevenue();
+  // }, [refetchStationRevenue, hasToken]);
+  // const { data : responseNearestAvailableBike , refetch : refetchNearestAvailableBike} = useGetNearestAvailableBike({
+  //   latitude: latitude ?? 0,
+  //   longitude: longitude ?? 0,
+  // });
+  // const getNearestAvailableBike = useCallback(() => {
+  //   if (!hasToken) {
+  //     return;
+  //   }
+  //   refetchNearestAvailableBike();
+  // }, [refetchNearestAvailableBike, hasToken]);
   return {
     getAllStations,
     getStationByID,
@@ -197,16 +197,16 @@ export const useStationActions = ({
     paginationStations: response?.data?.Stations.pagination,
     isLoadingGetAllStations: isLoading,
     fetchingStationID,
-    responseStationDetail,
+    responseStationDetail:responseStationDetail?.data,
     isLoadingGetStationByID: isLoadingStationID,
-    responseStationReservationStats,
-    getReservationStats,
-    responseStationBikeRevenue,
-    getStationBikeRevenue,
-    responseStationRevenue,
-    getStationRevenue,
-    responseNearestAvailableBike,
-    getNearestAvailableBike,
+    // responseStationReservationStats,
+    // getReservationStats,
+    // responseStationBikeRevenue,
+    // getStationBikeRevenue,
+    // responseStationRevenue,
+    // getStationRevenue,
+    // responseNearestAvailableBike,
+    // getNearestAvailableBike,
     updateStatusStation,
   };
 };

@@ -3,9 +3,10 @@ import { stationService } from "@services/station.service";
 import { QUERY_KEYS } from "@constants/queryKey";
 const fetchStationByID = async (id: string) => {
   try {
+    console.log(id);
     const response = await stationService.getStationById(id);
-    if (response.status === 200 && response.data?.data?.Stations) {
-      return response.data.data.Stations.data;
+    if (response.status === 200 && response.data?.data?.Station) {
+      return response.data.data.Station;
     }
     return null;
   } catch (error) {

@@ -36,10 +36,6 @@ export default function StationsPage() {
     responseStationDetail,
     isLoadingGetStationByID,
     updateStation,
-    getReservationStats,
-    responseStationReservationStats,
-    getStationRevenue,
-    responseStationRevenue
   } = useStationActions({
     hasToken: true,
     page: page,
@@ -93,7 +89,7 @@ export default function StationsPage() {
       console.log("stationID", stationID);
       getStationByID();
     }
-  }, [stationID, getStationByID, getReservationStats]);
+  }, [stationID, getStationByID]);
 
   useEffect(() => {
     if (isEditModalOpen && responseStationDetail) {
@@ -106,10 +102,6 @@ export default function StationsPage() {
       });
     }
   }, [isEditModalOpen, responseStationDetail, resetEdit]);
-
-  useEffect(() => {
-    getStationRevenue();
-  }, [getStationRevenue]);
 
   // MAP FOR CREATE MODAL
   useEffect(() => {
@@ -243,7 +235,7 @@ export default function StationsPage() {
             <Button onClick={() => setIsModalOpen(true)}>
               <Plus className="w-4 h-4 mr-2" /> Thêm trạm mới
             </Button>
-            <Button
+            {/* <Button
               variant="outline"
               onClick={() => {
                 if (!showRevenueReport) {
@@ -255,7 +247,7 @@ export default function StationsPage() {
               {showRevenueReport
                 ? "Ẩn báo cáo doanh thu"
                 : "Xem báo cáo doanh thu"}
-            </Button>
+            </Button> */}
           </div>
         </div>
 
@@ -268,7 +260,7 @@ export default function StationsPage() {
           </div>
         </div> */}
 
-        {showRevenueReport && responseStationRevenue?.result && (
+        {/* {showRevenueReport && responseStationRevenue?.result && (
           <div className="space-y-6 animate-in fade-in duration-500">
             <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border rounded-2xl p-8 shadow-lg">
               <div className="flex items-center justify-between mb-6">
@@ -293,7 +285,6 @@ export default function StationsPage() {
                 </div>
               </div>
 
-              {/* SUMMARY CARDS */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="group relative bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 rounded-xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
@@ -384,7 +375,6 @@ export default function StationsPage() {
                 </div>
               </div>
 
-              {/* STATIONS TABLE */}
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/20 rounded-full"></div>
@@ -401,7 +391,7 @@ export default function StationsPage() {
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                          {/* Station Info */}
+                          
                           <div className="flex-1 space-y-2">
                             <div className="flex items-center gap-3">
                               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -424,9 +414,9 @@ export default function StationsPage() {
                             </div>
                           </div>
 
-                          {/* Stats Grid */}
+                   
                           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-                            {/* Revenue */}
+                            
                             <div className="bg-gradient-to-br from-green-500/10 to-transparent rounded-lg p-4 border border-green-500/20">
                               <div className="flex items-center gap-2 mb-1">
                                 <svg className="w-3.5 h-3.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -439,7 +429,7 @@ export default function StationsPage() {
                               </p>
                             </div>
 
-                            {/* Rentals */}
+                            
                             <div className="bg-gradient-to-br from-blue-500/10 to-transparent rounded-lg p-4 border border-blue-500/20">
                               <div className="flex items-center gap-2 mb-1">
                                 <svg className="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -452,7 +442,7 @@ export default function StationsPage() {
                               </p>
                             </div>
 
-                            {/* Duration */}
+                           
                             <div className="bg-gradient-to-br from-purple-500/10 to-transparent rounded-lg p-4 border border-purple-500/20 col-span-2 lg:col-span-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <svg className="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -476,9 +466,9 @@ export default function StationsPage() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
-        {/* FILTERS */}
+  
         <div className="bg-card border border-border rounded-lg p-4 space-y-4">
           <div className="flex items-center gap-4">
             <input
