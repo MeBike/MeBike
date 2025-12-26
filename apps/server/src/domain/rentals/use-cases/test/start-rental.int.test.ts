@@ -38,8 +38,8 @@ describe("startRentalUseCase Integration", () => {
 
     depsLayer = Layer.mergeAll(
       Layer.succeed(Prisma, Prisma.make({ client })),
-      Layer.succeed(RentalRepository, rentalRepo),
-      Layer.succeed(BikeRepository, bikeRepo),
+      Layer.succeed(RentalRepository, RentalRepository.make(rentalRepo)),
+      Layer.succeed(BikeRepository, BikeRepository.make(bikeRepo)),
       Layer.succeed(WalletRepository, walletRepo),
     );
   }, 60000);

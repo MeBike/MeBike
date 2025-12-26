@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Match, Option } from "effect";
+import { Effect, Match, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient, Prisma as PrismaTypes, RentalStatus } from "generated/prisma/client";
@@ -433,15 +433,15 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
   };
 }
 
-export class RentalRepository extends Context.Tag("RentalRepository")<
-  RentalRepository,
-  RentalRepo
->() {}
+export class RentalRepository extends Effect.Service<RentalRepository>()(
+  "RentalRepository",
+  {
+    effect: Effect.gen(function* () {
+      const { client } = yield* Prisma;
+      return makeRentalRepository(client);
+    }),
+    dependencies: [Prisma.Default],
+  },
+) {}
 
-export const RentalRepositoryLive = Layer.effect(
-  RentalRepository,
-  Effect.gen(function* () {
-    const { client } = yield* Prisma;
-    return makeRentalRepository(client);
-  }),
-);
+export const RentalRepositoryLive = RentalRepository.Default;

@@ -1,6 +1,6 @@
 import type { Option } from "effect";
 
-import { Context, Effect, Layer } from "effect";
+import { Effect } from "effect";
 
 import type { PageRequest, PageResult } from "../../shared/pagination";
 import type {
@@ -59,45 +59,45 @@ export type UserService = {
   ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
 };
 
-export class UserServiceTag extends Context.Tag("UserService")<
-  UserServiceTag,
-  UserService
->() {}
+export class UserServiceTag extends Effect.Service<UserServiceTag>()(
+  "UserService",
+  {
+    effect: Effect.gen(function* () {
+      const repo = yield* UserRepository;
 
-export const UserServiceLive = Layer.effect(
-  UserServiceTag,
-  Effect.gen(function* () {
-    const repo = yield* UserRepository;
+      const service: UserService = {
+        getById: id =>
+          repo.findById(id),
 
-    const service: UserService = {
-      getById: id =>
-        repo.findById(id),
+        getByEmail: email =>
+          repo.findByEmail(email),
 
-      getByEmail: email =>
-        repo.findByEmail(email),
+        create: input =>
+          repo.createUser(input),
 
-      create: input =>
-        repo.createUser(input),
+        updateProfile: (id, patch) =>
+          repo.updateProfile(id, patch),
 
-      updateProfile: (id, patch) =>
-        repo.updateProfile(id, patch),
+        updateAdminById: (id, patch) =>
+          repo.updateAdminById(id, patch),
 
-      updateAdminById: (id, patch) =>
-        repo.updateAdminById(id, patch),
+        updatePassword: (id, passwordHash) =>
+          repo.updatePassword(id, passwordHash),
 
-      updatePassword: (id, passwordHash) =>
-        repo.updatePassword(id, passwordHash),
+        markVerified: id =>
+          repo.markVerified(id),
 
-      markVerified: id =>
-        repo.markVerified(id),
+        listWithOffset: (filter, pageReq) =>
+          repo.listWithOffset(filter, pageReq),
 
-      listWithOffset: (filter, pageReq) =>
-        repo.listWithOffset(filter, pageReq),
+        searchByQuery: query =>
+          repo.searchByQuery(query),
+      };
 
-      searchByQuery: query =>
-        repo.searchByQuery(query),
-    };
+      return service;
+    }),
+    dependencies: [UserRepository.Default],
+  },
+) {}
 
-    return service;
-  }),
-);
+export const UserServiceLive = UserServiceTag.Default;

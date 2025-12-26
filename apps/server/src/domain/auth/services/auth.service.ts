@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { Context, Effect, Layer, Option } from "effect";
+import { Effect, Option } from "effect";
 import jwt from "jsonwebtoken";
 import { uuidv7 } from "uuidv7";
 
@@ -57,11 +57,6 @@ export type AuthService = {
     newPassword: string;
   }) => Effect.Effect<void, InvalidOtp>;
 };
-
-export class AuthServiceTag extends Context.Tag("AuthService")<
-  AuthServiceTag,
-  AuthService
->() {}
 
 function recordSessionIssued(
   authEventRepo: AuthEventRepo,
@@ -122,251 +117,259 @@ function verifyRefreshToken(token: string): Effect.Effect<
   );
 }
 
-export const AuthServiceLive = Layer.effect(
-  AuthServiceTag,
-  Effect.gen(function* () {
-    const authRepo = yield* AuthRepository;
-    const authEventRepo = yield* AuthEventRepository;
-    const userRepo = yield* UserRepository;
-    const { client } = yield* Prisma;
+export class AuthServiceTag extends Effect.Service<AuthServiceTag>()(
+  "AuthService",
+  {
+    effect: Effect.gen(function* () {
+      const authRepo = yield* AuthRepository;
+      const authEventRepo = yield* AuthEventRepository;
+      const userRepo = yield* UserRepository;
+      const { client } = yield* Prisma;
 
-    const sendVerifyEmail: AuthService["sendVerifyEmail"] = ({ userId, email: addr, fullName }) =>
-      Effect.gen(function* () {
-        const otp = generateOtp();
-        const expiresAt = new Date(Date.now() + VERIFY_OTP_TTL_MS);
-        const record: EmailOtpRecord = {
-          userId,
-          email: addr,
-          kind: "verify-email",
-          otp,
-          expiresAt,
-        };
+      const sendVerifyEmail: AuthService["sendVerifyEmail"] = ({ userId, email: addr, fullName }) =>
+        Effect.gen(function* () {
+          const otp = generateOtp();
+          const expiresAt = new Date(Date.now() + VERIFY_OTP_TTL_MS);
+          const record: EmailOtpRecord = {
+            userId,
+            email: addr,
+            kind: "verify-email",
+            otp,
+            expiresAt,
+          };
 
-        yield* authRepo.saveEmailOtp(record).pipe(
+          yield* authRepo.saveEmailOtp(record).pipe(
+            Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+          );
+
+          const expiresInMinutes = Math.max(1, Math.ceil(VERIFY_OTP_TTL_MS / 60000));
+          // TODO: use templated email content and map enqueue failures to domain errors if needed
+          yield* Effect.tryPromise({
+            try: () =>
+              client.$transaction(tx =>
+                enqueueOutboxJob(tx, {
+                  type: JobTypes.EmailSend,
+                  payload: {
+                    version: 1,
+                    to: addr,
+                    kind: "auth.verifyOtp",
+                    fullName,
+                    otp,
+                    expiresInMinutes,
+                  },
+                  runAt: new Date(),
+                })),
+            catch: err => err as unknown,
+          }).pipe(Effect.catchAll(err => Effect.die(err)));
+        });
+
+      const loginWithPassword: AuthService["loginWithPassword"] = ({ email: addr, password }) =>
+        Effect.gen(function* () {
+          const userOpt = yield* userRepo.findByEmail(addr).pipe(
+            Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+          );
+          if (Option.isNone(userOpt)) {
+            yield* Effect.promise(() =>
+              bcrypt.compare(password, "$2b$10$C/.BkQrbVHwLsNweXs55we5OK4N9AYaqCrxrDG3lqF7DRgt21FiSG"),
+            ).pipe(Effect.ignore);
+            return yield* Effect.fail(new InvalidCredentials({}));
+          }
+          const user = userOpt.value;
+
+          const ok = yield* Effect.promise(() => bcrypt.compare(password, user.passwordHash));
+
+          if (!ok) {
+            return yield* Effect.fail(new InvalidCredentials({}));
+          }
+
+          const sessionId = uuidv7();
+          const tokens = makeTokensForUser(user, sessionId);
+          const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
+
+          yield* authRepo.saveSession(session).pipe(
+            Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+          );
+
+          yield* recordSessionIssued(authEventRepo, user.id);
+
+          return tokens;
+        });
+
+      const refreshTokens: AuthService["refreshTokens"] = ({ refreshToken }) =>
+        Effect.gen(function* () {
+          const payload = yield* verifyRefreshToken(refreshToken);
+          const sessionId = payload.jti ?? refreshToken;
+
+          const sessionOpt = yield* authRepo.getSession(sessionId).pipe(
+            Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+          );
+          if (Option.isNone(sessionOpt)) {
+            return yield* Effect.fail(new InvalidRefreshToken({}));
+          }
+          const session = sessionOpt.value;
+
+          if (session.refreshToken !== refreshToken || session.expiresAt.getTime() <= Date.now()) {
+            return yield* Effect.fail(new InvalidRefreshToken({}));
+          }
+
+          const userOpt = yield* userRepo.findById(session.userId).pipe(
+            Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+          );
+          if (Option.isNone(userOpt)) {
+            return yield* Effect.fail(new InvalidRefreshToken({}));
+          }
+          const user = userOpt.value;
+
+          const newSessionId = uuidv7();
+          const tokens = makeTokensForUser(user, newSessionId);
+          const newSession = makeSessionFromRefreshToken(
+            session.userId,
+            tokens.refreshToken,
+            newSessionId,
+          );
+
+          yield* authRepo.saveSession(newSession).pipe(
+            Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+          );
+          yield* recordSessionIssued(authEventRepo, user.id);
+          yield* authRepo.deleteSession(sessionId).pipe(
+            Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+          );
+
+          return tokens;
+        });
+
+      const logout: AuthService["logout"] = ({ sessionId }) =>
+        authRepo.deleteSession(sessionId).pipe(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );
 
-        const expiresInMinutes = Math.max(1, Math.ceil(VERIFY_OTP_TTL_MS / 60000));
-        // TODO: use templated email content and map enqueue failures to domain errors if needed
-        yield* Effect.tryPromise({
-          try: () =>
-            client.$transaction(tx =>
-              enqueueOutboxJob(tx, {
-                type: JobTypes.EmailSend,
-                payload: {
-                  version: 1,
-                  to: addr,
-                  kind: "auth.verifyOtp",
-                  fullName,
-                  otp,
-                  expiresInMinutes,
-                },
-                runAt: new Date(),
-              })),
-          catch: err => err as unknown,
-        }).pipe(Effect.catchAll(err => Effect.die(err)));
-      });
-
-    const loginWithPassword: AuthService["loginWithPassword"] = ({ email: addr, password }) =>
-      Effect.gen(function* () {
-        const userOpt = yield* userRepo.findByEmail(addr).pipe(
-          Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-        );
-        if (Option.isNone(userOpt)) {
-          yield* Effect.promise(() =>
-            bcrypt.compare(password, "$2b$10$C/.BkQrbVHwLsNweXs55we5OK4N9AYaqCrxrDG3lqF7DRgt21FiSG"),
-          ).pipe(Effect.ignore);
-          return yield* Effect.fail(new InvalidCredentials({}));
-        }
-        const user = userOpt.value;
-
-        const ok = yield* Effect.promise(() => bcrypt.compare(password, user.passwordHash));
-
-        if (!ok) {
-          return yield* Effect.fail(new InvalidCredentials({}));
-        }
-
-        const sessionId = uuidv7();
-        const tokens = makeTokensForUser(user, sessionId);
-        const session = makeSessionFromRefreshToken(user.id, tokens.refreshToken, sessionId);
-
-        yield* authRepo.saveSession(session).pipe(
+      const logoutAll: AuthService["logoutAll"] = ({ userId }) =>
+        authRepo.deleteAllSessionsForUser(userId).pipe(
           Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
         );
 
-        yield* recordSessionIssued(authEventRepo, user.id);
+      const verifyEmailOtp: AuthService["verifyEmailOtp"] = ({ userId, otp }) =>
+        Effect.gen(function* () {
+          const recordOpt = yield* authRepo.consumeEmailOtp({
+            userId,
+            kind: "verify-email",
+          }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
 
-        return tokens;
-      });
+          if (Option.isNone(recordOpt)) {
+            return yield* Effect.fail(new InvalidOtp({}));
+          }
+          const record = recordOpt.value;
 
-    const refreshTokens: AuthService["refreshTokens"] = ({ refreshToken }) =>
-      Effect.gen(function* () {
-        const payload = yield* verifyRefreshToken(refreshToken);
-        const sessionId = payload.jti ?? refreshToken;
+          if (record.otp !== otp || isOtpExpired(record.expiresAt)) {
+            return yield* Effect.fail(new InvalidOtp({}));
+          }
 
-        const sessionOpt = yield* authRepo.getSession(sessionId).pipe(
-          Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
-        );
-        if (Option.isNone(sessionOpt)) {
-          return yield* Effect.fail(new InvalidRefreshToken({}));
-        }
-        const session = sessionOpt.value;
+          const updated = yield* userRepo.markVerified(userId).pipe(
+            Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+          );
+          if (Option.isNone(updated)) {
+            return yield* Effect.fail(new InvalidOtp({}));
+          }
+        });
 
-        if (session.refreshToken !== refreshToken || session.expiresAt.getTime() <= Date.now()) {
-          return yield* Effect.fail(new InvalidRefreshToken({}));
-        }
+      const sendResetPassword: AuthService["sendResetPassword"] = ({ email: addr }) =>
+        Effect.gen(function* () {
+          const userOpt = yield* userRepo.findByEmail(addr).pipe(
+            Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+          );
+          if (Option.isNone(userOpt)) {
+            return;
+          }
+          const user = userOpt.value;
 
-        const userOpt = yield* userRepo.findById(session.userId).pipe(
-          Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-        );
-        if (Option.isNone(userOpt)) {
-          return yield* Effect.fail(new InvalidRefreshToken({}));
-        }
-        const user = userOpt.value;
+          const otp = generateOtp();
+          const expiresAt = new Date(Date.now() + RESET_OTP_TTL_MS);
+          const record: EmailOtpRecord = {
+            userId: user.id,
+            email: addr,
+            kind: "reset-password",
+            otp,
+            expiresAt,
+          };
 
-        const newSessionId = uuidv7();
-        const tokens = makeTokensForUser(user, newSessionId);
-        const newSession = makeSessionFromRefreshToken(
-          session.userId,
-          tokens.refreshToken,
-          newSessionId,
-        );
+          yield* authRepo.saveEmailOtp(record).pipe(
+            Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+          );
 
-        yield* authRepo.saveSession(newSession).pipe(
-          Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
-        );
-        yield* recordSessionIssued(authEventRepo, user.id);
-        yield* authRepo.deleteSession(sessionId).pipe(
-          Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
-        );
+          const expiresInMinutes = Math.max(1, Math.ceil(RESET_OTP_TTL_MS / 60000));
+          // TODO: use templated email content and map enqueue failures to domain errors if needed I wonder if this thing
+          // could fail we are writing to outbox after all
+          yield* Effect.tryPromise({
+            try: () =>
+              client.$transaction(tx =>
+                enqueueOutboxJob(tx, {
+                  type: JobTypes.EmailSend,
+                  payload: {
+                    version: 1,
+                    to: addr,
+                    kind: "auth.resetOtp",
+                    fullName: user.fullname,
+                    otp,
+                    expiresInMinutes,
+                  },
+                  runAt: new Date(),
+                })),
+            catch: err => err as unknown,
+          }).pipe(Effect.catchAll(err => Effect.die(err)));
+        });
 
-        return tokens;
-      });
+      const resetPassword: AuthService["resetPassword"] = ({ email: addr, otp, newPassword }) =>
+        Effect.gen(function* () {
+          const userOpt = yield* userRepo.findByEmail(addr).pipe(
+            Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+          );
+          if (Option.isNone(userOpt)) {
+            return yield* Effect.fail(new InvalidOtp({}));
+          }
+          const user = userOpt.value;
 
-    const logout: AuthService["logout"] = ({ sessionId }) =>
-      authRepo.deleteSession(sessionId).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
-      );
+          const recordOpt = yield* authRepo.consumeEmailOtp({
+            userId: user.id,
+            kind: "reset-password",
+          }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
 
-    const logoutAll: AuthService["logoutAll"] = ({ userId }) =>
-      authRepo.deleteAllSessionsForUser(userId).pipe(
-        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
-      );
+          if (Option.isNone(recordOpt)) {
+            return yield* Effect.fail(new InvalidOtp({}));
+          }
 
-    const verifyEmailOtp: AuthService["verifyEmailOtp"] = ({ userId, otp }) =>
-      Effect.gen(function* () {
-        const recordOpt = yield* authRepo.consumeEmailOtp({
-          userId,
-          kind: "verify-email",
-        }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
+          const record = recordOpt.value;
+          if (record.email !== addr || record.otp !== otp || isOtpExpired(record.expiresAt)) {
+            return yield* Effect.fail(new InvalidOtp({}));
+          }
 
-        if (Option.isNone(recordOpt)) {
-          return yield* Effect.fail(new InvalidOtp({}));
-        }
-        const record = recordOpt.value;
+          const hash = yield* Effect.promise(() => bcrypt.hash(newPassword, 10));
+          const updated = yield* userRepo.updatePassword(user.id, hash).pipe(
+            Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+          );
+          if (Option.isNone(updated)) {
+            return yield* Effect.fail(new InvalidOtp({}));
+          }
+        });
 
-        if (record.otp !== otp || isOtpExpired(record.expiresAt)) {
-          return yield* Effect.fail(new InvalidOtp({}));
-        }
+      return {
+        loginWithPassword,
+        refreshTokens,
+        logout,
+        logoutAll,
+        sendVerifyEmail,
+        verifyEmailOtp,
+        sendResetPassword,
+        resetPassword,
+      };
+    }),
+    dependencies: [
+      AuthRepository.Default,
+      AuthEventRepository.Default,
+      UserRepository.Default,
+      Prisma.Default,
+    ],
+  },
+) {}
 
-        const updated = yield* userRepo.markVerified(userId).pipe(
-          Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-        );
-        if (Option.isNone(updated)) {
-          return yield* Effect.fail(new InvalidOtp({}));
-        }
-      });
-
-    const sendResetPassword: AuthService["sendResetPassword"] = ({ email: addr }) =>
-      Effect.gen(function* () {
-        const userOpt = yield* userRepo.findByEmail(addr).pipe(
-          Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-        );
-        if (Option.isNone(userOpt)) {
-          return;
-        }
-        const user = userOpt.value;
-
-        const otp = generateOtp();
-        const expiresAt = new Date(Date.now() + RESET_OTP_TTL_MS);
-        const record: EmailOtpRecord = {
-          userId: user.id,
-          email: addr,
-          kind: "reset-password",
-          otp,
-          expiresAt,
-        };
-
-        yield* authRepo.saveEmailOtp(record).pipe(
-          Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
-        );
-
-        const expiresInMinutes = Math.max(1, Math.ceil(RESET_OTP_TTL_MS / 60000));
-        // TODO: use templated email content and map enqueue failures to domain errors if needed I wonder if this thing
-        // could fail we are writing to outbox after all
-        yield* Effect.tryPromise({
-          try: () =>
-            client.$transaction(tx =>
-              enqueueOutboxJob(tx, {
-                type: JobTypes.EmailSend,
-                payload: {
-                  version: 1,
-                  to: addr,
-                  kind: "auth.resetOtp",
-                  fullName: user.fullname,
-                  otp,
-                  expiresInMinutes,
-                },
-                runAt: new Date(),
-              })),
-          catch: err => err as unknown,
-        }).pipe(Effect.catchAll(err => Effect.die(err)));
-      });
-
-    const resetPassword: AuthService["resetPassword"] = ({ email: addr, otp, newPassword }) =>
-      Effect.gen(function* () {
-        const userOpt = yield* userRepo.findByEmail(addr).pipe(
-          Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-        );
-        if (Option.isNone(userOpt)) {
-          return yield* Effect.fail(new InvalidOtp({}));
-        }
-        const user = userOpt.value;
-
-        const recordOpt = yield* authRepo.consumeEmailOtp({
-          userId: user.id,
-          kind: "reset-password",
-        }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
-
-        if (Option.isNone(recordOpt)) {
-          return yield* Effect.fail(new InvalidOtp({}));
-        }
-
-        const record = recordOpt.value;
-        if (record.email !== addr || record.otp !== otp || isOtpExpired(record.expiresAt)) {
-          return yield* Effect.fail(new InvalidOtp({}));
-        }
-
-        const hash = yield* Effect.promise(() => bcrypt.hash(newPassword, 10));
-        const updated = yield* userRepo.updatePassword(user.id, hash).pipe(
-          Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
-        );
-        if (Option.isNone(updated)) {
-          return yield* Effect.fail(new InvalidOtp({}));
-        }
-      });
-
-    const service: AuthService = {
-      loginWithPassword,
-      refreshTokens,
-      logout,
-      logoutAll,
-      sendVerifyEmail,
-      verifyEmailOtp,
-      sendResetPassword,
-      resetPassword,
-    };
-
-    return service;
-  }),
-);
+export const AuthServiceLive = AuthServiceTag.Default;

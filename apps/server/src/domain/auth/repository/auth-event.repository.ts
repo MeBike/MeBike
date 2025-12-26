@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Effect } from "effect";
 
 import type { PrismaClient } from "generated/prisma/client";
 
@@ -12,10 +12,16 @@ export type AuthEventRepo = {
   ) => Effect.Effect<void, AuthEventRepositoryError>;
 };
 
-export class AuthEventRepository extends Context.Tag("AuthEventRepository")<
-  AuthEventRepository,
-  AuthEventRepo
->() {}
+export class AuthEventRepository extends Effect.Service<AuthEventRepository>()(
+  "AuthEventRepository",
+  {
+    effect: Effect.gen(function* () {
+      const { client } = yield* Prisma;
+      return makeAuthEventRepository(client);
+    }),
+    dependencies: [Prisma.Default],
+  },
+) {}
 
 export function makeAuthEventRepository(client: PrismaClient): AuthEventRepo {
   return {
@@ -37,10 +43,4 @@ export function makeAuthEventRepository(client: PrismaClient): AuthEventRepo {
   };
 }
 
-export const AuthEventRepositoryLive = Layer.effect(
-  AuthEventRepository,
-  Effect.gen(function* () {
-    const { client } = yield* Prisma;
-    return makeAuthEventRepository(client);
-  }),
-);
+export const AuthEventRepositoryLive = AuthEventRepository.Default;

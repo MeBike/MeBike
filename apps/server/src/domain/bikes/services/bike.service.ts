@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option } from "effect";
+import { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { BikeStatus } from "generated/prisma/client";
@@ -51,24 +51,20 @@ export type BikeService = {
   >;
 };
 
-export class BikeServiceTag extends Context.Tag("BikeService")<
-  BikeServiceTag,
-  BikeService
->() {}
+export class BikeServiceTag extends Effect.Service<BikeServiceTag>()(
+  "BikeService",
+  {
+    effect: Effect.gen(function* () {
+      const repo = yield* BikeRepository;
+      const { client } = yield* Prisma;
 
-export const BikeServiceLive = Layer.effect(
-  BikeServiceTag,
-  Effect.gen(function* () {
-    const repo = yield* BikeRepository;
-    const { client } = yield* Prisma;
-
-    const service: BikeService = {
-      listBikes: (filter, pageReq) =>
-        repo
-          .listByStationWithOffset(filter.stationId, filter, pageReq)
-          .pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-          ),
+      const service: BikeService = {
+        listBikes: (filter, pageReq) =>
+          repo
+            .listByStationWithOffset(filter.stationId, filter, pageReq)
+            .pipe(
+              Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+            ),
 
       getBikeDetail: (bikeId: string) =>
         repo.getById(bikeId).pipe(
@@ -181,7 +177,11 @@ export const BikeServiceLive = Layer.effect(
           );
           return updated;
         }),
-    };
-    return service;
-  }),
-);
+      };
+      return service;
+    }),
+    dependencies: [BikeRepository.Default, Prisma.Default],
+  },
+) {}
+
+export const BikeServiceLive = BikeServiceTag.Default;

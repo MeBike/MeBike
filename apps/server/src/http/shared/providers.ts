@@ -83,7 +83,7 @@ const WalletReposLive = WalletRepositoryLive.pipe(
 
 const WalletServiceLayer = WalletServiceLive.pipe(
   Layer.provide(WalletReposLive),
-)
+);
 
 export const WalletDepsLive = Layer.mergeAll(
   WalletReposLive,
@@ -96,10 +96,14 @@ export const RentalDepsLive = Layer.mergeAll(
   RentalServiceLayer,
   BikeDepsLive,
   WalletDepsLive,
+  Prisma.Default,
 );
 
 export function withRentalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(RentalDepsLive));
+  return eff.pipe(
+    Effect.provide(RentalDepsLive),
+    Effect.provide(Prisma.Default),
+  );
 }
 
 const SupplierReposLive = SupplierRepositoryLive.pipe(
@@ -205,7 +209,10 @@ export const RatingDepsLive = Layer.mergeAll(
 );
 
 export function withRatingDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
-  return eff.pipe(Effect.provide(RatingDepsLive));
+  return eff.pipe(
+    Effect.provide(RatingDepsLive),
+    Effect.provide(Prisma.Default),
+  );
 }
 
 export function withWalletDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {

@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Option } from "effect";
+import { Effect, Option } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
@@ -80,10 +80,16 @@ export type UserRepo = {
   ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
 };
 
-export class UserRepository extends Context.Tag("UserRepository")<
-  UserRepository,
-  UserRepo
->() {}
+export class UserRepository extends Effect.Service<UserRepository>()(
+  "UserRepository",
+  {
+    effect: Effect.gen(function* () {
+      const { client } = yield* Prisma;
+      return makeUserRepository(client);
+    }),
+    dependencies: [Prisma.Default],
+  },
+) {}
 
 export function makeUserRepository(client: PrismaClient): UserRepo {
   const toOrderBy = (
@@ -478,10 +484,4 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
   };
 }
 
-export const UserRepositoryLive = Layer.effect(
-  UserRepository,
-  Effect.gen(function* () {
-    const { client } = yield* Prisma;
-    return makeUserRepository(client);
-  }),
-);
+export const UserRepositoryLive = UserRepository.Default;
