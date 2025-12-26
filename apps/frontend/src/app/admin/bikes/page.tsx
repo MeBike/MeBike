@@ -14,6 +14,7 @@ import { useSupplierActions } from "@/hooks/use-supplier";
 import { getStatusColor } from "@utils/bike-status";
 import { formatDateUTC } from "@/utils/formatDateTime";
 import { formatToVNTime } from "@/lib/formateVNDate";
+import { UpdateBikeSchemaFormData } from "@/schemas/bikeSchema";
 export default function BikesPage() {
   const [detailId, setDetailId] = useState<string>("");
   const [editId, setEditId] = useState<string>("");
@@ -23,9 +24,9 @@ export default function BikesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newBike, setNewBike] = useState({
-    station_id: "",
-    supplier_id: "",
-    chip_id: "",
+    stationid: "",
+    supplierid: "",
+    chipid: "",
   });
   // const {responseStationBikeRevenue, getStationBikeRevenue} = useStationActions({ hasToken: true });
   const [editBike, setEditBike] = useState<Bike | null>(null);
@@ -84,13 +85,11 @@ export default function BikesPage() {
     setIsDetailModalOpen(true);
   }
   const handleEditBike = (bikeId: string) => {
-    if (editId === bikeId) {
-      getBikeByID();
-      setIsEditModalOpen(true); 
-    } else {
-      setEditId(bikeId);
-    }
-  }
+  // Set the bike ID to edit and fetch its details
+  setEditId(bikeId);
+  getBikeByID();
+  // The useEffect will open the edit modal when the data is loaded
+};
   useEffect(() => {
     getBikes();
     console.log(data?.data?.Bikes.data);
@@ -101,31 +100,34 @@ export default function BikesPage() {
       setIsEditModalOpen(true);
     }
   }, [isLoadingDetail, detailBike, editId]);
-  // const handleUpdateBike = () => {
-  //   if (!editBike) return;
-  //   updateBike({
-  //     station_id: editBike.station_id,
-  //     supplier_id: editBike.supplier_id || "",
-  //     status: editBike.status,
-  //     chip_id: editBike.chip_id,
-  //   }, editBike._id);
-  //   setIsEditModalOpen(false);
-  // };
+  const handleUpdateBike = () => {
+    if (!editBike) return;
+    updateBike(
+      {
+        station_id: editBike.station.id,
+        supplier_id: editBike.supplier.id,
+        status: editBike.status,
+        chip_id: editBike.chipId,
+      },
+      detailId
+    );
+    setIsEditModalOpen(false);
+  };
   const handleCreateBike = () => {
-    if (!newBike.station_id || !newBike.chip_id) {
+    if (!newBike.stationid || !newBike.chipid) {
       alert("Vui lòng điền đầy đủ thông tin");
       return;
     }
     createBike({
-      station_id: newBike.station_id,
-      supplier_id: newBike.supplier_id,
-      chip_id: newBike.chip_id,
+      station_id: newBike.stationid,
+      supplier_id: newBike.supplierid,
+      chip_id: newBike.chipid,
     });
     setIsCreateModalOpen(false);
     setNewBike({
-      station_id: "",
-      supplier_id: "",
-      chip_id: "",
+      stationid: "",
+      supplierid: "",
+      chipid: "",
     });
   };
   useEffect(() => {
@@ -750,9 +752,9 @@ export default function BikesPage() {
                     Trạm xe
                   </label>
                   <select
-                    value={newBike.station_id}
+                    value={newBike.stationid}
                     onChange={(e) =>
-                      setNewBike({ ...newBike, station_id: e.target.value })
+                      setNewBike({ ...newBike, stationid: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
@@ -769,9 +771,9 @@ export default function BikesPage() {
                     Nhà cung cấp
                   </label>
                   <select
-                    value={newBike.supplier_id}
+                    value={newBike.supplierid}
                     onChange={(e) =>
-                      setNewBike({ ...newBike, supplier_id: e.target.value })
+                      setNewBike({ ...newBike, supplierid: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
@@ -790,9 +792,9 @@ export default function BikesPage() {
                   </label>
                   <input
                     type="text"
-                    value={newBike.chip_id}
+                    value={newBike.chipid}
                     onChange={(e) =>
-                      setNewBike({ ...newBike, chip_id: e.target.value })
+                      setNewBike({ ...newBike, chipid: e.target.value })
                     }
                     placeholder="Nhập Chip ID"
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
@@ -1142,16 +1144,31 @@ export default function BikesPage() {
                 </div>
               )}
 
-              <Button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="w-full mt-6"
-              >
-                Đóng
-              </Button>
+              <div className="flex gap-2">
+                <div className="w-full">
+                  <Button
+                    onClick={() => setIsDetailModalOpen(false)}
+                    className="w-full mt-6"
+                  >
+                    Đóng
+                  </Button>
+                </div>
+                <div className="w-full">
+                  <Button
+                  onClick={() => {
+                    setIsEditModalOpen(true);
+                    setEditBike(detailBike);
+                  }}
+                  className="w-full mt-6"
+                >
+                  Cập nhật
+                </Button>
+                </div>
+              </div>
             </div>
           </div>
         )}
-        {/* {isEditModalOpen && detailBike && (
+        {isEditModalOpen && editBike && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
               <h2 className="text-xl font-bold text-foreground mb-4">
@@ -1164,18 +1181,24 @@ export default function BikesPage() {
                     Trạm xe
                   </label>
                   <select
-                    value={editBike?.station_id || ""}
+                    value={editBike?.station.id || ""}
                     onChange={(e) =>
                       setEditBike(
                         editBike
-                          ? { ...editBike, station_id: e.target.value }
+                          ? {
+                              ...editBike,
+                              station: {
+                                ...editBike.station,
+                                id: e.target.value,
+                              },
+                            }
                           : null
                       )
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
                     {stations.map((station) => (
-                      <option key={station._id} value={station._id}>
+                      <option key={station.id} value={station.id}>
                         {station.name}
                       </option>
                     ))}
@@ -1187,19 +1210,24 @@ export default function BikesPage() {
                     Nhà cung cấp
                   </label>
                   <select
-                    value={editBike?.supplier_id || ""}
+                    value={editBike?.supplier.id || ""}
                     onChange={(e) =>
                       setEditBike(
                         editBike
-                          ? { ...editBike, supplier_id: e.target.value }
+                          ? {
+                              ...editBike,
+                              supplier: {
+                                ...editBike.supplier,
+                                id: e.target.value,
+                              },
+                            }
                           : null
                       )
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
-                    <option value="">Không có</option>
-                    {allSupplier?.data.map((supplier) => (
-                      <option key={supplier._id} value={supplier._id}>
+                    {allSupplier?.map((supplier) => (
+                      <option key={supplier.id} value={supplier.id}>
                         {supplier.name}
                       </option>
                     ))}
@@ -1212,43 +1240,16 @@ export default function BikesPage() {
                   </label>
                   <input
                     type="text"
-                    value={editBike?.chip_id || ""}
+                    value={editBike?.chipId || ""}
                     onChange={(e) =>
                       setEditBike(
                         editBike
-                          ? { ...editBike, chip_id: e.target.value }
+                          ? { ...editBike, chipId: e.target.value }
                           : null
                       )
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Trạng thái
-                  </label>
-                  <select
-                    value={editBike?.status || ""}
-                    onChange={(e) =>
-                      setEditBike(
-                        editBike
-                          ? {
-                              ...editBike,
-                              status: e.target.value as BikeStatus,
-                            }
-                          : null
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  >
-                    <option value="CÓ SẴN">Có sẵn</option>
-                    <option value="ĐANG ĐƯỢC THUÊ">Đang được thuê</option>
-                    <option value="BỊ HỎNG">Bị hỏng</option>
-                    <option value="ĐÃ ĐẶT TRƯỚC">Đã đặt trước</option>
-                    <option value="ĐANG BẢO TRÌ">Đang bảo trì</option>
-                    <option value="KHÔNG CÓ SẴN">Không có sẵn</option>
-                  </select>
                 </div>
               </div>
 
@@ -1266,7 +1267,7 @@ export default function BikesPage() {
               </div>
             </div>
           </div>
-        )} */}
+        )}
       </div>
     );
 }

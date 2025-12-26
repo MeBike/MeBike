@@ -68,6 +68,9 @@ export interface Bike {
   createdAt: string;
   updatedAt: string;
 }
+export interface UpdateBike {
+
+}
 export type DetailBike = {
   id: string;
   chipId: string;

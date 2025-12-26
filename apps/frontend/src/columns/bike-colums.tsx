@@ -1,26 +1,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, RefreshCw, Pencil } from "lucide-react";
 import type { Bike, BikeStatus, Station, Supplier } from "@/types";
-import { formatDateUTC } from "@/utils/formatDateTime";
+import { getStatusColor } from "@/utils/bike-status";
 import { formatDateOnlyVN } from "@/utils/dateFormat";
-export const getStatusColor = (status: BikeStatus) => {
-  switch (status) {
-    case "Booked":
-      return "bg-yellow-100 text-yellow-800";
-    case "Maintained":
-      return "bg-blue-100 text-blue-800";
-    case "Broken":
-      return "bg-red-100 text-red-800";
-    case "Available":
-      return "bg-green-100 text-green-800";
-    case "Reserved":
-      return "bg-yellow-100 text-yellow-800";
-    case "Unavailable":
-      return "bg-gray-100 text-gray-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
+
 export const shortenId = (id: string, start: number = 6, end: number = 4) => {
   if (!id) return "";
   return `${id.slice(0, start)}...${id.slice(-end)}`;
@@ -108,17 +91,6 @@ export const bikeColumn = (
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Chỉnh sửa"
-          onClick={() => {
-            if (onEdit) {
-              onEdit({ id: row.original.id });
-            }
-          }}
-        >
-          <Pencil className="w-4 h-4 text-blue-500" />
         </button>
         <button
           title="Cập nhật trạng thái"
