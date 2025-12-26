@@ -13,6 +13,7 @@ import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
 import { getStatusColor } from "@utils/bike-status";
 import { formatDateUTC } from "@/utils/formatDateTime";
+import { formatToVNTime } from "@/lib/formateVNDate";
 export default function BikesPage() {
   const [detailId, setDetailId] = useState<string>("");
   const [editId, setEditId] = useState<string>("");
@@ -25,9 +26,8 @@ export default function BikesPage() {
     station_id: "",
     supplier_id: "",
     chip_id: "",
-    status: "CÓ SẴN" as BikeStatus,
   });
-  const {responseStationBikeRevenue, getStationBikeRevenue} = useStationActions({ hasToken: true });
+  // const {responseStationBikeRevenue, getStationBikeRevenue} = useStationActions({ hasToken: true });
   const [editBike, setEditBike] = useState<Bike | null>(null);
   const { stations } = useStationActions({ hasToken: true });
   const { allSupplier } = useSupplierActions({ hasToken: true });
@@ -38,21 +38,21 @@ export default function BikesPage() {
     data,
     detailBike,
     getStatisticsBike,
-    statisticData,
-    isLoadingStatistics,
+    // statisticData,
+    // isLoadingStatistics,
     paginationBikes,
     createBike,
     updateBike,
     getBikeByID,
     isLoadingDetail,
-    bikeActivityStats,
-    getBikeActivityStats,
-    bikeStats,
-    isFetchingBikeStats,
-    bikeRentals,
-    isFetchingRentalBikes,
-    getRentalBikes,
-    getBikeStats,
+    // bikeActivityStats,
+    // getBikeActivityStats,
+    // bikeStats,
+    // isFetchingBikeStats,
+    // bikeRentals,
+    // isFetchingRentalBikes,
+    // getRentalBikes,
+    // getBikeStats,
     getBikes,
   } = useBikeActions(
     true,
@@ -111,55 +111,53 @@ export default function BikesPage() {
   //   }, editBike._id);
   //   setIsEditModalOpen(false);
   // };
-  // const handleCreateBike = () => {
-  //   if (!newBike.station_id || !newBike.chip_id) {
-  //     alert("Vui lòng điền đầy đủ thông tin");
-  //     return;
-  //   }
-  //   createBike({
-  //     station_id: newBike.station_id,
-  //     supplier_id: newBike.supplier_id,
-  //     status: newBike.status,
-  //     chip_id: newBike.chip_id,
-  //   });
-  //   setIsCreateModalOpen(false);
-  //   setNewBike({
-  //     station_id: "",
-  //     supplier_id: "",
-  //     chip_id: "",
-  //     status: "CÓ SẴN",
-  //   });
-  // };
+  const handleCreateBike = () => {
+    if (!newBike.station_id || !newBike.chip_id) {
+      alert("Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+    createBike({
+      station_id: newBike.station_id,
+      supplier_id: newBike.supplier_id,
+      chip_id: newBike.chip_id,
+    });
+    setIsCreateModalOpen(false);
+    setNewBike({
+      station_id: "",
+      supplier_id: "",
+      chip_id: "",
+    });
+  };
   useEffect(() => {
     getStatisticsBike();
   }, [getStatisticsBike]);
   useEffect(() => {
     if (detailId) {
       getBikeByID();
-      getBikeActivityStats();
-      getBikeStats();
-      getRentalBikes();
+      // getBikeActivityStats();
+      // getBikeStats();
+      // getRentalBikes();
     }
-  } , [detailId , getBikeByID, getBikeActivityStats, getBikeStats, getRentalBikes]);
+  } , [detailId , getBikeByID]);
 
   useEffect(() => {
     if (editId) {
       getBikeByID();
     }
   }, [editId , getBikeByID]);
-  const available = statisticData?.result["CÓ SẴN"] || 0;
-  const renting = statisticData?.result["ĐANG ĐƯỢC THUÊ"] || 0;
-  const broken = statisticData?.result["BỊ HỎNG"] || 0;
-  const reserved = statisticData?.result["ĐÃ ĐẶT TRƯỚC"] || 0;
-  const total = data?.data?.Bikes.pagination?.total || 0;
-  Number(available) + Number(renting) + Number(broken) + Number(reserved);
-  if (isLoadingStatistics) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-        <Loader2 className="animate-spin w-16 h-16 text-primary" />
-      </div>
-    );
-  } 
+  // const available = statisticData?.result["CÓ SẴN"] || 0;
+  // const renting = statisticData?.result["ĐANG ĐƯỢC THUÊ"] || 0;
+  // const broken = statisticData?.result["BỊ HỎNG"] || 0;
+  // const reserved = statisticData?.result["ĐÃ ĐẶT TRƯỚC"] || 0;
+  // const total = data?.data?.Bikes.pagination?.total || 0;
+  // Number(available) + Number(renting) + Number(broken) + Number(reserved);
+  // if (isLoadingStatistics) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+  //       <Loader2 className="animate-spin w-16 h-16 text-primary" />
+  //     </div>
+  //   );
+  // } 
   if (isLoadingDetail){
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -170,7 +168,6 @@ export default function BikesPage() {
     return (
       <div>
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
@@ -181,15 +178,11 @@ export default function BikesPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {/* <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Xuất Excel
-            </Button> */}
               <Button onClick={() => setIsCreateModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Thêm xe mới
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 onClick={() => {
                   if (!showBikeRevenue) {
@@ -201,12 +194,11 @@ export default function BikesPage() {
                 {showBikeRevenue
                   ? "Ẩn báo cáo doanh thu"
                   : "Xem báo cáo doanh thu"}
-              </Button>
+              </Button> */}
             </div>
           </div>
 
-          {/* BIKE REVENUE REPORT */}
-          {showBikeRevenue && responseStationBikeRevenue?.result && (
+          {/* {showBikeRevenue && responseStationBikeRevenue?.result && (
             <div className="space-y-6 animate-in fade-in duration-500">
               <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border rounded-2xl p-8 shadow-lg">
                 <div className="flex items-center justify-between mb-6">
@@ -245,7 +237,6 @@ export default function BikesPage() {
                   </div>
                 </div>
 
-                {/* SUMMARY CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                   <div className="group relative bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 rounded-xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
@@ -359,7 +350,6 @@ export default function BikesPage() {
                   </div>
                 </div>
 
-                {/* STATIONS TABLE */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/20 rounded-full"></div>
@@ -375,7 +365,6 @@ export default function BikesPage() {
                           className="bg-gradient-to-br from-card to-muted/5 border border-border rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
                           style={{ animationDelay: `${stationIndex * 100}ms` }}
                         >
-                          {/* Station Header */}
                           <div
                             className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b border-border cursor-pointer hover:bg-primary/5 transition-colors"
                             onClick={() => toggleStation(station._id)}
@@ -500,7 +489,6 @@ export default function BikesPage() {
                             </div>
                           </div>
 
-                          {/* Bikes Grid - Collapsible */}
                           {expandedStations.has(station._id) &&
                             station.bikes &&
                             station.bikes.length > 0 && (
@@ -661,10 +649,9 @@ export default function BikesPage() {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Tổng số xe</p>
               <p className="text-2xl font-bold text-foreground mt-1">
@@ -695,15 +682,8 @@ export default function BikesPage() {
                 {reserved || "0"}
               </p>
             </div>
-            {/* <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Bảo trì</p>
-            <p className="text-2xl font-bold text-orange-500 mt-1">
-              {stats.maintenance}
-            </p>
           </div> */}
-          </div>
 
-          {/* Filters */}
           <div className="bg-card border border-border rounded-lg p-4 space-y-4">
             <div className="flex items-center gap-4">
               <select
@@ -714,12 +694,12 @@ export default function BikesPage() {
                 className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="CÓ SẴN">Có sẵn</option>
-                <option value="ĐANG ĐƯỢC THUÊ">Đang được thuê</option>
-                <option value="BỊ HỎNG">Bị hỏng</option>
-                <option value="ĐÃ ĐẶT TRƯỚC">Đã đặt trước</option>
-                <option value="ĐANG BẢO TRÌ">Đang bảo trì</option>
-                <option value="KHÔNG CÓ SẴN">Không có sẵn</option>
+                <option value="Available">Có sẵn</option>
+                <option value="Booked">Đang được thuê</option>
+                <option value="Broken">Bị hỏng</option>
+                <option value="Reserved">Đã đặt trước</option>
+                <option value="Maintenance">Đang bảo trì</option>
+                <option value="NotAvailable">Không có sẵn</option>
               </select>
               <Button
                 variant="outline"
@@ -732,7 +712,6 @@ export default function BikesPage() {
             </div>
           </div>
 
-          {/* Table */}
           <div className="w-full rounded-lg space-y-4  flex flex-col">
             <DataTable
               title="Danh sách xe đạp"
@@ -743,8 +722,6 @@ export default function BikesPage() {
                 onEdit: ({ id }: { id: string }) => {
                   handleEditBike(id);
                 },
-                stations: stations,
-                suppliers: allSupplier?.data || [],
               })}
               data={data?.data?.Bikes.data || []}
             />
@@ -756,8 +733,7 @@ export default function BikesPage() {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            Trang {paginationBikes?.page} / {paginationBikes?.totalPages}{" "}
-            xe đạp
+            Trang {paginationBikes?.page} / {paginationBikes?.totalPages} xe đạp
           </p>
         </div>
 
@@ -782,7 +758,7 @@ export default function BikesPage() {
                   >
                     <option value="">Chọn trạm xe</option>
                     {stations.map((station) => (
-                      <option key={station._id} value={station._id}>
+                      <option key={station.id} value={station.id}>
                         {station.name}
                       </option>
                     ))}
@@ -800,8 +776,8 @@ export default function BikesPage() {
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
                     <option value="">Chọn nhà cung cấp</option>
-                    {allSupplier?.data.map((supplier) => (
-                      <option key={supplier._id} value={supplier._id}>
+                    {allSupplier?.map((supplier) => (
+                      <option key={supplier.id} value={supplier.id}>
                         {supplier.name}
                       </option>
                     ))}
@@ -821,28 +797,6 @@ export default function BikesPage() {
                     placeholder="Nhập Chip ID"
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Trạng thái
-                  </label>
-                  <select
-                    value={newBike.status}
-                    onChange={(e) =>
-                      setNewBike({
-                        ...newBike,
-                        status: e.target.value as BikeStatus,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  >
-                    <option value="CÓ SẴN">Có sẵn</option>
-                    <option value="ĐANG ĐƯỢC THUÊ">Đang được thuê</option>
-                    <option value="BỊ HỎNG">Bị hỏng</option>
-                    <option value="ĐANG BẢO TRÌ">Đang bảo trì</option>
-                    <option value="KHÔNG CÓ SẴN">Không có sẵn</option>
-                  </select>
                 </div>
               </div>
 
@@ -916,19 +870,19 @@ export default function BikesPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">ID Xe</p>
                     <p className="text-foreground font-medium">
-                      {detailBike._id}
+                      {detailBike.id}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Chip ID</p>
                     <p className="text-foreground font-medium">
-                      {detailBike.chip_id}
+                      {detailBike.chipId}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Trạm</p>
                     <p className="text-foreground font-medium">
-                      {detailBike.station_id}
+                      {detailBike.station.name}
                     </p>
                   </div>
                   <div>
@@ -936,7 +890,7 @@ export default function BikesPage() {
                       Nhà cung cấp
                     </p>
                     <p className="text-foreground font-medium">
-                      {detailBike.supplier_id || "-"}
+                      {detailBike.supplier.name || "-"}
                     </p>
                   </div>
                   <div>
@@ -952,7 +906,7 @@ export default function BikesPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Ngày tạo</p>
                     <p className="text-foreground font-medium">
-                      {formatDateUTC(detailBike.createdAt)}
+                      {formatToVNTime(detailBike.createdAt)}
                     </p>
                   </div>
                   <div>
@@ -960,7 +914,7 @@ export default function BikesPage() {
                       Ngày cập nhật
                     </p>
                     <p className="text-foreground font-medium">
-                      {formatDateUTC(detailBike.updatedAt)}
+                      {formatToVNTime(detailBike.updatedAt)}
                     </p>
                   </div>
                 </div>
@@ -1091,18 +1045,17 @@ export default function BikesPage() {
                           {bikeActivityStats?.total_reports || 0} báo hỏng
                         </p>
                       </div>
-                      {/* Đánh giá trung bình - màu gray nếu chưa có đánh giá */}
-                      <div className="bg-gray-100 border border-gray-300 rounded p-3">
+                      {/* <div className="bg-gray-100 border border-gray-300 rounded p-3">
                         <p className="text-xs text-gray-600">
                           Đánh giá trung bình
                         </p>
                         <p className="text-2xl font-bold text-gray-800">
-                          {detailBike.average_rating && detailBike.average_rating > 0
+                          {detailBike.average_rating &&
+                          detailBike.average_rating > 0
                             ? `${detailBike.average_rating.toFixed(1)} ⭐ (${detailBike.total_ratings || 0} đánh giá)`
-                            : "Chưa có đánh giá"
-                          }
+                            : "Chưa có đánh giá"}
                         </p>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
