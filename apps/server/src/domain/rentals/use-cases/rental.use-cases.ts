@@ -1,18 +1,14 @@
 import { Effect, Option } from "effect";
 
-import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { RentalStatus } from "generated/prisma/enums";
 
 import { env } from "@/config/env";
 import { BikeServiceTag } from "@/domain/bikes";
 import { WalletServiceTag } from "@/domain/wallets";
 
 import type { RentalServiceFailure } from "../domain-errors";
-import type { RentalRow, RentalSortField, RentalStatusCounts } from "../models";
-import type {
-  EndRentalInput,
-  ListMyRentalsInput,
-  StartRentalInput,
-} from "../types";
+import type { RentalRow } from "../models";
+import type { EndRentalInput, StartRentalInput } from "../types";
 
 import {
   ActiveRentalExists,
@@ -20,50 +16,15 @@ import {
   BikeMissingStation,
   BikeNotFound,
   BikeNotFoundInStation,
+  EndStationMismatch,
   InsufficientBalanceToRent,
+  InvalidRentalState,
+  RentalNotFound,
   UserWalletNotFound,
 } from "../domain-errors";
 import { startRentalFailureFromBikeStatus } from "../guards/bike-status";
 import { RentalRepository } from "../repository/rental.repository";
 import { RentalServiceTag } from "../services/rental.service";
-
-export function listMyRentalsUseCase(
-  input: ListMyRentalsInput,
-): Effect.Effect<PageResult<RentalRow>, never, RentalServiceTag> {
-  return Effect.gen(function* () {
-    const service = yield* RentalServiceTag;
-    return yield* service.listMyRentals(input.userId, input.filter, input.pageReq);
-  });
-}
-
-export function listMyCurrentRentalsUseCase(
-  userId: string,
-  pageReq: PageRequest<RentalSortField>,
-): Effect.Effect<PageResult<RentalRow>, never, RentalServiceTag> {
-  return Effect.gen(function* () {
-    const service = yield* RentalServiceTag;
-    return yield* service.listMyCurrentRentals(userId, pageReq);
-  });
-}
-
-export function getMyRentalUseCase(
-  userId: string,
-  rentalId: string,
-): Effect.Effect<Option.Option<RentalRow>, never, RentalServiceTag> {
-  return Effect.gen(function* () {
-    const service = yield* RentalServiceTag;
-    return yield* service.getMyRentalById(userId, rentalId);
-  });
-}
-
-export function getMyRentalCountsUseCase(
-  userId: string,
-): Effect.Effect<RentalStatusCounts, never, RentalServiceTag> {
-  return Effect.gen(function* () {
-    const service = yield* RentalServiceTag;
-    return yield* service.getMyRentalCounts(userId);
-  });
-}
 
 export function startRentalUseCase(
   input: StartRentalInput,
@@ -163,9 +124,64 @@ export function startRentalUseCase(
 
 export function endRentalUseCase(
   input: EndRentalInput,
-): Effect.Effect<RentalRow, RentalServiceFailure, RentalServiceTag> {
+): Effect.Effect<RentalRow, RentalServiceFailure, RentalRepository> {
   return Effect.gen(function* () {
-    const service = yield* RentalServiceTag;
-    return yield* service.endRental(input);
+    const repo = yield* RentalRepository;
+    const { userId, rentalId, endStationId, endTime } = input;
+
+    const currentOpt = yield* repo.getMyRentalById(userId, rentalId).pipe(
+      Effect.catchTag("RentalRepositoryError", error => Effect.die(error)),
+    );
+
+    if (Option.isNone(currentOpt)) {
+      return yield* Effect.fail(new RentalNotFound({ rentalId, userId }));
+    }
+
+    const current = currentOpt.value;
+
+    if (current.status !== "RENTED") {
+      return yield* Effect.fail(
+        new InvalidRentalState({
+          rentalId,
+          from: current.status,
+          to: "COMPLETED" as RentalStatus,
+        }),
+      );
+    }
+
+    if (current.startStationId !== endStationId) {
+      return yield* Effect.fail(
+        new EndStationMismatch({
+          rentalId,
+          startStationId: current.startStationId ?? null,
+          attemptedEndStationId: endStationId,
+        }),
+      );
+    }
+
+    const durationMinutes = Math.max(
+      1,
+      Math.floor(
+        (endTime.getTime() - new Date(current.startTime).getTime()) / 60000,
+      ),
+    );
+
+    // TODO: Implement pricing logic (legacy behaviors depend on multiple domains):
+    // - Subscription pricing / extra-hour charging (subscriptions.useOne + package rules)
+    // - Reservation prepaid deduction (reservation domain)
+    // - Penalty rules (duration thresholds)
+    // - SOS/unsolvable exemptions (SOS domain)
+    const totalPrice = null; // Will be calculated later
+
+    return yield* repo.updateRentalOnEnd({
+      rentalId,
+      endStationId,
+      endTime,
+      durationMinutes,
+      totalPrice,
+      newStatus: "COMPLETED",
+    }).pipe(
+      Effect.catchTag("RentalRepositoryError", error => Effect.die(error)),
+    );
   });
 }

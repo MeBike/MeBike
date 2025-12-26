@@ -2,7 +2,6 @@ import { Context, Effect, Layer, Option } from "effect";
 
 import type { BikeRepo } from "@/domain/bikes/repository/bike.repository";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { RentalStatus } from "generated/prisma/enums";
 
 import { BikeRepository } from "@/domain/bikes";
 
@@ -17,8 +16,6 @@ import type { RentalRepo } from "../repository/rental.repository";
 
 import {
   BikeAlreadyRented,
-  EndStationMismatch,
-  InvalidRentalState,
   RentalNotFound,
   UnauthorizedRentalAccess,
 } from "../domain-errors";
@@ -45,12 +42,6 @@ export type RentalService = {
     userId: string,
   ) => Effect.Effect<RentalStatusCounts, never>;
 
-  endRental: (args: {
-    userId: string;
-    rentalId: string;
-    endStationId: string;
-    endTime: Date;
-  }) => Effect.Effect<RentalRow, RentalServiceFailure>;
   createRentalSession: (args: {
     userId: string;
     bikeId: string;
@@ -109,76 +100,6 @@ function makeRentalService(
           return counts;
         }),
       );
-    },
-
-    endRental({ userId, rentalId, endStationId, endTime }) {
-      return Effect.gen(function* () {
-        // 1. Get rental
-        const currentOpt = yield* repo.getMyRentalById(userId, rentalId).pipe(
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
-        );
-
-        if (Option.isNone(currentOpt)) {
-          return yield* Effect.fail(
-            new RentalNotFound({ rentalId, userId }),
-          );
-        }
-
-        const current = currentOpt.value;
-
-        // 2. Validate state transition
-        if (current.status !== "RENTED") {
-          return yield* Effect.fail(
-            new InvalidRentalState({
-              rentalId,
-              from: current.status,
-              to: "COMPLETED" as RentalStatus,
-            }),
-          );
-        }
-
-        // 3. Validate end station matches start station (domain rule)
-        if (current.startStationId !== endStationId) {
-          return yield* Effect.fail(
-            new EndStationMismatch({
-              rentalId,
-              startStationId: current.startStationId ?? null,
-              attemptedEndStationId: endStationId,
-            }),
-          );
-        }
-
-        // 3. Calculate duration
-        const durationMinutes = Math.max(
-          1,
-          Math.floor(
-            (endTime.getTime() - new Date(current.startTime).getTime()) / 60000,
-          ),
-        );
-
-        // 4. TODO: Implement pricing logic (legacy behaviors depend on multiple domains):
-        //    - Subscription pricing / extra-hour charging (subscriptions.useOne + package rules)
-        //    - Reservation prepaid deduction (reservation domain)
-        //    - Penalty rules (duration thresholds)
-        //    - SOS/unsolvable exemptions (SOS domain)
-        const totalPrice = null; // Will be calculated later
-
-        // 5. Update rental
-        const updated = yield* repo.updateRentalOnEnd({
-          rentalId,
-          endStationId,
-          endTime,
-          durationMinutes,
-          totalPrice,
-          newStatus: "COMPLETED",
-        }).pipe(
-          Effect.catchTag("RentalRepositoryError", error =>
-            Effect.die(error)),
-        );
-
-        return updated;
-      });
     },
 
     createRentalSession({ userId, bikeId, startStationId, startTime }) {

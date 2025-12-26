@@ -14,6 +14,9 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   LOG_LEVEL: z.string().default("info"),
   MIN_WALLET_BALANCE_TO_RENT: z.coerce.number().default(2000),
+  PRICE_PER_30_MINS: z.coerce.number().default(2000),
+  RENTAL_PENALTY_HOURS: z.coerce.number().default(24),
+  RENTAL_PENALTY_AMOUNT: z.coerce.number().default(50000),
   EXPIRE_AFTER_DAYS: z.coerce.number().default(30),
   AUTO_ACTIVATE_IN_DAYS: z.coerce.number().default(10),
 });

@@ -3,10 +3,7 @@ import { Effect, Match, Option } from "effect";
 
 import {
   endRentalUseCase,
-  getMyRentalCountsUseCase,
-  getMyRentalUseCase,
-  listMyCurrentRentalsUseCase,
-  listMyRentalsUseCase,
+  RentalServiceTag,
   startRentalUseCase,
 } from "@/domain/rentals";
 import { withLoggedCause } from "@/domain/shared";
@@ -168,19 +165,18 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const query = c.req.valid("query");
     const eff = withLoggedCause(
       withRentalDeps(
-        listMyRentalsUseCase({
-          userId,
-          filter: {
+        Effect.gen(function* () {
+          const service = yield* RentalServiceTag;
+          return yield* service.listMyRentals(userId, {
             status: query.status,
             startStationId: query.startStation,
             endStationId: query.endStation,
-          },
-          pageReq: {
+          }, {
             page: Number(query.page ?? 1),
             pageSize: Number(query.limit ?? 50),
             sortBy: "startTime",
             sortDir: "desc",
-          },
+          });
         }),
       ),
       "GET /v1/rentals/me",
@@ -199,15 +195,15 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const query = c.req.valid("query");
     const eff = withLoggedCause(
       withRentalDeps(
-        listMyCurrentRentalsUseCase(
-          userId,
-          {
+        Effect.gen(function* () {
+          const service = yield* RentalServiceTag;
+          return yield* service.listMyCurrentRentals(userId, {
             page: Number(query.page ?? 1),
             pageSize: Number(query.limit ?? 50),
             sortBy: "startTime",
             sortDir: "desc",
-          },
-        ),
+          });
+        }),
       ),
       "GET /v1/rentals/me/current",
     );
@@ -225,7 +221,12 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const { rentalId } = c.req.valid("param");
 
     const eff = withLoggedCause(
-      withRentalDeps(getMyRentalUseCase(userId, rentalId)),
+      withRentalDeps(
+        Effect.gen(function* () {
+          const service = yield* RentalServiceTag;
+          return yield* service.getMyRentalById(userId, rentalId);
+        }),
+      ),
       "GET /v1/rentals/me/{rentalId}",
     );
 
@@ -255,7 +256,12 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   app.openapi(rentals.getMyRentalCounts, async (c) => {
     const userId = c.var.currentUser!.userId;
     const eff = withLoggedCause(
-      withRentalDeps(getMyRentalCountsUseCase(userId)),
+      withRentalDeps(
+        Effect.gen(function* () {
+          const service = yield* RentalServiceTag;
+          return yield* service.getMyRentalCounts(userId);
+        }),
+      ),
       "GET /v1/rentals/me/counts",
     );
 
