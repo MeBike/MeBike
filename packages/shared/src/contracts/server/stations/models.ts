@@ -1,7 +1,7 @@
 import { z } from "../../../zod";
 
 export const StationSummarySchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
   capacity: z.number(),
@@ -52,7 +52,7 @@ export const StationStatsResponseSchema = z.object({
 });
 
 export const StationRevenueItemSchema = z.object({
-  _id: z.string(),
+  _id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
   totalRentals: z.number(),
@@ -83,7 +83,7 @@ export const StationRevenueResponseSchema = z.object({
 });
 
 export const BikeRevenueItemSchema = z.object({
-  _id: z.string(),
+  _id: z.uuidv7(),
   chipId: z.string(),
   totalRevenue: z.number(),
   totalRevenueFormatted: z.string(),
@@ -92,7 +92,7 @@ export const BikeRevenueItemSchema = z.object({
 });
 
 export const BikeRevenueStationSchema = z.object({
-  _id: z.string(),
+  _id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
   stationTotalRevenue: z.number(),
@@ -122,7 +122,7 @@ export const HighestRevenueStationSchema = z.object({
   }),
   station: z
     .object({
-      _id: z.string(),
+      _id: z.uuidv7(),
       name: z.string(),
       address: z.string(),
       totalRevenue: z.number(),
@@ -143,10 +143,10 @@ export const NearbyStationSchema = StationSummarySchema.extend({
 });
 
 export const NearestAvailableBikeSchema = z.object({
-  bikeId: z.string(),
+  bikeId: z.uuidv7(),
   chipId: z.string(),
   status: z.string(),
-  stationId: z.string(),
+  stationId: z.uuidv7(),
   stationName: z.string(),
   stationAddress: z.string(),
   distanceMeters: z.number(),
@@ -154,7 +154,7 @@ export const NearestAvailableBikeSchema = z.object({
 });
 
 const AlertItemBaseSchema = z.object({
-  _id: z.string(),
+  _id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
   capacity: z.number(),

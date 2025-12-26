@@ -16,7 +16,7 @@ export const StationErrorCodeSchema = z.enum(stationErrorCodes);
 
 export const StationErrorDetailSchema = ServerErrorDetailSchema.extend({
   code: StationErrorCodeSchema,
-  stationId: z.string().optional(),
+  stationId: z.uuidv7().optional(),
   from: z.string().optional(),
   to: z.string().optional(),
 }).openapi({

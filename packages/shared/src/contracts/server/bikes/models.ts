@@ -32,7 +32,7 @@ export const BikeRentalHistoryItemSchema = z.object({
 });
 
 export const BikeActivityStatsSchema = z.object({
-  bikeId: z.string(),
+  bikeId: z.uuidv7(),
   totalMinutesActive: z.number(),
   totalReports: z.number(),
   uptimePercentage: z.number(),
@@ -61,7 +61,7 @@ export const HighestRevenueBikeSchema = z.object({
   station: z.object({
     id: z.uuidv7(),
     name: z.string(),
-  }),
+  }).nullable(),
 });
 
 export type BikeSummary = z.infer<typeof BikeSummarySchema>;

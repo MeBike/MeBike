@@ -1,11 +1,12 @@
 import { Context, Effect, Layer, Option } from "effect";
 
+import type { BikeRepo } from "@/domain/bikes/repository/bike.repository";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { RentalStatus } from "generated/prisma/enums";
 
-import type {
-  RentalServiceFailure,
-} from "../domain-errors";
+import { BikeRepository } from "@/domain/bikes";
+
+import type { RentalServiceFailure } from "../domain-errors";
 import type {
   MyRentalFilter,
   RentalRow,
@@ -15,6 +16,7 @@ import type {
 import type { RentalRepo } from "../repository/rental.repository";
 
 import {
+  BikeAlreadyRented,
   EndStationMismatch,
   InvalidRentalState,
   RentalNotFound,
@@ -49,6 +51,12 @@ export type RentalService = {
     endStationId: string;
     endTime: Date;
   }) => Effect.Effect<RentalRow, RentalServiceFailure>;
+  createRentalSession: (args: {
+    userId: string;
+    bikeId: string;
+    startStationId: string;
+    startTime: Date;
+  }) => Effect.Effect<RentalRow, RentalServiceFailure>;
 
   getByIdForUser: (
     args: { rentalId: string; userId: string },
@@ -62,6 +70,7 @@ export class RentalServiceTag extends Context.Tag("RentalService")<
 
 function makeRentalService(
   repo: RentalRepo,
+  bikeRepo: BikeRepo,
 ): RentalService {
   return {
     listMyRentals(userId, filter, pageReq) {
@@ -172,6 +181,29 @@ function makeRentalService(
       });
     },
 
+    createRentalSession({ userId, bikeId, startStationId, startTime }) {
+      return Effect.gen(function* () {
+        const created = yield* repo.createRental({
+          userId,
+          bikeId,
+          startStationId,
+          startTime,
+        }).pipe(
+          Effect.catchTag("RentalUniqueViolation", () =>
+            Effect.fail(new BikeAlreadyRented({ bikeId }))),
+          Effect.catchTag("RentalRepositoryError", error =>
+            Effect.die(error)),
+        );
+
+        yield* bikeRepo.updateStatus(bikeId, "BOOKED").pipe(
+          Effect.catchTag("BikeRepositoryError", error => Effect.die(error)),
+          Effect.ignore,
+        );
+
+        return created;
+      });
+    },
+
     getByIdForUser: ({ rentalId, userId }) =>
       Effect.gen(function* () {
         const rentalOpt = yield* repo.getMyRentalById(userId, rentalId).pipe(
@@ -196,6 +228,7 @@ export const RentalServiceLive = Layer.effect(
   RentalServiceTag,
   Effect.gen(function* () {
     const repo = yield* RentalRepository;
-    return makeRentalService(repo);
+    const bikeRepo = yield* BikeRepository;
+    return makeRentalService(repo, bikeRepo);
   }),
 );

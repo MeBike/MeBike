@@ -111,7 +111,7 @@ export const activateSubscriptionRoute = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
-      subscriptionId: z.string(),
+      subscriptionId: z.uuidv7(),
     }),
   },
   responses: {

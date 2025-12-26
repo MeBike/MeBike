@@ -11,8 +11,8 @@ export const WalletTransactionStatusSchema = z
   .openapi("WalletTransactionStatus");
 
 export const WalletDetailSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
   balance: z.string().openapi({ example: "100000.00" }),
   status: WalletStatusSchema,
   createdAt: z.string().datetime(),
@@ -20,8 +20,8 @@ export const WalletDetailSchema = z.object({
 }).openapi("WalletDetail");
 
 export const WalletTransactionDetailSchema = z.object({
-  id: z.string(),
-  walletId: z.string(),
+  id: z.uuidv7(),
+  walletId: z.uuidv7(),
   amount: z.string().openapi({ example: "50000.00" }),
   fee: z.string().openapi({ example: "0.00" }),
   description: z.string().nullable().optional(),

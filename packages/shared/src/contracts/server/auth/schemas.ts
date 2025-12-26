@@ -39,13 +39,13 @@ export const RefreshRequestSchema = z.object({
 }).openapi("RefreshRequest") satisfies z.ZodType<RefreshRequest>;
 
 export const SendVerifyEmailRequestSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.uuidv7(),
   email: z.string().email(),
   fullName: z.string().min(1),
 }).openapi("SendVerifyEmailRequest") satisfies z.ZodType<SendVerifyEmailRequest>;
 
 export const VerifyEmailOtpRequestSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.uuidv7(),
   otp: z.string().min(1),
 }).openapi("VerifyEmailOtpRequest") satisfies z.ZodType<VerifyEmailOtpRequest>;
 

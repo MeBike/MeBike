@@ -15,7 +15,7 @@ export const BikeErrorCodeSchema = z.enum(bikeErrorCodes);
 
 export const BikeErrorDetailSchema = ServerErrorDetailSchema.extend({
   code: BikeErrorCodeSchema,
-  bikeId: z.string().optional(),
+  bikeId: z.uuidv7().optional(),
   chipId: z.string().optional(),
   status: z.string().optional(),
 }).openapi({

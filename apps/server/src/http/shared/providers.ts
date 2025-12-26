@@ -74,6 +74,7 @@ const RentalReposLive = RentalRepositoryLive.pipe(
 
 const RentalServiceLayer = RentalServiceLive.pipe(
   Layer.provide(RentalReposLive),
+  Layer.provide(BikeReposLive),
 );
 
 const WalletReposLive = WalletRepositoryLive.pipe(
@@ -82,7 +83,7 @@ const WalletReposLive = WalletRepositoryLive.pipe(
 
 const WalletServiceLayer = WalletServiceLive.pipe(
   Layer.provide(WalletReposLive),
-);
+)
 
 export const WalletDepsLive = Layer.mergeAll(
   WalletReposLive,

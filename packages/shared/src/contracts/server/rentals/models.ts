@@ -13,29 +13,29 @@ export const RentalIsoDateTimeSchema = z.iso.datetime();
 
 // Core rental base schema
 export const RentalSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
-  bikeId: z.string().optional(),
-  startStation: z.string(),
-  endStation: z.string().optional(),
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
+  bikeId: z.uuidv7().optional(),
+  startStation: z.uuidv7(),
+  endStation: z.uuidv7().optional(),
   startTime: z.iso.datetime(),
   endTime: z.iso.datetime().optional(),
   duration: z.number(),
   totalPrice: z.number().optional(),
-  subscriptionId: z.string().optional(),
+  subscriptionId: z.uuidv7().optional(),
   status: RentalStatusSchema,
   updatedAt: z.iso.datetime(),
 });
 
 // User info subset for rental lists
 export const RentalUserSummarySchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   fullname: z.string(),
 });
 
 // Full user info for detailed rentals
 export const RentalUserDetailSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   fullname: z.string(),
   email: z.string(),
   verify: VerifyStatusSchema,
@@ -50,16 +50,16 @@ export const RentalUserDetailSchema = z.object({
 
 // Bike info for rentals
 export const RentalBikeSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   chipId: z.string(),
   status: BikeStatusSchema,
-  supplierId: z.string().optional(),
+  supplierId: z.uuidv7().optional(),
   updatedAt: z.iso.datetime(),
 });
 
 // Station info for rentals
 export const RentalStationSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   name: z.string(),
   address: z.string(),
   latitude: z.number(),
@@ -79,12 +79,12 @@ export const RentalWithPriceSchema = RentalSchema.extend({
 
 // Rental list item (for paginated lists)
 export const RentalListItemSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   user: RentalUserSummarySchema,
-  bikeId: z.string(),
+  bikeId: z.uuidv7(),
   status: RentalStatusSchema,
-  startStation: z.string(),
-  endStation: z.string().optional(),
+  startStation: z.uuidv7(),
+  endStation: z.uuidv7().optional(),
   startTime: z.iso.datetime(),
   endTime: z.iso.datetime().optional(),
   duration: z.number(),
@@ -94,7 +94,7 @@ export const RentalListItemSchema = z.object({
 
 // Detailed rental with populated data
 export const RentalDetailSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   user: RentalUserDetailSchema,
   bike: RentalBikeSchema.nullable(),
   startStation: RentalStationSchema,
@@ -103,7 +103,7 @@ export const RentalDetailSchema = z.object({
   endTime: z.iso.datetime().optional(),
   duration: z.number(),
   totalPrice: z.number(),
-  subscriptionId: z.string().optional(),
+  subscriptionId: z.uuidv7().optional(),
   status: RentalStatusSchema,
   updatedAt: z.iso.datetime(),
 });
@@ -195,13 +195,13 @@ export const RentalCountsResponseSchema = z.object({
 });
 
 export const CreateRentalRequestSchema = z.object({
-  bikeId: z.string(),
-  startStationId: z.string(),
-  subscriptionId: z.string().optional(),
+  bikeId: z.uuidv7(),
+  startStationId: z.uuidv7(),
+  subscriptionId: z.uuidv7().optional(),
 });
 
 export const StaffCreateRentalRequestSchema = CreateRentalRequestSchema.extend({
-  userId: z.string(),
+  userId: z.uuidv7(),
 });
 
 export const CardTapRentalRequestSchema = z.object({
@@ -210,13 +210,13 @@ export const CardTapRentalRequestSchema = z.object({
 });
 
 export const EndRentalRequestSchema = z.object({
-  endStation: z.string(),
+  endStation: z.uuidv7(),
   endTime: z.iso.datetime().optional(),
   reason: z.string(),
 });
 
 export const UpdateRentalRequestSchema = z.object({
-  endStation: z.string().optional(),
+  endStation: z.uuidv7().optional(),
   endTime: z.iso.datetime().optional(),
   status: RentalStatusSchema.optional(),
   totalPrice: z.number().optional(),

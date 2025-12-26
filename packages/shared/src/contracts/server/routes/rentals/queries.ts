@@ -399,7 +399,7 @@ export const getStationActivity = createRoute({
   tags: ["Rentals"],
   request: {
     query: rentalDateRangeWith({
-      stationId: z.string().optional(),
+      stationId: z.uuidv7().optional(),
     }),
   },
   responses: {

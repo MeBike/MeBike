@@ -2,7 +2,7 @@ import { createRoute } from "@hono/zod-openapi";
 
 import { BikeNotFoundResponseSchema } from "../../bikes";
 import {
-  BikeActivityStatsSchemaOpenApi,
+  BikeActivityStatsResponseSchema,
   BikeErrorCodeSchema,
   BikeErrorResponseSchema,
   BikeIdParamSchema,
@@ -10,9 +10,9 @@ import {
   BikeListResponseSchema,
   BikeRentalHistoryQuerySchema,
   BikeRentalHistoryResponseSchema,
-  BikeRentalStatsSchemaOpenApi,
+  BikeRentalStatsResponseSchema,
   BikeSummarySchemaOpenApi,
-  HighestRevenueBikeSchemaOpenApi,
+  HighestRevenueBikeResponseSchema,
 } from "./shared";
 
 export const listBikes = createRoute({
@@ -107,7 +107,7 @@ export const getBikeStats = createRoute({
     200: {
       description: "Overall bike stats",
       content: {
-        "application/json": { schema: BikeRentalStatsSchemaOpenApi },
+        "application/json": { schema: BikeRentalStatsResponseSchema },
       },
     },
   },
@@ -121,7 +121,7 @@ export const getHighestRevenueBike = createRoute({
     200: {
       description: "Bike with highest revenue",
       content: {
-        "application/json": { schema: HighestRevenueBikeSchemaOpenApi.nullable() },
+        "application/json": { schema: HighestRevenueBikeResponseSchema },
       },
     },
   },
@@ -138,7 +138,7 @@ export const getBikeActivityStats = createRoute({
     200: {
       description: "Activity stats for a bike",
       content: {
-        "application/json": { schema: BikeActivityStatsSchemaOpenApi },
+        "application/json": { schema: BikeActivityStatsResponseSchema },
       },
     },
     404: {

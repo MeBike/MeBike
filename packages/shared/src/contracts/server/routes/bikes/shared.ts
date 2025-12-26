@@ -123,6 +123,24 @@ export const HighestRevenueBikeSchemaOpenApi = HighestRevenueBikeSchema.openapi(
   { description: "Bike with highest revenue" },
 );
 
+export const BikeRentalStatsResponseSchema = z.object({
+  data: BikeRentalStatsSchema,
+}).openapi("BikeRentalStatsResponse", {
+  description: "Bike rental stats response",
+});
+
+export const HighestRevenueBikeResponseSchema = z.object({
+  data: HighestRevenueBikeSchema.nullable(),
+}).openapi("HighestRevenueBikeResponse", {
+  description: "Highest revenue bike response",
+});
+
+export const BikeActivityStatsResponseSchema = z.object({
+  data: BikeActivityStatsSchema,
+}).openapi("BikeActivityStatsResponse", {
+  description: "Bike activity stats response",
+});
+
 export const BikeRentalHistoryResponseSchema = z
   .object({
     data: BikeRentalHistoryItemSchema.array(),

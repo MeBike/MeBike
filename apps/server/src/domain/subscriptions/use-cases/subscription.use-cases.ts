@@ -85,7 +85,7 @@ export function createSubscriptionUseCase(args: {
     const subscriptionEmail = buildSubscriptionCreatedEmail({
       fullName: args.fullName,
       packageName: args.packageName,
-      price: args.price,
+      price: Number(args.price.toString()),
       maxUsages: args.maxUsages,
       createdOn,
       // TODO: Provide a real callback URL once we standardize a `FRONTEND_URL`/`APP_WEB_URL` env.

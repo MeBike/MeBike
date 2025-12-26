@@ -199,7 +199,7 @@ export const adminUserDetailRoute = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
-      userId: z.string().min(1),
+      userId: z.uuidv7(),
     }),
   },
   responses: {

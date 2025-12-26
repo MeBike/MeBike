@@ -70,7 +70,7 @@ export function startRentalUseCase(
 ): Effect.Effect<
   RentalRow,
   RentalServiceFailure,
-  RentalRepository | BikeServiceTag | WalletServiceTag
+  RentalRepository | RentalServiceTag | BikeServiceTag | WalletServiceTag
 > {
   return Effect.gen(function* () {
     // TODO(architecture): This use-case currently calls `RentalRepository` directly for active-rental checks + creation.
@@ -83,6 +83,7 @@ export function startRentalUseCase(
     const repo = yield* RentalRepository;
     const bikeService = yield* BikeServiceTag;
     const walletService = yield* WalletServiceTag;
+    const rentalService = yield* RentalServiceTag;
     const { userId, bikeId, startStationId, startTime } = input;
 
     const existingByUser = yield* repo.findActiveByUserId(userId).pipe(
@@ -151,17 +152,12 @@ export function startRentalUseCase(
     // - mark reservation consumed/expired appropriately
     // - apply reservation prepaid deduction to end-rental pricing
 
-    return yield* repo.createRental({
+    return yield* rentalService.createRentalSession({
       userId,
       bikeId,
       startStationId,
       startTime,
-    }).pipe(
-      Effect.catchTag("RentalUniqueViolation", () =>
-        Effect.fail(new BikeAlreadyRented({ bikeId }))),
-      Effect.catchTag("RentalRepositoryError", error =>
-        Effect.die(error)),
-    );
+    });
   });
 }
 

@@ -106,7 +106,7 @@ export const adminUpdateUserRoute = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
-      userId: z.string().min(1),
+      userId: z.uuidv7(),
     }),
     body: {
       content: {
@@ -285,7 +285,7 @@ export const adminResetPasswordRoute = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
-      userId: z.string().min(1),
+      userId: z.uuidv7(),
     }),
     body: {
       content: {

@@ -12,7 +12,7 @@ export const SupplierErrorCodeSchema = z.enum(supplierErrorCodes);
 
 export const SupplierErrorDetailSchema = ServerErrorDetailSchema.extend({
   code: SupplierErrorCodeSchema,
-  supplierId: z.string().optional(), //
+  supplierId: z.uuidv7().optional(),
   name: z.string().optional(),
   status: z.string().optional(),
 }).openapi({

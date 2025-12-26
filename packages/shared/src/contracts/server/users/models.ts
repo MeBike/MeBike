@@ -2,12 +2,12 @@ import { z } from "../../../zod";
 import { UserRoleSchema, VerifyStatusSchema } from "./schemas";
 
 export const UserSummarySchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   fullname: z.string(),
 });
 
 export const UserDetailSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   fullname: z.string(),
   email: z.string(),
   verify: VerifyStatusSchema,
@@ -36,7 +36,7 @@ export const ActiveUsersSeriesRowSchema = z.object({
 });
 
 export const TopRenterUserSchema = z.object({
-  id: z.string(),
+  id: z.uuidv7(),
   fullname: z.string(),
   email: z.string(),
   avatar: z.string().nullable(),
@@ -56,7 +56,7 @@ export const NewUsersStatsSchema = z.object({
 });
 
 export const VipCustomerSchema = z.object({
-  userId: z.string(),
+  userId: z.uuidv7(),
   fullname: z.string(),
   totalDuration: z.number(),
 }).nullable();

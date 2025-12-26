@@ -36,8 +36,8 @@ export function rentalDateRangeWith<T extends z.ZodRawShape>(extra: T) {
 
 export const RentalIdParamSchema = z
   .object({
-    rentalId: z.string().openapi({
-      example: "665fd6e36b7e5d53f8f3d2c9",
+    rentalId: z.uuidv7().openapi({
+      example: "019b17bd-d130-7e7d-be69-91ceef7b6959",
       description: "Rental identifier",
     }),
   })
@@ -47,8 +47,8 @@ export const RentalIdParamSchema = z
 
 export const UserIdParamSchema = z
   .object({
-    userId: z.string().openapi({
-      example: "665fd6e36b7e5d53f8f3d2c9",
+    userId: z.uuidv7().openapi({
+      example: "019b17bd-d130-7e7d-be69-91ceef7b6959",
       description: "User identifier",
     }),
   })
@@ -69,8 +69,8 @@ export const PhoneNumberParamSchema = z
 
 export const SOSIdParamSchema = z
   .object({
-    sosId: z.string().openapi({
-      example: "665fd6e36b7e5d53f8f3d2c9",
+    sosId: z.uuidv7().openapi({
+      example: "019b17bd-d130-7e7d-be69-91ceef7b6959",
       description: "SOS alert identifier",
     }),
   })

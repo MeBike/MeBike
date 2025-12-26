@@ -9,8 +9,8 @@ export const SubscriptionPackageSchema = z
   .openapi("SubscriptionPackage");
 
 export const SubscriptionDetailSchema = z.object({
-  id: z.string(),
-  userId: z.string(),
+  id: z.uuidv7(),
+  userId: z.uuidv7(),
   packageName: SubscriptionPackageSchema,
   maxUsages: z.number().int().nullable(),
   usageCount: z.number().int(),

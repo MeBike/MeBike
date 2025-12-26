@@ -21,7 +21,7 @@ export const ratingErrorMessages = {
 
 export const CreateRatingRequestSchema = z.object({
   rating: z.number().int().min(1).max(5),
-  reasonIds: z.array(z.string()).min(1),
+  reasonIds: z.array(z.uuidv7()).min(1),
   comment: z.string().max(500).optional().nullable(),
 }).openapi("CreateRatingRequest");
 

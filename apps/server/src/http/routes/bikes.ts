@@ -3,17 +3,37 @@ import { Effect, Match } from "effect";
 
 import {
   adminUpdateBikeUseCase,
+  BikeStatsServiceTag,
   getBikeDetailUseCase,
   listBikesUseCase,
   reportBrokenBikeUseCase,
   softDeleteBikeUseCase,
 } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
+import {
+  toBikeActivityStats,
+  toBikeRentalHistoryItem,
+  toBikeRentalStats,
+  toBikeSummary,
+  toHighestRevenueBike,
+} from "@/http/presenters/bikes.presenter";
 import { withBikeDeps } from "@/http/shared/providers";
 
 type BikeSummary = BikesContracts.BikeSummary;
 type BikeNotFoundResponse = BikesContracts.BikeNotFoundResponse;
 type BikeUpdateConflictResponse = BikesContracts.BikeUpdateConflictResponse;
+type BikeRentalStatsResponse = { data: BikesContracts.BikeRentalStats };
+type HighestRevenueBikeResponse = { data: BikesContracts.HighestRevenueBike | null };
+type BikeActivityStatsResponse = { data: BikesContracts.BikeActivityStats };
+type BikeRentalHistoryResponse = {
+  data: BikesContracts.BikeRentalHistoryItem[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+};
 // type BikeReportForbiddenResponse = BikesContracts.BikeReportForbiddenResponse;
 
 const { BikeErrorCodeSchema, bikeErrorMessages } = BikesContracts;
@@ -30,13 +50,6 @@ type BikeListResponse = {
 
 export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const bikes = serverRoutes.bikes;
-  const toBikeSummary = (row: import("@/domain/bikes").BikeRow): BikeSummary => ({
-    id: row.id,
-    chipId: row.chipId,
-    stationId: row.stationId,
-    supplierId: row.supplierId,
-    status: row.status,
-  });
 
   app.openapi(bikes.listBikes, async (c) => {
     const query = c.req.valid("query");
@@ -208,5 +221,121 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     );
   });
 
-  // TODO: implement analytics endpoints (rental history, activity stats, stats summary, highest revenue)
+  app.openapi(bikes.getBikeStats, async (c) => {
+    const eff = withLoggedCause(
+      withBikeDeps(Effect.gen(function* () {
+        const svc = yield* BikeStatsServiceTag;
+        return yield* svc.getRentalStats();
+      })),
+      "GET /v1/bikes/stats/summary",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<BikeRentalStatsResponse, 200>({ data: toBikeRentalStats(right) }, 200)),
+      Match.tag("Left", ({ left }) => {
+        throw left;
+      }),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(bikes.getHighestRevenueBike, async (c) => {
+    const eff = withLoggedCause(
+      withBikeDeps(Effect.gen(function* () {
+        const svc = yield* BikeStatsServiceTag;
+        return yield* svc.getHighestRevenueBike();
+      })),
+      "GET /v1/bikes/stats/highest-revenue",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<HighestRevenueBikeResponse, 200>({
+          data: right ? toHighestRevenueBike(right) : null,
+        }, 200)),
+      Match.tag("Left", ({ left }) => {
+        throw left;
+      }),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(bikes.getBikeActivityStats, async (c) => {
+    const { id } = c.req.valid("param");
+
+    const eff = withLoggedCause(
+      withBikeDeps(Effect.gen(function* () {
+        const svc = yield* BikeStatsServiceTag;
+        return yield* svc.getBikeActivityStats({ bikeId: id });
+      })),
+      "GET /v1/bikes/{id}/activity-stats",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<BikeActivityStatsResponse, 200>({
+          data: toBikeActivityStats(right),
+        }, 200)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("BikeNotFound", () =>
+          c.json<BikeNotFoundResponse, 404>({
+            error: bikeErrorMessages.BIKE_NOT_FOUND,
+            details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
+          }, 404)),
+        Match.orElse((err) => {
+          throw err;
+        }),
+      )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(bikes.getBikeRentalHistory, async (c) => {
+    const { id } = c.req.valid("param");
+    const query = c.req.valid("query");
+
+    const eff = withLoggedCause(
+      withBikeDeps(Effect.gen(function* () {
+        const svc = yield* BikeStatsServiceTag;
+        return yield* svc.getBikeRentalHistory(id, {
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 50,
+          sortBy: query.sortBy ?? "endTime",
+          sortDir: query.sortDir ?? "desc",
+        });
+      })),
+      "GET /v1/bikes/{id}/rental-history",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<BikeRentalHistoryResponse, 200>({
+          data: right.items.map(toBikeRentalHistoryItem),
+          pagination: {
+            page: right.page,
+            pageSize: right.pageSize,
+            total: right.total,
+            totalPages: right.totalPages,
+          },
+        }, 200)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("BikeNotFound", () =>
+          c.json<BikeNotFoundResponse, 404>({
+            error: bikeErrorMessages.BIKE_NOT_FOUND,
+            details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
+          }, 404)),
+        Match.orElse((err) => {
+          throw err;
+        }),
+      )),
+      Match.exhaustive,
+    );
+  });
+
+  // Analytics endpoints implemented above.
 }

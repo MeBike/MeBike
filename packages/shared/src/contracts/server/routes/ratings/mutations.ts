@@ -19,7 +19,7 @@ export const createRatingRoute = createRoute({
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
-      rentalId: z.string(),
+      rentalId: z.uuidv7(),
     }),
     body: {
       content: {

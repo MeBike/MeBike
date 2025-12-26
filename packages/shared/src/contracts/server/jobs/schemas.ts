@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "../../../zod";
 
 import type { JobType } from "./job-types";
 
@@ -41,7 +41,7 @@ const EmailSendPayloadV1Schema = z.discriminatedUnion("kind", [
 
 const SubscriptionAutoActivatePayloadV1Schema = z.object({
   version: z.literal(1),
-  subscriptionId: z.string().min(1),
+  subscriptionId: z.uuidv7(),
 });
 
 const SubscriptionExpireSweepPayloadV1Schema = z.object({
