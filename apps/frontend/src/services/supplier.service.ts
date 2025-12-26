@@ -3,13 +3,20 @@ import type { AxiosResponse } from "axios";
 import type { Supplier } from "@/types/Supplier";
 import { CreateSupplierSchema } from "@/schemas/supplier.schema";
 import type { StatsSupplierBike } from "@custom-types";
-import {GET_ALL_SUPPLIER,GET_DETAIL_SUPPLIER,CREATE_SUPPLIER,GET_STATS_SUPPLIER} from "@/graphql"
+import {
+  GET_ALL_SUPPLIER,
+  GET_DETAIL_SUPPLIER,
+  CREATE_SUPPLIER,
+  GET_STATS_SUPPLIER,
+  UPDATE_SUPPLIER,
+} from "@/graphql";
 import { print } from "graphql";
 import {
   GetSupplierResponse,
   GetDetailSupplierResponse,
   CreateSupplierResponse,
   GetStatsSupplierResponse,
+  UpdateSupplierResponse,
 } from "../types/supplier.type";
 interface ApiResponse<T> {
   data: T[];
@@ -46,11 +53,13 @@ export const supplierService = {
     );
     return response;
   },
-  getSupplierById: async (id: string): Promise<AxiosResponse <GetDetailSupplierResponse> > => {
+  getSupplierById: async (
+    id: string
+  ): Promise<AxiosResponse<GetDetailSupplierResponse>> => {
     const response = await fetchHttpClient.query<GetDetailSupplierResponse>(
       print(GET_DETAIL_SUPPLIER),
       {
-        supplierId : id
+        supplierId: id,
       }
     );
     return response;
@@ -65,7 +74,7 @@ export const supplierService = {
           address: supplierData.address,
           contactFee: supplierData.contactFee,
           name: supplierData.name,
-          phone: supplierData.phone
+          phone: supplierData.phone,
         },
       }
     );
@@ -81,12 +90,24 @@ export const supplierService = {
   //   );
   //   return response.data;
   // },
-  updateSupplier: async (
-    {id,data} : {id: string, data: Partial<CreateSupplierSchema>}
-  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
-    const response = await fetchHttpClient.put<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.WITH_ID(id),
-      data
+  updateSupplier: async ({
+    id,
+    data,
+  }: {
+    id: string;
+    data: Partial<CreateSupplierSchema>;
+  }): Promise<AxiosResponse<UpdateSupplierResponse>> => {
+    const response = await fetchHttpClient.mutation<UpdateSupplierResponse>(
+      print(UPDATE_SUPPLIER),
+      {
+        body: {
+          address: data.address,
+          contactFee: data.contactFee,
+          name: data.name,
+          phone: data.phone,
+        },
+        updateSupplierId: id,
+      }
     );
     return response;
   },

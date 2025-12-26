@@ -114,15 +114,11 @@ export const useSupplierActions = ({hasToken , supplier_id , limit , page}: Supp
     useUpdateSupplier.mutate({ id: id, data }, {
       onSuccess: (result) => {
         if (result.status === HTTP_STATUS.OK) {
-          toast.success(result.data?.message || MESSAGE.UPDATE_SUPPLIER_SUCCESS);
+          toast.success(result.data?.data?.UpdateSupplier.message || MESSAGE.UPDATE_SUPPLIER_SUCCESS);
           queryClient.invalidateQueries({
             queryKey: ["suppliers", "all"],
           });
           queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
-        } else {
-          const errorMessage =
-            result.data?.message || MESSAGE.UPDATE_SUPPLIER_FAILED;
-          toast.error(errorMessage);
         }
       },
       onError: (error) => {
