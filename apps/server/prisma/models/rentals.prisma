@@ -27,6 +27,8 @@ model Rental {
   rating       Rating?
   // Partial unique index for active rentals per bike cannot be expressed in Prisma:
   // CREATE UNIQUE INDEX idx_rentals_active_bike ON rentals(bike_id) WHERE status = 'RENTED' AND bike_id IS NOT NULL;
+  // Partial unique index for active rentals per user cannot be expressed in Prisma:
+  // CREATE UNIQUE INDEX idx_rentals_active_user ON rentals(user_id) WHERE status = 'RENTED';
 
   @@index([userId], name: "idx_rentals_user")
   @@index([bikeId], name: "idx_rentals_bike")

@@ -8,7 +8,11 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
-    include: ["tests/**/*.{test,spec}.ts", "src/**/test/**/*.{test,spec}.ts"],
+    include: [
+      "tests/**/*.{test,spec,int.test}.ts",
+      "src/**/test/**/*.{test,spec}.ts",
+      "src/**/test/**/*.int.test.ts",
+    ],
     coverage: {
       reporter: ["text", "html"],
     },
@@ -16,6 +20,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(rootDir, "src"),
+      "generated": resolve(rootDir, "generated"),
     },
   },
 });
