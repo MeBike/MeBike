@@ -157,21 +157,14 @@ export const useBikeActions = (
       updateBikeMutation.mutate(
         { id, data },
         {
-          onSuccess: (result: {
-            status: number;
-            data?: { message?: string };
-          }) => {
+          onSuccess: (result) => {
             if (result.status === HTTP_STATUS.OK) {
               toast.success(
-                result.data?.message || MESSAGE.UPDATE_BIKE_SUCCESS
+                result.data?.data?.UpdateBike.message || MESSAGE.UPDATE_BIKE_SUCCESS
               );
               queryClient.invalidateQueries({
                 queryKey: ["bikes", "all"],
               });
-            } else {
-              const errorMessage =
-                result.data?.message || MESSAGE.UPDATE_BIKE_FAILED;
-              toast.error(errorMessage);
             }
           },
           onError: (error) => {
