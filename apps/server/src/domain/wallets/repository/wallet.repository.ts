@@ -31,6 +31,10 @@ import { selectWalletRow, selectWalletTransactionRow, toWalletRow, toWalletTrans
 
 export type WalletRepo = {
   findByUserId: (userId: string) => Effect.Effect<Option.Option<WalletRow>, WalletRepositoryError>;
+  findByUserIdInTx: (
+    tx: PrismaTypes.TransactionClient,
+    userId: string,
+  ) => Effect.Effect<Option.Option<WalletRow>, WalletRepositoryError>;
   createForUser: (userId: string) => Effect.Effect<WalletRow, WalletUniqueViolation | WalletRepositoryError>;
   createForUserInTx: (
     tx: PrismaTypes.TransactionClient,
@@ -103,11 +107,24 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
       Effect.tryPromise({
         try: async () => {
           const row = await findWalletByUserId(client, userId);
-          return Option.fromNullable(row ? toWalletRow(row) : null);
+          return Option.fromNullable(row).pipe(Option.map(toWalletRow));
         },
         catch: err =>
           new WalletRepositoryError({
             operation: "findByUserId",
+            cause: err,
+          }),
+      }),
+
+    findByUserIdInTx: (tx, userId) =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await findWalletByUserId(tx, userId);
+          return Option.fromNullable(row).pipe(Option.map(toWalletRow));
+        },
+        catch: err =>
+          new WalletRepositoryError({
+            operation: "findByUserIdInTx",
             cause: err,
           }),
       }),

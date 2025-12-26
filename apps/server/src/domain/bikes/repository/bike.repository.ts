@@ -12,6 +12,10 @@ import { BikeRepositoryError } from "../domain-errors";
 
 export type BikeRepo = {
   getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  getByIdInTx: (
+    tx: PrismaTypes.TransactionClient,
+    bikeId: string,
+  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
   listByStationWithOffset: (
     stationId: string | undefined,
     filter: BikeFilter,
@@ -20,6 +24,12 @@ export type BikeRepo = {
   updateStatus: (
     bikeId: string,
     status: BikeStatus,
+  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  updateStatusInTx: (
+    tx: PrismaTypes.TransactionClient,
+    bikeId: string,
+    status: BikeStatus,
+    updatedAt: Date,
   ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
 };
 export class BikeRepository extends Context.Tag("BikeRepository")<
@@ -50,14 +60,31 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
     status: true,
   } as const;
 
+  const findById = (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    bikeId: string,
+  ) =>
+    tx.bike.findUnique({ where: { id: bikeId }, select });
+
   return {
     getById: (bikeId: string) =>
       Effect.tryPromise({
         try: () =>
-          client.bike.findUnique({ where: { id: bikeId }, select }),
+          findById(client, bikeId),
         catch: e =>
           new BikeRepositoryError({
             operation: "getById",
+            cause: e,
+            message: "Failed to fetch bike by id",
+          }),
+      }).pipe(Effect.map(Option.fromNullable)),
+
+    getByIdInTx: (tx, bikeId) =>
+      Effect.tryPromise({
+        try: () => findById(tx, bikeId),
+        catch: e =>
+          new BikeRepositoryError({
+            operation: "getByIdInTx",
             cause: e,
             message: "Failed to fetch bike by id",
           }),
@@ -124,10 +151,43 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
 
         const row = yield* Effect.tryPromise({
           try: () =>
-            client.bike.findUnique({ where: { id: bikeId }, select }),
+            findById(client, bikeId),
           catch: e =>
             new BikeRepositoryError({
               operation: "updateStatus.findUnique",
+              cause: e,
+              message: "Failed to fetch bike after status update",
+            }),
+        });
+
+        return Option.fromNullable(row);
+      }),
+
+    updateStatusInTx: (tx, bikeId, status, updatedAt) =>
+      Effect.gen(function* () {
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            tx.bike.updateMany({
+              where: { id: bikeId },
+              data: { status, updatedAt },
+            }),
+          catch: e =>
+            new BikeRepositoryError({
+              operation: "updateStatusInTx.updateMany",
+              cause: e,
+              message: "Failed to update bike status",
+            }),
+        });
+
+        if (updated.count === 0) {
+          return Option.none<BikeRow>();
+        }
+
+        const row = yield* Effect.tryPromise({
+          try: () => findById(tx, bikeId),
+          catch: e =>
+            new BikeRepositoryError({
+              operation: "updateStatusInTx.findUnique",
               cause: e,
               message: "Failed to fetch bike after status update",
             }),

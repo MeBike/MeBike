@@ -7,8 +7,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json --resolve-full-paths --resolve-full-extension .js",
     "test": "vitest run",
+    "test:all": "vitest run --config vitest.config.ts --mode test",
+    "test:unit": "vitest run --config vitest.config.ts --mode test --exclude '**/*.int.test.ts'",
     "test:watch": "vitest",
     "test:int": "vitest run --config vitest.config.ts --mode test '**/*.int.test.ts'",
+    "unit:test": "pnpm test:unit",
+    "int:test": "pnpm test:int",
     "dev:test": "vitest --watch",
     "lint": "eslint .",
     "dev": "tsx --watch src/http/server.ts",

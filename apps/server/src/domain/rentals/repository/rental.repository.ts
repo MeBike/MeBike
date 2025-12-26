@@ -6,6 +6,7 @@ import type { PrismaClient, Prisma as PrismaTypes, RentalStatus } from "generate
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
 
 import type { RentalRepoError } from "../domain-errors";
 import type {
@@ -64,8 +65,23 @@ export type RentalRepo = {
     userId: string,
   ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
 
+  findActiveByBikeIdInTx: (
+    tx: PrismaTypes.TransactionClient,
+    bikeId: string,
+  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+
+  findActiveByUserIdInTx: (
+    tx: PrismaTypes.TransactionClient,
+    userId: string,
+  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+
   // Core rental operations
   createRental: (
+    data: CreateRentalInput,
+  ) => Effect.Effect<RentalRow, RentalRepoError>;
+
+  createRentalInTx: (
+    tx: PrismaTypes.TransactionClient,
     data: CreateRentalInput,
   ) => Effect.Effect<RentalRow, RentalRepoError>;
 
@@ -136,6 +152,38 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
     status: raw.status,
     updatedAt: raw.updatedAt,
   });
+
+  const createRentalWithClient = (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    data: CreateRentalInput,
+  ) =>
+    Effect.tryPromise({
+      try: () =>
+        tx.rental.create({
+          data: {
+            userId: data.userId,
+            bikeId: data.bikeId,
+            startStationId: data.startStationId,
+            startTime: data.startTime,
+            status: "RENTED" as RentalStatus,
+          },
+          select,
+        }),
+      catch: error =>
+        Match.value(error).pipe(
+          Match.when(isPrismaUniqueViolation, e =>
+            new RentalUniqueViolation({
+              operation: "createRental",
+              constraint: uniqueTargets(e),
+              cause: e,
+            })),
+          Match.orElse(e =>
+            new RentalRepositoryError({
+              operation: "createRental",
+              cause: e,
+            })),
+        ),
+    }).pipe(Effect.map(mapToRentalRow));
 
   return {
     listMyRentals(userId, filter, pageReq) {
@@ -231,7 +279,7 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
             }),
         });
 
-        return Option.fromNullable(raw ? mapToRentalRow(raw) : null);
+        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
       });
     },
 
@@ -271,7 +319,7 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
             }),
         });
 
-        return Option.fromNullable(raw ? mapToRentalRow(raw) : null);
+        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
       });
     },
 
@@ -290,38 +338,54 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
             }),
         });
 
-        return Option.fromNullable(raw ? mapToRentalRow(raw) : null);
+        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
+      });
+    },
+
+    findActiveByBikeIdInTx(tx, bikeId) {
+      return Effect.gen(function* () {
+        const raw = yield* Effect.tryPromise({
+          try: () =>
+            tx.rental.findFirst({
+              where: { bikeId, status: "RENTED" },
+              select,
+            }),
+          catch: e =>
+            new RentalRepositoryError({
+              operation: "findActiveByBikeIdInTx",
+              cause: e,
+            }),
+        });
+
+        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
+      });
+    },
+
+    findActiveByUserIdInTx(tx, userId) {
+      return Effect.gen(function* () {
+        const raw = yield* Effect.tryPromise({
+          try: () =>
+            tx.rental.findFirst({
+              where: { userId, status: "RENTED" },
+              select,
+            }),
+          catch: e =>
+            new RentalRepositoryError({
+              operation: "findActiveByUserIdInTx",
+              cause: e,
+            }),
+        });
+
+        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
       });
     },
 
     createRental(data) {
-      return Effect.tryPromise({
-        try: () =>
-          client.rental.create({
-            data: {
-              userId: data.userId,
-              bikeId: data.bikeId,
-              startStationId: data.startStationId,
-              startTime: data.startTime,
-              status: "RENTED" as RentalStatus,
-            },
-            select,
-          }),
-        catch: error =>
-          Match.value(error).pipe(
-            Match.when(isPrismaUniqueViolation, e =>
-              new RentalUniqueViolation({
-                operation: "createRental",
-                constraint: e.meta?.target as string[] | undefined,
-                cause: e,
-              })),
-            Match.orElse(e =>
-              new RentalRepositoryError({
-                operation: "createRental",
-                cause: e,
-              })),
-          ),
-      }).pipe(Effect.map(mapToRentalRow));
+      return createRentalWithClient(client, data);
+    },
+
+    createRentalInTx(tx, data) {
+      return createRentalWithClient(tx, data);
     },
 
     updateRentalOnEnd(data) {
