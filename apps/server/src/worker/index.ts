@@ -5,6 +5,8 @@ import { parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 import { Effect } from "effect";
 import process from "node:process";
 
+import type { Prisma } from "@/infrastructure/prisma";
+
 import { db } from "@/database";
 import {
   activateSubscriptionUseCase,
@@ -15,7 +17,7 @@ import {
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { makePgBoss } from "@/infrastructure/jobs/pgboss";
 import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
-import { Prisma } from "@/infrastructure/prisma";
+import { PrismaLive } from "@/infrastructure/prisma";
 import { makeEmailTransporter } from "@/lib/email";
 import logger from "@/lib/logger";
 
@@ -30,7 +32,7 @@ function runSubscriptionEffect<A, E>(
     eff.pipe(
       Effect.provide(SubscriptionServiceLive),
       Effect.provide(SubscriptionRepositoryLive),
-      Effect.provide(Prisma.Default),
+      Effect.provide(PrismaLive),
     ),
   );
 }

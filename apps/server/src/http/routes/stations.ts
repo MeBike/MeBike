@@ -9,7 +9,7 @@ import {
   StationRepositoryLive,
   StationServiceLive,
 } from "@/domain/stations";
-import { Prisma } from "@/infrastructure/prisma";
+import { PrismaLive } from "@/infrastructure/prisma";
 
 export function registerStationRoutes(
   app: import("@hono/zod-openapi").OpenAPIHono,
@@ -34,7 +34,7 @@ export function registerStationRoutes(
       }).pipe(
         Effect.provide(StationServiceLive),
         Effect.provide(StationRepositoryLive),
-        Effect.provide(Prisma.Default),
+        Effect.provide(PrismaLive),
       ),
       "GET /v1/stations",
     );
@@ -101,7 +101,7 @@ export function registerStationRoutes(
       .pipe(
         Effect.provide(StationServiceLive),
         Effect.provide(StationRepositoryLive),
-        Effect.provide(Prisma.Default),
+        Effect.provide(PrismaLive),
       )
       .pipe(effect => withLoggedCause(effect, "GET /v1/stations/nearby"));
 
@@ -147,7 +147,7 @@ export function registerStationRoutes(
     const eff = getStationDetailsUseCase(stationId).pipe(
       Effect.provide(StationServiceLive),
       Effect.provide(StationRepositoryLive),
-      Effect.provide(Prisma.Default),
+      Effect.provide(PrismaLive),
     );
 
     return Effect.runPromise(

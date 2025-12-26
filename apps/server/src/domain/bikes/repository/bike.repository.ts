@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { BikeStatus, PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
@@ -32,14 +32,15 @@ export type BikeRepo = {
     updatedAt: Date,
   ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
 };
+const makeBikeRepositoryEffect = Effect.gen(function* () {
+  const { client } = yield* Prisma;
+  return makeBikeRepository(client);
+});
+
 export class BikeRepository extends Effect.Service<BikeRepository>()(
   "BikeRepository",
   {
-    effect: Effect.gen(function* () {
-      const { client } = yield* Prisma;
-      return makeBikeRepository(client);
-    }),
-    dependencies: [Prisma.Default],
+    effect: makeBikeRepositoryEffect,
   },
 ) {}
 
@@ -206,4 +207,7 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
 
 export const bikeRepositoryFactory = makeBikeRepository;
 
-export const BikeRepositoryLive = BikeRepository.Default;
+export const BikeRepositoryLive = Layer.effect(
+  BikeRepository,
+  makeBikeRepositoryEffect.pipe(Effect.map(BikeRepository.make)),
+);

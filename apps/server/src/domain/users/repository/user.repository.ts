@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
@@ -80,14 +80,15 @@ export type UserRepo = {
   ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
 };
 
+const makeUserRepositoryEffect = Effect.gen(function* () {
+  const { client } = yield* Prisma;
+  return makeUserRepository(client);
+});
+
 export class UserRepository extends Effect.Service<UserRepository>()(
   "UserRepository",
   {
-    effect: Effect.gen(function* () {
-      const { client } = yield* Prisma;
-      return makeUserRepository(client);
-    }),
-    dependencies: [Prisma.Default],
+    effect: makeUserRepositoryEffect,
   },
 ) {}
 
@@ -484,4 +485,7 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
   };
 }
 
-export const UserRepositoryLive = UserRepository.Default;
+export const UserRepositoryLive = Layer.effect(
+  UserRepository,
+  makeUserRepositoryEffect.pipe(Effect.map(UserRepository.make)),
+);

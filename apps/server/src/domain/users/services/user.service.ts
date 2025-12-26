@@ -1,6 +1,6 @@
 import type { Option } from "effect";
 
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 
 import type { PageRequest, PageResult } from "../../shared/pagination";
 import type {
@@ -59,45 +59,50 @@ export type UserService = {
   ) => Effect.Effect<readonly UserRow[], UserRepositoryError>;
 };
 
+function makeUserService(repo: UserRepo): UserService {
+  return {
+    getById: id =>
+      repo.findById(id),
+
+    getByEmail: email =>
+      repo.findByEmail(email),
+
+    create: input =>
+      repo.createUser(input),
+
+    updateProfile: (id, patch) =>
+      repo.updateProfile(id, patch),
+
+    updateAdminById: (id, patch) =>
+      repo.updateAdminById(id, patch),
+
+    updatePassword: (id, passwordHash) =>
+      repo.updatePassword(id, passwordHash),
+
+    markVerified: id =>
+      repo.markVerified(id),
+
+    listWithOffset: (filter, pageReq) =>
+      repo.listWithOffset(filter, pageReq),
+
+    searchByQuery: query =>
+      repo.searchByQuery(query),
+  };
+}
+
+const makeUserServiceEffect = Effect.gen(function* () {
+  const repo = yield* UserRepository;
+  return makeUserService(repo);
+});
+
 export class UserServiceTag extends Effect.Service<UserServiceTag>()(
   "UserService",
   {
-    effect: Effect.gen(function* () {
-      const repo = yield* UserRepository;
-
-      const service: UserService = {
-        getById: id =>
-          repo.findById(id),
-
-        getByEmail: email =>
-          repo.findByEmail(email),
-
-        create: input =>
-          repo.createUser(input),
-
-        updateProfile: (id, patch) =>
-          repo.updateProfile(id, patch),
-
-        updateAdminById: (id, patch) =>
-          repo.updateAdminById(id, patch),
-
-        updatePassword: (id, passwordHash) =>
-          repo.updatePassword(id, passwordHash),
-
-        markVerified: id =>
-          repo.markVerified(id),
-
-        listWithOffset: (filter, pageReq) =>
-          repo.listWithOffset(filter, pageReq),
-
-        searchByQuery: query =>
-          repo.searchByQuery(query),
-      };
-
-      return service;
-    }),
-    dependencies: [UserRepository.Default],
+    effect: makeUserServiceEffect,
   },
 ) {}
 
-export const UserServiceLive = UserServiceTag.Default;
+export const UserServiceLive = Layer.effect(
+  UserServiceTag,
+  makeUserServiceEffect.pipe(Effect.map(UserServiceTag.make)),
+);

@@ -1,9 +1,9 @@
-import { Effect, Option } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type { BikeRepo } from "@/domain/bikes/repository/bike.repository";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
-import { BikeRepository, BikeRepositoryLive } from "@/domain/bikes";
+import { BikeRepository } from "@/domain/bikes";
 
 import type { RentalServiceFailure } from "../domain-errors";
 import type {
@@ -55,15 +55,16 @@ export type RentalService = {
   ) => Effect.Effect<RentalRow, RentalNotFound | UnauthorizedRentalAccess>;
 };
 
+const makeRentalServiceEffect = Effect.gen(function* () {
+  const repo = yield* RentalRepository;
+  const bikeRepo = yield* BikeRepository;
+  return makeRentalService(repo, bikeRepo);
+});
+
 export class RentalServiceTag extends Effect.Service<RentalServiceTag>()(
   "RentalService",
   {
-    effect: Effect.gen(function* () {
-      const repo = yield* RentalRepository;
-      const bikeRepo = yield* BikeRepository;
-      return makeRentalService(repo, bikeRepo);
-    }),
-    dependencies: [RentalRepository.Default, BikeRepositoryLive],
+    effect: makeRentalServiceEffect,
   },
 ) {}
 
@@ -140,4 +141,7 @@ function makeRentalService(
   };
 }
 
-export const RentalServiceLive = RentalServiceTag.Default;
+export const RentalServiceLive = Layer.effect(
+  RentalServiceTag,
+  makeRentalServiceEffect.pipe(Effect.map(RentalServiceTag.make)),
+);

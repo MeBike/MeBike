@@ -6,7 +6,7 @@ import {
   SubscriptionServiceLive,
   SubscriptionServiceTag,
 } from "@/domain/subscriptions";
-import { Prisma } from "@/infrastructure/prisma";
+import { PrismaLive } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
 
 async function main() {
@@ -18,7 +18,7 @@ async function main() {
     }).pipe(
       Effect.provide(SubscriptionServiceLive),
       Effect.provide(SubscriptionRepositoryLive),
-      Effect.provide(Prisma.Default),
+      Effect.provide(PrismaLive),
       Effect.tap(expiredCount =>
         Effect.sync(() => {
           logger.info(

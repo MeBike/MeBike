@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type {
@@ -32,14 +32,15 @@ export type StationRepo = {
   ) => Effect.Effect<PageResult<NearestStationRow>, StationRepositoryError>;
 };
 
+const makeStationRepositoryEffect = Effect.gen(function* () {
+  const { client } = yield* Prisma;
+  return makeStationRepository(client);
+});
+
 export class StationRepository extends Effect.Service<StationRepository>()(
   "StationRepository",
   {
-    effect: Effect.gen(function* () {
-      const { client } = yield* Prisma;
-      return makeStationRepository(client);
-    }),
-    dependencies: [Prisma.Default],
+    effect: makeStationRepositoryEffect,
   },
 ) {}
 
@@ -275,6 +276,9 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
   };
 }
 
-export const StationRepositoryLive = StationRepository.Default;
+export const StationRepositoryLive = Layer.effect(
+  StationRepository,
+  makeStationRepositoryEffect.pipe(Effect.map(StationRepository.make)),
+);
 
 export const stationRepositoryFactory = makeStationRepository;

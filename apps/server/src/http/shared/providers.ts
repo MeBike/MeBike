@@ -38,17 +38,17 @@ import {
   WalletRepositoryLive,
   WalletServiceLive,
 } from "@/domain/wallets";
-import { Email } from "@/infrastructure/email";
-import { Prisma } from "@/infrastructure/prisma";
-import { Redis } from "@/infrastructure/redis";
+import { EmailLive } from "@/infrastructure/email";
+import { PrismaLive } from "@/infrastructure/prisma";
+import { RedisLive } from "@/infrastructure/redis";
 
 const BikeReposLive = BikeRepositoryLive.pipe(
-  Layer.provide(Prisma.Default),
+  Layer.provide(PrismaLive),
 );
 
 const BikeServiceLayer = BikeServiceLive.pipe(
   Layer.provide(BikeReposLive),
-  Layer.provide(Prisma.Default),
+  Layer.provide(PrismaLive),
 );
 
 const BikeStatsServiceLayer = BikeStatsServiceLive.pipe(
@@ -61,7 +61,7 @@ export const BikeDepsLive = Layer.mergeAll(
   BikeStatsRepositoryLive,
   BikeServiceLayer,
   BikeStatsServiceLayer,
-  Prisma.Default,
+  PrismaLive,
 );
 
 export function withBikeDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
@@ -69,7 +69,7 @@ export function withBikeDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
 }
 
 const RentalReposLive = RentalRepositoryLive.pipe(
-  Layer.provide(Prisma.Default),
+  Layer.provide(PrismaLive),
 );
 
 const RentalServiceLayer = RentalServiceLive.pipe(
@@ -78,7 +78,7 @@ const RentalServiceLayer = RentalServiceLive.pipe(
 );
 
 const WalletReposLive = WalletRepositoryLive.pipe(
-  Layer.provide(Prisma.Default),
+  Layer.provide(PrismaLive),
 );
 
 const WalletServiceLayer = WalletServiceLive.pipe(
@@ -88,7 +88,7 @@ const WalletServiceLayer = WalletServiceLive.pipe(
 export const WalletDepsLive = Layer.mergeAll(
   WalletReposLive,
   WalletServiceLayer,
-  Prisma.Default,
+  PrismaLive,
 );
 
 export const RentalDepsLive = Layer.mergeAll(
@@ -96,18 +96,18 @@ export const RentalDepsLive = Layer.mergeAll(
   RentalServiceLayer,
   BikeDepsLive,
   WalletDepsLive,
-  Prisma.Default,
+  PrismaLive,
 );
 
 export function withRentalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(
     Effect.provide(RentalDepsLive),
-    Effect.provide(Prisma.Default),
+    Effect.provide(PrismaLive),
   );
 }
 
 const SupplierReposLive = SupplierRepositoryLive.pipe(
-  Layer.provide(Prisma.Default),
+  Layer.provide(PrismaLive),
 );
 
 const SupplierServiceLayer = SupplierServiceLive.pipe(
@@ -117,7 +117,7 @@ const SupplierServiceLayer = SupplierServiceLive.pipe(
 export const SupplierDepsLive = Layer.mergeAll(
   SupplierReposLive,
   SupplierServiceLayer,
-  Prisma.Default,
+  PrismaLive,
 );
 
 export function withSupplierDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
@@ -130,14 +130,14 @@ const AuthReposLive = Layer.mergeAll(
   UserRepositoryLive,
   WalletRepositoryLive,
 ).pipe(
-  Layer.provide(Prisma.Default),
-  Layer.provide(Redis.Default),
+  Layer.provide(PrismaLive),
+  Layer.provide(RedisLive),
 );
 
 const AuthServiceLayer = AuthServiceLive.pipe(
   Layer.provide(AuthReposLive),
-  Layer.provide(Email.Default),
-  Layer.provide(Prisma.Default),
+  Layer.provide(EmailLive),
+  Layer.provide(PrismaLive),
 );
 
 const AuthUserServiceLayer = UserServiceLive.pipe(
@@ -148,9 +148,9 @@ export const AuthDepsLive = Layer.mergeAll(
   AuthReposLive,
   AuthServiceLayer,
   AuthUserServiceLayer,
-  Email.Default,
-  Redis.Default,
-  Prisma.Default,
+  EmailLive,
+  RedisLive,
+  PrismaLive,
 );
 
 export function withAuthDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
@@ -158,7 +158,7 @@ export function withAuthDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
 }
 
 const UserReposLive = UserRepositoryLive.pipe(
-  Layer.provide(Prisma.Default),
+  Layer.provide(PrismaLive),
 );
 
 const UserServiceLayer = UserServiceLive.pipe(
@@ -168,7 +168,7 @@ const UserServiceLayer = UserServiceLive.pipe(
 export const UserDepsLive = Layer.mergeAll(
   UserReposLive,
   UserServiceLayer,
-  Prisma.Default,
+  PrismaLive,
 );
 
 export function withUserDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
@@ -192,12 +192,12 @@ const RatingReposLive = Layer.mergeAll(
   RatingRepositoryLive,
   RatingReasonRepositoryLive,
 ).pipe(
-  Layer.provide(Prisma.Default),
+  Layer.provide(PrismaLive),
 );
 
 const RatingServiceLayer = RatingServiceLive.pipe(
   Layer.provide(RatingRepositoryLive),
-  Layer.provide(Prisma.Default),
+  Layer.provide(PrismaLive),
 );
 
 export const RatingDepsLive = Layer.mergeAll(
@@ -205,13 +205,13 @@ export const RatingDepsLive = Layer.mergeAll(
   RatingServiceLayer,
   RentalReposLive,
   RentalServiceLayer,
-  Prisma.Default,
+  PrismaLive,
 );
 
 export function withRatingDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(
     Effect.provide(RatingDepsLive),
-    Effect.provide(Prisma.Default),
+    Effect.provide(PrismaLive),
   );
 }
 
@@ -220,7 +220,7 @@ export function withWalletDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
 }
 
 const SubscriptionReposLive = SubscriptionRepositoryLive.pipe(
-  Layer.provide(Prisma.Default),
+  Layer.provide(PrismaLive),
 );
 
 const SubscriptionServiceLayer = SubscriptionServiceLive.pipe(
@@ -232,8 +232,8 @@ export const SubscriptionDepsLive = Layer.mergeAll(
   SubscriptionServiceLayer,
   WalletDepsLive,
   UserDepsLive,
-  Email.Default,
-  Prisma.Default,
+  EmailLive,
+  PrismaLive,
 );
 
 export function withSubscriptionDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {

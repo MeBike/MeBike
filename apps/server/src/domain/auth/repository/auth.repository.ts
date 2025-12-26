@@ -1,4 +1,4 @@
-import { Effect, Option } from "effect";
+import { Effect, Layer, Option } from "effect";
 
 import { Redis } from "@/infrastructure/redis";
 
@@ -29,14 +29,15 @@ export type AuthRepo = {
   }) => Effect.Effect<Option.Option<EmailOtpRecord>, AuthRepositoryError>;
 };
 
+const makeAuthRepositoryEffect = Effect.gen(function* () {
+  const { client } = yield* Redis;
+  return makeAuthRepository(client);
+});
+
 export class AuthRepository extends Effect.Service<AuthRepository>()(
   "AuthRepository",
   {
-    effect: Effect.gen(function* () {
-      const { client } = yield* Redis;
-      return makeAuthRepository(client);
-    }),
-    dependencies: [Redis.Default],
+    effect: makeAuthRepositoryEffect,
   },
 ) {}
 
@@ -187,6 +188,9 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
   };
 }
 
-export const AuthRepositoryLive = AuthRepository.Default;
+export const AuthRepositoryLive = Layer.effect(
+  AuthRepository,
+  makeAuthRepositoryEffect.pipe(Effect.map(AuthRepository.make)),
+);
 
 export const authRepositoryFactory = makeAuthRepository;
