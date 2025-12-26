@@ -20,6 +20,7 @@ import {
   UnauthorizedRentalAccess,
 } from "../domain-errors";
 import { RentalRepository } from "../repository/rental.repository";
+import { aggregateRentalStatusCounts } from "./rental-counts";
 
 export type RentalService = {
   listMyRentals: (
@@ -92,20 +93,7 @@ function makeRentalService(
     getMyRentalCounts(userId) {
       return repo.getMyRentalCounts(userId).pipe(
         Effect.catchTag("RentalRepositoryError", error => Effect.die(error)),
-        Effect.map((rows) => {
-          const counts: RentalStatusCounts = {
-            RENTED: 0,
-            COMPLETED: 0,
-            CANCELLED: 0,
-            RESERVED: 0,
-          };
-
-          for (const row of rows) {
-            counts[row.status] = row.count;
-          }
-
-          return counts;
-        }),
+        Effect.map(aggregateRentalStatusCounts),
       );
     },
 

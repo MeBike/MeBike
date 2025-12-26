@@ -170,7 +170,7 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
                       position,
                       ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
                     ) AS distance_meters
-                  FROM "stations"
+                  FROM "Station"
                   WHERE ST_DWithin(
                     position,
                     ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
@@ -202,7 +202,7 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
                       position,
                       ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
                     ) AS distance_meters
-                  FROM "stations"
+                  FROM "Station"
                   ORDER BY distance_meters
                   OFFSET ${skip} LIMIT ${take};
                 `,
@@ -224,7 +224,7 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
                   .$queryRawUnsafe(
                     `
                     SELECT COUNT(*)::int AS count
-                    FROM "stations"
+                    FROM "Station"
                     WHERE ST_DWithin(
                       position,
                       ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
@@ -251,7 +251,7 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
             : Effect.tryPromise(() =>
                 client
                   .$queryRawUnsafe(
-                    "SELECT COUNT(*)::int AS count FROM \"stations\"",
+                    "SELECT COUNT(*)::int AS count FROM \"Station\"",
                   )
                   .then((rows: unknown) =>
                     Number((rows as any[])[0]?.count ?? 0),

@@ -10,7 +10,7 @@
     "test:all": "vitest run --config vitest.config.ts --mode test",
     "test:unit": "vitest run --config vitest.config.ts --mode test --exclude '**/*.int.test.ts'",
     "test:watch": "vitest",
-    "test:int": "vitest run --config vitest.config.ts --mode test '**/*.int.test.ts'",
+    "test:int": "vitest run --config vitest.int.config.ts --mode test",
     "unit:test": "pnpm test:unit",
     "int:test": "pnpm test:int",
     "dev:test": "vitest --watch",
