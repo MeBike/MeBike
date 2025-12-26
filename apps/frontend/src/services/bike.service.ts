@@ -8,19 +8,21 @@ import { Bike, BikeRentalHistory } from "@custom-types";
 import { BikeStatus } from "@custom-types";
 import { BikeActivityStats } from "@custom-types";
 import { BikeStats } from "@custom-types";
-import { GET_BIKES, GET_DETAIL_BIKES, CREATE_BIKE , UPDATE_BIKE} from "@/graphql";
-import { CreateBikeResponse, GetBikesResponse, GetDetailBikeResponse , UpdateBikeResponse} from "@/types/bike.type";
+import {
+  GET_BIKES,
+  GET_DETAIL_BIKES,
+  CREATE_BIKE,
+  UPDATE_BIKE,
+  CHANGE_BIKE_STATUS,
+} from "@/graphql";
+import {
+  CreateBikeResponse,
+  GetBikesResponse,
+  GetDetailBikeResponse,
+  UpdateBikeResponse,
+  ChangeBikeStatusResponse,
+} from "@/types/bike.type";
 import { print } from "graphql";
-interface ApiResponse<T> {
-  data: T;
-  pagination: {
-    totalPages: number;
-    currentPage: number;
-    limit: number;
-    totalRecords: number;
-  };
-  message: string;
-}
 interface DetailApiResponse<T> {
   result: T;
   message: string;
@@ -58,7 +60,6 @@ const BIKE_ENDPOINTS = {
 // }
 export const bikeService = {
   //for admin
-
   createBikeAdmin: async (
     data: BikeSchemaFormData
   ): Promise<AxiosResponse<CreateBikeResponse>> => {
@@ -172,6 +173,19 @@ export const bikeService = {
     const response = await fetchHttpClient.get<
       DetailApiResponseCuaNguyen<BikeRentalHistory>
     >(BIKE_ENDPOINTS.RENTAL_HISTORY_BIKE(id));
+    return response;
+  },
+  changeStatusBike: async (
+    changeBikeStatusId: string,
+    status: BikeStatus
+  ): Promise<AxiosResponse<ChangeBikeStatusResponse>> => {
+    const response = await fetchHttpClient.mutation<ChangeBikeStatusResponse>(
+      print(CHANGE_BIKE_STATUS),
+      {
+        changeBikeStatusId: changeBikeStatusId,
+        status: status,
+      }
+    );
     return response;
   },
 };

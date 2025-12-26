@@ -17,8 +17,9 @@ import { useRouter } from "next/navigation";
 import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
-import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index"
+import { QUERY_KEYS, HTTP_STATUS, MESSAGE } from "@constants/index";
 import { getErrorMessage } from "@/utils/message";
+import { useChangeStatusBikeMutation } from "./mutations/Bike/useChangeStatusBike";
 export const useBikeActions = (
   hasToken: boolean,
   bike_detail_id?: string,
@@ -82,8 +83,7 @@ export const useBikeActions = (
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
   const {
-    data: 
-    statisticData,
+    data: statisticData,
     refetch: refetchStatistics,
     isFetching: isLoadingStatistics,
   } = useGetStatisticsBikeQuery();
@@ -117,15 +117,21 @@ export const useBikeActions = (
       }
       useCreateBike.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === HTTP_STATUS.CREATED) {
-            toast.success(result.data?.data?.CreateBike.message || MESSAGE.CREATE_BIKE_SUCCESS);
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(
+              result.data?.data?.CreateBike.message ||
+                MESSAGE.CREATE_BIKE_SUCCESS
+            );
             queryClient.invalidateQueries({
-              queryKey:["bikes","all"]
+              queryKey: ["bikes", "all"],
             });
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.CREATE_BIKE_FAILED);
+          const errorMessage = getErrorMessage(
+            error,
+            MESSAGE.CREATE_BIKE_FAILED
+          );
           toast.error(errorMessage);
         },
       });
@@ -156,9 +162,11 @@ export const useBikeActions = (
             data?: { message?: string };
           }) => {
             if (result.status === HTTP_STATUS.OK) {
-              toast.success(result.data?.message || MESSAGE.UPDATE_BIKE_SUCCESS);
+              toast.success(
+                result.data?.message || MESSAGE.UPDATE_BIKE_SUCCESS
+              );
               queryClient.invalidateQueries({
-                queryKey:["bikes","all"]
+                queryKey: ["bikes", "all"],
               });
             } else {
               const errorMessage =
@@ -167,7 +175,10 @@ export const useBikeActions = (
             }
           },
           onError: (error) => {
-            const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_BIKE_FAILED);
+            const errorMessage = getErrorMessage(
+              error,
+              MESSAGE.UPDATE_BIKE_FAILED
+            );
             toast.error(errorMessage);
           },
         }
@@ -197,12 +208,16 @@ export const useBikeActions = (
             toast.success(result.data?.message || MESSAGE.DELETE_BIKE_SUCCESS);
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIKE.ALL() });
           } else {
-            const errorMessage = result.data?.message || MESSAGE.DELETE_BIKE_FAILED;
+            const errorMessage =
+              result.data?.message || MESSAGE.DELETE_BIKE_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.DELETE_BIKE_FAILED);
+          const errorMessage = getErrorMessage(
+            error,
+            MESSAGE.DELETE_BIKE_FAILED
+          );
           toast.error(errorMessage);
         },
       });
@@ -220,12 +235,16 @@ export const useBikeActions = (
           if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.message || MESSAGE.REPORT_BIKE_SUCCESS);
           } else {
-            const errorMessage = result.data?.message || MESSAGE.REPORT_BIKE_FAILED;
+            const errorMessage =
+              result.data?.message || MESSAGE.REPORT_BIKE_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.REPORT_BIKE_FAILED);
+          const errorMessage = getErrorMessage(
+            error,
+            MESSAGE.REPORT_BIKE_FAILED
+          );
           toast.error(errorMessage);
         },
       });
@@ -237,6 +256,45 @@ export const useBikeActions = (
       getDetailBike();
     }
   }, [getDetailBike, bike_detail_id]);
+  const useChangeBikeStatus = useChangeStatusBikeMutation();
+  const changeStatusBike = useCallback(
+    ({
+      changeBikeStatusId,
+      status,
+    }: {
+      changeBikeStatusId: string;
+      status: BikeStatus;
+    }) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useChangeBikeStatus.mutate(
+        { changeBikeStatusId, status },
+        {
+          onSuccess: (result) => {
+            if (result.status === HTTP_STATUS.OK) {
+              toast.success(
+                result.data?.data?.ChangeBikeStatus.message ||
+                  MESSAGE.CREATE_BIKE_SUCCESS
+              );
+              queryClient.invalidateQueries({
+                queryKey: ["bikes", "all"],
+              });
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(
+              error,
+              MESSAGE.CREATE_BIKE_FAILED
+            );
+            toast.error(errorMessage);
+          },
+        }
+      );
+    },
+    [useChangeBikeStatus, hasToken, router, queryClient]
+  );
   return {
     getBikes,
     createBike,
@@ -268,5 +326,6 @@ export const useBikeActions = (
     getRentalBikes,
     isFetchingRentalBikes,
     totalRecord: data?.data?.Bikes.pagination?.total || 0,
+    changeStatusBike,
   };
 };

@@ -81,3 +81,4 @@ export type GetBikesResponse = GraphQLMutationResponse<"Bikes", Bike[]>;
 export type GetDetailBikeResponse = GraphQLMutationResponse<"Bike", DetailBike>;
 export type CreateBikeResponse = GraphQLMutationResponse<"CreateBike">;
 export type UpdateBikeResponse = GraphQLMutationResponse<"UpdateBike">;
+export type ChangeBikeStatusResponse = GraphQLMutationResponse<"ChangeBikeStatus">;

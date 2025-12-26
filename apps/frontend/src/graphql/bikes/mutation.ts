@@ -19,3 +19,13 @@ export const UPDATE_BIKE = gql`
     }
   }
 `;
+export const CHANGE_BIKE_STATUS = gql`
+  mutation Mutation($changeBikeStatusId: String!, $status: BikeStatus!) {
+    ChangeBikeStatus(id: $changeBikeStatusId, status: $status) {
+      success
+      message
+      errors
+      statusCode
+    }
+  }
+`;
