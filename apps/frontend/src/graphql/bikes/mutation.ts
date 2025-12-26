@@ -9,3 +9,13 @@ export const CREATE_BIKE = gql`
     }
   }
 `;
+export const UPDATE_BIKE = gql`
+  mutation UpdateBike($body: UpdateBikeInput!, $updateBikeId: String!) {
+    UpdateBike(body: $body, id: $updateBikeId) {
+      success
+      message
+      errors
+      statusCode
+    }
+  }
+`;

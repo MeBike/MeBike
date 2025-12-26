@@ -8,8 +8,8 @@ import { Bike, BikeRentalHistory } from "@custom-types";
 import { BikeStatus } from "@custom-types";
 import { BikeActivityStats } from "@custom-types";
 import { BikeStats } from "@custom-types";
-import { GET_BIKES, GET_DETAIL_BIKES, CREATE_BIKE } from "@/graphql";
-import { CreateBikeResponse, GetBikesResponse, GetDetailBikeResponse } from "@/types/bike.type";
+import { GET_BIKES, GET_DETAIL_BIKES, CREATE_BIKE , UPDATE_BIKE} from "@/graphql";
+import { CreateBikeResponse, GetBikesResponse, GetDetailBikeResponse , UpdateBikeResponse} from "@/types/bike.type";
 import { print } from "graphql";
 interface ApiResponse<T> {
   data: T;
@@ -98,12 +98,19 @@ export const bikeService = {
     return response;
   },
   updateBike: async (
-    id: string,
+    updateBikeId: string,
     data: Partial<UpdateBikeSchemaFormData>
-  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
-    const response = await fetchHttpClient.patch<DetailApiResponse<Bike>>(
-      BIKE_ENDPOINTS.UPDATE(id),
-      data
+  ): Promise<AxiosResponse<UpdateBikeResponse>> => {
+    const response = await fetchHttpClient.mutation<UpdateBikeResponse>(
+      print(UPDATE_BIKE),
+      {
+        body: {
+          chipId: data.chip_id,
+          supplierId: data.supplier_id,
+          stationId: data.station_id,
+        },
+        updateBikeId: updateBikeId,
+      }
     );
     return response;
   },
@@ -138,7 +145,7 @@ export const bikeService = {
     const response = await fetchHttpClient.query<GetDetailBikeResponse>(
       print(GET_DETAIL_BIKES),
       {
-       bikeId: id ,
+        bikeId: id,
       }
     );
     return response;
