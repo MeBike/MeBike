@@ -1,0 +1,189 @@
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Effect, Either, Layer, Option } from "effect";
+import { uuidv7 } from "uuidv7";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+
+import { Prisma } from "@/infrastructure/prisma";
+import { migrate } from "@/test/db/migrate";
+import { startPostgres } from "@/test/db/postgres";
+import { PrismaClient, Prisma as PrismaNS } from "generated/prisma/client";
+
+import { makeSubscriptionRepository, SubscriptionRepository } from "../..";
+import { SubscriptionServiceLive, SubscriptionServiceTag } from "../subscription.service";
+
+function expectLeftTag<E extends { _tag: string }>(result: Either.Either<unknown, E>, tag: E["_tag"]) {
+  if (Either.isRight(result)) {
+    throw new Error(`Expected Left ${tag}, got Right`);
+  }
+  expect(result.left._tag).toBe(tag);
+}
+
+describe("subscriptionService Integration", () => {
+  let container: { stop: () => Promise<void>; url: string };
+  let client: PrismaClient;
+  let depsLayer: Layer.Layer<SubscriptionServiceTag | SubscriptionRepository | Prisma, never, never>;
+
+  beforeAll(async () => {
+    container = await startPostgres();
+    await migrate(container.url);
+
+    const adapter = new PrismaPg({ connectionString: container.url });
+    client = new PrismaClient({ adapter });
+
+    const subscriptionRepoLayer = Layer.succeed(
+      SubscriptionRepository,
+      makeSubscriptionRepository(client),
+    );
+    const subscriptionServiceLayer = SubscriptionServiceLive.pipe(
+      Layer.provide(subscriptionRepoLayer),
+    );
+
+    depsLayer = Layer.mergeAll(
+      Layer.succeed(Prisma, Prisma.make({ client })),
+      subscriptionRepoLayer,
+      subscriptionServiceLayer,
+    );
+  }, 60000);
+
+  afterEach(async () => {
+    await client.subscription.deleteMany({});
+    await client.user.deleteMany({});
+  });
+
+  afterAll(async () => {
+    if (client)
+      await client.$disconnect();
+    if (container)
+      await container.stop();
+  });
+
+  const createUser = async () => {
+    const id = uuidv7();
+    await client.user.create({
+      data: {
+        id,
+        fullname: "Subscription User",
+        email: `user-${id}@example.com`,
+        passwordHash: "hash",
+        role: "USER",
+        verify: "VERIFIED",
+      },
+    });
+    return { id };
+  };
+
+  const runWithService = <A, E>(
+    eff: Effect.Effect<A, E, SubscriptionServiceTag>,
+  ) =>
+    Effect.runPromise(eff.pipe(Effect.provide(depsLayer)));
+
+  it("createPending + findById returns subscription", async () => {
+    const { id: userId } = await createUser();
+
+    const created = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.createPending({
+          userId,
+          packageName: "basic",
+          maxUsages: 10,
+          price: new PrismaNS.Decimal("10.00"),
+        })),
+    );
+
+    const found = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.findById(created.id)),
+    );
+
+    if (Option.isNone(found)) {
+      throw new Error("Expected subscription to exist");
+    }
+    expect(found.value.userId).toBe(userId);
+  });
+
+  it("activate + incrementUsage updates subscription", async () => {
+    const { id: userId } = await createUser();
+
+    const created = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.createPending({
+          userId,
+          packageName: "basic",
+          maxUsages: 5,
+          price: new PrismaNS.Decimal("5.00"),
+        })),
+    );
+
+    const activatedAt = new Date();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    const activated = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.activate({
+          subscriptionId: created.id,
+          activatedAt,
+          expiresAt,
+        })),
+    );
+
+    if (Option.isNone(activated)) {
+      throw new Error("Expected activation to succeed");
+    }
+
+    const updated = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.incrementUsage(activated.value.id, 0, 1)),
+    );
+
+    if (Option.isNone(updated)) {
+      throw new Error("Expected usage increment to succeed");
+    }
+    expect(updated.value.usageCount).toBe(1);
+  });
+
+  it("activate rejects when another active subscription exists", async () => {
+    const { id: userId } = await createUser();
+
+    const first = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.createPending({
+          userId,
+          packageName: "basic",
+          maxUsages: 5,
+          price: new PrismaNS.Decimal("5.00"),
+        })),
+    );
+    const second = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.createPending({
+          userId,
+          packageName: "premium",
+          maxUsages: 5,
+          price: new PrismaNS.Decimal("15.00"),
+        })),
+    );
+
+    const activatedAt = new Date();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.activate({
+          subscriptionId: first.id,
+          activatedAt,
+          expiresAt,
+        })),
+    );
+
+    const result = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.activate({
+          subscriptionId: second.id,
+          activatedAt,
+          expiresAt,
+        }).pipe(Effect.either)),
+    );
+
+    expectLeftTag(result, "ActiveSubscriptionExists");
+  });
+});
