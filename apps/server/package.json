@@ -20,6 +20,7 @@
     "worker:dispatch-once": "tsx src/worker/commands/dispatch-outbox-once.ts",
     "worker:dlq-once": "tsx src/worker/commands/process-dlq-once.ts",
     "worker:email-once": "tsx src/worker/commands/process-email-once.ts",
+    "worker:fixed-slot-assign-once": "tsx src/worker/commands/fixed-slot-assign-once.ts",
     "worker:subscriptions-expire-sweep-once": "tsx src/worker/commands/subscriptions-expire-sweep-once.ts",
     "start": "node dist/src/http/server.js",
     "seed": "pnpm prisma db seed",
