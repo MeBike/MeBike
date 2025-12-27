@@ -92,6 +92,17 @@ export type RentalRepo = {
   findById: (
     rentalId: string,
   ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
+
+  /**
+   * EN: Assign bike to a reserved rental if it is still unassigned.
+   * VI: Gán bike cho rental RESERVED nếu vẫn chưa có bike.
+   */
+  assignBikeToReservedRentalInTx: (
+    tx: PrismaTypes.TransactionClient,
+    rentalId: string,
+    bikeId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<boolean, RentalRepositoryError>;
 };
 
 function toMyRentalsWhere(
@@ -429,6 +440,30 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
           Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
         ),
       );
+    },
+
+    assignBikeToReservedRentalInTx(tx, rentalId, bikeId, updatedAt) {
+      return Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.rental.updateMany({
+            where: {
+              id: rentalId,
+              bikeId: null,
+              status: "RESERVED",
+            },
+            data: {
+              bikeId,
+              updatedAt,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "assignBikeToReservedRentalInTx",
+            cause: e,
+          }),
+      });
     },
   };
 }
