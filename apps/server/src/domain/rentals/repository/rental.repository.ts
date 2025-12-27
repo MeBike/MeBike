@@ -150,7 +150,9 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
     updatedAt: true,
   } as const;
 
-  const mapToRentalRow = (raw: any): RentalRow => ({
+  type RentalSelectRow = PrismaTypes.RentalGetPayload<{ select: typeof select }>;
+
+  const mapToRentalRow = (raw: RentalSelectRow): RentalRow => ({
     id: raw.id,
     userId: raw.userId,
     bikeId: raw.bikeId,
