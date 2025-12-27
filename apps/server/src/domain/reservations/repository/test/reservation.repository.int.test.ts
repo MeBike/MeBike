@@ -5,7 +5,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import type { BikeStatus } from "generated/prisma/client";
 
+import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { migrate } from "@/test/db/migrate";
+import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
 import { startPostgres } from "@/test/db/postgres";
 import { PrismaClient } from "generated/prisma/client";
 
@@ -187,7 +189,8 @@ describe("reservationRepository Integration", () => {
   it("findLatestPendingOrActiveByUserId returns most recently updated pending/active", async () => {
     const user = await createUser(client);
     const station = await createStation(client, { name: "Station C" });
-    const bike = await createBike(client, { stationId: station.id, status: "AVAILABLE" });
+    const bikeA = await createBike(client, { stationId: station.id, status: "AVAILABLE" });
+    const bikeB = await createBike(client, { stationId: station.id, status: "AVAILABLE" });
 
     const older = new Date(Date.now() - 60 * 60 * 1000);
     const newer = new Date();
@@ -196,7 +199,7 @@ describe("reservationRepository Integration", () => {
       data: {
         id: uuidv7(),
         userId: user.id,
-        bikeId: bike.id,
+        bikeId: bikeA.id,
         stationId: station.id,
         reservationOption: "ONE_TIME",
         startTime: older,
@@ -211,7 +214,7 @@ describe("reservationRepository Integration", () => {
       data: {
         id: uuidv7(),
         userId: user.id,
-        bikeId: bike.id,
+        bikeId: bikeB.id,
         stationId: station.id,
         reservationOption: "ONE_TIME",
         startTime: newer,
@@ -345,5 +348,106 @@ describe("reservationRepository Integration", () => {
     }
 
     expect(result.left._tag).toBe("ReservationNotFound");
+  });
+
+  it("returns ReservationRepositoryError when database is unreachable", async () => {
+    const broken = makeUnreachablePrisma();
+    const brokenRepo = makeReservationRepository(broken.client);
+
+    const result = await Effect.runPromise(
+      brokenRepo.findById(uuidv7()).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected failure but got success");
+    }
+    expect(result.left._tag).toBe("ReservationRepositoryError");
+
+    await broken.stop();
+  });
+
+  it("createReservation maps active-bike unique constraint to ReservationUniqueViolation", async () => {
+    const now = new Date();
+    const user = await createUser(client);
+    const station = await createStation(client, { name: "Station F" });
+    const bike = await createBike(client, { stationId: station.id, status: "AVAILABLE" });
+
+    await Effect.runPromise(
+      repo.createReservation({
+        userId: user.id,
+        bikeId: bike.id,
+        stationId: station.id,
+        reservationOption: "ONE_TIME",
+        startTime: now,
+        endTime: new Date(now.getTime() + 30 * 60 * 1000),
+        prepaid: toPrismaDecimal("0"),
+        status: "PENDING",
+      }),
+    );
+
+    const result = await Effect.runPromise(
+      repo.createReservation({
+        userId: user.id,
+        bikeId: bike.id,
+        stationId: station.id,
+        reservationOption: "ONE_TIME",
+        startTime: new Date(now.getTime() + 60 * 60 * 1000),
+        endTime: new Date(now.getTime() + 90 * 60 * 1000),
+        prepaid: toPrismaDecimal("0"),
+        status: "PENDING",
+      }).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected ReservationUniqueViolation but got success");
+    }
+
+    expect(result.left._tag).toBe("ReservationUniqueViolation");
+  });
+
+  it("createReservation maps fixed-slot unique constraint to ReservationUniqueViolation", async () => {
+    const now = new Date();
+    const user = await createUser(client);
+    const station = await createStation(client, { name: "Station G" });
+    const template = await createFixedSlotTemplate(client, {
+      userId: user.id,
+      stationId: station.id,
+      slotStart: new Date(Date.UTC(2000, 0, 1, 7, 0, 0)),
+    });
+    const startTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+    await Effect.runPromise(
+      repo.createReservation({
+        userId: user.id,
+        bikeId: null,
+        stationId: station.id,
+        reservationOption: "FIXED_SLOT",
+        fixedSlotTemplateId: template.id,
+        startTime,
+        endTime: null,
+        prepaid: toPrismaDecimal("0"),
+        status: "PENDING",
+      }),
+    );
+
+    const result = await Effect.runPromise(
+      repo.createReservation({
+        userId: user.id,
+        bikeId: null,
+        stationId: station.id,
+        reservationOption: "FIXED_SLOT",
+        fixedSlotTemplateId: template.id,
+        startTime,
+        endTime: null,
+        prepaid: toPrismaDecimal("0"),
+        status: "PENDING",
+      }).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected ReservationUniqueViolation but got success");
+    }
+
+    expect(result.left._tag).toBe("ReservationUniqueViolation");
   });
 });
