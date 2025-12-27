@@ -141,6 +141,36 @@ describe("rentalRepository Integration", () => {
     expect(list.items).toHaveLength(1);
   });
 
+  it("createReservedRentalForReservationInTx stores a reserved rental with reservationId", async () => {
+    const { id: userId } = await createUser();
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId);
+    const reservationId = uuidv7();
+    const startTime = new Date();
+
+    const reserved = await client.$transaction(async (tx) =>
+      Effect.runPromise(
+        repo.createReservedRentalForReservationInTx(tx, {
+          reservationId,
+          userId,
+          bikeId,
+          startStationId: stationId,
+          startTime,
+          subscriptionId: null,
+        }),
+      ),
+    );
+
+    expect(reserved.id).toBe(reservationId);
+    expect(reserved.status).toBe("RESERVED");
+
+    const found = await Effect.runPromise(repo.findById(reservationId));
+    if (Option.isNone(found)) {
+      throw new Error("Expected reserved rental to exist");
+    }
+    expect(found.value.status).toBe("RESERVED");
+  });
+
   it("updateRentalOnEnd marks rental completed", async () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();

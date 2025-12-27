@@ -25,6 +25,15 @@ export type CreateRentalInput = {
   startTime: Date;
 };
 
+export type CreateReservedRentalInput = {
+  reservationId: string;
+  userId: string;
+  bikeId: string;
+  startStationId: string;
+  startTime: Date;
+  subscriptionId?: string | null;
+};
+
 export type UpdateRentalOnEndInput = {
   rentalId: string;
   endStationId: string;
@@ -83,6 +92,11 @@ export type RentalRepo = {
   createRentalInTx: (
     tx: PrismaTypes.TransactionClient,
     data: CreateRentalInput,
+  ) => Effect.Effect<RentalRow, RentalRepoError>;
+
+  createReservedRentalForReservationInTx: (
+    tx: PrismaTypes.TransactionClient,
+    data: CreateReservedRentalInput,
   ) => Effect.Effect<RentalRow, RentalRepoError>;
 
   updateRentalOnEnd: (
@@ -399,6 +413,38 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
 
     createRentalInTx(tx, data) {
       return createRentalWithClient(tx, data);
+    },
+
+    createReservedRentalForReservationInTx(tx, data) {
+      return Effect.tryPromise({
+        try: () =>
+          tx.rental.create({
+            data: {
+              id: data.reservationId,
+              userId: data.userId,
+              bikeId: data.bikeId,
+              startStationId: data.startStationId,
+              startTime: data.startTime,
+              status: "RESERVED",
+              subscriptionId: data.subscriptionId ?? null,
+            },
+            select,
+          }),
+        catch: error =>
+          Match.value(error).pipe(
+            Match.when(isPrismaUniqueViolation, e =>
+              new RentalUniqueViolation({
+                operation: "createReservedRentalForReservationInTx",
+                constraint: uniqueTargets(e),
+                cause: e,
+              })),
+            Match.orElse(e =>
+              new RentalRepositoryError({
+                operation: "createReservedRentalForReservationInTx",
+                cause: e,
+              })),
+          ),
+      }).pipe(Effect.map(mapToRentalRow));
     },
 
     updateRentalOnEnd(data) {

@@ -77,6 +77,13 @@ describe("subscriptionService Integration", () => {
   ) =>
     Effect.runPromise(eff.pipe(Effect.provide(depsLayer)));
 
+  const runInTxWithService = async <A, E>(
+    f: (tx: PrismaNS.TransactionClient) => Effect.Effect<A, E, SubscriptionServiceTag>,
+  ) =>
+    client.$transaction(async (tx) =>
+      Effect.runPromise(f(tx).pipe(Effect.provide(depsLayer))),
+    );
+
   it("createPending + findById returns subscription", async () => {
     const { id: userId } = await createUser();
 
@@ -139,6 +146,94 @@ describe("subscriptionService Integration", () => {
       throw new Error("Expected usage increment to succeed");
     }
     expect(updated.value.usageCount).toBe(1);
+  });
+
+  it("useOneInTx increments usage for PENDING subscription", async () => {
+    const { id: userId } = await createUser();
+
+    const created = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.createPending({
+          userId,
+          packageName: "basic",
+          maxUsages: 2,
+          price: new PrismaNS.Decimal("10.00"),
+        })),
+    );
+
+    const used = await runInTxWithService(
+      tx =>
+        Effect.flatMap(SubscriptionServiceTag, service =>
+          service.useOneInTx(tx, { subscriptionId: created.id, userId })),
+    );
+
+    expect(used.id).toBe(created.id);
+    expect(used.userId).toBe(userId);
+    expect(used.status).toBe("PENDING");
+    expect(used.usageCount).toBe(1);
+  });
+
+  it("useOneInTx fails with SubscriptionNotFound for missing id", async () => {
+    const { id: userId } = await createUser();
+
+    const result = await runInTxWithService(
+      tx =>
+        Effect.flatMap(SubscriptionServiceTag, service =>
+          service.useOneInTx(tx, { subscriptionId: uuidv7(), userId }).pipe(Effect.either)),
+    );
+
+    expectLeftTag(result, "SubscriptionNotFound");
+  });
+
+  it("useOneInTx fails with SubscriptionNotUsable for wrong user", async () => {
+    const { id: userA } = await createUser();
+    const { id: userB } = await createUser();
+
+    const created = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.createPending({
+          userId: userA,
+          packageName: "basic",
+          maxUsages: 2,
+          price: new PrismaNS.Decimal("10.00"),
+        })),
+    );
+
+    const result = await runInTxWithService(
+      tx =>
+        Effect.flatMap(SubscriptionServiceTag, service =>
+          service.useOneInTx(tx, { subscriptionId: created.id, userId: userB }).pipe(Effect.either)),
+    );
+
+    expectLeftTag(result, "SubscriptionNotUsable");
+  });
+
+  it("useOneInTx fails with SubscriptionUsageExceeded when maxUsages is reached", async () => {
+    const { id: userId } = await createUser();
+
+    const created = await runWithService(
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.createPending({
+          userId,
+          packageName: "basic",
+          maxUsages: 1,
+          price: new PrismaNS.Decimal("10.00"),
+        })),
+    );
+
+    await runInTxWithService(
+      tx =>
+        Effect.flatMap(SubscriptionServiceTag, service =>
+          service.useOneInTx(tx, { subscriptionId: created.id, userId })),
+    );
+
+    const result = await runInTxWithService(
+      tx =>
+        Effect.flatMap(SubscriptionServiceTag, service =>
+          service.useOneInTx(tx, { subscriptionId: created.id, userId }).pipe(Effect.either)),
+    );
+
+    expectLeftTag(result, "SubscriptionUsageExceeded");
   });
 
   it("activate rejects when another active subscription exists", async () => {
