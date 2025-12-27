@@ -1,9 +1,9 @@
 export interface Supplier {
   id: string;
   name: string;
-  contact_info: {
+  contactInfo: {
     address: string;
-    phone_number: string;
+    phone: string;
   };
   contract_fee: string;
   status: "Active" | "Inactive";

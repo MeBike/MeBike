@@ -4,7 +4,7 @@ import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "@schemas/bikeSchema";
-import { Bike, BikeRentalHistory } from "@custom-types";
+import { Bike, BikeRentalHistory , DetailBike} from "@custom-types";
 import { BikeStatus } from "@custom-types";
 import { BikeActivityStats } from "@custom-types";
 import { BikeStats } from "@custom-types";

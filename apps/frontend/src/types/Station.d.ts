@@ -15,6 +15,7 @@ export interface Station {
   distance: number | null;
   createdAt: string;
   updatedAt: string;
+  status : "Active" | "Inactive"
 };
 interface StationBikeRevenue {
   period: {
