@@ -7,6 +7,7 @@ import process from "node:process";
 
 import type { Prisma } from "@/infrastructure/prisma";
 
+import { env } from "@/config/env";
 import { db } from "@/database";
 import {
   activateSubscriptionUseCase,
@@ -16,14 +17,15 @@ import {
 } from "@/domain/subscriptions";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { makePgBoss } from "@/infrastructure/jobs/pgboss";
-import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import { PrismaLive } from "@/infrastructure/prisma";
 import { makeEmailTransporter } from "@/lib/email";
 import logger from "@/lib/logger";
 
 import { handleEmailJob } from "./email-worker";
+import { handleFixedSlotAssign } from "./fixed-slot-worker";
 import { startOutboxDispatcher } from "./outbox-dispatcher";
 import { attachPgBossEventLogging, WorkerLog } from "./worker-logging";
+import { setupDLQWorker, setupQueue } from "./worker-setup";
 // run effect with required dependencies
 function runSubscriptionEffect<A, E>(
   eff: Effect.Effect<A, E, SubscriptionServiceTag | Prisma>,
@@ -100,32 +102,10 @@ async function main() {
   await email.transporter.verify();
   WorkerLog.emailVerified();
 
-  const emailDlq = JobDeadLetters[JobTypes.EmailSend];
-  if (emailDlq) {
-    await boss.createQueue(emailDlq);
-    WorkerLog.queueEnsured(emailDlq);
-  }
-  const autoActivateDlq = JobDeadLetters[JobTypes.SubscriptionAutoActivate];
-  if (autoActivateDlq) {
-    await boss.createQueue(autoActivateDlq);
-    WorkerLog.queueEnsured(autoActivateDlq);
-  }
-
-  await boss.createQueue(
-    JobTypes.SubscriptionAutoActivate,
-    resolveQueueOptions(JobTypes.SubscriptionAutoActivate),
-  );
-  WorkerLog.queueEnsured(JobTypes.SubscriptionAutoActivate);
-  await boss.createQueue(
-    JobTypes.SubscriptionExpireSweep,
-    resolveQueueOptions(JobTypes.SubscriptionExpireSweep),
-  );
-  WorkerLog.queueEnsured(JobTypes.SubscriptionExpireSweep);
-  await boss.createQueue(
-    JobTypes.EmailSend,
-    resolveQueueOptions(JobTypes.EmailSend),
-  );
-  WorkerLog.queueEnsured(JobTypes.EmailSend);
+  await setupQueue(boss, JobTypes.EmailSend);
+  await setupQueue(boss, JobTypes.SubscriptionAutoActivate);
+  await setupQueue(boss, JobTypes.SubscriptionExpireSweep);
+  await setupQueue(boss, JobTypes.ReservationFixedSlotAssign);
 
   await boss.schedule(
     JobTypes.SubscriptionExpireSweep,
@@ -133,6 +113,15 @@ async function main() {
     { version: 1 },
   );
   WorkerLog.scheduleEnsured(JobTypes.SubscriptionExpireSweep, "*/5 * * * *");
+  await boss.schedule(
+    JobTypes.ReservationFixedSlotAssign,
+    env.FIXED_SLOT_ASSIGN_CRON,
+    { version: 1 },
+  );
+  WorkerLog.scheduleEnsured(
+    JobTypes.ReservationFixedSlotAssign,
+    env.FIXED_SLOT_ASSIGN_CRON,
+  );
 
   const autoActivateWorkerId = await boss.work(
     JobTypes.SubscriptionAutoActivate,
@@ -151,33 +140,15 @@ async function main() {
   });
   WorkerLog.workerRegistered(JobTypes.EmailSend, emailWorkerId);
 
-  if (emailDlq) {
-    const dlqWorkerId = await boss.work(
-      emailDlq,
-      async (jobs) => {
-        const job = jobs[0];
-        logger.error(
-          { jobId: job?.id, data: job?.data },
-          "Email job moved to DLQ",
-        );
-      },
-    );
-    WorkerLog.workerRegistered(emailDlq, dlqWorkerId);
-  }
+  const fixedSlotWorkerId = await boss.work(
+    JobTypes.ReservationFixedSlotAssign,
+    handleFixedSlotAssign,
+  );
+  WorkerLog.workerRegistered(JobTypes.ReservationFixedSlotAssign, fixedSlotWorkerId);
 
-  if (autoActivateDlq) {
-    const dlqWorkerId = await boss.work(
-      autoActivateDlq,
-      async (jobs) => {
-        const job = jobs[0];
-        logger.error(
-          { jobId: job?.id, data: job?.data },
-          "Subscription auto-activate job moved to DLQ",
-        );
-      },
-    );
-    WorkerLog.workerRegistered(autoActivateDlq, dlqWorkerId);
-  }
+  await setupDLQWorker(boss, JobTypes.EmailSend, "Email job");
+  await setupDLQWorker(boss, JobTypes.SubscriptionAutoActivate, "Subscription auto-activate job");
+  await setupDLQWorker(boss, JobTypes.ReservationFixedSlotAssign, "Fixed-slot assignment job");
 
   const stopDispatcher = startOutboxDispatcher({
     db,
