@@ -46,6 +46,12 @@ export function startRentalUseCase(
     const txEither = yield* Effect.tryPromise<TxEither, unknown>({
       try: () =>
         client.$transaction(async (tx) => {
+          // TODO(test): Add an integration test that forces a failure after one of the writes in this
+          // transaction (e.g. fail after `createRentalInTx` or `updateStatusInTx`) and assert the
+          // whole transaction rolls back (no rental row persisted, no bike status change).
+          // TODO(observability): Consider mapping transaction-level infra failures (deadlock /
+          // serialization / connection drop) into a dedicated repository/service infra error so we
+          // can log + alert consistently without treating them as domain failures.
           const eff: Effect.Effect<RentalRow, RentalServiceFailure, never> = Effect.gen(function* () {
             const existingByUser = yield* rentalRepo.findActiveByUserIdInTx(tx, userId).pipe(
               Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
@@ -210,6 +216,9 @@ export function endRentalUseCase(
     // - SOS/unsolvable exemptions (SOS domain)
     const totalPrice = null; // Will be calculated later
 
+    // TODO(test): When end-rental becomes a multi-domain transactional flow (pricing + wallet debit
+    // + bike status update), add integration tests asserting rollback (no partial writes) when any
+    // step fails mid-transaction.
     return yield* repo.updateRentalOnEnd({
       rentalId,
       endStationId,
