@@ -7,8 +7,8 @@ import type { BikeStatus } from "generated/prisma/client";
 
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { migrate } from "@/test/db/migrate";
-import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
 import { startPostgres } from "@/test/db/postgres";
+import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
 import { PrismaClient } from "generated/prisma/client";
 
 import { makeReservationRepository } from "../reservation.repository";
