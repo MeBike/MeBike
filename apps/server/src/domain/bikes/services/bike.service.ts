@@ -100,7 +100,7 @@ function makeBikeService(
 
           const pendingReservation = yield* Effect.promise(() =>
             client.reservation.findFirst({
-              where: { bikeId, status: "PENDING" as any },
+              where: { bikeId, status: "PENDING" },
               select: { id: true },
             }),
           );
