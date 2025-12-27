@@ -1,7 +1,6 @@
-import { z } from "../../../zod";
-
 import type { JobType } from "./job-types";
 
+import { z } from "../../../zod";
 import { JobTypes } from "./job-types";
 
 const EmailSendRawPayloadV1Schema = z.object({
@@ -48,10 +47,28 @@ const SubscriptionExpireSweepPayloadV1Schema = z.object({
   version: z.literal(1),
 });
 
+const ReservationFixedSlotAssignPayloadV1Schema = z.object({
+  version: z.literal(1),
+  slotDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
+/**
+ * NOTE(timezone): `slotDate` is a date-only key (YYYY-MM-DD), not an instant timestamp.
+ *
+ * - It exists to keep the job idempotent and avoid passing ambiguous DateTimes across producers/consumers.
+ * - Consumers must interpret `slotDate` consistently. For MeBike we assume a single "business timezone"
+ *   (typically `Asia/Ho_Chi_Minh`) for "which day is today?" semantics.
+ *
+ * If the system ever supports multiple timezones, consider evolving the payload to include an explicit
+ * `timeZone` (IANA string) and/or switching to a versioned job type (e.g. `reservations.fixedSlotAssign.v2`)
+ * with a stricter representation.
+ */
+
 export const JobPayloadSchemas = {
   [JobTypes.EmailSend]: EmailSendPayloadV1Schema,
   [JobTypes.SubscriptionAutoActivate]: SubscriptionAutoActivatePayloadV1Schema,
   [JobTypes.SubscriptionExpireSweep]: SubscriptionExpireSweepPayloadV1Schema,
+  [JobTypes.ReservationFixedSlotAssign]: ReservationFixedSlotAssignPayloadV1Schema,
 } as const;
 
 export type JobPayload<T extends JobType> = z.infer<(typeof JobPayloadSchemas)[T]>;
