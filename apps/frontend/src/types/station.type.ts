@@ -1,4 +1,5 @@
 import { GraphQLMutationResponse } from "./GraphQL";
+import { Bike } from "./bike.type";
 export interface Station {
   id: string;
   name: string;
@@ -17,6 +18,7 @@ export interface Station {
   createdAt: string;
   updatedAt: string;
   status : "Active" | "Inactive";
+  bikes : Bike[];
 }
 export type GetAllStationsResponse = GraphQLMutationResponse<"Stations",Station[]>;
 export type GetDetailStationResponse = GraphQLMutationResponse<"Station",Station>;

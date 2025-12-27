@@ -37,8 +37,6 @@ export const GET_STATIONS = gql`
 export const GET_DETAIL_STATION = gql`
   query Station($stationId: String!) {
     Station(id: $stationId) {
-      success
-      message
       data {
         id
         name
@@ -48,6 +46,17 @@ export const GET_DETAIL_STATION = gql`
         capacity
         totalBike
         distance
+        bikes {
+          id
+          chipId
+          station {
+            name
+            address
+          }
+          status
+          createdAt
+          updatedAt
+        }
         createdAt
         updatedAt
         status
@@ -58,8 +67,6 @@ export const GET_DETAIL_STATION = gql`
         maintanedBike
         unavailable
       }
-      errors
-      statusCode
     }
   }
 `;
