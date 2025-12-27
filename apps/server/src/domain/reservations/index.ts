@@ -1,1 +1,10 @@
-// reservation domain will go here
+export * from "./domain-errors";
+export * from "./models";
+export * from "./repository/reservation.repository";
+export * from "./services/reservation-hold.service";
+export * from "./services/reservation.service";
+export * from "./types";
+export * from "./use-cases/cancel-reservation.use-case";
+export * from "./use-cases/confirm-reservation.use-case";
+export * from "./use-cases/fixed-slot.use-cases";
+export * from "./use-cases/reserve-bike.use-case";
