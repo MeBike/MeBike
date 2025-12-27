@@ -16,6 +16,10 @@ export type BikeRepo = {
     tx: PrismaTypes.TransactionClient,
     bikeId: string,
   ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  findAvailableByStationInTx: (
+    tx: PrismaTypes.TransactionClient,
+    stationId: string,
+  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
   listByStationWithOffset: (
     stationId: string | undefined,
     filter: BikeFilter,
@@ -31,6 +35,11 @@ export type BikeRepo = {
     status: BikeStatus,
     updatedAt: Date,
   ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  reserveBikeIfAvailableInTx: (
+    tx: PrismaTypes.TransactionClient,
+    bikeId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<boolean, BikeRepositoryError>;
 };
 const makeBikeRepositoryEffect = Effect.gen(function* () {
   const { client } = yield* Prisma;
@@ -94,6 +103,21 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
             operation: "getByIdInTx",
             cause: e,
             message: "Failed to fetch bike by id",
+          }),
+      }).pipe(Effect.map(Option.fromNullable)),
+
+    findAvailableByStationInTx: (tx, stationId) =>
+      Effect.tryPromise({
+        try: () =>
+          tx.bike.findFirst({
+            where: { stationId, status: "AVAILABLE" },
+            select,
+          }),
+        catch: e =>
+          new BikeRepositoryError({
+            operation: "findAvailableByStationInTx",
+            cause: e,
+            message: "Failed to find available bike by station",
           }),
       }).pipe(Effect.map(Option.fromNullable)),
 
@@ -201,6 +225,23 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
         });
 
         return Option.fromNullable(row);
+      }),
+
+    reserveBikeIfAvailableInTx: (tx, bikeId, updatedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.bike.updateMany({
+            where: { id: bikeId, status: "AVAILABLE" },
+            data: { status: "RESERVED", updatedAt },
+          });
+          return updated.count > 0;
+        },
+        catch: e =>
+          new BikeRepositoryError({
+            operation: "reserveBikeIfAvailableInTx",
+            cause: e,
+            message: "Failed to reserve available bike",
+          }),
       }),
   };
 }
