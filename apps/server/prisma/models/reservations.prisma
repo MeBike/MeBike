@@ -35,6 +35,8 @@ model Reservation {
   subscription      Subscription?      @relation(fields: [subscriptionId], references: [id])
   // Partial unique index (active reservations per bike) cannot be expressed in Prisma; add manually:
   // CREATE UNIQUE INDEX idx_reservations_active_bike ON reservations(bike_id) WHERE status IN ('PENDING','ACTIVE') AND bike_id IS NOT NULL;
+  // Fixed-slot idempotency (one reservation per template per slot timestamp) cannot be expressed in Prisma; add manually:
+  // CREATE UNIQUE INDEX uq_reservations_fixed_slot_template_start_time ON reservations(fixed_slot_template_id, start_time) WHERE fixed_slot_template_id IS NOT NULL;
 
   @@index([userId], name: "idx_reservations_user")
   @@index([bikeId], name: "idx_reservations_bike")
