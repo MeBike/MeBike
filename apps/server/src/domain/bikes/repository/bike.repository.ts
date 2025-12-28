@@ -40,6 +40,16 @@ export type BikeRepo = {
     bikeId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, BikeRepositoryError>;
+  bookBikeIfReservedInTx: (
+    tx: PrismaTypes.TransactionClient,
+    bikeId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<boolean, BikeRepositoryError>;
+  releaseBikeIfReservedInTx: (
+    tx: PrismaTypes.TransactionClient,
+    bikeId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<boolean, BikeRepositoryError>;
 };
 const makeBikeRepositoryEffect = Effect.gen(function* () {
   const { client } = yield* Prisma;
@@ -241,6 +251,38 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
             operation: "reserveBikeIfAvailableInTx",
             cause: e,
             message: "Failed to reserve available bike",
+          }),
+      }),
+    bookBikeIfReservedInTx: (tx, bikeId, updatedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.bike.updateMany({
+            where: { id: bikeId, status: "RESERVED" },
+            data: { status: "BOOKED", updatedAt },
+          });
+          return updated.count > 0;
+        },
+        catch: e =>
+          new BikeRepositoryError({
+            operation: "bookBikeIfReservedInTx",
+            cause: e,
+            message: "Failed to book reserved bike",
+          }),
+      }),
+    releaseBikeIfReservedInTx: (tx, bikeId, updatedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.bike.updateMany({
+            where: { id: bikeId, status: "RESERVED" },
+            data: { status: "AVAILABLE", updatedAt },
+          });
+          return updated.count > 0;
+        },
+        catch: e =>
+          new BikeRepositoryError({
+            operation: "releaseBikeIfReservedInTx",
+            cause: e,
+            message: "Failed to release reserved bike",
           }),
       }),
   };

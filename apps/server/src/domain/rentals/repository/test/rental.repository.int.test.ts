@@ -171,6 +171,81 @@ describe("rentalRepository Integration", () => {
     expect(found.value.status).toBe("RESERVED");
   });
 
+  it("startReservedRentalInTx marks reserved rental as rented", async () => {
+    const { id: userId } = await createUser();
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId);
+    const reservationId = uuidv7();
+    const reservedAt = new Date();
+    const startTime = new Date();
+
+    const started = await client.$transaction(async (tx) =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          yield* repo.createReservedRentalForReservationInTx(tx, {
+            reservationId,
+            userId,
+            bikeId,
+            startStationId: stationId,
+            startTime: reservedAt,
+            subscriptionId: null,
+          });
+
+          return yield* repo.startReservedRentalInTx(
+            tx,
+            reservationId,
+            startTime,
+            startTime,
+            null,
+          );
+        }),
+      ),
+    );
+
+    expect(started).toBe(true);
+
+    const found = await Effect.runPromise(repo.findById(reservationId));
+    if (Option.isNone(found)) {
+      throw new Error("Expected rental to exist");
+    }
+    expect(found.value.status).toBe("RENTED");
+    expect(found.value.startTime.getTime()).toBe(startTime.getTime());
+  });
+
+  it("cancelReservedRentalInTx marks reserved rental as cancelled", async () => {
+    const { id: userId } = await createUser();
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId);
+    const reservationId = uuidv7();
+    const reservedAt = new Date();
+    const cancelledAt = new Date();
+
+    const cancelled = await client.$transaction(async (tx) =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          yield* repo.createReservedRentalForReservationInTx(tx, {
+            reservationId,
+            userId,
+            bikeId,
+            startStationId: stationId,
+            startTime: reservedAt,
+            subscriptionId: null,
+          });
+
+          return yield* repo.cancelReservedRentalInTx(tx, reservationId, cancelledAt);
+        }),
+      ),
+    );
+
+    expect(cancelled).toBe(true);
+
+    const found = await Effect.runPromise(repo.findById(reservationId));
+    if (Option.isNone(found)) {
+      throw new Error("Expected rental to exist");
+    }
+    expect(found.value.status).toBe("CANCELLED");
+  });
+
   it("updateRentalOnEnd marks rental completed", async () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();

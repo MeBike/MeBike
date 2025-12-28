@@ -70,7 +70,10 @@ describe("bikeRepository Integration", () => {
     return { id };
   };
 
-  const createBike = async (stationId: string, status: "AVAILABLE" | "BOOKED" = "AVAILABLE") => {
+  const createBike = async (
+    stationId: string,
+    status: "AVAILABLE" | "BOOKED" | "RESERVED" = "AVAILABLE",
+  ) => {
     const id = uuidv7();
     await client.bike.create({
       data: {
@@ -128,6 +131,60 @@ describe("bikeRepository Integration", () => {
   it("updateStatus returns Option.none for missing bike", async () => {
     const result = await Effect.runPromise(repo.updateStatus(uuidv7(), "BOOKED"));
     expect(Option.isNone(result)).toBe(true);
+  });
+
+  it("reserveBikeIfAvailableInTx marks available bike as reserved", async () => {
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId, "AVAILABLE");
+    const now = new Date();
+
+    const reserved = await client.$transaction(async (tx) =>
+      Effect.runPromise(repo.reserveBikeIfAvailableInTx(tx, bikeId, now)),
+    );
+
+    expect(reserved).toBe(true);
+
+    const updated = await Effect.runPromise(repo.getById(bikeId));
+    if (Option.isNone(updated)) {
+      throw new Error("Expected bike to exist");
+    }
+    expect(updated.value.status).toBe("RESERVED");
+  });
+
+  it("bookBikeIfReservedInTx marks reserved bike as booked", async () => {
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId, "RESERVED");
+    const now = new Date();
+
+    const booked = await client.$transaction(async (tx) =>
+      Effect.runPromise(repo.bookBikeIfReservedInTx(tx, bikeId, now)),
+    );
+
+    expect(booked).toBe(true);
+
+    const updated = await Effect.runPromise(repo.getById(bikeId));
+    if (Option.isNone(updated)) {
+      throw new Error("Expected bike to exist");
+    }
+    expect(updated.value.status).toBe("BOOKED");
+  });
+
+  it("releaseBikeIfReservedInTx marks reserved bike as available", async () => {
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId, "RESERVED");
+    const now = new Date();
+
+    const released = await client.$transaction(async (tx) =>
+      Effect.runPromise(repo.releaseBikeIfReservedInTx(tx, bikeId, now)),
+    );
+
+    expect(released).toBe(true);
+
+    const updated = await Effect.runPromise(repo.getById(bikeId));
+    if (Option.isNone(updated)) {
+      throw new Error("Expected bike to exist");
+    }
+    expect(updated.value.status).toBe("AVAILABLE");
   });
 
   it("returns BikeRepositoryError when database is unreachable", async () => {

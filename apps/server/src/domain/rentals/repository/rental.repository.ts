@@ -117,6 +117,28 @@ export type RentalRepo = {
     bikeId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, RentalRepositoryError>;
+
+  /**
+   * EN: Start a RESERVED rental by marking it RENTED and setting start time.
+   * VI: Bắt đầu rental RESERVED bằng cách chuyển sang RENTED và set start time.
+   */
+  startReservedRentalInTx: (
+    tx: PrismaTypes.TransactionClient,
+    rentalId: string,
+    startTime: Date,
+    updatedAt: Date,
+    subscriptionId: string | null,
+  ) => Effect.Effect<boolean, RentalRepositoryError>;
+
+  /**
+   * EN: Cancel a RESERVED rental (no-op if status already changed).
+   * VI: Hủy rental RESERVED (không làm gì nếu status đã đổi).
+   */
+  cancelReservedRentalInTx: (
+    tx: PrismaTypes.TransactionClient,
+    rentalId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<boolean, RentalRepositoryError>;
 };
 
 function toMyRentalsWhere(
@@ -509,6 +531,54 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
         catch: e =>
           new RentalRepositoryError({
             operation: "assignBikeToReservedRentalInTx",
+            cause: e,
+          }),
+      });
+    },
+
+    startReservedRentalInTx(tx, rentalId, startTime, updatedAt, subscriptionId) {
+      return Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.rental.updateMany({
+            where: {
+              id: rentalId,
+              status: "RESERVED",
+            },
+            data: {
+              status: "RENTED",
+              startTime,
+              updatedAt,
+              subscriptionId,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "startReservedRentalInTx",
+            cause: e,
+          }),
+      });
+    },
+
+    cancelReservedRentalInTx(tx, rentalId, updatedAt) {
+      return Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.rental.updateMany({
+            where: {
+              id: rentalId,
+              status: "RESERVED",
+            },
+            data: {
+              status: "CANCELLED",
+              updatedAt,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "cancelReservedRentalInTx",
             cause: e,
           }),
       });
