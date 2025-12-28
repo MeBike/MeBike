@@ -52,6 +52,16 @@ const ReservationFixedSlotAssignPayloadV1Schema = z.object({
   slotDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
+const ReservationNotifyNearExpiryPayloadV1Schema = z.object({
+  version: z.literal(1),
+  reservationId: z.uuidv7(),
+});
+
+const ReservationExpireHoldPayloadV1Schema = z.object({
+  version: z.literal(1),
+  reservationId: z.uuidv7(),
+});
+
 /**
  * NOTE(timezone): `slotDate` is a date-only key (YYYY-MM-DD), not an instant timestamp.
  *
@@ -69,6 +79,8 @@ export const JobPayloadSchemas = {
   [JobTypes.SubscriptionAutoActivate]: SubscriptionAutoActivatePayloadV1Schema,
   [JobTypes.SubscriptionExpireSweep]: SubscriptionExpireSweepPayloadV1Schema,
   [JobTypes.ReservationFixedSlotAssign]: ReservationFixedSlotAssignPayloadV1Schema,
+  [JobTypes.ReservationNotifyNearExpiry]: ReservationNotifyNearExpiryPayloadV1Schema,
+  [JobTypes.ReservationExpireHold]: ReservationExpireHoldPayloadV1Schema,
 } as const;
 
 export type JobPayload<T extends JobType> = z.infer<(typeof JobPayloadSchemas)[T]>;

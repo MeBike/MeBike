@@ -24,6 +24,10 @@ import logger from "@/lib/logger";
 import { handleEmailJob } from "./email-worker";
 import { handleFixedSlotAssign } from "./fixed-slot-worker";
 import { startOutboxDispatcher } from "./outbox-dispatcher";
+import {
+  handleReservationExpireHold,
+  handleReservationNotifyNearExpiry,
+} from "./reservation-hold-worker";
 import { attachPgBossEventLogging, WorkerLog } from "./worker-logging";
 import { setupDLQWorker, setupQueue } from "./worker-setup";
 // run effect with required dependencies
@@ -106,6 +110,8 @@ async function main() {
   await setupQueue(boss, JobTypes.SubscriptionAutoActivate);
   await setupQueue(boss, JobTypes.SubscriptionExpireSweep);
   await setupQueue(boss, JobTypes.ReservationFixedSlotAssign);
+  await setupQueue(boss, JobTypes.ReservationNotifyNearExpiry);
+  await setupQueue(boss, JobTypes.ReservationExpireHold);
 
   await boss.schedule(
     JobTypes.SubscriptionExpireSweep,
@@ -146,9 +152,27 @@ async function main() {
   );
   WorkerLog.workerRegistered(JobTypes.ReservationFixedSlotAssign, fixedSlotWorkerId);
 
+  const notifyWorkerId = await boss.work(
+    JobTypes.ReservationNotifyNearExpiry,
+    async (jobs) => {
+      await handleReservationNotifyNearExpiry(jobs[0], boss);
+    },
+  );
+  WorkerLog.workerRegistered(JobTypes.ReservationNotifyNearExpiry, notifyWorkerId);
+
+  const expireWorkerId = await boss.work(
+    JobTypes.ReservationExpireHold,
+    async (jobs) => {
+      await handleReservationExpireHold(jobs[0]);
+    },
+  );
+  WorkerLog.workerRegistered(JobTypes.ReservationExpireHold, expireWorkerId);
+
   await setupDLQWorker(boss, JobTypes.EmailSend, "Email job");
   await setupDLQWorker(boss, JobTypes.SubscriptionAutoActivate, "Subscription auto-activate job");
   await setupDLQWorker(boss, JobTypes.ReservationFixedSlotAssign, "Fixed-slot assignment job");
+  await setupDLQWorker(boss, JobTypes.ReservationNotifyNearExpiry, "Reservation near-expiry job");
+  await setupDLQWorker(boss, JobTypes.ReservationExpireHold, "Reservation expire-hold job");
 
   const stopDispatcher = startOutboxDispatcher({
     db,
