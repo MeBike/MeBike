@@ -16,6 +16,8 @@ const envSchema = z.object({
   MIN_WALLET_BALANCE_TO_RENT: z.coerce.number().default(2000),
   RESERVATION_HOLD_MINUTES: z.coerce.number().default(30),
   RESERVATION_PREPAID_AMOUNT: z.coerce.number().default(2000),
+  EXPIRY_NOTIFY_MINUTES: z.coerce.number().default(15),
+  REFUND_PERIOD_HOURS: z.coerce.number().default(24),
   FIXED_SLOT_ASSIGN_CRON: z.string().default("0 0 * * *"),
   PRICE_PER_30_MINS: z.coerce.number().default(2000),
   RENTAL_PENALTY_HOURS: z.coerce.number().default(24),
