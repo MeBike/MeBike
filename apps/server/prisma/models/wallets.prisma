@@ -46,6 +46,6 @@ model WalletTransaction {
 
   @@index([walletId], name: "idx_wallet_tx_wallet")
   @@index([type], name: "idx_wallet_tx_type")
-  @@unique([hash], name: "uq_wallet_tx_hash")
+  @@unique([hash], name: "uq_wallet_tx_hash", map: "uq_wallet_tx_hash")
   @@map("wallet_transactions")
 }
