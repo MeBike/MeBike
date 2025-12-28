@@ -60,6 +60,9 @@ export const useStationActions = ({
           queryClient.invalidateQueries({
             queryKey: ["stations", "all"],
           });
+          queryClient.invalidateQueries({
+            queryKey: QUERY_KEYS.STATION.DETAIL(stationId),
+          });
         }
       },
       onError: (error) => {
@@ -150,6 +153,9 @@ export const useStationActions = ({
             toast.success(result.data?.data?.UpdateStation.message || MESSAGE.UPDATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
               queryKey: ["stations", "all"],
+            });
+            queryClient.invalidateQueries({
+              queryKey: QUERY_KEYS.STATION.DETAIL(stationId || ""),
             });
           }
         },

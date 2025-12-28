@@ -13,11 +13,8 @@ import * as tt from "@tomtom-international/web-sdk-maps";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { stationColumns } from "@/columns/station-column";
-import { formatDateUTC } from "@/utils/formatDateTime";
-import type { StationStatistic } from "@/types/Station";
 import { useRouter } from "next/navigation";
 export default function StationsPage() {
-  // STATES
   const router = useRouter();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<tt.Map | null>(null);
@@ -45,7 +42,6 @@ export default function StationsPage() {
     name: searchQuery,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showRevenueReport, setShowRevenueReport] = useState(false);
   const {
@@ -84,14 +80,12 @@ export default function StationsPage() {
   useEffect(() => {
     getAllStations();
   }, [page, searchQuery, getAllStations]);
-
   useEffect(() => {
     if (stationID) {
       console.log("stationID", stationID);
       getStationByID();
     }
   }, [stationID, getStationByID]);
-
   useEffect(() => {
     if (isEditModalOpen && responseStationDetail) {
       resetEdit({
@@ -103,11 +97,8 @@ export default function StationsPage() {
       });
     }
   }, [isEditModalOpen, responseStationDetail, resetEdit]);
-
-  // MAP FOR CREATE MODAL
   useEffect(() => {
     if (!isModalOpen || !mapRef.current || mapInstanceRef.current) return;
-
     const timer = setTimeout(() => {
       const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
       if (!apiKey) return;
@@ -119,13 +110,10 @@ export default function StationsPage() {
         zoom: 14,
         style: "https://api.tomtom.com/style/1/style/20.3.2-*?map=hybrid_main",
       });
-
       setTimeout(() => {
         mapInstanceRef.current?.resize();
       }, 300);
-
       const markerRef = { current: null as tt.Marker | null };
-
       mapInstanceRef.current.on("click", function (e) {
         const { lat, lng } = e.lngLat;
         setCreateValue("latitude", lat.toString());
@@ -149,18 +137,13 @@ export default function StationsPage() {
       }
     };
   }, [isModalOpen, setCreateValue]);
-
-  // MAP FOR EDIT MODAL
   useEffect(() => {
     if (!isEditModalOpen || !editMapRef.current || editMapInstanceRef.current || !responseStationDetail?.latitude || !responseStationDetail?.longitude) return;
-
     const timer = setTimeout(() => {
       const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
       if (!apiKey) return;
-
       const lat = parseFloat(responseStationDetail.latitude);
       const lng = parseFloat(responseStationDetail.longitude);
-
       editMapInstanceRef.current = tt.map({
         key: apiKey,
         container: editMapRef.current as HTMLElement,
@@ -168,24 +151,17 @@ export default function StationsPage() {
         zoom: 14,
         style: "https://api.tomtom.com/style/1/style/20.3.2-*?map=basic_main",
       });
-
       setTimeout(() => {
         editMapInstanceRef.current?.resize();
       }, 300);
-
       const editMarkerRef = { current: null as tt.Marker | null };
-
-      // Add initial marker at existing location
       editMarkerRef.current = new tt.Marker({ draggable: false })
         .setLngLat([lng, lat])
         .addTo(editMapInstanceRef.current!);
-
-      // Update position on click
       editMapInstanceRef.current.on("click", function (e) {
         const { lat, lng } = e.lngLat;
         setEditValue("latitude", lat.toString());
         setEditValue("longitude", lng.toString());
-
         if (editMarkerRef.current) {
           editMarkerRef.current.setLngLat([lng, lat]);
         } else {
@@ -195,7 +171,6 @@ export default function StationsPage() {
         }
       });
     }, 400);
-
     return () => {
       clearTimeout(timer);
       if (!isEditModalOpen && editMapInstanceRef.current) {
@@ -205,14 +180,11 @@ export default function StationsPage() {
     };
   }, [isEditModalOpen, responseStationDetail, setEditValue]);
 
-  // ADD STATION
   const handleAddStation = (data: StationSchemaFormData) => {
     createStation(data);
     resetCreate();
     setIsModalOpen(false);
   };
-
-  // EDIT STATION
   const handleEditStation = (data: StationSchemaFormData) => {
     updateStation(data);
     setIsEditModalOpen(false);
@@ -221,10 +193,8 @@ export default function StationsPage() {
     setStationID(stationId);
     router.push(`/admin/stations/detail/${stationId}`);
   } 
-  // UI
   return (
     <div>
-      {/* HEADER */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -519,8 +489,6 @@ export default function StationsPage() {
           {paginationStations?.total} trạm
         </p>
       </div>
-
-      {/* ADD MODAL */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">

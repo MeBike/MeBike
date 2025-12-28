@@ -10,7 +10,7 @@ export default function Page({
   params: Promise<{ stationId: string }>;
 }) {
   const { stationId } = React.use(params);
-  const { getStationByID, isLoadingGetStationByID, responseStationDetail } =
+  const { isLoadingGetStationByID, responseStationDetail } =
     useStationActions({ hasToken: true, stationId: stationId });
   if (isLoadingGetStationByID) {
     return (
@@ -22,5 +22,5 @@ export default function Page({
   if (!responseStationDetail) {
     notFound();
   }
-  return <StationDetail station={responseStationDetail} />;
+  return <StationDetail station={responseStationDetail}  />;
 }

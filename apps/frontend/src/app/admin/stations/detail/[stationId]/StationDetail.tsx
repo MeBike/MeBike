@@ -1,4 +1,6 @@
-import { useState } from "react";
+
+"use client";
+import { useState, useEffect, useRef } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,40 +19,103 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Station } from "@/types/station.type";
 import { getStatusColor } from "@/utils/status-style";
+import { useStationActions } from "@/hooks/use-station";
+// Import TomTom SDK
+import "@tomtom-international/web-sdk-maps/dist/maps.css";
+import * as tt from "@tomtom-international/web-sdk-maps";
+
 const statusConfig = {
   active: { variant: "success" as const, label: "Active" },
   inactive: { variant: "secondary" as const, label: "Inactive" },
 };
+
 interface StationDetailProps {
   station: Station;
 }
-export default function StationDetail({ station }: StationDetailProps) {
+
+export default function StationDetail({ station  }: StationDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
-  console.log("Station detail:", station);
+  const {updateStation} = useStationActions({ hasToken: true, stationId: station.id });
+  // Map Refs
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<tt.Map | null>(null);
+  const markerRef = useRef<tt.Marker | null>(null);
+
   const [formData, setFormData] = useState({
     name: station?.name || "",
     address: station?.address || "",
     capacity: station?.capacity || 0,
-    status: station?.status || "active",
     latitude: station?.latitude || 0,
     longitude: station?.longitude || 0,
   });
 
+  // Effect xử lý bản đồ khi bật chế độ Edit
+  useEffect(() => {
+    if (!isEditing || !mapRef.current) return;
+
+    const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
+    if (!apiKey) return;
+
+    // Khởi tạo map sau một khoảng delay ngắn để đảm bảo DOM đã render
+    const timer = setTimeout(() => {
+      const lat = parseFloat(formData.latitude.toString());
+      const lng = parseFloat(formData.longitude.toString());
+
+      mapInstanceRef.current = tt.map({
+        key: apiKey,
+        container: mapRef.current!,
+        center: [lng, lat],
+        zoom: 15,
+        style: "https://api.tomtom.com/style/1/style/20.3.2-*?map=basic_main",
+      });
+
+      // Thêm marker hiện tại
+      markerRef.current = new tt.Marker()
+        .setLngLat([lng, lat])
+        .addTo(mapInstanceRef.current);
+
+      // Sự kiện click để đổi vị trí
+      mapInstanceRef.current.on("click", (e) => {
+        const { lat, lng } = e.lngLat;
+        setFormData((prev) => ({
+          ...prev,
+          latitude: lat,
+          longitude: lng,
+        }));
+
+        if (markerRef.current) {
+          markerRef.current.setLngLat([lng, lat]);
+        }
+      });
+
+      // Resize map để tránh lỗi render hụt
+      setTimeout(() => mapInstanceRef.current?.resize(), 200);
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [isEditing]);
+
   if (!station) {
     return (
-      <div>
-        <div className="flex items-center justify-center h-[60vh]">
-          <p className="text-muted-foreground">Station not found</p>
-        </div>
+      <div className="flex items-center justify-center h-[60vh]">
+        <p className="text-muted-foreground">Station not found</p>
       </div>
     );
   }
+
   const occupancyRate = Math.round(
     (station.totalBike / station.capacity) * 100
   );
 
   const handleSave = () => {
-    toast.success("Station updated successfully!");
+    // Gọi API update ở đây (sử dụng formData)
+    updateStation({address:formData.address, capacity:formData.capacity, latitude:formData.latitude.toString(), longitude:formData.longitude.toString(), name:formData.name});
     setIsEditing(false);
   };
 
@@ -59,7 +124,6 @@ export default function StationDetail({ station }: StationDetailProps) {
       name: station.name,
       address: station.address,
       capacity: station.capacity,
-      status: station.status,
       latitude: station.latitude,
       longitude: station.longitude,
     });
@@ -76,21 +140,18 @@ export default function StationDetail({ station }: StationDetailProps) {
           isEditing ? (
             <>
               <Button variant="outline" onClick={handleCancel}>
-                <X className="h-4 w-4 mr-2" />
-                Cancel
+                <X className="h-4 w-4 mr-2" /> Cancel
               </Button>
               <Button
                 onClick={handleSave}
                 className="gradient-primary text-primary-foreground"
               >
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
+                <Save className="h-4 w-4 mr-2" /> Save Changes
               </Button>
             </>
           ) : (
             <Button onClick={() => setIsEditing(true)} variant="outline">
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit
+              <Pencil className="h-4 w-4 mr-2" /> Edit
             </Button>
           )
         }
@@ -103,6 +164,7 @@ export default function StationDetail({ station }: StationDetailProps) {
               Station Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Name & Status */}
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 {isEditing ? (
@@ -120,34 +182,14 @@ export default function StationDetail({ station }: StationDetailProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                {isEditing ? (
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value as any })
-                    }
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {Object.entries(statusConfig).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
-                          {config.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  //   <Badge variant={status.variant}>{status.label}</Badge>
                   <Badge
                     className={`text-xs ${getStatusColor(station.status)}`}
                   >
                     {station.status}
                   </Badge>
-                )}
               </div>
 
+              {/* Address */}
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="address">Address</Label>
                 {isEditing ? (
@@ -165,6 +207,7 @@ export default function StationDetail({ station }: StationDetailProps) {
                 )}
               </div>
 
+              {/* Capacity & Map Section */}
               <div className="space-y-2">
                 <Label htmlFor="capacity">Capacity</Label>
                 {isEditing ? (
@@ -188,48 +231,53 @@ export default function StationDetail({ station }: StationDetailProps) {
 
               <div className="space-y-2">
                 <Label>Coordinates</Label>
-                {isEditing ? (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Lat"
-                      type="number"
-                      step="0.0001"
-                      value={formData.latitude}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          latitude: parseFloat(e.target.value),
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Long"
-                      type="number"
-                      step="0.0001"
-                      value={formData.longitude}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          longitude: parseFloat(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                ) : (
-                  <p className="text-foreground font-medium">
-                    {station.latitude}, {station.longitude}
-                  </p>
-                )}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Lat"
+                    type="number"
+                    readOnly={!isEditing}
+                    value={formData.latitude}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        latitude: parseFloat(e.target.value),
+                      })
+                    }
+                  />
+                  <Input
+                    placeholder="Long"
+                    type="number"
+                    readOnly={!isEditing}
+                    value={formData.longitude}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        longitude: parseFloat(e.target.value),
+                      })
+                    }
+                  />
+                </div>
               </div>
+
+              {/* TomTom Map Integration */}
+              {isEditing && (
+                <div className="md:col-span-2 space-y-2">
+                  <Label>Select Location on Map</Label>
+                  <div
+                    ref={mapRef}
+                    className="w-full h-[300px] rounded-lg border border-border"
+                    style={{ backgroundColor: "#e5e7eb" }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
+          {/* Bikes Section */}
           <div className="rounded-xl bg-card p-6 shadow-card">
-            <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-lg font-semibold text-card-foreground">
-                Bikes at this Station ({station.totalBike})
-              </h2>
-            </div>
+            <h2 className="text-lg font-semibold text-card-foreground mb-4">
+              Bikes at this Station ({station.totalBike})
+            </h2>
             {station.totalBike > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {station.bikes.map((bike) => (
@@ -247,6 +295,7 @@ export default function StationDetail({ station }: StationDetailProps) {
             )}
           </div>
         </div>
+
 
         <div className="space-y-6">
           <div className="rounded-xl bg-card p-6 shadow-card">
@@ -273,7 +322,7 @@ export default function StationDetail({ station }: StationDetailProps) {
                   />
                 </div>
               </div>
-
+              {/* Các chỉ số bike... */}
               <div className="grid grid-cols-2 gap-4 pt-4">
                 <div className="text-center p-3 rounded-lg bg-success/10">
                   <p className="text-2xl font-bold text-success">
@@ -287,23 +336,10 @@ export default function StationDetail({ station }: StationDetailProps) {
                   </p>
                   <p className="text-xs text-muted-foreground">Booked</p>
                 </div>
-                <div className="text-center p-3 rounded-lg bg-destructive/10">
-                  <p className="text-2xl font-bold text-destructive">
-                    {station.brokenBike}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Broken</p>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-warning/10">
-                  <p className="text-2xl font-bold text-warning">
-                    {station.maintanedBike}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Maintenance</p>
-                </div>
               </div>
             </div>
           </div>
 
-          {/* Timeline */}
           <div className="rounded-xl bg-card p-6 shadow-card">
             <h3 className="font-semibold text-card-foreground mb-4">
               Timeline
@@ -317,19 +353,6 @@ export default function StationDetail({ station }: StationDetailProps) {
                   <p className="text-sm font-medium text-foreground">Created</p>
                   <p className="text-sm text-muted-foreground">
                     {new Date(station.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                  <Calendar className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">
-                    Last Updated
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(station.updatedAt).toLocaleString()}
                   </p>
                 </div>
               </div>
