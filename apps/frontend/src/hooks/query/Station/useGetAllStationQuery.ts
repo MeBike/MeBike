@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
-const fetchAllStations = async ({page,limit,name} : {page ?: number , limit ?: number, name ?: string}) => {
+const fetchAllStations = async ({page,limit,name,search} : {page ?: number , limit ?: number, name ?: string, search ?: string}) => {
   try {
-    const response = await stationService.getAllStations({page,limit,name});
+    const response = await stationService.getAllStations({page,limit,name,search});
     if (response.status === 200) {
       return response.data; 
     }
@@ -12,9 +12,9 @@ const fetchAllStations = async ({page,limit,name} : {page ?: number , limit ?: n
     throw error;    
   }
 };
-export const useGetAllStation = ({page,limit,name} : {page ?: number , limit ?: number, name ?: string}) => {
+export const useGetAllStation = ({page,limit,name,search} : {page ?: number , limit ?: number, name ?: string, search ?: string}) => {
   return useQuery({
-    queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
-    queryFn: () => fetchAllStations({ page, limit, name }),
+    queryKey: QUERY_KEYS.STATION.ALL(page, limit, name, search),
+    queryFn: () => fetchAllStations({ page, limit, name, search }),
   });
 };

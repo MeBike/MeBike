@@ -89,11 +89,13 @@ export const userService = {
     limit,
     verify,
     role,
+    search
   }: {
     page?: number;
     limit?: number;
     verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
     role?: "ADMIN" | "USER" | "STAFF" | "";
+    search?: string;
   }): Promise<AxiosResponse<GetUsersResponse>> => {
     return fetchHttpClient.query<GetUsersResponse>(print(GET_USERS), {
       params: {
@@ -101,6 +103,7 @@ export const userService = {
         limit: limit,
         verify: verify === "" ? undefined : verify,
         role: role === "" ? undefined : role,
+        search: search,
       },
     });
   },
