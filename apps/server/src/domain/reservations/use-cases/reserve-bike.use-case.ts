@@ -1,0 +1,266 @@
+import { JobTypes } from "@mebike/shared/contracts/server/jobs";
+import { Effect, Match, Option } from "effect";
+
+import type {
+  SubscriptionNotFound,
+  SubscriptionNotUsable,
+  SubscriptionUsageExceeded,
+} from "@/domain/subscriptions/domain-errors";
+import type { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
+import type { ReservationOption } from "generated/prisma/client";
+
+import { env } from "@/config/env";
+import { BikeRepository } from "@/domain/bikes";
+import { RentalRepository } from "@/domain/rentals";
+import { toPrismaDecimal } from "@/domain/shared/decimal";
+import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
+import { WalletServiceTag } from "@/domain/wallets";
+import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
+import { Prisma } from "@/infrastructure/prisma";
+
+import type { ReservationServiceFailure } from "../domain-errors";
+import type { ReservationRow } from "../models";
+
+import {
+  ActiveReservationExists,
+  BikeAlreadyReserved,
+  BikeNotAvailable,
+  BikeNotFound,
+  BikeNotFoundInStation,
+  ReservationOptionNotSupported,
+  SubscriptionRequired,
+} from "../domain-errors";
+import { ReservationHoldServiceTag } from "../services/reservation-hold.service";
+import { ReservationServiceTag } from "../services/reservation.service";
+
+export type ReserveBikeInput = {
+  readonly userId: string;
+  readonly bikeId: string;
+  readonly stationId: string;
+  readonly startTime: Date;
+  readonly reservationOption: ReservationOption;
+  readonly subscriptionId?: string | null;
+  readonly endTime?: Date | null;
+  readonly now?: Date;
+};
+
+export type ReserveBikeFailure
+  = | ReservationServiceFailure
+    | SubscriptionNotFound
+    | SubscriptionNotUsable
+    | SubscriptionUsageExceeded
+    | WalletNotFound
+    | InsufficientWalletBalance;
+
+const HOLD_MINUTES = env.RESERVATION_HOLD_MINUTES;
+const PREPAID_AMOUNT = env.RESERVATION_PREPAID_AMOUNT;
+
+function computeEndTime(startTime: Date, holdMinutes = HOLD_MINUTES): Date {
+  return new Date(startTime.getTime() + holdMinutes * 60 * 1000);
+}
+
+export function reserveBikeUseCase(
+  input: ReserveBikeInput,
+): Effect.Effect<
+  ReservationRow,
+  ReserveBikeFailure,
+  | Prisma
+  | ReservationServiceTag
+  | ReservationHoldServiceTag
+  | BikeRepository
+  | WalletServiceTag
+  | SubscriptionServiceTag
+  | RentalRepository
+> {
+  return Effect.gen(function* () {
+    const { client } = yield* Prisma;
+    const reservationService = yield* ReservationServiceTag;
+    const reservationHoldService = yield* ReservationHoldServiceTag;
+    const bikeRepo = yield* BikeRepository;
+    const walletService = yield* WalletServiceTag;
+    const subscriptionService = yield* SubscriptionServiceTag;
+    const rentalRepo = yield* RentalRepository;
+    const now = input.now ?? new Date();
+
+    type TxEither = import("effect").Either.Either<ReservationRow, ReserveBikeFailure>;
+
+    const txEither = yield* Effect.tryPromise<TxEither, unknown>({
+      try: () =>
+        client.$transaction(async (tx) => {
+          const eff: Effect.Effect<
+            ReservationRow,
+            ReserveBikeFailure,
+            never
+          > = Effect.gen(function* () {
+            if (input.reservationOption === "FIXED_SLOT") {
+              return yield* Effect.fail(
+                new ReservationOptionNotSupported({ option: input.reservationOption }),
+              );
+            }
+
+            const existingByUser = yield* reservationHoldService.getCurrentHoldForUserNowInTx(
+              tx,
+              input.userId,
+              now,
+            );
+            if (Option.isSome(existingByUser)) {
+              return yield* Effect.fail(new ActiveReservationExists({ userId: input.userId }));
+            }
+
+            const activeReservation = yield* reservationService.getLatestPendingOrActiveForUserInTx(
+              tx,
+              input.userId,
+            );
+            if (Option.isSome(activeReservation)) {
+              return yield* Effect.fail(new ActiveReservationExists({ userId: input.userId }));
+            }
+
+            const existingByBike = yield* reservationHoldService.getCurrentHoldForBikeNowInTx(
+              tx,
+              input.bikeId,
+              now,
+            );
+            if (Option.isSome(existingByBike)) {
+              return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
+            }
+
+            const bikeOpt = yield* bikeRepo.getByIdInTx(tx, input.bikeId).pipe(
+              Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+            );
+            if (Option.isNone(bikeOpt)) {
+              return yield* Effect.fail(new BikeNotFound({ bikeId: input.bikeId }));
+            }
+            const bike = bikeOpt.value;
+
+            if (!bike.stationId || bike.stationId !== input.stationId) {
+              return yield* Effect.fail(new BikeNotFoundInStation({
+                bikeId: input.bikeId,
+                stationId: input.stationId,
+              }));
+            }
+
+            if (bike.status !== "AVAILABLE") {
+              return yield* Effect.fail(new BikeNotAvailable({
+                bikeId: input.bikeId,
+                status: bike.status,
+              }));
+            }
+
+            const subscriptionId: string | null = input.subscriptionId ?? null;
+            let prepaid = toPrismaDecimal(PREPAID_AMOUNT);
+
+            if (input.reservationOption === "SUBSCRIPTION") {
+              if (!subscriptionId) {
+                return yield* Effect.fail(new SubscriptionRequired({ userId: input.userId }));
+              }
+              yield* subscriptionService.useOneInTx(tx, {
+                subscriptionId,
+                userId: input.userId,
+                now,
+              }).pipe(
+                Effect.catchTag("SubscriptionRepositoryError", err => Effect.die(err)),
+              );
+
+              prepaid = toPrismaDecimal("0");
+            }
+            else {
+              yield* walletService.debitWalletInTx(tx, {
+                userId: input.userId,
+                amount: prepaid,
+                description: `Reservation prepaid ${input.userId}`,
+              }).pipe(
+                Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+              );
+            }
+
+            const endTime = input.endTime ?? computeEndTime(input.startTime);
+
+            const reservation = yield* reservationService.reserveHoldInTx(tx, {
+              userId: input.userId,
+              bikeId: input.bikeId,
+              stationId: input.stationId,
+              reservationOption: input.reservationOption,
+              subscriptionId,
+              startTime: input.startTime,
+              endTime,
+              prepaid,
+            });
+
+            yield* rentalRepo.createReservedRentalForReservationInTx(tx, {
+              reservationId: reservation.id,
+              userId: reservation.userId,
+              bikeId: reservation.bikeId ?? input.bikeId,
+              startStationId: reservation.stationId,
+              startTime: reservation.startTime,
+              subscriptionId: reservation.subscriptionId ?? null,
+            }).pipe(
+              Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+              Effect.catchTag("RentalUniqueViolation", err => Effect.die(err)),
+            );
+
+            const bikeReserved = yield* bikeRepo.reserveBikeIfAvailableInTx(
+              tx,
+              input.bikeId,
+              now,
+            ).pipe(Effect.catchTag("BikeRepositoryError", err => Effect.die(err)));
+            if (!bikeReserved) {
+              return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
+            }
+
+            if (reservation.endTime) {
+              const notifyAtMs = reservation.endTime.getTime()
+                - env.EXPIRY_NOTIFY_MINUTES * 60 * 1000;
+              const notifyAt = new Date(Math.max(now.getTime(), notifyAtMs));
+              const expireAt = new Date(Math.max(now.getTime(), reservation.endTime.getTime()));
+
+              yield* Effect.tryPromise({
+                try: () =>
+                  enqueueOutboxJob(tx, {
+                    type: JobTypes.ReservationNotifyNearExpiry,
+                    payload: {
+                      version: 1,
+                      reservationId: reservation.id,
+                    },
+                    runAt: notifyAt,
+                    dedupeKey: `reservation:notify:${reservation.id}`,
+                  }),
+                catch: err => err as unknown,
+              }).pipe(Effect.catchAll(err => Effect.die(err)));
+
+              yield* Effect.tryPromise({
+                try: () =>
+                  enqueueOutboxJob(tx, {
+                    type: JobTypes.ReservationExpireHold,
+                    payload: {
+                      version: 1,
+                      reservationId: reservation.id,
+                    },
+                    runAt: expireAt,
+                    dedupeKey: `reservation:expire:${reservation.id}`,
+                  }),
+                catch: err => err as unknown,
+              }).pipe(Effect.catchAll(err => Effect.die(err)));
+            }
+
+            // TODO(outbox): enqueue reservation confirmation email immediately after booking.
+            // Legacy behavior sends "success-reservation" confirmation; near-expiry is now handled
+            // via outbox jobs scheduled above. Consider dedupe keys so retries don't spam users.
+            // TODO(iot): send reservation "reserve" command once IoT integration is ready.
+
+            return reservation;
+          });
+
+          return Effect.runPromise(eff.pipe(Effect.either)) as Promise<TxEither>;
+        }),
+      catch: err => err as unknown,
+    }).pipe(
+      Effect.catchAll(err => Effect.die(err)),
+    );
+
+    return yield* Match.value(txEither).pipe(
+      Match.tag("Right", ({ right }) => Effect.succeed(right)),
+      Match.tag("Left", ({ left }) => Effect.fail(left)),
+      Match.exhaustive,
+    );
+  });
+}
