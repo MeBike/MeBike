@@ -44,6 +44,11 @@ export type SubscriptionRepo = {
     subscriptionId: string,
   ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
 
+  findByIdInTx: (
+    tx: PrismaTypes.TransactionClient,
+    subscriptionId: string,
+  ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
+
   findCurrentForUser: (
     userId: string,
     statuses: readonly SubscriptionStatus[],
@@ -72,6 +77,14 @@ export type SubscriptionRepo = {
     subscriptionId: string,
     expectedUsageCount: number,
     amount: number,
+  ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
+
+  incrementUsageInTx: (
+    tx: PrismaTypes.TransactionClient,
+    subscriptionId: string,
+    expectedUsageCount: number,
+    amount: number,
+    statuses?: readonly SubscriptionStatus[],
   ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
 
   markExpiredNow: (
@@ -105,6 +118,27 @@ function toSubscriptionOrderBy(
 }
 
 export function makeSubscriptionRepository(client: PrismaClient): SubscriptionRepo {
+  const findByIdWithClient = (
+    tx: PrismaClient | PrismaTypes.TransactionClient,
+    subscriptionId: string,
+  ) =>
+    Effect.tryPromise({
+      try: () =>
+        tx.subscription.findUnique({
+          where: { id: subscriptionId },
+          select: selectSubscriptionRow,
+        }),
+      catch: err =>
+        new SubscriptionRepositoryError({
+          operation: "findById",
+          cause: err,
+        }),
+    }).pipe(
+      Effect.map(row =>
+        Option.fromNullable(row).pipe(Option.map(toSubscriptionRow)),
+      ),
+    );
+
   return {
     createPending: input =>
       Effect.tryPromise({
@@ -146,23 +180,9 @@ export function makeSubscriptionRepository(client: PrismaClient): SubscriptionRe
           }),
       }).pipe(Effect.map(toSubscriptionRow)),
 
-    findById: subscriptionId =>
-      Effect.tryPromise({
-        try: () =>
-          client.subscription.findUnique({
-            where: { id: subscriptionId },
-            select: selectSubscriptionRow,
-          }),
-        catch: err =>
-          new SubscriptionRepositoryError({
-            operation: "findById",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(toSubscriptionRow)),
-        ),
-      ),
+    findById: subscriptionId => findByIdWithClient(client, subscriptionId),
+
+    findByIdInTx: (tx, subscriptionId) => findByIdWithClient(tx, subscriptionId),
 
     findCurrentForUser: (userId, statuses) =>
       Effect.tryPromise({
@@ -337,6 +357,48 @@ export function makeSubscriptionRepository(client: PrismaClient): SubscriptionRe
           catch: err =>
             new SubscriptionRepositoryError({
               operation: "incrementUsage.find",
+              cause: err,
+            }),
+        });
+
+        return Option.fromNullable(row).pipe(Option.map(toSubscriptionRow));
+      }),
+
+    incrementUsageInTx: (tx, subscriptionId, expectedUsageCount, amount, statuses = ["ACTIVE"]) =>
+      Effect.gen(function* () {
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            tx.subscription.updateMany({
+              where: {
+                id: subscriptionId,
+                status: { in: [...statuses] },
+                usageCount: expectedUsageCount,
+              },
+              data: {
+                usageCount: { increment: amount },
+                updatedAt: new Date(),
+              },
+            }),
+          catch: err =>
+            new SubscriptionRepositoryError({
+              operation: "incrementUsageInTx.update",
+              cause: err,
+            }),
+        });
+
+        if (updated.count === 0) {
+          return Option.none<SubscriptionRow>();
+        }
+
+        const row = yield* Effect.tryPromise({
+          try: () =>
+            tx.subscription.findUnique({
+              where: { id: subscriptionId },
+              select: selectSubscriptionRow,
+            }),
+          catch: err =>
+            new SubscriptionRepositoryError({
+              operation: "incrementUsageInTx.find",
               cause: err,
             }),
         });
