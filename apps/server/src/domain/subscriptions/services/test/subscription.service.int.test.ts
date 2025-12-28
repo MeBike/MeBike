@@ -80,7 +80,7 @@ describe("subscriptionService Integration", () => {
   const runInTxWithService = async <A, E>(
     f: (tx: PrismaNS.TransactionClient) => Effect.Effect<A, E, SubscriptionServiceTag>,
   ) =>
-    client.$transaction(async (tx) =>
+    client.$transaction(async tx =>
       Effect.runPromise(f(tx).pipe(Effect.provide(depsLayer))),
     );
 
@@ -133,19 +133,12 @@ describe("subscriptionService Integration", () => {
         })),
     );
 
-    if (Option.isNone(activated)) {
-      throw new Error("Expected activation to succeed");
-    }
-
     const updated = await runWithService(
       Effect.flatMap(SubscriptionServiceTag, service =>
-        service.incrementUsage(activated.value.id, 0, 1)),
+        service.incrementUsage(activated.id, 0, 1)),
     );
 
-    if (Option.isNone(updated)) {
-      throw new Error("Expected usage increment to succeed");
-    }
-    expect(updated.value.usageCount).toBe(1);
+    expect(updated.usageCount).toBe(1);
   });
 
   it("useOneInTx increments usage for PENDING subscription", async () => {

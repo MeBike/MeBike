@@ -178,19 +178,12 @@ export function activateSubscriptionUseCase(args: {
       );
     }
 
-    const activatedOpt = yield* service.activate({
+    const activated = yield* service.activate({
       subscriptionId: sub.id,
       activatedAt: now,
       expiresAt: computeExpiresAt(now),
     });
-
-    if (Option.isNone(activatedOpt)) {
-      return yield* Effect.fail(
-        new SubscriptionNotPendingError({ subscriptionId: sub.id }),
-      );
-    }
-
-    return activatedOpt.value;
+    return activated;
   });
 }
 
@@ -252,32 +245,24 @@ export function useSubscriptionOnceUseCase(args: {
         subscriptionId: sub.id,
         activatedAt: now,
         expiresAt: computeExpiresAt(now),
-      })
-      : Option.some<SubscriptionRow>(sub);
-
-    if (Option.isNone(maybeActivated)) {
-      return yield* Effect.fail(
-        new SubscriptionNotUsableError({
-          subscriptionId: sub.id,
-          status: "PENDING",
-        }),
-      );
-    }
+      }).pipe(
+        Effect.catchTag(
+          "SubscriptionNotPending",
+          err =>
+            Effect.fail(new SubscriptionNotUsableError({
+              subscriptionId: err.subscriptionId,
+              status: "PENDING",
+            })),
+        ),
+      )
+      : sub;
 
     const incremented = yield* service.incrementUsage(
-      sub.id,
-      sub.usageCount,
+      maybeActivated.id,
+      maybeActivated.usageCount,
       1,
     );
-    if (Option.isNone(incremented)) {
-      return yield* Effect.fail(
-        new SubscriptionNotUsableError({
-          subscriptionId: sub.id,
-          status: "ACTIVE",
-        }),
-      );
-    }
 
-    return incremented.value;
+    return incremented;
   });
 }

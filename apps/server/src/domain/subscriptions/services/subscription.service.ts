@@ -1,6 +1,4 @@
-import type { Option } from "effect";
-
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
@@ -11,6 +9,12 @@ import type {
 import type { SubscriptionFilter, SubscriptionRow, SubscriptionSortField } from "../models";
 import type { SubscriptionRepo } from "../repository/subscription.repository";
 
+import {
+  SubscriptionNotFound,
+  SubscriptionNotPending,
+  SubscriptionNotUsable,
+  SubscriptionUsageExceeded,
+} from "../domain-errors";
 import { SubscriptionRepository } from "../repository/subscription.repository";
 
 export type SubscriptionService = {
@@ -47,15 +51,33 @@ export type SubscriptionService = {
   activate: (
     input: Parameters<SubscriptionRepo["activate"]>[0],
   ) => Effect.Effect<
-    Option.Option<SubscriptionRow>,
-    SubscriptionRepositoryError | ActiveSubscriptionExists
+    SubscriptionRow,
+    SubscriptionRepositoryError | ActiveSubscriptionExists | SubscriptionNotFound | SubscriptionNotPending
   >;
 
   incrementUsage: (
     subscriptionId: string,
     expectedUsageCount: number,
     amount: number,
-  ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
+  ) => Effect.Effect<
+    SubscriptionRow,
+    SubscriptionRepositoryError | SubscriptionNotFound | SubscriptionNotUsable
+  >;
+
+  useOneInTx: (
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
+    input: {
+      readonly subscriptionId: string;
+      readonly userId: string;
+      readonly now?: Date;
+    },
+  ) => Effect.Effect<
+    SubscriptionRow,
+    | SubscriptionRepositoryError
+    | SubscriptionNotFound
+    | SubscriptionNotUsable
+    | SubscriptionUsageExceeded
+  >;
 
   markExpiredNow: (
     now: Date,
@@ -92,10 +114,97 @@ export const SubscriptionServiceLive = Layer.effect(
         repo.listForUser(userId, filter, pageReq),
 
       activate: input =>
-        repo.activate(input),
+        Effect.gen(function* () {
+          const activatedOpt = yield* repo.activate(input);
+          if (Option.isSome(activatedOpt)) {
+            return activatedOpt.value;
+          }
+
+          const existing = yield* repo.findById(input.subscriptionId);
+          if (Option.isNone(existing)) {
+            return yield* Effect.fail(new SubscriptionNotFound({
+              subscriptionId: input.subscriptionId,
+            }));
+          }
+
+          return yield* Effect.fail(new SubscriptionNotPending({
+            subscriptionId: input.subscriptionId,
+          }));
+        }),
 
       incrementUsage: (subscriptionId, expectedUsageCount, amount) =>
-        repo.incrementUsage(subscriptionId, expectedUsageCount, amount),
+        Effect.gen(function* () {
+          const updatedOpt = yield* repo.incrementUsage(subscriptionId, expectedUsageCount, amount);
+          if (Option.isSome(updatedOpt)) {
+            return updatedOpt.value;
+          }
+
+          const existing = yield* repo.findById(subscriptionId);
+          if (Option.isNone(existing)) {
+            return yield* Effect.fail(new SubscriptionNotFound({
+              subscriptionId,
+            }));
+          }
+
+          return yield* Effect.fail(new SubscriptionNotUsable({
+            subscriptionId,
+            status: existing.value.status,
+          }));
+        }),
+
+      useOneInTx: (tx, input) =>
+        Effect.gen(function* () {
+          const subscriptionOpt = yield* repo.findByIdInTx(tx, input.subscriptionId);
+          if (Option.isNone(subscriptionOpt)) {
+            return yield* Effect.fail(new SubscriptionNotFound({
+              subscriptionId: input.subscriptionId,
+            }));
+          }
+          const subscription = subscriptionOpt.value;
+
+          if (subscription.userId !== input.userId) {
+            return yield* Effect.fail(new SubscriptionNotUsable({
+              subscriptionId: input.subscriptionId,
+              status: subscription.status,
+            }));
+          }
+
+          if (subscription.status !== "ACTIVE" && subscription.status !== "PENDING") {
+            return yield* Effect.fail(new SubscriptionNotUsable({
+              subscriptionId: input.subscriptionId,
+              status: subscription.status,
+            }));
+          }
+
+          if (
+            subscription.maxUsages !== null
+            && subscription.usageCount >= subscription.maxUsages
+          ) {
+            return yield* Effect.fail(new SubscriptionUsageExceeded({
+              subscriptionId: input.subscriptionId,
+              usageCount: subscription.usageCount,
+              maxUsages: subscription.maxUsages,
+            }));
+          }
+
+          const updated = yield* repo.incrementUsageInTx(
+            tx,
+            subscription.id,
+            subscription.usageCount,
+            1,
+            ["ACTIVE", "PENDING"],
+          );
+
+          if (Option.isNone(updated)) {
+            return yield* Effect.fail(new SubscriptionUsageExceeded({
+              subscriptionId: input.subscriptionId,
+              usageCount: subscription.usageCount,
+              maxUsages: subscription.maxUsages ?? subscription.usageCount,
+            }));
+          }
+
+          return updated.value;
+        }),
 
       markExpiredNow: now =>
         repo.markExpiredNow(now),
