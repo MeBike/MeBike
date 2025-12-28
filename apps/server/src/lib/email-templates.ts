@@ -27,6 +27,23 @@ type FixedSlotAssignmentEmailParams = {
   readonly slotTimeLabel: string;
 };
 
+type ReservationHoldEmailParams = {
+  readonly fullName: string;
+  readonly stationName: string;
+  readonly bikeId: string;
+  readonly startTimeLabel: string;
+  readonly endTimeLabel: string;
+  readonly callBackUrl?: string;
+};
+
+type ReservationNearExpiryEmailParams = {
+  readonly fullName: string;
+  readonly stationName: string;
+  readonly bikeId: string;
+  readonly minutesRemaining: number;
+  readonly callBackUrl?: string;
+};
+
 const BRAND_NAME = "MeBike";
 const BRAND_COLOR = "#007bff";
 const TEXT_COLOR = "#1f2933";
@@ -209,6 +226,102 @@ export function buildFixedSlotNoBikeEmail({
     html: renderEmailShell({
       title,
       previewText: `${safeDate} lúc ${safeTime}`,
+      bodyHtml: body,
+    }),
+  };
+}
+
+export function buildReservationConfirmedEmail({
+  fullName,
+  stationName,
+  bikeId,
+  startTimeLabel,
+  endTimeLabel,
+  callBackUrl,
+}: ReservationHoldEmailParams): { subject: string; html: string } {
+  const safeName = escapeHtml(fullName);
+  const safeStation = escapeHtml(stationName);
+  const safeBikeId = escapeHtml(bikeId);
+  const safeStart = escapeHtml(startTimeLabel);
+  const safeEnd = escapeHtml(endTimeLabel);
+  const safeUrl = callBackUrl ? escapeHtml(callBackUrl) : "#";
+  const title = "Đặt trước xe thành công";
+
+  const body = `
+    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào ${safeName},</p>
+    <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
+      Xe của bạn đã được giữ chỗ thành công.
+    </p>
+    <div style="background: #ecfdf3; border: 1px solid #abefc6; color: #027a48; padding: 14px; border-radius: 8px; margin-bottom: 20px;">
+      <strong>Xe #${safeBikeId}</strong> • Trạm ${safeStation}
+    </div>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: ${TEXT_COLOR};">
+      <tr>
+        <td style="padding: 8px 0; font-weight: 600;">Thời gian đặt:</td>
+        <td style="padding: 8px 0;">${safeStart}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 0; font-weight: 600; color: #dc3545;">Hạn mở khóa:</td>
+        <td style="padding: 8px 0; color: #dc3545;"><strong>${safeEnd}</strong></td>
+      </tr>
+    </table>
+    <p style="margin: 16px 0 0; color: ${TEXT_COLOR};">
+      Vui lòng đến trạm và mở khóa xe trước thời hạn để bắt đầu chuyến đi.
+    </p>
+    <div style="text-align: center; margin: 24px 0 0;">
+      <a href="${safeUrl}" style="background: ${BRAND_COLOR}; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+        Mở ứng dụng để mở khóa
+      </a>
+    </div>
+  `;
+
+  return {
+    subject: "Đặt trước xe MeBike thành công",
+    html: renderEmailShell({
+      title,
+      previewText: `Xe #${bikeId} tại ${stationName}`,
+      bodyHtml: body,
+    }),
+  };
+}
+
+export function buildReservationNearExpiryEmail({
+  fullName,
+  stationName,
+  bikeId,
+  minutesRemaining,
+  callBackUrl,
+}: ReservationNearExpiryEmailParams): { subject: string; html: string } {
+  const safeName = escapeHtml(fullName);
+  const safeStation = escapeHtml(stationName);
+  const safeBikeId = escapeHtml(bikeId);
+  const safeMinutes = Math.max(1, Math.floor(minutesRemaining));
+  const safeUrl = callBackUrl ? escapeHtml(callBackUrl) : "#";
+  const title = "Phiên đặt trước sắp hết hạn";
+
+  const body = `
+    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào ${safeName},</p>
+    <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
+      Phiên đặt trước xe của bạn sắp hết hạn. Vui lòng đến trạm để mở khóa ngay.
+    </p>
+    <div style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 14px; border-radius: 8px; margin-bottom: 20px;">
+      <strong>Xe #${safeBikeId}</strong> • Trạm ${safeStation} • còn khoảng ${safeMinutes} phút
+    </div>
+    <p style="margin: 0; color: ${TEXT_COLOR};">
+      Nếu bạn không mở khóa trước khi hết hạn, phiên đặt trước sẽ tự động bị hủy.
+    </p>
+    <div style="text-align: center; margin: 24px 0 0;">
+      <a href="${safeUrl}" style="background: ${BRAND_COLOR}; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+        Mở ứng dụng để mở khóa
+      </a>
+    </div>
+  `;
+
+  return {
+    subject: "Phiên đặt trước gần hết hạn",
+    html: renderEmailShell({
+      title,
+      previewText: `Còn khoảng ${safeMinutes} phút`,
       bodyHtml: body,
     }),
   };
