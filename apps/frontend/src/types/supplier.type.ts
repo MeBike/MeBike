@@ -1,4 +1,5 @@
 import type { GraphQLMutationResponse } from "@/types/GraphQL";
+import { Bike } from "./bike.type";
 export interface Supplier {
   id: string;
   name: string;
@@ -10,6 +11,7 @@ export interface Supplier {
     address: string;
     phone: string
   };
+  bikes: Bike[];
 }
 export interface StatSupplier {
   totalSupplier : number;

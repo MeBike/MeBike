@@ -12,66 +12,64 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BikeCard } from "@/components/BikeCard";
-import { MapPin, Calendar, Pencil, Save, X } from "lucide-react";
+import {
+  Phone,
+  MapPin,
+  DollarSign,
+  Calendar,
+  Pencil,
+  Save,
+  X,
+  Bike,
+} from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { Station } from "@/types/station.type";
-import { getStatusColor } from "@/utils/status-style";
-const statusConfig = {
-  active: { variant: "success" as const, label: "Active" },
-  inactive: { variant: "secondary" as const, label: "Inactive" },
-};
-interface StationDetailProps {
-  station: Station;
+import { Supplier } from "@/types/supplier.type";
+
+interface SupplierDetailProps {
+    supplier : Supplier
 }
-export default function StationDetail({ station }: StationDetailProps) {
+export default function SupplierDetail({supplier}:SupplierDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
-  console.log("Station detail:", station);
   const [formData, setFormData] = useState({
-    name: station?.name || "",
-    address: station?.address || "",
-    capacity: station?.capacity || 0,
-    status: station?.status || "active",
-    latitude: station?.latitude || 0,
-    longitude: station?.longitude || 0,
+    name: supplier?.name || "",
+    phone: supplier?.contactInfo.phone || "",
+    address: supplier?.contactInfo.address || "",
+    contactFee: supplier?.contactFee || 0,
+    status: supplier?.status || "active",
   });
 
-  if (!station) {
+  if (!supplier) {
     return (
       <div>
         <div className="flex items-center justify-center h-[60vh]">
-          <p className="text-muted-foreground">Station not found</p>
+          <p className="text-muted-foreground">Supplier not found</p>
         </div>
       </div>
     );
   }
-  const occupancyRate = Math.round(
-    (station.totalBike / station.capacity) * 100
-  );
 
   const handleSave = () => {
-    toast.success("Station updated successfully!");
+    toast.success("Supplier updated successfully!");
     setIsEditing(false);
   };
 
   const handleCancel = () => {
     setFormData({
-      name: station.name,
-      address: station.address,
-      capacity: station.capacity,
-      status: station.status,
-      latitude: station.latitude,
-      longitude: station.longitude,
+      name: supplier.name,
+      phone: supplier.contactInfo.phone,
+      address: supplier.contactInfo.address,
+      contactFee: supplier.contactFee,
+      status: supplier.status,
     });
     setIsEditing(false);
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div>
       <PageHeader
-        title={station.name}
-        description={station.address}
-        backLink="/stations"
+        title={supplier.name}
+        description={`Supplier ID: ${supplier.id}`}
+        backLink="/suppliers"
         actions={
           isEditing ? (
             <>
@@ -97,14 +95,16 @@ export default function StationDetail({ station }: StationDetailProps) {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Info */}
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-xl bg-card p-6 shadow-card">
             <h2 className="text-lg font-semibold text-card-foreground mb-4">
-              Station Information
+              Supplier Information
             </h2>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
+                <Label htmlFor="name">Company Name</Label>
                 {isEditing ? (
                   <Input
                     id="name"
@@ -114,7 +114,7 @@ export default function StationDetail({ station }: StationDetailProps) {
                     }
                   />
                 ) : (
-                  <p className="text-foreground font-medium">{station.name}</p>
+                  <p className="text-foreground font-medium">{supplier.name}</p>
                 )}
               </div>
 
@@ -131,20 +131,56 @@ export default function StationDetail({ station }: StationDetailProps) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover">
-                      {Object.entries(statusConfig).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
-                          {config.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
-                  //   <Badge variant={status.variant}>{status.label}</Badge>
                   <Badge
-                    className={`text-xs ${getStatusColor(station.status)}`}
+                    variant={
+                      supplier.status === "Active" ? "success" : "secondary"
+                    }
                   >
-                    {station.status}
+                    {supplier.status === "Active" ? "Active" : "Inactive"}
                   </Badge>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                {isEditing ? (
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                  />
+                ) : (
+                  <p className="text-foreground font-medium">
+                    {supplier.contactInfo.phone}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contactFee">Contract Fee (per bike)</Label>
+                {isEditing ? (
+                  <Input
+                    id="contactFee"
+                    type="number"
+                    value={formData.contactFee}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        contactFee: parseInt(e.target.value),
+                      })
+                    }
+                  />
+                ) : (
+                  <p className="text-foreground font-medium">
+                    ${supplier.contactFee}
+                  </p>
                 )}
               </div>
 
@@ -160,145 +196,96 @@ export default function StationDetail({ station }: StationDetailProps) {
                   />
                 ) : (
                   <p className="text-foreground font-medium">
-                    {station.address}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="capacity">Capacity</Label>
-                {isEditing ? (
-                  <Input
-                    id="capacity"
-                    type="number"
-                    value={formData.capacity}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        capacity: parseInt(e.target.value),
-                      })
-                    }
-                  />
-                ) : (
-                  <p className="text-foreground font-medium">
-                    {station.capacity} bikes
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Coordinates</Label>
-                {isEditing ? (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Lat"
-                      type="number"
-                      step="0.0001"
-                      value={formData.latitude}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          latitude: parseFloat(e.target.value),
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Long"
-                      type="number"
-                      step="0.0001"
-                      value={formData.longitude}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          longitude: parseFloat(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                ) : (
-                  <p className="text-foreground font-medium">
-                    {station.latitude}, {station.longitude}
+                    {supplier.contactInfo.address}
                   </p>
                 )}
               </div>
             </div>
           </div>
 
+          {/* Bikes from this supplier */}
           <div className="rounded-xl bg-card p-6 shadow-card">
             <div className="flex items-center gap-3 mb-4">
+              <Bike className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold text-card-foreground">
-                Bikes at this Station ({station.totalBike})
+                Bikes from this Supplier ({supplierBikes.length})
               </h2>
             </div>
-            {station.totalBike > 0 ? (
+            {supplier.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {station.bikes.map((bike) => (
-                  <BikeCard
-                    key={bike.id}
-                    bike={bike}
-                    station_name={station.name}
-                  />
+                {supplierBikes.map((bike) => (
+                  <BikeCard key={bike.id} bike={bike} />
                 ))}
               </div>
             ) : (
               <p className="text-muted-foreground text-center py-8">
-                No bikes at this station
+                No bikes from this supplier
               </p>
             )}
           </div>
         </div>
 
+        {/* Sidebar */}
         <div className="space-y-6">
+          {/* Quick Info */}
           <div className="rounded-xl bg-card p-6 shadow-card">
             <h3 className="font-semibold text-card-foreground mb-4">
-              Capacity Overview
+              Quick Info
             </h3>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Occupancy</span>
-                  <span className="font-medium">{occupancyRate}%</span>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
+                  <Phone className="h-5 w-5 text-accent-foreground" />
                 </div>
-                <div className="h-3 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-all",
-                      occupancyRate > 80
-                        ? "bg-success"
-                        : occupancyRate > 50
-                          ? "bg-info"
-                          : "bg-warning"
-                    )}
-                    style={{ width: `${occupancyRate}%` }}
-                  />
+                <div>
+                  <p className="text-xs text-muted-foreground">Phone</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {supplier.contactInfo.phone}
+                  </p>
                 </div>
               </div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
+                  <MapPin className="h-5 w-5 text-accent-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Address</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {supplier.contactInfo.address}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary">
+                  <DollarSign className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Contract Fee</p>
+                  <p className="text-sm font-medium text-foreground">
+                    ${supplier.contactFee}/bike
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-4">
-                <div className="text-center p-3 rounded-lg bg-success/10">
-                  <p className="text-2xl font-bold text-success">
-                    {station.availableBike}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Available</p>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-info/10">
-                  <p className="text-2xl font-bold text-info">
-                    {station.bookedBike}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Booked</p>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-destructive/10">
-                  <p className="text-2xl font-bold text-destructive">
-                    {station.brokenBike}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Broken</p>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-warning/10">
-                  <p className="text-2xl font-bold text-warning">
-                    {station.maintanedBike}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Maintenance</p>
-                </div>
+          {/* Stats */}
+          <div className="rounded-xl bg-card p-6 shadow-card">
+            <h3 className="font-semibold text-card-foreground mb-4">
+              Statistics
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 rounded-lg bg-primary/10">
+                <p className="text-2xl font-bold text-primary">
+                  {supplierBikes.length}
+                </p>
+                <p className="text-xs text-muted-foreground">Total Bikes</p>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-success/10">
+                <p className="text-2xl font-bold text-success">
+                  {supplierBikes.filter((b) => b.status === "available").length}
+                </p>
+                <p className="text-xs text-muted-foreground">Available</p>
               </div>
             </div>
           </div>
@@ -314,9 +301,11 @@ export default function StationDetail({ station }: StationDetailProps) {
                   <Calendar className="h-4 w-4 text-accent-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-foreground">Created</p>
+                  <p className="text-sm font-medium text-foreground">
+                    Partnership Started
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(station.createdAt).toLocaleString()}
+                    {new Date(supplier.createdAt).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -329,7 +318,7 @@ export default function StationDetail({ station }: StationDetailProps) {
                     Last Updated
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(station.updatedAt).toLocaleString()}
+                    {new Date(supplier.updatedAt).toLocaleString()}
                   </p>
                 </div>
               </div>

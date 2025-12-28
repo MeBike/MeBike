@@ -51,11 +51,16 @@ export const GET_DETAIL_STATION = gql`
           chipId
           station {
             name
+            id
             address
           }
           status
           createdAt
           updatedAt
+          supplier {
+            name
+            id
+          }
         }
         createdAt
         updatedAt

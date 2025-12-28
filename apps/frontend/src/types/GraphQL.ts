@@ -43,7 +43,7 @@ export interface Me {
   role: UserRole;
   verify: string;
   email:string;
-  status: string;
+  status: "Active" | "Inactive" | "Banned";
   phone: string;
   userAccount: {
     email: string;

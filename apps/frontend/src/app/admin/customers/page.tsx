@@ -14,10 +14,11 @@ import { Plus } from "lucide-react";
 import { useUserActions } from "@/hooks/use-user";
 import { userColumns } from "@/columns/user-columns";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { formatDateUTC } from "@/utils/formatDateTime";
+import { useRouter } from "next/navigation";
 import { formatToVNTime } from "@/lib/formateVNDate";
 
 export default function CustomersPage() {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -159,6 +160,9 @@ export default function CustomersPage() {
     setIsEditProfileModalOpen(false);
     resetUpdateProfile();
   });
+  const handleDetailUser = (id: string) => {
+    router.push(`/admin/customers/detail/${id}`);
+  };
   return (
     <div>
       <div className="space-y-6">
@@ -243,8 +247,7 @@ export default function CustomersPage() {
             title="Danh sách người dùng"
             columns={userColumns({
               onView: (user) => {
-                setSelectedUserId(String(user.accountId));
-                setIsDetailModalOpen(true);
+                handleDetailUser(String(user.accountId));
               },
             })}
             data={users || []}
