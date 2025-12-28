@@ -20,6 +20,13 @@ type SubscriptionCreatedEmailParams = {
   readonly callBackUrl?: string;
 };
 
+type FixedSlotAssignmentEmailParams = {
+  readonly fullName: string;
+  readonly stationName: string;
+  readonly slotDateLabel: string;
+  readonly slotTimeLabel: string;
+};
+
 const BRAND_NAME = "MeBike";
 const BRAND_COLOR = "#007bff";
 const TEXT_COLOR = "#1f2933";
@@ -132,6 +139,76 @@ export function buildSubscriptionCreatedEmail({
     html: renderEmailShell({
       title: "Đăng ký gói tháng thành công",
       previewText: `Gói ${packageName} đang chờ kích hoạt`,
+      bodyHtml: body,
+    }),
+  };
+}
+
+export function buildFixedSlotAssignedEmail({
+  fullName,
+  stationName,
+  slotDateLabel,
+  slotTimeLabel,
+}: FixedSlotAssignmentEmailParams): { subject: string; html: string } {
+  const safeName = escapeHtml(fullName);
+  const safeStation = escapeHtml(stationName);
+  const safeDate = escapeHtml(slotDateLabel);
+  const safeTime = escapeHtml(slotTimeLabel);
+  const title = "Đặt xe theo khung giờ cố định thành công";
+
+  const body = `
+    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào ${safeName},</p>
+    <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
+      Xe đã được giữ thành công cho khung giờ cố định của bạn.
+    </p>
+    <div style="background: #ecfdf3; border: 1px solid #abefc6; color: #027a48; padding: 14px; border-radius: 8px; margin-bottom: 20px;">
+      <strong>${safeDate}</strong> • ${safeTime} • Trạm ${safeStation}
+    </div>
+    <p style="margin: 0; color: ${MUTED_COLOR}; font-size: 14px;">
+      Vui lòng đến trạm đúng giờ để nhận xe. Nếu cần thay đổi, hãy cập nhật lịch đặt trước trong ứng dụng.
+    </p>
+  `;
+
+  return {
+    subject: "Đặt xe khung giờ cố định thành công",
+    html: renderEmailShell({
+      title,
+      previewText: `${safeDate} lúc ${safeTime}`,
+      bodyHtml: body,
+    }),
+  };
+}
+
+export function buildFixedSlotNoBikeEmail({
+  fullName,
+  stationName,
+  slotDateLabel,
+  slotTimeLabel,
+}: FixedSlotAssignmentEmailParams): { subject: string; html: string } {
+  const safeName = escapeHtml(fullName);
+  const safeStation = escapeHtml(stationName);
+  const safeDate = escapeHtml(slotDateLabel);
+  const safeTime = escapeHtml(slotTimeLabel);
+  const title = "Không có xe cho khung giờ cố định";
+
+  const body = `
+    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào ${safeName},</p>
+    <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
+      Rất tiếc, hiện không có xe khả dụng cho khung giờ cố định của bạn.
+    </p>
+    <div style="background: #fef3f2; border: 1px solid #fecdca; color: #b42318; padding: 14px; border-radius: 8px; margin-bottom: 20px;">
+      <strong>${safeDate}</strong> • ${safeTime} • Trạm ${safeStation}
+    </div>
+    <p style="margin: 0; color: ${MUTED_COLOR}; font-size: 14px;">
+      Bạn có thể đổi khung giờ hoặc chọn trạm khác trong ứng dụng để tăng khả năng giữ xe.
+    </p>
+  `;
+
+  return {
+    subject: "Không có xe khả dụng cho khung giờ cố định",
+    html: renderEmailShell({
+      title,
+      previewText: `${safeDate} lúc ${safeTime}`,
       bodyHtml: body,
     }),
   };

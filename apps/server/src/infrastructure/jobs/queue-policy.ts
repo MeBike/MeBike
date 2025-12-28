@@ -9,6 +9,7 @@ export type QueueOptionsWithDeadLetter = QueueOptions & { deadLetter?: string };
 export const JobDeadLetters: Partial<Record<JobType, string>> = {
   [JobTypes.EmailSend]: "emails.dlq",
   [JobTypes.SubscriptionAutoActivate]: "subscriptions.autoActivate.dlq",
+  [JobTypes.ReservationFixedSlotAssign]: "reservations.fixedSlotAssign.dlq",
 };
 
 export function listDlqQueues(): readonly string[] {
@@ -37,6 +38,13 @@ const DEFAULT_QUEUE_OPTIONS: Record<JobType, QueueOptionsWithDeadLetter> = {
     retryDelay: 60,
     retryBackoff: true,
     retryDelayMax: 10 * 60,
+  },
+  [JobTypes.ReservationFixedSlotAssign]: {
+    retryLimit: 3,
+    retryDelay: 60,
+    retryBackoff: true,
+    retryDelayMax: 10 * 60,
+    deadLetter: JobDeadLetters[JobTypes.ReservationFixedSlotAssign],
   },
 };
 
