@@ -11,7 +11,6 @@ import { isPrismaRecordNotFound, isPrismaUniqueViolation } from "@/infrastructur
 import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
 import { ReservationStatus } from "generated/prisma/client";
 
-import type { ReservationRow } from "../models";
 import type { CreateReservationInput, UpdateReservationStatusInput } from "../types";
 import type { ReservationRepo } from "./reservation.repository.types";
 
@@ -335,6 +334,27 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
         catch: err =>
           new ReservationRepositoryError({
             operation: "findPendingHoldByBikeIdNowInTx",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toReservationRow)),
+        ),
+      ),
+
+    findActiveByUserIdInTx: (tx, userId) =>
+      Effect.tryPromise({
+        try: () =>
+          tx.reservation.findFirst({
+            where: {
+              userId,
+              status: ReservationStatus.ACTIVE,
+            },
+            select: selectReservationRow,
+          }),
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "findActiveByUserIdInTx",
             cause: err,
           }),
       }).pipe(

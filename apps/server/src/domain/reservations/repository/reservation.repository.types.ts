@@ -108,6 +108,15 @@ export type ReservationRepo = {
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
 
   /**
+   * EN: Find ACTIVE reservation by user id inside a Prisma transaction.
+   * VI: Tìm reservation ACTIVE theo user id bên trong Prisma transaction.
+   */
+  findActiveByUserIdInTx: (
+    tx: PrismaTypes.TransactionClient,
+    userId: string,
+  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
+
+  /**
    * EN: Find a PENDING FIXED_SLOT reservation for a template at a specific start time (bike unassigned).
    * VI: Tìm reservation FIXED_SLOT ở trạng thái PENDING theo template + thời điểm bắt đầu (chưa gán bike).
    */
