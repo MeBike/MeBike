@@ -457,6 +457,26 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
 
     updateStatusInTx: (tx, input) => updateStatusWithClient(tx, input),
 
+    expirePendingHoldInTx: (tx, reservationId, now) =>
+      Effect.tryPromise({
+        try: async () => {
+          const result = await tx.reservation.updateMany({
+            where: {
+              id: reservationId,
+              status: ReservationStatus.PENDING,
+              endTime: { lt: now },
+            },
+            data: { status: ReservationStatus.EXPIRED, updatedAt: now },
+          });
+          return result.count > 0;
+        },
+        catch: err =>
+          new ReservationRepositoryError({
+            operation: "expirePendingHoldInTx",
+            cause: err,
+          }),
+      }),
+
     markExpiredNow: now =>
       Effect.tryPromise({
         try: () =>

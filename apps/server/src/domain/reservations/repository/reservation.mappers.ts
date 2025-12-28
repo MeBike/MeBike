@@ -12,6 +12,7 @@ export const selectReservationRow = {
   endTime: true,
   prepaid: true,
   status: true,
+  createdAt: true,
   updatedAt: true,
 } as const;
 
@@ -27,6 +28,7 @@ export function toReservationRow(row: {
   endTime: Date | null;
   prepaid: ReservationRow["prepaid"];
   status: string;
+  createdAt: Date;
   updatedAt: Date;
 }): ReservationRow {
   return {
@@ -41,6 +43,7 @@ export function toReservationRow(row: {
     endTime: row.endTime,
     prepaid: row.prepaid,
     status: row.status as ReservationRow["status"],
+    createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
 }

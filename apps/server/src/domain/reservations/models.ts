@@ -14,6 +14,7 @@ export type ReservationRow = {
   readonly endTime: Date | null;
   readonly prepaid: ReservationDecimal;
   readonly status: ReservationStatus;
+  readonly createdAt: Date;
   readonly updatedAt: Date;
 };
 
