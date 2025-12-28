@@ -90,6 +90,8 @@ export const WalletServiceLive = Layer.effect(
       repo.increaseBalance(input).pipe(
         Effect.catchTag("WalletRecordNotFound", () =>
           Effect.fail(new WalletNotFound({ userId: input.userId }))),
+        Effect.catchTag("WalletUniqueViolation", () =>
+          getByUserId(input.userId)),
       );
 
     const creditWalletInTx: WalletService["creditWalletInTx"] = (tx, input) =>

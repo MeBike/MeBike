@@ -111,6 +111,32 @@ describe("walletRepository Integration", () => {
     expectLeftTag(result, "WalletRecordNotFound");
   });
 
+  it("increaseBalance returns WalletUniqueViolation for duplicate hash", async () => {
+    const { id: userId } = await createUser();
+    await Effect.runPromise(repo.createForUser(userId));
+
+    const hash = `refund:reservation:${uuidv7()}`;
+    await Effect.runPromise(
+      repo.increaseBalance({
+        userId,
+        amount: new Prisma.Decimal("25.00"),
+        hash,
+        type: "REFUND",
+      }),
+    );
+
+    const result = await Effect.runPromise(
+      repo.increaseBalance({
+        userId,
+        amount: new Prisma.Decimal("25.00"),
+        hash,
+        type: "REFUND",
+      }).pipe(Effect.either),
+    );
+
+    expectLeftTag(result, "WalletUniqueViolation");
+  });
+
   it("decreaseBalance fails when balance is insufficient", async () => {
     const { id: userId } = await createUser();
     await Effect.runPromise(repo.createForUser(userId));

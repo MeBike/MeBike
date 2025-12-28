@@ -40,7 +40,9 @@ export type WalletRepo = {
     tx: PrismaTypes.TransactionClient,
     userId: string,
   ) => Effect.Effect<WalletRow, WalletUniqueViolation | WalletRepositoryError>;
-  increaseBalance: (input: IncreaseBalanceInput) => Effect.Effect<WalletRow, WalletRecordNotFound | WalletRepositoryError>;
+  increaseBalance: (
+    input: IncreaseBalanceInput,
+  ) => Effect.Effect<WalletRow, WalletRecordNotFound | WalletUniqueViolation | WalletRepositoryError>;
   increaseBalanceInTx: (
     tx: PrismaTypes.TransactionClient,
     input: IncreaseBalanceInput,
@@ -208,6 +210,12 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
         catch: (err) => {
           if (err instanceof WalletRecordNotFound)
             return err;
+          if (isPrismaUniqueViolation(err)) {
+            return new WalletUniqueViolation({
+              operation: "increaseBalance",
+              constraint: "wallet_transactions.hash",
+            });
+          }
           return new WalletRepositoryError({ operation: "increaseBalance", cause: err });
         },
       }),
