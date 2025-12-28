@@ -197,6 +197,7 @@ export type Reservation = {
   end_time: Timestamp | null;
   prepaid: Generated<string>;
   status: Generated<ReservationStatus>;
+  created_at: Generated<Timestamp>;
   updated_at: Generated<Timestamp>;
 };
 export type Station = {
