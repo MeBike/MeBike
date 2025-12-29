@@ -27,6 +27,10 @@ export type StationRepo = {
   getById: (
     id: string,
   ) => Effect.Effect<Option.Option<StationRow>, StationRepositoryError>;
+  getByIdInTx: (
+    tx: PrismaTypes.TransactionClient,
+    id: string,
+  ) => Effect.Effect<Option.Option<StationRow>, StationRepositoryError>;
   listNearest: (
     args: NearestSearchArgs,
   ) => Effect.Effect<PageResult<NearestStationRow>, StationRepositoryError>;
@@ -131,6 +135,24 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
           catch: e =>
             new StationRepositoryError({
               operation: "getById",
+              cause: e,
+            }),
+        });
+        return Option.fromNullable(row);
+      });
+    },
+
+    getByIdInTx(tx: PrismaTypes.TransactionClient, id: string) {
+      return Effect.gen(function* () {
+        const row = yield* Effect.tryPromise({
+          try: () =>
+            tx.station.findUnique({
+              where: { id },
+              select: stationSelect,
+            }),
+          catch: e =>
+            new StationRepositoryError({
+              operation: "getByIdInTx",
               cause: e,
             }),
         });

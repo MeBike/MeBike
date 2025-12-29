@@ -34,6 +34,10 @@ export type UserRepo = {
   readonly findById: (
     id: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  readonly findByIdInTx: (
+    tx: PrismaTypes.TransactionClient,
+    id: string,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
   readonly findByEmail: (
     email: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
@@ -135,6 +139,24 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
         catch: err =>
           new UserRepositoryError({
             operation: "findById",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toUserRow)),
+        ),
+      ),
+
+    findByIdInTx: (tx, id) =>
+      Effect.tryPromise({
+        try: () =>
+          tx.user.findUnique({
+            where: { id },
+            select: selectUserRow,
+          }),
+        catch: err =>
+          new UserRepositoryError({
+            operation: "findByIdInTx",
             cause: err,
           }),
       }).pipe(

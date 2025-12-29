@@ -1,11 +1,12 @@
 import { Effect, Option } from "effect";
 
+import type { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { BikeRepository } from "@/domain/bikes";
 import { RentalRepository } from "@/domain/rentals";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
-import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
+import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import {
@@ -87,7 +88,7 @@ async function enqueueEmailIdempotent(
   args: Parameters<typeof enqueueOutboxJob>[1],
 ): Promise<void> {
   try {
-    await enqueueOutboxJob(tx, args);
+    await Effect.runPromise(enqueueOutboxJobInTx(tx, args));
   }
   catch (err) {
     if (isPrismaUniqueViolation(err)) {
