@@ -74,7 +74,10 @@ const RegisterPage = () => {
     try {
       console.log("Verifying OTP:", otp);
       console.log("Registered email:", registeredEmail);
-      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("access_token")
+          : null;
       console.log("Token exists:", !!token);
       await verifyEmail({ email: registeredEmail, otp });
       console.log("OTP verified successfully!");

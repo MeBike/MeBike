@@ -1,5 +1,5 @@
 "use client";
-import StationDetail from "./StationDetail";
+import StationDetail from "../../components/StationDetail";
 import React from "react";
 import { notFound } from "next/navigation";
 import { useStationActions } from "@/hooks/use-station";

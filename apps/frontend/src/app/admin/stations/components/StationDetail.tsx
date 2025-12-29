@@ -135,7 +135,7 @@ export default function StationDetail({ station  }: StationDetailProps) {
       <PageHeader
         title={station.name}
         description={station.address}
-        backLink="/stations"
+        backLink="/admin/stations"
         actions={
           isEditing ? (
             <>

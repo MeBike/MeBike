@@ -42,9 +42,12 @@ export default function StationsPage() {
     setStationID(stationId);
     router.push(`/admin/stations/detail/${stationId}`);
   };
+  const handleAddStation = () => {
+    router.push(`/admin/stations/create`);
+  }
   return (
     <div className="space-y-6">
-      <StationHeader onAddStation={() => {}} />
+      <StationHeader onAddStation={() => handleAddStation()} />
       <StationStats activeStation={100} inActiveStation={100} totalStation={100}/>
       <StationFilter value={searchQuery} onChange={setSearchQuery} />
       <div className="w-full rounded-lg space-y-4 flex flex-col">
