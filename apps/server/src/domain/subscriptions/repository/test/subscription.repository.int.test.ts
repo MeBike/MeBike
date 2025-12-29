@@ -251,4 +251,44 @@ describe("subscriptionRepository Integration", () => {
 
     await broken.stop();
   });
+
+  it("enforces unique ACTIVE subscription per user (partial unique index)", async () => {
+    const { id: userId } = await createUser();
+    const now = new Date();
+
+    await client.subscription.create({
+      data: {
+        id: uuidv7(),
+        userId,
+        packageName: "basic",
+        maxUsages: 10,
+        usageCount: 0,
+        status: "ACTIVE",
+        activatedAt: now,
+        expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        price: new Prisma.Decimal("10.00"),
+      },
+    });
+
+    await expect(
+      client.subscription.create({
+        data: {
+          id: uuidv7(),
+          userId,
+          packageName: "premium",
+          maxUsages: 5,
+          usageCount: 0,
+          status: "ACTIVE",
+          activatedAt: now,
+          expiresAt: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
+          price: new Prisma.Decimal("20.00"),
+        },
+      }),
+    ).rejects.toBeDefined();
+
+    const activeCount = await client.subscription.count({
+      where: { userId, status: "ACTIVE" },
+    });
+    expect(activeCount).toBe(1);
+  });
 });

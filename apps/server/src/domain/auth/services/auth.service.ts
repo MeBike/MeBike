@@ -9,7 +9,7 @@ import type { PrismaClient } from "generated/prisma/client";
 
 import { UserRepository } from "@/domain/users/repository/user.repository";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
-import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
+import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
 
@@ -150,23 +150,18 @@ export function makeAuthService({
 
       const expiresInMinutes = Math.max(1, Math.ceil(VERIFY_OTP_TTL_MS / 60000));
       // TODO: use templated email content and map enqueue failures to domain errors if needed
-      yield* Effect.tryPromise({
-        try: () =>
-          client.$transaction(tx =>
-            enqueueOutboxJob(tx, {
-              type: JobTypes.EmailSend,
-              payload: {
-                version: 1,
-                to: addr,
-                kind: "auth.verifyOtp",
-                fullName,
-                otp,
-                expiresInMinutes,
-              },
-              runAt: new Date(),
-            })),
-        catch: err => err as unknown,
-      }).pipe(Effect.catchAll(err => Effect.die(err)));
+      yield* enqueueOutboxJobInTx(client, {
+        type: JobTypes.EmailSend,
+        payload: {
+          version: 1,
+          to: addr,
+          kind: "auth.verifyOtp",
+          fullName,
+          otp,
+          expiresInMinutes,
+        },
+        runAt: new Date(),
+      });
     });
 
   const loginWithPassword: AuthService["loginWithPassword"] = ({ email: addr, password }) =>
@@ -306,23 +301,18 @@ export function makeAuthService({
       const expiresInMinutes = Math.max(1, Math.ceil(RESET_OTP_TTL_MS / 60000));
       // TODO: use templated email content and map enqueue failures to domain errors if needed I wonder if this thing
       // could fail we are writing to outbox after all
-      yield* Effect.tryPromise({
-        try: () =>
-          client.$transaction(tx =>
-            enqueueOutboxJob(tx, {
-              type: JobTypes.EmailSend,
-              payload: {
-                version: 1,
-                to: addr,
-                kind: "auth.resetOtp",
-                fullName: user.fullname,
-                otp,
-                expiresInMinutes,
-              },
-              runAt: new Date(),
-            })),
-        catch: err => err as unknown,
-      }).pipe(Effect.catchAll(err => Effect.die(err)));
+      yield* enqueueOutboxJobInTx(client, {
+        type: JobTypes.EmailSend,
+        payload: {
+          version: 1,
+          to: addr,
+          kind: "auth.resetOtp",
+          fullName: user.fullname,
+          otp,
+          expiresInMinutes,
+        },
+        runAt: new Date(),
+      });
     });
 
   const resetPassword: AuthService["resetPassword"] = ({ email: addr, otp, newPassword }) =>

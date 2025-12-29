@@ -22,8 +22,9 @@ model JobOutbox {
 
   @@index([status, runAt], name: "idx_job_outbox_status_run_at")
   @@index([type, status], name: "idx_job_outbox_type_status")
-  // TODO(jobs-dedupe): consider a partial unique index on (type, dedupe_key)
-  // where status IN ('PENDING','SENT') to prevent double-enqueue.
+  // Partial unique index for dedupe is applied via migration:
+  // CREATE UNIQUE INDEX job_outbox_type_dedupe_active
+  //   ON job_outbox(type, dedupe_key)
+  //   WHERE dedupe_key IS NOT NULL AND status IN ('PENDING','SENT');
   @@map("job_outbox")
 }
-
