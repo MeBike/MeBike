@@ -13,10 +13,13 @@ import { env } from "@/config/env";
 import { BikeRepository } from "@/domain/bikes";
 import { RentalRepository } from "@/domain/rentals";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
+import { StationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
+import { UserRepository } from "@/domain/users";
 import { WalletServiceTag } from "@/domain/wallets";
-import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
+import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
+import { buildReservationConfirmedEmail } from "@/lib/email-templates";
 
 import type { ReservationServiceFailure } from "../domain-errors";
 import type { ReservationRow } from "../models";
@@ -54,9 +57,14 @@ export type ReserveBikeFailure
 
 const HOLD_MINUTES = env.RESERVATION_HOLD_MINUTES;
 const PREPAID_AMOUNT = env.RESERVATION_PREPAID_AMOUNT;
+const RESERVATION_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
 function computeEndTime(startTime: Date, holdMinutes = HOLD_MINUTES): Date {
   return new Date(startTime.getTime() + holdMinutes * 60 * 1000);
+}
+
+function formatReservationDateTime(value: Date): string {
+  return value.toLocaleString("vi-VN", { timeZone: RESERVATION_TIME_ZONE });
 }
 
 export function reserveBikeUseCase(
@@ -68,6 +76,8 @@ export function reserveBikeUseCase(
   | ReservationServiceTag
   | ReservationHoldServiceTag
   | BikeRepository
+  | StationRepository
+  | UserRepository
   | WalletServiceTag
   | SubscriptionServiceTag
   | RentalRepository
@@ -77,6 +87,8 @@ export function reserveBikeUseCase(
     const reservationService = yield* ReservationServiceTag;
     const reservationHoldService = yield* ReservationHoldServiceTag;
     const bikeRepo = yield* BikeRepository;
+    const stationRepo = yield* StationRepository;
+    const userRepo = yield* UserRepository;
     const walletService = yield* WalletServiceTag;
     const subscriptionService = yield* SubscriptionServiceTag;
     const rentalRepo = yield* RentalRepository;
@@ -213,39 +225,72 @@ export function reserveBikeUseCase(
               const notifyAt = new Date(Math.max(now.getTime(), notifyAtMs));
               const expireAt = new Date(Math.max(now.getTime(), reservation.endTime.getTime()));
 
-              yield* Effect.tryPromise({
-                try: () =>
-                  enqueueOutboxJob(tx, {
-                    type: JobTypes.ReservationNotifyNearExpiry,
-                    payload: {
-                      version: 1,
-                      reservationId: reservation.id,
-                    },
-                    runAt: notifyAt,
-                    dedupeKey: `reservation:notify:${reservation.id}`,
-                  }),
-                catch: err => err as unknown,
-              }).pipe(Effect.catchAll(err => Effect.die(err)));
+              yield* enqueueOutboxJobInTx(tx, {
+                type: JobTypes.ReservationNotifyNearExpiry,
+                payload: {
+                  version: 1,
+                  reservationId: reservation.id,
+                },
+                runAt: notifyAt,
+                dedupeKey: `reservation:notify:${reservation.id}`,
+              });
 
-              yield* Effect.tryPromise({
-                try: () =>
-                  enqueueOutboxJob(tx, {
-                    type: JobTypes.ReservationExpireHold,
-                    payload: {
-                      version: 1,
-                      reservationId: reservation.id,
-                    },
-                    runAt: expireAt,
-                    dedupeKey: `reservation:expire:${reservation.id}`,
-                  }),
-                catch: err => err as unknown,
-              }).pipe(Effect.catchAll(err => Effect.die(err)));
+              yield* enqueueOutboxJobInTx(tx, {
+                type: JobTypes.ReservationExpireHold,
+                payload: {
+                  version: 1,
+                  reservationId: reservation.id,
+                },
+                runAt: expireAt,
+                dedupeKey: `reservation:expire:${reservation.id}`,
+              });
             }
 
-            // TODO(outbox): enqueue reservation confirmation email immediately after booking.
-            // Legacy behavior sends "success-reservation" confirmation; near-expiry is now handled
-            // via outbox jobs scheduled above. Consider dedupe keys so retries don't spam users.
+            // Confirmation email (legacy: "success-reservation").
+            // TODO(env): Provide a real callback URL once we standardize a `FRONTEND_URL`/`APP_WEB_URL` env.
             // TODO(iot): send reservation "reserve" command once IoT integration is ready.
+            {
+              const [userOpt, stationOpt] = yield* Effect.all([
+                userRepo.findByIdInTx(tx, reservation.userId).pipe(
+                  Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+                ),
+                stationRepo.getByIdInTx(tx, reservation.stationId).pipe(
+                  Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+                ),
+              ]);
+
+              if (Option.isNone(userOpt)) {
+                return yield* Effect.die(new Error(
+                  `Invariant violated: reservation ${reservation.id} references missing user ${reservation.userId}`,
+                ));
+              }
+              if (Option.isNone(stationOpt)) {
+                return yield* Effect.die(new Error(
+                  `Invariant violated: reservation ${reservation.id} references missing station ${reservation.stationId}`,
+                ));
+              }
+
+              const email = buildReservationConfirmedEmail({
+                fullName: userOpt.value.fullname,
+                stationName: stationOpt.value.name,
+                bikeId: reservation.bikeId ?? input.bikeId,
+                startTimeLabel: formatReservationDateTime(reservation.startTime),
+                endTimeLabel: formatReservationDateTime(endTime),
+              });
+
+              yield* enqueueOutboxJobInTx(tx, {
+                type: JobTypes.EmailSend,
+                payload: {
+                  version: 1,
+                  to: userOpt.value.email,
+                  kind: "raw",
+                  subject: email.subject,
+                  html: email.html,
+                },
+                runAt: now,
+                dedupeKey: `reservation-confirm:${reservation.id}`,
+              });
+            }
 
             return reservation;
           });
