@@ -245,17 +245,25 @@ export function buildReservationConfirmedEmail({
   const safeStart = escapeHtml(startTimeLabel);
   const safeEnd = escapeHtml(endTimeLabel);
   const safeUrl = callBackUrl ? escapeHtml(callBackUrl) : "#";
-  const title = "Đặt trước xe thành công";
+  const title = "Đặt trước xe đạp thành công";
 
   const body = `
     <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào ${safeName},</p>
     <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
-      Xe của bạn đã được giữ chỗ thành công.
+      Chúc mừng! Bạn đã <strong>đặt trước xe đạp thành công</strong>.
     </p>
-    <div style="background: #ecfdf3; border: 1px solid #abefc6; color: #027a48; padding: 14px; border-radius: 8px; margin-bottom: 20px;">
-      <strong>Xe #${safeBikeId}</strong> • Trạm ${safeStation}
+    <div style="background: #ecfdf3; border: 1px solid #abefc6; color: #027a48; padding: 14px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+      Xe <strong>#${safeBikeId}</strong> đã được giữ cho bạn tại <strong>${safeStation}</strong>
     </div>
     <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: ${TEXT_COLOR};">
+      <tr>
+        <td style="padding: 8px 0; font-weight: 600;">Mã xe:</td>
+        <td style="padding: 8px 0;">#${safeBikeId}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 0; font-weight: 600;">Trạm xe:</td>
+        <td style="padding: 8px 0;">${safeStation}</td>
+      </tr>
       <tr>
         <td style="padding: 8px 0; font-weight: 600;">Thời gian đặt:</td>
         <td style="padding: 8px 0;">${safeStart}</td>
@@ -265,18 +273,24 @@ export function buildReservationConfirmedEmail({
         <td style="padding: 8px 0; color: #dc3545;"><strong>${safeEnd}</strong></td>
       </tr>
     </table>
-    <p style="margin: 16px 0 0; color: ${TEXT_COLOR};">
-      Vui lòng đến trạm và mở khóa xe trước thời hạn để bắt đầu chuyến đi.
+    <p style="margin: 20px 0 0; color: ${TEXT_COLOR};">
+      Vui lòng đến trạm xe và <strong>mở khóa xe trước ${safeEnd}</strong> để bắt đầu chuyến đi.
+    </p>
+    <p style="margin: 12px 0 0; color: ${TEXT_COLOR};">
+      Nếu không mở khóa kịp thời, phiên đặt trước sẽ <strong>tự động bị hủy</strong> và xe sẽ được giải phóng.
     </p>
     <div style="text-align: center; margin: 24px 0 0;">
       <a href="${safeUrl}" style="background: ${BRAND_COLOR}; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
         Mở ứng dụng để mở khóa
       </a>
     </div>
+    <p style="margin: 20px 0 0; color: ${MUTED_COLOR}; font-size: 14px;">
+      <strong>Mẹo:</strong> Mở ứng dụng để xem vị trí trạm xe và hướng dẫn chi tiết.
+    </p>
   `;
 
   return {
-    subject: "Đặt trước xe MeBike thành công",
+    subject: "Xác nhận đặt trước thành công",
     html: renderEmailShell({
       title,
       previewText: `Xe #${bikeId} tại ${stationName}`,
