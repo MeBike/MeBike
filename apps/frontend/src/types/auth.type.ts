@@ -18,4 +18,5 @@ export type GetDetailUserResponse = GraphQLMutationResponse<"User", Me>;
 export type CreateUserResponse = GraphQLMutationResponse<"CreateUser">;
 export type ChangeStatusUserResponse = GraphQLMutationResponse<"ChangeUserStatus">;
 export type ForgotPasswordRequestResponse = GraphQLMutationResponse<"ResetPasswordRequest">;
-export type VerifyForgotPasswordTokenResponse = GraphQLMutationResponse<"ResetPassword">;
+export type ResetPasswordResponse = GraphQLMutationResponse<"ResetPassword">;
+export type VerifyForgotPasswordTokenResponse = GraphQLMutationResponse<"VerifyOTP", { resetToken: string }>;

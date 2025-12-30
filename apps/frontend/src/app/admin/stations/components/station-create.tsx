@@ -6,20 +6,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as tt from "@tomtom-international/web-sdk-maps";
 import { ChevronLeft } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useStationActions } from "@/hooks/use-station";
 import { stationSchema, StationSchemaFormData } from "@/schemas/stationSchema";
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
-export default function CreateStationPage() {
+interface CreateStationPageProps {
+  onCreate : (data: StationSchemaFormData) => Promise<void>;
+}
+export default function CreateStationPage({ onCreate }: CreateStationPageProps) {
   const router = useRouter();
+  const {createStation} = useStationActions({hasToken: true});
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<tt.Marker | null>(null);
-    
-  const { createStation } = useStationActions({ hasToken: true });
 
   const {
     register,
@@ -74,7 +75,7 @@ export default function CreateStationPage() {
 
   const onSubmit = async (data: StationSchemaFormData) => {
     try {
-      await createStation(data);
+      await onCreate(data);
       router.push("/admin/stations"); // Quay lại danh sách sau khi tạo thành công
       router.refresh();
     } catch (error) {

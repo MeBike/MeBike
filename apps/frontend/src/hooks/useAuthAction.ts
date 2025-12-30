@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { clearTokens, setTokens } from "@utils/tokenManager";
+import { clearTokens, setTokens, setResetToken } from "@utils/tokenManager";
 import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePasswordMutation";
 import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
@@ -22,7 +22,9 @@ import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutat
 import { MESSAGE , QUERY_KEYS , HTTP_STATUS } from "@constants/index"
 import { AuthTokens } from "@/types/GraphQL";
 import { getErrorMessage } from "@/utils/message";
-
+import { useVerifyOTPMutation } from "./mutations/Auth/useVerifyOTPMutation";
+import { VerifyForgotPasswordTokenResponse } from "@/types/auth.type";
+import { set } from "zod";
 
 export const useAuthActions = () => {
   const router = useRouter();
@@ -32,6 +34,7 @@ export const useAuthActions = () => {
   const useLogout = useLogoutMutation();
   const useChangePassword = useChangePasswordMutation();
   const useVerifyEmail = useVerifyEmailMutation();
+  const useVerifyOTP = useVerifyOTPMutation();
   const useUpdateProfile = useUpdateProfileMutation();
   const useForgotPassword = useForgotPasswordMutation();
   const useResetPassword = useResetPasswordMutation();
@@ -223,6 +226,29 @@ export const useAuthActions = () => {
       });
     });
   }, [useResendVerifyEmail]);
+  const verifyOTP = useCallback(({email, otp}: {email: string; otp: string}) => {
+    return new Promise<void>((resolve, reject) => {
+      useVerifyOTP.mutate({email, otp}, {
+        onSuccess: (result) => {
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(
+              result.data?.data?.VerifyOTP.message || MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS
+            );
+            setResetToken(result.data?.data?.VerifyOTP.data?.resetToken || "");
+            resolve();
+          }
+        },
+        onError: (error: unknown) => {
+          const errorMessage = getErrorMessage(
+            error,
+            MESSAGE.RESEND_VERIFY_EMAIL_FAILED
+          );
+          toast.error(errorMessage);
+          reject(error);
+        },
+      });
+    });
+  }, [useResendVerifyEmail]);
   const forgotPassword = useCallback(
     (data: ForgotPasswordSchemaFormData) => {
       useForgotPassword.mutate(data, {
@@ -296,6 +322,7 @@ export const useAuthActions = () => {
     forgotPassword,
     resetPassword,
     updateProfile,
+    verifyOTP,
     isUpdatingProfile: useUpdateProfile.isPending,
     isChangingPassword: useChangePassword.isPending,
     isRegistering: useRegister.isPending,

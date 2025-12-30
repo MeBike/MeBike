@@ -102,6 +102,18 @@ export const CREATE_FORGOT_PASSWORD_REQUEST = gql`
   }
 `;
 export const VERIFY_FORGOT_PASSWORD_TOKEN = gql`
+  mutation VerifyOTP($data: VerifyOtpInput!) {
+    VerifyOTP(data: $data) {
+      success
+      message
+      data {
+        resetToken
+      }
+      errors
+    }
+  }
+`;
+export const RESET_PASSWORD = gql`
   mutation Mutation($data: ResetPasswordInput!) {
     ResetPassword(data: $data) {
       errors
@@ -111,3 +123,4 @@ export const VERIFY_FORGOT_PASSWORD_TOKEN = gql`
     }
   }
 `;
+

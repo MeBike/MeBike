@@ -6,13 +6,15 @@ import { useAuthActions } from "@hooks/useAuthAction";
 import { ResetPasswordOtpForm } from "@/components/auth/ResetPasswordOtpForm";
 import { ResetPasswordNewForm } from "@/components/auth/ResetPasswordNewForm";
 import ForgotPasswordForm from "./components/forgot-password-form";
+import { getResetToken , clearResetToken} from "@/utils/tokenManager";
 
 const ForgotPassword = () => {
   const [step, setStep] = useState<"email" | "otp" | "password">("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [resetToken, setResetToken] = useState<string>("");
   const [timeLeft, setTimeLeft] = useState(300);
-  const { forgotPassword, isLoadingForgottingPassword, resetPassword, isReseting } = useAuthActions();
+  const { forgotPassword, isLoadingForgottingPassword, resetPassword, isReseting , verifyOTP} = useAuthActions();
   const router = useRouter();
   useEffect(() => {
     console.log(otp);
@@ -30,6 +32,9 @@ const ForgotPassword = () => {
   const handleVerifyOtp = async (otpParam: string) => {
     try {
       setOtp(otpParam);
+      const response = await verifyOTP({ email, otp: otpParam });
+      console.log("OTP verification response:", response);
+      setResetToken(getResetToken() || "");
       setStep("password");
     } catch (error) {
       console.error('OTP verification error:', error);
@@ -39,7 +44,11 @@ const ForgotPassword = () => {
 
   const handleResetPassword = async ( otpParam: string, newPassword: string, confirmPassword: string) => {
     try {
-      await resetPassword({otp: otpParam, password: newPassword, confirm_password: confirmPassword });
+      await resetPassword({
+        otp: resetToken,
+        password: newPassword,
+        confirm_password: confirmPassword,
+      });
       setTimeout(() => {
         router.push("/auth/login");
       }, 2000);
