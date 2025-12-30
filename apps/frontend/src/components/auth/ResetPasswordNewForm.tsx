@@ -15,7 +15,7 @@ import { Lock, Loader2, ChevronLeft, Eye, EyeOff } from "lucide-react";
 interface ResetPasswordNewFormProps {
   email: string;
   otp: string;
-  onSubmit: (email: string, otp: string, newPassword: string, confirmPassword: string) => Promise<void>;
+  onSubmit: (otp: string, newPassword: string, confirmPassword: string) => Promise<void>;
   onBack: () => void;
   isLoading?: boolean;
 }
@@ -57,7 +57,8 @@ export function ResetPasswordNewForm({
     setError("");
     try {
       console.log("📤 Resetting password with OTP verification...");
-      await onSubmit(email, otp, newPassword, confirmPassword);
+      console.log(otp)
+      await onSubmit(otp, newPassword, confirmPassword);
       console.log("✅ Password reset successful - staying in loading state for navigation");
       // Keep setIsSubmitting(true) - the parent will navigate
     } catch (err) {

@@ -33,15 +33,30 @@ export const GET_DETAIL_SUPPLIER = gql`
       success
       message
       data {
-        contactFee
+        id
+        name
         contactInfo {
           phone
           address
         }
-        createdAt
-        id
-        name
+        contactFee
         status
+        bikes {
+          id
+          chipId
+          status
+          createdAt
+          updatedAt
+          station {
+            address
+            name
+            status
+          }
+          supplier {
+            name
+          }
+        }
+        createdAt
         updatedAt
       }
       errors

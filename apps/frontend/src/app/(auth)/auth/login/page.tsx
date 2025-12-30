@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@components/ui/card";
 import { Separator } from "@components/ui/separator";
-import { Button } from "@components/ui/button";
 import { LoginHeader } from "./components/login-header";
 import { LoginForm } from "./components/login-form";
 import LoginFooter from "./components/login-footer";

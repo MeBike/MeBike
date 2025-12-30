@@ -18,6 +18,7 @@ import {
   CHANGE_PASSWORD_MUTATION,
   UPDATE_PROFILE,
   CREATE_FORGOT_PASSWORD_REQUEST,
+  VERIFY_FORGOT_PASSWORD_TOKEN,
 } from "@/graphql";
 import {print} from "graphql"
 import {
@@ -29,6 +30,7 @@ import {
   ChangePasswordResponse,
   UpdateProfileResponse,
   ForgotPasswordRequestResponse,
+  VerifyForgotPasswordTokenResponse,
 } from "@/types/auth.type";
 interface AuthResponse {
   message: string;
@@ -186,11 +188,18 @@ export const authService = {
   },
   resetPassword: async (
     data: ResetPasswordSchemaFormData
-  ): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>(
-      "/users/reset-password",
-      data
-    );
+  ): Promise<AxiosResponse<VerifyForgotPasswordTokenResponse>> => {
+    const response =
+      await fetchHttpClient.mutation<VerifyForgotPasswordTokenResponse>(
+        print(VERIFY_FORGOT_PASSWORD_TOKEN),
+        {
+          data: {
+            confirmPassword: data.confirm_password,
+            newPassword: data.password,
+            resetToken : data.otp
+          },
+        }
+      );
     return response;
   },
 };

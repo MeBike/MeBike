@@ -248,13 +248,8 @@ export const useAuthActions = () => {
         useResetPassword.mutate(data, {
           onSuccess: (result) => {
             if (result.status === HTTP_STATUS.OK) {
-              toast.success(result.data?.message || MESSAGE.RESET_PASSWORD_SUCCESS);
+              toast.success(result.data?.data?.ResetPassword.message || MESSAGE.RESET_PASSWORD_SUCCESS);
               resolve();
-            } else {
-              const errorMessage =
-                result.data?.message || MESSAGE.RESET_PASSWORD_FAILED;
-              toast.error(errorMessage);
-              reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {

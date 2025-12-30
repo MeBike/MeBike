@@ -119,6 +119,7 @@ export const useSupplierActions = ({hasToken , supplier_id , limit , page}: Supp
             queryKey: ["suppliers", "all"],
           });
           queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
+          queryClient.invalidateQueries({ queryKey: ["supplier", id] });
         }
       },
       onError: (error) => {

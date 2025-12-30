@@ -6,9 +6,10 @@ import { getStatusColor } from "@/utils/bike-status";
 interface BikeCardProps {
   bike: Bike;
   station_name: string;
+  supplier_name?: string;
 }
 
-export function BikeCard({ bike, station_name }: BikeCardProps) {
+export function BikeCard({ bike, station_name , supplier_name}: BikeCardProps) {
   return (
     <Link href={`/admin/bikes/detail/${bike.id}`} className="group block">
       <div
@@ -54,7 +55,7 @@ export function BikeCard({ bike, station_name }: BikeCardProps) {
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Cpu className="h-4 w-4 text-primary" />
-              <span className="truncate">{bike.supplier.name}</span>
+              <span className="truncate">{supplier_name}</span>
             </div>
           </div>
 

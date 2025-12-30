@@ -1,16 +1,10 @@
-import { useState } from "react";
+"use client";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { BikeCard } from "@/components/BikeCard";
 import {
   Phone,
@@ -22,13 +16,25 @@ import {
   X,
   Bike,
 } from "lucide-react";
-import { toast } from "sonner";
 import { Supplier } from "@/types/supplier.type";
-
 interface SupplierDetailProps {
-    supplier : Supplier
+  supplier: Supplier | null;
+  onSubmit: ({
+    name,
+    address,
+    contactFee,
+    phone,
+  }: {
+    name?: string;
+    address?: string;
+    contactFee?: number;
+    phone?: string;
+  }) => void;
 }
-export default function SupplierDetail({supplier}:SupplierDetailProps) {
+export default function SupplierDetail({
+  supplier,
+  onSubmit,
+}: SupplierDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: supplier?.name || "",
@@ -37,6 +43,17 @@ export default function SupplierDetail({supplier}:SupplierDetailProps) {
     contactFee: supplier?.contactFee || 0,
     status: supplier?.status || "active",
   });
+  // useEffect(() => {
+  //   if (supplier) {
+  //     setFormData({
+  //       name: supplier.name,
+  //       phone: supplier.contactInfo.phone,
+  //       address: supplier.contactInfo.address,
+  //       contactFee: supplier.contactFee,
+  //       status: supplier.status,
+  //     });
+  //   }
+  // }, [supplier]);
 
   if (!supplier) {
     return (
@@ -48,11 +65,39 @@ export default function SupplierDetail({supplier}:SupplierDetailProps) {
     );
   }
 
-  const handleSave = () => {
-    toast.success("Supplier updated successfully!");
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Khởi tạo object chứa các trường thay đổi
+    const updatePayload: Parameters<typeof onSubmit>[0] = {};
+
+    // So sánh từng trường, cái nào khác mới thêm vào payload
+    if (formData.name !== supplier.name) {
+      updatePayload.name = formData.name;
+    }
+
+    if (formData.phone !== supplier.contactInfo.phone) {
+      updatePayload.phone = formData.phone;
+    }
+
+    if (formData.address !== supplier.contactInfo.address) {
+      updatePayload.address = formData.address;
+    }
+
+    if (formData.contactFee !== supplier.contactFee) {
+      updatePayload.contactFee = formData.contactFee;
+    }
+
+    // Kiểm tra nếu object payload rỗng (không có gì thay đổi)
+    if (Object.keys(updatePayload).length === 0) {
+      setIsEditing(false);
+      return;
+    }
+
+    // Chỉ gửi những trường đã thay đổi
+    onSubmit(updatePayload);
     setIsEditing(false);
   };
-
   const handleCancel = () => {
     setFormData({
       name: supplier.name,
@@ -63,7 +108,14 @@ export default function SupplierDetail({supplier}:SupplierDetailProps) {
     });
     setIsEditing(false);
   };
-
+  if (supplier === null) {
+    return (
+      <div>
+        <div className="flex items-center justify-center h-[60vh]"></div>
+        <p className="text-muted-foreground">Supplier not found</p>
+      </div>
+    );
+  }
   return (
     <div>
       <PageHeader
@@ -120,30 +172,13 @@ export default function SupplierDetail({supplier}:SupplierDetailProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                {isEditing ? (
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value as any })
-                    }
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Badge
-                    variant={
-                      supplier.status === "Active" ? "success" : "secondary"
-                    }
-                  >
-                    {supplier.status === "Active" ? "Active" : "Inactive"}
-                  </Badge>
-                )}
+                <Badge
+                  variant={
+                    supplier.status === "Active" ? "success" : "secondary"
+                  }
+                >
+                  {supplier.status === "Active" ? "Active" : "Inactive"}
+                </Badge>
               </div>
 
               <div className="space-y-2">
@@ -173,9 +208,10 @@ export default function SupplierDetail({supplier}:SupplierDetailProps) {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        contactFee: parseInt(e.target.value),
+                        contactFee: parseFloat(e.target.value),
                       })
                     }
+                    step={0.01}
                   />
                 ) : (
                   <p className="text-foreground font-medium">
@@ -208,13 +244,18 @@ export default function SupplierDetail({supplier}:SupplierDetailProps) {
             <div className="flex items-center gap-3 mb-4">
               <Bike className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold text-card-foreground">
-                Bikes from this Supplier ({supplierBikes.length})
+                Bikes from this Supplier ({supplier.bikes.length})
               </h2>
             </div>
-            {supplier.length > 0 ? (
+            {supplier.bikes.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {supplierBikes.map((bike) => (
-                  <BikeCard key={bike.id} bike={bike} />
+                {supplier.bikes.map((bike) => (
+                  <BikeCard
+                    key={bike.id}
+                    bike={bike}
+                    station_name={bike.station?.name}
+                    supplier_name={supplier.name}
+                  />
                 ))}
               </div>
             ) : (
@@ -277,13 +318,16 @@ export default function SupplierDetail({supplier}:SupplierDetailProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center p-3 rounded-lg bg-primary/10">
                 <p className="text-2xl font-bold text-primary">
-                  {supplierBikes.length}
+                  {supplier.bikes.length}
                 </p>
                 <p className="text-xs text-muted-foreground">Total Bikes</p>
               </div>
               <div className="text-center p-3 rounded-lg bg-success/10">
                 <p className="text-2xl font-bold text-success">
-                  {supplierBikes.filter((b) => b.status === "available").length}
+                  {
+                    supplier.bikes.filter((b) => b.status === "Available")
+                      .length
+                  }
                 </p>
                 <p className="text-xs text-muted-foreground">Available</p>
               </div>

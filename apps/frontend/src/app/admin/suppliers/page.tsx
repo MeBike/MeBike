@@ -18,8 +18,9 @@ import { PaginationDemo } from "@components/PaginationCustomer";
 import { Input } from "@/components/ui/input";
 import { getStatusColor } from "@/utils/status-style";
 import { formatToVNTime } from "@/lib/formateVNDate";
-
+import { useRouter } from "next/navigation";
 export default function SuppliersPage() {
+  const router = useRouter();
   const {
     register: create,
     handleSubmit,
@@ -107,13 +108,7 @@ export default function SuppliersPage() {
 
   const handleViewSupplier = (supplier: Supplier) => {
     if (!supplier) return;
-    if (selectedSupplier?.id === supplier.id && !isDetailModalOpen) {
-      setIsDetailModalOpen(true);
-      return;
-    }
-    setSelectedSupplier(supplier);
-    setIsLoadingDetail(true);
-    setIsDetailModalOpen(false);
+    router.push(`/admin/suppliers/detail/${supplier.id}`);
   };
 
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);

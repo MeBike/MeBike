@@ -23,11 +23,6 @@ export const columns = ({
   ) => void;
 }): ColumnDef<Supplier>[] => [
   {
-    accessorKey: "id",
-    header: "ID",
-    cell: ({ row }) => row.original.id,
-  },
-  {
     accessorKey: "name",
     header: "Tên nhà cung cấp",
     cell: ({ row }) => row.original.name,
@@ -53,7 +48,7 @@ export const columns = ({
     cell: ({ row }) => `${formatToVNTime(row.original.createdAt)}`,
   },
   {
-    accessorKey: "createdAt",
+    accessorKey: "updatedAt",
     header: "Ngày được cập nhật",
     cell: ({ row }) => `${formatToVNTime(row.original.updatedAt)}`,
   },

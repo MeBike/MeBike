@@ -10,7 +10,7 @@ export interface Supplier {
   contactInfo: {
     address: string;
     phone: string
-  };
+  }; 
   bikes: Bike[];
 }
 export interface StatSupplier {

@@ -101,3 +101,13 @@ export const CREATE_FORGOT_PASSWORD_REQUEST = gql`
     }
   }
 `;
+export const VERIFY_FORGOT_PASSWORD_TOKEN = gql`
+  mutation Mutation($data: ResetPasswordInput!) {
+    ResetPassword(data: $data) {
+      errors
+      statusCode
+      message
+      success
+    }
+  }
+`;
