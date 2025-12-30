@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
-import { UserProfile } from "@/schemas/userSchema";
+import { CreateUserFormData, UserProfile } from "@/schemas/userSchema";
 import { GET_DETAIL_USER ,  GET_USERS , GET_USER_STATS , CHANGE_STATUS_USER , CREATE_USER} from "@/graphql";
 import { print } from "graphql";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
@@ -171,7 +171,7 @@ export const userService = {
     return response;
   },
   createUser: async (
-    data: UserProfile
+    data: CreateUserFormData
   ): Promise<AxiosResponse<CreateUserResponse>> => {
     const response = await fetchHttpClient.mutation<CreateUserResponse>(
       print(CREATE_USER),

@@ -6,41 +6,32 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { BikeCard } from "@/components/BikeCard";
-import { MapPin, Calendar, Pencil, Save, X } from "lucide-react";
-import { toast } from "sonner";
+import { Calendar, Pencil, Save, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Station } from "@/types/station.type";
 import { getStatusColor } from "@/utils/status-style";
-import { useStationActions } from "@/hooks/use-station";
-// Import TomTom SDK
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
 import * as tt from "@tomtom-international/web-sdk-maps";
 
-const statusConfig = {
-  active: { variant: "success" as const, label: "Active" },
-  inactive: { variant: "secondary" as const, label: "Inactive" },
-};
+
 
 interface StationDetailProps {
   station: Station;
+  onSubmit : ({address,capacity,latitude,longitude,name} : {
+    address : string,
+    capacity : number,
+    latitude : string,
+    longitude : string,
+    name : string
+  }) => void;
 }
 
-export default function StationDetail({ station  }: StationDetailProps) {
+export default function StationDetail({ station, onSubmit }: StationDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const {updateStation} = useStationActions({ hasToken: true, stationId: station.id });
-  // Map Refs
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<tt.Map | null>(null);
   const markerRef = useRef<tt.Marker | null>(null);
-
   const [formData, setFormData] = useState({
     name: station?.name || "",
     address: station?.address || "",
@@ -115,7 +106,13 @@ export default function StationDetail({ station  }: StationDetailProps) {
 
   const handleSave = () => {
     // Gọi API update ở đây (sử dụng formData)
-    updateStation({address:formData.address, capacity:formData.capacity, latitude:formData.latitude.toString(), longitude:formData.longitude.toString(), name:formData.name});
+    onSubmit({
+      address: formData.address,
+      capacity: formData.capacity,
+      latitude: formData.latitude.toString(),
+      longitude: formData.longitude.toString(),
+      name: formData.name,
+    });
     setIsEditing(false);
   };
 
@@ -182,11 +179,9 @@ export default function StationDetail({ station  }: StationDetailProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="status">Status</Label>
-                  <Badge
-                    className={`text-xs ${getStatusColor(station.status)}`}
-                  >
-                    {station.status}
-                  </Badge>
+                <Badge className={`text-xs ${getStatusColor(station.status)}`}>
+                  {station.status}
+                </Badge>
               </div>
 
               {/* Address */}
@@ -295,7 +290,6 @@ export default function StationDetail({ station  }: StationDetailProps) {
             )}
           </div>
         </div>
-
 
         <div className="space-y-6">
           <div className="rounded-xl bg-card p-6 shadow-card">

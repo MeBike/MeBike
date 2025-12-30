@@ -9,7 +9,6 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useStationActions } from "@/hooks/use-station";
 import { stationSchema, StationSchemaFormData } from "@/schemas/stationSchema";
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
 interface CreateStationPageProps {
@@ -17,7 +16,6 @@ interface CreateStationPageProps {
 }
 export default function CreateStationPage({ onCreate }: CreateStationPageProps) {
   const router = useRouter();
-  const {createStation} = useStationActions({hasToken: true});
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<tt.Marker | null>(null);
