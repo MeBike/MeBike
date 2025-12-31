@@ -14,16 +14,16 @@ export async function setupQueue(
   boss: PgBoss,
   jobType: JobType,
 ): Promise<void> {
-  // Create main queue
-  await boss.createQueue(jobType, resolveQueueOptions(jobType));
-  WorkerLog.queueEnsured(jobType);
-
   // Create DLQ if configured
   const dlq = JobDeadLetters[jobType];
   if (dlq) {
     await boss.createQueue(dlq);
     WorkerLog.queueEnsured(dlq);
   }
+
+  // Create main queue
+  await boss.createQueue(jobType, resolveQueueOptions(jobType));
+  WorkerLog.queueEnsured(jobType);
 }
 
 /**
