@@ -104,12 +104,27 @@ export function registerAuthRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const eff = withLoggedCause(
       withAuthDeps(Effect.gen(function* () {
         const service = yield* AuthServiceTag;
-        return yield* service.logout(body);
+        return yield* service.logout({ refreshToken: body.refreshToken });
       })),
       "POST /v1/auth/logout",
-    ).pipe(Effect.orDie);
-    await Effect.runPromise(eff);
-    return c.json<undefined, 200>(undefined, 200);
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+    return Match.value(result).pipe(
+      Match.tag("Right", () => c.json<undefined, 200>(undefined, 200)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("InvalidRefreshToken", () =>
+          c.json<AuthContracts.AuthErrorResponse, 401>({
+            error: authErrorMessages.INVALID_REFRESH_TOKEN,
+            details: { code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_REFRESH_TOKEN },
+          }, 401)),
+        Match.orElse((err) => {
+          throw err;
+        }),
+      )),
+      Match.exhaustive,
+    );
   });
 
   app.openapi(auth.logoutAll, async (c) => {

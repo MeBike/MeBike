@@ -44,7 +44,7 @@ export type AuthService = {
     password: string;
   }) => Effect.Effect<Tokens, AuthFailure>;
   refreshTokens: (args: { refreshToken: string }) => Effect.Effect<Tokens, AuthFailure>;
-  logout: (args: { sessionId: string }) => Effect.Effect<void>;
+  logout: (args: { refreshToken: string }) => Effect.Effect<void, AuthFailure>;
   logoutAll: (args: { userId: string }) => Effect.Effect<void>;
   sendVerifyEmail: (args: {
     userId: string;
@@ -240,10 +240,27 @@ export function makeAuthService({
       return tokens;
     });
 
-  const logout: AuthService["logout"] = ({ sessionId }) =>
-    authRepo.deleteSession(sessionId).pipe(
-      Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
-    );
+  const logout: AuthService["logout"] = ({ refreshToken }) =>
+    Effect.gen(function* () {
+      const payload = yield* verifyRefreshToken(refreshToken);
+      const sessionId = payload.jti ?? refreshToken;
+
+      const sessionOpt = yield* authRepo.getSession(sessionId).pipe(
+        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+      );
+      if (Option.isNone(sessionOpt)) {
+        return yield* Effect.fail(new InvalidRefreshToken({}));
+      }
+      const session = sessionOpt.value;
+
+      if (session.refreshToken !== refreshToken || session.expiresAt.getTime() <= Date.now()) {
+        return yield* Effect.fail(new InvalidRefreshToken({}));
+      }
+
+      yield* authRepo.deleteSession(sessionId).pipe(
+        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+      );
+    });
 
   const logoutAll: AuthService["logoutAll"] = ({ userId }) =>
     authRepo.deleteAllSessionsForUser(userId).pipe(

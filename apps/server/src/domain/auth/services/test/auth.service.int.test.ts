@@ -214,7 +214,7 @@ describe("authService Integration", () => {
     await runWithService(
       Effect.gen(function* () {
         const service = yield* AuthServiceTag;
-        return yield* service.logout({ sessionId });
+        return yield* service.logout({ refreshToken: tokens.refreshToken });
       }),
     );
 
