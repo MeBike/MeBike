@@ -11,6 +11,8 @@ const envSchema = z.object({
   REDIS_URL: z.string().default("redis://localhost:6379"),
   EMAIL_APP: z.string().min(1, "EMAIL_APP is required"),
   EMAIL_PASSWORD_APP: z.string().min(1, "EMAIL_PASSWORD_APP is required"),
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   LOG_LEVEL: z.string().default("info"),
   MIN_WALLET_BALANCE_TO_RENT: z.coerce.number().default(2000),
