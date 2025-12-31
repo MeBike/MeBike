@@ -38,9 +38,14 @@ import {
   WalletRepositoryLive,
   WalletServiceLive,
 } from "@/domain/wallets";
+import {
+  PaymentAttemptRepositoryLive,
+  StripeTopupServiceLive,
+} from "@/domain/wallets/topups";
 import { EmailLive } from "@/infrastructure/email";
 import { PrismaLive } from "@/infrastructure/prisma";
 import { RedisLive } from "@/infrastructure/redis";
+import { StripeLive } from "@/infrastructure/stripe";
 
 const BikeReposLive = BikeRepositoryLive.pipe(
   Layer.provide(PrismaLive),
@@ -217,6 +222,27 @@ export function withRatingDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
 
 export function withWalletDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(Effect.provide(WalletDepsLive));
+}
+
+const PaymentAttemptReposLive = PaymentAttemptRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const StripeTopupServiceLayer = StripeTopupServiceLive.pipe(
+  Layer.provide(PaymentAttemptReposLive),
+  Layer.provide(StripeLive),
+);
+
+export const StripeTopupDepsLive = Layer.mergeAll(
+  PaymentAttemptReposLive,
+  WalletDepsLive,
+  StripeTopupServiceLayer,
+  StripeLive,
+  PrismaLive,
+);
+
+export function withStripeTopupDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(Effect.provide(StripeTopupDepsLive));
 }
 
 const SubscriptionReposLive = SubscriptionRepositoryLive.pipe(

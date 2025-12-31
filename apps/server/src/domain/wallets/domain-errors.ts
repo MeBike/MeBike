@@ -24,8 +24,8 @@ export class WalletBalanceConstraint extends Data.TaggedError("WalletBalanceCons
   WithGenericError & {
     readonly walletId: string;
     readonly userId: string;
-    readonly balance: number;
-    readonly attemptedDebit: number;
+    readonly balance: bigint;
+    readonly attemptedDebit: bigint;
   }
 > {}
 
@@ -41,6 +41,6 @@ export class WalletNotFound extends Data.TaggedError("WalletNotFound")<{
 export class InsufficientWalletBalance extends Data.TaggedError("InsufficientWalletBalance")<{
   readonly walletId: string;
   readonly userId: string;
-  readonly balance: number;
-  readonly attemptedDebit: number;
+  readonly balance: bigint;
+  readonly attemptedDebit: bigint;
 }> {}

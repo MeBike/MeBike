@@ -6,6 +6,10 @@ export class PaymentAttemptRepositoryError extends Data.TaggedError("PaymentAtte
   WithGenericError
 > {}
 
+export class PaymentAttemptUniqueViolation extends Data.TaggedError("PaymentAttemptUniqueViolation")<
+  WithGenericError<{ readonly constraint?: string | string[] }>
+> {}
+
 export class PaymentAttemptNotFound extends Data.TaggedError("PaymentAttemptNotFound")<{
   readonly paymentAttemptId: string;
 }> {}

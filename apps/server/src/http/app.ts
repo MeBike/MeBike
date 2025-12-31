@@ -18,6 +18,7 @@ import { registerBikeRoutes } from "./routes/bikes";
 import { registerRatingRoutes } from "./routes/ratings";
 import { registerRentalRoutes } from "./routes/rentals";
 import { registerStationRoutes } from "./routes/stations";
+import { registerStripeWebhookRoutes } from "./routes/stripe-webhook.routes";
 import { registerSubscriptionRoutes } from "./routes/subscriptions";
 import { registerSupplierRoutes } from "./routes/suppliers";
 import { registerUserRoutes } from "./routes/users";
@@ -84,6 +85,7 @@ export function createHttpApp() {
   registerRentalRoutes(app);
   registerSupplierRoutes(app);
   registerAuthRoutes(app);
+  registerStripeWebhookRoutes(app);
   registerUserRoutes(app);
   registerRatingRoutes(app);
   registerWalletRoutes(app);

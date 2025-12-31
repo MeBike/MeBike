@@ -2,14 +2,15 @@ import { serverRoutes, UnauthorizedErrorCodeSchema, unauthorizedErrorMessages, W
 import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
-import { toPrismaDecimal } from "@/domain/shared/decimal";
+import { toMinorUnit } from "@/domain/shared/money";
 import {
+  createStripeCheckoutSessionUseCase,
   creditWalletUseCase,
   debitWalletUseCase,
   getRequiredWalletByUserIdUseCase,
   listWalletTransactionsForUserUseCase,
 } from "@/domain/wallets";
-import { withWalletDeps } from "@/http/shared/providers";
+import { withStripeTopupDeps, withWalletDeps } from "@/http/shared/providers";
 
 export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const wallets = serverRoutes.wallets;
@@ -135,8 +136,8 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     }
 
     const body = c.req.valid("json");
-    const amount = toPrismaDecimal(body.amount);
-    const fee = body.fee !== undefined ? toPrismaDecimal(body.fee) : undefined;
+    const amount = toMinorUnit(body.amount);
+    const fee = body.fee !== undefined ? toMinorUnit(body.fee) : undefined;
 
     const eff = withLoggedCause(
       withWalletDeps(creditWalletUseCase({
@@ -183,7 +184,7 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     }
 
     const body = c.req.valid("json");
-    const amount = toPrismaDecimal(body.amount);
+    const amount = toMinorUnit(body.amount);
 
     const eff = withLoggedCause(
       withWalletDeps(debitWalletUseCase({
@@ -219,6 +220,85 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
             error: walletErrorMessages.WALLET_NOT_FOUND,
             details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
           }, 404)),
+      )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(wallets.createStripeTopupSession, async (c) => {
+    const userId = c.var.currentUser?.userId ?? null;
+    if (!userId) {
+      return c.json({
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      }, 401);
+    }
+
+    const body = c.req.valid("json");
+    if (!/^\d+$/.test(body.amount)) {
+      return c.json<WalletsContracts.WalletErrorResponse, 400>({
+        error: walletErrorMessages.TOPUP_INVALID_REQUEST,
+        details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
+      }, 400);
+    }
+
+    const amountMinor = BigInt(body.amount);
+    if (amountMinor < 5000n) {
+      return c.json<WalletsContracts.WalletErrorResponse, 400>({
+        error: walletErrorMessages.TOPUP_INVALID_REQUEST,
+        details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
+      }, 400);
+    }
+
+    if (amountMinor > BigInt(Number.MAX_SAFE_INTEGER)) {
+      return c.json<WalletsContracts.WalletErrorResponse, 400>({
+        error: walletErrorMessages.TOPUP_INVALID_REQUEST,
+        details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
+      }, 400);
+    }
+
+    const eff = withLoggedCause(
+      withStripeTopupDeps(createStripeCheckoutSessionUseCase({
+        userId,
+        amountMinor: Number(amountMinor),
+        currency: body.currency,
+        successUrl: body.successUrl,
+        cancelUrl: body.cancelUrl,
+      })),
+      "POST /v1/wallets/me/topups/stripe/checkout",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<WalletsContracts.StripeTopupSessionResponse, 200>({
+          data: {
+            paymentAttemptId: right.paymentAttemptId,
+            checkoutUrl: right.checkoutUrl,
+          },
+        }, 200)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("InvalidTopupRequest", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 400>({
+            error: walletErrorMessages.TOPUP_INVALID_REQUEST,
+            details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
+          }, 400)),
+        Match.tag("WalletNotFound", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WALLET_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+          }, 404)),
+        Match.tag("TopupProviderError", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 502>({
+            error: walletErrorMessages.TOPUP_PROVIDER_ERROR,
+            details: { code: WalletErrorCodeSchema.enum.TOPUP_PROVIDER_ERROR },
+          }, 502)),
+        Match.orElse(() =>
+          c.json<WalletsContracts.WalletErrorResponse, 500>({
+            error: walletErrorMessages.TOPUP_INTERNAL_ERROR,
+            details: { code: WalletErrorCodeSchema.enum.TOPUP_INTERNAL_ERROR },
+          }, 500)),
       )),
       Match.exhaustive,
     );
