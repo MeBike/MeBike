@@ -16,12 +16,18 @@ export const WalletErrorCodeSchema = z
   .enum([
     "WALLET_NOT_FOUND",
     "INSUFFICIENT_BALANCE",
+    "TOPUP_INVALID_REQUEST",
+    "TOPUP_PROVIDER_ERROR",
+    "TOPUP_INTERNAL_ERROR",
   ])
   .openapi("WalletErrorCode");
 
 export const walletErrorMessages = {
   WALLET_NOT_FOUND: "Wallet not found",
   INSUFFICIENT_BALANCE: "Insufficient balance",
+  TOPUP_INVALID_REQUEST: "Invalid top-up request",
+  TOPUP_PROVIDER_ERROR: "Top-up provider error",
+  TOPUP_INTERNAL_ERROR: "Top-up internal error",
 } as const;
 
 export const WalletErrorResponseSchema = z.object({
@@ -58,6 +64,20 @@ export const WalletDebitRequestSchema = z.object({
   type: WalletTransactionTypeSchema.optional(),
 }).openapi("WalletDebitRequest");
 
+export const StripeTopupSessionRequestSchema = z.object({
+  amount: z.string().min(1).openapi({ example: "100000" }),
+  currency: z.string().min(3).max(3).openapi({ example: "vnd" }),
+  successUrl: z.string().url(),
+  cancelUrl: z.string().url(),
+}).openapi("StripeTopupSessionRequest");
+
+export const StripeTopupSessionResponseSchema = z.object({
+  data: z.object({
+    paymentAttemptId: z.string(),
+    checkoutUrl: z.string().url(),
+  }),
+}).openapi("StripeTopupSessionResponse");
+
 export const ListMyWalletTransactionsQuerySchema = z.object({
   ...paginationQueryFields,
 }).openapi("ListMyWalletTransactionsQuery");
@@ -72,6 +92,8 @@ export type GetMyWalletResponse = z.infer<typeof GetMyWalletResponseSchema>;
 export type WalletMutationResponse = z.infer<typeof WalletMutationResponseSchema>;
 export type WalletCreditRequest = z.infer<typeof WalletCreditRequestSchema>;
 export type WalletDebitRequest = z.infer<typeof WalletDebitRequestSchema>;
+export type StripeTopupSessionRequest = z.infer<typeof StripeTopupSessionRequestSchema>;
+export type StripeTopupSessionResponse = z.infer<typeof StripeTopupSessionResponseSchema>;
 export type ListMyWalletTransactionsResponse = z.infer<typeof ListMyWalletTransactionsResponseSchema>;
 export {
   UnauthorizedErrorCodeSchema,

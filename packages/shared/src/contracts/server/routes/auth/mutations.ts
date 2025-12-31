@@ -145,15 +145,29 @@ export const logoutRoute = createRoute({
     body: {
       content: {
         "application/json": {
-          schema: z.object({
-            sessionId: z.string().min(1),
-          }).openapi("LogoutRequest"),
+          schema: RefreshRequestSchema.openapi("LogoutRequest"),
         },
       },
     },
   },
   responses: {
     200: { description: "Logged out" },
+    401: {
+      description: "Invalid refresh token",
+      content: {
+        "application/json": {
+          schema: AuthErrorResponseSchema,
+          examples: {
+            InvalidRefreshToken: {
+              value: {
+                error: authErrorMessages.INVALID_REFRESH_TOKEN,
+                details: { code: AuthErrorCodeSchema.enum.INVALID_REFRESH_TOKEN },
+              },
+            },
+          },
+        },
+      },
+    },
   },
 });
 

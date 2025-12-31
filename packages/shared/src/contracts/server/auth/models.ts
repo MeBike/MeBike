@@ -19,6 +19,10 @@ export type RefreshRequest = {
   refreshToken: string;
 };
 
+export type LogoutRequest = {
+  refreshToken: string;
+};
+
 export type SendVerifyEmailRequest = {
   userId: string;
   email: string;
