@@ -191,7 +191,7 @@ describe("reservation use-cases unhappy paths", () => {
     return { id };
   };
 
-  const createWallet = async (userId: string, balance: string) => {
+  const createWallet = async (userId: string, balance: bigint) => {
     await client.wallet.create({
       data: {
         userId,
@@ -283,7 +283,7 @@ describe("reservation use-cases unhappy paths", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "50000");
+    await createWallet(userId, 50000n);
 
     await client.reservation.create({
       data: {
@@ -309,8 +309,8 @@ describe("reservation use-cases unhappy paths", () => {
     const { id: otherUserId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "50000");
-    await createWallet(otherUserId, "50000");
+    await createWallet(userId, 50000n);
+    await createWallet(otherUserId, 50000n);
 
     const now = new Date();
     await client.reservation.create({
@@ -345,7 +345,7 @@ describe("reservation use-cases unhappy paths", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "0");
+    await createWallet(userId, 0n);
 
     const now = new Date();
     const result = await runReserve({ userId, bikeId, stationId, startTime: now, now });
@@ -356,7 +356,7 @@ describe("reservation use-cases unhappy paths", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "50000");
+    await createWallet(userId, 50000n);
 
     const now = new Date();
     const result = await runReserve({
@@ -375,7 +375,7 @@ describe("reservation use-cases unhappy paths", () => {
     const { id: otherUserId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "50000");
+    await createWallet(userId, 50000n);
     const subscription = await createSubscription({ userId: otherUserId, status: "ACTIVE" });
 
     const now = new Date();
@@ -395,7 +395,7 @@ describe("reservation use-cases unhappy paths", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "50000");
+    await createWallet(userId, 50000n);
     const subscription = await createSubscription({
       userId,
       status: "ACTIVE",

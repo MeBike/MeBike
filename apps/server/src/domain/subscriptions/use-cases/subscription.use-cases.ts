@@ -3,6 +3,7 @@ import { Effect, Option } from "effect";
 import type { SubscriptionPackage } from "generated/prisma/client";
 
 import { env } from "@/config/env";
+import { toMinorUnit } from "@/domain/shared/money";
 import { WalletServiceTag } from "@/domain/wallets";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
@@ -112,9 +113,10 @@ export function createSubscriptionUseCase(args: {
           price: args.price,
         }).pipe(Effect.runPromise);
 
+        const priceMinor = toMinorUnit(args.price);
         await walletService.debitWalletInTx(tx, {
           userId: args.userId,
-          amount: args.price,
+          amount: priceMinor,
           description: `Subscription payment ${pending.id}`,
           type: "DEBIT",
         }).pipe(Effect.runPromise);

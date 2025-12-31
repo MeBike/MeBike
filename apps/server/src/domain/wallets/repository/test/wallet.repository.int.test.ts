@@ -6,7 +6,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { migrate } from "@/test/db/migrate";
 import { startPostgres } from "@/test/db/postgres";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { Prisma, PrismaClient } from "generated/prisma/client";
+import { PrismaClient } from "generated/prisma/client";
 
 import { makeWalletRepository } from "../wallet.repository";
 
@@ -88,12 +88,12 @@ describe("walletRepository Integration", () => {
     await Effect.runPromise(repo.createForUser(userId));
 
     const increased = await Effect.runPromise(
-      repo.increaseBalance({ userId, amount: new Prisma.Decimal("100.00") }),
+      repo.increaseBalance({ userId, amount: 100n }),
     );
     expect(increased.balance.toString()).toBe("100");
 
     const decreased = await Effect.runPromise(
-      repo.decreaseBalance({ userId, amount: new Prisma.Decimal("30.00") }),
+      repo.decreaseBalance({ userId, amount: 30n }),
     );
     expect(decreased.balance.toString()).toBe("70");
 
@@ -105,7 +105,7 @@ describe("walletRepository Integration", () => {
 
   it("increaseBalance fails when wallet is missing", async () => {
     const result = await Effect.runPromise(
-      repo.increaseBalance({ userId: uuidv7(), amount: new Prisma.Decimal("50.00") }).pipe(Effect.either),
+      repo.increaseBalance({ userId: uuidv7(), amount: 50n }).pipe(Effect.either),
     );
 
     expectLeftTag(result, "WalletRecordNotFound");
@@ -119,7 +119,7 @@ describe("walletRepository Integration", () => {
     await Effect.runPromise(
       repo.increaseBalance({
         userId,
-        amount: new Prisma.Decimal("25.00"),
+        amount: 25n,
         hash,
         type: "REFUND",
       }),
@@ -128,7 +128,7 @@ describe("walletRepository Integration", () => {
     const result = await Effect.runPromise(
       repo.increaseBalance({
         userId,
-        amount: new Prisma.Decimal("25.00"),
+        amount: 25n,
         hash,
         type: "REFUND",
       }).pipe(Effect.either),
@@ -142,7 +142,7 @@ describe("walletRepository Integration", () => {
     await Effect.runPromise(repo.createForUser(userId));
 
     const result = await Effect.runPromise(
-      repo.decreaseBalance({ userId, amount: new Prisma.Decimal("10.00") }).pipe(Effect.either),
+      repo.decreaseBalance({ userId, amount: 10n }).pipe(Effect.either),
     );
 
     expectLeftTag(result, "WalletBalanceConstraint");

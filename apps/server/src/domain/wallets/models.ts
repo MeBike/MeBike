@@ -1,11 +1,9 @@
-import type { Prisma as PrismaTypes, WalletStatus, WalletTransactionStatus, WalletTransactionType } from "generated/prisma/client";
-
-export type WalletDecimal = PrismaTypes.Decimal;
+import type { WalletStatus, WalletTransactionStatus, WalletTransactionType } from "generated/prisma/client";
 
 export type WalletRow = {
   readonly id: string;
   readonly userId: string;
-  readonly balance: WalletDecimal;
+  readonly balance: bigint;
   readonly status: WalletStatus;
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -14,8 +12,8 @@ export type WalletRow = {
 export type WalletTransactionRow = {
   readonly id: string;
   readonly walletId: string;
-  readonly amount: WalletDecimal;
-  readonly fee: WalletDecimal;
+  readonly amount: bigint;
+  readonly fee: bigint;
   readonly description: string | null;
   readonly hash: string | null;
   readonly type: WalletTransactionType;
@@ -25,8 +23,8 @@ export type WalletTransactionRow = {
 
 export type IncreaseBalanceInput = {
   readonly userId: string;
-  readonly amount: WalletDecimal;
-  readonly fee?: WalletDecimal;
+  readonly amount: bigint;
+  readonly fee?: bigint;
   readonly description?: string | null;
   readonly hash?: string | null;
   readonly type?: WalletTransactionType; // default DEPOSIT
@@ -34,7 +32,7 @@ export type IncreaseBalanceInput = {
 
 export type DecreaseBalanceInput = {
   readonly userId: string;
-  readonly amount: WalletDecimal;
+  readonly amount: bigint;
   readonly description?: string | null;
   readonly hash?: string | null;
   readonly type?: WalletTransactionType; // default DEBIT

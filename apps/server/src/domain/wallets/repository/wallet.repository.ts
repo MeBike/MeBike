@@ -8,7 +8,6 @@ import type {
   WalletTransactionType,
 } from "generated/prisma/client";
 
-import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
@@ -16,7 +15,6 @@ import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import type {
   DecreaseBalanceInput,
   IncreaseBalanceInput,
-  WalletDecimal,
   WalletRow,
   WalletTransactionRow,
 } from "../models";
@@ -83,8 +81,8 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
     tx: PrismaClient | PrismaTypes.TransactionClient,
     args: {
       walletId: string;
-      amount: WalletDecimal;
-      fee: WalletDecimal;
+      amount: bigint;
+      fee: bigint;
       description?: string | null;
       hash?: string | null;
       type: WalletTransactionType;
@@ -172,9 +170,9 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
     increaseBalance: input =>
       Effect.tryPromise({
         try: async () => {
-          const amount = toPrismaDecimal(input.amount) as WalletDecimal;
-          const fee = toPrismaDecimal(input.fee ?? "0") as WalletDecimal;
-          const net = amount.sub(fee);
+          const amount = input.amount;
+          const fee = input.fee ?? 0n;
+          const net = amount - fee;
           const txType: WalletTransactionType = input.type ?? "DEPOSIT";
           const txStatus: WalletTransactionStatus = "SUCCESS";
 
@@ -223,9 +221,9 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
     increaseBalanceInTx: (tx, input) =>
       Effect.tryPromise({
         try: async () => {
-          const amount = toPrismaDecimal(input.amount) as WalletDecimal;
-          const fee = toPrismaDecimal(input.fee ?? "0") as WalletDecimal;
-          const net = amount.sub(fee);
+          const amount = input.amount;
+          const fee = input.fee ?? 0n;
+          const net = amount - fee;
           const txType: WalletTransactionType = input.type ?? "DEPOSIT";
           const txStatus: WalletTransactionStatus = "SUCCESS";
 
@@ -264,7 +262,7 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
     decreaseBalance: input =>
       Effect.tryPromise({
         try: async () => {
-          const amount = toPrismaDecimal(input.amount) as WalletDecimal;
+          const amount = input.amount;
           const txType: WalletTransactionType = input.type ?? "DEBIT";
           const txStatus: WalletTransactionStatus = "SUCCESS";
 
@@ -289,8 +287,8 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
                 operation: "decreaseBalance.updateBalance",
                 walletId: wallet.id,
                 userId: input.userId,
-                balance: Number(wallet.balance.toString()),
-                attemptedDebit: Number(amount.toString()),
+                balance: wallet.balance,
+                attemptedDebit: amount,
               });
             }
 
@@ -302,7 +300,7 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
             await createTransaction(tx, {
               walletId: wallet.id,
               amount,
-              fee: toPrismaDecimal(0) as WalletDecimal,
+              fee: 0n,
               description: input.description ?? null,
               hash: input.hash ?? null,
               type: txType,
@@ -325,7 +323,7 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
     decreaseBalanceInTx: (tx, input) =>
       Effect.tryPromise({
         try: async () => {
-          const amount = toPrismaDecimal(input.amount) as WalletDecimal;
+          const amount = input.amount;
           const txType: WalletTransactionType = input.type ?? "DEBIT";
           const txStatus: WalletTransactionStatus = "SUCCESS";
 
@@ -349,8 +347,8 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
               operation: "decreaseBalanceInTx.updateBalance",
               walletId: wallet.id,
               userId: input.userId,
-              balance: Number(wallet.balance.toString()),
-              attemptedDebit: Number(amount.toString()),
+              balance: wallet.balance,
+              attemptedDebit: amount,
             });
           }
 
@@ -362,7 +360,7 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
           await createTransaction(tx, {
             walletId: wallet.id,
             amount,
-            fee: toPrismaDecimal(0) as WalletDecimal,
+            fee: 0n,
             description: input.description ?? null,
             hash: input.hash ?? null,
             type: txType,

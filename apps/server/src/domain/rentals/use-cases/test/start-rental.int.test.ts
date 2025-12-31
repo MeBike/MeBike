@@ -141,7 +141,7 @@ describe("startRentalUseCase Integration", () => {
     return { id };
   };
 
-  const createWallet = async (userId: string, balance: string) => {
+  const createWallet = async (userId: string, balance: bigint) => {
     await client.wallet.create({
       data: {
         userId,
@@ -198,7 +198,7 @@ describe("startRentalUseCase Integration", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "5000");
+    await createWallet(userId, 5000n);
 
     const result = await runStartRental({
       userId,
@@ -222,7 +222,7 @@ describe("startRentalUseCase Integration", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "5000");
+    await createWallet(userId, 5000n);
     await createActiveRental({ userId, bikeId, startStationId: stationId });
 
     const result = await runStartRental({
@@ -238,8 +238,8 @@ describe("startRentalUseCase Integration", () => {
     const { id: otherUserId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "5000");
-    await createWallet(otherUserId, "5000");
+    await createWallet(userId, 5000n);
+    await createWallet(otherUserId, 5000n);
     await createActiveRental({
       userId: otherUserId,
       bikeId,
@@ -257,7 +257,7 @@ describe("startRentalUseCase Integration", () => {
   it("fails when bike is missing", async () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
-    await createWallet(userId, "5000");
+    await createWallet(userId, 5000n);
 
     const result = await runStartRental({
       userId,
@@ -271,7 +271,7 @@ describe("startRentalUseCase Integration", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId: null });
-    await createWallet(userId, "5000");
+    await createWallet(userId, 5000n);
 
     const result = await runStartRental({
       userId,
@@ -288,7 +288,7 @@ describe("startRentalUseCase Integration", () => {
       name: `Station ${uuidv7()}`,
     });
     const { id: bikeId } = await createBike({ stationId: otherStationId });
-    await createWallet(userId, "5000");
+    await createWallet(userId, 5000n);
 
     const result = await runStartRental({ userId, bikeId, startStationId });
     expectLeftTag(result, "BikeNotFoundInStation");
@@ -304,7 +304,7 @@ describe("startRentalUseCase Integration", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId, status });
-    await createWallet(userId, "5000");
+    await createWallet(userId, 5000n);
 
     const result = await runStartRental({
       userId,
@@ -331,7 +331,7 @@ describe("startRentalUseCase Integration", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "1000");
+    await createWallet(userId, 1000n);
 
     const result = await runStartRental({
       userId,

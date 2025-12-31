@@ -13,6 +13,7 @@ import { env } from "@/config/env";
 import { BikeRepository } from "@/domain/bikes";
 import { RentalRepository } from "@/domain/rentals";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
+import { toMinorUnit } from "@/domain/shared/money";
 import { StationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { UserRepository } from "@/domain/users";
@@ -160,6 +161,7 @@ export function reserveBikeUseCase(
 
             const subscriptionId: string | null = input.subscriptionId ?? null;
             let prepaid = toPrismaDecimal(PREPAID_AMOUNT);
+            let prepaidMinor = toMinorUnit(prepaid);
 
             if (input.reservationOption === "SUBSCRIPTION") {
               if (!subscriptionId) {
@@ -174,11 +176,12 @@ export function reserveBikeUseCase(
               );
 
               prepaid = toPrismaDecimal("0");
+              prepaidMinor = 0n;
             }
             else {
               yield* walletService.debitWalletInTx(tx, {
                 userId: input.userId,
-                amount: prepaid,
+                amount: prepaidMinor,
                 description: `Reservation prepaid ${input.userId}`,
               }).pipe(
                 Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),

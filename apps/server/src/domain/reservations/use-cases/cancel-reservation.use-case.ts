@@ -3,6 +3,7 @@ import { Effect, Match, Option } from "effect";
 import { env } from "@/config/env";
 import { BikeRepository } from "@/domain/bikes";
 import { RentalRepository } from "@/domain/rentals";
+import { toMinorUnit } from "@/domain/shared/money";
 import { WalletServiceTag } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
@@ -99,10 +100,11 @@ export function cancelReservationUseCase(
     if (isRefundEligible(reservation, now)) {
       const refundHash = `refund:reservation:${reservation.id}`;
       const description = `Refund reservation ${reservation.id}`;
+      const amount = toMinorUnit(reservation.prepaid);
 
       yield* walletService.creditWallet({
         userId: reservation.userId,
-        amount: reservation.prepaid,
+        amount,
         description,
         hash: refundHash,
         type: "REFUND",

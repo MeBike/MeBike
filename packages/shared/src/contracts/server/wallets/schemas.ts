@@ -41,16 +41,18 @@ export const WalletMutationResponseSchema = z.object({
   data: WalletDetailSchema,
 }).openapi("WalletMutationResponse");
 
+const minorUnitString = z.string().regex(/^\d+(?:\.0+)?$/);
+
 export const WalletCreditRequestSchema = z.object({
-  amount: z.string().openapi({ example: "100000.00" }),
-  fee: z.string().optional().openapi({ example: "0.00" }),
+  amount: minorUnitString.openapi({ example: "100000" }),
+  fee: minorUnitString.optional().openapi({ example: "0" }),
   description: z.string().optional().nullable(),
   hash: z.string().optional().nullable(),
   type: WalletTransactionTypeSchema.optional(),
 }).openapi("WalletCreditRequest");
 
 export const WalletDebitRequestSchema = z.object({
-  amount: z.string().openapi({ example: "50000.00" }),
+  amount: minorUnitString.openapi({ example: "50000" }),
   description: z.string().optional().nullable(),
   hash: z.string().optional().nullable(),
   type: WalletTransactionTypeSchema.optional(),

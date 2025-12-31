@@ -193,7 +193,7 @@ describe("reservation use-cases integration", () => {
     return { id };
   };
 
-  const createWallet = async (userId: string, balance: string) => {
+  const createWallet = async (userId: string, balance: bigint) => {
     await client.wallet.create({
       data: {
         userId,
@@ -237,7 +237,7 @@ describe("reservation use-cases integration", () => {
     const { id: userId, email } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "50000");
+    await createWallet(userId, 50000n);
 
     const now = new Date("2025-01-01T10:00:00.000Z");
     const startTime = new Date("2025-01-01T10:00:00.000Z");
@@ -291,7 +291,7 @@ describe("reservation use-cases integration", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    await createWallet(userId, "50000");
+    await createWallet(userId, 50000n);
 
     const now = new Date("2025-01-01T12:00:00.000Z");
 
@@ -337,7 +337,7 @@ describe("reservation use-cases integration", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId });
-    const initialBalance = "50000";
+    const initialBalance = 50000n;
     await createWallet(userId, initialBalance);
 
     const now = new Date("2025-01-01T13:00:00.000Z");
@@ -380,7 +380,7 @@ describe("reservation use-cases integration", () => {
     expect(bike?.status).toBe("AVAILABLE");
 
     const wallet = await client.wallet.findUnique({ where: { userId } });
-    expect(wallet?.balance.toString()).toBe(initialBalance);
+    expect(wallet?.balance).toBe(initialBalance);
 
     const refundTx = await client.walletTransaction.findFirst({
       where: { hash: `refund:reservation:${reservationId}` },
@@ -392,7 +392,7 @@ describe("reservation use-cases integration", () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation();
     const { id: bikeId } = await createBike({ stationId, status: "RESERVED" });
-    await createWallet(userId, "50000");
+    await createWallet(userId, 50000n);
 
     const now = new Date("2025-01-01T10:00:00.000Z");
     const result = await runReserve({ userId, bikeId, stationId, startTime: now, now });
