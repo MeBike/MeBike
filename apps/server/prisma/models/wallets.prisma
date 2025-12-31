@@ -19,7 +19,7 @@ enum WalletTransactionStatus {
 model Wallet {
   id        String       @id @default(uuid(7)) @db.Uuid
   userId    String       @unique @map("user_id") @db.Uuid
-  balance   Decimal      @default(0) @db.Decimal(14, 2)
+  balance   BigInt       @default(0) @db.BigInt
   status    WalletStatus @default(ACTIVE)
   createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz
@@ -35,8 +35,8 @@ model Wallet {
 model WalletTransaction {
   id          String                  @id @default(uuid(7)) @db.Uuid
   walletId    String                  @map("wallet_id") @db.Uuid
-  amount      Decimal                 @db.Decimal(14, 2)
-  fee         Decimal                 @default(0) @db.Decimal(14, 2)
+  amount      BigInt                  @db.BigInt
+  fee         BigInt                  @default(0) @db.BigInt
   description String?                 @db.Text
   hash        String?                 @db.Text
   type        WalletTransactionType
