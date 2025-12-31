@@ -26,6 +26,7 @@ model Wallet {
 
   user         User                @relation(fields: [userId], references: [id])
   transactions WalletTransaction[]
+  paymentAttempts PaymentAttempt[]
 
   @@index([status], name: "idx_wallets_status")
   @@map("wallets")

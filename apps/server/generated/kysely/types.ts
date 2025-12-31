@@ -30,6 +30,22 @@ export const JobOutboxStatus = {
   CANCELLED: "CANCELLED",
 } as const;
 export type JobOutboxStatus = (typeof JobOutboxStatus)[keyof typeof JobOutboxStatus];
+export const PaymentProvider = {
+  STRIPE: "STRIPE",
+} as const;
+export type PaymentProvider = (typeof PaymentProvider)[keyof typeof PaymentProvider];
+export const PaymentKind = {
+  TOPUP: "TOPUP",
+  WITHDRAW: "WITHDRAW",
+} as const;
+export type PaymentKind = (typeof PaymentKind)[keyof typeof PaymentKind];
+export const PaymentStatus = {
+  PENDING: "PENDING",
+  SUCCEEDED: "SUCCEEDED",
+  FAILED: "FAILED",
+  CANCELLED: "CANCELLED",
+} as const;
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 export const RatingReasonType = {
   ISSUE: "ISSUE",
   COMPLIMENT: "COMPLIMENT",
@@ -153,6 +169,22 @@ export type JobOutbox = {
   created_at: Generated<Timestamp>;
   updated_at: Generated<Timestamp>;
 };
+export type PaymentAttempt = {
+  id: string;
+  user_id: string;
+  wallet_id: string;
+  provider: PaymentProvider;
+  provider_ref: string | null;
+  kind: PaymentKind;
+  status: Generated<PaymentStatus>;
+  amount_minor: string;
+  fee_minor: Generated<string>;
+  currency: string;
+  failure_reason: string | null;
+  metadata: unknown | null;
+  created_at: Generated<Timestamp>;
+  updated_at: Timestamp;
+};
 export type Rating = {
   id: string;
   user_id: string;
@@ -270,6 +302,7 @@ export type DB = {
   FixedSlotDate: FixedSlotDate;
   FixedSlotTemplate: FixedSlotTemplate;
   job_outbox: JobOutbox;
+  payment_attempts: PaymentAttempt;
   Rating: Rating;
   RatingReason: RatingReason;
   RatingReasonLink: RatingReasonLink;

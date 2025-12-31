@@ -36,6 +36,7 @@ model User {
   rentals       Rental[]
   ratings       Rating[]
   wallet        Wallet?
+  paymentAttempts PaymentAttempt[]
 
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")
