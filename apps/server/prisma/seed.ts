@@ -4,6 +4,7 @@ import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
 import { PrismaClient } from "../generated/prisma/client";
+import { STATION_IDS } from "./seed/station-ids";
 import { stations } from "./seed/stations.data";
 
 function getConnectionString() {
@@ -24,6 +25,7 @@ async function main() {
 
   for (const station of stations) {
     const updatedAt = new Date(station.updatedAt);
+    const stationId = STATION_IDS[station.name] ?? uuidv7();
     await prisma.$executeRaw`
       INSERT INTO "Station" (
         "id",
@@ -36,7 +38,7 @@ async function main() {
         "updated_at"
       )
       VALUES (
-        ${uuidv7()}::uuid,
+        ${stationId}::uuid,
         ${station.name},
         ${station.address},
         ${station.capacity},
