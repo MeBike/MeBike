@@ -26,6 +26,8 @@ model User {
   nfcCardUid   String?          @map("nfc_card_uid")
   role         UserRole         @default(USER)
   verify       UserVerifyStatus @default(UNVERIFIED)
+  stripeConnectedAccountId String? @unique @map("stripe_connected_account_id") @db.Text
+  stripePayoutsEnabled     Boolean? @map("stripe_payouts_enabled")
   createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -37,6 +39,7 @@ model User {
   ratings       Rating[]
   wallet        Wallet?
   paymentAttempts PaymentAttempt[]
+  withdrawals   WalletWithdrawal[]
 
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")

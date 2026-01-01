@@ -127,6 +127,13 @@ export const WalletTransactionStatus = {
   FAILED: "FAILED",
 } as const;
 export type WalletTransactionStatus = (typeof WalletTransactionStatus)[keyof typeof WalletTransactionStatus];
+export const WalletWithdrawalStatus = {
+  PENDING: "PENDING",
+  PROCESSING: "PROCESSING",
+  SUCCEEDED: "SUCCEEDED",
+  FAILED: "FAILED",
+} as const;
+export type WalletWithdrawalStatus = (typeof WalletWithdrawalStatus)[keyof typeof WalletWithdrawalStatus];
 export type AuthEvent = {
   id: string;
   user_id: string;
@@ -274,6 +281,8 @@ export type User = {
   nfc_card_uid: string | null;
   role: Generated<UserRole>;
   verify: Generated<UserVerifyStatus>;
+  stripe_connected_account_id: string | null;
+  stripe_payouts_enabled: boolean | null;
   created_at: Generated<Timestamp>;
   updated_at: Timestamp;
 };
@@ -296,6 +305,20 @@ export type WalletTransaction = {
   status: Generated<WalletTransactionStatus>;
   created_at: Generated<Timestamp>;
 };
+export type WalletWithdrawal = {
+  id: string;
+  user_id: string;
+  wallet_id: string;
+  amount: string;
+  currency: string;
+  status: Generated<WalletWithdrawalStatus>;
+  idempotency_key: string;
+  stripe_transfer_id: string | null;
+  stripe_payout_id: string | null;
+  failure_reason: string | null;
+  created_at: Generated<Timestamp>;
+  updated_at: Timestamp;
+};
 export type DB = {
   AuthEvent: AuthEvent;
   Bike: Bike;
@@ -313,5 +336,6 @@ export type DB = {
   Supplier: Supplier;
   User: User;
   wallet_transactions: WalletTransaction;
+  wallet_withdrawals: WalletWithdrawal;
   wallets: Wallet;
 };
