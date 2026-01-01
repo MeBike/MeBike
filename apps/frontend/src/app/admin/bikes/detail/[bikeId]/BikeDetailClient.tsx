@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getStatusColor } from "@/utils/bike-status";
 import { formatToVNTime } from "@/lib/formateVNDate";
-import { BikeStatus } from "@/types";
+import type { BikeStatus } from "@/types";
 import {
   Select,
   SelectContent,

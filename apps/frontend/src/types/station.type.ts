@@ -1,5 +1,5 @@
 import { GraphQLMutationResponse } from "./GraphQL";
-import { Bike } from "./bike.type";
+import { Bike } from "./Bike";
 export interface Station {
   id: string;
   name: string;

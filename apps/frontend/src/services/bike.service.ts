@@ -21,7 +21,7 @@ import {
   GetDetailBikeResponse,
   UpdateBikeResponse,
   ChangeBikeStatusResponse,
-} from "@/types/bike.type";
+} from "@/types/Bike";
 import { print } from "graphql";
 interface DetailApiResponse<T> {
   result: T;
