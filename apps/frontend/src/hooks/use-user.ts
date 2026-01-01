@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetAllUserQuery } from "./query/User/useGetAllUserQuery";
-import { useCallback } from "react";
+import { use, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { VerifyStatus } from "@/types";
@@ -12,40 +12,15 @@ import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
 import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
 import { useGetDashboardStatsQuery } from "./query/User/useGetDashboardStatsQuery";
-import { ResetPasswordRequest } from "@/schemas/userSchema";
+import { CreateUserFormData, ResetPasswordRequest } from "@/schemas/userSchema";
 import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
 import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
-interface ErrorWithMessage {
-  message: string;
-}
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
-
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-
-  return defaultMessage;
-};
+import { getErrorMessage } from "@/utils/message";
+import type { Me } from "@/types/GraphQL";
+import type { DetailUser } from "@/services/auth.service";
+import { useChangeStatusMutation } from "./mutations/User/useChangeStatusMutation";
 export const useUserActions = ({
   hasToken,
   verify,
@@ -129,7 +104,7 @@ export const useUserActions = ({
       return;
     }
     refetchDetailUser();
-  }, [hasToken, router, refetchDetailUser]);
+  }, [hasToken, router, refetchDetailUser , id]);
   const getNewRegistrationStats = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -159,38 +134,37 @@ export const useUserActions = ({
     }
     refetchSearch();
   }, [hasToken, router, refetchSearch]);
-  const users =
-    searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
   const createUser = useCallback(
-    async (userData: UserProfile) => {
+    async (userData: CreateUserFormData) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
       useCreateUser.mutate(userData, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result?.status === HTTP_STATUS.CREATED) {
-            toast.success(result.data?.message || MESSAGE.CREATE_USER_SUCCESS);
+        onSuccess: (result) => {
+          if (result?.status === HTTP_STATUS.OK) {
+            toast.success(
+              result.data?.data?.CreateUser.message ||
+                MESSAGE.CREATE_USER_SUCCESS
+            );
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.USER.ALL(),
             });
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
+            queryClient.invalidateQueries({
+              queryKey: QUERY_KEYS.USER.STATISTICS,
+            });
             if (searchQuery && searchQuery.length > 0) {
               refetchSearch();
-            } else {  
+            } else {
               refetch();
             }
-          } else {
-            const errorMessage =
-              result?.data?.message || MESSAGE.CREATE_USER_FAILED;
-            toast.error(errorMessage);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.CREATE_USER_FAILED);
+          const errorMessage = getErrorMessage(
+            error,
+            MESSAGE.CREATE_USER_FAILED
+          );
           toast.error(errorMessage);
         },
       });
@@ -237,6 +211,49 @@ export const useUserActions = ({
       router,
       id,
       useResetPassword,
+    ]
+  );
+  const useChangeStatusUser = useChangeStatusMutation();
+  const changeStatusUser = useCallback(
+    async ({accountId , status}: {accountId : string , status : "Active" | "Inactive"}) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useChangeStatusUser.mutate(
+        { accountId: accountId || "", status: status },
+        {
+          onSuccess: (result) => {
+            if (result?.status === HTTP_STATUS.OK) {
+              queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.USER.ALL(),
+              });
+              queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.USER.STATISTICS,
+              });
+              refetchDetailUser();
+              refetch();
+              toast.success(MESSAGE.UPDATE_PROFILE_SUCCESS);
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              MESSAGE.UPDATE_PROFILE_FAILED
+            );
+            toast.error(errorMessage);
+          },
+        }
+      );
+    },
+    [
+      hasToken,
+      router,
+      id,
+      useChangeStatusUser,
+      queryClient,
+      refetchDetailUser,
+      refetch,
     ]
   );
   const updateProfileUser = useCallback(
@@ -287,7 +304,7 @@ export const useUserActions = ({
     ]
   );
   return {
-    users: users,
+    users: data?.data?.Users.data,
     refetch,
     isLoading,
     isFetching,
@@ -310,15 +327,16 @@ export const useUserActions = ({
     isLoadingTopRenter,
     getSearchUsers,
     createUser,
-    paginationUser: data?.pagination,
+    paginationUser: data?.data?.Users.pagination,
     isLoadingSearch,
-    totalRecordUser: data?.pagination?.totalRecords || 0,
+    totalRecordUser: data?.data?.Users?.total || 0,
     getDetailUser,
-    detailUserData,
+    detailUserData: detailUserData?.data.data?.User?.data,
     isLoadingDetailUser,
     dashboardStatsData,
     resetPassword,
     updateProfileUser,
     getRefetchDashboardStats,
+    changeStatusUser,
   };
 };

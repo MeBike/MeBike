@@ -3,16 +3,16 @@
 import { Card } from "@/components/ui/card";
 import { Users, UserCheck, TrendingUp, DollarSign, Award } from "lucide-react";
 import { DashboardUserStats } from "@/services/user.service";
-
-export function CustomerStats({ stats }: { stats: DashboardUserStats })  {
+import { UserStats } from "@/types/user.type";
+export function CustomerStats({ stats }: { stats: UserStats }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Tổng khách hàng</p>
+            <p className="text-sm text-muted-foreground">Accounts</p>
             <p className="text-3xl font-bold text-primary mt-1">
-              {stats.totalCustomers}
+              {stats.totalUsers}
             </p>
           </div>
           <div className="p-3 bg-primary/10 rounded-lg">
@@ -20,13 +20,51 @@ export function CustomerStats({ stats }: { stats: DashboardUserStats })  {
           </div>
         </div>
       </Card>
-
       <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Đang hoạt động</p>
+            <p className="text-sm text-muted-foreground">Verify User</p>
             <p className="text-3xl font-bold text-green-500 mt-1">
-              {stats.activeCustomers}
+              {stats.totalUserUnverfied}
+            </p>
+          </div>
+          <div className="p-3 bg-green-500/10 rounded-lg">
+            <UserCheck className="w-6 h-6 text-green-500" />
+          </div>
+        </div>
+      </Card>
+      <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">User</p>
+            <p className="text-3xl font-bold text-green-500 mt-1">
+              {stats.totalUser}
+            </p>
+          </div>
+          <div className="p-3 bg-green-500/10 rounded-lg">
+            <UserCheck className="w-6 h-6 text-green-500" />
+          </div>
+        </div>
+      </Card>
+      <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">SOS</p>
+            <p className="text-3xl font-bold text-green-500 mt-1">
+              {stats.totalSos}
+            </p>
+          </div>
+          <div className="p-3 bg-green-500/10 rounded-lg">
+            <UserCheck className="w-6 h-6 text-green-500" />
+          </div>
+        </div>
+      </Card>
+      <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">STAFF</p>
+            <p className="text-3xl font-bold text-green-500 mt-1">
+              {stats.totalStaff}
             </p>
           </div>
           <div className="p-3 bg-green-500/10 rounded-lg">
@@ -35,7 +73,7 @@ export function CustomerStats({ stats }: { stats: DashboardUserStats })  {
         </div>
       </Card>
 
-      <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
+      {/* <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-muted-foreground">Khách mới tháng này</p>
@@ -93,7 +131,7 @@ export function CustomerStats({ stats }: { stats: DashboardUserStats })  {
             <TrendingUp className="w-6 h-6 text-purple-500" />
           </div>
         </div>
-      </Card>
+      </Card> */}
     </div>
   );
 }

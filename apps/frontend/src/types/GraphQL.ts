@@ -1,14 +1,18 @@
+import { UserRole } from "./Customer";
+import { Pagination } from "./Pagination";
 export interface ErrorObject {
   message: string;
   [key: string]: unknown;
 }
 
 export interface BaseMutationResponse<T = null> {
-  data: T | null;
+  data?: T | null;
   errors?: (string | ErrorObject)[] | null;
   message: string;
   statusCode: number;
   success: boolean;
+  total?: number;
+  pagination?: Pagination;
 }
 export interface GraphQLMutationResponse<
   MutationName extends string,
@@ -18,7 +22,7 @@ export interface GraphQLMutationResponse<
     [K in MutationName]: BaseMutationResponse<Payload>;
   } | null;
   errors?: (string | ErrorObject)[] | null;
-}
+  }
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -36,10 +40,10 @@ export interface Me {
   accountId: string;
   name: string;
   YOB: number;
-  role: string;
+  role: UserRole;
   verify: string;
   email:string;
-  status: string;
+  status: "Active" | "Inactive" | "Banned";
   phone: string;
   userAccount: {
     email: string;

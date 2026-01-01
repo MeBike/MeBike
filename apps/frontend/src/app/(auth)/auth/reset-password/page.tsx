@@ -40,9 +40,9 @@ function ResetPasswordContent() {
 
     setIsLoading(true);
     resetPassword({
-      password,
+      password : password,
       confirm_password: confirmPassword,
-      forgot_password_token: token,
+      otp: token,
     });
     setIsLoading(false);
   };

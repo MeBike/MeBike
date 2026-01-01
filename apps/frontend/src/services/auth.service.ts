@@ -17,6 +17,9 @@ import {
   LOGOUT_MUTATION,
   CHANGE_PASSWORD_MUTATION,
   UPDATE_PROFILE,
+  CREATE_FORGOT_PASSWORD_REQUEST,
+  VERIFY_FORGOT_PASSWORD_TOKEN,
+  RESET_PASSWORD,
 } from "@/graphql";
 import {print} from "graphql"
 import {
@@ -27,6 +30,9 @@ import {
   LogOutResponse,
   ChangePasswordResponse,
   UpdateProfileResponse,
+  ForgotPasswordRequestResponse,
+  VerifyForgotPasswordTokenResponse,
+  ResetPasswordResponse,
 } from "@/types/auth.type";
 interface AuthResponse {
   message: string;
@@ -153,9 +159,9 @@ export const authService = {
       print(CHANGE_PASSWORD_MUTATION),
       {
         body: {
-          oldPassword : data.oldPassword,
-          newPassword : data.newPassword,
-          confirmPassword : data.confirmPassword
+          oldPassword: data.oldPassword,
+          newPassword: data.newPassword,
+          confirmPassword: data.confirmPassword,
         },
       }
     );
@@ -163,29 +169,45 @@ export const authService = {
   },
   forgotPassword: async (
     data: ForgotPasswordSchemaFormData
-  ): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>(
-      "/users/forgot-password",
-      data
-    );
+  ): Promise<AxiosResponse<ForgotPasswordRequestResponse>> => {
+    const response =
+      await fetchHttpClient.mutation<ForgotPasswordRequestResponse>(
+        print(CREATE_FORGOT_PASSWORD_REQUEST),
+        {
+          email: data.email,
+        }
+      );
     return response;
   },
   verifyForgotPassword: async (
-    email_forgot_password_token: string
-  ): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>(
-      "/users/verify-forgot-password",
-      { email_forgot_password_token }
+    email_forgot_password_token: string,
+    otp : string,
+  ): Promise<AxiosResponse<VerifyForgotPasswordTokenResponse>> => {
+    const response = await fetchHttpClient.mutation<VerifyForgotPasswordTokenResponse>(
+      print(VERIFY_FORGOT_PASSWORD_TOKEN),
+      { 
+        data : {
+          email : email_forgot_password_token,
+          otp : otp
+        }
+       }
     );
     return response;
   },
   resetPassword: async (
     data: ResetPasswordSchemaFormData
-  ): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>(
-      "/users/reset-password",
-      data
-    );
+  ): Promise<AxiosResponse<ResetPasswordResponse>> => {
+    const response =
+      await fetchHttpClient.mutation<ResetPasswordResponse>(
+        print(RESET_PASSWORD),
+        {
+          data: {
+            confirmPassword: data.confirm_password,
+            newPassword: data.password,
+            resetToken: data.otp,
+          },
+        }
+      );
     return response;
   },
 };

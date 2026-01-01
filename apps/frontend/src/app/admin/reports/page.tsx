@@ -71,21 +71,21 @@ export default function ReportsPage() {
   }, [currentPage, refetchReports]);
 
   // Fetch staff list on mount
-  useEffect(() => {
-    setIsLoadingStaff(true);
-    userService
-      .getAllUsers({ role: "STAFF", limit: 100 })
-      .then((res) => {
-        setStaffList(res.data.data || []);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch staff list:", error);
-        setStaffList([]);
-      })
-      .finally(() => {
-        setIsLoadingStaff(false);
-      });
-  }, []);
+  // useEffect(() => {
+  //   setIsLoadingStaff(true);
+  //   userService
+  //     .getAllUsers({ role: "STAFF", limit: 100 })
+  //     .then((res) => {
+  //       setStaffList(res.data.data || []);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Failed to fetch staff list:", error);
+  //       setStaffList([]);
+  //     })
+  //     .finally(() => {
+  //       setIsLoadingStaff(false);
+  //     });
+  // }, []);
 
   const handleViewReport = async (report: Report) => {
     setSelectedReport(report);

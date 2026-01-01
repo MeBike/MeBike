@@ -57,7 +57,7 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
       const hasResponse = authError?.response && typeof authError.response === "object";
       const status = hasResponse && authError.response ? authError.response.status : undefined;
       const isAuthError = hasResponse && (status === 401 || status === 403);
-      
+
       if (isAuthError) {
         clearTokens();
         setHasToken(false);

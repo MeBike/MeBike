@@ -80,5 +80,7 @@ export const MESSAGE = {
   CHANGE_STATUS_SUPPLIER_SUCCESS: "Cập nhật trạng thái nhà cung cấp thành công",
   CHANGE_STATUS_SUPPLIER_FAILED: "Cập nhật trạng thái nhà cung cấp thất bại",
   UPDATE_SUPPLIER_SUCCESS: "Cập nhật thông tin nhà cung cấp thành công",
-  UPDATE_SUPPLIER_FAILED: "Cập nhật thông tin nhà cung cấp thất bại"
+  UPDATE_SUPPLIER_FAILED: "Cập nhật thông tin nhà cung cấp thất bại",
+  UPDATE_STATION_STATUS_SUCCESS: "Cập nhật trạng thái trạm thành công",
+  UPDATE_STATION_STATUS_FAILED: "Cập nhật trạng thái trạm thất bại"
 };

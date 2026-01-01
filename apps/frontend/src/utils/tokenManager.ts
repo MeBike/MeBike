@@ -13,6 +13,23 @@ export const getRefreshToken = () : string | null => {
     return Cookies.get(REFRESH_TOKEN) ?? null ;
 }
 
+export const getResetToken = () : string | null => {
+    if (!isBrowser) return null;
+    return Cookies.get('resetToken') ?? null ;
+}
+export const setResetToken = (token : string) : void => {
+    if (!isBrowser) return;
+    Cookies.set('resetToken', token, {
+        expires: 1,
+        secure: window.location.protocol === 'https:',
+        sameSite: "strict",
+        path: '/',
+    });
+}
+export const clearResetToken = () : void => {
+    if (!isBrowser) return;
+    Cookies.remove('resetToken', { path: '/' });
+}
 export const setTokens = (
   access_token: string,
   refresh_token: string

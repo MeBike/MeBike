@@ -11,43 +11,21 @@ import { useChangeStatusSupplierMutation } from "./mutations/Supplier/useChangeS
 import { useUpdateSupplierMutation } from "./mutations/Supplier/useUpdateSupplierMutation";
 import { useGetSupplierByIDQuery } from "./query/Supplier/useGetSupplierByIDQuery";
 import { HTTP_STATUS , MESSAGE , QUERY_KEYS } from "@constants/index";
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
+import { getErrorMessage } from "@/utils/message";
+interface SupplierActionProps {
+  hasToken : boolean,
+  supplier_id ?: string,
+  limit ?: number,
+  page ?: number
 }
-
-interface ErrorWithMessage {
-  message: string;
-}
-
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-
-  return defaultMessage;
-};
-export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) => {
+export const useSupplierActions = ({hasToken , supplier_id , limit , page}: SupplierActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const {
     refetch: refetchAllSuppliers,
     data: allSupplier,
-  } = useGetAllSupplierQuery();
+    isLoading:isLoadingAllSupplier
+  } = useGetAllSupplierQuery(page, limit);
   const { data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier , refetch : fetchAllStatsSupplier } =
     useGetAllStatsSupplierQuery();
   const useCreateSupplier = useCreateSupplierMutation();
@@ -78,16 +56,12 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
       }
       useCreateSupplier.mutate(supplierData, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || MESSAGE.CREATE_SUPPLIER_SUCCESS );
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.data?.CreateSupplier.message || MESSAGE.CREATE_SUPPLIER_SUCCESS );
             queryClient.invalidateQueries({
-              queryKey: ["suppliers", "all", 1, 10],
+              queryKey: ["suppliers", "all"],
             });
             queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
-          } else {
-            const errorMessage =
-              result.data?.message || MESSAGE.CREATE_SUPPLIER_FAILED;
-            toast.error(errorMessage);
           }
         },
         onError: (error) => {
@@ -108,10 +82,10 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
         { id, newStatus },
         {
           onSuccess: (result) => {
-            if (result.status === 200) {
+            if (result.status === HTTP_STATUS.OK) {
               toast.success(result.data?.message || MESSAGE.CHANGE_STATUS_SUPPLIER_SUCCESS);
               queryClient.invalidateQueries({
-                queryKey: ["suppliers", "all", 1, 10],
+                queryKey: ["suppliers", "all"],
               });
               queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
             } else {
@@ -139,16 +113,13 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     }
     useUpdateSupplier.mutate({ id: id, data }, {
       onSuccess: (result) => {
-        if (result.status === 200) {
-          toast.success(result.data?.message || MESSAGE.UPDATE_SUPPLIER_SUCCESS);
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success(result.data?.data?.UpdateSupplier.message || MESSAGE.UPDATE_SUPPLIER_SUCCESS);
           queryClient.invalidateQueries({
-            queryKey: ["suppliers", "all", 1, 10],
+            queryKey: ["suppliers", "all"],
           });
           queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
-        } else {
-          const errorMessage =
-            result.data?.message || MESSAGE.UPDATE_SUPPLIER_FAILED;
-          toast.error(errorMessage);
+          queryClient.invalidateQueries({ queryKey: ["supplier", id] });
         }
       },
       onError: (error) => {
@@ -169,7 +140,9 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
   return {
     useGetAllSupplierQuery,
     getAllSuppliers,
-    allSupplier,
+    allSupplier : allSupplier?.data?.Suppliers.data,
+    paginationAllSupplier: allSupplier?.data?.Suppliers.pagination,
+    isLoadingAllSupplier,
     createSupplier,
     isCreatingSupplier: useCreateSupplier.isPending,
     useGetAllStatsSupplierQuery,
@@ -183,7 +156,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     changeStatusSupplier,
     getUpdateSupplier,
     fetchDetailSupplier,
-    detailSupplier : detailSupplier?.result,
+    detailSupplier : detailSupplier?.data?.Supplier.data,
     isLoadingDetailSupplier,
   };
 };

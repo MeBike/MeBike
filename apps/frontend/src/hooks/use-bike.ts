@@ -17,34 +17,9 @@ import { useRouter } from "next/navigation";
 import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
-import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index"
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
-interface ErrorWithMessage {
-  message: string;
-}
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-  return defaultMessage;
-};
+import { QUERY_KEYS, HTTP_STATUS, MESSAGE } from "@constants/index";
+import { getErrorMessage } from "@/utils/message";
+import { useChangeStatusBikeMutation } from "./mutations/Bike/useChangeStatusBike";
 export const useBikeActions = (
   hasToken: boolean,
   bike_detail_id?: string,
@@ -104,15 +79,11 @@ export const useBikeActions = (
   } = useGetAllBikeQuery({
     page: page,
     limit: limit,
-    station_id: station_id || "",
-    supplier_id: supplier_id || "",
-    status: status || "",
   });
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
   const {
-    data: 
-    statisticData,
+    data: statisticData,
     refetch: refetchStatistics,
     isFetching: isLoadingStatistics,
   } = useGetStatisticsBikeQuery();
@@ -145,22 +116,22 @@ export const useBikeActions = (
         return;
       }
       useCreateBike.mutate(data, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result.status === HTTP_STATUS.CREATED) {
-            toast.success(result.data?.message || MESSAGE.CREATE_BIKE_SUCCESS);
+        onSuccess: (result) => {
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(
+              result.data?.data?.CreateBike.message ||
+                MESSAGE.CREATE_BIKE_SUCCESS
+            );
             queryClient.invalidateQueries({
-              queryKey:QUERY_KEYS.BIKE.ALL()
+              queryKey: ["bikes", "all"],
             });
-          } else {
-            const errorMessage = result.data?.message || MESSAGE.CREATE_BIKE_FAILED;
-            toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.CREATE_BIKE_FAILED);
+          const errorMessage = getErrorMessage(
+            error,
+            MESSAGE.CREATE_BIKE_FAILED
+          );
           toast.error(errorMessage);
         },
       });
@@ -186,23 +157,21 @@ export const useBikeActions = (
       updateBikeMutation.mutate(
         { id, data },
         {
-          onSuccess: (result: {
-            status: number;
-            data?: { message?: string };
-          }) => {
+          onSuccess: (result) => {
             if (result.status === HTTP_STATUS.OK) {
-              toast.success(result.data?.message || MESSAGE.UPDATE_BIKE_SUCCESS);
+              toast.success(
+                result.data?.data?.UpdateBike.message || MESSAGE.UPDATE_BIKE_SUCCESS
+              );
               queryClient.invalidateQueries({
-                queryKey:QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id)
+                queryKey: ["bikes", "all"],
               });
-            } else {
-              const errorMessage =
-                result.data?.message || MESSAGE.UPDATE_BIKE_FAILED;
-              toast.error(errorMessage);
             }
           },
           onError: (error) => {
-            const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_BIKE_FAILED);
+            const errorMessage = getErrorMessage(
+              error,
+              MESSAGE.UPDATE_BIKE_FAILED
+            );
             toast.error(errorMessage);
           },
         }
@@ -232,12 +201,16 @@ export const useBikeActions = (
             toast.success(result.data?.message || MESSAGE.DELETE_BIKE_SUCCESS);
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIKE.ALL() });
           } else {
-            const errorMessage = result.data?.message || MESSAGE.DELETE_BIKE_FAILED;
+            const errorMessage =
+              result.data?.message || MESSAGE.DELETE_BIKE_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.DELETE_BIKE_FAILED);
+          const errorMessage = getErrorMessage(
+            error,
+            MESSAGE.DELETE_BIKE_FAILED
+          );
           toast.error(errorMessage);
         },
       });
@@ -255,12 +228,16 @@ export const useBikeActions = (
           if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.message || MESSAGE.REPORT_BIKE_SUCCESS);
           } else {
-            const errorMessage = result.data?.message || MESSAGE.REPORT_BIKE_FAILED;
+            const errorMessage =
+              result.data?.message || MESSAGE.REPORT_BIKE_FAILED;
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.REPORT_BIKE_FAILED);
+          const errorMessage = getErrorMessage(
+            error,
+            MESSAGE.REPORT_BIKE_FAILED
+          );
           toast.error(errorMessage);
         },
       });
@@ -272,6 +249,45 @@ export const useBikeActions = (
       getDetailBike();
     }
   }, [getDetailBike, bike_detail_id]);
+  const useChangeBikeStatus = useChangeStatusBikeMutation();
+  const changeStatusBike = useCallback(
+    ({
+      changeBikeStatusId,
+      status,
+    }: {
+      changeBikeStatusId: string;
+      status: BikeStatus;
+    }) => {
+      if (!hasToken) {
+        router.push("/login");
+        return;
+      }
+      useChangeBikeStatus.mutate(
+        { changeBikeStatusId, status },
+        {
+          onSuccess: (result) => {
+            if (result.status === HTTP_STATUS.OK) {
+              toast.success(
+                result.data?.data?.ChangeBikeStatus.message ||
+                  MESSAGE.CREATE_BIKE_SUCCESS
+              );
+              queryClient.invalidateQueries({
+                queryKey: ["bikes", "all"],
+              });
+            }
+          },
+          onError: (error) => {
+            const errorMessage = getErrorMessage(
+              error,
+              MESSAGE.CREATE_BIKE_FAILED
+            );
+            toast.error(errorMessage);
+          },
+        }
+      );
+    },
+    [useChangeBikeStatus, hasToken, router, queryClient]
+  );
   return {
     getBikes,
     createBike,
@@ -279,10 +295,10 @@ export const useBikeActions = (
     deleteBike,
     reportBike,
     getBikeByID,
-    paginationBikes: data?.pagination,
+    paginationBikes: data?.data?.Bikes.pagination,
     isFetchingBikeDetail: isLoading,
     isLoadingDetail,
-    detailBike: detailBike?.result,
+    detailBike: detailBike?.data?.Bike.data,
     isReportingBike: reportBikeMutation.isPending,
     isDeletingBike: deleteBikeMutation.isPending,
     isUpdatingBike: updateBikeMutation.isPending,
@@ -292,7 +308,7 @@ export const useBikeActions = (
     getStatisticsBike,
     isLoadingStatistics,
     statisticData,
-    paginationOfBikes: data?.pagination,
+    paginationOfBikes: data?.data?.Bikes.pagination,
     bikeActivityStats: bikeActivityStats?.result,
     getBikeActivityStats,
     isFetchingBikeActivityStats,
@@ -302,6 +318,7 @@ export const useBikeActions = (
     bikeRentals: bikeRentals?.result.data,
     getRentalBikes,
     isFetchingRentalBikes,
-    totalRecord: data?.pagination.totalRecords || 0,
+    totalRecord: data?.data?.Bikes.pagination?.total || 0,
+    changeStatusBike,
   };
 };

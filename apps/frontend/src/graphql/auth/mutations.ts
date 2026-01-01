@@ -41,36 +41,6 @@ export const REFRESH_TOKEN_MUTATION = gql`
     }
   }
 `;
-export const GET_ME = gql`
-  query Query {
-    User {
-      success
-      message
-      data {
-        id
-        accountId
-        name
-        YOB
-        role
-        verify
-        status
-        phone
-        address
-        avatarUrl
-        nfcCardUid
-        userAccount {
-          email
-          id
-          password
-        }
-        createdAt
-        updatedAt
-      }
-      errors
-      statusCode
-    }
-  }
-`;
 export const LOGOUT_MUTATION = gql`
   mutation LogoutUser {
     LogoutUser {
@@ -121,3 +91,36 @@ export const UPDATE_PROFILE = gql`
     }
   }
 `;
+export const CREATE_FORGOT_PASSWORD_REQUEST = gql`
+  mutation ResetPasswordRequest($email: String!) {
+    ResetPasswordRequest(email: $email) {
+      errors
+      message
+      statusCode
+      success
+    }
+  }
+`;
+export const VERIFY_FORGOT_PASSWORD_TOKEN = gql`
+  mutation VerifyOTP($data: VerifyOtpInput!) {
+    VerifyOTP(data: $data) {
+      success
+      message
+      data {
+        resetToken
+      }
+      errors
+    }
+  }
+`;
+export const RESET_PASSWORD = gql`
+  mutation Mutation($data: ResetPasswordInput!) {
+    ResetPassword(data: $data) {
+      errors
+      statusCode
+      message
+      success
+    }
+  }
+`;
+

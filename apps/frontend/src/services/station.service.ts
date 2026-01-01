@@ -2,6 +2,21 @@ import fetchHttpClient from "@lib/httpClient";
 import { AxiosResponse } from "axios";
 import { Station, NearestStationResponse } from "@/types";
 import { StationSchemaFormData } from "@/schemas/stationSchema";
+import {
+  GetAllStationsResponse,
+  GetDetailStationResponse,
+  CreateStationResponse,
+  UpdateStationStatusResponse,
+  UpdateStationResponse,
+} from "@/types/station.type";
+import {
+  GET_STATIONS,
+  GET_DETAIL_STATION,
+  CREATE_STATION,
+  UPDATE_STATION,
+  UPDATE_STATUS_STATION_STATUS,
+} from "@/graphql";
+import { print } from "graphql";
 import type {
   StationBikeRevenue,
   StationStatisticsResponse,
@@ -45,36 +60,56 @@ export const stationService = {
   getAllStations: async ({
     page,
     limit,
-    name
+    name,
+    latitude,
+    longitude,
+    search,
   }: {
     page?: number;
     limit?: number;
     name?: string;
-  }): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
-      STATION_ENDPOINTS.ALL,
+    latitude?: string;
+    longitude?: string;
+    search?: string;
+  }): Promise<AxiosResponse<GetAllStationsResponse>> => {
+    const response = await fetchHttpClient.mutation<GetAllStationsResponse>(
+      print(GET_STATIONS),
       {
         page,
         limit,
-        name
+        name,
+        latitude,
+        longitude,
+        search,
       }
     );
     return response;
   },
   getStationById: async (
     stationId: string
-  ): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
-    const response = await fetchHttpClient.get<ApiDetailResponse<Station>>(
-      STATION_ENDPOINTS.DETAIL(stationId)
+  ): Promise<AxiosResponse<GetDetailStationResponse>> => {
+    const response = await fetchHttpClient.mutation<GetDetailStationResponse>(
+      print(GET_DETAIL_STATION),
+      {
+        stationId: stationId,
+      }
     );
     return response;
   },
   createStation: async (
     stationData: StationSchemaFormData
-  ): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
-    const response = await fetchHttpClient.post<ApiDetailResponse<Station>>(
-      STATION_ENDPOINTS.BASE,
-      stationData
+  ): Promise<AxiosResponse<CreateStationResponse>> => {
+    const response = await fetchHttpClient.mutation<CreateStationResponse>(
+      print(CREATE_STATION),
+      {
+        body: {
+          address: stationData.address,
+          capacity: stationData.capacity,
+          latitude: stationData.latitude,
+          longitude: stationData.longitude,
+          name: stationData.name,
+        },
+      }
     );
     return response;
   },
@@ -89,15 +124,24 @@ export const stationService = {
     return response;
   },
   updateStation: async ({
-    stationID,
+    id,
     stationData,
   }: {
-    stationID: string;
+    id: string;
     stationData: StationSchemaFormData;
-  }): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
-    const response = await fetchHttpClient.put<ApiDetailResponse<Station>>(
-      STATION_ENDPOINTS.ID(stationID),
-      stationData
+  }): Promise<AxiosResponse<UpdateStationResponse>> => {
+    const response = await fetchHttpClient.mutation<UpdateStationResponse>(
+      print(UPDATE_STATION),
+      {
+        body: {
+          address: stationData.address,
+          capacity: stationData.capacity,
+          latitude: stationData.latitude,
+          longitude: stationData.longitude,
+          name: stationData.name,
+        },
+        updateStationId : id
+      }
     );
     return response;
   },
@@ -133,6 +177,22 @@ export const stationService = {
       longitude: longitude,
       maxDistance: maxDistance,
     });
+    return response;
+  },
+  updateStationStatus: async ({
+    id,
+  }: {
+    id: string;
+  }): Promise<AxiosResponse<UpdateStationStatusResponse>> => {
+    const response =
+      await fetchHttpClient.mutation<UpdateStationStatusResponse>(
+        print(UPDATE_STATUS_STATION_STATUS),
+        {
+          body: {
+            id : id,
+          },
+        }
+      );
     return response;
   },
 };

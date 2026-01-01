@@ -4,20 +4,25 @@ import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "@schemas/bikeSchema";
-import { Bike, BikeRentalHistory } from "@custom-types";
+import { Bike, BikeRentalHistory , DetailBike} from "@custom-types";
 import { BikeStatus } from "@custom-types";
 import { BikeActivityStats } from "@custom-types";
 import { BikeStats } from "@custom-types";
-interface ApiResponse<T> {
-  data: T;
-  pagination: {
-    totalPages: number;
-    currentPage: number;
-    limit: number;
-    totalRecords: number;
-  };
-  message: string;
-}
+import {
+  GET_BIKES,
+  GET_DETAIL_BIKES,
+  CREATE_BIKE,
+  UPDATE_BIKE,
+  CHANGE_BIKE_STATUS,
+} from "@/graphql";
+import {
+  CreateBikeResponse,
+  GetBikesResponse,
+  GetDetailBikeResponse,
+  UpdateBikeResponse,
+  ChangeBikeStatusResponse,
+} from "@/types/Bike";
+import { print } from "graphql";
 interface DetailApiResponse<T> {
   result: T;
   message: string;
@@ -55,13 +60,18 @@ const BIKE_ENDPOINTS = {
 // }
 export const bikeService = {
   //for admin
-
   createBikeAdmin: async (
     data: BikeSchemaFormData
-  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<Bike>>(
-      BIKE_ENDPOINTS.BASE,
-      data
+  ): Promise<AxiosResponse<CreateBikeResponse>> => {
+    const response = await fetchHttpClient.mutation<CreateBikeResponse>(
+      print(CREATE_BIKE),
+      {
+        body: {
+          chipId: data.chip_id,
+          supplierId: data.supplier_id,
+          stationId: data.station_id,
+        },
+      }
     );
     return response;
   },
@@ -89,12 +99,19 @@ export const bikeService = {
     return response;
   },
   updateBike: async (
-    id: string,
+    updateBikeId: string,
     data: Partial<UpdateBikeSchemaFormData>
-  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
-    const response = await fetchHttpClient.patch<DetailApiResponse<Bike>>(
-      BIKE_ENDPOINTS.UPDATE(id),
-      data
+  ): Promise<AxiosResponse<UpdateBikeResponse>> => {
+    const response = await fetchHttpClient.mutation<UpdateBikeResponse>(
+      print(UPDATE_BIKE),
+      {
+        body: {
+          chipId: data.chip_id,
+          supplierId: data.supplier_id,
+          stationId: data.station_id,
+        },
+        updateBikeId: updateBikeId,
+      }
     );
     return response;
   },
@@ -105,36 +122,31 @@ export const bikeService = {
     );
     return response;
   },
-  //all
-  getBikeByIdForAll: async (
-    id: string
-  ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Bike>>(
-      BIKE_ENDPOINTS.BY_ID_FOR_ALL(id)
+  getAllBikes: async ({
+    limit,
+    page,
+  }: {
+    limit?: number;
+    page?: number;
+  }): Promise<AxiosResponse<GetBikesResponse>> => {
+    const response = await fetchHttpClient.query<GetBikesResponse>(
+      print(GET_BIKES),
+      {
+        params: {
+          limit: limit ?? 10,
+          page: page ?? 1,
+        },
+      }
     );
     return response;
   },
-  getAllBikes: async ({
-    page,
-    limit,
-    station_id,
-    supplier_id,
-    status,
-  }: {
-    page?: number;
-    limit?: number;
-    station_id?: string;
-    supplier_id?: string;
-    status?: BikeStatus;
-  }): Promise<AxiosResponse<ApiResponse<Bike[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Bike[]>>(
-      BIKE_ENDPOINTS.BASE,
+  getDetailBike: async (
+    id: string
+  ): Promise<AxiosResponse<GetDetailBikeResponse>> => {
+    const response = await fetchHttpClient.query<GetDetailBikeResponse>(
+      print(GET_DETAIL_BIKES),
       {
-        page,
-        limit,
-        station_id,
-        supplier_id,
-        status,
+        bikeId: id,
       }
     );
     return response;
@@ -161,6 +173,19 @@ export const bikeService = {
     const response = await fetchHttpClient.get<
       DetailApiResponseCuaNguyen<BikeRentalHistory>
     >(BIKE_ENDPOINTS.RENTAL_HISTORY_BIKE(id));
+    return response;
+  },
+  changeStatusBike: async (
+    changeBikeStatusId: string,
+    status: BikeStatus
+  ): Promise<AxiosResponse<ChangeBikeStatusResponse>> => {
+    const response = await fetchHttpClient.mutation<ChangeBikeStatusResponse>(
+      print(CHANGE_BIKE_STATUS),
+      {
+        changeBikeStatusId: changeBikeStatusId,
+        status: status,
+      }
+    );
     return response;
   },
 };

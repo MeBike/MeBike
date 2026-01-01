@@ -7,10 +7,10 @@ export const QUERY_KEYS = {
     USER_PROFILE_QUERY_KEY: ["user", "me"],
   },
   USER: {
-    ALL: (page?: number, limit?: number, verify?: string, role?: string) => [
+    ALL: (page?: number, limit?: number, verify?: string, role?: string, search?: string) => [
       "user",
       "all",
-      { page, limit, verify, role },
+      { page, limit, verify, role, search },
     ],
     STATISTICS: ["user", "statistics"],
     ACTIVE_USER: ["user", "active"],
@@ -55,12 +55,13 @@ export const QUERY_KEYS = {
     DETAIL: (id: string) => ["sos-detail", id],
   },
   STATION: {
-    ALL: (page?: number, limit?: number, name?: string) => [
+    ALL: (page?: number, limit?: number, name?: string, search?: string) => [
       "stations",
       "all",
       page,
       limit,
       name,
+      search,
     ],
     DETAIL: (stationId: string) => ["station", stationId],
     RESERVATION_STATS_STATION: (stationId: string) => [

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Bike, BikeRentalHistory, BikeStatus } from "@custom-types";
-import { Plus } from "lucide-react";
+import { CloudCog, Plus } from "lucide-react";
 import { useBikeActions } from "@/hooks/use-bike";
 import { Loader2 } from "lucide-react";
 import { bikeColumn } from "@/columns/bike-colums";
@@ -13,6 +13,10 @@ import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
 import { getStatusColor } from "@utils/bike-status";
 import { formatDateUTC } from "@/utils/formatDateTime";
+import { formatToVNTime } from "@/lib/formateVNDate";
+import { UpdateBikeSchemaFormData } from "@/schemas/bikeSchema";
+import { useRouter } from "next/navigation";
+import BikeDetailPage from "./detail/[bikeId]/page";
 export default function BikesPage() {
   const [detailId, setDetailId] = useState<string>("");
   const [editId, setEditId] = useState<string>("");
@@ -21,16 +25,16 @@ export default function BikesPage() {
   const [statusFilter, setStatusFilter] = useState<BikeStatus | "all">("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const router = useRouter();
   const [newBike, setNewBike] = useState({
-    station_id: "",
-    supplier_id: "",
-    chip_id: "",
-    status: "CÓ SẴN" as BikeStatus,
+    stationid: "",
+    supplierid: "",
+    chipid: "",
   });
-  const {responseStationBikeRevenue, getStationBikeRevenue} = useStationActions({ hasToken: true });
+  // const {responseStationBikeRevenue, getStationBikeRevenue} = useStationActions({ hasToken: true });
   const [editBike, setEditBike] = useState<Bike | null>(null);
   const { stations } = useStationActions({ hasToken: true });
-  const { allSupplier } = useSupplierActions(true);
+  const { allSupplier } = useSupplierActions({ hasToken: true });
   const [detailTab, setDetailTab] = useState<
     "info" | "rentals" | "stats" | "activity"
   >("info");
@@ -38,22 +42,22 @@ export default function BikesPage() {
     data,
     detailBike,
     getStatisticsBike,
-    statisticData,
-    isLoadingStatistics,
+    // statisticData,
+    // isLoadingStatistics,
     paginationBikes,
     createBike,
     updateBike,
     getBikeByID,
     isLoadingDetail,
-    bikeActivityStats,
-    getBikeActivityStats,
-    bikeStats,
-    isFetchingBikeStats,
-    bikeRentals,
-    isFetchingRentalBikes,
-    getRentalBikes,
-    getBikeStats,
-    
+    // bikeActivityStats,
+    // getBikeActivityStats,
+    // bikeStats,
+    // isFetchingBikeStats,
+    // bikeRentals,
+    // isFetchingRentalBikes,
+    // getRentalBikes,
+    // getBikeStats,
+    getBikes,
   } = useBikeActions(
     true,
     detailId,
@@ -80,17 +84,20 @@ export default function BikesPage() {
   };
 
   const handleViewDetails = (bikeId: string) => {
+    router.push(`/admin/bikes/detail/${bikeId}`);
     setDetailId(bikeId);
     setIsDetailModalOpen(true);
   }
   const handleEditBike = (bikeId: string) => {
-    if (editId === bikeId) {
-      getBikeByID();
-      setIsEditModalOpen(true); 
-    } else {
-      setEditId(bikeId);
-    }
-  }
+  // Set the bike ID to edit and fetch its details
+  setEditId(bikeId);
+  getBikeByID();
+  // The useEffect will open the edit modal when the data is loaded
+};
+  useEffect(() => {
+    getBikes();
+    console.log(data?.data?.Bikes.data);
+  }, [page, limit, statusFilter, getBikes]);
   useEffect(() => {
     if (!isLoadingDetail && detailBike && editId) {
       setEditBike(detailBike);
@@ -99,31 +106,32 @@ export default function BikesPage() {
   }, [isLoadingDetail, detailBike, editId]);
   const handleUpdateBike = () => {
     if (!editBike) return;
-    updateBike({
-      station_id: editBike.station_id,
-      supplier_id: editBike.supplier_id || "",
-      status: editBike.status,
-      chip_id: editBike.chip_id,
-    }, editBike._id);
+    updateBike(
+      {
+        station_id: editBike.station.id,
+        supplier_id: editBike.supplier.id,
+        status: editBike.status,
+        chip_id: editBike.chipId,
+      },
+      detailId
+    );
     setIsEditModalOpen(false);
   };
   const handleCreateBike = () => {
-    if (!newBike.station_id || !newBike.chip_id) {
+    if (!newBike.stationid || !newBike.chipid) {
       alert("Vui lòng điền đầy đủ thông tin");
       return;
     }
     createBike({
-      station_id: newBike.station_id,
-      supplier_id: newBike.supplier_id,
-      status: newBike.status,
-      chip_id: newBike.chip_id,
+      station_id: newBike.stationid,
+      supplier_id: newBike.supplierid,
+      chip_id: newBike.chipid,
     });
     setIsCreateModalOpen(false);
     setNewBike({
-      station_id: "",
-      supplier_id: "",
-      chip_id: "",
-      status: "CÓ SẴN",
+      stationid: "",
+      supplierid: "",
+      chipid: "",
     });
   };
   useEffect(() => {
@@ -132,30 +140,30 @@ export default function BikesPage() {
   useEffect(() => {
     if (detailId) {
       getBikeByID();
-      getBikeActivityStats();
-      getBikeStats();
-      getRentalBikes();
+      // getBikeActivityStats();
+      // getBikeStats();
+      // getRentalBikes();
     }
-  } , [detailId , getBikeByID, getBikeActivityStats, getBikeStats, getRentalBikes]);
+  } , [detailId , getBikeByID]);
 
   useEffect(() => {
     if (editId) {
       getBikeByID();
     }
   }, [editId , getBikeByID]);
-  const available = statisticData?.result["CÓ SẴN"] || 0;
-  const renting = statisticData?.result["ĐANG ĐƯỢC THUÊ"] || 0;
-  const broken = statisticData?.result["BỊ HỎNG"] || 0;
-  const reserved = statisticData?.result["ĐÃ ĐẶT TRƯỚC"] || 0;
-  const total =
-  Number(available) + Number(renting) + Number(broken) + Number(reserved);
-  if (isLoadingStatistics) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-        <Loader2 className="animate-spin w-16 h-16 text-primary" />
-      </div>
-    );
-  } 
+  // const available = statisticData?.result["CÓ SẴN"] || 0;
+  // const renting = statisticData?.result["ĐANG ĐƯỢC THUÊ"] || 0;
+  // const broken = statisticData?.result["BỊ HỎNG"] || 0;
+  // const reserved = statisticData?.result["ĐÃ ĐẶT TRƯỚC"] || 0;
+  // const total = data?.data?.Bikes.pagination?.total || 0;
+  // Number(available) + Number(renting) + Number(broken) + Number(reserved);
+  // if (isLoadingStatistics) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+  //       <Loader2 className="animate-spin w-16 h-16 text-primary" />
+  //     </div>
+  //   );
+  // } 
   if (isLoadingDetail){
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -166,7 +174,6 @@ export default function BikesPage() {
     return (
       <div>
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-foreground">
@@ -177,15 +184,11 @@ export default function BikesPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {/* <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Xuất Excel
-            </Button> */}
               <Button onClick={() => setIsCreateModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Thêm xe mới
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 onClick={() => {
                   if (!showBikeRevenue) {
@@ -197,12 +200,11 @@ export default function BikesPage() {
                 {showBikeRevenue
                   ? "Ẩn báo cáo doanh thu"
                   : "Xem báo cáo doanh thu"}
-              </Button>
+              </Button> */}
             </div>
           </div>
 
-          {/* BIKE REVENUE REPORT */}
-          {showBikeRevenue && responseStationBikeRevenue?.result && (
+          {/* {showBikeRevenue && responseStationBikeRevenue?.result && (
             <div className="space-y-6 animate-in fade-in duration-500">
               <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border rounded-2xl p-8 shadow-lg">
                 <div className="flex items-center justify-between mb-6">
@@ -241,7 +243,6 @@ export default function BikesPage() {
                   </div>
                 </div>
 
-                {/* SUMMARY CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                   <div className="group relative bg-gradient-to-br from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 rounded-xl p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
@@ -355,7 +356,6 @@ export default function BikesPage() {
                   </div>
                 </div>
 
-                {/* STATIONS TABLE */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="h-1 w-12 bg-gradient-to-r from-primary to-primary/20 rounded-full"></div>
@@ -371,7 +371,6 @@ export default function BikesPage() {
                           className="bg-gradient-to-br from-card to-muted/5 border border-border rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
                           style={{ animationDelay: `${stationIndex * 100}ms` }}
                         >
-                          {/* Station Header */}
                           <div
                             className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b border-border cursor-pointer hover:bg-primary/5 transition-colors"
                             onClick={() => toggleStation(station._id)}
@@ -496,7 +495,6 @@ export default function BikesPage() {
                             </div>
                           </div>
 
-                          {/* Bikes Grid - Collapsible */}
                           {expandedStations.has(station._id) &&
                             station.bikes &&
                             station.bikes.length > 0 && (
@@ -657,10 +655,9 @@ export default function BikesPage() {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Tổng số xe</p>
               <p className="text-2xl font-bold text-foreground mt-1">
@@ -691,15 +688,8 @@ export default function BikesPage() {
                 {reserved || "0"}
               </p>
             </div>
-            {/* <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Bảo trì</p>
-            <p className="text-2xl font-bold text-orange-500 mt-1">
-              {stats.maintenance}
-            </p>
           </div> */}
-          </div>
 
-          {/* Filters */}
           <div className="bg-card border border-border rounded-lg p-4 space-y-4">
             <div className="flex items-center gap-4">
               <select
@@ -710,12 +700,12 @@ export default function BikesPage() {
                 className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="CÓ SẴN">Có sẵn</option>
-                <option value="ĐANG ĐƯỢC THUÊ">Đang được thuê</option>
-                <option value="BỊ HỎNG">Bị hỏng</option>
-                <option value="ĐÃ ĐẶT TRƯỚC">Đã đặt trước</option>
-                <option value="ĐANG BẢO TRÌ">Đang bảo trì</option>
-                <option value="KHÔNG CÓ SẴN">Không có sẵn</option>
+                <option value="Available">Có sẵn</option>
+                <option value="Booked">Đang được thuê</option>
+                <option value="Broken">Bị hỏng</option>
+                <option value="Reserved">Đã đặt trước</option>
+                <option value="Maintenance">Đang bảo trì</option>
+                <option value="NotAvailable">Không có sẵn</option>
               </select>
               <Button
                 variant="outline"
@@ -728,7 +718,6 @@ export default function BikesPage() {
             </div>
           </div>
 
-          {/* Table */}
           <div className="w-full rounded-lg space-y-4  flex flex-col">
             <DataTable
               title="Danh sách xe đạp"
@@ -739,21 +728,18 @@ export default function BikesPage() {
                 onEdit: ({ id }: { id: string }) => {
                   handleEditBike(id);
                 },
-                stations: stations,
-                suppliers: allSupplier?.data || [],
               })}
-              data={data?.data || []}
+              data={data?.data?.Bikes.data || []}
             />
             <PaginationDemo
-              currentPage={paginationBikes?.currentPage ?? 1}
+              currentPage={paginationBikes?.page ?? 1}
               onPageChange={setPage}
               totalPages={paginationBikes?.totalPages ?? 1}
             />
           </div>
 
           <p className="text-sm text-muted-foreground">
-            Trang {paginationBikes?.currentPage} / {paginationBikes?.totalPages}{" "}
-            xe đạp
+            Trang {paginationBikes?.page} / {paginationBikes?.totalPages} xe đạp
           </p>
         </div>
 
@@ -770,15 +756,15 @@ export default function BikesPage() {
                     Trạm xe
                   </label>
                   <select
-                    value={newBike.station_id}
+                    value={newBike.stationid}
                     onChange={(e) =>
-                      setNewBike({ ...newBike, station_id: e.target.value })
+                      setNewBike({ ...newBike, stationid: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
                     <option value="">Chọn trạm xe</option>
                     {stations.map((station) => (
-                      <option key={station._id} value={station._id}>
+                      <option key={station.id} value={station.id}>
                         {station.name}
                       </option>
                     ))}
@@ -789,15 +775,15 @@ export default function BikesPage() {
                     Nhà cung cấp
                   </label>
                   <select
-                    value={newBike.supplier_id}
+                    value={newBike.supplierid}
                     onChange={(e) =>
-                      setNewBike({ ...newBike, supplier_id: e.target.value })
+                      setNewBike({ ...newBike, supplierid: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
                     <option value="">Chọn nhà cung cấp</option>
-                    {allSupplier?.data.map((supplier) => (
-                      <option key={supplier._id} value={supplier._id}>
+                    {allSupplier?.map((supplier) => (
+                      <option key={supplier.id} value={supplier.id}>
                         {supplier.name}
                       </option>
                     ))}
@@ -810,35 +796,13 @@ export default function BikesPage() {
                   </label>
                   <input
                     type="text"
-                    value={newBike.chip_id}
+                    value={newBike.chipid}
                     onChange={(e) =>
-                      setNewBike({ ...newBike, chip_id: e.target.value })
+                      setNewBike({ ...newBike, chipid: e.target.value })
                     }
                     placeholder="Nhập Chip ID"
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Trạng thái
-                  </label>
-                  <select
-                    value={newBike.status}
-                    onChange={(e) =>
-                      setNewBike({
-                        ...newBike,
-                        status: e.target.value as BikeStatus,
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  >
-                    <option value="CÓ SẴN">Có sẵn</option>
-                    <option value="ĐANG ĐƯỢC THUÊ">Đang được thuê</option>
-                    <option value="BỊ HỎNG">Bị hỏng</option>
-                    <option value="ĐANG BẢO TRÌ">Đang bảo trì</option>
-                    <option value="KHÔNG CÓ SẴN">Không có sẵn</option>
-                  </select>
                 </div>
               </div>
 
@@ -857,13 +821,12 @@ export default function BikesPage() {
             </div>
           </div>
         )}
-        {isDetailModalOpen && detailBike && (
+        {/* {isDetailModalOpen && detailBike && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-foreground mb-4">
                 Chi tiết xe đạp
               </h2>
-              {/* Tabs for different sections */}
               <div className="flex gap-2 mb-6 border-b border-border">
                 <button
                   onClick={() => setDetailTab("info")}
@@ -912,19 +875,19 @@ export default function BikesPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">ID Xe</p>
                     <p className="text-foreground font-medium">
-                      {detailBike._id}
+                      {detailBike.id}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Chip ID</p>
                     <p className="text-foreground font-medium">
-                      {detailBike.chip_id}
+                      {detailBike.chipId}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Trạm</p>
                     <p className="text-foreground font-medium">
-                      {detailBike.station_id}
+                      {detailBike.station.name}
                     </p>
                   </div>
                   <div>
@@ -932,7 +895,7 @@ export default function BikesPage() {
                       Nhà cung cấp
                     </p>
                     <p className="text-foreground font-medium">
-                      {detailBike.supplier_id || "-"}
+                      {detailBike.supplier.name || "-"}
                     </p>
                   </div>
                   <div>
@@ -948,7 +911,7 @@ export default function BikesPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Ngày tạo</p>
                     <p className="text-foreground font-medium">
-                      {formatDateUTC(detailBike.created_at)}
+                      {formatToVNTime(detailBike.createdAt)}
                     </p>
                   </div>
                   <div>
@@ -956,7 +919,7 @@ export default function BikesPage() {
                       Ngày cập nhật
                     </p>
                     <p className="text-foreground font-medium">
-                      {formatDateUTC(detailBike.updated_at)}
+                      {formatToVNTime(detailBike.updatedAt)}
                     </p>
                   </div>
                 </div>
@@ -973,9 +936,6 @@ export default function BikesPage() {
                     </div>
                   ) : Array.isArray(bikeRentals) && bikeRentals.length > 0 ? (
                     <div className="bg-muted rounded-lg p-4">
-                      {/* <p className="text-sm text-muted-foreground mb-2">
-                        API: /bikes/{detailBike._id}/rental-history
-                      </p> */}
                       <div className="space-y-2">
                         {bikeRentals.map(
                           (rental: BikeRentalHistory, index: number) => (
@@ -1033,14 +993,12 @@ export default function BikesPage() {
                 <div className="space-y-3">
                   <div className="bg-muted rounded-lg p-4">
                     <div className="grid grid-cols-2 gap-3">
-                      {/* ID xe - màu primary */}
                       <div className="bg-primary/10 border border-primary rounded p-3">
                         <p className="text-xs text-primary">ID xe</p>
                         <p className="text-2xl font-bold text-primary">
                           {bikeActivityStats?.bike_id.slice(0, 8)}
                         </p>
                       </div>
-                      {/* Doanh thu từng tháng */}
                       {bikeActivityStats?.monthly_stats?.map((stat, idx) => (
                         <div
                           key={idx}
@@ -1060,7 +1018,6 @@ export default function BikesPage() {
                           </p>
                         </div>
                       ))}
-                      {/* Thời gian sử dụng - màu blue */}
                       <div className="bg-blue-100 border border-blue-300 rounded p-3">
                         <p className="text-xs text-blue-600">
                           Thời gian sử dụng
@@ -1069,7 +1026,6 @@ export default function BikesPage() {
                           {bikeActivityStats?.total_minutes_active || 0} phút
                         </p>
                       </div>
-                      {/* Phần trăm thời gian hoạt động - màu green */}
                       <div className="bg-green-100 border border-green-300 rounded p-3">
                         <p className="text-xs text-green-600">
                           Phần trăm thời gian hoạt động
@@ -1078,7 +1034,6 @@ export default function BikesPage() {
                           {bikeActivityStats?.uptime_percentage}%
                         </p>
                       </div>
-                      {/* Số lượng báo hỏng - màu red */}
                       <div className="bg-red-100 border border-red-300 rounded p-3">
                         <p className="text-xs text-red-600">
                           Số lượng báo hỏng
@@ -1087,16 +1042,15 @@ export default function BikesPage() {
                           {bikeActivityStats?.total_reports || 0} báo hỏng
                         </p>
                       </div>
-                      {/* Đánh giá trung bình - màu gray nếu chưa có đánh giá */}
                       <div className="bg-gray-100 border border-gray-300 rounded p-3">
                         <p className="text-xs text-gray-600">
                           Đánh giá trung bình
                         </p>
                         <p className="text-2xl font-bold text-gray-800">
-                          {detailBike.average_rating && detailBike.average_rating > 0
+                          {detailBike.average_rating &&
+                          detailBike.average_rating > 0
                             ? `${detailBike.average_rating.toFixed(1)} ⭐ (${detailBike.total_ratings || 0} đánh giá)`
-                            : "Chưa có đánh giá"
-                          }
+                            : "Chưa có đánh giá"}
                         </p>
                       </div>
                     </div>
@@ -1148,7 +1102,7 @@ export default function BikesPage() {
                             {bikeStats?.total_reports}
                           </span>
                         </div>
-                        {/* {bikeActivityStats.monthly_stats.length > 0 && (
+                        {bikeActivityStats.monthly_stats.length > 0 && (
                           <div className="mt-4">
                             <p className="text-sm font-medium text-foreground mb-2">
                               Thống kê theo tháng
@@ -1172,7 +1126,7 @@ export default function BikesPage() {
                                 ))}
                             </div>
                           </div>
-                        )} */}
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -1185,16 +1139,31 @@ export default function BikesPage() {
                 </div>
               )}
 
-              <Button
-                onClick={() => setIsDetailModalOpen(false)}
-                className="w-full mt-6"
-              >
-                Đóng
-              </Button>
+              <div className="flex gap-2">
+                <div className="w-full">
+                  <Button
+                    onClick={() => setIsDetailModalOpen(false)}
+                    className="w-full mt-6"
+                  >
+                    Đóng
+                  </Button>
+                </div>
+                <div className="w-full">
+                  <Button
+                  onClick={() => {
+                    setIsEditModalOpen(true);
+                    setEditBike(detailBike);
+                  }}
+                  className="w-full mt-6"
+                >
+                  Cập nhật
+                </Button>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-        {isEditModalOpen && detailBike && (
+        )} */}
+        {isEditModalOpen && editBike && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
               <h2 className="text-xl font-bold text-foreground mb-4">
@@ -1207,18 +1176,24 @@ export default function BikesPage() {
                     Trạm xe
                   </label>
                   <select
-                    value={editBike?.station_id || ""}
+                    value={editBike?.station.id || ""}
                     onChange={(e) =>
                       setEditBike(
                         editBike
-                          ? { ...editBike, station_id: e.target.value }
+                          ? {
+                              ...editBike,
+                              station: {
+                                ...editBike.station,
+                                id: e.target.value,
+                              },
+                            }
                           : null
                       )
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
                     {stations.map((station) => (
-                      <option key={station._id} value={station._id}>
+                      <option key={station.id} value={station.id}>
                         {station.name}
                       </option>
                     ))}
@@ -1230,19 +1205,24 @@ export default function BikesPage() {
                     Nhà cung cấp
                   </label>
                   <select
-                    value={editBike?.supplier_id || ""}
+                    value={editBike?.supplier.id || ""}
                     onChange={(e) =>
                       setEditBike(
                         editBike
-                          ? { ...editBike, supplier_id: e.target.value }
+                          ? {
+                              ...editBike,
+                              supplier: {
+                                ...editBike.supplier,
+                                id: e.target.value,
+                              },
+                            }
                           : null
                       )
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
-                    <option value="">Không có</option>
-                    {allSupplier?.data.map((supplier) => (
-                      <option key={supplier._id} value={supplier._id}>
+                    {allSupplier?.map((supplier) => (
+                      <option key={supplier.id} value={supplier.id}>
                         {supplier.name}
                       </option>
                     ))}
@@ -1255,43 +1235,16 @@ export default function BikesPage() {
                   </label>
                   <input
                     type="text"
-                    value={editBike?.chip_id || ""}
+                    value={editBike?.chipId || ""}
                     onChange={(e) =>
                       setEditBike(
                         editBike
-                          ? { ...editBike, chip_id: e.target.value }
+                          ? { ...editBike, chipId: e.target.value }
                           : null
                       )
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Trạng thái
-                  </label>
-                  <select
-                    value={editBike?.status || ""}
-                    onChange={(e) =>
-                      setEditBike(
-                        editBike
-                          ? {
-                              ...editBike,
-                              status: e.target.value as BikeStatus,
-                            }
-                          : null
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  >
-                    <option value="CÓ SẴN">Có sẵn</option>
-                    <option value="ĐANG ĐƯỢC THUÊ">Đang được thuê</option>
-                    <option value="BỊ HỎNG">Bị hỏng</option>
-                    <option value="ĐÃ ĐẶT TRƯỚC">Đã đặt trước</option>
-                    <option value="ĐANG BẢO TRÌ">Đang bảo trì</option>
-                    <option value="KHÔNG CÓ SẴN">Không có sẵn</option>
-                  </select>
                 </div>
               </div>
 

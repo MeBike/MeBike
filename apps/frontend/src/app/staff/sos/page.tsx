@@ -73,8 +73,6 @@ export default function SOSPage() {
   const latitude = sosDetail?.result?.location?.coordinates?.[1] || 0;
   const longitude = sosDetail?.result?.location?.coordinates?.[0] || 0;
 
-  const { responseNearestAvailableBike, getNearestAvailableBike } =
-    useStationActions({ latitude, longitude });
 
   // Filter SOS agents from users
   const sosAgents = users?.filter((user) => user.role === "SOS") || [];
@@ -137,11 +135,11 @@ export default function SOSPage() {
     }
   }, [selectedSOSId, refetchSOSDetail]);
 
-  useEffect(() => {
-    if (latitude && longitude && isAssignModalOpen) {
-      getNearestAvailableBike();
-    }
-  }, [latitude, longitude, isAssignModalOpen, getNearestAvailableBike]);
+  // useEffect(() => {
+  //   if (latitude && longitude && isAssignModalOpen) {
+  //     getNearestAvailableBike();
+  //   }
+  // }, [latitude, longitude, isAssignModalOpen, getNearestAvailableBike]);
 
   const handleReset = () => {
     setSearchQuery("");
@@ -184,930 +182,933 @@ export default function SOSPage() {
   }
 
   return (
+    // <div>
+    //   <div className="space-y-6">
+    //     <div className="flex items-center justify-between">
+    //       <div>
+    //         <h1 className="text-3xl font-bold text-foreground">
+    //           Quản lý yêu cầu cứu hộ
+    //         </h1>
+    //         <p className="text-muted-foreground mt-1">
+    //           Theo dõi và quản lý các yêu cầu cứu hộ từ người dùng
+    //         </p>
+    //       </div>
+    //     </div>
+
+    //     {/* Filters */}
+    //     <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+    //       <div className="flex items-center justify-between">
+    //         <h3 className="font-semibold text-foreground">Bộ lọc</h3>
+    //         <Button variant="ghost" size="sm" onClick={handleReset}>
+    //           Xóa bộ lọc
+    //         </Button>
+    //       </div>
+
+    //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    //         <div className="space-y-2">
+    //           <label className="text-sm font-medium">Tìm kiếm</label>
+    //           <input
+    //             type="text"
+    //             placeholder="Mã yêu cầu, mã người dùng, mã xe..."
+    //             value={searchQuery}
+    //             onChange={(e) => setSearchQuery(e.target.value)}
+    //             className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+    //           />
+    //         </div>
+
+    //         <div className="space-y-2">
+    //           <label className="text-sm font-medium">Trạng thái</label>
+    //           <select
+    //             value={statusFilter}
+    //             onChange={(e) => {
+    //               setStatusFilter(e.target.value as SOS["status"] | "all");
+    //               handleFilterChange();
+    //             }}
+    //             className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+    //           >
+    //             <option value="all">Tất cả</option>
+    //             <option value="ĐANG CHỜ XỬ LÍ">Đang chờ xử lý</option>
+    //             <option value="ĐÃ XỬ LÍ">Đã xử lý</option>
+    //             <option value="KHÔNG XỬ LÍ ĐƯỢC">Không xử lý được</option>
+    //             <option value="ĐÃ TỪ CHỐI">Đã từ chối</option>
+    //           </select>
+    //         </div>
+    //       </div>
+    //     </div>
+
+    //     {/* SOS Requests Table */}
+    //     <div>
+    //       <p className="text-sm text-muted-foreground mb-4">
+    //         Hiển thị trang {currentPage}
+    //       </p>
+
+    //       {sosRequests?.data && sosRequests.data.length === 0 ? (
+    //         <div className="bg-card border border-border rounded-lg p-8 text-center">
+    //           <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+    //           <p className="text-foreground font-medium">
+    //             Không có yêu cầu cứu hộ
+    //           </p>
+    //           <p className="text-sm text-muted-foreground mt-1">
+    //             Không tìm thấy yêu cầu cứu hộ nào phù hợp với bộ lọc
+    //           </p>
+    //         </div>
+    //       ) : (
+    //         <>
+    //           <div className="bg-card border border-border rounded-lg overflow-hidden">
+    //             <DataTable
+    //               title="Danh sách đơn cứu hộ"
+    //               columns={sosColumns({
+    //                 onView: (sos: SOS) => {
+    //                   setSelectedSOSId(sos._id);
+    //                   setIsDetailModalOpen(true);
+    //                 },
+    //               })}
+    //               data={sosRequests?.data || []}
+    //             />
+    //           </div>
+
+    //           <div className="pt-3">
+    //             <PaginationDemo
+    //               currentPage={currentPage}
+    //               totalPages={sosRequests?.pagination.totalPages || 1}
+    //               onPageChange={setCurrentPage}
+    //             />
+    //           </div>
+    //         </>
+    //       )}
+    //     </div>
+    //   </div>
+
+    //   {/* Detail SOS Modal */}
+    //   {isDetailModalOpen && sosDetail?.result && (
+    //     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    //       <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-auto">
+    //         <div className="flex items-center justify-between mb-4">
+    //           <h2 className="text-xl font-bold text-foreground">
+    //             Chi tiết yêu cầu cứu hộ
+    //           </h2>
+    //           <button
+    //             onClick={() => {
+    //               setIsDetailModalOpen(false);
+    //               setSelectedSOSId("");
+    //               setDetailTab("info");
+    //             }}
+    //             className="text-gray-500 hover:text-gray-700"
+    //           >
+    //             ✕
+    //           </button>
+    //         </div>
+
+    //         {!sosDetail?.result ? (
+    //           <div className="flex items-center justify-center py-8">
+    //             <Loader2 className="animate-spin w-8 h-8 text-primary" />
+    //           </div>
+    //         ) : (
+    //           <>
+    //             {/* Tabs for different sections */}
+    //             <div className="flex gap-2 mb-6 border-b border-border">
+    //               <button
+    //                 onClick={() => setDetailTab("info")}
+    //                 className={`px-4 py-2 text-sm font-medium transition-colors ${
+    //                   detailTab === "info"
+    //                     ? "text-primary border-b-2 border-primary"
+    //                     : "text-muted-foreground hover:text-foreground"
+    //                 }`}
+    //               >
+    //                 Thông tin
+    //               </button>
+    //               <button
+    //                 onClick={() => setDetailTab("details")}
+    //                 className={`px-4 py-2 text-sm font-medium transition-colors ${
+    //                   detailTab === "details"
+    //                     ? "text-primary border-b-2 border-primary"
+    //                     : "text-muted-foreground hover:text-foreground"
+    //                 }`}
+    //               >
+    //                 Chi tiết vấn đề
+    //               </button>
+    //               <button
+    //                 onClick={() => setDetailTab("notes")}
+    //                 className={`px-4 py-2 text-sm font-medium transition-colors ${
+    //                   detailTab === "notes"
+    //                     ? "text-primary border-b-2 border-primary"
+    //                     : "text-muted-foreground hover:text-foreground"
+    //                 }`}
+    //               >
+    //                 Ghi chú xử lý
+    //               </button>
+    //             </div>
+
+    //             {/* Tab: Info */}
+    //             {detailTab === "info" && (
+    //               <div className="grid grid-cols-2 gap-4">
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Mã yêu cầu cứu hộ
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result._id}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Tên người yêu cầu
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.requester?.fullname || "-"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Email người yêu cầu
+    //                   </p>
+    //                   <p className="text-foreground font-medium text-sm">
+    //                     {sosDetail.result.requester?.email || "-"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Số điện thoại người yêu cầu
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.requester?.phone_number || "-"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">Mã xe đạp</p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.bike?._id || "-"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Chip ID xe đạp
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.bike?.chip_id || "-"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Trạng thái xe đạp
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.bike?.status || "-"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Tên nhân viên SOS
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.sos_agent?.fullname ||
+    //                       "Chưa được giao"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Email nhân viên SOS
+    //                   </p>
+    //                   <p className="text-foreground font-medium text-sm">
+    //                     {sosDetail.result.sos_agent?.email || "Chưa có"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Số điện thoại nhân viên SOS
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.sos_agent?.phone_number ||
+    //                       "Chưa được giao"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Trạng thái
+    //                   </p>
+    //                   <span
+    //                     className={`px-3 py-1 rounded-full text-xs font-medium ${
+    //                       sosDetail.result.status === "ĐÃ XỬ LÍ"
+    //                         ? "bg-green-100 text-green-800"
+    //                         : sosDetail.result.status === "ĐANG CHỜ XỬ LÍ"
+    //                         ? "bg-yellow-100 text-yellow-800"
+    //                         : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
+    //                         ? "bg-orange-100 text-orange-800"
+    //                         : "bg-red-100 text-red-800"
+    //                     }`}
+    //                   >
+    //                     {sosDetail.result.status}
+    //                   </span>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">Ngày tạo</p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.created_at
+    //                       ? formatDateUTC(sosDetail.result.created_at)
+    //                       : "Chưa có"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Lần cập nhật cuối
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.updated_at
+    //                       ? formatDateUTC(sosDetail.result.updated_at)
+    //                       : "Chưa có"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground">
+    //                     Thời gian xử lý
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.resolved_at &&
+    //                     sosDetail.result.resolved_at !== null
+    //                       ? formatDateUTC(sosDetail.result.resolved_at)
+    //                       : "Chưa xử lý"}
+    //                   </p>
+    //                 </div>
+    //               </div>
+    //             )}
+
+    //             {/* Tab: Details */}
+    //             {detailTab === "details" && (
+    //               <div className="space-y-4">
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground mb-2">
+    //                     Mô tả vấn đề
+    //                   </p>
+    //                   <p className="text-foreground bg-muted rounded-lg p-3 whitespace-pre-wrap">
+    //                     {sosDetail.result.issue}
+    //                   </p>
+    //                 </div>
+
+    //                 <div className="grid grid-cols-2 gap-4">
+    //                   <div>
+    //                     <p className="text-sm text-muted-foreground mb-2">
+    //                       Kinh độ
+    //                     </p>
+    //                     <p className="text-foreground font-medium">
+    //                       {sosDetail.result.location?.coordinates?.[0] || "-"}
+    //                     </p>
+    //                   </div>
+
+    //                   <div>
+    //                     <p className="text-sm text-muted-foreground mb-2">
+    //                       Vĩ độ
+    //                     </p>
+    //                     <p className="text-foreground font-medium">
+    //                       {sosDetail.result.location?.coordinates?.[1] || "-"}
+    //                     </p>
+    //                   </div>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground mb-2">
+    //                     Loại vị trí
+    //                   </p>
+    //                   <p className="text-foreground font-medium">
+    //                     {sosDetail.result.location?.type || "-"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground mb-2">
+    //                     Hình ảnh đính kèm
+    //                   </p>
+    //                   {sosDetail.result.photos &&
+    //                   sosDetail.result.photos.length > 0 ? (
+    //                     <div className="space-y-2">
+    //                       <p className="text-sm text-foreground">
+    //                         Tổng cộng: {sosDetail.result.photos.length} hình ảnh
+    //                       </p>
+    //                       <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+    //                         {sosDetail.result.photos.map((photo, idx) => (
+    //                           <div
+    //                             key={idx}
+    //                             className="relative aspect-video rounded-lg overflow-hidden border border-border bg-muted group"
+    //                           >
+    //                             <Image
+    //                               src={photo}
+    //                               alt={`SOS photo ${idx + 1}`}
+    //                               fill
+    //                               className="object-cover transition-transform group-hover:scale-105"
+    //                               loading="lazy"
+    //                             />
+    //                             <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1">
+    //                               Ảnh #{idx + 1}
+    //                             </div>
+    //                           </div>
+    //                         ))}
+    //                       </div>
+    //                     </div>
+    //                   ) : (
+    //                     <p className="text-sm text-muted-foreground bg-muted rounded-lg p-3">
+    //                       Không có hình ảnh đính kèm
+    //                     </p>
+    //                   )}
+    //                 </div>
+    //               </div>
+    //             )}
+
+    //             {/* Tab: Notes */}
+    //             {detailTab === "notes" && (
+    //               <div className="space-y-4">
+    //                 <div>
+    //                   <p className="text-sm text-muted-foreground mb-2">
+    //                     Ghi chú xử lý
+    //                   </p>
+    //                   <p className="text-foreground bg-muted rounded-lg p-3 whitespace-pre-wrap min-h-24">
+    //                     {sosDetail.result.agent_notes || "Chưa có ghi chú"}
+    //                   </p>
+    //                 </div>
+
+    //                 <div className="grid grid-cols-2 gap-4">
+    //                   <div>
+    //                     <p className="text-sm text-muted-foreground mb-2">
+    //                       Nhân viên SOS
+    //                     </p>
+    //                     <p className="text-foreground font-medium">
+    //                       {sosDetail.result.sos_agent?.fullname ||
+    //                         "Chưa được giao"}
+    //                     </p>
+    //                     <p className="text-xs text-muted-foreground mt-1">
+    //                       {sosDetail.result.sos_agent?.email || "Chưa có"}
+    //                     </p>
+    //                   </div>
+
+    //                   <div>
+    //                     <p className="text-sm text-muted-foreground mb-2">
+    //                       Nhân viên xử lý
+    //                     </p>
+    //                     <p className="text-foreground font-medium">
+    //                       {sosDetail.result.staff_id ? "Đã gán" : "Chưa gán"}
+    //                     </p>
+    //                   </div>
+    //                 </div>
+
+    //                 <div className="grid grid-cols-2 gap-4">
+    //                   <div>
+    //                     <p className="text-sm text-muted-foreground mb-2">
+    //                       Ngày tạo
+    //                     </p>
+    //                     <p className="text-foreground font-medium text-sm">
+    //                       {sosDetail.result.created_at
+    //                         ? formatDateUTC(sosDetail.result.created_at)
+    //                         : "Chưa có"}
+    //                     </p>
+    //                   </div>
+
+    //                   <div>
+    //                     <p className="text-sm text-muted-foreground mb-2">
+    //                       Cập nhật cuối
+    //                     </p>
+    //                     <p className="text-foreground font-medium text-sm">
+    //                       {sosDetail.result.updated_at
+    //                         ? formatDateUTC(sosDetail.result.updated_at)
+    //                         : "Chưa có"}
+    //                     </p>
+    //                   </div>
+
+    //                   <div>
+    //                     <p className="text-sm text-muted-foreground mb-2">
+    //                       Thời gian xử lý
+    //                     </p>
+    //                     <p className="text-foreground font-medium text-sm">
+    //                       {sosDetail.result.resolved_at &&
+    //                       sosDetail.result.resolved_at !== null
+    //                         ? formatDateUTC(sosDetail.result.resolved_at)
+    //                         : "Chưa xử lý"}
+    //                     </p>
+    //                   </div>
+
+    //                   <div>
+    //                     <p className="text-sm text-muted-foreground mb-2">
+    //                       Trạng thái hiện tại
+    //                     </p>
+    //                     <span
+    //                       className={`px-3 py-1 rounded-full text-xs font-medium inline-block ${
+    //                         sosDetail.result.status === "ĐÃ XỬ LÍ"
+    //                           ? "bg-green-100 text-green-800"
+    //                           : sosDetail.result.status === "ĐANG CHỜ XỬ LÍ"
+    //                           ? "bg-yellow-100 text-yellow-800"
+    //                           : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
+    //                           ? "bg-orange-100 text-orange-800"
+    //                           : "bg-red-100 text-red-800"
+    //                       }`}
+    //                     >
+    //                       {sosDetail.result.status}
+    //                     </span>
+    //                   </div>
+    //                 </div>
+    //               </div>
+    //             )}
+    //           </>
+    //         )}
+
+    //         <div className="flex gap-3 mt-6">
+    //           <Button
+    //             onClick={() => {
+    //               setIsDetailModalOpen(false);
+    //               setSelectedSOSId("");
+    //               setDetailTab("info");
+    //             }}
+    //             className="flex-1"
+    //             variant="outline"
+    //           >
+    //             Đóng
+    //           </Button>
+    //           {sosDetail.result.status === "ĐANG CHỜ XỬ LÍ" && (
+    //             <>
+    //               <Button
+    //                 className="flex-1"
+    //                 onClick={() => {
+    //                   setIsAssignModalOpen(true);
+    //                 }}
+    //               >
+    //                 Phân công xử lý
+    //               </Button>
+    //               <Button
+    //                 className="flex-1"
+    //                 variant="destructive"
+    //                 onClick={() => {
+    //                   setIsCancelModalOpen(true);
+    //                 }}
+    //               >
+    //                 Hủy yêu cầu
+    //               </Button>
+    //             </>
+    //           )}
+    //           {(sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC" ||
+    //             sosDetail.result.status.includes("KHÔNG XỬ LÍ")) && (
+    //             <Button
+    //               className="flex-1"
+    //               onClick={() => {
+    //                 console.log("Status:", sosDetail.result.status);
+    //                 console.log("Rental:", sosDetail.result.rental);
+    //                 const rentalId = sosDetail.result.rental?._id;
+    //                 if (!rentalId) {
+    //                   alert("Không tìm thấy thông tin thuê xe");
+    //                   return;
+    //                 }
+    //                 setSelectedRentalId(rentalId);
+    //                 setIsReplaceModalOpen(true);
+    //                 // Pre-fill form with rental station info
+    //                 const startStation = sosDetail.result.rental?.start_station;
+    //                 if (startStation) {
+    //                   endRentalForm.setValue("end_station", startStation);
+    //                 }
+    //                 endRentalForm.setValue(
+    //                   "reason",
+    //                   "Không xử lý được - Thay xe mới"
+    //                 );
+    //               }}
+    //             >
+    //               Thay xe
+    //             </Button>
+    //           )}
+    //         </div>
+    //       </div>
+    //     </div>
+    //   )}
+
+    //   {/* Assign SOS Modal */}
+    //   {isAssignModalOpen && (
+    //     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    //       <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+    //         <div className="flex items-center justify-between mb-4">
+    //           <h2 className="text-xl font-bold text-foreground">
+    //             Phân công xử lý SOS
+    //           </h2>
+    //           <button
+    //             onClick={() => {
+    //               setIsAssignModalOpen(false);
+    //               form.reset();
+    //             }}
+    //             className="text-gray-500 hover:text-gray-700"
+    //           >
+    //             ✕
+    //           </button>
+    //         </div>
+
+    //         <Form {...form}>
+    //           <form
+    //             onSubmit={form.handleSubmit(onSubmitAssign)}
+    //             className="space-y-4"
+    //           >
+    //             <FormField
+    //               control={form.control}
+    //               name="replaced_bike_id"
+    //               render={({ field }) => (
+    //                 <FormItem>
+    //                   <FormLabel>Xe thay thế</FormLabel>
+    //                   <FormControl>
+    //                     <select
+    //                       {...field}
+    //                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground truncate"
+    //                     >
+    //                       <option value="">Chọn xe thay thế</option>
+    //                       {responseNearestAvailableBike?.data?.result ? (
+    //                         <option
+    //                           value={
+    //                             (
+    //                               responseNearestAvailableBike.data.result as {
+    //                                 bike_id: string;
+    //                                 chip_id: string;
+    //                                 station_name: string;
+    //                               }
+    //                             ).bike_id
+    //                           }
+    //                           className="truncate"
+    //                         >
+    //                           {
+    //                             (
+    //                               responseNearestAvailableBike.data.result as {
+    //                                 bike_id: string;
+    //                                 chip_id: string;
+    //                                 station_name: string;
+    //                               }
+    //                             ).chip_id
+    //                           }
+    //                           km
+    //                         </option>
+    //                       ) : null}
+    //                     </select>
+    //                   </FormControl>
+    //                   {responseNearestAvailableBike?.data?.result && (
+    //                     <p className="text-xs text-muted-foreground mt-1">
+    //                       Trạm:{" "}
+    //                       {
+    //                         (
+    //                           responseNearestAvailableBike.data.result as {
+    //                             bike_id: string;
+    //                             chip_id: string;
+    //                             station_name: string;
+    //                           }
+    //                         ).station_name
+    //                       }
+    //                     </p>
+    //                   )}
+    //                   <FormMessage />
+    //                   {!responseNearestAvailableBike?.data?.result && (
+    //                     <p className="text-sm text-muted-foreground mt-1">
+    //                       Không tìm thấy xe khả dụng gần đó
+    //                     </p>
+    //                   )}
+    //                 </FormItem>
+    //               )}
+    //             />
+
+    //             <FormField
+    //               control={form.control}
+    //               name="sos_agent_id"
+    //               render={({ field }) => (
+    //                 <FormItem>
+    //                   <FormLabel>Nhân viên SOS</FormLabel>
+    //                   <FormControl>
+    //                     <select
+    //                       {...field}
+    //                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+    //                     >
+    //                       <option value="">Chọn nhân viên SOS</option>
+    //                       {sosAgents?.map((agent) => (
+    //                         <option key={agent._id} value={agent._id}>
+    //                           {agent.fullname} - {agent.email}
+    //                         </option>
+    //                       ))}
+    //                     </select>
+    //                   </FormControl>
+    //                   <FormMessage />
+    //                   {sosAgents && sosAgents.length === 0 && (
+    //                     <p className="text-sm text-muted-foreground mt-1">
+    //                       Không có nhân viên SOS khả dụng
+    //                     </p>
+    //                   )}
+    //                 </FormItem>
+    //               )}
+    //             />
+
+    //             <div className="flex gap-3 mt-6">
+    //               <Button
+    //                 type="button"
+    //                 variant="outline"
+    //                 onClick={() => {
+    //                   setIsAssignModalOpen(false);
+    //                   form.reset();
+    //                 }}
+    //                 className="flex-1"
+    //               >
+    //                 Hủy
+    //               </Button>
+    //               <Button
+    //                 type="submit"
+    //                 className="flex-1"
+    //                 disabled={form.formState.isSubmitting}
+    //               >
+    //                 {form.formState.isSubmitting ? (
+    //                   <>
+    //                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+    //                     Đang xử lý...
+    //                   </>
+    //                 ) : (
+    //                   "Phân công"
+    //                 )}
+    //               </Button>
+    //             </div>
+    //           </form>
+    //         </Form>
+    //       </div>
+    //     </div>
+    //   )}
+
+    //   {/* Replace Bike Modal */}
+    //   {isReplaceModalOpen && (
+    //     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    //       <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+    //         <div className="flex items-center justify-between mb-4">
+    //           <h2 className="text-xl font-bold text-foreground">Thay xe mới</h2>
+    //           <button
+    //             onClick={() => {
+    //               setIsReplaceModalOpen(false);
+    //               endRentalForm.reset();
+    //             }}
+    //             className="text-gray-500 hover:text-gray-700"
+    //           >
+    //             ✕
+    //           </button>
+    //         </div>
+
+    //         <Form {...endRentalForm}>
+    //           <form
+    //             onSubmit={endRentalForm.handleSubmit(onSubmitReplaceBike)}
+    //             className="space-y-4"
+    //           >
+    //             <FormField
+    //               control={endRentalForm.control}
+    //               name="end_station"
+    //               render={({ field }) => (
+    //                 <FormItem>
+    //                   <FormLabel>Trạm trả xe</FormLabel>
+    //                   <FormControl>
+    //                     <select
+    //                       {...field}
+    //                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
+    //                     >
+    //                       <option value="">Chọn trạm trả xe</option>
+    //                       {stations?.map((station: Station) => (
+    //                         <option key={station._id} value={station._id}>
+    //                           {station.name}
+    //                         </option>
+    //                       ))}
+    //                     </select>
+    //                   </FormControl>
+    //                   <FormMessage />
+    //                 </FormItem>
+    //               )}
+    //             />
+
+    //             <FormField
+    //               control={endRentalForm.control}
+    //               name="reason"
+    //               render={({ field }) => (
+    //                 <FormItem>
+    //                   <FormLabel>Lý do</FormLabel>
+    //                   <FormControl>
+    //                     <Input
+    //                       {...field}
+    //                       placeholder="Nhập lý do kết thúc thuê xe..."
+    //                       className="w-full"
+    //                     />
+    //                   </FormControl>
+    //                   <FormMessage />
+    //                 </FormItem>
+    //               )}
+    //             />
+
+    //             <div className="flex gap-3 mt-6">
+    //               <Button
+    //                 type="button"
+    //                 variant="outline"
+    //                 onClick={() => {
+    //                   setIsReplaceModalOpen(false);
+    //                   endRentalForm.reset();
+    //                 }}
+    //                 className="flex-1"
+    //                 disabled={isReplacingBike}
+    //               >
+    //                 Hủy
+    //               </Button>
+    //               <Button
+    //                 type="submit"
+    //                 className="flex-1"
+    //                 disabled={isReplacingBike}
+    //               >
+    //                 {isReplacingBike ? (
+    //                   <>
+    //                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+    //                     Đang xử lý...
+    //                   </>
+    //                 ) : (
+    //                   "Xác nhận thay xe"
+    //                 )}
+    //               </Button>
+    //             </div>
+    //           </form>
+    //         </Form>
+    //       </div>
+    //     </div>
+    //   )}
+
+    //   {/* Cancel SOS Modal */}
+    //   {isCancelModalOpen && (
+    //     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    //       <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+    //         <div className="flex items-center justify-between mb-4">
+    //           <h2 className="text-xl font-bold text-foreground">
+    //             Hủy yêu cầu SOS
+    //           </h2>
+    //           <button
+    //             onClick={() => {
+    //               setIsCancelModalOpen(false);
+    //               setCancelReason("");
+    //             }}
+    //             className="text-gray-500 hover:text-gray-700"
+    //           >
+    //             ✕
+    //           </button>
+    //         </div>
+
+    //         <div className="space-y-4">
+    //           <div>
+    //             <label className="text-sm font-medium mb-2 block">
+    //               Lý do hủy
+    //             </label>
+    //             <textarea
+    //               value={cancelReason}
+    //               onChange={(e) => setCancelReason(e.target.value)}
+    //               placeholder="Nhập lý do hủy yêu cầu SOS..."
+    //               className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground min-h-24"
+    //             />
+    //           </div>
+
+    //           <div className="flex gap-3">
+    //             <Button
+    //               type="button"
+    //               variant="outline"
+    //               onClick={() => {
+    //                 setIsCancelModalOpen(false);
+    //                 setCancelReason("");
+    //               }}
+    //               className="flex-1"
+    //               disabled={isCancelling}
+    //             >
+    //               Đóng
+    //             </Button>
+    //             <Button
+    //               type="button"
+    //               variant="destructive"
+    //               onClick={handleCancelSOS}
+    //               className="flex-1"
+    //               disabled={isCancelling}
+    //             >
+    //               {isCancelling ? (
+    //                 <>
+    //                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+    //                   Đang hủy...
+    //                 </>
+    //               ) : (
+    //                 "Xác nhận hủy"
+    //               )}
+    //             </Button>
+    //           </div>
+    //         </div>
+    //       </div>
+    //     </div>
+    //   )}
+
+    //   {/* Cancel SOS Modal */}
+    //   {isCancelModalOpen && (
+    //     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    //       <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+    //         <div className="flex items-center justify-between mb-4">
+    //           <h2 className="text-xl font-bold text-foreground">
+    //             Hủy yêu cầu SOS
+    //           </h2>
+    //           <button
+    //             onClick={() => {
+    //               setIsCancelModalOpen(false);
+    //               setCancelReason("");
+    //             }}
+    //             className="text-gray-500 hover:text-gray-700"
+    //           >
+    //             ✕
+    //           </button>
+    //         </div>
+
+    //         <div className="space-y-4">
+    //           <div>
+    //             <label className="text-sm font-medium mb-2 block">
+    //               Lý do hủy
+    //             </label>
+    //             <textarea
+    //               value={cancelReason}
+    //               onChange={(e) => setCancelReason(e.target.value)}
+    //               placeholder="Nhập lý do hủy yêu cầu SOS..."
+    //               className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground min-h-24"
+    //             />
+    //           </div>
+
+    //           <div className="flex gap-3">
+    //             <Button
+    //               type="button"
+    //               variant="outline"
+    //               onClick={() => {
+    //                 setIsCancelModalOpen(false);
+    //                 setCancelReason("");
+    //               }}
+    //               className="flex-1"
+    //               disabled={isCancelling}
+    //             >
+    //               Đóng
+    //             </Button>
+    //             <Button
+    //               type="button"
+    //               variant="destructive"
+    //               onClick={handleCancelSOS}
+    //               className="flex-1"
+    //               disabled={isCancelling}
+    //             >
+    //               {isCancelling ? (
+    //                 <>
+    //                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+    //                   Đang hủy...
+    //                 </>
+    //               ) : (
+    //                 "Xác nhận hủy"
+    //               )}
+    //             </Button>
+    //           </div>
+    //         </div>
+    //       </div>
+    //     </div>
+    //   )}
+    // </div>
     <div>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">
-              Quản lý yêu cầu cứu hộ
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Theo dõi và quản lý các yêu cầu cứu hộ từ người dùng
-            </p>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Bộ lọc</h3>
-            <Button variant="ghost" size="sm" onClick={handleReset}>
-              Xóa bộ lọc
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tìm kiếm</label>
-              <input
-                type="text"
-                placeholder="Mã yêu cầu, mã người dùng, mã xe..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Trạng thái</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value as SOS["status"] | "all");
-                  handleFilterChange();
-                }}
-                className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              >
-                <option value="all">Tất cả</option>
-                <option value="ĐANG CHỜ XỬ LÍ">Đang chờ xử lý</option>
-                <option value="ĐÃ XỬ LÍ">Đã xử lý</option>
-                <option value="KHÔNG XỬ LÍ ĐƯỢC">Không xử lý được</option>
-                <option value="ĐÃ TỪ CHỐI">Đã từ chối</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* SOS Requests Table */}
-        <div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Hiển thị trang {currentPage}
-          </p>
-
-          {sosRequests?.data && sosRequests.data.length === 0 ? (
-            <div className="bg-card border border-border rounded-lg p-8 text-center">
-              <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-foreground font-medium">
-                Không có yêu cầu cứu hộ
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Không tìm thấy yêu cầu cứu hộ nào phù hợp với bộ lọc
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="bg-card border border-border rounded-lg overflow-hidden">
-                <DataTable
-                  title="Danh sách đơn cứu hộ"
-                  columns={sosColumns({
-                    onView: (sos: SOS) => {
-                      setSelectedSOSId(sos._id);
-                      setIsDetailModalOpen(true);
-                    },
-                  })}
-                  data={sosRequests?.data || []}
-                />
-              </div>
-
-              <div className="pt-3">
-                <PaginationDemo
-                  currentPage={currentPage}
-                  totalPages={sosRequests?.pagination.totalPages || 1}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Detail SOS Modal */}
-      {isDetailModalOpen && sosDetail?.result && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">
-                Chi tiết yêu cầu cứu hộ
-              </h2>
-              <button
-                onClick={() => {
-                  setIsDetailModalOpen(false);
-                  setSelectedSOSId("");
-                  setDetailTab("info");
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            {!sosDetail?.result ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="animate-spin w-8 h-8 text-primary" />
-              </div>
-            ) : (
-              <>
-                {/* Tabs for different sections */}
-                <div className="flex gap-2 mb-6 border-b border-border">
-                  <button
-                    onClick={() => setDetailTab("info")}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      detailTab === "info"
-                        ? "text-primary border-b-2 border-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Thông tin
-                  </button>
-                  <button
-                    onClick={() => setDetailTab("details")}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      detailTab === "details"
-                        ? "text-primary border-b-2 border-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Chi tiết vấn đề
-                  </button>
-                  <button
-                    onClick={() => setDetailTab("notes")}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      detailTab === "notes"
-                        ? "text-primary border-b-2 border-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Ghi chú xử lý
-                  </button>
-                </div>
-
-                {/* Tab: Info */}
-                {detailTab === "info" && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Mã yêu cầu cứu hộ
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result._id}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Tên người yêu cầu
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.requester?.fullname || "-"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Email người yêu cầu
-                      </p>
-                      <p className="text-foreground font-medium text-sm">
-                        {sosDetail.result.requester?.email || "-"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Số điện thoại người yêu cầu
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.requester?.phone_number || "-"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">Mã xe đạp</p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.bike?._id || "-"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Chip ID xe đạp
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.bike?.chip_id || "-"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Trạng thái xe đạp
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.bike?.status || "-"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Tên nhân viên SOS
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.sos_agent?.fullname ||
-                          "Chưa được giao"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Email nhân viên SOS
-                      </p>
-                      <p className="text-foreground font-medium text-sm">
-                        {sosDetail.result.sos_agent?.email || "Chưa có"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Số điện thoại nhân viên SOS
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.sos_agent?.phone_number ||
-                          "Chưa được giao"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Trạng thái
-                      </p>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          sosDetail.result.status === "ĐÃ XỬ LÍ"
-                            ? "bg-green-100 text-green-800"
-                            : sosDetail.result.status === "ĐANG CHỜ XỬ LÍ"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
-                            ? "bg-orange-100 text-orange-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {sosDetail.result.status}
-                      </span>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">Ngày tạo</p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.created_at
-                          ? formatDateUTC(sosDetail.result.created_at)
-                          : "Chưa có"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Lần cập nhật cuối
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.updated_at
-                          ? formatDateUTC(sosDetail.result.updated_at)
-                          : "Chưa có"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Thời gian xử lý
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.resolved_at &&
-                        sosDetail.result.resolved_at !== null
-                          ? formatDateUTC(sosDetail.result.resolved_at)
-                          : "Chưa xử lý"}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tab: Details */}
-                {detailTab === "details" && (
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Mô tả vấn đề
-                      </p>
-                      <p className="text-foreground bg-muted rounded-lg p-3 whitespace-pre-wrap">
-                        {sosDetail.result.issue}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Kinh độ
-                        </p>
-                        <p className="text-foreground font-medium">
-                          {sosDetail.result.location?.coordinates?.[0] || "-"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Vĩ độ
-                        </p>
-                        <p className="text-foreground font-medium">
-                          {sosDetail.result.location?.coordinates?.[1] || "-"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Loại vị trí
-                      </p>
-                      <p className="text-foreground font-medium">
-                        {sosDetail.result.location?.type || "-"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Hình ảnh đính kèm
-                      </p>
-                      {sosDetail.result.photos &&
-                      sosDetail.result.photos.length > 0 ? (
-                        <div className="space-y-2">
-                          <p className="text-sm text-foreground">
-                            Tổng cộng: {sosDetail.result.photos.length} hình ảnh
-                          </p>
-                          <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-                            {sosDetail.result.photos.map((photo, idx) => (
-                              <div
-                                key={idx}
-                                className="relative aspect-video rounded-lg overflow-hidden border border-border bg-muted group"
-                              >
-                                <Image
-                                  src={photo}
-                                  alt={`SOS photo ${idx + 1}`}
-                                  fill
-                                  className="object-cover transition-transform group-hover:scale-105"
-                                  loading="lazy"
-                                />
-                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs px-2 py-1">
-                                  Ảnh #{idx + 1}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground bg-muted rounded-lg p-3">
-                          Không có hình ảnh đính kèm
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Tab: Notes */}
-                {detailTab === "notes" && (
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Ghi chú xử lý
-                      </p>
-                      <p className="text-foreground bg-muted rounded-lg p-3 whitespace-pre-wrap min-h-24">
-                        {sosDetail.result.agent_notes || "Chưa có ghi chú"}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Nhân viên SOS
-                        </p>
-                        <p className="text-foreground font-medium">
-                          {sosDetail.result.sos_agent?.fullname ||
-                            "Chưa được giao"}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {sosDetail.result.sos_agent?.email || "Chưa có"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Nhân viên xử lý
-                        </p>
-                        <p className="text-foreground font-medium">
-                          {sosDetail.result.staff_id ? "Đã gán" : "Chưa gán"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Ngày tạo
-                        </p>
-                        <p className="text-foreground font-medium text-sm">
-                          {sosDetail.result.created_at
-                            ? formatDateUTC(sosDetail.result.created_at)
-                            : "Chưa có"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Cập nhật cuối
-                        </p>
-                        <p className="text-foreground font-medium text-sm">
-                          {sosDetail.result.updated_at
-                            ? formatDateUTC(sosDetail.result.updated_at)
-                            : "Chưa có"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Thời gian xử lý
-                        </p>
-                        <p className="text-foreground font-medium text-sm">
-                          {sosDetail.result.resolved_at &&
-                          sosDetail.result.resolved_at !== null
-                            ? formatDateUTC(sosDetail.result.resolved_at)
-                            : "Chưa xử lý"}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Trạng thái hiện tại
-                        </p>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium inline-block ${
-                            sosDetail.result.status === "ĐÃ XỬ LÍ"
-                              ? "bg-green-100 text-green-800"
-                              : sosDetail.result.status === "ĐANG CHỜ XỬ LÍ"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC"
-                              ? "bg-orange-100 text-orange-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {sosDetail.result.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="flex gap-3 mt-6">
-              <Button
-                onClick={() => {
-                  setIsDetailModalOpen(false);
-                  setSelectedSOSId("");
-                  setDetailTab("info");
-                }}
-                className="flex-1"
-                variant="outline"
-              >
-                Đóng
-              </Button>
-              {sosDetail.result.status === "ĐANG CHỜ XỬ LÍ" && (
-                <>
-                  <Button
-                    className="flex-1"
-                    onClick={() => {
-                      setIsAssignModalOpen(true);
-                    }}
-                  >
-                    Phân công xử lý
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    variant="destructive"
-                    onClick={() => {
-                      setIsCancelModalOpen(true);
-                    }}
-                  >
-                    Hủy yêu cầu
-                  </Button>
-                </>
-              )}
-              {(sosDetail.result.status === "KHÔNG XỬ LÍ ĐƯỢC" ||
-                sosDetail.result.status.includes("KHÔNG XỬ LÍ")) && (
-                <Button
-                  className="flex-1"
-                  onClick={() => {
-                    console.log("Status:", sosDetail.result.status);
-                    console.log("Rental:", sosDetail.result.rental);
-                    const rentalId = sosDetail.result.rental?._id;
-                    if (!rentalId) {
-                      alert("Không tìm thấy thông tin thuê xe");
-                      return;
-                    }
-                    setSelectedRentalId(rentalId);
-                    setIsReplaceModalOpen(true);
-                    // Pre-fill form with rental station info
-                    const startStation = sosDetail.result.rental?.start_station;
-                    if (startStation) {
-                      endRentalForm.setValue("end_station", startStation);
-                    }
-                    endRentalForm.setValue(
-                      "reason",
-                      "Không xử lý được - Thay xe mới"
-                    );
-                  }}
-                >
-                  Thay xe
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Assign SOS Modal */}
-      {isAssignModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">
-                Phân công xử lý SOS
-              </h2>
-              <button
-                onClick={() => {
-                  setIsAssignModalOpen(false);
-                  form.reset();
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmitAssign)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="replaced_bike_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Xe thay thế</FormLabel>
-                      <FormControl>
-                        <select
-                          {...field}
-                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground truncate"
-                        >
-                          <option value="">Chọn xe thay thế</option>
-                          {responseNearestAvailableBike?.data?.result ? (
-                            <option
-                              value={
-                                (
-                                  responseNearestAvailableBike.data.result as {
-                                    bike_id: string;
-                                    chip_id: string;
-                                    station_name: string;
-                                  }
-                                ).bike_id
-                              }
-                              className="truncate"
-                            >
-                              {
-                                (
-                                  responseNearestAvailableBike.data.result as {
-                                    bike_id: string;
-                                    chip_id: string;
-                                    station_name: string;
-                                  }
-                                ).chip_id
-                              }
-                              km
-                            </option>
-                          ) : null}
-                        </select>
-                      </FormControl>
-                      {responseNearestAvailableBike?.data?.result && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Trạm:{" "}
-                          {
-                            (
-                              responseNearestAvailableBike.data.result as {
-                                bike_id: string;
-                                chip_id: string;
-                                station_name: string;
-                              }
-                            ).station_name
-                          }
-                        </p>
-                      )}
-                      <FormMessage />
-                      {!responseNearestAvailableBike?.data?.result && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Không tìm thấy xe khả dụng gần đó
-                        </p>
-                      )}
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sos_agent_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nhân viên SOS</FormLabel>
-                      <FormControl>
-                        <select
-                          {...field}
-                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                        >
-                          <option value="">Chọn nhân viên SOS</option>
-                          {sosAgents?.map((agent) => (
-                            <option key={agent._id} value={agent._id}>
-                              {agent.fullname} - {agent.email}
-                            </option>
-                          ))}
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                      {sosAgents && sosAgents.length === 0 && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Không có nhân viên SOS khả dụng
-                        </p>
-                      )}
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex gap-3 mt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsAssignModalOpen(false);
-                      form.reset();
-                    }}
-                    className="flex-1"
-                  >
-                    Hủy
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1"
-                    disabled={form.formState.isSubmitting}
-                  >
-                    {form.formState.isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Đang xử lý...
-                      </>
-                    ) : (
-                      "Phân công"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-        </div>
-      )}
-
-      {/* Replace Bike Modal */}
-      {isReplaceModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">Thay xe mới</h2>
-              <button
-                onClick={() => {
-                  setIsReplaceModalOpen(false);
-                  endRentalForm.reset();
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            <Form {...endRentalForm}>
-              <form
-                onSubmit={endRentalForm.handleSubmit(onSubmitReplaceBike)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={endRentalForm.control}
-                  name="end_station"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Trạm trả xe</FormLabel>
-                      <FormControl>
-                        <select
-                          {...field}
-                          className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-                        >
-                          <option value="">Chọn trạm trả xe</option>
-                          {stations?.map((station: Station) => (
-                            <option key={station._id} value={station._id}>
-                              {station.name}
-                            </option>
-                          ))}
-                        </select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={endRentalForm.control}
-                  name="reason"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Lý do</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="Nhập lý do kết thúc thuê xe..."
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex gap-3 mt-6">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsReplaceModalOpen(false);
-                      endRentalForm.reset();
-                    }}
-                    className="flex-1"
-                    disabled={isReplacingBike}
-                  >
-                    Hủy
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="flex-1"
-                    disabled={isReplacingBike}
-                  >
-                    {isReplacingBike ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Đang xử lý...
-                      </>
-                    ) : (
-                      "Xác nhận thay xe"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-        </div>
-      )}
-
-      {/* Cancel SOS Modal */}
-      {isCancelModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">
-                Hủy yêu cầu SOS
-              </h2>
-              <button
-                onClick={() => {
-                  setIsCancelModalOpen(false);
-                  setCancelReason("");
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Lý do hủy
-                </label>
-                <textarea
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="Nhập lý do hủy yêu cầu SOS..."
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground min-h-24"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsCancelModalOpen(false);
-                    setCancelReason("");
-                  }}
-                  className="flex-1"
-                  disabled={isCancelling}
-                >
-                  Đóng
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleCancelSOS}
-                  className="flex-1"
-                  disabled={isCancelling}
-                >
-                  {isCancelling ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang hủy...
-                    </>
-                  ) : (
-                    "Xác nhận hủy"
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cancel SOS Modal */}
-      {isCancelModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">
-                Hủy yêu cầu SOS
-              </h2>
-              <button
-                onClick={() => {
-                  setIsCancelModalOpen(false);
-                  setCancelReason("");
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Lý do hủy
-                </label>
-                <textarea
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="Nhập lý do hủy yêu cầu SOS..."
-                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground min-h-24"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsCancelModalOpen(false);
-                    setCancelReason("");
-                  }}
-                  className="flex-1"
-                  disabled={isCancelling}
-                >
-                  Đóng
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleCancelSOS}
-                  className="flex-1"
-                  disabled={isCancelling}
-                >
-                  {isCancelling ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Đang hủy...
-                    </>
-                  ) : (
-                    "Xác nhận hủy"
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }

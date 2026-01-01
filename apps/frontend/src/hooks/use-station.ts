@@ -11,37 +11,10 @@ import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQu
 import { useGetStationStatsReservationQuery } from "./query/Station/useGetStationStatsReservation";
 import { useGetStationBikeRevenue } from "./query/Station/useGetStationBikeRevenue";
 import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
+import { useUpdateStatusStationMutation } from "./mutations/Station/useUpdateStatusStationMutation";
 import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
 import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
-interface ErrorWithMessage {
-  message: string;
-}
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-
-  return defaultMessage;
-};
-interface StationActionProps {
+import { getErrorMessage } from "@/utils/message";interface StationActionProps {
   hasToken?: boolean;
   stationId?: string;
   page?: number;
@@ -60,7 +33,7 @@ export const useStationActions = ({
   name
 }: StationActionProps) => {
   const queryClient = useQueryClient();
-  const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
+  // const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
   const router = useRouter();
   const {
     refetch,
@@ -75,12 +48,35 @@ export const useStationActions = ({
   const useCreateStation = useCreateSupplierMutation();
   const useSoftDeleteStation = useSoftDeleteStationMutation();
   const useUpdateStation = useUpdateStationMutation(stationId || "");
-  const getReservationStats = useCallback(() => {
+  const useUpdateStatusStation = useUpdateStatusStationMutation();
+  const updateStatusStation = useCallback(() => {
     if (!hasToken || !stationId) {
       return;
     }
-    refetchStationReservationStats();
-  }, [refetchStationReservationStats, hasToken, stationId]);
+    useUpdateStatusStation.mutate({id: stationId} , {
+      onSuccess: (result) => {
+        if (result.status === HTTP_STATUS.OK) {
+          toast.success(result.data?.data?.UpdateStationStatus.message || MESSAGE.UPDATE_STATION_STATUS_SUCCESS);
+          queryClient.invalidateQueries({
+            queryKey: ["stations", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: QUERY_KEYS.STATION.DETAIL(stationId),
+          });
+        }
+      },
+      onError: (error) => {
+        const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_STATION_STATUS_FAILED);
+        toast.error(errorMessage);
+      },  
+    });
+  }, [hasToken, stationId, useUpdateStatusStation]);  
+  // const getReservationStats = useCallback(() => {
+  //   if (!hasToken || !stationId) {
+  //     return;
+  //   }
+  //   refetchStationReservationStats();
+  // }, [refetchStationReservationStats, hasToken, stationId]);
   const getAllStations = useCallback(() => {
     if (!hasToken) {
       return;
@@ -92,7 +88,7 @@ export const useStationActions = ({
       return;
     }
     fetchingStationID();
-  }, [fetchingStationID, hasToken]);
+  }, [fetchingStationID, hasToken , stationId]);
   const createStation = useCallback(
     async (data: StationSchemaFormData) => {
       if (!hasToken) {
@@ -102,14 +98,10 @@ export const useStationActions = ({
       useCreateStation.mutate(data, {
         onSuccess: (result) => {
           if (result.status === HTTP_STATUS.OK) {
-            toast.success(result.data?.message || MESSAGE.CREATE_STATION_SUCCESS);
+            toast.success(result.data?.data?.CreateStation.message || MESSAGE.CREATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(),
+              queryKey: ["stations", "all"],
             });
-          } else {
-            const errorMessage =
-              result.data?.message || MESSAGE.CREATE_STATION_FAILED;
-            toast.error(errorMessage);
           }
         },
         onError: (error) => {
@@ -128,10 +120,10 @@ export const useStationActions = ({
       }
       useSoftDeleteStation.mutate(stationId, {
         onSuccess: (result) => {
-          if (result.status === 200) {
+          if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.message || MESSAGE.DELETE_STATION_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(),
+              queryKey: ["stations", "all"],
             });
           } else {
             const errorMessage =
@@ -142,8 +134,7 @@ export const useStationActions = ({
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            MESSAGE.DELETE_STATION_FAILED
-          );
+            MESSAGE.DELETE_STATION_FAILED);
           toast.error(errorMessage);
         },
       });
@@ -158,15 +149,14 @@ export const useStationActions = ({
       }
       useUpdateStation.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || MESSAGE.UPDATE_STATION_SUCCESS);
+          if (result.status === HTTP_STATUS.OK) {
+            toast.success(result.data?.data?.UpdateStation.message || MESSAGE.UPDATE_STATION_SUCCESS);
             queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(),
+              queryKey: ["stations", "all"],
             });
-          } else {
-            const errorMessage =
-              result.data?.message || MESSAGE.UPDATE_STATION_FAILED;
-            toast.error(errorMessage);
+            queryClient.invalidateQueries({
+              queryKey: QUERY_KEYS.STATION.DETAIL(stationId || ""),
+            });
           }
         },
         onError: (error) => {
@@ -177,30 +167,30 @@ export const useStationActions = ({
     },
     [hasToken, router, queryClient, useUpdateStation , page, limit, name]
   );
-  const { data: responseStationBikeRevenue, refetch: refetchStationBikeRevenue } = useGetStationBikeRevenue();
-  const getStationBikeRevenue = useCallback(() => {
-    if (!hasToken) {
-      return;
-    }
-    refetchStationBikeRevenue();
-  }, [refetchStationBikeRevenue, hasToken]);
-  const {data : responseStationRevenue , refetch : refetchStationRevenue } = useGetStationRevenue();
-  const getStationRevenue = useCallback(() => {
-    if (!hasToken) {
-      return;
-    }
-    refetchStationRevenue();
-  }, [refetchStationRevenue, hasToken]);
-  const { data : responseNearestAvailableBike , refetch : refetchNearestAvailableBike} = useGetNearestAvailableBike({
-    latitude: latitude ?? 0,
-    longitude: longitude ?? 0,
-  });
-  const getNearestAvailableBike = useCallback(() => {
-    if (!hasToken) {
-      return;
-    }
-    refetchNearestAvailableBike();
-  }, [refetchNearestAvailableBike, hasToken]);
+  // const { data: responseStationBikeRevenue, refetch: refetchStationBikeRevenue } = useGetStationBikeRevenue();
+  // const getStationBikeRevenue = useCallback(() => {
+  //   if (!hasToken) {
+  //     return;
+  //   }
+  //   refetchStationBikeRevenue();
+  // }, [refetchStationBikeRevenue, hasToken]);
+  // const {data : responseStationRevenue , refetch : refetchStationRevenue } = useGetStationRevenue();
+  // const getStationRevenue = useCallback(() => {
+  //   if (!hasToken) {
+  //     return;
+  //   }
+  //   refetchStationRevenue();
+  // }, [refetchStationRevenue, hasToken]);
+  // const { data : responseNearestAvailableBike , refetch : refetchNearestAvailableBike} = useGetNearestAvailableBike({
+  //   latitude: latitude ?? 0,
+  //   longitude: longitude ?? 0,
+  // });
+  // const getNearestAvailableBike = useCallback(() => {
+  //   if (!hasToken) {
+  //     return;
+  //   }
+  //   refetchNearestAvailableBike();
+  // }, [refetchNearestAvailableBike, hasToken]);
   return {
     getAllStations,
     getStationByID,
@@ -209,19 +199,20 @@ export const useStationActions = ({
     useGetAllStation,
     deleteStation,
     updateStation,
-    stations: response?.data || [],
-    paginationStations: response?.pagination,
+    stations: response?.data?.Stations.data || [],
+    paginationStations: response?.data?.Stations.pagination,
     isLoadingGetAllStations: isLoading,
     fetchingStationID,
-    responseStationDetail,
+    responseStationDetail:responseStationDetail?.data,
     isLoadingGetStationByID: isLoadingStationID,
-    responseStationReservationStats,
-    getReservationStats,
-    responseStationBikeRevenue,
-    getStationBikeRevenue,
-    responseStationRevenue,
-    getStationRevenue,
-    responseNearestAvailableBike,
-    getNearestAvailableBike,
+    // responseStationReservationStats,
+    // getReservationStats,
+    // responseStationBikeRevenue,
+    // getStationBikeRevenue,
+    // responseStationRevenue,
+    // getStationRevenue,
+    // responseNearestAvailableBike,
+    // getNearestAvailableBike,
+    updateStatusStation,
   };
 };
