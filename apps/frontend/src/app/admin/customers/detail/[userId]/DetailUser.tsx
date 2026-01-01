@@ -97,7 +97,7 @@ export default function DetailUser({user}: UserDetailProps) {
                   <Shield className="h-3 w-3 mr-1" />
                   {role.label}
                 </Badge>
-                <Badge variant={status.variant}>{status.label}</Badge>
+                <Badge >{status.label}</Badge>
               </div>
 
               {user.verify === "verified" && (

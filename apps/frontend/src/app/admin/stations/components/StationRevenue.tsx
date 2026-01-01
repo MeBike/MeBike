@@ -1,9 +1,10 @@
 import { formatToVNTime } from "@/lib/formateVNDate";
 import { StationStatistic } from "@/types/Station";
 import { StationStatisticsResponse } from "@/types/Station";
+import { Station } from "@/types/station.type";
 interface StationRevenueProps {
   responseStationRevenue: StationStatisticsResponse;
-  station: any;
+  station: Station;
 }
 export default function StationRevenue({ responseStationRevenue, station }: StationRevenueProps) {
   return (

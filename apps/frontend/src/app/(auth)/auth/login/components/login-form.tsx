@@ -71,6 +71,7 @@ export function LoginForm({
       </div>
       <div className="text-right mt-2">
         <Button
+          type="button"
           variant="link"
           onClick={() => router.push("/auth/forgot-password")}
         >

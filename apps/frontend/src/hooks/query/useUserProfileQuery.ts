@@ -14,9 +14,13 @@ export const fetchUserProfile = async (): Promise<Me> => {
 };
 export function useUserProfileQuery(isAuthenticated: boolean) {
     return useQuery<Me, AxiosError>({
-        queryKey: QUERY_KEYS.AUTH.USER_PROFILE_QUERY_KEY,
-        queryFn: fetchUserProfile,
-        enabled: isAuthenticated,
-        staleTime : 0,
+      queryKey: QUERY_KEYS.AUTH.USER_PROFILE_QUERY_KEY,
+      queryFn: fetchUserProfile,
+      enabled: isAuthenticated,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: false,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: true, // Don't retry failed requests
     });
 } 

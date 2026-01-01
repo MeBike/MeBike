@@ -5,9 +5,9 @@ export default function LoginFooter() {
     return (
       <div className="space-y-2 text-center">
         <p className="text-sm text-muted-foreground">
-          Don't have an account?{" "}
+          Don&apos;t have an account?
           <Button variant="link" onClick={() => router.push("/auth/register")}>
-            Sign Up 
+            Sign Up
           </Button>
         </p>
         <Button variant="link" onClick={() => router.push("/")}>

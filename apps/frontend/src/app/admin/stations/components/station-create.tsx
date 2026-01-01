@@ -17,7 +17,7 @@ interface CreateStationPageProps {
 export default function CreateStationPage({ onCreate }: CreateStationPageProps) {
   const router = useRouter();
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<tt.Map | null >(null);
   const markerRef = useRef<tt.Marker | null>(null);
 
   const {
@@ -49,7 +49,7 @@ export default function CreateStationPage({ onCreate }: CreateStationPageProps) 
 
     mapInstanceRef.current.addControl(new tt.NavigationControl());
 
-    mapInstanceRef.current.on("click", (e: any) => {
+    mapInstanceRef.current.on("click", (e: tt.MapMouseEvent<"click">) => {
       const { lat, lng } = e.lngLat;
       setValue("latitude", lat.toString());
       setValue("longitude", lng.toString());
@@ -59,7 +59,7 @@ export default function CreateStationPage({ onCreate }: CreateStationPageProps) 
       } else {
         markerRef.current = new tt.Marker()
           .setLngLat([lng, lat])
-          .addTo(mapInstanceRef.current);
+          .addTo(mapInstanceRef.current!);
       }
     });
 
