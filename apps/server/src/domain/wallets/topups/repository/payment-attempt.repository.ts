@@ -3,7 +3,7 @@ import { Context, Effect, Layer, Option } from "effect";
 import type { PaymentProvider, PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
-import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+import { getPrismaUniqueViolationTarget, isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 import type { CreatePaymentAttemptInput, PaymentAttemptRow } from "../models";
 
@@ -102,9 +102,7 @@ export function makePaymentAttemptRepository(client: PrismaClient): PaymentAttem
           if (isPrismaUniqueViolation(err)) {
             return new PaymentAttemptUniqueViolation({
               operation: "create",
-              constraint: typeof err.meta?.target === "string" || Array.isArray(err.meta?.target)
-                ? err.meta?.target
-                : undefined,
+              constraint: getPrismaUniqueViolationTarget(err),
               cause: err,
             });
           }
@@ -161,9 +159,7 @@ export function makePaymentAttemptRepository(client: PrismaClient): PaymentAttem
           if (isPrismaUniqueViolation(err)) {
             return new PaymentAttemptUniqueViolation({
               operation: "setProviderRef",
-              constraint: typeof err.meta?.target === "string" || Array.isArray(err.meta?.target)
-                ? err.meta?.target
-                : undefined,
+              constraint: getPrismaUniqueViolationTarget(err),
               cause: err,
             });
           }
