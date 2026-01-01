@@ -17,6 +17,7 @@ import { registerAuthRoutes } from "./routes/auth";
 import { registerBikeRoutes } from "./routes/bikes";
 import { registerRatingRoutes } from "./routes/ratings";
 import { registerRentalRoutes } from "./routes/rentals";
+import { registerReservationRoutes } from "./routes/reservations";
 import { registerStationRoutes } from "./routes/stations";
 import { registerStripeWebhookRoutes } from "./routes/stripe-webhook.routes";
 import { registerSubscriptionRoutes } from "./routes/subscriptions";
@@ -64,6 +65,8 @@ export function createHttpApp() {
   app.use("/v1/ratings/*", requireAuthMiddleware);
   app.use("/v1/wallets/*", requireAuthMiddleware);
   app.use("/v1/subscriptions/*", requireAuthMiddleware);
+  app.use("/v1/reservations", requireAuthMiddleware);
+  app.use("/v1/reservations/*", requireAuthMiddleware);
   app.use("/v1/suppliers", requireAdminMiddleware);
   app.use("/v1/suppliers/*", requireAdminMiddleware);
   app.use("/v1/users/manage-users/*", requireAdminOrStaffMiddleware);
@@ -83,6 +86,7 @@ export function createHttpApp() {
   registerStationRoutes(app);
   registerBikeRoutes(app);
   registerRentalRoutes(app);
+  registerReservationRoutes(app);
   registerSupplierRoutes(app);
   registerAuthRoutes(app);
   registerStripeWebhookRoutes(app);

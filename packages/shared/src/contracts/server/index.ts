@@ -5,6 +5,8 @@ export * from "./jobs";
 export * as RatingsContracts from "./ratings";
 export * as RentalsContracts from "./rentals";
 export * from "./rentals";
+export * as ReservationsContracts from "./reservations";
+export * from "./reservations";
 export * from "./routes";
 export * from "./schemas";
 export * as StationsContracts from "./stations";

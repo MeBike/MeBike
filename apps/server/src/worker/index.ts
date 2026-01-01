@@ -163,7 +163,7 @@ async function main() {
   const expireWorkerId = await boss.work(
     JobTypes.ReservationExpireHold,
     async (jobs) => {
-      await handleReservationExpireHold(jobs[0]);
+      await handleReservationExpireHold(jobs[0], boss);
     },
   );
   WorkerLog.workerRegistered(JobTypes.ReservationExpireHold, expireWorkerId);

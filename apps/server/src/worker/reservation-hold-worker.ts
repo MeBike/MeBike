@@ -18,7 +18,10 @@ import {
   UserRepositoryLive,
 } from "@/domain/users/repository/user.repository";
 import { Prisma, PrismaLive } from "@/infrastructure/prisma";
-import { buildReservationNearExpiryEmail } from "@/lib/email-templates";
+import {
+  buildReservationExpiredEmail,
+  buildReservationNearExpiryEmail,
+} from "@/lib/email-templates";
 import logger from "@/lib/logger";
 
 type ReservationWorkerDeps
@@ -144,6 +147,7 @@ export async function handleReservationNotifyNearExpiry(
 
 export async function handleReservationExpireHold(
   job: Job<unknown> | undefined,
+  boss: PgBoss,
 ): Promise<void> {
   if (!job) {
     logger.warn("Reservation expire worker received empty batch");
@@ -165,6 +169,8 @@ export async function handleReservationExpireHold(
       const reservationRepo = yield* ReservationRepository;
       const bikeRepo = yield* BikeRepository;
       const rentalRepo = yield* RentalRepository;
+      const userRepo = yield* UserRepository;
+      const stationRepo = yield* StationRepository;
       const { client } = yield* Prisma;
       const now = new Date();
 
@@ -213,7 +219,14 @@ export async function handleReservationExpireHold(
               ),
             );
 
-            return { outcome: "EXPIRED" as const };
+            return {
+              outcome: "EXPIRED" as const,
+              reservationId: reservation.id,
+              userId: reservation.userId,
+              stationId: reservation.stationId,
+              bikeId: reservation.bikeId,
+              endTime: reservation.endTime,
+            };
           });
         },
         catch: err => err as unknown,
@@ -221,7 +234,55 @@ export async function handleReservationExpireHold(
         Effect.catchAll(err => Effect.die(err)),
       );
 
-      return outcome;
+      if (outcome.outcome !== "EXPIRED") {
+        return outcome;
+      }
+
+      const userOpt = yield* userRepo.findById(outcome.userId).pipe(
+        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+      );
+      if (Option.isNone(userOpt)) {
+        return { outcome: "SKIPPED" as const, reason: "MISSING_USER" as const };
+      }
+      const user = userOpt.value;
+
+      const stationOpt = yield* stationRepo.getById(outcome.stationId).pipe(
+        Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+      );
+      if (Option.isNone(stationOpt)) {
+        return { outcome: "SKIPPED" as const, reason: "MISSING_STATION" as const };
+      }
+      const station = stationOpt.value;
+
+      const endTimeLabel = outcome.endTime.toLocaleString("vi-VN", {
+        timeZone: "Asia/Ho_Chi_Minh",
+      });
+      const email = buildReservationExpiredEmail({
+        fullName: user.fullname,
+        stationName: station.name,
+        bikeId: outcome.bikeId,
+        endTimeLabel,
+      });
+
+      yield* Effect.tryPromise({
+        try: () =>
+          boss.send(
+            JobTypes.EmailSend,
+            {
+              version: 1,
+              kind: "raw",
+              to: user.email,
+              subject: email.subject,
+              html: email.html,
+            },
+            {
+              singletonKey: `reservation:expired:${outcome.reservationId}`,
+            },
+          ),
+        catch: err => err as unknown,
+      }).pipe(Effect.catchAll(err => Effect.die(err)));
+
+      return { outcome: "EXPIRED_NOTIFIED" as const };
     }),
   );
 

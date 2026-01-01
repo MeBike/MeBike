@@ -44,6 +44,14 @@ type ReservationNearExpiryEmailParams = {
   readonly callBackUrl?: string;
 };
 
+type ReservationExpiredEmailParams = {
+  readonly fullName: string;
+  readonly stationName: string;
+  readonly bikeId: string;
+  readonly endTimeLabel: string;
+  readonly callBackUrl?: string;
+};
+
 const BRAND_NAME = "MeBike";
 const BRAND_COLOR = "#007bff";
 const TEXT_COLOR = "#1f2933";
@@ -336,6 +344,48 @@ export function buildReservationNearExpiryEmail({
     html: renderEmailShell({
       title,
       previewText: `Còn khoảng ${safeMinutes} phút`,
+      bodyHtml: body,
+    }),
+  };
+}
+
+export function buildReservationExpiredEmail({
+  fullName,
+  stationName,
+  bikeId,
+  endTimeLabel,
+  callBackUrl,
+}: ReservationExpiredEmailParams): { subject: string; html: string } {
+  const safeName = escapeHtml(fullName);
+  const safeStation = escapeHtml(stationName);
+  const safeBikeId = escapeHtml(bikeId);
+  const safeEnd = escapeHtml(endTimeLabel);
+  const safeUrl = callBackUrl ? escapeHtml(callBackUrl) : "#";
+  const title = "Phiên đặt trước đã hết hạn";
+
+  const body = `
+    <p style="margin: 0 0 16px; color: ${TEXT_COLOR};">Xin chào ${safeName},</p>
+    <p style="margin: 0 0 20px; color: ${TEXT_COLOR};">
+      Phiên đặt trước xe của bạn đã hết hạn vì bạn chưa kịp mở khóa.
+    </p>
+    <div style="background: #fef3f2; border: 1px solid #fecdca; color: #b42318; padding: 14px; border-radius: 8px; margin-bottom: 20px;">
+      <strong>Xe #${safeBikeId}</strong> • Trạm ${safeStation} • Hạn mở khóa: ${safeEnd}
+    </div>
+    <p style="margin: 0; color: ${TEXT_COLOR};">
+      Nếu bạn vẫn muốn thuê xe, vui lòng đặt trước lại trên ứng dụng.
+    </p>
+    <div style="text-align: center; margin: 24px 0 0;">
+      <a href="${safeUrl}" style="background: ${BRAND_COLOR}; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+        Mở ứng dụng
+      </a>
+    </div>
+  `;
+
+  return {
+    subject: "Phiên đặt trước đã hết hạn",
+    html: renderEmailShell({
+      title,
+      previewText: `Xe #${bikeId} đã được giải phóng`,
       bodyHtml: body,
     }),
   };

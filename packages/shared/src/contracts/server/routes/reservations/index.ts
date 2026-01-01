@@ -1,5 +1,21 @@
-// TODO: Fill with concrete route contracts for reservations.
+import {
+  cancelReservationRoute,
+  confirmReservationRoute,
+  reserveBikeRoute,
+} from "./mutations";
+import {
+  getMyReservationRoute,
+  listMyReservationsRoute,
+} from "./queries";
+
+export * from "../../reservations";
+export * from "./mutations";
+export * from "./queries";
+
 export const reservationsRoutes = {
-  // example placeholder:
-  // reserveBike: { method: "post", path: "/v1/reservations" },
+  reserveBike: reserveBikeRoute,
+  confirmReservation: confirmReservationRoute,
+  cancelReservation: cancelReservationRoute,
+  listMyReservations: listMyReservationsRoute,
+  getMyReservation: getMyReservationRoute,
 } as const;
