@@ -14,6 +14,7 @@ export const HTTP_STATUS = {
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
+
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503,
 };
@@ -54,7 +55,7 @@ export class FetchHttpClient {
           "API Error:",
           error.response?.status,
           error.config?.url,
-          error.response?.data,
+          error.response?.data
         );
         const originalRequest = error.config;
 
@@ -68,8 +69,8 @@ export class FetchHttpClient {
           "/users/change-password",
         ];
 
-        const shouldSkipTokenRefresh = noAuthRetryEndpoints.some(
-          (endpoint) => originalRequest?.url?.includes(endpoint),
+        const shouldSkipTokenRefresh = noAuthRetryEndpoints.some((endpoint) =>
+          originalRequest?.url?.includes(endpoint)
         );
 
         if (
@@ -99,12 +100,10 @@ export class FetchHttpClient {
               originalRequest.headers.Authorization = `Bearer ${newToken}`;
             }
             return this.axiosInstance(originalRequest);
-          }
-          catch (refreshError) {
+          } catch (refreshError) {
             this.processQueue(refreshError, null);
             return Promise.reject(refreshError);
-          }
-          finally {
+          } finally {
             this.isRefreshing = false;
           }
         }
@@ -129,7 +128,7 @@ export class FetchHttpClient {
         // }
 
         return Promise.reject(error);
-      },
+      }
     );
   }
 
@@ -142,7 +141,7 @@ export class FetchHttpClient {
     const response = await axios.post(
       `${this.baseURL}/users/refresh-token`,
       { refresh_token: refreshToken },
-      { headers: { "Content-Type": "application/json" } },
+      { headers: { "Content-Type": "application/json" } }
     );
     console.log("Refresh token response:", response.status, response.data);
     if (response.status !== HTTP_STATUS.OK) {
@@ -160,8 +159,7 @@ export class FetchHttpClient {
     this.failedQueue.forEach(({ resolve, reject }) => {
       if (error) {
         reject(error);
-      }
-      else {
+      } else {
         resolve(token);
       }
     });
@@ -170,7 +168,7 @@ export class FetchHttpClient {
 
   async get<T>(
     url: string,
-    params?: AxiosRequestConfig["params"],
+    params?: AxiosRequestConfig["params"]
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.get(url, {
       params: params ?? {},
@@ -180,7 +178,7 @@ export class FetchHttpClient {
   async post<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown> | undefined,
+    config?: AxiosRequestConfig<unknown> | undefined
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.post(url, data, config);
   }
@@ -189,7 +187,7 @@ export class FetchHttpClient {
   async put<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown> | undefined,
+    config?: AxiosRequestConfig<unknown> | undefined
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.put(url, data, config);
   }
@@ -198,7 +196,7 @@ export class FetchHttpClient {
   async patch<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig<unknown> | undefined,
+    config?: AxiosRequestConfig<unknown> | undefined
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.patch(url, data, config);
   }
@@ -206,7 +204,7 @@ export class FetchHttpClient {
   // axios.delete(url[, config])
   async delete<T>(
     url: string,
-    params?: AxiosRequestConfig["params"],
+    params?: AxiosRequestConfig["params"]
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.delete(url, {
       params,
@@ -216,7 +214,9 @@ export class FetchHttpClient {
 
 function getBaseUrl() {
   if (process.env.EXPO_PUBLIC_API_BASE_URL) {
-    console.log(`Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`);
+    console.log(
+      `Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`
+    );
     return process.env.EXPO_PUBLIC_API_BASE_URL;
   }
 
@@ -224,8 +224,7 @@ function getBaseUrl() {
     const androidUrl = "http://10.0.2.2:4000";
     console.log(`Development on Android, using: ${androidUrl}`);
     return androidUrl;
-  }
-  else {
+  } else {
     const iosUrl = "http://localhost:4000";
     console.log(`Development on iOS/Web, using: ${iosUrl}`);
     return iosUrl;

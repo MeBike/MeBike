@@ -12,8 +12,8 @@ interface ProfileProps {
     user: Me;
     handleAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     formData: Me | null;
-    handleInputChange: (field: string, value: string) => void;
-    handleUserAccountChange: (field: string, value: string) => void;
+    handleInputChange: (field: keyof Me, value: string) => void;
+    handleUserAccountChange: (field: keyof Me["userAccount"], value: string) => void;
     setIsVerifyEmailModalOpen: (isOpen: boolean) => void;
     handleResendVerifyEmail: () => void;
 }

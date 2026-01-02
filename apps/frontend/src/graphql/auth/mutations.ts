@@ -123,4 +123,23 @@ export const RESET_PASSWORD = gql`
     }
   }
 `;
-
+export const VERIFY_EMAIL = gql`
+  mutation VerifyEmail {
+    VerifyEmail {
+      success
+      message
+      errors
+      statusCode
+    }
+  }
+`;
+export const VERIFY_EMAIL_PROCESS = gql`
+  mutation VerifyEmailProcess($otp: String!) {
+    VerifyEmailProcess(otp: $otp) {
+      success
+      message
+      errors
+      statusCode
+    }
+  }
+`;

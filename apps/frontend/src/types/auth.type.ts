@@ -20,3 +20,5 @@ export type ChangeStatusUserResponse = GraphQLMutationResponse<"ChangeUserStatus
 export type ForgotPasswordRequestResponse = GraphQLMutationResponse<"ResetPasswordRequest">;
 export type ResetPasswordResponse = GraphQLMutationResponse<"ResetPassword">;
 export type VerifyForgotPasswordTokenResponse = GraphQLMutationResponse<"VerifyOTP", { resetToken: string }>;
+export type VerifyEmailResponse = GraphQLMutationResponse<"VerifyEmail">;
+export type VerifyEmailProcessResponse = GraphQLMutationResponse<"VerifyEmailProcess">
