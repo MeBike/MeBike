@@ -10,6 +10,7 @@ import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 
 import { BikeRepositoryError } from "../domain-errors";
 
+// TODO: If create/update chipId is added, handle Bike_chip_id_key unique violation → DuplicateBikeChipId
 export type BikeRepo = {
   getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
   getByIdInTx: (

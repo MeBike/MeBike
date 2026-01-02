@@ -19,6 +19,7 @@ import type {
 
 import { StationRepositoryError } from "../errors";
 
+// TODO: If create/update name is added, handle Station_name_key unique violation → DuplicateStationName
 export type StationRepo = {
   listWithOffset: (
     filter: StationFilter,

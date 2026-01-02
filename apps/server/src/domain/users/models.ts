@@ -12,6 +12,8 @@ export type UserRow = {
   readonly role: UserRole;
   readonly verify: UserVerifyStatus;
   readonly nfcCardUid: string | null;
+  readonly stripeConnectedAccountId: string | null;
+  readonly stripePayoutsEnabled: boolean | null;
   readonly updatedAt: Date;
 };
 

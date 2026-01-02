@@ -146,6 +146,7 @@ export function makeSupplierRepository(client: PrismaClient): SupplierRepo {
             },
             select,
           }),
+        // TODO: Refactor to use isPrismaUniqueViolation helper for consistency
         catch: (err: any) => {
           if (
             err instanceof PrismaTypes.PrismaClientKnownRequestError
@@ -184,6 +185,7 @@ export function makeSupplierRepository(client: PrismaClient): SupplierRepo {
               },
               select,
             }),
+          // TODO: Refactor to use isPrismaUniqueViolation helper for consistency
           catch: (err: any) => {
             if (
               err instanceof PrismaTypes.PrismaClientKnownRequestError

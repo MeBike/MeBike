@@ -3,7 +3,7 @@ import { Effect, Layer, Option } from "effect";
 import type { PrismaClient, Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
-import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
+import { isPrismaRecordNotFound, isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { UserRole, UserVerifyStatus } from "generated/prisma/client";
 
 import type { PageRequest, PageResult } from "../../shared/pagination";
@@ -75,6 +75,25 @@ export type UserRepo = {
   readonly markVerified: (
     id: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  readonly findByStripeConnectedAccountId: (
+    accountId: string,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  readonly setStripeConnectedAccountId: (
+    id: string,
+    accountId: string,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  readonly setStripeConnectedAccountIdIfNull: (
+    id: string,
+    accountId: string,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  readonly setStripePayoutsEnabled: (
+    id: string,
+    enabled: boolean,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  readonly setStripePayoutsEnabledByAccountId: (
+    accountId: string,
+    enabled: boolean,
+  ) => Effect.Effect<boolean, UserRepositoryError>;
   readonly listWithOffset: (
     filter: UserFilter,
     pageReq: PageRequest<UserSortField>,
@@ -444,6 +463,124 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
         });
 
         return Option.some(toUserRow(updated));
+      }),
+
+    findByStripeConnectedAccountId: accountId =>
+      Effect.tryPromise({
+        try: () =>
+          client.user.findUnique({
+            where: { stripeConnectedAccountId: accountId },
+            select: selectUserRow,
+          }),
+        catch: err =>
+          new UserRepositoryError({
+            operation: "findByStripeConnectedAccountId",
+            cause: err,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toUserRow)),
+        ),
+      ),
+
+    setStripeConnectedAccountId: (id, accountId) =>
+      Effect.tryPromise({
+        try: () =>
+          client.user.update({
+            where: { id },
+            data: {
+              stripeConnectedAccountId: accountId,
+            },
+            select: selectUserRow,
+          }),
+        catch: err => err as unknown,
+      }).pipe(
+        Effect.catchAll((err) => {
+          if (isPrismaRecordNotFound(err)) {
+            return Effect.succeed(null);
+          }
+          return Effect.fail(new UserRepositoryError({
+            operation: "setStripeConnectedAccountId",
+            cause: err,
+          }));
+        }),
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toUserRow)),
+        ),
+      ),
+
+    setStripeConnectedAccountIdIfNull: (id, accountId) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.user.updateMany({
+            where: {
+              id,
+              stripeConnectedAccountId: null,
+            },
+            data: {
+              stripeConnectedAccountId: accountId,
+            },
+          });
+          if (updated.count === 0)
+            return null;
+          return client.user.findUnique({
+            where: { id },
+            select: selectUserRow,
+          });
+        },
+        catch: err => err as unknown,
+      }).pipe(
+        Effect.catchAll(err =>
+          Effect.fail(new UserRepositoryError({
+            operation: "setStripeConnectedAccountIdIfNull",
+            cause: err,
+          })),
+        ),
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toUserRow)),
+        ),
+      ),
+
+    setStripePayoutsEnabled: (id, enabled) =>
+      Effect.tryPromise({
+        try: () =>
+          client.user.update({
+            where: { id },
+            data: {
+              stripePayoutsEnabled: enabled,
+            },
+            select: selectUserRow,
+          }),
+        catch: err => err as unknown,
+      }).pipe(
+        Effect.catchAll((err) => {
+          if (isPrismaRecordNotFound(err)) {
+            return Effect.succeed(null);
+          }
+          return Effect.fail(new UserRepositoryError({
+            operation: "setStripePayoutsEnabled",
+            cause: err,
+          }));
+        }),
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(toUserRow)),
+        ),
+      ),
+
+    setStripePayoutsEnabledByAccountId: (accountId, enabled) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.user.updateMany({
+            where: { stripeConnectedAccountId: accountId },
+            data: { stripePayoutsEnabled: enabled },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new UserRepositoryError({
+            operation: "setStripePayoutsEnabledByAccountId",
+            cause: err,
+          }),
       }),
 
     listWithOffset: (filter, pageReq) =>
