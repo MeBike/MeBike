@@ -198,13 +198,10 @@ describe("userRepository Integration", () => {
       const firstEmail = `first-${uuidv7()}@example.com`;
       const duplicateEmail = "existing@example.com";
 
-      // Pre-create user with the email that will cause conflict
       await Effect.runPromise(repo.createUser(createUserInput({ email: duplicateEmail })));
 
-      // Attempt transaction that creates one user then fails on second
       try {
         await client.$transaction(async (tx) => {
-          // First user - should succeed within tx
           await Effect.runPromise(repo.createUserInTx(tx, createUserInput({ email: firstEmail })));
 
           // Second user - will fail due to duplicate email, causing tx rollback
@@ -212,6 +209,8 @@ describe("userRepository Integration", () => {
         });
         throw new Error("Transaction should have failed");
       }
+
+      // eslint-disable-next-line unused-imports/no-unused-vars
       catch (error) {
         // Expected - transaction failed
       }
@@ -226,19 +225,17 @@ describe("userRepository Integration", () => {
 
       try {
         await client.$transaction(async (tx) => {
-          // Create user successfully
           await Effect.runPromise(repo.createUserInTx(tx, createUserInput({ email })));
-
-          // Simulate business logic failure after DB write
           throw new Error("Simulated business logic failure");
         });
         throw new Error("Transaction should have failed");
       }
+
+      // eslint-disable-next-line unused-imports/no-unused-vars
       catch (error) {
         // Expected
       }
 
-      // Verify user was NOT persisted (rollback worked)
       const user = await Effect.runPromise(repo.findByEmail(email));
       expect(Option.isNone(user)).toBe(true);
     });
