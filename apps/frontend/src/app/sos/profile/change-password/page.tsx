@@ -100,7 +100,7 @@ export default function ProfilePage() {
   const handleVerifyEmailSubmit = async (email: string, otp: string) => {
     setIsVerifyingEmail(true);
     try {
-      await verifyEmail({email, otp});
+      await verifyEmail({otp});
       setIsVerifyEmailModalOpen(false);
     } finally {
       setIsVerifyingEmail(false);
