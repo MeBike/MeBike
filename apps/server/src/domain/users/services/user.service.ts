@@ -50,6 +50,25 @@ export type UserService = {
   markVerified: (
     id: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  findByStripeConnectedAccountId: (
+    accountId: string,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  setStripeConnectedAccountId: (
+    id: string,
+    accountId: string,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  setStripeConnectedAccountIdIfNull: (
+    id: string,
+    accountId: string,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  setStripePayoutsEnabled: (
+    id: string,
+    enabled: boolean,
+  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  setStripePayoutsEnabledByAccountId: (
+    accountId: string,
+    enabled: boolean,
+  ) => Effect.Effect<boolean, UserRepositoryError>;
   listWithOffset: (
     filter: UserFilter,
     pageReq: PageRequest<UserSortField>,
@@ -81,6 +100,21 @@ function makeUserService(repo: UserRepo): UserService {
 
     markVerified: id =>
       repo.markVerified(id),
+
+    findByStripeConnectedAccountId: accountId =>
+      repo.findByStripeConnectedAccountId(accountId),
+
+    setStripeConnectedAccountId: (id, accountId) =>
+      repo.setStripeConnectedAccountId(id, accountId),
+
+    setStripeConnectedAccountIdIfNull: (id, accountId) =>
+      repo.setStripeConnectedAccountIdIfNull(id, accountId),
+
+    setStripePayoutsEnabled: (id, enabled) =>
+      repo.setStripePayoutsEnabled(id, enabled),
+
+    setStripePayoutsEnabledByAccountId: (accountId, enabled) =>
+      repo.setStripePayoutsEnabledByAccountId(accountId, enabled),
 
     listWithOffset: (filter, pageReq) =>
       repo.listWithOffset(filter, pageReq),
