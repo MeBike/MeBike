@@ -15,6 +15,7 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   LOG_LEVEL: z.string().default("info"),
+  MIN_WITHDRAWAL_AMOUNT: z.coerce.number().default(5000),
   MIN_WALLET_BALANCE_TO_RENT: z.coerce.number().default(2000),
   RESERVATION_HOLD_MINUTES: z.coerce.number().default(30),
   RESERVATION_PREPAID_AMOUNT: z.coerce.number().default(2000),
