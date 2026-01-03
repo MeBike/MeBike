@@ -161,30 +161,25 @@ export const useAuthActions = () => {
     [useLogout, queryClient, router]
   );
   const verifyEmail = useCallback(
-    ({email , otp} : {email: string; otp: string}): Promise<void> => {
+    ({otp} : {otp: string}): Promise<void> => {
       return new Promise((resolve, reject) => {
-        useVerifyEmail.mutate({ email, otp }, {
+        useVerifyEmail.mutate({ otp }, {
           onSuccess: (result) => {
             console.log("verifyEmail onSuccess:", result.status);
             if (result.status === HTTP_STATUS.OK) {
-              const accessToken = result.data.result?.access_token;
-              const refreshToken = result.data.result?.refresh_token;
-              if (!accessToken || !refreshToken) {
-                const errMsg = "Thiếu access hoặc refresh token";
-                toast.error(errMsg);
-                reject(new Error(errMsg));
-                return;
-              }
-              setTokens(accessToken, refreshToken);
-              window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
-              toast.success(result.data?.message || MESSAGE.EMAIL_VERIFY_SUCCESS);
+              // const accessToken = result.data.data?.VerifyOTP.data.?.access_token;
+              // const refreshToken = result.data.result?.refresh_token;
+              // if (!accessToken || !refreshToken) {
+              //   const errMsg = "Thiếu access hoặc refresh token";
+              //   toast.error(errMsg);
+              //   reject(new Error(errMsg));
+              //   return;
+              // }
+              // setTokens(accessToken, refreshToken);
+              // window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
+              toast.success(result.data?.data?.VerifyEmailProcess.message || MESSAGE.EMAIL_VERIFY_SUCCESS);
               queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
               resolve();
-            } else {
-              const errorMessage =
-                result.data?.message || MESSAGE.EMAIL_VERIFY_ERROR;
-              toast.error(errorMessage);
-              reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
@@ -206,13 +201,8 @@ export const useAuthActions = () => {
       useResendVerifyEmail.mutate(undefined, {
         onSuccess: (result) => {
           if (result.status === HTTP_STATUS.OK) {
-            toast.success(result.data?.message || MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS);
+            toast.success(result.data?.data?.VerifyEmail.message || MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS);
             resolve();
-          } else {
-            const errorMessage =
-              result.data?.message || MESSAGE.RESEND_VERIFY_EMAIL_FAILED;
-            toast.error(errorMessage);
-            reject(new Error(errorMessage));
           }
         },
         onError: (error: unknown) => {

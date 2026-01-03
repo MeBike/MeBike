@@ -70,7 +70,7 @@ const RegisterPage = () => {
       // Don't proceed to email verification if registration fails
     }
   };
-  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
+  const handleVerifyEmailSubmit = async (otp: string) => {
     try {
       console.log("Verifying OTP:", otp);
       console.log("Registered email:", registeredEmail);
@@ -79,7 +79,7 @@ const RegisterPage = () => {
           ? localStorage.getItem("access_token")
           : null;
       console.log("Token exists:", !!token);
-      await verifyEmail({ email: registeredEmail, otp });
+      await verifyEmail({ otp });
       console.log("OTP verified successfully!");
     } catch (err) {
       console.log("Verification error (caught):", err);

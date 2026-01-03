@@ -20,6 +20,8 @@ import {
   CREATE_FORGOT_PASSWORD_REQUEST,
   VERIFY_FORGOT_PASSWORD_TOKEN,
   RESET_PASSWORD,
+  VERIFY_EMAIL,
+  VERIFY_EMAIL_PROCESS
 } from "@/graphql";
 import {print} from "graphql"
 import {
@@ -33,6 +35,8 @@ import {
   ForgotPasswordRequestResponse,
   VerifyForgotPasswordTokenResponse,
   ResetPasswordResponse,
+  VerifyEmailProcessResponse,
+  VerifyEmailResponse
 } from "@/types/auth.type";
 interface AuthResponse {
   message: string;
@@ -109,22 +113,22 @@ export const authService = {
     );
     return response;
   },
-  resendVerifyEmail: async (): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>(
-      "/users/resend-verify-email"
+  resendVerifyEmail: async (): Promise<AxiosResponse<VerifyEmailResponse>> => {
+    const response = await fetchHttpClient.mutation<VerifyEmailResponse>(
+      print(VERIFY_EMAIL)
     );
     return response;
   },
   verifyEmail: async ({
-    email,
     otp,
   }: {
-    email: string;
     otp: string;
-  }): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>(
-      "/users/verify-email",
-      { email, otp }
+  }): Promise<AxiosResponse<VerifyEmailProcessResponse>> => {
+    const response = await fetchHttpClient.mutation<VerifyEmailProcessResponse>(
+      print(VERIFY_EMAIL_PROCESS),
+      {
+        "otp" : otp
+      }
     );
     return response;
   },
