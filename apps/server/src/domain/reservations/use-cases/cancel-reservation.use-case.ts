@@ -1,4 +1,4 @@
-import { Effect, Match, Option } from "effect";
+import { Effect, Option } from "effect";
 
 import { env } from "@/config/env";
 import { BikeRepository } from "@/domain/bikes";
@@ -6,6 +6,7 @@ import { RentalRepository } from "@/domain/rentals";
 import { toMinorUnit } from "@/domain/shared/money";
 import { WalletServiceTag } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
+import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import logger from "@/lib/logger";
 
 import type { ReservationServiceFailure } from "../domain-errors";
@@ -35,66 +36,51 @@ export function cancelReservationUseCase(
     const walletService = yield* WalletServiceTag;
     const now = input.now ?? new Date();
 
-    type TxEither = import("effect").Either.Either<ReservationRow, ReservationServiceFailure>;
+    const reservation = yield* runPrismaTransaction(client, tx =>
+      Effect.gen(function* () {
+        const updatedReservation = yield* reservationService.cancelPendingInTx(
+          tx,
+          {
+            reservationId: input.reservationId,
+            userId: input.userId,
+            now,
+          },
+        );
 
-    const txEither = yield* Effect.tryPromise<TxEither, unknown>({
-      try: () =>
-        client.$transaction(async (tx) => {
-          const eff: Effect.Effect<ReservationRow, ReservationServiceFailure, never> = Effect.gen(function* () {
-            const updatedReservation = yield* reservationService.cancelPendingInTx(
-              tx,
-              {
-                reservationId: input.reservationId,
-                userId: input.userId,
-                now,
-              },
+        yield* rentalRepo.cancelReservedRentalInTx(
+          tx,
+          updatedReservation.id,
+          now,
+        ).pipe(Effect.catchTag("RentalRepositoryError", err => Effect.die(err)));
+
+        const bikeId = updatedReservation.bikeId;
+        if (bikeId) {
+          const bikeReleased = yield* bikeRepo.releaseBikeIfReservedInTx(
+            tx,
+            bikeId,
+            now,
+          ).pipe(
+            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+          );
+          if (!bikeReleased) {
+            const bikeOpt = yield* bikeRepo.getByIdInTx(tx, bikeId).pipe(
+              Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
             );
-
-            yield* rentalRepo.cancelReservedRentalInTx(
-              tx,
-              updatedReservation.id,
-              now,
-            ).pipe(Effect.catchTag("RentalRepositoryError", err => Effect.die(err)));
-
-            const bikeId = updatedReservation.bikeId;
-            if (bikeId) {
-              const bikeReleased = yield* bikeRepo.releaseBikeIfReservedInTx(
-                tx,
-                bikeId,
-                now,
-              ).pipe(
-                Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-              );
-              if (!bikeReleased) {
-                const bikeOpt = yield* bikeRepo.getByIdInTx(tx, bikeId).pipe(
-                  Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-                );
-                if (Option.isNone(bikeOpt)) {
-                  return yield* Effect.fail(new BikeNotFound({ bikeId }));
-                }
-                return yield* Effect.fail(new BikeNotAvailable({
-                  bikeId,
-                  status: bikeOpt.value.status,
-                }));
-              }
+            if (Option.isNone(bikeOpt)) {
+              return yield* Effect.fail(new BikeNotFound({ bikeId }));
             }
+            return yield* Effect.fail(new BikeNotAvailable({
+              bikeId,
+              status: bikeOpt.value.status,
+            }));
+          }
+        }
 
-            // TODO(iot): send reservation "cancel" command once IoT integration is ready.
+        // TODO(iot): send reservation "cancel" command once IoT integration is ready.
 
-            return updatedReservation;
-          });
-
-          return Effect.runPromise(eff.pipe(Effect.either)) as Promise<TxEither>;
-        }),
-      catch: err => err as unknown,
-    }).pipe(
-      Effect.catchAll(err => Effect.die(err)),
-    );
-
-    const reservation = yield* Match.value(txEither).pipe(
-      Match.tag("Right", ({ right }) => Effect.succeed(right)),
-      Match.tag("Left", ({ left }) => Effect.fail(left)),
-      Match.exhaustive,
+        return updatedReservation;
+      })).pipe(
+      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
     );
 
     if (isRefundEligible(reservation, now)) {

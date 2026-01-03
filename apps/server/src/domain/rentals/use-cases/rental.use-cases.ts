@@ -1,4 +1,4 @@
-import { Effect, Match, Option } from "effect";
+import { Effect, Option } from "effect";
 
 import type { RentalStatus } from "generated/prisma/enums";
 
@@ -6,6 +6,7 @@ import { env } from "@/config/env";
 import { BikeRepository } from "@/domain/bikes";
 import { WalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
+import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { RentalServiceFailure } from "../domain-errors";
 import type { RentalRow } from "../models";
@@ -41,127 +42,108 @@ export function startRentalUseCase(
     const walletRepo = yield* WalletRepository;
     const { userId, bikeId, startStationId, startTime } = input;
 
-    type TxEither = import("effect").Either.Either<RentalRow, RentalServiceFailure>;
+    const rental = yield* runPrismaTransaction(client, tx =>
+      Effect.gen(function* () {
+        const existingByUser = yield* rentalRepo.findActiveByUserIdInTx(tx, userId).pipe(
+          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isSome(existingByUser)) {
+          return yield* Effect.fail(new ActiveRentalExists({ userId }));
+        }
 
-    const txEither = yield* Effect.tryPromise<TxEither, unknown>({
-      try: () =>
-        client.$transaction(async (tx) => {
-          // TODO(test): Add an integration test that forces a failure after one of the writes in this
-          // transaction (e.g. fail after `createRentalInTx` or `updateStatusInTx`) and assert the
-          // whole transaction rolls back (no rental row persisted, no bike status change).
-          // TODO(observability): Consider mapping transaction-level infra failures (deadlock /
-          // serialization / connection drop) into a dedicated repository/service infra error so we
-          // can log + alert consistently without treating them as domain failures.
-          const eff: Effect.Effect<RentalRow, RentalServiceFailure, never> = Effect.gen(function* () {
-            const existingByUser = yield* rentalRepo.findActiveByUserIdInTx(tx, userId).pipe(
-              Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-            );
-            if (Option.isSome(existingByUser)) {
-              return yield* Effect.fail(new ActiveRentalExists({ userId }));
-            }
+        const existingByBike = yield* rentalRepo.findActiveByBikeIdInTx(tx, bikeId).pipe(
+          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isSome(existingByBike)) {
+          return yield* Effect.fail(new BikeAlreadyRented({ bikeId }));
+        }
 
-            const existingByBike = yield* rentalRepo.findActiveByBikeIdInTx(tx, bikeId).pipe(
-              Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-            );
-            if (Option.isSome(existingByBike)) {
-              return yield* Effect.fail(new BikeAlreadyRented({ bikeId }));
-            }
+        const bikeOpt = yield* bikeRepo.getByIdInTx(tx, bikeId).pipe(
+          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isNone(bikeOpt)) {
+          return yield* Effect.fail(new BikeNotFound({ bikeId }));
+        }
+        const bike = bikeOpt.value;
 
-            const bikeOpt = yield* bikeRepo.getByIdInTx(tx, bikeId).pipe(
-              Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-            );
-            if (Option.isNone(bikeOpt)) {
-              return yield* Effect.fail(new BikeNotFound({ bikeId }));
-            }
-            const bike = bikeOpt.value;
+        if (!bike.stationId) {
+          return yield* Effect.fail(new BikeMissingStation({ bikeId }));
+        }
+        if (bike.stationId !== startStationId) {
+          return yield* Effect.fail(new BikeNotFoundInStation({ bikeId, stationId: startStationId }));
+        }
 
-            if (!bike.stationId) {
-              return yield* Effect.fail(new BikeMissingStation({ bikeId }));
-            }
-            if (bike.stationId !== startStationId) {
-              return yield* Effect.fail(new BikeNotFoundInStation({ bikeId, stationId: startStationId }));
-            }
+        const bikeStatusFailure = startRentalFailureFromBikeStatus({
+          bikeId,
+          status: bike.status,
+        });
+        if (Option.isSome(bikeStatusFailure)) {
+          return yield* Effect.fail(bikeStatusFailure.value);
+        }
 
-            const bikeStatusFailure = startRentalFailureFromBikeStatus({
-              bikeId,
-              status: bike.status,
-            });
-            if (Option.isSome(bikeStatusFailure)) {
-              return yield* Effect.fail(bikeStatusFailure.value);
-            }
+        const walletOpt = yield* walletRepo.findByUserIdInTx(tx, userId).pipe(
+          Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isNone(walletOpt)) {
+          return yield* Effect.fail(new UserWalletNotFound({ userId }));
+        }
+        const wallet = walletOpt.value;
 
-            const walletOpt = yield* walletRepo.findByUserIdInTx(tx, userId).pipe(
-              Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-            );
-            if (Option.isNone(walletOpt)) {
-              return yield* Effect.fail(new UserWalletNotFound({ userId }));
-            }
-            const wallet = walletOpt.value;
+        const currentBalance = Number(wallet.balance.toString());
+        const requiredBalance = env.MIN_WALLET_BALANCE_TO_RENT;
+        if (Number.isNaN(currentBalance) || currentBalance < requiredBalance) {
+          return yield* Effect.fail(new InsufficientBalanceToRent({
+            userId,
+            requiredBalance,
+            currentBalance: Number.isNaN(currentBalance) ? 0 : currentBalance,
+          }));
+        }
 
-            const currentBalance = Number(wallet.balance.toString());
-            const requiredBalance = env.MIN_WALLET_BALANCE_TO_RENT;
-            if (Number.isNaN(currentBalance) || currentBalance < requiredBalance) {
-              return yield* Effect.fail(new InsufficientBalanceToRent({
+        // TODO: Check subscription eligibility / usage rules (depends on subscriptions "useOne")
+        // TODO: Reservation integration (if started from reservation):
+        // - ensure reservation belongs to user and is active
+        // - mark reservation consumed/expired appropriately
+        // - apply reservation prepaid deduction to end-rental pricing
+
+        const rental = yield* rentalRepo.createRentalInTx(tx, {
+          userId,
+          bikeId,
+          startStationId,
+          startTime,
+        }).pipe(
+          Effect.catchTag(
+            "RentalUniqueViolation",
+            ({ constraint }): Effect.Effect<never, RentalServiceFailure> => {
+              const mapped = rentalUniqueViolationToFailure({
+                constraint,
+                bikeId,
                 userId,
-                requiredBalance,
-                currentBalance: Number.isNaN(currentBalance) ? 0 : currentBalance,
-              }));
-            }
+              });
+              if (Option.isSome(mapped)) {
+                return Effect.fail(mapped.value);
+              }
 
-            // TODO: Check subscription eligibility / usage rules (depends on subscriptions "useOne")
-            // TODO: Reservation integration (if started from reservation):
-            // - ensure reservation belongs to user and is active
-            // - mark reservation consumed/expired appropriately
-            // - apply reservation prepaid deduction to end-rental pricing
+              return Effect.die(new Error(
+                `Unhandled rental unique constraint: ${String(constraint)}`,
+              ));
+            },
+          ),
+          Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
+        );
 
-            const rental = yield* rentalRepo.createRentalInTx(tx, {
-              userId,
-              bikeId,
-              startStationId,
-              startTime,
-            }).pipe(
-              Effect.catchTag(
-                "RentalUniqueViolation",
-                ({ constraint }): Effect.Effect<never, RentalServiceFailure> => {
-                  const mapped = rentalUniqueViolationToFailure({
-                    constraint,
-                    bikeId,
-                    userId,
-                  });
-                  if (Option.isSome(mapped)) {
-                    return Effect.fail(mapped.value);
-                  }
+        const updatedBike = yield* bikeRepo.updateStatusInTx(tx, bikeId, "BOOKED", startTime).pipe(
+          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isNone(updatedBike)) {
+          return yield* Effect.fail(new BikeNotFound({ bikeId }));
+        }
 
-                  return Effect.die(new Error(
-                    `Unhandled rental unique constraint: ${String(constraint)}`,
-                  ));
-                },
-              ),
-              Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
-            );
-
-            const updatedBike = yield* bikeRepo.updateStatusInTx(tx, bikeId, "BOOKED", startTime).pipe(
-              Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-            );
-            if (Option.isNone(updatedBike)) {
-              return yield* Effect.fail(new BikeNotFound({ bikeId }));
-            }
-
-            return rental;
-          });
-
-          return Effect.runPromise(eff.pipe(Effect.either)) as Promise<TxEither>;
-        }),
-      catch: err => err as unknown,
-    }).pipe(
-      Effect.catchAll(err => Effect.die(err)),
+        return rental;
+      })).pipe(
+      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
     );
 
-    return yield* Match.value(txEither).pipe(
-      Match.tag("Right", ({ right }) => Effect.succeed(right)),
-      Match.tag("Left", ({ left }) => Effect.fail(left)),
-      Match.exhaustive,
-    );
+    return rental;
   });
 }
 
