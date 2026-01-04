@@ -230,6 +230,12 @@ export default function ProfilePage() {
         handleResendVerifyEmail={handleResendVerifyEmail}
         handleUserAccountChange={handleUserAccountChange}
         setIsVerifyEmailModalOpen={setIsVerifyEmailModalOpen}
+        handleSave={handleSave}
+        isEditing={isEditing}
+        isSaving={isSaving}
+        setIsEditing={setIsEditing}
+        avatarPreview={avatarPreview}
+        handleCancel={handleCancel}
       />
 
       <VerifyEmailModal

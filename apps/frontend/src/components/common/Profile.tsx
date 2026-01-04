@@ -8,20 +8,26 @@ import { Me } from "@/types/GraphQL";
 import { cn } from "@/lib/utils";
 import { Mail, X } from "lucide-react";
 import { Save, Loader2, Camera } from "lucide-react";
+import { Dispatch , SetStateAction } from "react";
 interface ProfileProps {
   user: Me;
   handleAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   formData: Me | null;
   handleInputChange: (field: keyof Me, value: string) => void;
+  avatarPreview: string;
+  handleCancel: () => void; 
   handleUserAccountChange: (
     field: keyof Me["userAccount"],
     value: string
   ) => void;
   setIsVerifyEmailModalOpen: (isOpen: boolean) => void;
   handleResendVerifyEmail: () => void;
+  isEditing: boolean;
+  setIsEditing: Dispatch<SetStateAction<boolean>>; // Thêm mới
+  isSaving: boolean;
+  handleSave: () => Promise<void>;
 }
 import { formatToVNTime } from "@/lib/formateVNDate";
-import { useAuthActions } from "@/hooks/useAuthAction";
 import { useRouter } from "next/navigation";
 export default function Profile({
   user,
@@ -30,16 +36,16 @@ export default function Profile({
   handleUserAccountChange,
   setIsVerifyEmailModalOpen,
   handleResendVerifyEmail,
+  isEditing,        // Nhận từ props
+  setIsEditing,     // Nhận từ props
+  isSaving,         // Nhận từ props
+  handleSave,
   formData,
+  avatarPreview,
+  handleCancel
 }: ProfileProps) {
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? "");
   const router = useRouter();
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
-  const handleCancel = () => {
-    setIsEditing(false);
-  };
   const handleNavigate = () => {
     if (user.role === "ADMIN") {
       router.push("/admin/profile/change-password");
@@ -51,7 +57,6 @@ export default function Profile({
       router.push("/user/profile/change-password");
     }
   };
-  const handleSave = () => {};
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
