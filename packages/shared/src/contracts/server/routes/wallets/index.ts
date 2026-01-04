@@ -1,5 +1,6 @@
 import {
   createStripeTopupSessionRoute,
+  createWalletWithdrawalRoute,
   creditMyWalletRoute,
   debitMyWalletRoute,
 } from "./mutations";
@@ -18,4 +19,5 @@ export const walletsRoutes = {
   creditMyWallet: creditMyWalletRoute,
   debitMyWallet: debitMyWalletRoute,
   createStripeTopupSession: createStripeTopupSessionRoute,
+  createWalletWithdrawal: createWalletWithdrawalRoute,
 } as const;

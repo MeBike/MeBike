@@ -4,6 +4,7 @@ import { ratingsRoutes } from "./ratings";
 import { rentalsRoutes } from "./rentals";
 import { reservationsRoutes } from "./reservations";
 import { stationsRoutes } from "./stations";
+import { stripeRoutes } from "./stripe";
 import { subscriptionsRoutes } from "./subscriptions";
 import { suppliersRoutes } from "./suppliers";
 import { usersRoutes } from "./users";
@@ -15,6 +16,7 @@ export * from "./ratings";
 export * from "./rentals";
 export * from "./reservations";
 export * from "./stations";
+export * from "./stripe";
 export * from "./subscriptions";
 export * from "./suppliers";
 export * from "./users";
@@ -31,6 +33,7 @@ export const serverRoutes = {
   users: usersRoutes,
   ratings: ratingsRoutes,
   wallets: walletsRoutes,
+  stripe: stripeRoutes,
 } as const;
 
 export type ServerRouteKey = keyof typeof serverRoutes;

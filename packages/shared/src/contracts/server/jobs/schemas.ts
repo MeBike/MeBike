@@ -62,6 +62,11 @@ const ReservationExpireHoldPayloadV1Schema = z.object({
   reservationId: z.uuidv7(),
 });
 
+const WalletWithdrawalExecutePayloadV1Schema = z.object({
+  version: z.literal(1),
+  withdrawalId: z.uuidv7(),
+});
+
 /**
  * NOTE(timezone): `slotDate` is a date-only key (YYYY-MM-DD), not an instant timestamp.
  *
@@ -81,6 +86,7 @@ export const JobPayloadSchemas = {
   [JobTypes.ReservationFixedSlotAssign]: ReservationFixedSlotAssignPayloadV1Schema,
   [JobTypes.ReservationNotifyNearExpiry]: ReservationNotifyNearExpiryPayloadV1Schema,
   [JobTypes.ReservationExpireHold]: ReservationExpireHoldPayloadV1Schema,
+  [JobTypes.WalletWithdrawalExecute]: WalletWithdrawalExecutePayloadV1Schema,
 } as const;
 
 export type JobPayload<T extends JobType> = z.infer<(typeof JobPayloadSchemas)[T]>;

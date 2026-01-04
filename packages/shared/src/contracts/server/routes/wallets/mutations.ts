@@ -13,6 +13,8 @@ import {
   WalletErrorCodeSchema,
   walletErrorMessages,
   WalletMutationResponseSchema,
+  WalletWithdrawalRequestSchema,
+  WalletWithdrawalResponseSchema,
 } from "../../wallets/schemas";
 
 export const creditMyWalletRoute = createRoute({
@@ -279,6 +281,138 @@ export const createStripeTopupSessionRoute = createRoute({
               value: {
                 error: walletErrorMessages.TOPUP_PROVIDER_ERROR,
                 details: { code: WalletErrorCodeSchema.enum.TOPUP_PROVIDER_ERROR },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const createWalletWithdrawalRoute = createRoute({
+  method: "post",
+  path: "/v1/wallets/me/withdrawals",
+  tags: ["Wallets"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: WalletWithdrawalRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Withdrawal request created",
+      content: {
+        "application/json": {
+          schema: WalletWithdrawalResponseSchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid withdrawal request",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            details: z.object({
+              code: WalletErrorCodeSchema,
+            }),
+          }),
+          examples: {
+            InvalidRequest: {
+              value: {
+                error: walletErrorMessages.WITHDRAWAL_INVALID_REQUEST,
+                details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_INVALID_REQUEST },
+              },
+            },
+            InsufficientBalance: {
+              value: {
+                error: walletErrorMessages.INSUFFICIENT_BALANCE,
+                details: { code: WalletErrorCodeSchema.enum.INSUFFICIENT_BALANCE },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    403: {
+      description: "Withdrawal not enabled",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            details: z.object({
+              code: WalletErrorCodeSchema,
+            }),
+          }),
+          examples: {
+            NotEnabled: {
+              value: {
+                error: walletErrorMessages.WITHDRAWAL_NOT_ENABLED,
+                details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_NOT_ENABLED },
+              },
+            },
+          },
+        },
+      },
+    },
+    409: {
+      description: "Duplicate withdrawal request",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            details: z.object({
+              code: WalletErrorCodeSchema,
+            }),
+          }),
+          examples: {
+            Duplicate: {
+              value: {
+                error: walletErrorMessages.WITHDRAWAL_DUPLICATE,
+                details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_DUPLICATE },
+              },
+            },
+          },
+        },
+      },
+    },
+    500: {
+      description: "Withdrawal processing error",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+            details: z.object({
+              code: WalletErrorCodeSchema,
+            }),
+          }),
+          examples: {
+            InternalError: {
+              value: {
+                error: walletErrorMessages.WITHDRAWAL_INTERNAL_ERROR,
+                details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_INTERNAL_ERROR },
               },
             },
           },

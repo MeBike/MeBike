@@ -10,6 +10,7 @@ import {
   WalletDetailSchema,
   WalletTransactionDetailSchema,
   WalletTransactionTypeSchema,
+  WalletWithdrawalDetailSchema,
 } from "./models";
 
 export const WalletErrorCodeSchema = z
@@ -19,6 +20,10 @@ export const WalletErrorCodeSchema = z
     "TOPUP_INVALID_REQUEST",
     "TOPUP_PROVIDER_ERROR",
     "TOPUP_INTERNAL_ERROR",
+    "WITHDRAWAL_INVALID_REQUEST",
+    "WITHDRAWAL_NOT_ENABLED",
+    "WITHDRAWAL_DUPLICATE",
+    "WITHDRAWAL_INTERNAL_ERROR",
   ])
   .openapi("WalletErrorCode");
 
@@ -28,6 +33,10 @@ export const walletErrorMessages = {
   TOPUP_INVALID_REQUEST: "Invalid top-up request",
   TOPUP_PROVIDER_ERROR: "Top-up provider error",
   TOPUP_INTERNAL_ERROR: "Top-up internal error",
+  WITHDRAWAL_INVALID_REQUEST: "Invalid withdrawal request",
+  WITHDRAWAL_NOT_ENABLED: "Withdrawal not enabled",
+  WITHDRAWAL_DUPLICATE: "Duplicate withdrawal request",
+  WITHDRAWAL_INTERNAL_ERROR: "Withdrawal internal error",
 } as const;
 
 export const WalletErrorResponseSchema = z.object({
@@ -78,6 +87,16 @@ export const StripeTopupSessionResponseSchema = z.object({
   }),
 }).openapi("StripeTopupSessionResponse");
 
+export const WalletWithdrawalRequestSchema = z.object({
+  amount: z.string().min(1).openapi({ example: "50000" }),
+  currency: z.string().min(3).max(3).optional().openapi({ example: "vnd" }),
+  idempotencyKey: z.string().optional(),
+}).openapi("WalletWithdrawalRequest");
+
+export const WalletWithdrawalResponseSchema = z.object({
+  data: WalletWithdrawalDetailSchema,
+}).openapi("WalletWithdrawalResponse");
+
 export const ListMyWalletTransactionsQuerySchema = z.object({
   ...paginationQueryFields,
 }).openapi("ListMyWalletTransactionsQuery");
@@ -94,6 +113,8 @@ export type WalletCreditRequest = z.infer<typeof WalletCreditRequestSchema>;
 export type WalletDebitRequest = z.infer<typeof WalletDebitRequestSchema>;
 export type StripeTopupSessionRequest = z.infer<typeof StripeTopupSessionRequestSchema>;
 export type StripeTopupSessionResponse = z.infer<typeof StripeTopupSessionResponseSchema>;
+export type WalletWithdrawalRequest = z.infer<typeof WalletWithdrawalRequestSchema>;
+export type WalletWithdrawalResponse = z.infer<typeof WalletWithdrawalResponseSchema>;
 export type ListMyWalletTransactionsResponse = z.infer<typeof ListMyWalletTransactionsResponseSchema>;
 export {
   UnauthorizedErrorCodeSchema,
@@ -101,4 +122,5 @@ export {
   UnauthorizedErrorResponseSchema,
   WalletDetailSchema,
   WalletTransactionDetailSchema,
+  WalletWithdrawalDetailSchema,
 };
