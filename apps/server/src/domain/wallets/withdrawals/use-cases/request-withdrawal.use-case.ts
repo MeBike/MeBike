@@ -113,6 +113,10 @@ export function requestWithdrawalUseCase(
           idempotencyKey,
         });
 
+        // TODO(concurrency): check-then-act race.
+        // Two concurrent withdrawal requests can both compute the same `reserved` before either inserts its hold,
+        // leading to over-reservation. Fix by enforcing a DB guard (e.g. SERIALIZABLE tx with retry, SELECT ... FOR UPDATE on wallet,
+        // or an atomic `reservedBalance` column updated with a conditional check).
         const reserved = yield* walletHoldService.sumActiveAmountByWalletInTx(tx, wallet.id);
         const available = wallet.balance - reserved;
         if (available < input.amount) {
