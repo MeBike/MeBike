@@ -1,6 +1,5 @@
 "use client";
 import { ProfileHeader } from "@/components/dashboard/profile-header";
-import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@/components/ui/progress";
 export default function DashboardPage() {
@@ -13,13 +12,12 @@ export default function DashboardPage() {
     );
   }
   return (
-    <DashboardLayout user={user}>
+    <div>
       <div className="space-y-8">
         <section>
           <ProfileHeader user={user} />
         </section>
-
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

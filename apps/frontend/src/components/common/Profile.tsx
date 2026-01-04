@@ -9,22 +9,47 @@ import { cn } from "@/lib/utils";
 import { Mail, X } from "lucide-react";
 import { Save, Loader2, Camera } from "lucide-react";
 interface ProfileProps {
-    user: Me;
-    handleAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    formData: Me | null;
-    handleInputChange: (field: keyof Me, value: string) => void;
-    handleUserAccountChange: (field: keyof Me["userAccount"], value: string) => void;
-    setIsVerifyEmailModalOpen: (isOpen: boolean) => void;
-    handleResendVerifyEmail: () => void;
+  user: Me;
+  handleAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  formData: Me | null;
+  handleInputChange: (field: keyof Me, value: string) => void;
+  handleUserAccountChange: (
+    field: keyof Me["userAccount"],
+    value: string
+  ) => void;
+  setIsVerifyEmailModalOpen: (isOpen: boolean) => void;
+  handleResendVerifyEmail: () => void;
 }
 import { formatToVNTime } from "@/lib/formateVNDate";
-export default function Profile({ user , handleAvatarChange , handleInputChange , handleUserAccountChange , setIsVerifyEmailModalOpen , handleResendVerifyEmail , formData}: ProfileProps) {
+import { useAuthActions } from "@/hooks/useAuthAction";
+import { useRouter } from "next/navigation";
+export default function Profile({
+  user,
+  handleAvatarChange,
+  handleInputChange,
+  handleUserAccountChange,
+  setIsVerifyEmailModalOpen,
+  handleResendVerifyEmail,
+  formData,
+}: ProfileProps) {
   const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? "");
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
   const handleCancel = () => {
     setIsEditing(false);
+  };
+  const handleNavigate = () => {
+    if (user.role === "ADMIN") {
+      router.push("/admin/profile/change-password");
+    } else if (user.role === "STAFF") {
+      router.push("/staff/profile/change-password");
+    } else if (user.role === "SOS") {
+      router.push("/sos/profile/change-password");
+    } else {
+      router.push("/user/profile/change-password");
+    }
   };
   const handleSave = () => {};
   return (
@@ -286,11 +311,14 @@ export default function Profile({ user , handleAvatarChange , handleInputChange 
                 Cập nhật mật khẩu của bạn
               </p>
             </div>
-            <Link href="/user/profile/change-password">
-              <Button variant="outline" className="cursor-pointer">
-                Thay đổi
-              </Button>
-            </Link>
+
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              onClick={handleNavigate}
+            >
+              Thay đổi
+            </Button>
           </div>
           <div className="flex items-center justify-between pt-4 border-t border-border">
             <div>
