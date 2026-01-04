@@ -24,8 +24,6 @@ import { AuthTokens } from "@/types/GraphQL";
 import { getErrorMessage } from "@/utils/message";
 import { useVerifyOTPMutation } from "./mutations/Auth/useVerifyOTPMutation";
 import { VerifyForgotPasswordTokenResponse } from "@/types/auth.type";
-import { set } from "zod";
-
 export const useAuthActions = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -113,9 +111,7 @@ export const useAuthActions = () => {
               window.dispatchEvent(new Event("token:changed"));
               await new Promise((resolve) => setTimeout(resolve, 100));
               await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ME });
-              toast.success(MESSAGE.REGISTER_SUCCESS, {
-                description:"Tài khoản của bạn đã được tạo.",
-              });
+              toast.success(result.data.data?.RegisterUser.message)
               resolve();
             } else {
               const errorMessage = MESSAGE.REGISTER_NOT_SUCCESS;
@@ -147,10 +143,8 @@ export const useAuthActions = () => {
             );
             queryClient.removeQueries({ queryKey: QUERY_KEYS.ME });
             queryClient.clear();
-            toast.success(MESSAGE.LOGOUT_SUCCESS);
+            toast.error(MESSAGE.LOGOUT_SUCCESS);
             router.push("/auth/login");
-          } else {
-            toast.error(MESSAGE.LOGOUT_FAIL);
           }
         },
         onError: (error: unknown) => {

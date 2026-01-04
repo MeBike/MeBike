@@ -1,5 +1,5 @@
 
 import LoginClient from "./LoginClient";
-export default async function LoginPage() {
+export default function LoginPage() {
   return <LoginClient />;
 }
