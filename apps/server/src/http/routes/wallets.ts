@@ -9,8 +9,9 @@ import {
   debitWalletUseCase,
   getRequiredWalletByUserIdUseCase,
   listWalletTransactionsForUserUseCase,
+  requestWithdrawalUseCase,
 } from "@/domain/wallets";
-import { withStripeTopupDeps, withWalletDeps } from "@/http/shared/providers";
+import { withStripeTopupDeps, withWalletDeps, withWithdrawalDeps } from "@/http/shared/providers";
 
 export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const wallets = serverRoutes.wallets;
@@ -37,6 +38,23 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     type: row.type,
     status: row.status,
     createdAt: row.createdAt.toISOString(),
+  });
+
+  const mapWalletWithdrawal = (
+    row: import("@/domain/wallets/withdrawals").WalletWithdrawalRow,
+  ): WalletsContracts.WalletWithdrawalDetail => ({
+    id: row.id,
+    userId: row.userId,
+    walletId: row.walletId,
+    amount: row.amount.toString(),
+    currency: row.currency,
+    status: row.status,
+    idempotencyKey: row.idempotencyKey,
+    stripeTransferId: row.stripeTransferId,
+    stripePayoutId: row.stripePayoutId,
+    failureReason: row.failureReason,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   });
 
   app.openapi(wallets.getMyWallet, async (c) => {
@@ -298,6 +316,88 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
           c.json<WalletsContracts.WalletErrorResponse, 500>({
             error: walletErrorMessages.TOPUP_INTERNAL_ERROR,
             details: { code: WalletErrorCodeSchema.enum.TOPUP_INTERNAL_ERROR },
+          }, 500)),
+      )),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(wallets.createWalletWithdrawal, async (c) => {
+    const userId = c.var.currentUser?.userId ?? null;
+    if (!userId) {
+      return c.json({
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      }, 401);
+    }
+
+    const body = c.req.valid("json");
+    if (!/^\d+$/.test(body.amount)) {
+      return c.json<WalletsContracts.WalletErrorResponse, 400>({
+        error: walletErrorMessages.WITHDRAWAL_INVALID_REQUEST,
+        details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_INVALID_REQUEST },
+      }, 400);
+    }
+
+    const amount = BigInt(body.amount);
+    if (amount <= 0n || amount > BigInt(Number.MAX_SAFE_INTEGER)) {
+      return c.json<WalletsContracts.WalletErrorResponse, 400>({
+        error: walletErrorMessages.WITHDRAWAL_INVALID_REQUEST,
+        details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_INVALID_REQUEST },
+      }, 400);
+    }
+
+    const eff = withLoggedCause(
+      withWithdrawalDeps(
+        requestWithdrawalUseCase({
+          userId,
+          amount,
+          currency: body.currency,
+          idempotencyKey: body.idempotencyKey && body.idempotencyKey.trim()
+            ? body.idempotencyKey.trim()
+            : undefined,
+        }),
+      ),
+      "POST /v1/wallets/me/withdrawals",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<WalletsContracts.WalletWithdrawalResponse, 200>({
+          data: mapWalletWithdrawal(right),
+        }, 200)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("InvalidWithdrawalRequest", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 400>({
+            error: walletErrorMessages.WITHDRAWAL_INVALID_REQUEST,
+            details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_INVALID_REQUEST },
+          }, 400)),
+        Match.tag("InsufficientWalletBalance", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 400>({
+            error: walletErrorMessages.INSUFFICIENT_BALANCE,
+            details: { code: WalletErrorCodeSchema.enum.INSUFFICIENT_BALANCE },
+          }, 400)),
+        Match.tag("StripeConnectNotLinked", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 403>({
+            error: walletErrorMessages.WITHDRAWAL_NOT_ENABLED,
+            details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_NOT_ENABLED },
+          }, 403)),
+        Match.tag("StripePayoutsNotEnabled", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 403>({
+            error: walletErrorMessages.WITHDRAWAL_NOT_ENABLED,
+            details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_NOT_ENABLED },
+          }, 403)),
+        Match.tag("DuplicateWithdrawalRequest", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 409>({
+            error: walletErrorMessages.WITHDRAWAL_DUPLICATE,
+            details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_DUPLICATE },
+          }, 409)),
+        Match.orElse(() =>
+          c.json<WalletsContracts.WalletErrorResponse, 500>({
+            error: walletErrorMessages.WITHDRAWAL_INTERNAL_ERROR,
+            details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_INTERNAL_ERROR },
           }, 500)),
       )),
       Match.exhaustive,

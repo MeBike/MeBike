@@ -28,6 +28,7 @@ import {
   handleReservationExpireHold,
   handleReservationNotifyNearExpiry,
 } from "./reservation-hold-worker";
+import { handleWithdrawalExecute, handleWithdrawalSweep } from "./wallet-withdrawal-worker";
 import { attachPgBossEventLogging, WorkerLog } from "./worker-logging";
 import { setupDLQWorker, setupQueue } from "./worker-setup";
 // run effect with required dependencies
@@ -112,6 +113,8 @@ async function main() {
   await setupQueue(boss, JobTypes.ReservationFixedSlotAssign);
   await setupQueue(boss, JobTypes.ReservationNotifyNearExpiry);
   await setupQueue(boss, JobTypes.ReservationExpireHold);
+  await setupQueue(boss, JobTypes.WalletWithdrawalExecute);
+  await setupQueue(boss, JobTypes.WalletWithdrawalSweep);
 
   await boss.schedule(
     JobTypes.SubscriptionExpireSweep,
@@ -128,6 +131,12 @@ async function main() {
     JobTypes.ReservationFixedSlotAssign,
     env.FIXED_SLOT_ASSIGN_CRON,
   );
+  await boss.schedule(
+    JobTypes.WalletWithdrawalSweep,
+    env.WITHDRAWAL_SWEEP_CRON,
+    { version: 1 },
+  );
+  WorkerLog.scheduleEnsured(JobTypes.WalletWithdrawalSweep, env.WITHDRAWAL_SWEEP_CRON);
 
   const autoActivateWorkerId = await boss.work(
     JobTypes.SubscriptionAutoActivate,
@@ -168,11 +177,29 @@ async function main() {
   );
   WorkerLog.workerRegistered(JobTypes.ReservationExpireHold, expireWorkerId);
 
+  const withdrawalWorkerId = await boss.work(
+    JobTypes.WalletWithdrawalExecute,
+    async (jobs) => {
+      await handleWithdrawalExecute(jobs[0]);
+    },
+  );
+  WorkerLog.workerRegistered(JobTypes.WalletWithdrawalExecute, withdrawalWorkerId);
+
+  const withdrawalSweepWorkerId = await boss.work(
+    JobTypes.WalletWithdrawalSweep,
+    async (jobs) => {
+      await handleWithdrawalSweep(jobs[0]);
+    },
+  );
+  WorkerLog.workerRegistered(JobTypes.WalletWithdrawalSweep, withdrawalSweepWorkerId);
+
   await setupDLQWorker(boss, JobTypes.EmailSend, "Email job");
   await setupDLQWorker(boss, JobTypes.SubscriptionAutoActivate, "Subscription auto-activate job");
   await setupDLQWorker(boss, JobTypes.ReservationFixedSlotAssign, "Fixed-slot assignment job");
   await setupDLQWorker(boss, JobTypes.ReservationNotifyNearExpiry, "Reservation near-expiry job");
   await setupDLQWorker(boss, JobTypes.ReservationExpireHold, "Reservation expire-hold job");
+  await setupDLQWorker(boss, JobTypes.WalletWithdrawalExecute, "Wallet withdrawal execute job");
+  await setupDLQWorker(boss, JobTypes.WalletWithdrawalSweep, "Wallet withdrawal sweep job");
 
   const stopDispatcher = startOutboxDispatcher({
     db,

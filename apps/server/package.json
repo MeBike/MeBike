@@ -22,6 +22,7 @@
     "worker:email-once": "tsx src/worker/commands/process-email-once.ts",
     "worker:fixed-slot-assign-once": "tsx src/worker/commands/fixed-slot-assign-once.ts",
     "worker:subscriptions-expire-sweep-once": "tsx src/worker/commands/subscriptions-expire-sweep-once.ts",
+    "worker:wallet-withdrawal-sweep-once": "tsx src/worker/commands/wallet-withdrawal-sweep-once.ts",
     "start": "node dist/src/http/server.js",
     "seed": "pnpm prisma db seed",
     "seed:bikes": "tsx prisma/seed-bikes.ts"

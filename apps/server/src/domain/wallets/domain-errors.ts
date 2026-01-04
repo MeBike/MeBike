@@ -6,6 +6,10 @@ export class WalletRepositoryError extends Data.TaggedError("WalletRepositoryErr
   WithGenericError
 > {}
 
+export class WalletHoldRepositoryError extends Data.TaggedError("WalletHoldRepositoryError")<
+  WithGenericError
+> {}
+
 export class WalletUniqueViolation extends Data.TaggedError("WalletUniqueViolation")<
   WithGenericError & {
     readonly constraint: string;

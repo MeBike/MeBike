@@ -19,6 +19,7 @@ import { registerRatingRoutes } from "./routes/ratings";
 import { registerRentalRoutes } from "./routes/rentals";
 import { registerReservationRoutes } from "./routes/reservations";
 import { registerStationRoutes } from "./routes/stations";
+import { registerStripeConnectRoutes } from "./routes/stripe-connect.routes";
 import { registerStripeWebhookRoutes } from "./routes/stripe-webhook.routes";
 import { registerSubscriptionRoutes } from "./routes/subscriptions";
 import { registerSupplierRoutes } from "./routes/suppliers";
@@ -67,6 +68,7 @@ export function createHttpApp() {
   app.use("/v1/subscriptions/*", requireAuthMiddleware);
   app.use("/v1/reservations", requireAuthMiddleware);
   app.use("/v1/reservations/*", requireAuthMiddleware);
+  app.use("/v1/stripe/*", requireAuthMiddleware);
   app.use("/v1/suppliers", requireAdminMiddleware);
   app.use("/v1/suppliers/*", requireAdminMiddleware);
   app.use("/v1/users/manage-users/*", requireAdminOrStaffMiddleware);
@@ -89,6 +91,7 @@ export function createHttpApp() {
   registerReservationRoutes(app);
   registerSupplierRoutes(app);
   registerAuthRoutes(app);
+  registerStripeConnectRoutes(app);
   registerStripeWebhookRoutes(app);
   registerUserRoutes(app);
   registerRatingRoutes(app);

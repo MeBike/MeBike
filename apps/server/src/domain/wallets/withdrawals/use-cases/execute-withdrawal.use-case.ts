@@ -1,20 +1,22 @@
 import { Effect, Match } from "effect";
 
 import type { UserRepositoryError } from "@/domain/users/domain-errors";
-import type { WalletNotFound, WalletRepositoryError } from "@/domain/wallets/domain-errors";
+import type { WalletHoldRepositoryError } from "@/domain/wallets/domain-errors";
 
 import { env } from "@/config/env";
 import { UserServiceTag } from "@/domain/users/services/user.service";
-import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import { WalletHoldServiceTag } from "@/domain/wallets/services/wallet-hold.service";
 import { Prisma } from "@/infrastructure/prisma";
+import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type {
   WithdrawalNotFound,
   WithdrawalProviderError,
+
+  WithdrawalRepositoryError,
 } from "../domain-errors";
 
 import {
-  WithdrawalRepositoryError,
   WithdrawalUserNotFound,
 } from "../domain-errors";
 import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";
@@ -41,6 +43,22 @@ function toMinorAmountNumber(amount: bigint): number | null {
   return Number(amount);
 }
 
+function getStripeErrorCode(cause: unknown): string | undefined {
+  if (!cause || typeof cause !== "object") {
+    return undefined;
+  }
+  if ("code" in cause && typeof (cause as { code?: unknown }).code === "string") {
+    return (cause as { code: string }).code;
+  }
+  if ("raw" in cause && typeof (cause as { raw?: unknown }).raw === "object" && (cause as { raw?: unknown }).raw) {
+    const raw = (cause as { raw: { code?: unknown } }).raw;
+    if (typeof raw.code === "string") {
+      return raw.code;
+    }
+  }
+  return undefined;
+}
+
 export function executeWithdrawalUseCase(
   withdrawalId: string,
 ): Effect.Effect<
@@ -49,20 +67,20 @@ export function executeWithdrawalUseCase(
   | WithdrawalProviderError
   | WithdrawalRepositoryError
   | WithdrawalUserNotFound
-  | WalletNotFound
-  | WalletRepositoryError
+  | WalletHoldRepositoryError
   | UserRepositoryError,
-  Prisma | WithdrawalServiceTag | WalletServiceTag | UserServiceTag | StripeWithdrawalServiceTag
+  Prisma | WithdrawalServiceTag | WalletHoldServiceTag | UserServiceTag | StripeWithdrawalServiceTag
 > {
   return Effect.gen(function* () {
     const withdrawalService = yield* WithdrawalServiceTag;
-    const walletService = yield* WalletServiceTag;
+    const walletHoldService = yield* WalletHoldServiceTag;
     const userService = yield* UserServiceTag;
     const stripeService = yield* StripeWithdrawalServiceTag;
     const { client } = yield* Prisma;
     const now = new Date();
     const processingTtlMs = env.WITHDRAWAL_PROCESSING_TTL_MINUTES * 60 * 1000;
     const processingStaleBefore = new Date(now.getTime() - processingTtlMs);
+    const slaMs = env.WITHDRAWAL_SLA_MINUTES * 60 * 1000;
 
     const withdrawalResult = yield* withdrawalService.getById(withdrawalId).pipe(
       Effect.either,
@@ -118,21 +136,22 @@ export function executeWithdrawalUseCase(
             Match.exhaustive,
           );
 
-          if (!user.stripeConnectedAccountId) {
-            return yield* markFailedAndRefund(
+          const accountId = user.stripeConnectedAccountId;
+          if (!accountId) {
+            return yield* markFailedAndReleaseHold(
               client,
               withdrawalService,
-              walletService,
+              walletHoldService,
               withdrawal,
               "stripe_account_missing",
             );
           }
 
           if (user.stripePayoutsEnabled !== true) {
-            return yield* markFailedAndRefund(
+            return yield* markFailedAndReleaseHold(
               client,
               withdrawalService,
-              walletService,
+              walletHoldService,
               withdrawal,
               "payouts_not_enabled",
             );
@@ -140,67 +159,72 @@ export function executeWithdrawalUseCase(
 
           const amountMinor = toMinorAmountNumber(withdrawal.amount);
           if (!amountMinor) {
-            return yield* markFailedAndRefund(
+            return yield* markFailedAndReleaseHold(
               client,
               withdrawalService,
-              walletService,
+              walletHoldService,
               withdrawal,
               "amount_out_of_range",
             );
           }
 
-          const marked = yield* Effect.tryPromise({
-            try: () =>
-              client.$transaction(async tx =>
-                Effect.runPromise(
-                  withdrawalService.markProcessingInTx(tx, {
-                    withdrawalId,
-                    staleBefore: processingStaleBefore,
-                  }),
-                )),
-            catch: cause =>
-              new WithdrawalRepositoryError({
-                operation: "markProcessingInTx",
-                cause,
-              }),
-          });
+          const marked = yield* runPrismaTransaction(client, tx =>
+            withdrawalService.markProcessingInTx(tx, {
+              withdrawalId,
+              staleBefore: processingStaleBefore,
+            })).pipe(
+            Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+          );
 
           if (!marked) {
             return { status: "ignored", withdrawalId, reason: "already_processing" } satisfies ExecuteWithdrawalOutcome;
           }
 
-          const transfer = yield* stripeService.createTransfer({
-            amountMinor,
-            currency: withdrawal.currency,
-            destinationAccountId: user.stripeConnectedAccountId,
-            idempotencyKey: `${withdrawal.idempotencyKey}:transfer`,
-            description: `Withdrawal ${withdrawal.id}`,
-          });
+          const providerResult = yield* Effect.gen(function* () {
+            const transfer = yield* stripeService.createTransfer({
+              amountMinor,
+              currency: withdrawal.currency,
+              destinationAccountId: accountId,
+              idempotencyKey: `${withdrawal.idempotencyKey}:transfer`,
+              description: `Withdrawal ${withdrawal.id}`,
+            });
 
-          const payout = yield* stripeService.createPayout({
-            amountMinor,
-            currency: withdrawal.currency,
-            accountId: user.stripeConnectedAccountId,
-            idempotencyKey: `${withdrawal.idempotencyKey}:payout`,
-            description: `Withdrawal ${withdrawal.id}`,
-          });
+            const payout = yield* stripeService.createPayout({
+              amountMinor,
+              currency: withdrawal.currency,
+              accountId,
+              idempotencyKey: `${withdrawal.idempotencyKey}:payout`,
+              description: `Withdrawal ${withdrawal.id}`,
+            });
 
-          yield* Effect.tryPromise({
-            try: () =>
-              client.$transaction(async tx =>
-                Effect.runPromise(
-                  withdrawalService.setStripeRefsInTx(tx, {
-                    withdrawalId,
-                    stripeTransferId: transfer.id,
-                    stripePayoutId: payout.id,
-                  }),
-                )),
-            catch: cause =>
-              new WithdrawalRepositoryError({
-                operation: "setStripeRefsInTx",
-                cause,
-              }),
-          });
+            return { transfer, payout };
+          }).pipe(Effect.either);
+
+          if (providerResult._tag === "Left") {
+            const errorCode = getStripeErrorCode(providerResult.left.cause);
+            const slaExceeded = now.getTime() - withdrawal.createdAt.getTime() >= slaMs;
+            if (errorCode === "balance_insufficient" && slaExceeded) {
+              return yield* markFailedAndReleaseHold(
+                client,
+                withdrawalService,
+                walletHoldService,
+                withdrawal,
+                "provider_balance_insufficient",
+              );
+            }
+            return yield* Effect.fail(providerResult.left);
+          }
+
+          const { transfer, payout } = providerResult.right;
+
+          yield* runPrismaTransaction(client, tx =>
+            withdrawalService.setStripeRefsInTx(tx, {
+              withdrawalId,
+              stripeTransferId: transfer.id,
+              stripePayoutId: payout.id,
+            })).pipe(
+            Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+          );
 
           return {
             status: "processing",
@@ -214,70 +238,42 @@ export function executeWithdrawalUseCase(
   });
 }
 
-function markFailedAndRefund(
+function markFailedAndReleaseHold(
   client: import("generated/prisma/client").PrismaClient,
   withdrawalService: import("../services/withdrawal.service").WithdrawalService,
-  walletService: import("@/domain/wallets/services/wallet.service").WalletService,
+  walletHoldService: import("@/domain/wallets/services/wallet-hold.service").WalletHoldService,
   withdrawal: import("../models").WalletWithdrawalRow,
   reason: string,
 ): Effect.Effect<
   ExecuteWithdrawalOutcome,
   | WithdrawalRepositoryError
-  | WalletNotFound
-  | WalletRepositoryError
+  | WalletHoldRepositoryError
 > {
   return Effect.gen(function* () {
-    type TxEither = import("effect").Either.Either<
-      boolean,
-      WithdrawalRepositoryError | WalletNotFound | WalletRepositoryError
-    >;
+    const updated = yield* runPrismaTransaction(client, tx =>
+      Effect.gen(function* () {
+        const markFailed = yield* withdrawalService.markFailedInTx(tx, {
+          withdrawalId: withdrawal.id,
+          failureReason: reason,
+        });
 
-    // TODO(HOTFIX): Transaction does NOT rollback on domain failures due to Effect.either wrapping.
-    // When domain errors occur (e.g. WalletNotFound), the Promise resolves with Left(error)
-    // instead of rejecting, causing Prisma to COMMIT partial writes (e.g. withdrawal marked failed
-    // but wallet not refunded). This is a CRITICAL financial integrity bug.
-    // Fix: Remove Effect.either wrapper and let failures throw naturally to trigger rollback.
-    const txEither = yield* Effect.tryPromise<TxEither, WithdrawalRepositoryError>({
-      try: () =>
-        client.$transaction(async (tx) => {
-          const eff: Effect.Effect<
-            boolean,
-            WithdrawalRepositoryError | WalletNotFound | WalletRepositoryError,
-            never
-          > = Effect.gen(function* () {
-            const markFailed = yield* withdrawalService.markFailedInTx(tx, {
-              withdrawalId: withdrawal.id,
-              failureReason: reason,
-            });
+        if (!markFailed) {
+          return false;
+        }
 
-            if (!markFailed) {
-              return false;
-            }
+        const released = yield* walletHoldService.releaseByWithdrawalIdInTx(
+          tx,
+          withdrawal.id,
+          new Date(),
+        );
+        if (!released) {
+          // Legacy rows may not have a hold; treat as already released.
+          return true;
+        }
 
-            yield* walletService.creditWalletInTx(tx, {
-              userId: withdrawal.userId,
-              amount: withdrawal.amount,
-              description: "Withdrawal failed refund",
-              hash: `withdrawal:refund:${withdrawal.id}`,
-              type: "REFUND",
-            });
-
-            return true;
-          });
-
-          return Effect.runPromise(eff.pipe(Effect.either)) as Promise<TxEither>;
-        }),
-      catch: err =>
-        new WithdrawalRepositoryError({
-          operation: "markFailedAndRefund",
-          cause: err,
-        }),
-    });
-
-    const updated = yield* Match.value(txEither).pipe(
-      Match.tag("Right", ({ right }) => Effect.succeed(right)),
-      Match.tag("Left", ({ left }) => Effect.fail(left)),
-      Match.exhaustive,
+        return true;
+      })).pipe(
+      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
     );
 
     if (!updated) {

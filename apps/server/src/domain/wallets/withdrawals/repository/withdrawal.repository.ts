@@ -65,6 +65,10 @@ export type WithdrawalRepositoryType = {
   findByStripePayoutId: (
     payoutId: string,
   ) => Effect.Effect<Option.Option<WalletWithdrawalRow>, WithdrawalRepositoryError>;
+  findProcessingBefore: (
+    createdBefore: Date,
+    limit: number,
+  ) => Effect.Effect<ReadonlyArray<WalletWithdrawalRow>, WithdrawalRepositoryError>;
   findByIdempotencyKey: (
     idempotencyKey: string,
   ) => Effect.Effect<Option.Option<WalletWithdrawalRow>, WithdrawalRepositoryError>;
@@ -241,6 +245,26 @@ export function makeWithdrawalRepository(client: PrismaClient): WithdrawalReposi
         catch: err =>
           new WithdrawalRepositoryError({
             operation: "findByStripePayoutId",
+            cause: err,
+          }),
+      }),
+    findProcessingBefore: (createdBefore, limit) =>
+      Effect.tryPromise({
+        try: async () => {
+          const rows = await client.walletWithdrawal.findMany({
+            where: {
+              status: "PROCESSING",
+              createdAt: { lte: createdBefore },
+            },
+            orderBy: { createdAt: "asc" },
+            take: limit,
+            select: selectWithdrawalRow,
+          });
+          return rows.map(toWithdrawalRow);
+        },
+        catch: err =>
+          new WithdrawalRepositoryError({
+            operation: "findProcessingBefore",
             cause: err,
           }),
       }),

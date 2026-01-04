@@ -1,4 +1,10 @@
-import type { WalletStatus, WalletTransactionStatus, WalletTransactionType } from "generated/prisma/client";
+import type {
+  WalletHoldReason,
+  WalletHoldStatus,
+  WalletStatus,
+  WalletTransactionStatus,
+  WalletTransactionType,
+} from "generated/prisma/client";
 
 export type WalletRow = {
   readonly id: string;
@@ -36,4 +42,24 @@ export type DecreaseBalanceInput = {
   readonly description?: string | null;
   readonly hash?: string | null;
   readonly type?: WalletTransactionType; // default DEBIT
+};
+
+export type WalletHoldRow = {
+  readonly id: string;
+  readonly walletId: string;
+  readonly withdrawalId: string;
+  readonly amount: bigint;
+  readonly status: WalletHoldStatus;
+  readonly reason: WalletHoldReason;
+  readonly releasedAt: Date | null;
+  readonly settledAt: Date | null;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+};
+
+export type CreateWalletHoldInput = {
+  readonly walletId: string;
+  readonly withdrawalId: string;
+  readonly amount: bigint;
+  readonly reason?: WalletHoldReason;
 };

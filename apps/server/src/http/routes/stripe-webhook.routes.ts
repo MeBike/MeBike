@@ -1,7 +1,7 @@
 import { Effect, Match } from "effect";
 
-import { handleStripeWebhookEventUseCase } from "@/domain/wallets/topups";
-import { withStripeTopupDeps } from "@/http/shared/providers";
+import { handleStripeWebhookUseCase } from "@/domain/wallets";
+import { withStripeWebhookDeps } from "@/http/shared/providers";
 import { StripeClient, StripeWebhookError, verifyStripeWebhook } from "@/infrastructure/stripe";
 import logger from "@/lib/logger";
 
@@ -11,11 +11,11 @@ export function registerStripeWebhookRoutes(app: import("@hono/zod-openapi").Ope
     const signature = c.req.header("stripe-signature");
 
     const result = await Effect.runPromise(
-      withStripeTopupDeps(
+      withStripeWebhookDeps(
         Effect.gen(function* () {
           const stripe = (yield* StripeClient).client;
           const event = yield* verifyStripeWebhook(stripe, payload, signature);
-          return yield* handleStripeWebhookEventUseCase(event);
+          return yield* handleStripeWebhookUseCase(event);
         }).pipe(Effect.either),
       ),
     );

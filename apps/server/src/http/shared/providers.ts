@@ -43,6 +43,8 @@ import {
   UserStatsServiceLive,
 } from "@/domain/users";
 import {
+  WalletHoldRepositoryLive,
+  WalletHoldServiceLive,
   WalletRepositoryLive,
   WalletServiceLive,
 } from "@/domain/wallets";
@@ -50,6 +52,11 @@ import {
   PaymentAttemptRepositoryLive,
   StripeTopupServiceLive,
 } from "@/domain/wallets/topups";
+import {
+  StripeWithdrawalServiceLive,
+  WithdrawalRepositoryLive,
+  WithdrawalServiceLive,
+} from "@/domain/wallets/withdrawals";
 import { EmailLive } from "@/infrastructure/email";
 import { PrismaLive } from "@/infrastructure/prisma";
 import { RedisLive } from "@/infrastructure/redis";
@@ -98,13 +105,23 @@ const WalletReposLive = WalletRepositoryLive.pipe(
   Layer.provide(PrismaLive),
 );
 
+const WalletHoldReposLive = WalletHoldRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
 const WalletServiceLayer = WalletServiceLive.pipe(
   Layer.provide(WalletReposLive),
+);
+
+const WalletHoldServiceLayer = WalletHoldServiceLive.pipe(
+  Layer.provide(WalletHoldReposLive),
 );
 
 export const WalletDepsLive = Layer.mergeAll(
   WalletReposLive,
   WalletServiceLayer,
+  WalletHoldReposLive,
+  WalletHoldServiceLayer,
   PrismaLive,
 );
 
@@ -255,6 +272,41 @@ export const StripeTopupDepsLive = Layer.mergeAll(
 
 export function withStripeTopupDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(Effect.provide(StripeTopupDepsLive));
+}
+
+const WithdrawalReposLive = WithdrawalRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const WithdrawalServiceLayer = WithdrawalServiceLive.pipe(
+  Layer.provide(WithdrawalReposLive),
+);
+
+const StripeWithdrawalServiceLayer = StripeWithdrawalServiceLive.pipe(
+  Layer.provide(StripeLive),
+);
+
+export const WithdrawalDepsLive = Layer.mergeAll(
+  WithdrawalReposLive,
+  WithdrawalServiceLayer,
+  StripeWithdrawalServiceLayer,
+  WalletDepsLive,
+  UserDepsLive,
+  StripeLive,
+  PrismaLive,
+);
+
+export function withWithdrawalDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(Effect.provide(WithdrawalDepsLive));
+}
+
+export const StripeWebhookDepsLive = Layer.mergeAll(
+  StripeTopupDepsLive,
+  WithdrawalDepsLive,
+);
+
+export function withStripeWebhookDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
+  return eff.pipe(Effect.provide(StripeWebhookDepsLive));
 }
 
 const SubscriptionReposLive = SubscriptionRepositoryLive.pipe(

@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { Effect, Match } from "effect";
 
 import { Prisma } from "@/infrastructure/prisma";
+import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { WalletNotFound, WalletRepositoryError } from "../../domain-errors";
 import type { InvalidTopupRequest, PaymentAttemptRepositoryError, PaymentAttemptUniqueViolation } from "../domain-errors";
@@ -11,6 +12,29 @@ import type { StripeCheckoutAttemptInput, StripeTopupSessionResult, StripeWebhoo
 import { WalletServiceTag } from "../../services/wallet.service";
 import { TopupProviderError } from "../domain-errors";
 import { StripeTopupServiceTag } from "../services/stripe-topup.service";
+
+// TODO(future): Add a Stripe Connect-based “top-up” flow (destination charge or direct charge),
+// so Stripe balances move realistically (platform/connected) instead of only crediting the internal wallet ledger.
+//
+// Option A — Destination charge (platform creates payment, Stripe transfers to connected):
+// - Create PaymentIntent/Checkout Session on platform with:
+//   - amount, currency
+//   - transfer_data[destination] = connectedAccountId (acct_...)
+//   - optional application_fee_amount (platform fee)
+// - Confirm on client (or redirect via Checkout).
+// - Webhook marks payment succeeded and (optionally) credits internal wallet.
+//
+// Option B — Direct charge (payment created on connected account):
+// - Create PaymentIntent on connected account (Stripe-Account header / stripeAccount option).
+// - Optional application_fee_amount for platform fee.
+// - Confirm on client; webhook finalizes.
+//
+// API shape idea:
+// - POST /payments/intent { amountMinor, currency, connectedAccountId, applicationFeeMinor? } -> client_secret
+// - Webhooks handle payment status; avoid “credit on request” behavior.
+// Notes:
+// - Validate connectedAccountId authz (must belong to caller/merchant).
+// - Expect KYC/capabilities gating for live payouts/withdrawals.
 
 export type CreateStripeCheckoutSessionInput = Omit<
   StripeCheckoutAttemptInput,
@@ -55,7 +79,7 @@ export function createStripeCheckoutSessionUseCase(
   });
 }
 
-export function handleStripeWebhookEventUseCase(
+export function handleStripeTopupWebhookEventUseCase(
   event: Stripe.Event,
 ): Effect.Effect<
   StripeWebhookOutcome,
@@ -118,50 +142,44 @@ export function handleStripeWebhookEventUseCase(
       return { status: "failed", paymentAttemptId: attempt.id, reason };
     }
 
-    return yield* Effect.tryPromise({
-      try: () =>
-        client.$transaction(async (tx) => {
-          const updated = await Effect.runPromise(
-            service.markSucceededIfPendingInTx(tx, attempt.id, session.id),
-          );
-          if (!updated) {
-            return { status: "ignored", reason: "already_processed" } as StripeWebhookOutcome;
-          }
+    return yield* runPrismaTransaction(client, tx =>
+      Effect.gen(function* () {
+        const updated = yield* service.markSucceededIfPendingInTx(tx, attempt.id, session.id);
+        if (!updated) {
+          return { status: "ignored", reason: "already_processed" } as StripeWebhookOutcome;
+        }
 
-          const creditResult = await Effect.runPromise(
-            walletService.creditWalletInTx(tx, {
-              userId: attempt.userId,
-              amount: receivedMinor,
-              description: "Stripe top-up",
-              hash: `stripe:checkout:${session.id}`,
-              type: "DEPOSIT",
-            }).pipe(Effect.either),
-          );
+        const creditResult = yield* walletService.creditWalletInTx(tx, {
+          userId: attempt.userId,
+          amount: receivedMinor,
+          description: "Stripe top-up",
+          hash: `stripe:checkout:${session.id}`,
+          type: "DEPOSIT",
+        }).pipe(Effect.either);
 
-          return Match.value(creditResult).pipe(
-            Match.tag("Right", () =>
-              ({ status: "succeeded", paymentAttemptId: attempt.id } as StripeWebhookOutcome)),
-            Match.tag("Left", ({ left }) => {
-              if (left._tag === "WalletNotFound") {
-                return Effect.runPromise(
-                  service.markFailedIfPendingInTx(tx, attempt.id, "wallet_missing"),
-                ).then(() => ({
+        return yield* Match.value(creditResult).pipe(
+          Match.tag("Right", () =>
+            Effect.succeed({ status: "succeeded", paymentAttemptId: attempt.id } as StripeWebhookOutcome)),
+          Match.tag("Left", ({ left }) => {
+            if (left._tag === "WalletNotFound") {
+              return service.markFailedIfPendingInTx(tx, attempt.id, "wallet_missing").pipe(
+                Effect.as({
                   status: "failed",
                   paymentAttemptId: attempt.id,
                   reason: "wallet_missing",
-                } as StripeWebhookOutcome));
-              }
-              throw left;
-            }),
-            Match.exhaustive,
-          );
-        }),
-      catch: cause =>
-        new TopupProviderError({
-          operation: "stripe.webhook.handleCheckoutSession",
-          provider: "stripe",
-          cause,
-        }),
-    });
+                } as StripeWebhookOutcome),
+              );
+            }
+            return Effect.fail(new TopupProviderError({
+              operation: "stripe.webhook.handleCheckoutSession",
+              provider: "stripe",
+              cause: left,
+            }));
+          }),
+          Match.exhaustive,
+        );
+      })).pipe(
+      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+    );
   });
 }
