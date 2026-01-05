@@ -19,6 +19,9 @@ export interface Station {
   updatedAt: string;
   status : "Active" | "Inactive";
   bikes : Bike[];
+  activeStation: number;
+  inactiveStation: number; 
+
 }
 export type GetAllStationsResponse = GraphQLMutationResponse<"Stations",Station[]>;
 export type GetDetailStationResponse = GraphQLMutationResponse<"Station",Station>;

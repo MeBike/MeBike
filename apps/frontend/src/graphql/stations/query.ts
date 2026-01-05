@@ -4,6 +4,8 @@ export const GET_STATIONS = gql`
     Stations(params: $params) {
       success
       message
+      activeStation
+      inactiveStation
       data {
         id
         name

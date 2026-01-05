@@ -12,7 +12,21 @@ import { useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import StationStats from "./components/StationStats";
-function StationTableSection({ page, limit, searchQuery, setPage, deleteStation, router }: any) {
+import React, { Dispatch, SetStateAction } from "react";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+function StationTableSection({
+  page,
+  limit,
+  searchQuery,
+  setPage,
+  router,
+}: {
+  page: number,
+  limit: number,
+  searchQuery: string,
+  setPage: Dispatch<SetStateAction<number>>,
+  router : AppRouterInstance
+}) {
   // Hook gọi ở đây mới kích hoạt được Suspense fallback ở cha
   const { stations, paginationStations } = useStationActions({
     page,
@@ -25,7 +39,6 @@ function StationTableSection({ page, limit, searchQuery, setPage, deleteStation,
       <DataTable
         title="Danh sách trạm xe"
         columns={stationColumns({
-          onDelete: ({ id }) => deleteStation(id),
           onView: ({ id }) => router.push(`/admin/stations/detail/${id}`),
         })}
         data={stations}
@@ -40,13 +53,14 @@ function StationTableSection({ page, limit, searchQuery, setPage, deleteStation,
 }
 export default function StationClient() {
   const router = useRouter();
+  const { inactiveStation, activeStation, totalStation } = useStationActions({
+    hasToken: true,
+  });
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
   const [stationID, setStationID] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
-  const {
-    getStationByID,
-  } = useStationActions({
+  const { getStationByID } = useStationActions({
     hasToken: true,
     page: page,
     limit: limit,
@@ -61,16 +75,20 @@ export default function StationClient() {
   }, [stationID, getStationByID]);
   const handleAddStation = () => {
     router.push(`/admin/stations/create`);
-  }
+  };
   return (
     <div className="space-y-6">
       <StationHeader onAddStation={() => handleAddStation()} />
-      <StationStats activeStation={100} inActiveStation={100} totalStation={100}/>
+      <StationStats
+        activeStation={activeStation ?? 0}
+        inActiveStation={inactiveStation ?? 0}
+        totalStation={totalStation ?? 0}
+      />
       <StationFilter value={searchQuery} onChange={setSearchQuery} />
       <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
-        <StationTableSection 
-          page={page} 
-          limit={10} 
+        <StationTableSection
+          page={page}
+          limit={10}
           searchQuery={searchQuery}
           setPage={setPage}
           router={router}
