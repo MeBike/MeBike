@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
+import { HTTP_STATUS } from "@/constants";
 const getAllBikes = async (
   page?: number,
   limit?: number,
@@ -10,7 +11,7 @@ const getAllBikes = async (
       page: page,
       limit: limit,
     });
-    if (response.status === 200) {
+    if (response.status === HTTP_STATUS.OK) {
       return response.data;
     }
   } catch (error) {
