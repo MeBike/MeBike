@@ -27,6 +27,7 @@ model Wallet {
   id        String       @id @default(uuid(7)) @db.Uuid
   userId    String       @unique @map("user_id") @db.Uuid
   balance   BigInt       @default(0) @db.BigInt
+  reservedBalance BigInt @default(0) @map("reserved_balance") @db.BigInt
   status    WalletStatus @default(ACTIVE)
   createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz
