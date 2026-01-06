@@ -89,6 +89,7 @@ export const RentalListItemSchema = z.object({
   endTime: z.iso.datetime().optional(),
   duration: z.number(),
   totalPrice: z.number(),
+  subscriptionId: z.uuidv7().optional(),
   updatedAt: z.iso.datetime(),
 });
 

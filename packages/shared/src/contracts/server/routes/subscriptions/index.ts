@@ -4,6 +4,7 @@ import {
 } from "./mutations";
 import {
   getSubscriptionRoute,
+  listSubscriptionPackagesRoute,
   listSubscriptionsRoute,
 } from "./queries";
 
@@ -16,4 +17,5 @@ export const subscriptionsRoutes = {
   activateSubscription: activateSubscriptionRoute,
   getSubscription: getSubscriptionRoute,
   listSubscriptions: listSubscriptionsRoute,
+  listSubscriptionPackages: listSubscriptionPackagesRoute,
 } as const;

@@ -28,6 +28,7 @@ function toContractRental(
     endTime: row.endTime ? row.endTime.toISOString() : undefined,
     duration: row.durationMinutes ?? 0,
     totalPrice: row.totalPrice ?? undefined,
+    subscriptionId: row.subscriptionId ?? undefined,
     status: row.status,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -46,6 +47,7 @@ function toContractRentalWithPrice(
     endTime: row.endTime ? row.endTime.toISOString() : undefined,
     duration: row.durationMinutes ?? 0,
     totalPrice: row.totalPrice ?? 0,
+    subscriptionId: row.subscriptionId ?? undefined,
     status: row.status,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -64,6 +66,7 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
         bikeId: body.bikeId,
         startStationId: body.startStationId,
         startTime: new Date(),
+        subscriptionId: body.subscriptionId,
       })),
       "POST /v1/rentals",
     );
@@ -150,6 +153,33 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
                 code: RentalErrorCodeSchema.enum.NOT_ENOUGH_BALANCE_TO_RENT,
                 requiredBalance,
                 currentBalance,
+              },
+            }, 400)),
+          Match.tag("SubscriptionNotFound", ({ subscriptionId }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.SUBSCRIPTION_NOT_FOUND,
+              details: {
+                code: RentalErrorCodeSchema.enum.SUBSCRIPTION_NOT_FOUND,
+                subscriptionId,
+              },
+            }, 400)),
+          Match.tag("SubscriptionNotUsable", ({ subscriptionId, status }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.SUBSCRIPTION_NOT_USABLE,
+              details: {
+                code: RentalErrorCodeSchema.enum.SUBSCRIPTION_NOT_USABLE,
+                subscriptionId,
+                status,
+              },
+            }, 400)),
+          Match.tag("SubscriptionUsageExceeded", ({ subscriptionId, usageCount, maxUsages }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.SUBSCRIPTION_USAGE_EXCEEDED,
+              details: {
+                code: RentalErrorCodeSchema.enum.SUBSCRIPTION_USAGE_EXCEEDED,
+                subscriptionId,
+                usageCount,
+                maxUsages,
               },
             }, 400)),
           Match.orElse(() => {

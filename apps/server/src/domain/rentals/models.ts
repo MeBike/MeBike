@@ -10,6 +10,7 @@ export type RentalRow = {
   endTime: Date | null;
   durationMinutes: number | null;
   totalPrice: number | null;
+  subscriptionId: string | null;
   status: RentalStatus;
   updatedAt: Date;
 };

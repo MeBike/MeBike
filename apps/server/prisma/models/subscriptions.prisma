@@ -20,7 +20,7 @@ model Subscription {
   status      SubscriptionStatus  @default(PENDING)
   activatedAt DateTime?           @map("activated_at") @db.Timestamptz
   expiresAt   DateTime?           @map("expires_at") @db.Timestamptz
-  price       Decimal             @db.Decimal(12, 2)
+  price       BigInt
   updatedAt   DateTime            @default(now()) @map("updated_at") @db.Timestamptz
 
   user         User          @relation(fields: [userId], references: [id])

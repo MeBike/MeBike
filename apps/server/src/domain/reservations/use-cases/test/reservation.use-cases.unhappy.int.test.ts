@@ -218,7 +218,7 @@ describe("reservation use-cases unhappy paths", () => {
         status: args.status ?? "ACTIVE",
         activatedAt: args.status === "ACTIVE" ? new Date() : null,
         expiresAt: args.status === "ACTIVE" ? new Date(Date.now() + 86400000) : null,
-        price: "10000",
+        price: 10000n,
       },
     });
     return { id };

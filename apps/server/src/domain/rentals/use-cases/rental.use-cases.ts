@@ -4,6 +4,7 @@ import type { RentalStatus } from "generated/prisma/enums";
 
 import { env } from "@/config/env";
 import { BikeRepository } from "@/domain/bikes";
+import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { WalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -33,14 +34,15 @@ export function startRentalUseCase(
 ): Effect.Effect<
   RentalRow,
   RentalServiceFailure,
-  Prisma | RentalRepository | BikeRepository | WalletRepository
+  Prisma | RentalRepository | BikeRepository | WalletRepository | SubscriptionServiceTag
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const rentalRepo = yield* RentalRepository;
     const bikeRepo = yield* BikeRepository;
     const walletRepo = yield* WalletRepository;
-    const { userId, bikeId, startStationId, startTime } = input;
+    const subscriptionService = yield* SubscriptionServiceTag;
+    const { userId, bikeId, startStationId, startTime, subscriptionId } = input;
 
     const rental = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
@@ -99,7 +101,16 @@ export function startRentalUseCase(
           }));
         }
 
-        // TODO: Check subscription eligibility / usage rules (depends on subscriptions "useOne")
+        if (subscriptionId) {
+          yield* subscriptionService.useOneInTx(tx, {
+            subscriptionId,
+            userId,
+            now: startTime,
+          }).pipe(
+            Effect.catchTag("SubscriptionRepositoryError", err => Effect.die(err)),
+          );
+        }
+
         // TODO: Reservation integration (if started from reservation):
         // - ensure reservation belongs to user and is active
         // - mark reservation consumed/expired appropriately
@@ -110,6 +121,7 @@ export function startRentalUseCase(
           bikeId,
           startStationId,
           startTime,
+          subscriptionId: subscriptionId ?? null,
         }).pipe(
           Effect.catchTag(
             "RentalUniqueViolation",

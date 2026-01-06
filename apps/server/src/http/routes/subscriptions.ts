@@ -7,13 +7,15 @@ import {
 import { Data, Effect, Match, Option } from "effect";
 
 import type { SubscriptionRow } from "@/domain/subscriptions";
+import type { SubscriptionPackageConfig } from "@/domain/subscriptions/package-config";
 
 import { withLoggedCause } from "@/domain/shared";
-import { toPrismaDecimal } from "@/domain/shared/decimal";
 import {
   activateSubscriptionUseCase,
   createSubscriptionUseCase,
 } from "@/domain/subscriptions";
+import { listSubscriptionPackages } from "@/domain/subscriptions/package-config";
+import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { UserServiceTag } from "@/domain/users";
 import { withSubscriptionDeps } from "@/http/shared/providers";
 
@@ -34,6 +36,102 @@ export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").Open
     expiresAt: row.expiresAt ? row.expiresAt.toISOString() : null,
     price: row.price.toString(),
     updatedAt: row.updatedAt.toISOString(),
+  });
+
+  const mapPackageDetail = (
+    pkg: SubscriptionPackageConfig,
+  ): SubscriptionsContracts.SubscriptionPackageDetail => ({
+    packageName: pkg.packageName,
+    price: pkg.price.toString(),
+    maxUsages: pkg.maxUsages,
+    currency: pkg.currency,
+  });
+
+  app.openapi(subscriptions.listSubscriptionPackages, async c =>
+    c.json<SubscriptionsContracts.ListSubscriptionPackagesResponse, 200>({
+      data: listSubscriptionPackages().map(mapPackageDetail),
+    }, 200));
+
+  app.openapi(subscriptions.getSubscription, async (c) => {
+    const userId = c.var.currentUser?.userId ?? null;
+    if (!userId) {
+      return c.json({
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      }, 401);
+    }
+
+    const { subscriptionId } = c.req.valid("param");
+
+    const eff = withLoggedCause(
+      withSubscriptionDeps(
+        Effect.flatMap(SubscriptionServiceTag, service => service.findById(subscriptionId)),
+      ),
+      "GET /v1/subscriptions/{subscriptionId}",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) => {
+        if (Option.isNone(right) || right.value.userId !== userId) {
+          return c.json<SubscriptionsContracts.SubscriptionErrorResponse, 404>({
+            error: subscriptionErrorMessages.SUBSCRIPTION_NOT_FOUND,
+            details: { code: SubscriptionErrorCodeSchema.enum.SUBSCRIPTION_NOT_FOUND },
+          }, 404);
+        }
+        return c.json<SubscriptionsContracts.SubscriptionDetailResponse, 200>({
+          data: mapSubscriptionDetail(right.value),
+        }, 200);
+      }),
+      Match.tag("Left", () =>
+        c.json<SubscriptionsContracts.SubscriptionErrorResponse, 404>({
+          error: subscriptionErrorMessages.SUBSCRIPTION_NOT_FOUND,
+          details: { code: SubscriptionErrorCodeSchema.enum.SUBSCRIPTION_NOT_FOUND },
+        }, 404)),
+      Match.exhaustive,
+    );
+  });
+
+  app.openapi(subscriptions.listSubscriptions, async (c) => {
+    const userId = c.var.currentUser?.userId ?? null;
+    if (!userId) {
+      return c.json({
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      }, 401);
+    }
+
+    const query = c.req.valid("query");
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 50;
+
+    const eff = withLoggedCause(
+      withSubscriptionDeps(
+        Effect.flatMap(SubscriptionServiceTag, service =>
+          service.listForUser(userId, { status: query.status }, { page, pageSize })),
+      ),
+      "GET /v1/subscriptions",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<SubscriptionsContracts.ListSubscriptionsResponse, 200>({
+          data: right.items.map(mapSubscriptionDetail),
+          pagination: {
+            page: right.page,
+            pageSize: right.pageSize,
+            total: right.total,
+            totalPages: right.totalPages,
+          },
+        }, 200)),
+      Match.tag("Left", ({ left }) => {
+        throw left;
+      }),
+      Match.exhaustive,
+    );
   });
 
   app.openapi(subscriptions.createSubscription, async (c) => {
@@ -58,8 +156,6 @@ export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").Open
         return yield* createSubscriptionUseCase({
           userId,
           packageName: body.packageName,
-          price: toPrismaDecimal(body.price),
-          maxUsages: body.maxUsages ?? null,
           email: user.email,
           fullName: user.fullname,
         });

@@ -6,8 +6,9 @@ import { env } from "@/config/env";
 import { toMinorUnit } from "@/domain/shared/money";
 import { WalletServiceTag } from "@/domain/wallets";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
-import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
+import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
+import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import { buildSubscriptionCreatedEmail } from "@/lib/email-templates";
 
 import type {
@@ -30,6 +31,7 @@ import {
   SubscriptionPendingOrActiveExists as SubscriptionPendingOrActiveExistsError,
   SubscriptionUsageExceeded as SubscriptionUsageExceededError,
 } from "../domain-errors";
+import { getSubscriptionPackageConfig } from "../package-config";
 import { SubscriptionServiceTag } from "../services/subscription.service";
 
 export type UseSubscriptionFailure
@@ -67,8 +69,6 @@ function computeAutoActivateAt(now: Date): Date {
 export function createSubscriptionUseCase(args: {
   userId: string;
   packageName: SubscriptionPackage;
-  price: SubscriptionRow["price"];
-  maxUsages: number | null; // null means unlimited
   email: string;
   fullName: string;
   now?: Date;
@@ -82,46 +82,46 @@ export function createSubscriptionUseCase(args: {
     const walletService = yield* WalletServiceTag;
     const { client } = yield* Prisma;
     const now = args.now ?? new Date();
+    const packageConfig = getSubscriptionPackageConfig(args.packageName);
     const createdOn = now.toISOString().slice(0, 10);
     const subscriptionEmail = buildSubscriptionCreatedEmail({
       fullName: args.fullName,
       packageName: args.packageName,
-      price: Number(args.price.toString()),
-      maxUsages: args.maxUsages,
+      price: Number(packageConfig.price.toString()),
+      maxUsages: packageConfig.maxUsages,
       createdOn,
       // TODO: Provide a real callback URL once we standardize a `FRONTEND_URL`/`APP_WEB_URL` env.
     });
 
-    const created = yield* Effect.tryPromise({
-      try: () => client.$transaction(async (tx) => {
-        // TODO(effect-env): Avoid `Effect.runPromise` inside `$transaction` callbacks when the Effect depends on Context/Layer.
-        // `runPromise` starts a new runtime without the outer environment, which can fail with "Service not found".
-        // Prefer tx-only repo functions (no Tag dependencies), or provide the captured Context explicitly.
-        const existing = await service.findCurrentForUserInTx(
+    const created = yield* runPrismaTransaction(client, tx =>
+      Effect.gen(function* () {
+        const existing = yield* service.findCurrentForUserInTx(
           tx,
           args.userId,
           ["PENDING", "ACTIVE"],
-        ).pipe(Effect.runPromise);
+        );
         if (Option.isSome(existing)) {
-          throw new SubscriptionPendingOrActiveExistsError({ userId: args.userId });
+          return yield* Effect.fail(
+            new SubscriptionPendingOrActiveExistsError({ userId: args.userId }),
+          );
         }
 
-        const pending = await service.createPendingInTx(tx, {
+        const pending = yield* service.createPendingInTx(tx, {
           userId: args.userId,
           packageName: args.packageName,
-          maxUsages: args.maxUsages,
-          price: args.price,
-        }).pipe(Effect.runPromise);
+          maxUsages: packageConfig.maxUsages,
+          price: packageConfig.price,
+        });
 
-        const priceMinor = toMinorUnit(args.price);
-        await walletService.debitWalletInTx(tx, {
+        const priceMinor = toMinorUnit(packageConfig.price);
+        yield* walletService.debitWalletInTx(tx, {
           userId: args.userId,
           amount: priceMinor,
           description: `Subscription payment ${pending.id}`,
           type: "DEBIT",
-        }).pipe(Effect.runPromise);
+        });
 
-        await enqueueOutboxJob(tx, {
+        yield* enqueueOutboxJobInTx(tx, {
           type: JobTypes.SubscriptionAutoActivate,
           dedupeKey: pending.id,
           payload: {
@@ -131,7 +131,7 @@ export function createSubscriptionUseCase(args: {
           runAt: computeAutoActivateAt(now),
         });
 
-        await enqueueOutboxJob(tx, {
+        yield* enqueueOutboxJobInTx(tx, {
           type: JobTypes.EmailSend,
           dedupeKey: `subscription-created:${pending.id}`,
           payload: {
@@ -145,9 +145,9 @@ export function createSubscriptionUseCase(args: {
         });
 
         return pending;
-      }),
-      catch: err => err as CreateSubscriptionFailure,
-    });
+      })).pipe(
+      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
+    );
 
     return created;
   });

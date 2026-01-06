@@ -93,7 +93,7 @@ describe("subscriptionService Integration", () => {
           userId,
           packageName: "basic",
           maxUsages: 10,
-          price: new PrismaNS.Decimal("10.00"),
+          price: 1000n,
         })),
     );
 
@@ -117,7 +117,7 @@ describe("subscriptionService Integration", () => {
           userId,
           packageName: "basic",
           maxUsages: 5,
-          price: new PrismaNS.Decimal("5.00"),
+          price: 500n,
         })),
     );
 
@@ -150,7 +150,7 @@ describe("subscriptionService Integration", () => {
           userId,
           packageName: "basic",
           maxUsages: 2,
-          price: new PrismaNS.Decimal("10.00"),
+          price: 1000n,
         })),
     );
 
@@ -162,7 +162,7 @@ describe("subscriptionService Integration", () => {
 
     expect(used.id).toBe(created.id);
     expect(used.userId).toBe(userId);
-    expect(used.status).toBe("PENDING");
+    expect(used.status).toBe("ACTIVE");
     expect(used.usageCount).toBe(1);
   });
 
@@ -188,7 +188,7 @@ describe("subscriptionService Integration", () => {
           userId: userA,
           packageName: "basic",
           maxUsages: 2,
-          price: new PrismaNS.Decimal("10.00"),
+          price: 1000n,
         })),
     );
 
@@ -210,7 +210,7 @@ describe("subscriptionService Integration", () => {
           userId,
           packageName: "basic",
           maxUsages: 1,
-          price: new PrismaNS.Decimal("10.00"),
+          price: 1000n,
         })),
     );
 
@@ -238,7 +238,7 @@ describe("subscriptionService Integration", () => {
           userId,
           packageName: "basic",
           maxUsages: 5,
-          price: new PrismaNS.Decimal("5.00"),
+          price: 500n,
         })),
     );
     const second = await runWithService(
@@ -247,7 +247,7 @@ describe("subscriptionService Integration", () => {
           userId,
           packageName: "premium",
           maxUsages: 5,
-          price: new PrismaNS.Decimal("15.00"),
+          price: 1500n,
         })),
     );
 

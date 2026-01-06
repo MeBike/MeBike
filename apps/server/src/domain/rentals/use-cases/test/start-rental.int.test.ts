@@ -4,6 +4,12 @@ import { uuidv7 } from "uuidv7";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
+import {
+  makeSubscriptionRepository,
+  SubscriptionRepository,
+  SubscriptionServiceLive,
+  SubscriptionServiceTag,
+} from "@/domain/subscriptions";
 import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
 import { startRentalUseCase } from "@/domain/rentals/use-cases/rental.use-cases";
 import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
@@ -22,7 +28,7 @@ describe("startRentalUseCase Integration", () => {
   let bikeRepo: ReturnType<typeof makeBikeRepository>;
   let walletRepo: ReturnType<typeof makeWalletRepository>;
   let depsLayer: Layer.Layer<
-    Prisma | RentalRepository | BikeRepository | WalletRepository
+    Prisma | RentalRepository | BikeRepository | WalletRepository | SubscriptionServiceTag
   >;
 
   beforeAll(async () => {
@@ -35,12 +41,21 @@ describe("startRentalUseCase Integration", () => {
     rentalRepo = makeRentalRepository(client);
     bikeRepo = makeBikeRepository(client);
     walletRepo = makeWalletRepository(client);
+    const subscriptionRepoLayer = Layer.succeed(
+      SubscriptionRepository,
+      makeSubscriptionRepository(client),
+    );
+    const subscriptionServiceLayer = SubscriptionServiceLive.pipe(
+      Layer.provide(subscriptionRepoLayer),
+    );
 
     depsLayer = Layer.mergeAll(
       Layer.succeed(Prisma, Prisma.make({ client })),
       Layer.succeed(RentalRepository, RentalRepository.make(rentalRepo)),
       Layer.succeed(BikeRepository, BikeRepository.make(bikeRepo)),
       Layer.succeed(WalletRepository, walletRepo),
+      subscriptionRepoLayer,
+      subscriptionServiceLayer,
     );
   }, 60000);
   afterEach(async () => {
@@ -62,7 +77,7 @@ describe("startRentalUseCase Integration", () => {
     eff: Effect.Effect<
       A,
       E,
-      Prisma | RentalRepository | BikeRepository | WalletRepository
+      Prisma | RentalRepository | BikeRepository | WalletRepository | SubscriptionServiceTag
     >,
   ) => eff.pipe(Effect.provide(depsLayer));
 

@@ -6,6 +6,7 @@ import {
   UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
+  ListSubscriptionPackagesResponseSchema,
   ListSubscriptionsQuerySchema,
   ListSubscriptionsResponseSchema,
   SubscriptionDetailResponseSchema,
@@ -82,6 +83,39 @@ export const listSubscriptionsRoute = createRoute({
       content: {
         "application/json": {
           schema: ListSubscriptionsResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const listSubscriptionPackagesRoute = createRoute({
+  method: "get",
+  path: "/v1/subscriptions/packages",
+  tags: ["Subscriptions"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    200: {
+      description: "List subscription packages",
+      content: {
+        "application/json": {
+          schema: ListSubscriptionPackagesResponseSchema,
         },
       },
     },

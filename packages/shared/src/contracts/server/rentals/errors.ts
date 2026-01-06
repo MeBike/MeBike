@@ -29,6 +29,9 @@ export const rentalErrorCodes = [
   // Payment & Wallet Errors
   "NOT_ENOUGH_BALANCE_TO_RENT",
   "USER_NOT_HAVE_WALLET",
+  "SUBSCRIPTION_NOT_FOUND",
+  "SUBSCRIPTION_NOT_USABLE",
+  "SUBSCRIPTION_USAGE_EXCEEDED",
 
   // Time & Validation Errors
   "END_DATE_CANNOT_BE_IN_FUTURE",
@@ -72,6 +75,7 @@ export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   bikeId: z.uuidv7().optional(),
   userId: z.uuidv7().optional(),
   stationId: z.uuidv7().optional(),
+  subscriptionId: z.uuidv7().optional(),
   sosId: z.uuidv7().optional(),
   cardUid: z.string().optional(),
   chipId: z.string().optional(),
@@ -89,6 +93,8 @@ export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   value: z.string().optional(),
   requestedStatus: z.string().optional(),
   requestedBikeStatus: z.string().optional(),
+  usageCount: z.number().optional(),
+  maxUsages: z.number().nullable().optional(),
 }).openapi({
   description: "Rental-specific error detail",
   example: {
@@ -132,6 +138,9 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
 
   NOT_ENOUGH_BALANCE_TO_RENT: "Insufficient balance to start rental",
   USER_NOT_HAVE_WALLET: "User does not have a wallet",
+  SUBSCRIPTION_NOT_FOUND: "Subscription not found",
+  SUBSCRIPTION_NOT_USABLE: "Subscription is not usable",
+  SUBSCRIPTION_USAGE_EXCEEDED: "Subscription usage limit exceeded",
 
   END_DATE_CANNOT_BE_IN_FUTURE: "End date cannot be in the future",
   END_TIME_MUST_GREATER_THAN_START_TIME: "End time must be after start time",

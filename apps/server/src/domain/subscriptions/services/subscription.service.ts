@@ -16,6 +16,7 @@ import {
   SubscriptionUsageExceeded,
 } from "../domain-errors";
 import { SubscriptionRepository } from "../repository/subscription.repository";
+import { env } from "@/config/env";
 
 export type SubscriptionService = {
   createPending: (
@@ -161,6 +162,7 @@ export const SubscriptionServiceLive = Layer.effect(
             }));
           }
           const subscription = subscriptionOpt.value;
+          const now = input.now ?? new Date();
 
           if (subscription.userId !== input.userId) {
             return yield* Effect.fail(new SubscriptionNotUsable({
@@ -187,10 +189,40 @@ export const SubscriptionServiceLive = Layer.effect(
             }));
           }
 
+          let current = subscription;
+          if (subscription.status === "PENDING") {
+            const expiresAt = new Date(
+              now.getTime() + env.EXPIRE_AFTER_DAYS * 24 * 60 * 60 * 1000,
+            );
+            const activated = yield* repo.activateInTx(tx, {
+              subscriptionId: subscription.id,
+              activatedAt: now,
+              expiresAt,
+            }).pipe(
+              Effect.catchTag(
+                "ActiveSubscriptionExists",
+                () =>
+                  Effect.fail(new SubscriptionNotUsable({
+                    subscriptionId: subscription.id,
+                    status: "ACTIVE",
+                  })),
+              ),
+            );
+
+            if (Option.isNone(activated)) {
+              return yield* Effect.fail(new SubscriptionNotUsable({
+                subscriptionId: subscription.id,
+                status: subscription.status,
+              }));
+            }
+
+            current = activated.value;
+          }
+
           const updated = yield* repo.incrementUsageInTx(
             tx,
-            subscription.id,
-            subscription.usageCount,
+            current.id,
+            current.usageCount,
             1,
             ["ACTIVE", "PENDING"],
           );

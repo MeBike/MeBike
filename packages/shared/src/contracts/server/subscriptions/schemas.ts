@@ -6,7 +6,12 @@ import {
   unauthorizedErrorMessages,
   UnauthorizedErrorResponseSchema,
 } from "../schemas";
-import { SubscriptionDetailSchema, SubscriptionPackageSchema, SubscriptionStatusSchema } from "./models";
+import {
+  SubscriptionDetailSchema,
+  SubscriptionPackageDetailSchema,
+  SubscriptionPackageSchema,
+  SubscriptionStatusSchema,
+} from "./models";
 
 export const SubscriptionErrorCodeSchema = z
   .enum([
@@ -41,8 +46,6 @@ export const SubscriptionErrorResponseSchema = z.object({
 
 export const CreateSubscriptionRequestSchema = z.object({
   packageName: SubscriptionPackageSchema,
-  price: z.string().openapi({ example: "250000.00" }),
-  maxUsages: z.number().int().nullable(),
 }).openapi("CreateSubscriptionRequest");
 
 export const CreateSubscriptionResponseSchema = z.object({
@@ -67,15 +70,22 @@ export const ListSubscriptionsResponseSchema = z.object({
   pagination: PaginationSchema,
 }).openapi("ListSubscriptionsResponse");
 
+export const ListSubscriptionPackagesResponseSchema = z.object({
+  data: SubscriptionPackageDetailSchema.array(),
+}).openapi("ListSubscriptionPackagesResponse");
+
 export type SubscriptionErrorResponse = z.infer<typeof SubscriptionErrorResponseSchema>;
 export type CreateSubscriptionRequest = z.infer<typeof CreateSubscriptionRequestSchema>;
 export type CreateSubscriptionResponse = z.infer<typeof CreateSubscriptionResponseSchema>;
 export type ActivateSubscriptionResponse = z.infer<typeof ActivateSubscriptionResponseSchema>;
 export type SubscriptionDetailResponse = z.infer<typeof SubscriptionDetailResponseSchema>;
 export type ListSubscriptionsResponse = z.infer<typeof ListSubscriptionsResponseSchema>;
+export type ListSubscriptionPackagesResponse = z.infer<typeof ListSubscriptionPackagesResponseSchema>;
+export type SubscriptionPackageDetail = z.infer<typeof SubscriptionPackageDetailSchema>;
 
 export {
   SubscriptionDetailSchema,
+  SubscriptionPackageDetailSchema,
   SubscriptionPackageSchema,
   SubscriptionStatusSchema,
   UnauthorizedErrorCodeSchema,

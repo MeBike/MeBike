@@ -280,22 +280,17 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
               throw new WalletRecordNotFound({ operation: "decreaseBalance.findWallet", userId: input.userId });
             }
 
-            const changed = await tx.wallet.updateMany({
-              where: {
-                id: wallet.id,
-                balance: { gte: amount },
-              },
-              data: {
-                balance: { decrement: amount },
-              },
-            });
+            const changed = await tx.$executeRaw`UPDATE "wallets"
+              SET "balance" = "balance" - ${amount}
+              WHERE "id" = ${wallet.id}
+                AND "balance" - "reserved_balance" >= ${amount}`;
 
-            if (changed.count === 0) {
+            if (changed === 0) {
               throw new WalletBalanceConstraint({
                 operation: "decreaseBalance.updateBalance",
                 walletId: wallet.id,
                 userId: input.userId,
-                balance: wallet.balance,
+                balance: wallet.balance - wallet.reservedBalance,
                 attemptedDebit: amount,
               });
             }
@@ -340,22 +335,17 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
             throw new WalletRecordNotFound({ operation: "decreaseBalanceInTx.findWallet", userId: input.userId });
           }
 
-          const changed = await tx.wallet.updateMany({
-            where: {
-              id: wallet.id,
-              balance: { gte: amount },
-            },
-            data: {
-              balance: { decrement: amount },
-            },
-          });
+          const changed = await tx.$executeRaw`UPDATE "wallets"
+            SET "balance" = "balance" - ${amount}
+            WHERE "id" = ${wallet.id}
+              AND "balance" - "reserved_balance" >= ${amount}`;
 
-          if (changed.count === 0) {
+          if (changed === 0) {
             throw new WalletBalanceConstraint({
               operation: "decreaseBalanceInTx.updateBalance",
               walletId: wallet.id,
               userId: input.userId,
-              balance: wallet.balance,
+              balance: wallet.balance - wallet.reservedBalance,
               attemptedDebit: amount,
             });
           }

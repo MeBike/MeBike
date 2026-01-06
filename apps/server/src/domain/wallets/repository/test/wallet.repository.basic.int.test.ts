@@ -1,68 +1,17 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Effect, Either, Option } from "effect";
+import { Effect, Option } from "effect";
 import { uuidv7 } from "uuidv7";
-import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { PrismaClient } from "generated/prisma/client";
 
 import { makeWalletRepository } from "../wallet.repository";
+import { setupWalletRepositoryTests } from "./test-helpers";
 
-describe("walletRepository Integration", () => {
-  let container: { stop: () => Promise<void>; url: string };
-  let client: PrismaClient;
-  let repo: ReturnType<typeof makeWalletRepository>;
-
-  beforeAll(async () => {
-    container = await startPostgres();
-    await migrate(container.url);
-
-    const adapter = new PrismaPg({ connectionString: container.url });
-    client = new PrismaClient({ adapter });
-    repo = makeWalletRepository(client);
-  }, 60000);
-
-  afterEach(async () => {
-    await client.walletTransaction.deleteMany({});
-    await client.wallet.deleteMany({});
-    await client.user.deleteMany({});
-  });
-
-  afterAll(async () => {
-    if (client)
-      await client.$disconnect();
-    if (container)
-      await container.stop();
-  });
-
-  const createUser = async () => {
-    const id = uuidv7();
-    await client.user.create({
-      data: {
-        id,
-        fullname: "Wallet User",
-        email: `user-${id}@example.com`,
-        passwordHash: "hash",
-        role: "USER",
-        verify: "VERIFIED",
-      },
-    });
-    return { id };
-  };
-
-  const expectLeftTag = <E extends { _tag: string }>(
-    result: Either.Either<unknown, E>,
-    tag: E["_tag"],
-  ) => {
-    if (Either.isRight(result)) {
-      throw new Error(`Expected Left ${tag}, got Right`);
-    }
-    expect(result.left._tag).toBe(tag);
-  };
+describe("wallet Repository - Basic Operations", () => {
+  const { getRepo, createUser, expectLeftTag } = setupWalletRepositoryTests();
 
   it("createForUser creates a wallet", async () => {
+    const repo = getRepo();
     const { id: userId } = await createUser();
 
     const wallet = await Effect.runPromise(repo.createForUser(userId));
@@ -73,6 +22,7 @@ describe("walletRepository Integration", () => {
   });
 
   it("createForUser rejects duplicate wallet", async () => {
+    const repo = getRepo();
     const { id: userId } = await createUser();
     await Effect.runPromise(repo.createForUser(userId));
 
@@ -84,6 +34,7 @@ describe("walletRepository Integration", () => {
   });
 
   it("increaseBalance and decreaseBalance adjust balance", async () => {
+    const repo = getRepo();
     const { id: userId } = await createUser();
     await Effect.runPromise(repo.createForUser(userId));
 
@@ -104,6 +55,7 @@ describe("walletRepository Integration", () => {
   });
 
   it("increaseBalance fails when wallet is missing", async () => {
+    const repo = getRepo();
     const result = await Effect.runPromise(
       repo.increaseBalance({ userId: uuidv7(), amount: 50n }).pipe(Effect.either),
     );
@@ -112,6 +64,7 @@ describe("walletRepository Integration", () => {
   });
 
   it("increaseBalance returns WalletUniqueViolation for duplicate hash", async () => {
+    const repo = getRepo();
     const { id: userId } = await createUser();
     await Effect.runPromise(repo.createForUser(userId));
 
@@ -138,6 +91,7 @@ describe("walletRepository Integration", () => {
   });
 
   it("decreaseBalance fails when balance is insufficient", async () => {
+    const repo = getRepo();
     const { id: userId } = await createUser();
     await Effect.runPromise(repo.createForUser(userId));
 

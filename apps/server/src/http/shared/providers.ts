@@ -117,6 +117,14 @@ const WalletHoldServiceLayer = WalletHoldServiceLive.pipe(
   Layer.provide(WalletHoldReposLive),
 );
 
+const SubscriptionReposLive = SubscriptionRepositoryLive.pipe(
+  Layer.provide(PrismaLive),
+);
+
+const SubscriptionServiceLayer = SubscriptionServiceLive.pipe(
+  Layer.provide(SubscriptionReposLive),
+);
+
 export const WalletDepsLive = Layer.mergeAll(
   WalletReposLive,
   WalletServiceLayer,
@@ -130,6 +138,8 @@ export const RentalDepsLive = Layer.mergeAll(
   RentalServiceLayer,
   BikeDepsLive,
   WalletDepsLive,
+  SubscriptionReposLive,
+  SubscriptionServiceLayer,
   PrismaLive,
 );
 
@@ -308,14 +318,6 @@ export const StripeWebhookDepsLive = Layer.mergeAll(
 export function withStripeWebhookDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(Effect.provide(StripeWebhookDepsLive));
 }
-
-const SubscriptionReposLive = SubscriptionRepositoryLive.pipe(
-  Layer.provide(PrismaLive),
-);
-
-const SubscriptionServiceLayer = SubscriptionServiceLive.pipe(
-  Layer.provide(SubscriptionReposLive),
-);
 
 export const SubscriptionDepsLive = Layer.mergeAll(
   SubscriptionReposLive,

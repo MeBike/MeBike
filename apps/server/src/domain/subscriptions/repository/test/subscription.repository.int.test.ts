@@ -6,7 +6,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { migrate } from "@/test/db/migrate";
 import { startPostgres } from "@/test/db/postgres";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
-import { Prisma, PrismaClient } from "generated/prisma/client";
+import { PrismaClient } from "generated/prisma/client";
 
 import { makeSubscriptionRepository } from "../subscription.repository";
 
@@ -69,7 +69,7 @@ describe("subscriptionRepository Integration", () => {
         userId,
         packageName: "basic",
         maxUsages: 10,
-        price: new Prisma.Decimal("10.00"),
+        price: 1000n,
       }),
     );
 
@@ -88,7 +88,7 @@ describe("subscriptionRepository Integration", () => {
         userId,
         packageName: "premium",
         maxUsages: null,
-        price: new Prisma.Decimal("20.00"),
+        price: 2000n,
       }),
     );
 
@@ -108,7 +108,7 @@ describe("subscriptionRepository Integration", () => {
         userId,
         packageName: "basic",
         maxUsages: 5,
-        price: new Prisma.Decimal("5.00"),
+        price: 500n,
       }),
     );
 
@@ -137,7 +137,7 @@ describe("subscriptionRepository Integration", () => {
         userId,
         packageName: "basic",
         maxUsages: 5,
-        price: new Prisma.Decimal("5.00"),
+        price: 500n,
       }),
     );
 
@@ -174,7 +174,7 @@ describe("subscriptionRepository Integration", () => {
         userId,
         packageName: "basic",
         maxUsages: 5,
-        price: new Prisma.Decimal("5.00"),
+        price: 500n,
       }),
     );
 
@@ -203,7 +203,7 @@ describe("subscriptionRepository Integration", () => {
         userId,
         packageName: "basic",
         maxUsages: 5,
-        price: new Prisma.Decimal("5.00"),
+        price: 500n,
       }),
     );
     const second = await Effect.runPromise(
@@ -211,7 +211,7 @@ describe("subscriptionRepository Integration", () => {
         userId,
         packageName: "premium",
         maxUsages: 5,
-        price: new Prisma.Decimal("15.00"),
+        price: 1500n,
       }),
     );
 
@@ -266,7 +266,7 @@ describe("subscriptionRepository Integration", () => {
         status: "ACTIVE",
         activatedAt: now,
         expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
-        price: new Prisma.Decimal("10.00"),
+        price: 1000n,
       },
     });
 
@@ -281,7 +281,7 @@ describe("subscriptionRepository Integration", () => {
           status: "ACTIVE",
           activatedAt: now,
           expiresAt: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
-          price: new Prisma.Decimal("20.00"),
+          price: 2000n,
         },
       }),
     ).rejects.toBeDefined();

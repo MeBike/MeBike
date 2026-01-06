@@ -21,7 +21,7 @@ export type CreatePendingSubscriptionInput = {
   readonly userId: string;
   readonly packageName: SubscriptionPackage;
   readonly maxUsages: number | null;
-  readonly price: PrismaTypes.Decimal;
+  readonly price: bigint;
 };
 
 export type ActivateSubscriptionInput = {
@@ -67,6 +67,14 @@ export type SubscriptionRepo = {
   ) => Effect.Effect<PageResult<SubscriptionRow>, SubscriptionRepositoryError>;
 
   activate: (
+    input: ActivateSubscriptionInput,
+  ) => Effect.Effect<
+    Option.Option<SubscriptionRow>,
+    SubscriptionRepositoryError | ActiveSubscriptionExists
+  >;
+
+  activateInTx: (
+    tx: PrismaTypes.TransactionClient,
     input: ActivateSubscriptionInput,
   ) => Effect.Effect<
     Option.Option<SubscriptionRow>,
@@ -315,6 +323,55 @@ export function makeSubscriptionRepository(client: PrismaClient): SubscriptionRe
           catch: err =>
             new SubscriptionRepositoryError({
               operation: "activate.find",
+              cause: err,
+            }),
+        });
+
+        return Option.fromNullable(row).pipe(Option.map(toSubscriptionRow));
+      }),
+
+    activateInTx: (tx, input) =>
+      Effect.gen(function* () {
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            tx.subscription.updateMany({
+              where: {
+                id: input.subscriptionId,
+                status: "PENDING",
+              },
+              data: {
+                status: "ACTIVE",
+                activatedAt: input.activatedAt,
+                expiresAt: input.expiresAt,
+                updatedAt: input.activatedAt,
+              },
+            }),
+          catch: (err) => {
+            if (isPrismaUniqueViolation(err)) {
+              return new ActiveSubscriptionExists({
+                subscriptionId: input.subscriptionId,
+              });
+            }
+            return new SubscriptionRepositoryError({
+              operation: "activateInTx.update",
+              cause: err,
+            });
+          },
+        });
+
+        if (updated.count === 0) {
+          return Option.none<SubscriptionRow>();
+        }
+
+        const row = yield* Effect.tryPromise({
+          try: () =>
+            tx.subscription.findUnique({
+              where: { id: input.subscriptionId },
+              select: selectSubscriptionRow,
+            }),
+          catch: err =>
+            new SubscriptionRepositoryError({
+              operation: "activateInTx.find",
               cause: err,
             }),
         });

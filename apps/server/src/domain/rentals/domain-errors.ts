@@ -2,6 +2,11 @@ import { Data } from "effect";
 
 import type { WithGenericError } from "@/domain/shared";
 import type { BikeStatus, RentalStatus } from "generated/prisma/enums";
+import type {
+  SubscriptionNotFound,
+  SubscriptionNotUsable,
+  SubscriptionUsageExceeded,
+} from "@/domain/subscriptions/domain-errors";
 
 export class RentalRepositoryError extends Data.TaggedError("RentalRepositoryError")<
   WithGenericError
@@ -103,5 +108,8 @@ export type RentalServiceFailure
     | UserWalletNotFound
     | InsufficientBalanceToRent
     | InvalidRentalState
-    | EndStationMismatch;
+    | EndStationMismatch
+    | SubscriptionNotFound
+    | SubscriptionNotUsable
+    | SubscriptionUsageExceeded;
 export type RentalRepoError = RentalRepositoryError | RentalUniqueViolation;

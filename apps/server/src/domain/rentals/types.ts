@@ -14,6 +14,7 @@ export type StartRentalInput = {
   bikeId: string;
   startStationId: string;
   startTime: Date;
+  subscriptionId?: string;
 };
 
 export type EndRentalInput = {

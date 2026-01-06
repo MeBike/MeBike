@@ -1,6 +1,4 @@
-import type { Prisma as PrismaTypes, SubscriptionPackage, SubscriptionStatus } from "generated/prisma/client";
-
-export type SubscriptionDecimal = PrismaTypes.Decimal;
+import type { SubscriptionPackage, SubscriptionStatus } from "generated/prisma/client";
 
 export type SubscriptionRow = {
   readonly id: string;
@@ -11,7 +9,7 @@ export type SubscriptionRow = {
   readonly status: SubscriptionStatus;
   readonly activatedAt: Date | null;
   readonly expiresAt: Date | null;
-  readonly price: SubscriptionDecimal;
+  readonly price: bigint;
   readonly updatedAt: Date;
 };
 

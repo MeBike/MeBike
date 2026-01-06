@@ -23,6 +23,7 @@ export type CreateRentalInput = {
   bikeId: string;
   startStationId: string;
   startTime: Date;
+  subscriptionId?: string | null;
 };
 
 export type CreateReservedRentalInput = {
@@ -182,6 +183,7 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
     endTime: true,
     duration: true,
     totalPrice: true,
+    subscriptionId: true,
     status: true,
     updatedAt: true,
   } as const;
@@ -198,6 +200,7 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
     endTime: raw.endTime,
     durationMinutes: raw.duration,
     totalPrice: raw.totalPrice ? Number(raw.totalPrice) : null,
+    subscriptionId: raw.subscriptionId,
     status: raw.status,
     updatedAt: raw.updatedAt,
   });
@@ -214,6 +217,7 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
             bikeId: data.bikeId,
             startStationId: data.startStationId,
             startTime: data.startTime,
+            subscriptionId: data.subscriptionId ?? null,
             status: "RENTED" as RentalStatus,
           },
           select,
