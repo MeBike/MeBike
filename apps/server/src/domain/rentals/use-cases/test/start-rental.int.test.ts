@@ -3,15 +3,18 @@ import { Effect, Either, Layer } from "effect";
 import { uuidv7 } from "uuidv7";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
+import type {
+  SubscriptionServiceTag,
+} from "@/domain/subscriptions";
+
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
+import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
+import { startRentalUseCase } from "@/domain/rentals/use-cases/rental.use-cases";
 import {
   makeSubscriptionRepository,
   SubscriptionRepository,
   SubscriptionServiceLive,
-  SubscriptionServiceTag,
 } from "@/domain/subscriptions";
-import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
-import { startRentalUseCase } from "@/domain/rentals/use-cases/rental.use-cases";
 import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";

@@ -3,10 +3,12 @@ import { Effect, Either, Layer, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
+import type { Prisma as PrismaNS } from "generated/prisma/client";
+
 import { Prisma } from "@/infrastructure/prisma";
 import { migrate } from "@/test/db/migrate";
 import { startPostgres } from "@/test/db/postgres";
-import { PrismaClient, Prisma as PrismaNS } from "generated/prisma/client";
+import { PrismaClient } from "generated/prisma/client";
 
 import { makeSubscriptionRepository, SubscriptionRepository } from "../..";
 import { SubscriptionServiceLive, SubscriptionServiceTag } from "../subscription.service";

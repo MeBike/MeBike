@@ -138,7 +138,7 @@ describe("bikeRepository Integration", () => {
     const { id: bikeId } = await createBike(stationId, "AVAILABLE");
     const now = new Date();
 
-    const reserved = await client.$transaction(async (tx) =>
+    const reserved = await client.$transaction(async tx =>
       Effect.runPromise(repo.reserveBikeIfAvailableInTx(tx, bikeId, now)),
     );
 
@@ -156,7 +156,7 @@ describe("bikeRepository Integration", () => {
     const { id: bikeId } = await createBike(stationId, "RESERVED");
     const now = new Date();
 
-    const booked = await client.$transaction(async (tx) =>
+    const booked = await client.$transaction(async tx =>
       Effect.runPromise(repo.bookBikeIfReservedInTx(tx, bikeId, now)),
     );
 
@@ -174,7 +174,7 @@ describe("bikeRepository Integration", () => {
     const { id: bikeId } = await createBike(stationId, "RESERVED");
     const now = new Date();
 
-    const released = await client.$transaction(async (tx) =>
+    const released = await client.$transaction(async tx =>
       Effect.runPromise(repo.releaseBikeIfReservedInTx(tx, bikeId, now)),
     );
 

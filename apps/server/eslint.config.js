@@ -1,7 +1,7 @@
 import createConfig from "@mebike/eslint-config/create-config";
 
 export default createConfig({
-  ignores: ["dist/**", "dist-test/**"],
+  ignores: ["dist/**", "dist-test/**", "generated/**"],
   rules: {
     "no-console": "warn",
   },

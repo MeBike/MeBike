@@ -2,6 +2,8 @@ import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
+import { env } from "@/config/env";
+
 import type {
   ActiveSubscriptionExists,
   SubscriptionRepositoryError,
@@ -16,7 +18,6 @@ import {
   SubscriptionUsageExceeded,
 } from "../domain-errors";
 import { SubscriptionRepository } from "../repository/subscription.repository";
-import { env } from "@/config/env";
 
 export type SubscriptionService = {
   createPending: (

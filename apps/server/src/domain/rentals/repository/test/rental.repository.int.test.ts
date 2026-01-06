@@ -148,7 +148,7 @@ describe("rentalRepository Integration", () => {
     const reservationId = uuidv7();
     const startTime = new Date();
 
-    const reserved = await client.$transaction(async (tx) =>
+    const reserved = await client.$transaction(async tx =>
       Effect.runPromise(
         repo.createReservedRentalForReservationInTx(tx, {
           reservationId,
@@ -179,7 +179,7 @@ describe("rentalRepository Integration", () => {
     const reservedAt = new Date();
     const startTime = new Date();
 
-    const started = await client.$transaction(async (tx) =>
+    const started = await client.$transaction(async tx =>
       Effect.runPromise(
         Effect.gen(function* () {
           yield* repo.createReservedRentalForReservationInTx(tx, {
@@ -220,7 +220,7 @@ describe("rentalRepository Integration", () => {
     const reservedAt = new Date();
     const cancelledAt = new Date();
 
-    const cancelled = await client.$transaction(async (tx) =>
+    const cancelled = await client.$transaction(async tx =>
       Effect.runPromise(
         Effect.gen(function* () {
           yield* repo.createReservedRentalForReservationInTx(tx, {

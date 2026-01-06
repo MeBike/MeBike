@@ -16,10 +16,11 @@ import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import type {
   WithdrawalNotFound,
   WithdrawalProviderError,
+
+  WithdrawalRepositoryError,
 } from "../domain-errors";
 
 import {
-  WithdrawalRepositoryError,
   WithdrawalUserNotFound,
 } from "../domain-errors";
 import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";

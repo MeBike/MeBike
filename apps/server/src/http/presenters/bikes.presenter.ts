@@ -74,4 +74,3 @@ export function toBikeRentalHistoryItem(
     ...(row.endStation ? { endStation: row.endStation } : {}),
   };
 }
-
