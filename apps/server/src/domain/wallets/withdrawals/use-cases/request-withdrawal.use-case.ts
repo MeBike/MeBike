@@ -10,10 +10,7 @@ import type {
 
 import { env } from "@/config/env";
 import { UserServiceTag } from "@/domain/users/services/user.service";
-import {
-  InsufficientWalletBalance,
-  WalletNotFound,
-} from "@/domain/wallets/domain-errors";
+import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { WalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { WalletHoldServiceTag } from "@/domain/wallets/services/wallet-hold.service";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
@@ -113,13 +110,13 @@ export function requestWithdrawalUseCase(
           idempotencyKey,
         });
 
-        // TODO(concurrency): check-then-act race.
-        // Two concurrent withdrawal requests can both compute the same `reserved` before either inserts its hold,
-        // leading to over-reservation. Fix by enforcing a DB guard (e.g. SERIALIZABLE tx with retry, SELECT ... FOR UPDATE on wallet,
-        // or an atomic `reservedBalance` column updated with a conditional check).
-        const reserved = yield* walletHoldService.sumActiveAmountByWalletInTx(tx, wallet.id);
-        const available = wallet.balance - reserved;
-        if (available < input.amount) {
+        const reservedRows = yield* walletRepo.reserveBalanceInTx(tx, {
+          walletId: wallet.id,
+          amount: input.amount,
+        });
+
+        const available = wallet.balance - wallet.reservedBalance;
+        if (!reservedRows) {
           return yield* Effect.fail(new InsufficientWalletBalance({
             walletId: wallet.id,
             userId: user.id,

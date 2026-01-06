@@ -52,6 +52,14 @@ export type WalletService = {
     WalletRow,
     WalletNotFound | InsufficientWalletBalance | WalletRepositoryError
   >;
+  reserveBalanceInTx: (
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
+    input: { readonly walletId: string; readonly amount: bigint },
+  ) => Effect.Effect<boolean, WalletRepositoryError>;
+  releaseReservedBalanceInTx: (
+    tx: import("generated/prisma/client").Prisma.TransactionClient,
+    input: { readonly walletId: string; readonly amount: bigint },
+  ) => Effect.Effect<boolean, WalletRepositoryError>;
 
   listTransactionsForUser: (
     args: { userId: string; pageReq: PageRequest<"createdAt"> },
@@ -130,6 +138,12 @@ export const WalletServiceLive = Layer.effect(
         ),
       );
 
+    const reserveBalanceInTx: WalletService["reserveBalanceInTx"] = (tx, input) =>
+      repo.reserveBalanceInTx(tx, input);
+
+    const releaseReservedBalanceInTx: WalletService["releaseReservedBalanceInTx"] = (tx, input) =>
+      repo.releaseReservedBalanceInTx(tx, input);
+
     const listTransactionsForUser: WalletService["listTransactionsForUser"] = ({ userId, pageReq }) =>
       Effect.gen(function* () {
         const wallet = yield* getByUserId(userId);
@@ -144,6 +158,8 @@ export const WalletServiceLive = Layer.effect(
       creditWalletInTx,
       debitWallet,
       debitWalletInTx,
+      reserveBalanceInTx,
+      releaseReservedBalanceInTx,
       listTransactionsForUser,
     };
 

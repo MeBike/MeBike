@@ -90,6 +90,11 @@ export function handleStripePayoutWebhookUseCase(
                 return true;
               }
 
+              yield* walletService.releaseReservedBalanceInTx(tx, {
+                walletId: withdrawal.walletId,
+                amount: withdrawal.amount,
+              });
+
               yield* walletService.debitWalletInTx(tx, {
                 userId: withdrawal.userId,
                 amount: withdrawal.amount,
@@ -137,6 +142,11 @@ export function handleStripePayoutWebhookUseCase(
                 // Legacy rows may not have a hold; treat as already released.
                 return true;
               }
+
+              yield* walletService.releaseReservedBalanceInTx(tx, {
+                walletId: withdrawal.walletId,
+                amount: withdrawal.amount,
+              });
 
               return true;
             })).pipe(

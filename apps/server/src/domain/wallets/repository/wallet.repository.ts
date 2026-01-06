@@ -56,6 +56,14 @@ export type WalletRepo = {
     WalletRow,
     WalletRecordNotFound | WalletBalanceConstraint | WalletRepositoryError
   >;
+  reserveBalanceInTx: (
+    tx: PrismaTypes.TransactionClient,
+    input: { readonly walletId: string; readonly amount: bigint },
+  ) => Effect.Effect<boolean, WalletRepositoryError>;
+  releaseReservedBalanceInTx: (
+    tx: PrismaTypes.TransactionClient,
+    input: { readonly walletId: string; readonly amount: bigint },
+  ) => Effect.Effect<boolean, WalletRepositoryError>;
   listTransactions: (
     walletId: string,
     pageReq: PageRequest<"createdAt">,
@@ -375,6 +383,43 @@ export function makeWalletRepository(client: PrismaClient): WalletRepo {
           }
           return new WalletRepositoryError({ operation: "decreaseBalanceInTx", cause: err });
         },
+      }),
+
+    reserveBalanceInTx: (tx, input) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.$executeRaw`UPDATE "wallets"
+            SET "reserved_balance" = "reserved_balance" + ${input.amount}
+            WHERE "id" = ${input.walletId}
+              AND "balance" - "reserved_balance" >= ${input.amount}`;
+          return updated > 0;
+        },
+        catch: err =>
+          new WalletRepositoryError({
+            operation: "reserveBalanceInTx",
+            cause: err,
+          }),
+      }),
+
+    releaseReservedBalanceInTx: (tx, input) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.wallet.updateMany({
+            where: {
+              id: input.walletId,
+              reservedBalance: { gte: input.amount },
+            },
+            data: {
+              reservedBalance: { decrement: input.amount },
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WalletRepositoryError({
+            operation: "releaseReservedBalanceInTx",
+            cause: err,
+          }),
       }),
 
     listTransactions: (walletId, pageReq) => {

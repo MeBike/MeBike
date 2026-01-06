@@ -1,22 +1,25 @@
 import { Effect, Match } from "effect";
 
 import type { UserRepositoryError } from "@/domain/users/domain-errors";
-import type { WalletHoldRepositoryError } from "@/domain/wallets/domain-errors";
+import type {
+  WalletHoldRepositoryError,
+  WalletRepositoryError,
+} from "@/domain/wallets/domain-errors";
 
 import { env } from "@/config/env";
 import { UserServiceTag } from "@/domain/users/services/user.service";
 import { WalletHoldServiceTag } from "@/domain/wallets/services/wallet-hold.service";
+import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type {
   WithdrawalNotFound,
   WithdrawalProviderError,
-
-  WithdrawalRepositoryError,
 } from "../domain-errors";
 
 import {
+  WithdrawalRepositoryError,
   WithdrawalUserNotFound,
 } from "../domain-errors";
 import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";
@@ -68,12 +71,14 @@ export function executeWithdrawalUseCase(
   | WithdrawalRepositoryError
   | WithdrawalUserNotFound
   | WalletHoldRepositoryError
+  | WalletRepositoryError
   | UserRepositoryError,
-  Prisma | WithdrawalServiceTag | WalletHoldServiceTag | UserServiceTag | StripeWithdrawalServiceTag
+  Prisma | WithdrawalServiceTag | WalletHoldServiceTag | WalletServiceTag | UserServiceTag | StripeWithdrawalServiceTag
 > {
   return Effect.gen(function* () {
     const withdrawalService = yield* WithdrawalServiceTag;
     const walletHoldService = yield* WalletHoldServiceTag;
+    const walletService = yield* WalletServiceTag;
     const userService = yield* UserServiceTag;
     const stripeService = yield* StripeWithdrawalServiceTag;
     const { client } = yield* Prisma;
@@ -142,6 +147,7 @@ export function executeWithdrawalUseCase(
               client,
               withdrawalService,
               walletHoldService,
+              walletService,
               withdrawal,
               "stripe_account_missing",
             );
@@ -152,6 +158,7 @@ export function executeWithdrawalUseCase(
               client,
               withdrawalService,
               walletHoldService,
+              walletService,
               withdrawal,
               "payouts_not_enabled",
             );
@@ -163,6 +170,7 @@ export function executeWithdrawalUseCase(
               client,
               withdrawalService,
               walletHoldService,
+              walletService,
               withdrawal,
               "amount_out_of_range",
             );
@@ -208,6 +216,7 @@ export function executeWithdrawalUseCase(
                 client,
                 withdrawalService,
                 walletHoldService,
+                walletService,
                 withdrawal,
                 "provider_balance_insufficient",
               );
@@ -242,12 +251,14 @@ function markFailedAndReleaseHold(
   client: import("generated/prisma/client").PrismaClient,
   withdrawalService: import("../services/withdrawal.service").WithdrawalService,
   walletHoldService: import("@/domain/wallets/services/wallet-hold.service").WalletHoldService,
+  walletService: import("@/domain/wallets/services/wallet.service").WalletService,
   withdrawal: import("../models").WalletWithdrawalRow,
   reason: string,
 ): Effect.Effect<
   ExecuteWithdrawalOutcome,
   | WithdrawalRepositoryError
   | WalletHoldRepositoryError
+  | WalletRepositoryError
 > {
   return Effect.gen(function* () {
     const updated = yield* runPrismaTransaction(client, tx =>
@@ -260,6 +271,11 @@ function markFailedAndReleaseHold(
         if (!markFailed) {
           return false;
         }
+
+        yield* walletService.releaseReservedBalanceInTx(tx, {
+          walletId: withdrawal.walletId,
+          amount: withdrawal.amount,
+        });
 
         const released = yield* walletHoldService.releaseByWithdrawalIdInTx(
           tx,
