@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
 
@@ -10,10 +10,9 @@ export const useGetNearestAvailableBike = ({
   latitude,
   longitude,
 }: UseGetNearestAvailableBikeProps) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: QUERY_KEYS.STATION.NEAREST_AVAILABLE_BIKE(latitude, longitude),
     queryFn: () =>
       stationService.getStationNearestAvailableBike({ latitude, longitude }),
-    enabled: !!latitude && !!longitude,
   });
 };

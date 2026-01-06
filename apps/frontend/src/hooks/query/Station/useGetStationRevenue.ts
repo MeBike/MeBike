@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
 const getStationRevenue = async () => {
@@ -13,9 +13,8 @@ const getStationRevenue = async () => {
   }
 };
 export const useGetStationRevenue = () => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: QUERY_KEYS.STATION.STATION_REVENUE,
     queryFn: () => getStationRevenue(),
-    enabled: false,
   });
 };
