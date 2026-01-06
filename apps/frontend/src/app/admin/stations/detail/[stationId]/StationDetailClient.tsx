@@ -20,14 +20,14 @@ export default function StationDetailClient({
       </div>
     );
   }
-  if (!responseStationDetail) {
+  if (!responseStationDetail?.data) {
     notFound();
   }
   return (
     <Suspense
       fallback={<Loader2 className="animate-spin w-16 h-16 text-primary" />}
     >
-      <StationDetail station={responseStationDetail} onSubmit={updateStation} />
+      <StationDetail station={responseStationDetail.data} onSubmit={updateStation} />
     </Suspense>
   );
 }

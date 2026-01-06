@@ -12,6 +12,7 @@ import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
 import { useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import BikeManagementSkeleton from "./loading";
 export default function BikeClient() {
   const [detailId, setDetailId] = useState<string>("");
@@ -37,7 +38,6 @@ export default function BikeClient() {
   const {
     data,
     detailBike,
-    getStatisticsBike,
     // statisticData,
     // isLoadingStatistics,
     paginationBikes,
@@ -130,9 +130,9 @@ export default function BikeClient() {
       chipid: "",
     });
   };
-  useEffect(() => {
-    getStatisticsBike();
-  }, [getStatisticsBike]);
+  // useEffect(() => {
+  //   getStatisticsBike();
+  // }, [getStatisticsBike]);
   useEffect(() => {
     if (detailId) {
       getBikeByID();
@@ -159,7 +159,10 @@ export default function BikeClient() {
   //       <Loader2 className="animate-spin w-16 h-16 text-primary" />
   //     </div>
   //   );
-  // } 
+  // } ì
+  if (!data?.data?.Bikes) {
+    notFound();
+  }
   if (isLoadingDetail){
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
@@ -725,7 +728,7 @@ export default function BikeClient() {
                   handleEditBike(id);
                 },
               })}
-              data={data?.data?.Bikes.data || []}
+              data={data?.data?.Bikes?.data || []}
             />
             <PaginationDemo
               currentPage={paginationBikes?.page ?? 1}

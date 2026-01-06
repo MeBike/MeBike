@@ -17,7 +17,7 @@ import * as tt from "@tomtom-international/web-sdk-maps";
 
 
 interface StationDetailProps {
-  station: Station;
+  station?: Station;
   onSubmit : ({address,capacity,latitude,longitude,name} : {
     address : string,
     capacity : number,

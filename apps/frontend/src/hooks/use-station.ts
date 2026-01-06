@@ -221,7 +221,7 @@ export const useStationActions = ({
     totalStation : response?.data?.Stations.total,
     activeStation : response?.data?.Stations.activeStation,
     inactiveStation : response?.data?.Stations.inactiveStation,
-    responseStationDetail: responseStationDetail?.data,
+    responseStationDetail: responseStationDetail?.data?.Station,
     isLoadingGetStationByID: isLoadingStationID,
     // responseStationReservationStats,
     // getReservationStats,

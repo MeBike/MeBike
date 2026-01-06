@@ -1,10 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { reservationService } from "@services/reservation.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
+import { HTTP_STATUS } from "@/constants";
 const getStatsReservationStation = async (stationId: string) => {
   try {
     const response = await reservationService.getStationReservationStats(stationId);
-    return response.data;
+    if (response.status === HTTP_STATUS.OK) {
+      return response.data;
+    }
   } catch (error) {
     console.log(error);
     throw new Error("Failed to fetch bikes");

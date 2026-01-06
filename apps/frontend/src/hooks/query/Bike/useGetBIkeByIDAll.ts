@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 import { HTTP_STATUS } from "@/constants";
 const getBikeByIDForAll = async (id: string) => {
@@ -13,8 +13,9 @@ const getBikeByIDForAll = async (id: string) => {
     }
 };
 export const useGetBikeByIDAllQuery = (id: string) => {
-    return useSuspenseQuery({
+    return useQuery({
         queryKey: ["bikes", "detail", id],
         queryFn: () => getBikeByIDForAll(id),
+        enabled: !!id && id !== "",
     })
 }
