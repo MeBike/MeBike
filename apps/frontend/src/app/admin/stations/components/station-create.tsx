@@ -83,7 +83,6 @@ export default function CreateStationPage({ onCreate }: CreateStationPageProps) 
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header trang */}
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" onClick={() => router.back()}>
           <ChevronLeft className="w-4 h-4" />
@@ -97,7 +96,6 @@ export default function CreateStationPage({ onCreate }: CreateStationPageProps) 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Cột trái: Form thông tin */}
         <div className="lg:col-span-5 bg-card border rounded-xl p-6 shadow-sm">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
@@ -175,9 +173,7 @@ export default function CreateStationPage({ onCreate }: CreateStationPageProps) 
             </div>
           </form>
         </div>
-
-        {/* Cột phải: Bản đồ */}
-        <div className="lg:col-span-7 h-[600px] border rounded-xl overflow-hidden shadow-sm relative">
+        <div className="lg:col-span-7 h-[500px] border rounded-xl overflow-hidden shadow-sm relative">
           <div ref={mapRef} className="w-full h-full" />
           <div className="absolute top-4 left-4 bg-background/90 px-3 py-1.5 rounded-md text-xs font-medium border shadow-sm pointer-events-none">
             Click vào bản đồ để chọn vị trí trạm

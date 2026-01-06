@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import StationStats from "./components/StationStats";
 import React, { Dispatch, SetStateAction } from "react";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import StationManagementSkeleton from "./loading";
 function StationTableSection({
   page,
   limit,
@@ -85,7 +86,7 @@ export default function StationClient() {
         totalStation={totalStation ?? 0}
       />
       <StationFilter value={searchQuery} onChange={setSearchQuery} />
-      <Suspense fallback={<Skeleton className="h-[400px] w-full" />}>
+      <Suspense fallback={<Skeleton />}>
         <StationTableSection
           page={page}
           limit={10}

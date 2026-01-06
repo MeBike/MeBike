@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Bike, BikeRentalHistory, BikeStatus } from "@custom-types";
 import { CloudCog, Plus } from "lucide-react";
@@ -11,12 +11,8 @@ import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
-import { getStatusColor } from "@utils/bike-status";
-import { formatDateUTC } from "@/utils/formatDateTime";
-import { formatToVNTime } from "@/lib/formateVNDate";
-import { UpdateBikeSchemaFormData } from "@/schemas/bikeSchema";
 import { useRouter } from "next/navigation";
-import BikeDetailPage from "./detail/[bikeId]/page";
+import BikeManagementSkeleton from "./loading";
 export default function BikeClient() {
   const [detailId, setDetailId] = useState<string>("");
   const [editId, setEditId] = useState<string>("");
@@ -172,7 +168,7 @@ export default function BikeClient() {
     );
   }
     return (
-      <div>
+      <Suspense fallback={<BikeManagementSkeleton />}>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -1263,6 +1259,6 @@ export default function BikeClient() {
             </div>
           </div>
         )}
-      </div>
+      </Suspense>
     );
 }

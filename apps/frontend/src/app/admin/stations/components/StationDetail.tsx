@@ -128,7 +128,7 @@ export default function StationDetail({ station, onSubmit }: StationDetailProps)
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <PageHeader
         title={station.name}
         description={station.address}

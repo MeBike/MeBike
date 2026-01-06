@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery} from "@tanstack/react-query";
 import { stationService } from "@services/station.service";
 import { QUERY_KEYS } from "@constants/queryKey";
 const fetchStationByID = async (id: string) => {
@@ -15,9 +15,8 @@ const fetchStationByID = async (id: string) => {
   }
 };
 export const useGetStationByIDQuery = (stationId: string) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: QUERY_KEYS.STATION.DETAIL(stationId),
     queryFn: () => fetchStationByID(stationId),
-    enabled: !!stationId,
   });
 };

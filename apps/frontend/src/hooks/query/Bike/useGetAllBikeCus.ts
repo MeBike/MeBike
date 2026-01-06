@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
 const getAllBikes = async (
@@ -25,7 +25,7 @@ export const useGetAllBikeQuery = ({
   page?: number;
   limit?: number;
 }) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: QUERY_KEYS.BIKE.ALL(page, limit),
     queryFn: () => getAllBikes(page, limit),
   });
