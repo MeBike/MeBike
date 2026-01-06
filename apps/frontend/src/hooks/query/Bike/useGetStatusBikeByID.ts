@@ -1,10 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 export const useGetStatusBikeIDQuery = (id: string) => {
-    return useQuery({
+    return useSuspenseQuery({
         queryKey: ["bikes", "status", id],
-        queryFn: () => bikeService.getStatusBikeByIdAdmin(id),
-        enabled: !!id,
-        
+        queryFn: () => bikeService.getStatusBikeByIdAdmin(id)
     })
 }

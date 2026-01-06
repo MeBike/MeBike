@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 export const useGetHistoryByIdQuery = (id: string) => {
-    return useQuery({
+    return useSuspenseQuery({
         queryKey: ["bikes", "history", id],
         queryFn: () => bikeService.getHistoryBikeById(id),
     })
