@@ -15,4 +15,4 @@ export const useGetStationStatsReservationQuery = (stationId: string) => {
     queryKey: QUERY_KEYS.STATION.RESERVATION_STATS_STATION(stationId),
     queryFn: () => getStatsReservationStation(stationId),
   });
-}.
+}
