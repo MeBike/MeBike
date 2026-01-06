@@ -10,6 +10,7 @@ export type WalletRow = {
   readonly id: string;
   readonly userId: string;
   readonly balance: bigint;
+  readonly reservedBalance: bigint;
   readonly status: WalletStatus;
   readonly createdAt: Date;
   readonly updatedAt: Date;
