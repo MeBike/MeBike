@@ -38,6 +38,8 @@ model Reservation {
   // CREATE UNIQUE INDEX idx_reservations_active_bike ON reservations(bike_id) WHERE status IN ('PENDING','ACTIVE') AND bike_id IS NOT NULL;
   // Partial unique index (active reservations per user) cannot be expressed in Prisma; add manually:
   // CREATE UNIQUE INDEX idx_reservations_active_user ON reservations(user_id) WHERE status IN ('PENDING','ACTIVE');
+  // TODO(fixed-slot): If FIXED_SLOT should coexist with normal holds, scope the user constraint to bike-holds only:
+  // CREATE UNIQUE INDEX idx_reservations_active_user ON reservations(user_id) WHERE status IN ('PENDING','ACTIVE') AND bike_id IS NOT NULL;
   // Fixed-slot idempotency (one reservation per template per slot timestamp) cannot be expressed in Prisma; add manually:
   // CREATE UNIQUE INDEX uq_reservations_fixed_slot_template_start_time ON reservations(fixed_slot_template_id, start_time) WHERE fixed_slot_template_id IS NOT NULL;
 
