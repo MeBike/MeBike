@@ -140,6 +140,7 @@ export const RentalDepsLive = Layer.mergeAll(
   WalletDepsLive,
   SubscriptionReposLive,
   SubscriptionServiceLayer,
+  ReservationRepositoryLive,
   PrismaLive,
 );
 

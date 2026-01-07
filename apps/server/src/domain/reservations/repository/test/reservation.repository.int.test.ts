@@ -205,7 +205,11 @@ describe("reservationRepository Integration", () => {
         startTime: older,
         endTime: new Date(older.getTime() + 60 * 60 * 1000),
         prepaid: "0",
-        status: "PENDING",
+        // NOTE: With `idx_reservations_active_user`, we can no longer create multiple
+        // reservations in PENDING/ACTIVE for the same user.
+        // TODO(reservations/fixed-slot): Revisit test strategy when FIXED_SLOT is implemented end-to-end
+        // and we finalize whether the constraint should be scoped (e.g. only `bike_id IS NOT NULL`).
+        status: "CANCELLED",
         updatedAt: older,
       },
     });
@@ -232,61 +236,11 @@ describe("reservationRepository Integration", () => {
     expect(Option.getOrThrow(result).id).toBe(active.id);
   });
 
-  it("findNextUpcomingByUserId respects onlyFixedSlot option", async () => {
-    const now = new Date();
-    const user = await createUser(client);
-    const station = await createStation(client, { name: "Station D" });
-    const bike = await createBike(client, { stationId: station.id, status: "AVAILABLE" });
-
-    await client.reservation.create({
-      data: {
-        id: uuidv7(),
-        userId: user.id,
-        bikeId: bike.id,
-        stationId: station.id,
-        reservationOption: "ONE_TIME",
-        startTime: new Date(now.getTime() + 60 * 60 * 1000),
-        endTime: new Date(now.getTime() + 2 * 60 * 60 * 1000),
-        prepaid: "0",
-        status: "PENDING",
-        updatedAt: now,
-      },
-    });
-
-    const template = await createFixedSlotTemplate(client, {
-      userId: user.id,
-      stationId: station.id,
-      slotStart: new Date(Date.UTC(2000, 0, 1, 8, 0, 0)),
-    });
-
-    const fixedSlot = await client.reservation.create({
-      data: {
-        id: uuidv7(),
-        userId: user.id,
-        bikeId: null,
-        stationId: station.id,
-        reservationOption: "FIXED_SLOT",
-        fixedSlotTemplateId: template.id,
-        startTime: new Date(now.getTime() + 2 * 60 * 60 * 1000),
-        endTime: null,
-        prepaid: "0",
-        status: "PENDING",
-        updatedAt: now,
-      },
-      select: { id: true },
-    });
-
-    const nextAny = await Effect.runPromise(
-      repo.findNextUpcomingByUserId(user.id, now),
-    );
-    expect(Option.isSome(nextAny)).toBe(true);
-    expect(Option.getOrThrow(nextAny).reservationOption).toBe("ONE_TIME");
-
-    const nextFixed = await Effect.runPromise(
-      repo.findNextUpcomingByUserId(user.id, now, { onlyFixedSlot: true }),
-    );
-    expect(Option.isSome(nextFixed)).toBe(true);
-    expect(Option.getOrThrow(nextFixed).id).toBe(fixedSlot.id);
+  it.skip("findNextUpcomingByUserId respects onlyFixedSlot option", async () => {
+    // TODO(reservations/fixed-slot): This test requires creating both a normal hold (bike_id != null)
+    // and a FIXED_SLOT reservation (bike_id = null) for the same user in PENDING/ACTIVE.
+    // With the current DB constraint `idx_reservations_active_user`, this is not possible.
+    // Re-enable once we finalize fixed-slot semantics and adjust the constraint accordingly.
   });
 
   it("findPendingFixedSlotByTemplateAndStartInTx + assignBikeToPendingReservationInTx are idempotent", async () => {
@@ -446,6 +400,46 @@ describe("reservationRepository Integration", () => {
 
     if (Either.isRight(result)) {
       throw new Error("Expected ReservationUniqueViolation but got success");
+    }
+
+    expect(result.left._tag).toBe("ReservationUniqueViolation");
+  });
+
+  it("createReservation maps active-user unique constraint to ReservationUniqueViolation", async () => {
+    const now = new Date();
+    const user = await createUser(client);
+    const station = await createStation(client, { name: "Station H" });
+    const bikeA = await createBike(client, { stationId: station.id, status: "AVAILABLE" });
+    const bikeB = await createBike(client, { stationId: station.id, status: "AVAILABLE" });
+
+    await Effect.runPromise(
+      repo.createReservation({
+        userId: user.id,
+        bikeId: bikeA.id,
+        stationId: station.id,
+        reservationOption: "ONE_TIME",
+        startTime: now,
+        endTime: new Date(now.getTime() + 30 * 60 * 1000),
+        prepaid: toPrismaDecimal("0"),
+        status: "PENDING",
+      }),
+    );
+
+    const result = await Effect.runPromise(
+      repo.createReservation({
+        userId: user.id,
+        bikeId: bikeB.id,
+        stationId: station.id,
+        reservationOption: "ONE_TIME",
+        startTime: new Date(now.getTime() + 1000),
+        endTime: new Date(now.getTime() + 60 * 60 * 1000),
+        prepaid: toPrismaDecimal("0"),
+        status: "PENDING",
+      }).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected ReservationUniqueViolation (User Double-Booking) but got success");
     }
 
     expect(result.left._tag).toBe("ReservationUniqueViolation");

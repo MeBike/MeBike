@@ -3,6 +3,7 @@ import { Effect, Layer, Option } from "effect";
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
 import type {
+  ActiveReservationExists,
   BikeAlreadyReserved,
 } from "../domain-errors";
 import type { ReservationFilter, ReservationRow, ReservationSortField } from "../models";
@@ -122,7 +123,7 @@ export type ReservationService = {
       readonly endTime: Date | null;
       readonly prepaid: ReservationRow["prepaid"];
     },
-  ) => Effect.Effect<ReservationRow, BikeAlreadyReserved>;
+  ) => Effect.Effect<ReservationRow, BikeAlreadyReserved | ActiveReservationExists>;
 };
 
 function makeReservationService(
@@ -177,6 +178,14 @@ function makeReservationService(
         }
 
         if (reservation.status !== "PENDING") {
+          return yield* Effect.fail(new InvalidReservationTransition({
+            reservationId: reservation.id,
+            from: reservation.status,
+            to: "ACTIVE",
+          }));
+        }
+
+        if (reservation.endTime && reservation.endTime <= input.now) {
           return yield* Effect.fail(new InvalidReservationTransition({
             reservationId: reservation.id,
             from: reservation.status,
@@ -250,10 +259,11 @@ function makeReservationService(
       }).pipe(
         Effect.catchTag(
           "ReservationUniqueViolation",
-          ({ constraint }): Effect.Effect<never, BikeAlreadyReserved> => {
+          ({ constraint }): Effect.Effect<never, BikeAlreadyReserved | ActiveReservationExists> => {
             const mapped = mapReservationUniqueViolation({
               constraint,
               bikeId: input.bikeId,
+              userId: input.userId,
             });
             if (mapped) {
               return Effect.fail(mapped);

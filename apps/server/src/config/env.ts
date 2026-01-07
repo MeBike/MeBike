@@ -26,6 +26,8 @@ const envSchema = z.object({
   REFUND_PERIOD_HOURS: z.coerce.number().default(24),
   FIXED_SLOT_ASSIGN_CRON: z.string().default("0 0 * * *"),
   PRICE_PER_30_MINS: z.coerce.number().default(2000),
+  // Legacy semantics: each subscription "usage" covers this many hours of rental time.
+  SUB_HOURS_PER_USED: z.coerce.number().default(10),
   RENTAL_PENALTY_HOURS: z.coerce.number().default(24),
   RENTAL_PENALTY_AMOUNT: z.coerce.number().default(50000),
   EXPIRE_AFTER_DAYS: z.coerce.number().default(30),

@@ -365,6 +365,23 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
               },
               400,
             )),
+          Match.tag("UserWalletNotFound", ({ userId: missingUserId }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.USER_NOT_HAVE_WALLET,
+              details: {
+                code: RentalErrorCodeSchema.enum.USER_NOT_HAVE_WALLET,
+                userId: missingUserId,
+              },
+            }, 400)),
+          Match.tag("InsufficientBalanceToRent", ({ requiredBalance, currentBalance }) =>
+            c.json<RentalsContracts.RentalErrorResponse, 400>({
+              error: rentalErrorMessages.NOT_ENOUGH_BALANCE_TO_RENT,
+              details: {
+                code: RentalErrorCodeSchema.enum.NOT_ENOUGH_BALANCE_TO_RENT,
+                requiredBalance,
+                currentBalance,
+              },
+            }, 400)),
           Match.tag("BikeAlreadyRented", () =>
             c.json(
               {

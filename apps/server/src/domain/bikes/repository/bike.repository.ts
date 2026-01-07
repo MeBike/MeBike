@@ -36,6 +36,11 @@ export type BikeRepo = {
     status: BikeStatus,
     updatedAt: Date,
   ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
+  bookBikeIfAvailableInTx: (
+    tx: PrismaTypes.TransactionClient,
+    bikeId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<boolean, BikeRepositoryError>;
   reserveBikeIfAvailableInTx: (
     tx: PrismaTypes.TransactionClient,
     bikeId: string,
@@ -236,6 +241,23 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
         });
 
         return Option.fromNullable(row);
+      }),
+
+    bookBikeIfAvailableInTx: (tx, bikeId, updatedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.bike.updateMany({
+            where: { id: bikeId, status: "AVAILABLE" },
+            data: { status: "BOOKED", updatedAt },
+          });
+          return updated.count > 0;
+        },
+        catch: e =>
+          new BikeRepositoryError({
+            operation: "bookBikeIfAvailableInTx",
+            cause: e,
+            message: "Failed to book available bike",
+          }),
       }),
 
     reserveBikeIfAvailableInTx: (tx, bikeId, updatedAt) =>

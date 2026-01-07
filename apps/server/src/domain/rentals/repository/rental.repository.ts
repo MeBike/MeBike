@@ -103,6 +103,10 @@ export type RentalRepo = {
   updateRentalOnEnd: (
     data: UpdateRentalOnEndInput,
   ) => Effect.Effect<RentalRow, RentalRepositoryError>;
+  updateRentalOnEndInTx: (
+    tx: PrismaTypes.TransactionClient,
+    data: UpdateRentalOnEndInput,
+  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
 
   findById: (
     rentalId: string,
@@ -199,7 +203,7 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
     startTime: raw.startTime,
     endTime: raw.endTime,
     durationMinutes: raw.duration,
-    totalPrice: raw.totalPrice ? Number(raw.totalPrice) : null,
+    totalPrice: raw.totalPrice === null ? null : Number(raw.totalPrice),
     subscriptionId: raw.subscriptionId,
     status: raw.status,
     updatedAt: raw.updatedAt,
@@ -482,9 +486,7 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
               endStationId: data.endStationId,
               endTime: data.endTime,
               duration: data.durationMinutes,
-              totalPrice: data.totalPrice
-                ? String(data.totalPrice)
-                : null,
+              totalPrice: data.totalPrice === null ? null : String(data.totalPrice),
               status: data.newStatus,
             },
             select,
@@ -495,6 +497,44 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
             cause: e,
           }),
       }).pipe(Effect.map(mapToRentalRow));
+    },
+
+    updateRentalOnEndInTx(tx, data) {
+      return Effect.tryPromise({
+        try: async () => {
+          const updated = await tx.rental.updateMany({
+            where: {
+              id: data.rentalId,
+              status: "RENTED",
+            },
+            data: {
+              endStationId: data.endStationId,
+              endTime: data.endTime,
+              duration: data.durationMinutes,
+              totalPrice: data.totalPrice === null ? null : String(data.totalPrice),
+              status: data.newStatus,
+            },
+          });
+
+          if (updated.count === 0) {
+            return null;
+          }
+
+          return await tx.rental.findUnique({
+            where: { id: data.rentalId },
+            select,
+          });
+        },
+        catch: e =>
+          new RentalRepositoryError({
+            operation: "updateRentalOnEndInTx",
+            cause: e,
+          }),
+      }).pipe(
+        Effect.map(row =>
+          Option.fromNullable(row).pipe(Option.map(mapToRentalRow)),
+        ),
+      );
     },
 
     findById(rentalId) {

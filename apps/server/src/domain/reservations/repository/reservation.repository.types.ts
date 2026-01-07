@@ -191,6 +191,16 @@ export type ReservationRepo = {
   ) => Effect.Effect<ReservationRow, ReservationNotFound | ReservationRepositoryError>;
 
   /**
+   * EN: Expire an ACTIVE reservation by id (idempotent).
+   * VI: Hết hạn reservation ACTIVE theo id (idempotent).
+   */
+  expireActiveInTx: (
+    tx: PrismaTypes.TransactionClient,
+    reservationId: string,
+    updatedAt: Date,
+  ) => Effect.Effect<boolean, ReservationRepositoryError>;
+
+  /**
    * EN: Expire a single PENDING reservation if endTime < now (idempotent).
    * VI: Hết hạn một reservation PENDING nếu endTime < now (idempotent).
    */
