@@ -7,8 +7,8 @@ import { uuidv7 } from "uuidv7";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { makeUserRepository } from "@/domain/users/repository/user.repository";
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
+
+import { getTestDatabase } from "@/test/db/test-database";
 import { startRedis } from "@/test/db/redis";
 import { PrismaClient } from "generated/prisma/client";
 
@@ -43,8 +43,7 @@ describe("authService Integration", () => {
   let userRepo: ReturnType<typeof makeUserRepository>;
 
   beforeAll(async () => {
-    pgContainer = await startPostgres();
-    await migrate(pgContainer.url);
+    pgContainer = await getTestDatabase();
 
     const adapter = new PrismaPg({ connectionString: pgContainer.url });
     client = new PrismaClient({ adapter });

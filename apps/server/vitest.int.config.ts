@@ -12,6 +12,7 @@ export default defineConfig({
       "tests/**/*.int.test.ts",
       "src/**/test/**/*.int.test.ts",
     ],
+    globalSetup: ["./src/test/db/global-setup.ts"],
   },
   resolve: {
     alias: {

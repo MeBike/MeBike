@@ -2,8 +2,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { uuidv7 } from "uuidv7";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
+
+import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
 describe("job outbox dedupe integration", () => {
@@ -11,8 +11,8 @@ describe("job outbox dedupe integration", () => {
   let client: PrismaClient;
 
   beforeAll(async () => {
-    container = await startPostgres();
-    await migrate(container.url);
+    container = await getTestDatabase();
+    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });

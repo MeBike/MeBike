@@ -6,8 +6,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { Prisma as PrismaNS } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
+
+import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
 import { makeSubscriptionRepository, SubscriptionRepository } from "../..";
@@ -26,8 +26,8 @@ describe("subscriptionService Integration", () => {
   let depsLayer: Layer.Layer<SubscriptionServiceTag | SubscriptionRepository | Prisma, never, never>;
 
   beforeAll(async () => {
-    container = await startPostgres();
-    await migrate(container.url);
+    container = await getTestDatabase();
+    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });

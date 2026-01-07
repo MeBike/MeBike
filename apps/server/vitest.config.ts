@@ -16,6 +16,7 @@ export default defineConfig({
     coverage: {
       reporter: ["text", "html"],
     },
+    globalSetup: ["./src/test/db/global-setup.ts"],
   },
   resolve: {
     alias: {

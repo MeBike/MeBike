@@ -6,8 +6,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { DB } from "generated/kysely/types";
 
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
+
+import { getTestDatabase } from "@/test/db/test-database";
 import { seed } from "@/test/db/seed";
 
 import type { UserStatsRepo } from "../user-stats.repository";
@@ -20,8 +20,8 @@ describe("userStatsRepository Integration", () => {
   let repo: UserStatsRepo;
 
   beforeAll(async () => {
-    container = await startPostgres();
-    await migrate(container.url);
+    container = await getTestDatabase();
+    
 
     testDb = makeTestDb(container.url);
 

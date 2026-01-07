@@ -2,8 +2,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { Effect } from "effect";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
+
+import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
 import { makeAuthEventRepository } from "../auth-event.repository";
@@ -13,8 +13,8 @@ describe("authEventRepository Integration", () => {
   let client: PrismaClient;
 
   beforeAll(async () => {
-    container = await startPostgres();
-    await migrate(container.url);
+    container = await getTestDatabase();
+    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });

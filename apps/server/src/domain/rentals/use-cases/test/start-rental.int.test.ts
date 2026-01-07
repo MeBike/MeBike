@@ -18,8 +18,8 @@ import {
 import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
+
+import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
 type TestContainer = { stop: () => Promise<void>; url: string };
@@ -35,8 +35,8 @@ describe("startRentalUseCase Integration", () => {
   >;
 
   beforeAll(async () => {
-    container = await startPostgres();
-    await migrate(container.url);
+    container = await getTestDatabase();
+    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });

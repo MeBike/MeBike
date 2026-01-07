@@ -8,8 +8,8 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { DB } from "generated/kysely/types";
 
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
+
+import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
 import { makeBikeStatsRepository } from "../bike-stats.repository";
@@ -21,8 +21,8 @@ describe("bikeStatsRepository Integration", () => {
   let repo: ReturnType<typeof makeBikeStatsRepository>;
 
   beforeAll(async () => {
-    container = await startPostgres();
-    await migrate(container.url);
+    container = await getTestDatabase();
+    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });

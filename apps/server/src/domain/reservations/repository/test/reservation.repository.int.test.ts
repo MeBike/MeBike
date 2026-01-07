@@ -6,10 +6,12 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { BikeStatus } from "generated/prisma/client";
 
 import { toPrismaDecimal } from "@/domain/shared/decimal";
-import { migrate } from "@/test/db/migrate";
-import { startPostgres } from "@/test/db/postgres";
+
+import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
 import { PrismaClient } from "generated/prisma/client";
+
+import { getTestDatabase } from "@/test/db/test-database";
 
 import { makeReservationRepository } from "../reservation.repository";
 
@@ -110,8 +112,7 @@ describe("reservationRepository Integration", () => {
   let repo: ReturnType<typeof makeReservationRepository>;
 
   beforeAll(async () => {
-    container = await startPostgres();
-    await migrate(container.url);
+    container = await getTestDatabase();
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });
