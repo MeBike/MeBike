@@ -74,8 +74,7 @@ export default function CreateStationPage({ onCreate }: CreateStationPageProps) 
   const onSubmit = async (data: StationSchemaFormData) => {
     try {
       await onCreate(data);
-      router.push("/admin/stations"); // Quay lại danh sách sau khi tạo thành công
-      router.refresh();
+      router.push("/admin/stations"); 
     } catch (error) {
       console.error("Lỗi khi tạo trạm:", error);
     }

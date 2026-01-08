@@ -32,6 +32,13 @@ export default function StationDetail({ station, onSubmit }: StationDetailProps)
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<tt.Map | null>(null);
   const markerRef = useRef<tt.Marker | null>(null);
+  const [oldData,setOldDate] = useState({
+    name: station?.name || "",
+    address: station?.address || "",
+    capacity: station?.capacity || 0,
+    latitude: station?.latitude || 0,
+    longitude: station?.longitude || 0,
+  });
   const [formData, setFormData] = useState({
     name: station?.name || "",
     address: station?.address || "",
@@ -105,7 +112,16 @@ export default function StationDetail({ station, onSubmit }: StationDetailProps)
   );
 
   const handleSave = () => {
-    // Gọi API update ở đây (sử dụng formData)
+    const isUnchanged = 
+    oldData.name === formData.name &&
+    oldData.address === formData.address &&
+    oldData.capacity === formData.capacity &&
+    oldData.latitude === formData.latitude &&
+    oldData.longitude === formData.longitude;
+  if (isUnchanged) {
+    setIsEditing(false); 
+    return;
+  }
     onSubmit({
       address: formData.address,
       capacity: formData.capacity,
