@@ -36,7 +36,7 @@ export const useStationActions = ({
   const queryClient = useQueryClient();
   // const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
   const router = useRouter();
-  const { data: response } = useGetAllStation({
+  const { data: response , isLoading : isLoadingGetAllStations} = useGetAllStation({
     page: page,
     limit: limit,
     name: name,
@@ -223,6 +223,7 @@ export const useStationActions = ({
     inactiveStation : response?.data?.Stations.inactiveStation,
     responseStationDetail: responseStationDetail?.data?.Station,
     isLoadingGetStationByID: isLoadingStationID,
+    isLoadingGetAllStations,
     // responseStationReservationStats,
     // getReservationStats,
     // responseStationBikeRevenue,
