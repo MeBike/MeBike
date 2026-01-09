@@ -15,7 +15,7 @@ import {
 import axios from "axios";
 import { print } from "graphql";
 import { Platform } from "react-native";
-import { REFRESH_TOKEN_MUTATION } from "@/graphql";
+import { REFRESH_TOKEN_MUTATION } from "@graphql";
 
 // Constants
 export const HTTP_STATUS = {
