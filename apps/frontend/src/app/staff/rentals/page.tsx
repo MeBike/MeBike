@@ -62,14 +62,11 @@ export default function RentalsPage() {
         : undefined,
   });
 
-  const { stations, getAllStations } = useStationActions({
+  const { stations } = useStationActions({
     hasToken: true,
     page: 1,
     limit: 100,
   });
-  useEffect(() => {
-    getAllStations();
-  }, [getAllStations]);
 
   const rentals = allRentalsData || [];
 

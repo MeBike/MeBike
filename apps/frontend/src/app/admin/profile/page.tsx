@@ -183,7 +183,7 @@ export default function ProfilePage() {
     // Nếu có field nào thay đổi mới gọi API
     if (Object.keys(updatedData).length > 0) {
       try {
-        await updateProfile(updatedData);
+         await updateProfile(updatedData);
       } catch (error) {
         console.error("Error updating profile:", error);
         alert("Lỗi khi cập nhật hồ sơ. Vui lòng thử lại.");
@@ -230,6 +230,12 @@ export default function ProfilePage() {
         handleResendVerifyEmail={handleResendVerifyEmail}
         handleUserAccountChange={handleUserAccountChange}
         setIsVerifyEmailModalOpen={setIsVerifyEmailModalOpen}
+        handleSave={handleSave}
+        isEditing={isEditing}
+        isSaving={isSaving}
+        setIsEditing={setIsEditing}
+        avatarPreview={avatarPreview}
+        handleCancel={handleCancel}
       />
 
       <VerifyEmailModal

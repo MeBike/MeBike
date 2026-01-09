@@ -13,6 +13,8 @@ export interface BaseMutationResponse<T = null> {
   success: boolean;
   total?: number;
   pagination?: Pagination;
+  activeStation ?: number;
+  inactiveStation ?: number;
 }
 export interface GraphQLMutationResponse<
   MutationName extends string,

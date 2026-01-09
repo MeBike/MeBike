@@ -2,15 +2,24 @@
 
 import type React from "react";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Camera, Save, X, Mail, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@radix-ui/react-progress";
 import { useAuthActions } from "@/hooks/useAuthAction";
+import Image from "next/image";
 import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
+import Link from "next/link";
 import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 import { uploadImageToFirebase } from "@/lib/firebase";
 import { Me } from "@/types/GraphQL";
+import { formatToVNTime } from "@/lib/formateVNDate";
 import Profile from "@/components/common/Profile";
 type FormDataWithAvatar = Me & { avatarFile?: File };
+
 // Compress image function
 const compressImage = async (file: File): Promise<File> => {
   return new Promise((resolve) => {
@@ -174,7 +183,7 @@ export default function ProfilePage() {
     // Nếu có field nào thay đổi mới gọi API
     if (Object.keys(updatedData).length > 0) {
       try {
-        await updateProfile(updatedData);
+         await updateProfile(updatedData);
       } catch (error) {
         console.error("Error updating profile:", error);
         alert("Lỗi khi cập nhật hồ sơ. Vui lòng thử lại.");
@@ -221,6 +230,12 @@ export default function ProfilePage() {
         handleResendVerifyEmail={handleResendVerifyEmail}
         handleUserAccountChange={handleUserAccountChange}
         setIsVerifyEmailModalOpen={setIsVerifyEmailModalOpen}
+        handleSave={handleSave}
+        isEditing={isEditing}
+        isSaving={isSaving}
+        setIsEditing={setIsEditing}
+        avatarPreview={avatarPreview}
+        handleCancel={handleCancel}
       />
 
       <VerifyEmailModal

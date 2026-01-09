@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 const getStatisticsBikeAdmin = async () => {
   try {
@@ -12,9 +12,8 @@ const getStatisticsBikeAdmin = async () => {
   }
 };
 export const useGetStatisticsBikeQuery = () => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: ["bikes", "status"],
     queryFn: () => getStatisticsBikeAdmin(),
-    enabled: false,
   });
 };

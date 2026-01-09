@@ -8,25 +8,55 @@ import { Me } from "@/types/GraphQL";
 import { cn } from "@/lib/utils";
 import { Mail, X } from "lucide-react";
 import { Save, Loader2, Camera } from "lucide-react";
+import { Dispatch , SetStateAction } from "react";
 interface ProfileProps {
-    user: Me;
-    handleAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    formData: Me | null;
-    handleInputChange: (field: keyof Me, value: string) => void;
-    handleUserAccountChange: (field: keyof Me["userAccount"], value: string) => void;
-    setIsVerifyEmailModalOpen: (isOpen: boolean) => void;
-    handleResendVerifyEmail: () => void;
+  user: Me;
+  handleAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  formData: Me | null;
+  handleInputChange: (field: keyof Me, value: string) => void;
+  avatarPreview: string;
+  handleCancel: () => void; 
+  handleUserAccountChange: (
+    field: keyof Me["userAccount"],
+    value: string
+  ) => void;
+  setIsVerifyEmailModalOpen: (isOpen: boolean) => void;
+  handleResendVerifyEmail: () => void;
+  isEditing: boolean;
+  setIsEditing: Dispatch<SetStateAction<boolean>>; // Thêm mới
+  isSaving: boolean;
+  handleSave: () => Promise<void>;
 }
 import { formatToVNTime } from "@/lib/formateVNDate";
-export default function Profile({ user , handleAvatarChange , handleInputChange , handleUserAccountChange , setIsVerifyEmailModalOpen , handleResendVerifyEmail , formData}: ProfileProps) {
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? "");
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
+import { useRouter } from "next/navigation";
+export default function Profile({
+  user,
+  handleAvatarChange,
+  handleInputChange,
+  handleUserAccountChange,
+  setIsVerifyEmailModalOpen,
+  handleResendVerifyEmail,
+  isEditing,        // Nhận từ props
+  setIsEditing,     // Nhận từ props
+  isSaving,         // Nhận từ props
+  handleSave,
+  formData,
+  avatarPreview,
+  handleCancel
+}: ProfileProps) {
+  const router = useRouter();
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
-  const handleCancel = () => {
-    setIsEditing(false);
+  const handleNavigate = () => {
+    if (user.role === "ADMIN") {
+      router.push("/admin/profile/change-password");
+    } else if (user.role === "STAFF") {
+      router.push("/staff/profile/change-password");
+    } else if (user.role === "SOS") {
+      router.push("/sos/profile/change-password");
+    } else {
+      router.push("/user/profile/change-password");
+    }
   };
-  const handleSave = () => {};
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -286,11 +316,14 @@ export default function Profile({ user , handleAvatarChange , handleInputChange 
                 Cập nhật mật khẩu của bạn
               </p>
             </div>
-            <Link href="/user/profile/change-password">
-              <Button variant="outline" className="cursor-pointer">
-                Thay đổi
-              </Button>
-            </Link>
+
+            <Button
+              variant="outline"
+              className="cursor-pointer"
+              onClick={handleNavigate}
+            >
+              Thay đổi
+            </Button>
           </div>
           <div className="flex items-center justify-between pt-4 border-t border-border">
             <div>

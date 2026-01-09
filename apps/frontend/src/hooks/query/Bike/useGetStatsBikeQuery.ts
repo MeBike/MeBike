@@ -1,10 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
-const fetchBikeStats = async (bikeId: string) => {
+import { HTTP_STATUS } from "@/constants";
+const getBikeStats = async (bikeId: string) => {
   try {
     const response = await bikeService.getStatisticsBike(bikeId);
-    if (response.status === 200) {
+    if (response.status === HTTP_STATUS.OK) {
       return response.data;
     }
   } catch (error) {
@@ -13,9 +14,8 @@ const fetchBikeStats = async (bikeId: string) => {
   }
 };
 export const useGetBikeStatsQuery = (bikeId: string) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: QUERY_KEYS.BIKE.BIKE_STATS(bikeId),
-    queryFn: () => fetchBikeStats(bikeId),
-    enabled: !!bikeId,
+    queryFn: () => getBikeStats(bikeId),
   });
 };

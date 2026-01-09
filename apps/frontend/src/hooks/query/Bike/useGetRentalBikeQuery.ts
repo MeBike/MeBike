@@ -1,7 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
-const fetchBikeRentalHistory = async (bikeId: string) => {
+const getBikeRentalHistory = async (bikeId: string) => {
   try {
     const response = await bikeService.getRentalHistoryBike(bikeId);
     if (response.status === 200) {
@@ -13,9 +13,8 @@ const fetchBikeRentalHistory = async (bikeId: string) => {
   }
 };
 export const useGetRentalBikeQuery = (bikeId: string) => {
-  return useQuery({
+  return useSuspenseQuery({
     queryKey: QUERY_KEYS.BIKE.RENTAL_BIKE(bikeId),
-    queryFn: () => fetchBikeRentalHistory(bikeId),
-    enabled: !!bikeId,
+    queryFn: () => getBikeRentalHistory(bikeId),
   });
 };

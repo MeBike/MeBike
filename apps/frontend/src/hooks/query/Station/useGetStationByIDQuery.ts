@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { stationService } from "@services/station.service";
 import { QUERY_KEYS } from "@constants/queryKey";
-const fetchStationByID = async (id: string) => {
+import { HTTP_STATUS } from "@/constants";
+const getStationByID = async (id: string) => {
   try {
     console.log(id);
     const response = await stationService.getStationById(id);
-    if (response.status === 200 && response.data?.data?.Station) {
-      return response.data.data.Station;
+    if (response.status === HTTP_STATUS.OK) {
+      return response.data;
     }
     return null;
   } catch (error) {
@@ -17,7 +18,7 @@ const fetchStationByID = async (id: string) => {
 export const useGetStationByIDQuery = (stationId: string) => {
   return useQuery({
     queryKey: QUERY_KEYS.STATION.DETAIL(stationId),
-    queryFn: () => fetchStationByID(stationId),
-    enabled: !!stationId,
+    queryFn: () => getStationByID(stationId),
+    enabled : !!stationId && stationId !== ""
   });
 };

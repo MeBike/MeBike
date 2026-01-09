@@ -197,14 +197,17 @@ export function Sidebar() {
 
   // Navigation handler with progress
   const handleNav = (href: string) => {
-    if (pathname === href) return;
-    NProgress.start();
-    startTransition(() => {
-      router.push(href);
-      setMobileOpen(false);
-      setTimeout(() => NProgress.done(), 600);
-    });
-  };
+  if (pathname === href) return;
+
+  NProgress.start();
+  
+  // Bỏ startTransition, gọi trực tiếp router.push
+  router.push(href); 
+  setMobileOpen(false);
+  
+  // NProgress sẽ kết thúc khi component mới mounted hoặc dùng useEffect ở Layout
+  setTimeout(() => NProgress.done(), 600); 
+};
 
   return (
     <>
