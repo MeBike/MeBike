@@ -1,9 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-interface StationHeaderProps {
-  onAddStation?: () => void;
-}
-export default function StationHeader({ onAddStation }: StationHeaderProps) {
+
+export default function StationHeader() {
   return (
     <div className="flex items-center justify-between">
       <div>
