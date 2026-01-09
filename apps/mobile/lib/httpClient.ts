@@ -1,18 +1,21 @@
-import axios, {
+import type {
+  AxiosError,
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
-  AxiosError,
 } from "axios";
+
 import {
   clearTokens,
-  setTokens,
   getAccessToken,
   getRefreshToken,
+  setTokens,
 } from "@utils/tokenManager";
-import { REFRESH_TOKEN_MUTATION } from "@/graphql";
+import axios from "axios";
 import { print } from "graphql";
+
+import { REFRESH_TOKEN_MUTATION } from "@/graphql";
 
 // Constants
 export const HTTP_STATUS = {
@@ -33,10 +36,10 @@ const NO_RETRY_URLS = [
   "/users/change-password",
 ];
 
-interface QueueItem {
+type QueueItem = {
   resolve: (value: unknown) => void;
   reject: (error: AxiosError | null) => void;
-}
+};
 
 export class HttpClient {
   private axiosInstance: AxiosInstance;
@@ -59,17 +62,16 @@ export class HttpClient {
   private setupInterceptors() {
     this.axiosInstance.interceptors.request.use(
       this.handleRequest,
-      (error) => Promise.reject(error)
+      error => Promise.reject(error),
     );
     this.axiosInstance.interceptors.response.use(
       this.handleResponseSuccess,
-      this.handleResponseError
+      this.handleResponseError,
     );
   }
 
-
   private handleRequest = (
-    config: InternalAxiosRequestConfig
+    config: InternalAxiosRequestConfig,
   ): InternalAxiosRequestConfig => {
     const accessToken = getAccessToken();
     const isRefreshTokenRequest = this.checkIsRefreshTokenRequest(config);
@@ -87,10 +89,10 @@ export class HttpClient {
   private handleResponseError = async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     if (
-      !originalRequest ||
-      originalRequest._retry ||
-      this.shouldSkipTokenRefresh(originalRequest) ||
-      error.response?.status !== 401
+      !originalRequest
+      || originalRequest._retry
+      || this.shouldSkipTokenRefresh(originalRequest)
+      || error.response?.status !== 401
     ) {
       return Promise.reject(error);
     }
@@ -104,7 +106,7 @@ export class HttpClient {
           }
           return this.axiosInstance(originalRequest);
         })
-        .catch((err) => Promise.reject(err));
+        .catch(err => Promise.reject(err));
     }
     originalRequest._retry = true;
     this.isRefreshing = true;
@@ -114,29 +116,33 @@ export class HttpClient {
       this.dispatchAuthEvent("auth:token_refreshed");
       originalRequest.headers.Authorization = `Bearer ${newToken}`;
       return this.axiosInstance(originalRequest);
-    } catch (refreshError) {
+    }
+    catch (refreshError) {
       this.processQueue(refreshError as AxiosError, null);
       this.dispatchAuthEvent("auth:session_expired");
       return Promise.reject(refreshError);
-    } finally {
+    }
+    finally {
       this.isRefreshing = false;
     }
   };
 
-
   private checkIsRefreshTokenRequest(config: InternalAxiosRequestConfig): boolean {
-    if (!config.data) return false;
+    if (!config.data)
+      return false;
     try {
       const payload = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
       return payload.query && payload.query.includes("mutation RefreshToken");
-    } catch {
+    }
+    catch {
       return false;
     }
   }
 
   private shouldSkipTokenRefresh(config: InternalAxiosRequestConfig): boolean {
-    if (this.checkIsAuthRequest(config)) return true;
-    if (config.url && NO_RETRY_URLS.some((url) => config.url?.includes(url))) {
+    if (this.checkIsAuthRequest(config))
+      return true;
+    if (config.url && NO_RETRY_URLS.some(url => config.url?.includes(url))) {
       return true;
     }
 
@@ -144,21 +150,23 @@ export class HttpClient {
   }
 
   private checkIsAuthRequest(config: InternalAxiosRequestConfig): boolean {
-    if (!config.data) return false;
+    if (!config.data)
+      return false;
     try {
       const payload = typeof config.data === "string" ? JSON.parse(config.data) : config.data;
       return (
-        payload.query &&
-        (payload.query.includes("mutation LoginUser") ||
-          payload.query.includes("mutation RegisterUser"))
+        payload.query
+        && (payload.query.includes("mutation LoginUser")
+          || payload.query.includes("mutation RegisterUser"))
       );
-    } catch {
+    }
+    catch {
       return false;
     }
   }
 
   private async refreshAccessToken(): Promise<string> {
-    const refreshToken = getRefreshToken();
+    const refreshToken = await getRefreshToken();
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }
@@ -177,7 +185,8 @@ export class HttpClient {
       }
       setTokens(result.accessToken, result.refreshToken);
       return result.accessToken;
-    } catch (error) {
+    }
+    catch (error) {
       clearTokens();
       throw error;
     }
@@ -187,7 +196,8 @@ export class HttpClient {
     this.failedQueue.forEach((prom) => {
       if (error) {
         prom.reject(error);
-      } else {
+      }
+      else {
         prom.resolve(token);
       }
     });
@@ -209,7 +219,7 @@ export class HttpClient {
   async post<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.post(url, data, config);
   }
@@ -217,7 +227,7 @@ export class HttpClient {
   async put<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.put(url, data, config);
   }
@@ -225,7 +235,7 @@ export class HttpClient {
   async patch<T>(
     url: string,
     data?: AxiosRequestConfig["data"],
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.patch(url, data, config);
   }
@@ -237,7 +247,7 @@ export class HttpClient {
   async query<T>(
     queryString: string,
     variables: object = {},
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.post("", { query: queryString, variables }, config);
   }
@@ -245,7 +255,7 @@ export class HttpClient {
   async mutation<T>(
     mutationString: string,
     variables: object = {},
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.query<T>(mutationString, variables, config);
   }
@@ -253,7 +263,7 @@ export class HttpClient {
 function getBaseUrl() {
   if (process.env.EXPO_PUBLIC_API_BASE_URL) {
     console.log(
-      `Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`
+      `Using API Base URL from environment: ${process.env.EXPO_PUBLIC_API_BASE_URL}`,
     );
     return process.env.EXPO_PUBLIC_API_BASE_URL;
   }
@@ -262,14 +272,15 @@ function getBaseUrl() {
     const androidUrl = "http://10.0.2.2:4000";
     console.log(`Development on Android, using: ${androidUrl}`);
     return androidUrl;
-  } else {
+  }
+  else {
     const iosUrl = "http://localhost:4000";
     console.log(`Development on iOS/Web, using: ${iosUrl}`);
     return iosUrl;
   }
 }
 
-export const API_BASE_URL = getBaseUrl(); 
+export const API_BASE_URL = getBaseUrl();
 const httpClient = new HttpClient(API_BASE_URL);
 
-export default httpClient
+export default httpClient;
