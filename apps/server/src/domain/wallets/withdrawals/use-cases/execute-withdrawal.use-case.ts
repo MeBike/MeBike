@@ -189,10 +189,20 @@ export function executeWithdrawalUseCase(
             return { status: "ignored", withdrawalId, reason: "already_processing" } satisfies ExecuteWithdrawalOutcome;
           }
 
+          if (withdrawal.currency.toLowerCase() !== "usd") {
+            return yield* markFailedAndReleaseHold(
+              client,
+              withdrawalService,
+              walletHoldService,
+              walletService,
+              withdrawal,
+              "unsupported_currency",
+            );
+          }
+
           const providerResult = yield* Effect.gen(function* () {
             const transfer = yield* stripeService.createTransfer({
               amountMinor,
-              currency: withdrawal.currency,
               destinationAccountId: accountId,
               idempotencyKey: `${withdrawal.idempotencyKey}:transfer`,
               description: `Withdrawal ${withdrawal.id}`,
@@ -200,7 +210,6 @@ export function executeWithdrawalUseCase(
 
             const payout = yield* stripeService.createPayout({
               amountMinor,
-              currency: withdrawal.currency,
               accountId,
               idempotencyKey: `${withdrawal.idempotencyKey}:payout`,
               description: `Withdrawal ${withdrawal.id}`,

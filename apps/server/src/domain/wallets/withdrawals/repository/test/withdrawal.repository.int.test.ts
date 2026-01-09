@@ -3,7 +3,6 @@ import { Effect, Either, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
-
 import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
 import { PrismaClient } from "generated/prisma/client";
@@ -17,7 +16,6 @@ describe("withdrawalRepository Integration", () => {
 
   beforeAll(async () => {
     container = await getTestDatabase();
-    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });
@@ -77,7 +75,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 50000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey,
       }),
     );
@@ -89,6 +87,26 @@ describe("withdrawalRepository Integration", () => {
     expect(withdrawal.idempotencyKey).toBe(idempotencyKey);
   });
 
+  it("createPending rejects non-usd currency via db constraint", async () => {
+    const { userId, walletId } = await createUserAndWallet();
+    const idempotencyKey = `withdraw:${uuidv7()}`;
+
+    const result = await Effect.runPromise(
+      repo.createPending({
+        userId,
+        walletId,
+        amount: 50000n,
+        currency: "vnd",
+        idempotencyKey,
+      }).pipe(Effect.either),
+    );
+
+    expectLeftTag(result, "WithdrawalRepositoryError");
+    if (Either.isLeft(result)) {
+      expect(result.left.operation).toBe("createPending");
+    }
+  });
+
   it("createPending is idempotent - returns existing record on duplicate idempotencyKey", async () => {
     const { userId, walletId } = await createUserAndWallet();
     const idempotencyKey = `withdraw:${uuidv7()}`;
@@ -98,7 +116,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 25000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey,
       }),
     );
@@ -115,8 +133,8 @@ describe("withdrawalRepository Integration", () => {
     );
 
     expect(second.id).toBe(first.id);
-    expect(second.amount).toBe(25000n); // Original amount preserved
-    expect(second.currency).toBe("vnd"); // Original currency preserved
+    expect(second.amount).toBe(25000n);
+    expect(second.currency).toBe("usd");
   });
 
   it("findById returns Some for existing record", async () => {
@@ -127,7 +145,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 10000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey: `withdraw:${uuidv7()}`,
       }),
     );
@@ -153,7 +171,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 15000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey,
       }),
     );
@@ -180,7 +198,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 20000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey: `withdraw:${uuidv7()}`,
       }),
     );
@@ -213,7 +231,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 20000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey: `withdraw:${uuidv7()}`,
       }),
     );
@@ -243,7 +261,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 30000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey: `withdraw:${uuidv7()}`,
       }),
     );
@@ -276,7 +294,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 30000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey: `withdraw:${uuidv7()}`,
       }),
     );
@@ -306,7 +324,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 40000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey: `withdraw:${uuidv7()}`,
       }),
     );
@@ -339,7 +357,7 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 40000n,
-        currency: "vnd",
+        currency: "usd",
         idempotencyKey: `withdraw:${uuidv7()}`,
       }),
     );

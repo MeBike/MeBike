@@ -40,7 +40,7 @@ export const WalletWithdrawalDetailSchema = z.object({
   walletId: z.uuidv7(),
   userId: z.uuidv7(),
   amount: z.string().openapi({ example: "50000" }),
-  currency: z.string().min(3).max(3).openapi({ example: "vnd" }),
+  currency: z.literal("usd").openapi({ example: "usd" }),
   status: WalletWithdrawalStatusSchema,
   idempotencyKey: z.string(),
   stripeTransferId: z.string().nullable().optional(),

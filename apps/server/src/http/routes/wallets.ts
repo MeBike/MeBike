@@ -47,7 +47,7 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     userId: row.userId,
     walletId: row.walletId,
     amount: row.amount.toString(),
-    currency: row.currency,
+    currency: "usd",
     status: row.status,
     idempotencyKey: row.idempotencyKey,
     stripeTransferId: row.stripeTransferId,
@@ -268,6 +268,13 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
       }, 400);
     }
 
+    if (body.currency.toLowerCase() !== "usd") {
+      return c.json<WalletsContracts.WalletErrorResponse, 400>({
+        error: walletErrorMessages.TOPUP_INVALID_REQUEST,
+        details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
+      }, 400);
+    }
+
     if (amountMinor > BigInt(Number.MAX_SAFE_INTEGER)) {
       return c.json<WalletsContracts.WalletErrorResponse, 400>({
         error: walletErrorMessages.TOPUP_INVALID_REQUEST,
@@ -279,7 +286,6 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
       withStripeTopupDeps(createStripeCheckoutSessionUseCase({
         userId,
         amountMinor: Number(amountMinor),
-        currency: body.currency,
         successUrl: body.successUrl,
         cancelUrl: body.cancelUrl,
       })),
@@ -341,6 +347,13 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
 
     const amount = BigInt(body.amount);
     if (amount <= 0n || amount > BigInt(Number.MAX_SAFE_INTEGER)) {
+      return c.json<WalletsContracts.WalletErrorResponse, 400>({
+        error: walletErrorMessages.WITHDRAWAL_INVALID_REQUEST,
+        details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_INVALID_REQUEST },
+      }, 400);
+    }
+
+    if (body.currency && body.currency.toLowerCase() !== "usd") {
       return c.json<WalletsContracts.WalletErrorResponse, 400>({
         error: walletErrorMessages.WITHDRAWAL_INVALID_REQUEST,
         details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_INVALID_REQUEST },

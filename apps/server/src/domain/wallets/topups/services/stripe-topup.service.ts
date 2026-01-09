@@ -15,7 +15,6 @@ export type StripeCheckoutAttemptInput = {
   readonly userId: string;
   readonly walletId: string;
   readonly amountMinor: number;
-  readonly currency: string;
 };
 
 export type StripeTopupSessionResult = {
@@ -95,7 +94,7 @@ export const StripeTopupServiceLive = Layer.effect(
           }));
         }
 
-        const currency = input.currency.toLowerCase();
+        const currency = "usd";
 
         const attempt = yield* repo.create({
           userId: input.userId,
@@ -112,7 +111,7 @@ export const StripeTopupServiceLive = Layer.effect(
 
     const createCheckoutSession: StripeTopupService["createCheckoutSession"] = input =>
       Effect.gen(function* () {
-        const currency = input.attempt.currency.toLowerCase();
+        const currency = "usd";
         const amountMinor = Number(input.attempt.amountMinor);
 
         const session = yield* Effect.tryPromise({

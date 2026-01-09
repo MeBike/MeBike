@@ -89,7 +89,13 @@ export function requestWithdrawalUseCase(
       }));
     }
 
-    const currency = (input.currency ?? "vnd").toLowerCase();
+    if (input.currency && input.currency.toLowerCase() !== "usd") {
+      return yield* Effect.fail(new InvalidWithdrawalRequest({
+        message: "currency must be usd",
+      }));
+    }
+
+    const currency = "usd";
     const now = input.now ?? new Date();
     const idempotencyKey = input.idempotencyKey ?? `withdraw:${uuidv7()}`;
 

@@ -40,7 +40,6 @@ export type StripeWithdrawalService = {
   createTransfer: (
     input: {
       readonly amountMinor: number;
-      readonly currency: string;
       readonly destinationAccountId: string;
       readonly idempotencyKey: string;
       readonly description?: string;
@@ -49,7 +48,6 @@ export type StripeWithdrawalService = {
   createPayout: (
     input: {
       readonly amountMinor: number;
-      readonly currency: string;
       readonly accountId: string;
       readonly idempotencyKey: string;
       readonly description?: string;
@@ -125,7 +123,7 @@ export const StripeWithdrawalServiceLive = Layer.effect(
         try: () =>
           stripe.transfers.create({
             amount: input.amountMinor,
-            currency: input.currency,
+            currency: "usd",
             destination: input.destinationAccountId,
             description: input.description,
           }, { idempotencyKey: input.idempotencyKey }),
@@ -142,7 +140,7 @@ export const StripeWithdrawalServiceLive = Layer.effect(
         try: () =>
           stripe.payouts.create({
             amount: input.amountMinor,
-            currency: input.currency,
+            currency: "usd",
             description: input.description,
           }, { stripeAccount: input.accountId, idempotencyKey: input.idempotencyKey }),
         catch: cause =>

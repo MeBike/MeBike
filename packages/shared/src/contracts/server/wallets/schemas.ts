@@ -75,7 +75,7 @@ export const WalletDebitRequestSchema = z.object({
 
 export const StripeTopupSessionRequestSchema = z.object({
   amount: z.string().min(1).openapi({ example: "100000" }),
-  currency: z.string().min(3).max(3).openapi({ example: "vnd" }),
+  currency: z.literal("usd").openapi({ example: "usd" }),
   successUrl: z.string().url(),
   cancelUrl: z.string().url(),
 }).openapi("StripeTopupSessionRequest");
@@ -89,7 +89,7 @@ export const StripeTopupSessionResponseSchema = z.object({
 
 export const WalletWithdrawalRequestSchema = z.object({
   amount: z.string().min(1).openapi({ example: "50000" }),
-  currency: z.string().min(3).max(3).optional().openapi({ example: "vnd" }),
+  currency: z.literal("usd").optional().openapi({ example: "usd" }),
   idempotencyKey: z.string().optional(),
 }).openapi("WalletWithdrawalRequest");
 

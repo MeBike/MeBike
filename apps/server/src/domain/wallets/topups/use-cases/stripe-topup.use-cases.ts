@@ -60,7 +60,6 @@ export function createStripeCheckoutSessionUseCase(
       userId: input.userId,
       walletId: wallet.id,
       amountMinor: input.amountMinor,
-      currency: input.currency,
     });
 
     const session = yield* service.createCheckoutSession({
@@ -122,10 +121,9 @@ export function handleStripeTopupWebhookEventUseCase(
     }
 
     const receivedMinor = BigInt(amountTotal);
-    const expectedCurrency = attempt.currency.toLowerCase();
     const receivedCurrency = currency.toLowerCase();
 
-    if (receivedMinor !== attempt.amountMinor || receivedCurrency !== expectedCurrency) {
+    if (receivedMinor !== attempt.amountMinor || receivedCurrency !== "usd") {
       const reason = "amount_or_currency_mismatch";
       yield* Effect.tryPromise({
         try: () =>
