@@ -1,18 +1,22 @@
 import fetchHttpClient from "../lib/httpClient";
-
 export async function testBackendConnection() {
   try {
     console.log("Testing backend connection...");
-    const response = await fetchHttpClient.get("/");
+    
+    // Sử dụng hàm .query đã có trong HttpClient của bạn
+    // Câu query { __typename } là câu lệnh nhỏ nhất mà mọi server GraphQL đều hiểu
+    const response = await fetchHttpClient.query(`query { __typename }`);
+
     console.log("Backend connection successful:", response.data);
     return true;
-  }
+  } 
   catch (error) {
+    // Nếu nó lọt vào đây với lỗi 500 nhưng nội dung là "GraphQL error", 
+    // thực tế là nó vẫn đang CONNECT tốt. 
     console.error("Backend connection failed:", error);
     return false;
   }
 }
-
 export async function testLoginEndpoint() {
   try {
     console.log("Testing login endpoint...");
