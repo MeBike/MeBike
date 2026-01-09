@@ -4,3 +4,4 @@ const Page = () => {
     <BikeClient/>
   )
 }
+export default Page

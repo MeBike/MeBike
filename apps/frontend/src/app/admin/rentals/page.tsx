@@ -72,15 +72,14 @@ export default function RentalsPage() {
         : undefined,
   });
 
-  const { stations, getAllStations } = useStationActions({
+  const { stations } = useStationActions({
     hasToken: true,
     page: 1,
     limit: 100,
   });
   useEffect(() => {
-    getAllStations();
     getTodayRevenue();
-  }, [ getAllStations, getTodayRevenue]);
+  }, [ getTodayRevenue]);
   useEffect(() => {
     getSummaryRental();
   }, [getSummaryRental]);

@@ -12,7 +12,7 @@ import type { Reservation } from "@/types/Reservation";
 import { Loader2 } from "lucide-react";
 import { formatDateUTC } from "@/utils/formatDateTime";
 export default function ReservationsPage() {
-  const { stations, getAllStations } = useStationActions({ hasToken: true });
+  const { stations } = useStationActions({ hasToken: true });
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     Reservation["status"] | "all"
@@ -40,11 +40,9 @@ export default function ReservationsPage() {
   useEffect(() => {
     fetchAllReservations();
     fetchReservationStats();
-    getAllStations();
   }, [
     fetchAllReservations,
     fetchReservationStats,
-    getAllStations,
     currentPage,
   ]);
 

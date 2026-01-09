@@ -13,7 +13,6 @@ export default function StationsPage() {
   const [limit] = useState<number>(10);
   const [searchQuery, setSearchQuery] = useState("");
   const {
-    getAllStations,
     stations,
     paginationStations,
   } = useStationActions({
@@ -22,11 +21,6 @@ export default function StationsPage() {
     limit: limit,
     name: searchQuery,
   });
-
-  // LOAD DATA
-  useEffect(() => {
-    getAllStations();
-  }, [limit, page, searchQuery, getAllStations]);
 
   // UI
   return (

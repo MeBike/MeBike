@@ -4,3 +4,4 @@ const Page = ({ params }: { params: Promise<{ supplierId: string }> }) => {
         <SupplierDetailClient params={params}/>
     )
 }
+export default Page;
