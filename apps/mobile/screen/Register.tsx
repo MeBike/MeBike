@@ -179,7 +179,6 @@ export default function RegisterScreen() {
       phone: phone,
     }).then(() => {
       clearForm();
-      navigation.navigate("EmailVerification", { email });
     }).catch((error) => {
       console.log("Register error:", error);
     });

@@ -44,7 +44,6 @@ export default function LoginScreen() {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
       return;
     }
-    
     try {
       Animated.loop(
         Animated.timing(rotateAnim, {
@@ -54,9 +53,6 @@ export default function LoginScreen() {
         }),
       ).start();
       await logIn({ email, password });
-      if(user){
-        navigation.navigate("Main");
-      }
     }
     catch (error) {
       rotateAnim.stopAnimation();

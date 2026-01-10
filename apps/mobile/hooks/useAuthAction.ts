@@ -99,6 +99,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
             setTokens(accessToken, refreshToken);
             await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
             Alert.alert("Đăng nhập thành công", "Chào mừng trở lại!");
+            navigation?.navigate("Main");
             resolve();
           },
           onError: (error: unknown) => {
@@ -122,6 +123,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
               await onTokenUpdate?.();
               await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               Alert.alert("Thành công", "Đăng ký thành công. Tài khoản của bạn đã được tạo.");
+              navigation?.navigate("EmailVerification", { email: data.email });
               resolve();
             }
           },
@@ -133,7 +135,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
         });
       });
     },
-    [useRegister, queryClient, onTokenUpdate]
+    [useRegister, queryClient, onTokenUpdate, navigation]
   );
   const logOut = useCallback(
     (refresh_token: string) => {
