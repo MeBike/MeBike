@@ -20,7 +20,7 @@ import { useAuth } from "@providers/auth-providers";
 import type { ForgotPasswordNavigationProp } from "../types/navigation";
 
 import { IconSymbol } from "../components/IconSymbol";
-import { BikeColors } from "../constants/BikeColors";
+import { BikeColors } from "@constants";
 
 function ForgotPasswordScreen() {
   const navigation = useNavigation<ForgotPasswordNavigationProp>();

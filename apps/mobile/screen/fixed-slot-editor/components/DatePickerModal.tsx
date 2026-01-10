@@ -2,7 +2,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import React from "react";
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 
 import { getTomorrowDate } from "../editorUtils";
 

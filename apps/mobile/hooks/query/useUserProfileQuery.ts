@@ -25,8 +25,8 @@ export function useUserProfileQuery(isAuthenticated: boolean) {
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: false,
-    refetchOnWindowFocus: false, 
-    refetchOnMount: false,
-    refetchOnReconnect: true, // Don't retry failed requests
+    refetchOnWindowFocus: true, 
+    refetchOnMount: true,
+    refetchOnReconnect: true, 
   });
 }

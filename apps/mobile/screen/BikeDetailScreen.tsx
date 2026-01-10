@@ -14,7 +14,7 @@ import {
 
 import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
 import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 import { useAuth } from "@providers/auth-providers";
 import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
 import { formatVietnamDateTime } from "@utils/date";
@@ -222,7 +222,7 @@ function BikeDetailScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { bike, station } = route.params as RouteParams;
-  const hasToken = Boolean(user?._id);
+  const hasToken = Boolean(user?.id);
 
   const [paymentMode, setPaymentMode] = useState<PaymentMode>("wallet");
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);

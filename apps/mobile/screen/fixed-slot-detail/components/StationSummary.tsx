@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 
 import { STATUS_STYLES } from "../utils";
 

@@ -22,7 +22,7 @@ const MySOSScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const hasToken = Boolean(user?.id);
   const [page, setPage] = useState(1);
   const [limit] = useState(5);
   const [allSOSData, setAllSOSData] = useState<SOS[]>([]);

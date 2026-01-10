@@ -1,5 +1,5 @@
 import { FixedSlotTemplateCard } from "@components/reservation-flow/FixedSlotTemplateCard";
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 import type { FixedSlotTemplateListItem } from "@/types/fixed-slot-types";
 import React, { useEffect, useState } from "react";
 import {

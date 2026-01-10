@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 
 import { DatePickerModal } from "./fixed-slot-editor/components/DatePickerModal";
 import { SelectedDatesSection } from "./fixed-slot-editor/components/SelectedDatesSection";

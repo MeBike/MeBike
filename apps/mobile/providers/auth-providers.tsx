@@ -39,68 +39,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Debug logging
   // console.log("AuthProvider state:", { hasToken, isInitialized });
 
-  // Callback to update hasToken when token is saved or cleared
-  const handleTokenUpdate = useCallback(async () => {
-    const token = await getAccessToken();
-    setHasToken(!!token);
-  }, [getAccessToken]);
+  // Callback to update token state
+  const syncTokenState = useCallback(async () => {
+    try {
+      const token = await getAccessToken();
+      console.log("AuthProvider syncTokenState - token present:", !!token);
+      
+      setHasToken(!!token);
 
-  const actions = useAuthActions(navigation, handleTokenUpdate);
-  useEffect(() => {
-  // Hàm xử lý khi token thay đổi
-  const syncTokenState = async () => {
-    const token = await getAccessToken();
-    // console.log("Token event received, updating state:", !!token);
-    
-    setHasToken(!!token);
-
-    if (token) {
-      // Ép TanStack Query gọi lại API profile ngay lập tức
-      // Điều này đảm bảo user profile luôn mới nhất sau khi login
-      await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-    } else {
-      queryClient.clear();
+      if (token) {
+        // Ensure query is fresh after token update
+        await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+      } else {
+        // Only clear cache when transition from hasToken=true to false (logout)
+        // or on initial check if no token
+        queryClient.clear();
+      }
+    } finally {
+      setIsInitialized(true);
     }
-    setIsInitialized(true);
-  };
+  }, [queryClient]);
 
-  // Khởi tạo lần đầu
-  syncTokenState();
+  const actions = useAuthActions(navigation, syncTokenState);
 
-  // Đăng ký lắng nghe event từ TokenManager
-  const subscription = DeviceEventEmitter.addListener(TOKEN_EVENT, syncTokenState);
+  useEffect(() => {
+    // Initial check
+    syncTokenState();
 
-  return () => {
-    subscription.remove();
-  };
-}, [queryClient]);
+    // Listen for manual token changes (login/logout/refresh)
+    const subscription = DeviceEventEmitter.addListener(TOKEN_EVENT, syncTokenState);
 
+    return () => {
+      subscription.remove();
+    };
+  }, [syncTokenState]);
+
+  // Handle 401/403 errors
   useEffect(() => {
     if (isError && hasToken && isInitialized) {
       const authError = isError as unknown as AuthError;
-      const hasResponse = authError?.response && typeof authError.response === "object";
-      const status = hasResponse && authError.response ? authError.response.status : undefined;
-      const isAuthError = hasResponse && (status === 401 || status === 403);
+      const status = authError?.response?.status;
+      const isAuthError = status === 401 || status === 403;
 
       if (isAuthError) {
-        const clearAuth = async () => {
-          console.log("Auth error detected, clearing auth state");
-          await clearTokens();
-          setHasToken(false);
+        console.log("Auth error detected (401/403), logging out...");
+        const logout = async () => {
+          await clearTokens(); // This will trigger TOKEN_EVENT and syncTokenState
           queryClient.clear();
         };
-        clearAuth();
+        logout();
       }
     }
-  }, [isError, hasToken, queryClient, isInitialized]);
-
-  // Additional effect to ensure queries are properly disabled when token is cleared
-  useEffect(() => {
-    if (!hasToken && isInitialized) {
-      console.log("No token detected, clearing query cache");
-      queryClient.clear();
-    }
-  }, [hasToken, isInitialized, queryClient]);
+  }, [isError, hasToken, isInitialized, queryClient]);
 
   const value: AuthContextType = React.useMemo(() => {
     const user = userProfile as Me | null;

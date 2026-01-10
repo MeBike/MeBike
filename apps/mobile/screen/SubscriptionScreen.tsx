@@ -23,7 +23,7 @@ import { SubscriptionPlansSection } from "@components/subscription/subscription-
 import { SubscriptionHistorySection } from "@components/subscription/subscription-history-section";
 import { SubscriptionSummary } from "@components/subscription/subscription-summary";
 import { SubscriptionToggle, type SubscriptionSectionKey } from "@components/subscription/subscription-toggle";
-import { SUBSCRIPTION_PACKAGES } from "@constants/subscriptionPackages";
+import { SUBSCRIPTION_PACKAGES } from "@constants";
 import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 import { useActivateSubscriptionMutation } from "@hooks/mutations/Subscription/useActivateSubscriptionMutation";
 import { useSubscribeMutation } from "@hooks/mutations/Subscription/useSubscribeMutation";

@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 
 type Props = {
   stationId: string;

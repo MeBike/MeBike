@@ -6,7 +6,7 @@ import {
   View,
 } from "react-native";
 
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 
 export type ReservationMode = "MỘT LẦN" | "GÓI THÁNG";
 

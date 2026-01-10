@@ -1,4 +1,4 @@
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 import { Ionicons } from "@expo/vector-icons";
 import {
   FlatList,

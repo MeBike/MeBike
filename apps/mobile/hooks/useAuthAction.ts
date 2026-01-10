@@ -60,32 +60,37 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
   const useResetPassword = useResetPasswordMutation();
   const useResendVerifyEmail = useResendVerifyEmailMutation();
   const changePassword = useCallback(
-    (old_password: string, password: string, confirm_password: string): Promise<void> => {
-      return new Promise((resolve, reject) => {
-        useChangePassword.mutate(
-          { old_password, password, confirm_password },
-          {
-            onSuccess: (result) => {
-              if (result.status === 200) {
-                Alert.alert("Success", result.data.message);
-                resolve();
-              } else {
-                const errorMessage = result.data?.message || "Error changing password";
-                Alert.alert("Lỗi", errorMessage);
-                reject(new Error(errorMessage));
-              }
-            },
-            onError: (error: unknown) => {
-              const errorMessage = getErrorMessage(
-                error,
-                "Error changing password"
+    (oldPassword: string, newPassword: string, confirmPassword : string) => {
+      useChangePassword.mutate(
+        { oldPassword, newPassword, confirmPassword },
+        {
+          onSuccess: (result) => {
+            if (result.status === HTTP_STATUS.OK) {
+              const messsage = getErrorMessage(result.data?.data?.ChangePassword.errors,"Đổi password thành công rồi");
+              Alert.alert(
+                "Thành công",
+                messsage
               );
-              Alert.alert("Lỗi", errorMessage);
-              reject(error);
-            },
-          }
-        );
-      });
+            } else {
+              const messsage = getErrorMessage(result.data?.data?.ChangePassword.errors, "Đổi password thất bại");
+              Alert.alert(
+                "Lỗi",
+                messsage
+              );
+            }
+          },
+          onError: (error: unknown) => {
+            const errorMessage = getErrorMessage(
+              error,
+              "Đổi password thất bại"
+            );
+            Alert.alert(
+              "Lỗi",
+              errorMessage
+            );
+          },
+        }
+      );
     },
     [useChangePassword]
   );
@@ -96,7 +101,8 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
           onSuccess: async (result) => {
             const { accessToken, refreshToken } = result.data.data?.LoginUser.data as AuthTokens
             console.log(result.data.data?.LoginUser.data);
-            setTokens(accessToken, refreshToken);
+            await setTokens(accessToken, refreshToken);
+            await onTokenUpdate?.();
             await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
             Alert.alert("Đăng nhập thành công", "Chào mừng trở lại!");
             navigation?.navigate("Main");

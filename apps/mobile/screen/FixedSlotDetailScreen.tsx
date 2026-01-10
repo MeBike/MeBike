@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 import { useFixedSlotTemplateDetailQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplateDetailQuery";
 
 import { DateChips } from "./fixed-slot-detail/components/DateChips";

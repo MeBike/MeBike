@@ -18,7 +18,7 @@ import {
 import type { RouteProp } from "@react-navigation/native";
 import type { RootStackParamList } from "../types/navigation";
 import { IconSymbol } from "../components/IconSymbol";
-import { BikeColors } from "../constants/BikeColors";
+import { BikeColors } from "@constants";
 
 type EmailVerificationRouteProp = RouteProp<
   RootStackParamList,

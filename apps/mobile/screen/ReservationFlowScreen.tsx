@@ -22,7 +22,7 @@ import {
   ReservationMode,
   ReservationModeToggle,
 } from "../components/reservation-flow/ReservationModeToggle";
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 import { useReservationActions } from "@hooks/useReservationActions";
 import { useAuth } from "@providers/auth-providers";
@@ -61,7 +61,7 @@ export default function ReservationFlowScreen() {
   const route = useRoute<ReservationFlowRouteProp>();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const hasToken = Boolean(user?.id);
   const {
     stationId,
     stationName,

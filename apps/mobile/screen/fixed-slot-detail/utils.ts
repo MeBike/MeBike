@@ -1,4 +1,4 @@
-import { BikeColors } from "@constants/BikeColors";
+import { BikeColors } from "@constants";
 
 export const STATUS_STYLES: Record<string, { backgroundColor: string; color: string }> = {
   "ĐANG HOẠT ĐỘNG": { backgroundColor: "#E1F7E3", color: BikeColors.success },

@@ -29,7 +29,7 @@ const CreateSOSRequestScreen = () => {
   const route = useRoute();
   const { rentalId } = route.params as RouteParams;
   const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const hasToken = Boolean(user?.id);
   const { createSOSRequest } = useSOS({ hasToken, page: 1, limit: 10 });
 
   const [issue, setIssue] = useState("");

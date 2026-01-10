@@ -37,8 +37,10 @@ export type ProfileUserResponse = {
   message: string;
   result: DetailUser;
 };
-import { LoginResponse , LogOutResponse  , RegisterResponse , GetMeResponse , VerifyEmailResponse , VerifyForgotPasswordTokenResponse , VerifyEmailProcessResponse} from "@/types";
-import { LOGIN_MUTATION , LOGOUT_MUTATION , REGISTER_MUTATION , GET_ME , VERIFY_EMAIL, VERIFY_EMAIL_PROCESS} from "@graphql";
+import { LoginResponse , LogOutResponse  , RegisterResponse , GetMeResponse , VerifyEmailResponse , VerifyForgotPasswordTokenResponse , VerifyEmailProcessResponse
+  , UpdateProfileResponse , ChangePasswordResponse
+} from "@/types";
+import { LOGIN_MUTATION , LOGOUT_MUTATION , REGISTER_MUTATION , GET_ME , VERIFY_EMAIL, VERIFY_EMAIL_PROCESS , UPDATE_PROFILE , CHANGE_PASSWORD_MUTATION} from "@graphql";
 import { print } from "graphql";
 export const authService = {
   login: async (
@@ -102,12 +104,30 @@ export const authService = {
     const response = await fetchHttpClient.post<AuthResponse>("/users/refresh-token", { refresh_token });
     return response;
   },
-  updateProfile: async (data: Partial<UpdateProfileSchemaFormData>): Promise<AxiosResponse<ProfileUserResponse>> => {
-    const response = await fetchHttpClient.patch<ProfileUserResponse>("/users/me", data);
+  updateProfile: async (
+    data: Partial<UpdateProfileSchemaFormData>
+  ): Promise<AxiosResponse<UpdateProfileResponse>> => {
+    const response = await fetchHttpClient.mutation<UpdateProfileResponse>(
+      print(UPDATE_PROFILE),
+      {
+        data,
+      }
+    );
     return response;
   },
-  changePassword: async (data: ChangePasswordSchemaFormData): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.put<MessageResponse>("/users/change-password", data);
+  changePassword: async (
+    data: ChangePasswordSchemaFormData
+  ): Promise<AxiosResponse<ChangePasswordResponse>> => {
+    const response = await fetchHttpClient.mutation<ChangePasswordResponse>(
+      print(CHANGE_PASSWORD_MUTATION),
+      {
+        body: {
+          oldPassword: data.oldPassword,
+          newPassword: data.newPassword,
+          confirmPassword: data.confirmPassword,
+        },
+      }
+    );
     return response;
   },
   forgotPassword: async (data: ForgotPasswordSchemaFormData): Promise<AxiosResponse<MessageResponse>> => {

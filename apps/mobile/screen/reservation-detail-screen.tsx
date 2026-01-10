@@ -50,7 +50,7 @@ function ReservationDetailScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
 
-  const hasToken = Boolean(user?._id);
+  const hasToken = Boolean(user?.id);
 
   const { reservationId, reservation: initialReservation } = route.params;
 
