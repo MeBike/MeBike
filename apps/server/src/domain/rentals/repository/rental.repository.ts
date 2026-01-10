@@ -1,6 +1,5 @@
 import { Effect, Layer, Match, Option } from "effect";
 
-import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type { PrismaClient, Prisma as PrismaTypes, RentalStatus } from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
@@ -8,206 +7,38 @@ import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
 
-import type { RentalRepoError } from "../domain-errors";
 import type {
-  MyRentalFilter,
-  RentalCountsRow,
-  RentalRow,
-  RentalSortField,
+  AdminRentalListItem,
 } from "../models";
+import type {
+  CreateRentalInput,
+  RentalRepo,
+} from "./rental.repository.types";
 
 import { RentalRepositoryError, RentalUniqueViolation } from "../domain-errors";
+import {
+  adminRentalDetailSelect,
+  adminRentalListSelect,
+  mapToAdminRentalDetail,
+  mapToAdminRentalListItem,
+} from "./rental.repository.admin.query";
+import {
+  mapToRentalRow,
+  rentalSelect,
+  toAdminRentalsWhere,
+  toMyRentalsWhere,
+  toRentalOrderBy,
+} from "./rental.repository.query";
 
-export type CreateRentalInput = {
-  userId: string;
-  bikeId: string;
-  startStationId: string;
-  startTime: Date;
-  subscriptionId?: string | null;
-};
-
-export type CreateReservedRentalInput = {
-  reservationId: string;
-  userId: string;
-  bikeId: string;
-  startStationId: string;
-  startTime: Date;
-  subscriptionId?: string | null;
-};
-
-export type UpdateRentalOnEndInput = {
-  rentalId: string;
-  endStationId: string;
-  endTime: Date;
-  durationMinutes: number;
-  totalPrice: number | null;
-  newStatus: RentalStatus;
-};
-
-export type RentalRepo = {
-  // User "/me" views
-  listMyRentals: (
-    userId: string,
-    filter: MyRentalFilter,
-    pageReq: PageRequest<RentalSortField>,
-  ) => Effect.Effect<PageResult<RentalRow>, RentalRepositoryError>;
-
-  listMyCurrentRentals: (
-    userId: string,
-    pageReq: PageRequest<RentalSortField>,
-  ) => Effect.Effect<PageResult<RentalRow>, RentalRepositoryError>;
-
-  getMyRentalById: (
-    userId: string,
-    rentalId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
-  getMyRentalCounts: (
-    userId: string,
-  ) => Effect.Effect<readonly RentalCountsRow[], RentalRepositoryError>;
-
-  // Helpers for future use-cases
-  findActiveByBikeId: (
-    bikeId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
-  findActiveByUserId: (
-    userId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
-  findActiveByBikeIdInTx: (
-    tx: PrismaTypes.TransactionClient,
-    bikeId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
-  findActiveByUserIdInTx: (
-    tx: PrismaTypes.TransactionClient,
-    userId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
-  // Core rental operations
-  createRental: (
-    data: CreateRentalInput,
-  ) => Effect.Effect<RentalRow, RentalRepoError>;
-
-  createRentalInTx: (
-    tx: PrismaTypes.TransactionClient,
-    data: CreateRentalInput,
-  ) => Effect.Effect<RentalRow, RentalRepoError>;
-
-  createReservedRentalForReservationInTx: (
-    tx: PrismaTypes.TransactionClient,
-    data: CreateReservedRentalInput,
-  ) => Effect.Effect<RentalRow, RentalRepoError>;
-
-  updateRentalOnEnd: (
-    data: UpdateRentalOnEndInput,
-  ) => Effect.Effect<RentalRow, RentalRepositoryError>;
-  updateRentalOnEndInTx: (
-    tx: PrismaTypes.TransactionClient,
-    data: UpdateRentalOnEndInput,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
-  findById: (
-    rentalId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
-  /**
-   * EN: Assign bike to a reserved rental if it is still unassigned.
-   * VI: Gán bike cho rental RESERVED nếu vẫn chưa có bike.
-   */
-  assignBikeToReservedRentalInTx: (
-    tx: PrismaTypes.TransactionClient,
-    rentalId: string,
-    bikeId: string,
-    updatedAt: Date,
-  ) => Effect.Effect<boolean, RentalRepositoryError>;
-
-  /**
-   * EN: Start a RESERVED rental by marking it RENTED and setting start time.
-   * VI: Bắt đầu rental RESERVED bằng cách chuyển sang RENTED và set start time.
-   */
-  startReservedRentalInTx: (
-    tx: PrismaTypes.TransactionClient,
-    rentalId: string,
-    startTime: Date,
-    updatedAt: Date,
-    subscriptionId: string | null,
-  ) => Effect.Effect<boolean, RentalRepositoryError>;
-
-  /**
-   * EN: Cancel a RESERVED rental (no-op if status already changed).
-   * VI: Hủy rental RESERVED (không làm gì nếu status đã đổi).
-   */
-  cancelReservedRentalInTx: (
-    tx: PrismaTypes.TransactionClient,
-    rentalId: string,
-    updatedAt: Date,
-  ) => Effect.Effect<boolean, RentalRepositoryError>;
-};
-
-function toMyRentalsWhere(
-  userId: string,
-  filter: MyRentalFilter,
-): PrismaTypes.RentalWhereInput {
-  return {
-    userId,
-    ...(filter.status ? { status: filter.status } : {}),
-    ...(filter.startStationId ? { startStationId: filter.startStationId } : {}),
-    ...(filter.endStationId ? { endStationId: filter.endStationId } : {}),
-  };
-}
-
-function toRentalOrderBy(
-  req: PageRequest<RentalSortField>,
-): PrismaTypes.RentalOrderByWithRelationInput {
-  const sortBy = req.sortBy ?? "startTime";
-  const sortDir = req.sortDir ?? "desc";
-  switch (sortBy) {
-    case "endTime":
-      return { endTime: sortDir };
-    case "status":
-      return { status: sortDir };
-    case "updatedAt":
-      return { updatedAt: sortDir };
-    case "startTime":
-    default:
-      return { startTime: sortDir };
-  }
-}
+export type {
+  CreateRentalInput,
+  CreateReservedRentalInput,
+  RentalRepo,
+  UpdateRentalOnEndInput,
+} from "./rental.repository.types";
 
 export function makeRentalRepository(client: PrismaClient): RentalRepo {
-  const select = {
-    id: true,
-    userId: true,
-    bikeId: true,
-    startStationId: true,
-    endStationId: true,
-    startTime: true,
-    endTime: true,
-    duration: true,
-    totalPrice: true,
-    subscriptionId: true,
-    status: true,
-    updatedAt: true,
-  } as const;
-
-  type RentalSelectRow = PrismaTypes.RentalGetPayload<{ select: typeof select }>;
-
-  const mapToRentalRow = (raw: RentalSelectRow): RentalRow => ({
-    id: raw.id,
-    userId: raw.userId,
-    bikeId: raw.bikeId,
-    startStationId: raw.startStationId,
-    endStationId: raw.endStationId,
-    startTime: raw.startTime,
-    endTime: raw.endTime,
-    durationMinutes: raw.duration,
-    totalPrice: raw.totalPrice === null ? null : Number(raw.totalPrice),
-    subscriptionId: raw.subscriptionId,
-    status: raw.status,
-    updatedAt: raw.updatedAt,
-  });
+  const select = rentalSelect;
 
   const createRentalWithClient = (
     tx: PrismaClient | PrismaTypes.TransactionClient,
@@ -625,6 +456,67 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
             operation: "cancelReservedRentalInTx",
             cause: e,
           }),
+      });
+    },
+
+    adminListRentals(filter, pageReq) {
+      return Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage(pageReq);
+
+        const where = toAdminRentalsWhere(filter);
+        const orderBy = toRentalOrderBy(pageReq);
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.rental.count({ where }),
+            catch: e =>
+              new RentalRepositoryError({
+                operation: "adminListRentals.count",
+                cause: e,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.rental.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                select: adminRentalListSelect,
+              }),
+            catch: e =>
+              new RentalRepositoryError({
+                operation: "adminListRentals.findMany",
+                cause: e,
+              }),
+          }),
+        ]);
+
+        const mappedItems: AdminRentalListItem[] = items.map(mapToAdminRentalListItem);
+
+        return makePageResult(mappedItems, total, page, pageSize);
+      });
+    },
+
+    adminGetRentalById(rentalId) {
+      return Effect.gen(function* () {
+        const raw = yield* Effect.tryPromise({
+          try: () =>
+            client.rental.findUnique({
+              where: { id: rentalId },
+              select: adminRentalDetailSelect,
+            }),
+          catch: e =>
+            new RentalRepositoryError({
+              operation: "adminGetRentalById",
+              cause: e,
+            }),
+        });
+
+        if (!raw) {
+          return Option.none();
+        }
+        return Option.some(mapToAdminRentalDetail(raw));
       });
     },
   };

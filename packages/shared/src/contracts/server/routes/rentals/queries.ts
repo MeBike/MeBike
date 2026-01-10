@@ -1,7 +1,10 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { z } from "../../../../zod";
+import { AdminRentalsListResponseSchema } from "../../rentals";
 import {
+  paginationQueryFields,
+  SortDirectionSchema,
   UnauthorizedErrorCodeSchema,
   unauthorizedErrorMessages,
   UnauthorizedErrorResponseSchema,
@@ -13,6 +16,7 @@ import {
   PhoneNumberParamSchema,
   RentalCountsResponseSchema,
   rentalDateRangeWith,
+  RentalDetailSchemaOpenApi,
   RentalErrorCodeSchema,
   RentalErrorResponseSchema,
   RentalIdParamSchema,
@@ -408,6 +412,102 @@ export const getStationActivity = createRoute({
       content: {
         "application/json": {
           schema: StationActivityResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const adminListRentals = createRoute({
+  method: "get",
+  path: "/v1/admin/rentals",
+  tags: ["Admin", "Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z
+      .object({
+        userId: z.uuidv7().optional(),
+        bikeId: z.uuidv7().optional(),
+        startStation: z.uuidv7().optional(),
+        endStation: z.uuidv7().optional(),
+        status: RentalStatusSchema.optional(),
+        ...paginationQueryFields,
+        sortBy: z.enum(["startTime", "endTime", "status", "updatedAt"]).optional(),
+        sortDir: SortDirectionSchema.optional(),
+      })
+      .openapi("AdminRentalsListQuery", {
+        description: "Query parameters for admin rental listing",
+      }),
+  },
+  responses: {
+    200: {
+      description: "Paginated list of all rentals (admin view)",
+      content: {
+        "application/json": {
+          schema: AdminRentalsListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Admin access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const adminGetRental = createRoute({
+  method: "get",
+  path: "/v1/admin/rentals/{rentalId}",
+  tags: ["Admin", "Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Detailed rental with all populated data (admin view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RentalDetailSchemaOpenApi,
+            "Get admin rental detail response",
+          ),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Admin access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Rental not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
         },
       },
     },

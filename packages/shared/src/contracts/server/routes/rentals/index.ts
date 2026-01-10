@@ -13,6 +13,8 @@ export {
 } from "./mutations";
 
 export {
+  adminGetRental,
+  adminListRentals,
   getActiveRentalsByPhone,
   getAllRentals,
   getDashboardSummary,

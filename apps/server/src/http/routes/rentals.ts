@@ -2,11 +2,20 @@ import { RentalsContracts, serverRoutes } from "@mebike/shared";
 import { Effect, Match, Option } from "effect";
 
 import {
+  adminGetRentalDetailUseCase,
+  adminListRentalsUseCase,
   endRentalUseCase,
   RentalServiceTag,
   startRentalUseCase,
 } from "@/domain/rentals";
 import { withLoggedCause } from "@/domain/shared";
+import { requireAdminMiddleware } from "@/http/middlewares/auth";
+import {
+  toContractAdminRentalDetail,
+  toContractAdminRentalListItem,
+  toContractRental,
+  toContractRentalWithPrice,
+} from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";
 import { withRentalDeps } from "@/http/shared/providers";
 
@@ -14,44 +23,6 @@ const {
   RentalErrorCodeSchema,
   rentalErrorMessages,
 } = RentalsContracts;
-
-function toContractRental(
-  row: import("@/domain/rentals").RentalRow,
-): RentalsContracts.MyRentalListResponse["data"][number] {
-  return {
-    id: row.id,
-    userId: row.userId,
-    bikeId: row.bikeId ?? undefined,
-    startStation: row.startStationId,
-    endStation: row.endStationId ?? undefined,
-    startTime: row.startTime.toISOString(),
-    endTime: row.endTime ? row.endTime.toISOString() : undefined,
-    duration: row.durationMinutes ?? 0,
-    totalPrice: row.totalPrice ?? undefined,
-    subscriptionId: row.subscriptionId ?? undefined,
-    status: row.status,
-    updatedAt: row.updatedAt.toISOString(),
-  };
-}
-
-function toContractRentalWithPrice(
-  row: import("@/domain/rentals").RentalRow,
-): RentalsContracts.RentalWithPrice {
-  return {
-    id: row.id,
-    userId: row.userId,
-    bikeId: row.bikeId ?? undefined,
-    startStation: row.startStationId,
-    endStation: row.endStationId ?? undefined,
-    startTime: row.startTime.toISOString(),
-    endTime: row.endTime ? row.endTime.toISOString() : undefined,
-    duration: row.durationMinutes ?? 0,
-    totalPrice: row.totalPrice ?? 0,
-    subscriptionId: row.subscriptionId ?? undefined,
-    status: row.status,
-    updatedAt: row.updatedAt.toISOString(),
-  };
-}
 
 export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const rentals = serverRoutes.rentals;
@@ -203,7 +174,7 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
             endStationId: query.endStation,
           }, {
             page: Number(query.page ?? 1),
-            pageSize: Number(query.limit ?? 50),
+            pageSize: Number(query.pageSize ?? 50),
             sortBy: "startTime",
             sortDir: "desc",
           });
@@ -229,7 +200,7 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
           const service = yield* RentalServiceTag;
           return yield* service.listMyCurrentRentals(userId, {
             page: Number(query.page ?? 1),
-            pageSize: Number(query.limit ?? 50),
+            pageSize: Number(query.pageSize ?? 50),
             sortBy: "startTime",
             sortDir: "desc",
           });
@@ -409,4 +380,84 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
       Match.exhaustive,
     );
   });
+
+  app.openapi(
+    { ...rentals.adminListRentals, middleware: [requireAdminMiddleware] as const },
+    async (c) => {
+      const query = c.req.valid("query");
+
+      const eff = withLoggedCause(
+        withRentalDeps(
+          adminListRentalsUseCase({
+            filter: {
+              userId: query.userId,
+              bikeId: query.bikeId,
+              startStationId: query.startStation,
+              endStationId: query.endStation,
+              status: query.status,
+            },
+            pageReq: {
+              page: Number(query.page ?? 1),
+              pageSize: Number(query.pageSize ?? 50),
+              sortBy: query.sortBy ?? "startTime",
+              sortDir: query.sortDir ?? "desc",
+            },
+          }),
+        ),
+        "GET /v1/admin/rentals",
+      );
+
+      const value = await Effect.runPromise(eff);
+      const response: RentalsContracts.AdminRentalsListResponse = {
+        data: value.items.map(toContractAdminRentalListItem),
+        pagination: toContractPage(value),
+      };
+      return c.json<RentalsContracts.AdminRentalsListResponse, 200>(response, 200);
+    },
+  );
+
+  app.openapi(
+    { ...rentals.adminGetRental, middleware: [requireAdminMiddleware] as const },
+    async (c) => {
+      const { rentalId } = c.req.valid("param");
+
+      const eff = withLoggedCause(
+        withRentalDeps(adminGetRentalDetailUseCase(rentalId)),
+        "GET /v1/admin/rentals/{rentalId}",
+      );
+
+      const result = await Effect.runPromise(eff.pipe(Effect.either));
+
+      return Match.value(result).pipe(
+        Match.tag("Right", ({ right }) => {
+          const detail = toContractAdminRentalDetail(right);
+          return c.json(
+            {
+              message: "OK",
+              result: detail,
+            },
+            200,
+          );
+        }),
+        Match.tag("Left", ({ left }) =>
+          Match.value(left).pipe(
+            Match.tag("AdminRentalNotFound", () =>
+              c.json(
+                {
+                  error: rentalErrorMessages.RENTAL_NOT_FOUND,
+                  details: {
+                    code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+                    rentalId,
+                  },
+                },
+                404,
+              )),
+            Match.orElse(() => {
+              throw left;
+            }),
+          )),
+        Match.exhaustive,
+      );
+    },
+  );
 }

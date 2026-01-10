@@ -3,7 +3,6 @@ import { Effect, Either, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
-
 import { getTestDatabase } from "@/test/db/test-database";
 import { makeUnreachablePrisma } from "@/test/db/unreachable-prisma";
 import { PrismaClient } from "generated/prisma/client";
@@ -17,7 +16,6 @@ describe("rentalRepository Integration", () => {
 
   beforeAll(async () => {
     container = await getTestDatabase();
-    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });
@@ -279,6 +277,73 @@ describe("rentalRepository Integration", () => {
       throw new Error("Expected rental to exist");
     }
     expect(found.value.status).toBe("COMPLETED");
+  });
+
+  it("adminListRentals returns filtered results with user summary", async () => {
+    const { id: userId } = await createUser();
+    const { id: otherUserId } = await createUser();
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId);
+    const { id: otherBikeId } = await createBike(stationId);
+
+    await Effect.runPromise(
+      repo.createRental({
+        userId,
+        bikeId,
+        startStationId: stationId,
+        startTime: new Date(),
+      }),
+    );
+
+    await Effect.runPromise(
+      repo.createRental({
+        userId: otherUserId,
+        bikeId: otherBikeId,
+        startStationId: stationId,
+        startTime: new Date(),
+      }),
+    );
+
+    const page = await Effect.runPromise(
+      repo.adminListRentals({ userId }, {
+        page: 1,
+        pageSize: 10,
+        sortBy: "startTime",
+        sortDir: "desc",
+      }),
+    );
+
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0].user.id).toBe(userId);
+  });
+
+  it("adminGetRentalById returns detailed rental data", async () => {
+    const { id: userId } = await createUser();
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId);
+
+    const rental = await Effect.runPromise(
+      repo.createRental({
+        userId,
+        bikeId,
+        startStationId: stationId,
+        startTime: new Date(),
+      }),
+    );
+
+    const detailOpt = await Effect.runPromise(
+      repo.adminGetRentalById(rental.id),
+    );
+
+    if (Option.isNone(detailOpt)) {
+      throw new Error("Expected rental detail");
+    }
+
+    expect(detailOpt.value.id).toBe(rental.id);
+    expect(detailOpt.value.user.id).toBe(userId);
+    expect(detailOpt.value.user.email).toContain("@example.com");
+    expect(detailOpt.value.bike?.id).toBe(bikeId);
+    expect(detailOpt.value.startStation.id).toBe(stationId);
   });
 
   it("createRental rejects active rental duplicates", async () => {

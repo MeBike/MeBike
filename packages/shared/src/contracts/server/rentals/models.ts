@@ -1,5 +1,6 @@
 import { z } from "../../../zod";
 import { BikeStatusSchema } from "../bikes";
+import { PaginationSchema } from "../schemas";
 import { UserRoleSchema, VerifyStatusSchema } from "../users";
 
 export const RentalStatusSchema = z.enum([
@@ -11,7 +12,6 @@ export const RentalStatusSchema = z.enum([
 
 export const RentalIsoDateTimeSchema = z.iso.datetime();
 
-// Core rental base schema
 export const RentalSchema = z.object({
   id: z.uuidv7(),
   userId: z.uuidv7(),
@@ -27,13 +27,11 @@ export const RentalSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 
-// User info subset for rental lists
 export const RentalUserSummarySchema = z.object({
   id: z.uuidv7(),
   fullname: z.string(),
 });
 
-// Full user info for detailed rentals
 export const RentalUserDetailSchema = z.object({
   id: z.uuidv7(),
   fullname: z.string(),
@@ -229,24 +227,34 @@ export const CancelRentalRequestSchema = z.object({
   reason: z.string(),
 });
 
+export const AdminRentalListItemSchema = z.object({
+  id: z.uuidv7(),
+  user: RentalUserSummarySchema,
+  bikeId: z.uuidv7().optional().nullable(),
+  status: RentalStatusSchema,
+  startStation: z.uuidv7(),
+  endStation: z.uuidv7().optional(),
+  startTime: z.iso.datetime(),
+  endTime: z.iso.datetime().optional(),
+  duration: z.number(),
+  totalPrice: z.number(),
+  subscriptionId: z.uuidv7().optional(),
+  updatedAt: z.iso.datetime(),
+});
+
 export const RentalListResponseSchema = z.object({
   data: z.array(RentalListItemSchema),
-  pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-  }),
+  pagination: PaginationSchema,
+});
+
+export const AdminRentalsListResponseSchema = z.object({
+  data: z.array(AdminRentalListItemSchema),
+  pagination: PaginationSchema,
 });
 
 export const MyRentalListResponseSchema = z.object({
   data: z.array(RentalSchema),
-  pagination: z.object({
-    page: z.number(),
-    limit: z.number(),
-    total: z.number(),
-    totalPages: z.number(),
-  }),
+  pagination: PaginationSchema,
 });
 
 // TypeScript types
@@ -272,4 +280,5 @@ export type EndRentalRequest = z.infer<typeof EndRentalRequestSchema>;
 export type UpdateRentalRequest = z.infer<typeof UpdateRentalRequestSchema>;
 export type CancelRentalRequest = z.infer<typeof CancelRentalRequestSchema>;
 export type RentalListResponse = z.infer<typeof RentalListResponseSchema>;
+export type AdminRentalsListResponse = z.infer<typeof AdminRentalsListResponseSchema>;
 export type MyRentalListResponse = z.infer<typeof MyRentalListResponseSchema>;

@@ -14,6 +14,7 @@ import {
   RentalWithPricingSchema,
   StationActivityResponseSchema,
 } from "../../rentals";
+import { paginationQueryFields, PaginationSchema } from "../../schemas";
 
 export { RentalErrorResponseSchema };
 
@@ -83,8 +84,7 @@ export const RentalListQuerySchema = z
     startStation: z.string().optional(),
     endStation: z.string().optional(),
     status: RentalStatusSchema.optional(),
-    page: z.string().optional(),
-    limit: z.string().optional(),
+    ...paginationQueryFields,
   })
   .openapi("RentalListQuery", {
     description: "Query parameters for rental listing",
@@ -128,12 +128,7 @@ export const RentalListItemSchemaOpenApi = RentalListItemSchema.openapi(
 export const RentalListResponseSchema = z
   .object({
     data: z.array(RentalListItemSchemaOpenApi),
-    pagination: z.object({
-      page: z.number(),
-      limit: z.number(),
-      total: z.number(),
-      totalPages: z.number(),
-    }),
+    pagination: PaginationSchema,
   })
   .openapi("RentalListResponse", {
     description: "Paginated rental list",
@@ -142,12 +137,7 @@ export const RentalListResponseSchema = z
 export const MyRentalListResponseSchema = z
   .object({
     data: z.array(RentalSchemaOpenApi),
-    pagination: z.object({
-      page: z.number(),
-      limit: z.number(),
-      total: z.number(),
-      totalPages: z.number(),
-    }),
+    pagination: PaginationSchema,
   })
   .openapi("MyRentalListResponse", {
     description: "Paginated user rental list",

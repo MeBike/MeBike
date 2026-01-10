@@ -7,7 +7,7 @@ export type DomainPage = {
 
 export type ContractPage = {
   page: number;
-  limit: number;
+  pageSize: number;
   total: number;
   totalPages: number;
 };
@@ -15,7 +15,7 @@ export type ContractPage = {
 export function toContractPage(page: DomainPage): ContractPage {
   return {
     page: page.page,
-    limit: page.pageSize,
+    pageSize: page.pageSize,
     total: page.total,
     totalPages: page.totalPages,
   };

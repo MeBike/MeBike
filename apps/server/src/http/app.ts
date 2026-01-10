@@ -74,6 +74,8 @@ export function createHttpApp() {
   app.use("/v1/users/manage-users/*", requireAdminOrStaffMiddleware);
   app.use("/v1/users/manage-users/create", requireAdminMiddleware);
   app.use("/v1/users/manage-users/admin-reset-password/*", requireAdminMiddleware);
+  app.use("/v1/admin/rentals", requireAdminMiddleware);
+  app.use("/v1/admin/rentals/*", requireAdminMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(
