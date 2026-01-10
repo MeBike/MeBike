@@ -37,17 +37,42 @@ export type ProfileUserResponse = {
   message: string;
   result: DetailUser;
 };
+import { LoginResponse , LogOutResponse  , RegisterResponse , GetMeResponse} from "@/types";
+import { LOGIN_MUTATION , LOGOUT_MUTATION , REGISTER_MUTATION , GET_ME } from "@graphql";
+import { print } from "graphql";
 export const authService = {
-  login: async (data: LoginSchemaFormData): Promise<AxiosResponse<AuthResponse>> => {
-    const response = await fetchHttpClient.post<AuthResponse>("/users/login", data);
+  login: async (
+    data: LoginSchemaFormData
+  ): Promise<AxiosResponse<LoginResponse>> => {
+    return fetchHttpClient.mutation<LoginResponse>(print(LOGIN_MUTATION), {
+      body: {
+        email: data.email,
+        password: data.password,
+      },
+    });
+  },
+  register: async (
+    data: RegisterSchemaFormData
+  ): Promise<AxiosResponse<RegisterResponse>> => {
+    const response = await fetchHttpClient.mutation<RegisterResponse>(
+      print(REGISTER_MUTATION),
+      {
+        body: {
+          email: data.email,
+          name: data.name,
+          YOB: data.YOB,
+          phone: data.phone,
+          password: data.password,
+          confirmPassword: data.confirmPassword,
+        },
+      }
+    );
     return response;
   },
-  register: async (data: RegisterSchemaFormData): Promise<AxiosResponse<AuthResponse>> => {
-    const response = await fetchHttpClient.post<AuthResponse>("/users/register", data);
-    return response;
-  },
-  logout: async (refresh_token: string): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>("/users/logout", { refresh_token });
+  logout: async (): Promise<AxiosResponse<LogOutResponse>> => {
+    const response = await fetchHttpClient.mutation<LogOutResponse>(
+      print(LOGOUT_MUTATION)
+    );
     return response;
   },
   resendVerifyEmail: async (): Promise<AxiosResponse<MessageResponse>> => {
@@ -64,8 +89,8 @@ export const authService = {
     const response = await fetchHttpClient.post<MessageResponse>("/users/verify-email", { email, otp });
     return response;
   },
-  getMe: async (): Promise<AxiosResponse<ProfileUserResponse>> => {
-    const response = await fetchHttpClient.get<ProfileUserResponse>("/users/me");
+   getMe: async (): Promise<AxiosResponse<GetMeResponse>> => {
+    const response = await fetchHttpClient.query<GetMeResponse>(print(GET_ME));
     return response;
   },
   refreshToken: async (refresh_token: string): Promise<AxiosResponse<AuthResponse>> => {

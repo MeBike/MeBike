@@ -15,6 +15,7 @@ import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
+import { AuthTokens } from "@/types";
 
 interface ErrorResponse {
   response?: {
@@ -93,9 +94,8 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { access_token, refresh_token } = result.data.result;
-            setTokens(access_token, refresh_token);
-            onTokenUpdate?.();
+            const { accessToken, refreshToken } = result.data.data?.LoginUser.data as AuthTokens;
+            setTokens(accessToken, refreshToken);
             await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
             Alert.alert("Đăng nhập thành công", "Chào mừng trở lại!");
             navigation?.navigate("Main");
@@ -117,16 +117,12 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
         useRegister.mutate(data, {
           onSuccess: async (result) => {
             if (result.status === 200) {
-              const { access_token, refresh_token } = result.data.result;
-              setTokens(access_token, refresh_token);
+              const { accessToken, refreshToken } = result.data.data?.RegisterUser.data as AuthTokens;
+              setTokens(accessToken, refreshToken);
               await onTokenUpdate?.();
               await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               Alert.alert("Thành công", "Đăng ký thành công. Tài khoản của bạn đã được tạo.");
               resolve();
-            } else {
-              const errorMessage = result.data?.message || "Lỗi khi đăng ký";
-              Alert.alert("Lỗi", errorMessage);
-              reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
@@ -149,9 +145,6 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
             queryClient.clear();
             Alert.alert("Thành công", "Đăng xuất thành công");
             navigation?.navigate("Login");
-          } else {
-            const errorMessage = result.data?.message || "Lỗi khi đăng xuất";
-            Alert.alert("Lỗi", errorMessage);
           }
         },
         onError: (error: unknown) => {

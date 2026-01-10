@@ -10,6 +10,7 @@ import type { DetailUser } from "@services/auth.service";
 import { useUserProfileQuery } from "@hooks/query/useUserProfileQuery";
 import { useAuthActions } from "@hooks/useAuthAction";
 import { clearTokens, getAccessToken } from "@utils/tokenManager";
+import { Me } from "@/types";
 
 type AuthError = {
   response?: {
@@ -17,7 +18,7 @@ type AuthError = {
   };
 };
 type AuthContextType = ReturnType<typeof useAuthActions> & {
-  user: DetailUser | null;
+  user: Me | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isStaff: boolean;
@@ -25,6 +26,8 @@ type AuthContextType = ReturnType<typeof useAuthActions> & {
   isSOS: boolean;
   actions: ReturnType<typeof useAuthActions>;
 };
+import { DeviceEventEmitter } from "react-native";
+import { TOKEN_EVENT } from "@utils/tokenManager";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hasToken, setHasToken] = useState<boolean>(false);
@@ -44,37 +47,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const actions = useAuthActions(navigation, handleTokenUpdate);
   useEffect(() => {
-    const initializeAuth = async () => {
-      const token = await getAccessToken();
-      setHasToken(!!token);
-      setIsInitialized(true);
-    };
+  // Hàm xử lý khi token thay đổi
+  const syncTokenState = async () => {
+    const token = await getAccessToken();
+    console.log("Token event received, updating state:", !!token);
+    
+    setHasToken(!!token);
 
-    initializeAuth();
-
-    const handleAuthFailure = async () => {
-      await clearTokens();
-      setHasToken(false);
+    if (token) {
+      // Ép TanStack Query gọi lại API profile ngay lập tức
+      // Điều này đảm bảo user profile luôn mới nhất sau khi login
+      await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+    } else {
       queryClient.clear();
-    };
+    }
+  };
 
-    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-      if (nextAppState === "active") {
-        // Kiểm tra lại token khi app active
-        const token = await getAccessToken();
-        setHasToken(!!token);
-      }
-    };
+  // Khởi tạo lần đầu
+  syncTokenState();
 
-    const subscription = AppState.addEventListener("change", handleAppStateChange);
+  // Đăng ký lắng nghe event từ TokenManager
+  const subscription = DeviceEventEmitter.addListener(TOKEN_EVENT, syncTokenState);
 
-    // Custom event listener for auth failures (có thể trigger từ API calls)
-    // Thay thế window events bằng custom event system nếu cần
-
-    return () => {
-      subscription?.remove();
-    };
-  }, [queryClient]);
+  return () => {
+    subscription.remove();
+  };
+}, [queryClient]);
 
   useEffect(() => {
     if (isError && hasToken && isInitialized) {
@@ -104,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [hasToken, isInitialized, queryClient]);
 
   const value: AuthContextType = React.useMemo(() => {
-    const user = userProfile as DetailUser | null;
+    const user = userProfile as Me | null;
     const isAuthenticated = !!user && isSuccess && isInitialized;
     const role = user?.role;
 

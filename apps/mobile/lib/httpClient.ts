@@ -14,7 +14,7 @@ import {
 } from "@utils/tokenManager";
 import axios from "axios";
 import { print } from "graphql";
-import { Platform } from "react-native";
+import { DeviceEventEmitter, Platform } from "react-native";
 import { REFRESH_TOKEN_MUTATION } from "@graphql";
 
 // Constants
@@ -61,7 +61,7 @@ export class HttpClient {
 
   private setupInterceptors() {
     this.axiosInstance.interceptors.request.use(
-      this.handleRequest,
+      async (config) => await this.handleRequest(config), 
       error => Promise.reject(error),
     );
     this.axiosInstance.interceptors.response.use(
@@ -70,10 +70,10 @@ export class HttpClient {
     );
   }
 
-  private handleRequest = (
+  private handleRequest = async (
     config: InternalAxiosRequestConfig,
-  ): InternalAxiosRequestConfig => {
-    const accessToken = getAccessToken();
+  ): Promise<InternalAxiosRequestConfig> => {
+    const accessToken = await getAccessToken();
     const isRefreshTokenRequest = this.checkIsRefreshTokenRequest(config);
     if (accessToken && !isRefreshTokenRequest) {
       config.headers = config.headers || {};
@@ -126,7 +126,10 @@ export class HttpClient {
       this.isRefreshing = false;
     }
   };
-
+  private dispatchAuthEvent(eventName: string) {
+    // Sử dụng DeviceEventEmitter thay cho window.dispatchEvent
+    DeviceEventEmitter.emit(eventName);
+  }
   private checkIsRefreshTokenRequest(config: InternalAxiosRequestConfig): boolean {
     if (!config.data)
       return false;
@@ -204,11 +207,7 @@ export class HttpClient {
     this.failedQueue = [];
   }
 
-  private dispatchAuthEvent(eventName: string) {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event(eventName));
-    }
-  }
+
 
   // --- Public API ---
 
