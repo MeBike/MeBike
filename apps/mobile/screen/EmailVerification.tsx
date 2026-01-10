@@ -216,8 +216,7 @@ export default function EmailVerificationScreen() {
 
     setIsVerifying(true);
     try {
-      await verifyEmail({ email, otp: otpCode });
-      
+      await verifyEmail({ otp: otpCode });
       navigation.navigate("Main");
     } catch (error) {
       console.log("Verify error:", error);

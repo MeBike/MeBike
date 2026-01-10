@@ -37,8 +37,8 @@ export type ProfileUserResponse = {
   message: string;
   result: DetailUser;
 };
-import { LoginResponse , LogOutResponse  , RegisterResponse , GetMeResponse} from "@/types";
-import { LOGIN_MUTATION , LOGOUT_MUTATION , REGISTER_MUTATION , GET_ME } from "@graphql";
+import { LoginResponse , LogOutResponse  , RegisterResponse , GetMeResponse , VerifyEmailResponse , VerifyForgotPasswordTokenResponse , VerifyEmailProcessResponse} from "@/types";
+import { LOGIN_MUTATION , LOGOUT_MUTATION , REGISTER_MUTATION , GET_ME , VERIFY_EMAIL, VERIFY_EMAIL_PROCESS} from "@graphql";
 import { print } from "graphql";
 export const authService = {
   login: async (
@@ -75,18 +75,23 @@ export const authService = {
     );
     return response;
   },
-  resendVerifyEmail: async (): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>("/users/resend-verify-email");
+  resendVerifyEmail: async (): Promise<AxiosResponse<VerifyEmailResponse>> => {
+    const response = await fetchHttpClient.mutation<VerifyEmailResponse>(
+      print(VERIFY_EMAIL)
+    );
     return response;
   },
   verifyEmail: async ({
-    email,
     otp,
   }: {
-    email: string;
     otp: string;
-  }): Promise<AxiosResponse<MessageResponse>> => {
-    const response = await fetchHttpClient.post<MessageResponse>("/users/verify-email", { email, otp });
+  }): Promise<AxiosResponse<VerifyEmailProcessResponse>> => {
+    const response = await fetchHttpClient.mutation<VerifyEmailProcessResponse>(
+      print(VERIFY_EMAIL_PROCESS),
+      {
+        "otp" : otp
+      }
+    );
     return response;
   },
    getMe: async (): Promise<AxiosResponse<GetMeResponse>> => {

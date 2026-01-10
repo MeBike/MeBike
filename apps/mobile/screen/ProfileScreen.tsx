@@ -161,7 +161,7 @@ function ProfileScreen() {
 
   const handleVerifyEmail = async (otp: string) => {
     try {
-      await verifyEmail({ email: profile.email, otp });
+      await verifyEmail({ otp });
       // Close modal after successful verification
       setTimeout(() => {
         setIsVerifyEmailModalOpen(false);
@@ -369,7 +369,7 @@ function ProfileScreen() {
           </View>
 
           {/* Email Verification Section */}
-          {profile.verify !== "VERIFIED" && (
+          {profile.verify !== "Verified" && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Xác thực Email</Text>
               <View style={styles.emailVerificationCard}>

@@ -16,7 +16,7 @@ import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEm
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
 import { AuthTokens } from "@/types";
-
+import { HTTP_STATUS } from "@constants";
 interface ErrorResponse {
   response?: {
     data?: {
@@ -123,7 +123,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
               await onTokenUpdate?.();
               await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               Alert.alert("Thành công", "Đăng ký thành công. Tài khoản của bạn đã được tạo.");
-              navigation?.navigate("EmailVerification", { email: data.email });
+              navigation?.navigate("Main");
               resolve();
             }
           },
@@ -158,36 +158,32 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
     [useLogout, queryClient, onTokenUpdate, navigation]
   );
   const verifyEmail = useCallback(
-    ({email , otp} : {email: string; otp: string}): Promise<void> => {
+    ({otp} : {otp: string}): Promise<void> => {
       return new Promise((resolve, reject) => {
-        useVerifyEmail.mutate({ email, otp }, {
+        useVerifyEmail.mutate({ otp }, {
           onSuccess: (result) => {
             console.log("verifyEmail onSuccess:", result.status);
-            if (result.status === 200) {
-              const accessToken = result.data.result?.access_token;
-              const refreshToken = result.data.result?.refresh_token;
-              if (!accessToken || !refreshToken) {
-                const errMsg = "Thiếu access hoặc refresh token";
-                Alert.alert("Lỗi", errMsg);
-                reject(new Error(errMsg));
-                return;
-              }
-              setTokens(accessToken, refreshToken);
-              Alert.alert("Thành công", result.data.message);
+            if (result.status === HTTP_STATUS.OK) {
+              // const accessToken = result.data.data?.VerifyOTP.data.?.access_token;
+              // const refreshToken = result.data.result?.refresh_token;
+              // if (!accessToken || !refreshToken) {
+              //   const errMsg = "Thiếu access hoặc refresh token";
+              //   toast.error(errMsg);
+              //   reject(new Error(errMsg));
+              //   return;
+              // }
+              // setTokens(accessToken, refreshToken);
+              // window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
+              Alert.alert("Thành công", result.data?.data?.VerifyEmailProcess.message || "Xác thực email thành công");
               queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               resolve();
-            } else {
-              const errorMessage =
-                result.data?.message || "Lỗi khi xác minh email";
-              Alert.alert("Lỗi", errorMessage);
-              reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
             console.log("verifyEmail onError:", error);
             const errorMessage = getErrorMessage(
               error,
-              "OTP không hợp lệ hoặc đã hết hạn"
+              "Lỗi khi xác thực email"
             );
             Alert.alert("Lỗi", errorMessage);
             reject(error);
@@ -201,22 +197,17 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
     return new Promise<void>((resolve, reject) => {
       useResendVerifyEmail.mutate(undefined, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            Alert.alert("Thành công", "Email xác minh đã được gửi lại thành công");
+          if (result.status === HTTP_STATUS.OK) {
+            Alert.alert("Thành công", result.data?.data?.VerifyEmail.message || "Gửi lại mã xác thực thành công");
             resolve();
-          } else {
-            const errorMessage =
-              result.data?.message || "Lỗi khi gửi lại email xác minh";
-            Alert.alert("Lỗi", errorMessage);
-            reject(new Error(errorMessage));
           }
         },
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(
             error,
-            "Lỗi khi gửi lại email xác minh"
+            "Lỗi khi gửi lại mã xác thực"
           );
-          Alert.alert("Error", errorMessage);
+          Alert.alert("Lỗi", errorMessage);
           reject(error);
         },
       });

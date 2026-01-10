@@ -7,7 +7,6 @@
       "@schemas/*": ["./schema/*"],
       "@shared/*": ["../../packages/shared/src/*"],
       "@components/*": ["./components/*"],
-      "@constants/*": ["./constants/*"],
       "@hooks/*": ["./hooks/*"],
       "@services/*": ["./services/*"],
       "@lib/*": ["./lib/*"],
@@ -18,6 +17,7 @@
       "@providers/*": ["./providers/*"],
       "@custom-types": ["./types/index"],
       "@graphql":["./graphql/index.ts"],
+      "@constants":["./constants/index.ts"]
     },
     "strict": true
   }
