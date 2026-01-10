@@ -16,8 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { DetailUser } from "@services/auth.service";
-
+import type { Me } from "@/types";
 import { useAuth } from "@providers/auth-providers";
 import { getRefreshToken } from "@utils/tokenManager";
 import { VerifyEmailModal } from "@components/VerifyEmailModal";
@@ -28,19 +27,25 @@ function ProfileScreen() {
   const { user, logOut, verifyEmail, resendVerifyEmail, isCustomer } = useAuth();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const hasToken = Boolean(user?._id);
-  const [profile, setProfile] = useState<DetailUser>(() => ({
-    _id: user?._id ?? "",
-    fullname: user?.fullname ?? "",
+  const hasToken = Boolean(user?.id);
+  const [profile, setProfile] = useState<Me>(() => ({
+    id: user?.id ?? "",
+    name: user?.name ?? "",
     email: user?.email ?? "",
     verify: user?.verify ?? "",
     location: user?.location ?? "",
     username: user?.username ?? "",
-    phone_number: user?.phone_number ?? "",
-    avatar: user?.avatar ?? "",
+    phone: user?.phone ?? "",
+    avatarUrl: user?.avatarUrl ?? "",
     role: user?.role ?? "USER",
-    created_at: user?.created_at ?? "",
-    updated_at: user?.updated_at ?? "",
+    createdAt: user?.createdAt ?? "",
+    updatedAt: user?.updatedAt ?? "",
+    accountId: user?.accountId ?? "",
+    YOB: user?.YOB ?? 0,
+    status: user?.status ?? "Active",
+    userAccount: user?.userAccount ?? { email: "", id: "", password: "" },
+    address: user?.address ?? "",
+    nfcCardUid: user?.nfcCardUid ?? "",
   }));
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
   const [isResendingOtp, setIsResendingOtp] = useState(false);
@@ -62,17 +67,23 @@ function ProfileScreen() {
   useEffect(() => {
     if (user) {
       setProfile({
-        _id: user._id ?? "",
-        fullname: user.fullname ?? "",
+        id: user.id ?? "",
+        name: user.name ?? "",
         email: user.email ?? "",
         verify: user.verify ?? "",
         location: user.location ?? "",
         username: user.username ?? "",
-        phone_number: user.phone_number ?? "",
-        avatar: user.avatar ?? "",
+        phone: user.phone ?? "",
+        avatarUrl: user.avatarUrl ?? "",
         role: user.role ?? "USER",
-        created_at: user.created_at ?? "",
-        updated_at: user.updated_at ?? "",
+        createdAt: user.createdAt ?? "",
+        updatedAt: user.updatedAt ?? "",
+        accountId: user.accountId ?? "",
+        YOB: user.YOB ?? 0,
+        status: user.status ?? "Active",
+        userAccount: user.userAccount ?? { email: "", id: "", password: "" },
+        address: user.address ?? "",
+        nfcCardUid: user.nfcCardUid ?? "",
       });
     }
   }, [user]);
@@ -228,8 +239,8 @@ function ProfileScreen() {
           <View>
             <Image
               source={
-                profile.avatar
-                  ? { uri: profile.avatar }
+                profile.avatarUrl
+                  ? { uri: profile.avatarUrl }
                   : require("../assets/avatar2.png")
               }
               style={{
@@ -261,7 +272,7 @@ function ProfileScreen() {
             }}
             numberOfLines={1}
           >
-            {profile.fullname}
+            {profile.name}
           </Text>
           {/* Thành viên + Stats */}
           <Text
@@ -273,7 +284,7 @@ function ProfileScreen() {
             }}
             numberOfLines={1}
           >
-            Thành viên từ {formatDate(profile.created_at)}
+            Thành viên từ {formatDate(profile.createdAt as string) || 0}
           </Text>
           <View
             style={{
@@ -300,7 +311,7 @@ function ProfileScreen() {
                 <Ionicons name="mail" size={18} color="#0066FF" />
                 <View style={styles.infoContent}>
                   <Text style={styles.infoLabel}>Email</Text>
-                  <Text style={styles.infoValue}>{profile.email}</Text>
+                  <Text style={styles.infoValue}>{profile.userAccount.email}</Text>
                 </View>
               </View>
               <View style={styles.infoDivider} />
@@ -309,7 +320,7 @@ function ProfileScreen() {
                 <View style={styles.infoContent}>
                   <Text style={styles.infoLabel}>Điện thoại</Text>
                   <Text style={styles.infoValue}>
-                    {profile.phone_number || "Chưa cập nhật"}
+                    {profile.phone || "Chưa cập nhật"}
                   </Text>
                 </View>
               </View>
