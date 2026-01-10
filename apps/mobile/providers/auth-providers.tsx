@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { data: userProfile, isLoading: isUserProfileLoading, isError, isSuccess } = useUserProfileQuery(hasToken);
 
   // Debug logging
-  console.log("AuthProvider state:", { hasToken, isInitialized });
+  // console.log("AuthProvider state:", { hasToken, isInitialized });
 
   // Callback to update hasToken when token is saved or cleared
   const handleTokenUpdate = useCallback(async () => {
@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Hàm xử lý khi token thay đổi
   const syncTokenState = async () => {
     const token = await getAccessToken();
-    console.log("Token event received, updating state:", !!token);
+    // console.log("Token event received, updating state:", !!token);
     
     setHasToken(!!token);
 
@@ -61,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       queryClient.clear();
     }
+    setIsInitialized(true);
   };
 
   // Khởi tạo lần đầu
@@ -105,7 +106,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const user = userProfile as Me | null;
     const isAuthenticated = !!user && isSuccess && isInitialized;
     const role = user?.role;
-
     return {
       ...actions,
       user,

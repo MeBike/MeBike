@@ -94,11 +94,11 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { accessToken, refreshToken } = result.data.data?.LoginUser.data as AuthTokens;
+            const { accessToken, refreshToken } = result.data.data?.LoginUser.data as AuthTokens
+            console.log(result.data.data?.LoginUser.data);
             setTokens(accessToken, refreshToken);
             await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
             Alert.alert("Đăng nhập thành công", "Chào mừng trở lại!");
-            navigation?.navigate("Main");
             resolve();
           },
           onError: (error: unknown) => {

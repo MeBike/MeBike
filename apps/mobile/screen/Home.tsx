@@ -18,7 +18,7 @@ import type { HomeScreenNavigationProp } from "../types/navigation";
 
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
-import { useDashboardStats } from "../hooks/useDashboardStats";
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { user, isAuthenticated } = useAuth();
-  const { stats, isLoading } = useDashboardStats();
+
 
   const formatNumber = (num: number) => {
     if (num >= 10000) {
@@ -275,12 +275,7 @@ export default function HomeScreen() {
     return `${num}`;
   };
 
-  const displayStats = useMemo(() => ({
-    stations: stats ? formatNumber(stats.totalStations) : "...",
-    bikes: stats ? formatNumber(stats.totalBikes) : "...",
-    users: stats ? formatNumber(stats.totalUsers) : "...",
-    appRating: stats ? (stats.appRating.total_ratings > 0 ? stats.appRating.average_rating.toFixed(1) : "Chưa có") : "...",
-  }), [stats]);
+
   const navigateToLogin = () => {
     navigation.navigate("Login");
   };
@@ -426,37 +421,7 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Stats Section */}
-        <View style={styles.statsSection}>
-          <Text style={styles.sectionTitle}>Thống kê hệ thống</Text>
 
-          {isLoading
-            ? (
-                <ActivityIndicator size="large" color={BikeColors.primary} />
-              )
-            : (
-                <View style={styles.statsGrid}>
-                  <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>{displayStats.stations}</Text>
-                    <Text style={styles.statLabel}>Trạm</Text>
-                  </View>
-
-                  <View style={styles.statCard}>
-                    <Text style={styles.statNumber}>{displayStats.bikes}</Text>
-                    <Text style={styles.statLabel}>Xe đạp</Text>
-                  </View>
-<View style={styles.statCard}>
-  <Text style={styles.statNumber}>{displayStats.users}</Text>
-  <Text style={styles.statLabel}>Người dùng</Text>
-</View>
-
-<View style={styles.statCard}>
-  <Text style={styles.statNumber}>{displayStats.appRating}</Text>
-  <Text style={styles.statLabel}>Đánh giá App</Text>
-</View>
-                </View>
-              )}
-        </View>
 
         {/* CTA Section */}
         <View style={styles.ctaSection}>

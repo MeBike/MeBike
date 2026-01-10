@@ -12,9 +12,10 @@ export const USER_PROFILE_QUERY_KEY = ["user", "me"];
 export async function fetchUserProfile(): Promise<Me> {
   const response = await authService.getMe();
   if (response.status === 200) {
+    console.log(response.data.data?.User.data)
     return response.data.data?.User.data as Me;
   }
-  throw new Error("Failed to fetch user profile");
+  throw new Error("Failed to fetch user profile"); 
 }
 export function useUserProfileQuery(isAuthenticated: boolean) {
   console.log("useUserProfileQuery enabled:", isAuthenticated);

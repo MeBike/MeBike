@@ -30,8 +30,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const { logIn, isLoggingIn, isLoading, forgotPassword, isLoadingForgottingPassword } = useAuth();
-
+  const { logIn, isLoggingIn, isLoading, forgotPassword, isLoadingForgottingPassword , user} = useAuth();
   useEffect(() => {
     const checkBackend = async () => {
       const isOnline = await testBackendConnection();
@@ -54,8 +53,10 @@ export default function LoginScreen() {
           useNativeDriver: true,
         }),
       ).start();
-
       await logIn({ email, password });
+      if(user){
+        navigation.navigate("Main");
+      }
     }
     catch (error) {
       rotateAnim.stopAnimation();
