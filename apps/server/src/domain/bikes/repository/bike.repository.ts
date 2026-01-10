@@ -5,13 +5,22 @@ import type { BikeStatus, PrismaClient, Prisma as PrismaTypes } from "generated/
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
+import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 import type { BikeFilter, BikeRow, BikeSortField } from "../models";
 
-import { BikeRepositoryError } from "../domain-errors";
+import { BikeRepositoryError, DuplicateChipId } from "../domain-errors";
 
-// TODO: If create/update chipId is added, handle Bike_chip_id_key unique violation → DuplicateBikeChipId
 export type BikeRepo = {
+  create: (
+    input: {
+      chipId: string;
+      stationId: string;
+      supplierId: string;
+      status: BikeStatus;
+    },
+  ) => Effect.Effect<BikeRow, BikeRepositoryError | DuplicateChipId>;
+
   getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
   getByIdInTx: (
     tx: PrismaTypes.TransactionClient,
@@ -99,6 +108,31 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
     tx.bike.findUnique({ where: { id: bikeId }, select });
 
   return {
+    create: input =>
+      Effect.tryPromise({
+        try: () =>
+          client.bike.create({
+            data: {
+              chipId: input.chipId,
+              stationId: input.stationId,
+              supplierId: input.supplierId,
+              status: input.status,
+              updatedAt: new Date(),
+            },
+            select,
+          }),
+        catch: (err: unknown) => {
+          if (isPrismaUniqueViolation(err)) {
+            return new DuplicateChipId({ chipId: input.chipId });
+          }
+          return new BikeRepositoryError({
+            operation: "create",
+            cause: err,
+            message: "Failed to create bike",
+          });
+        },
+      }),
+
     getById: (bikeId: string) =>
       Effect.tryPromise({
         try: () =>

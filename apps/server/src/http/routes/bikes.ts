@@ -4,12 +4,14 @@ import { Effect, Match } from "effect";
 import {
   adminUpdateBikeUseCase,
   BikeStatsServiceTag,
+  createBikeUseCase,
   getBikeDetailUseCase,
   listBikesUseCase,
   reportBrokenBikeUseCase,
   softDeleteBikeUseCase,
 } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
+import { requireAdminMiddleware } from "@/http/middlewares/auth";
 import {
   toBikeActivityStats,
   toBikeRentalHistoryItem,
@@ -50,6 +52,39 @@ type BikeListResponse = {
 
 export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const bikes = serverRoutes.bikes;
+
+  app.openapi({ ...bikes.createBike, middleware: [requireAdminMiddleware] as const }, async (c) => {
+    const body = c.req.valid("json");
+
+    const eff = withLoggedCause(
+      withBikeDeps(
+        createBikeUseCase({
+          chipId: body.chipId,
+          stationId: body.stationId,
+          supplierId: body.supplierId,
+          status: body.status,
+        }),
+      ),
+      "POST /v1/bikes",
+    );
+
+    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    return Match.value(result).pipe(
+      Match.tag("Right", ({ right }) =>
+        c.json<BikeSummary, 201>(toBikeSummary(right), 201)),
+      Match.tag("Left", ({ left }) => Match.value(left).pipe(
+        Match.tag("DuplicateChipId", () =>
+          c.json<BikeUpdateConflictResponse, 400>({
+            error: bikeErrorMessages.DUPLICATE_CHIP_ID,
+            details: { code: BikeErrorCodeSchema.enum.DUPLICATE_CHIP_ID },
+          }, 400)),
+        Match.orElse((err) => {
+          throw err;
+        }),
+      )),
+      Match.exhaustive,
+    );
+  });
 
   app.openapi(bikes.listBikes, async (c) => {
     const query = c.req.valid("query");

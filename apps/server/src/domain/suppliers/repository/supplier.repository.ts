@@ -4,14 +4,13 @@ import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type {
   BikeStatus,
   PrismaClient,
+  Prisma as PrismaTypes,
   SupplierStatus,
 } from "generated/prisma/client";
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
-import {
-  Prisma as PrismaTypes,
-} from "generated/prisma/client";
+import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 
 import type {
   CreateSupplierInput,
@@ -148,10 +147,7 @@ export function makeSupplierRepository(client: PrismaClient): SupplierRepo {
           }),
         // TODO: Refactor to use isPrismaUniqueViolation helper for consistency
         catch: (err: any) => {
-          if (
-            err instanceof PrismaTypes.PrismaClientKnownRequestError
-            && err.code === "P2002"
-          ) {
+          if (isPrismaUniqueViolation(err)) {
             return new DuplicateSupplierName({ name: data.name });
           }
           return err;
@@ -187,10 +183,7 @@ export function makeSupplierRepository(client: PrismaClient): SupplierRepo {
             }),
           // TODO: Refactor to use isPrismaUniqueViolation helper for consistency
           catch: (err: any) => {
-            if (
-              err instanceof PrismaTypes.PrismaClientKnownRequestError
-              && err.code === "P2002"
-            ) {
+            if (isPrismaUniqueViolation(err)) {
               return new DuplicateSupplierName({
                 name: patch.name ?? existing.name,
               });

@@ -25,6 +25,7 @@ describe("bikeRepository Integration", () => {
   afterEach(async () => {
     await client.bike.deleteMany({});
     await client.station.deleteMany({});
+    await client.supplier.deleteMany({});
   });
 
   afterAll(async () => {
@@ -68,6 +69,22 @@ describe("bikeRepository Integration", () => {
     return { id };
   };
 
+  const createSupplier = async () => {
+    const id = uuidv7();
+    await client.supplier.create({
+      data: {
+        id,
+        name: `Supplier ${id}`,
+        address: "123 Supplier St",
+        phoneNumber: "0900000000",
+        contractFee: "10.00",
+        status: "ACTIVE",
+        updatedAt: new Date(),
+      },
+    });
+    return { id };
+  };
+
   const createBike = async (
     stationId: string,
     status: "AVAILABLE" | "BOOKED" | "RESERVED" = "AVAILABLE",
@@ -95,6 +112,53 @@ describe("bikeRepository Integration", () => {
       throw new Error("Expected bike to exist");
     }
     expect(result.value.id).toBe(bikeId);
+  });
+
+  it("create inserts a bike", async () => {
+    const { id: stationId } = await createStation();
+    const { id: supplierId } = await createSupplier();
+
+    const created = await Effect.runPromise(
+      repo.create({
+        chipId: `chip-${uuidv7()}`,
+        stationId,
+        supplierId,
+        status: "AVAILABLE",
+      }),
+    );
+
+    expect(created.stationId).toBe(stationId);
+    expect(created.supplierId).toBe(supplierId);
+    expect(created.status).toBe("AVAILABLE");
+  });
+
+  it("create rejects duplicate chipId", async () => {
+    const { id: stationId } = await createStation();
+    const { id: supplierId } = await createSupplier();
+    const chipId = `chip-${uuidv7()}`;
+
+    await Effect.runPromise(
+      repo.create({
+        chipId,
+        stationId,
+        supplierId,
+        status: "AVAILABLE",
+      }),
+    );
+
+    const result = await Effect.runPromise(
+      repo.create({
+        chipId,
+        stationId,
+        supplierId,
+        status: "AVAILABLE",
+      }).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected duplicate chipId failure");
+    }
+    expect(result.left._tag).toBe("DuplicateChipId");
   });
 
   it("getById returns Option.none for missing bike", async () => {

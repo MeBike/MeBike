@@ -6,6 +6,10 @@ import type { BikeStatus } from "generated/prisma/client";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type {
+  BikeRepositoryError,
+  DuplicateChipId,
+} from "../domain-errors";
+import type {
   BikeFilter,
   BikeRow,
   BikeSortField,
@@ -20,6 +24,15 @@ import {
 import { BikeRepository } from "../repository/bike.repository";
 
 export type BikeService = {
+  createBike: (
+    input: {
+      chipId: string;
+      stationId: string;
+      supplierId: string;
+      status?: BikeStatus;
+    },
+  ) => Effect.Effect<BikeRow, BikeRepositoryError | DuplicateChipId>;
+
   listBikes: (
     filter: BikeFilter,
     pageReq: PageRequest<BikeSortField>,
@@ -43,13 +56,6 @@ export type BikeService = {
     Option.Option<BikeRow>,
     BikeCurrentlyRented | BikeCurrentlyReserved | BikeNotFound
   >;
-
-  softDeleteBike: (
-    bikeId: string,
-  ) => Effect.Effect<
-    Option.Option<BikeRow>,
-    BikeCurrentlyRented | BikeCurrentlyReserved | BikeNotFound
-  >;
 };
 
 function makeBikeService(
@@ -57,6 +63,14 @@ function makeBikeService(
   client: import("generated/prisma/client").PrismaClient,
 ): BikeService {
   return {
+    createBike: input =>
+      repo.create({
+        chipId: input.chipId,
+        stationId: input.stationId,
+        supplierId: input.supplierId,
+        status: input.status ?? "AVAILABLE",
+      }),
+
     listBikes: (filter, pageReq) =>
       repo
         .listByStationWithOffset(filter.stationId, filter, pageReq)
@@ -135,46 +149,6 @@ function makeBikeService(
         return Option.some(updated);
       }),
 
-    softDeleteBike: (bikeId: string) =>
-      Effect.gen(function* () {
-        const current = yield* repo
-          .getById(bikeId)
-          .pipe(
-            Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-          );
-        if (Option.isNone(current)) {
-          return yield* Effect.fail(new BikeNotFound({ id: bikeId }));
-        }
-
-        const activeRental = yield* Effect.promise(() =>
-          client.rental.findFirst({
-            where: { bikeId, status: { in: ["RENTED", "RESERVED"] } },
-            select: { id: true },
-          }),
-        );
-        if (activeRental) {
-          return yield* Effect.fail(
-            new BikeCurrentlyRented({ bikeId, action: "delete" }),
-          );
-        }
-
-        const pendingReservation = yield* Effect.promise(() =>
-          client.reservation.findFirst({
-            where: { bikeId, status: "PENDING" as any },
-            select: { id: true },
-          }),
-        );
-        if (pendingReservation) {
-          return yield* Effect.fail(
-            new BikeCurrentlyReserved({ bikeId, action: "delete" }),
-          );
-        }
-
-        const updated = yield* repo.updateStatus(bikeId, "UNAVAILABLE").pipe(
-          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
-        );
-        return updated;
-      }),
   };
 }
 
