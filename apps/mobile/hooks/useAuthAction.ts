@@ -30,45 +30,11 @@ interface ErrorResponse {
   };
 }
 import { AuthTokens } from "@graphql";
-import {
-  LoginResponse,
-  RegisterResponse,
-  RefreshTokenResponse,
-  GetMeResponse,
-  LogOutResponse,
-  ChangePasswordResponse,
-  UpdateProfileResponse,
-  GetUsersResponse,
-  GetDetailUserResponse,
-  CreateUserResponse,
-  ChangeStatusUserResponse,
-  ForgotPasswordRequestResponse,
-  ResetPasswordResponse,
-  VerifyForgotPasswordTokenResponse,
-  VerifyEmailResponse,
-  VerifyEmailProcessResponse,
-} from "@custom-types";
+import { getErrorMessage } from "@/utils/getErrorMessage";
 interface ErrorWithMessage {
   message: string;
 }
 
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-
-  return defaultMessage;
-};
 
 export const useAuthActions = (
   navigation?: { navigate: (route: string) => void },
@@ -86,13 +52,13 @@ export const useAuthActions = (
   const useResendVerifyEmail = useResendVerifyEmailMutation();
   const changePassword = useCallback(
     (
-      old_password: string,
-      password: string,
-      confirm_password: string
+      oldPassword: string,
+      newPassword: string,
+      confirmPassword: string
     ): Promise<void> => {
       return new Promise((resolve, reject) => {
         useChangePassword.mutate(
-          { old_password, password, confirm_password },
+          { oldPassword, newPassword, confirmPassword },
           {
             onSuccess: (result) => {
               const changeData = result.data.data?.ChangePassword;
@@ -144,7 +110,6 @@ export const useAuthActions = (
             }
           },
           onError: (error: unknown) => {
-            console.error("Login Error:", error);
             const errorMessage = getErrorMessage(error, "Lỗi khi đăng nhập");
             Alert.alert("Lỗi", errorMessage);
             reject(error);

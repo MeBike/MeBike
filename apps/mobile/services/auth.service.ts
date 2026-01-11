@@ -137,9 +137,9 @@ export const authService = {
       print(CHANGE_PASSWORD_MUTATION),
       {
         body: {
-          old_password: data.old_password,
-          password: data.password,
-          confirm_password: data.confirm_password,
+          oldPassword: data.oldPassword,
+          newPassword: data.newPassword,
+          confirmPassword: data.confirmPassword,
         },
       }
     );
