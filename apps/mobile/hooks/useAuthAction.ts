@@ -99,14 +99,23 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { accessToken, refreshToken } = result.data.data?.LoginUser.data as AuthTokens
-            console.log(result.data.data?.LoginUser.data);
-            await setTokens(accessToken, refreshToken);
-            await onTokenUpdate?.();
-            await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-            Alert.alert("Đăng nhập thành công", "Chào mừng trở lại!");
-            navigation?.navigate("Main");
-            resolve();
+            try {
+              const { accessToken, refreshToken } = result.data.data?.LoginUser.data as AuthTokens;
+              console.log("Login successful, setting tokens...");
+              await setTokens(accessToken, refreshToken);
+              
+              // This triggers syncTokenState in AuthProvider
+              await onTokenUpdate?.();
+              
+              // Invalidate to fetch fresh user data
+              await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+              
+              Alert.alert("Đăng nhập thành công", "Chào mừng trở lại!");
+              // Navigation will be handled by the root navigator's change in isAuthenticated state
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
           },
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(error, "Lỗi khi đăng nhập");
@@ -116,7 +125,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
         });
       });
     },
-    [useLogin, queryClient, onTokenUpdate, navigation]
+    [useLogin, queryClient, onTokenUpdate]
   );
   const register = useCallback(
     (data: RegisterSchemaFormData) => {
@@ -125,11 +134,10 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
           onSuccess: async (result) => {
             if (result.status === 200) {
               const { accessToken, refreshToken } = result.data.data?.RegisterUser.data as AuthTokens;
-              setTokens(accessToken, refreshToken);
+              await setTokens(accessToken, refreshToken);
               await onTokenUpdate?.();
               await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               Alert.alert("Thành công", "Đăng ký thành công. Tài khoản của bạn đã được tạo.");
-              navigation?.navigate("Main");
               resolve();
             }
           },
@@ -141,27 +149,33 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
         });
       });
     },
-    [useRegister, queryClient, onTokenUpdate, navigation]
+    [useRegister, queryClient, onTokenUpdate]
   );
   const logOut = useCallback(
     (refresh_token: string) => {
       useLogout.mutate(refresh_token, {
-        onSuccess: (result) => {
+        onSuccess: async (result) => {
           if (result.status === 200) {
-            clearTokens();
-            onTokenUpdate?.();
+            console.log("Logout successful, clearing tokens...");
+            await clearTokens();
+            await onTokenUpdate?.();
             queryClient.clear();
             Alert.alert("Thành công", "Đăng xuất thành công");
-            navigation?.navigate("Login");
+            // Navigation will be handled by the root navigator's change in isAuthenticated state
           }
         },
-        onError: (error: unknown) => {
+        onError: async (error: unknown) => {
+          // Even if server logout fails, we should clear local state
+          console.log("Logout error, but clearing local state anyway:", error);
+          await clearTokens();
+          await onTokenUpdate?.();
+          queryClient.clear();
           const errorMessage = getErrorMessage(error, "Lỗi khi đăng xuất");
           Alert.alert("Lỗi", errorMessage);
         },
       });
     },
-    [useLogout, queryClient, onTokenUpdate, navigation]
+    [useLogout, queryClient, onTokenUpdate]
   );
   const verifyEmail = useCallback(
     ({otp} : {otp: string}): Promise<void> => {

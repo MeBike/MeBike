@@ -110,6 +110,7 @@ function ProfileScreen() {
         text: "Đăng xuất",
         onPress: async () => {
           const refreshToken = await getRefreshToken();
+          console.log(refreshToken);
           if (!refreshToken)
             return;
           logOut(String(refreshToken));

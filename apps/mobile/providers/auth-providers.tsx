@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const syncTokenState = useCallback(async () => {
     try {
       const token = await getAccessToken();
-      console.log("AuthProvider syncTokenState - token present:", !!token);
       
       setHasToken(!!token);
 
