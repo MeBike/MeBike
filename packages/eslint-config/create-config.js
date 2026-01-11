@@ -46,6 +46,15 @@ export default function createConfig(options, ...userConfigs) {
     },
     ...userConfigs,
     {
+      files: ["apps/mobile/**"],
+      rules: {
+        "node/prefer-global/process": "off",
+        "n/prefer-global/process": "off",
+        "node/no-process-env": "off",
+        "n/no-process-env": "off",
+      },
+    },
+    {
       // Chỉ áp dụng cho các file declaration (.d.ts)
       files: ["**/*.d.ts"],
       // Trong các file này, hãy tắt quy tắc đó đi
