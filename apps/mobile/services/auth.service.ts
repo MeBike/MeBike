@@ -1,6 +1,13 @@
 import type { AxiosResponse } from "axios";
 
-import type { ChangePasswordSchemaFormData, ForgotPasswordSchemaFormData, LoginSchemaFormData, RegisterSchemaFormData, ResetPasswordSchemaFormData, UpdateProfileSchemaFormData } from "@schemas/authSchema";
+import type {
+  ChangePasswordSchemaFormData,
+  ForgotPasswordSchemaFormData,
+  LoginSchemaFormData,
+  RegisterSchemaFormData,
+  ResetPasswordSchemaFormData,
+  UpdateProfileSchemaFormData,
+} from "@schemas/authSchema";
 
 import fetchHttpClient from "@lib/httpClient";
 
@@ -18,8 +25,8 @@ type MessageResponse = {
   };
   message: string;
 };
-export const ROLES = ["USER", "ADMIN", "STAFF" , "SOS"] as const;
-export type RoleType = typeof ROLES[number];
+export const ROLES = ["USER", "ADMIN", "STAFF", "SOS"] as const;
+export type RoleType = (typeof ROLES)[number];
 export type DetailUser = {
   _id: string;
   fullname: string;
@@ -84,14 +91,19 @@ export const authService = {
   register: async (
     data: RegisterSchemaFormData
   ): Promise<AxiosResponse<RegisterResponse>> => {
-    return fetchHttpClient.mutation<RegisterResponse>(print(REGISTER_MUTATION), {
-      body: {
-        fullname: data.fullname,
-        email: data.email,
-        password: data.password,
-        phone_number: data.phone_number,
-      },
-    });
+    return fetchHttpClient.mutation<RegisterResponse>(
+      print(REGISTER_MUTATION),
+      {
+        body: {
+          email: data.email,
+          name: data.name,
+          YOB: data.YOB,
+          phone: data.phone,
+          password: data.password,
+          confirmPassword: data.confirmPassword,
+        },
+      }
+    );
   },
   logout: async (): Promise<AxiosResponse<LogOutResponse>> => {
     console.log(">>> [AuthService] logout called");
@@ -152,9 +164,10 @@ export const authService = {
       { email: data.email }
     );
   },
-  verifyForgotPassword: async (
-    data: { email: string; otp: string }
-  ): Promise<AxiosResponse<VerifyForgotPasswordTokenResponse>> => {
+  verifyForgotPassword: async (data: {
+    email: string;
+    otp: string;
+  }): Promise<AxiosResponse<VerifyForgotPasswordTokenResponse>> => {
     return fetchHttpClient.mutation<VerifyForgotPasswordTokenResponse>(
       print(VERIFY_FORGOT_PASSWORD_TOKEN),
       { data }

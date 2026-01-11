@@ -126,6 +126,7 @@ export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [YOB, setYOB] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -136,6 +137,7 @@ export default function RegisterScreen() {
 
   const clearForm = () => {
     setName("");
+    setYOB("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -145,11 +147,12 @@ export default function RegisterScreen() {
   const handleRegister = () => {
     // Validate using schema
     const validationResult = registerSchema.safeParse({
-      fullname: name,
+      name,
       email,
+      YOB: YOB ? Number(YOB) : undefined,
       password,
-      confirm_password: confirmPassword,
-      phone_number: phone || undefined,
+      confirmPassword: confirmPassword,
+      phone: phone || undefined,
     });
 
     if (!validationResult.success) {
@@ -168,17 +171,20 @@ export default function RegisterScreen() {
 
     setErrors({});
     register({
-      fullname: name,
+      name: name,
+      YOB: Number(YOB),
       email,
       password,
-      confirm_password: confirmPassword,
-      phone_number: phone || undefined,
-    }).then(() => {
-      clearForm();
-      navigation.navigate("EmailVerification", { email });
-    }).catch((error) => {
-      console.log("Register error:", error);
-    });
+      confirmPassword: confirmPassword,
+      phone: phone,
+    })
+      .then(() => {
+        clearForm();
+        navigation.navigate("EmailVerification", { email });
+      })
+      .catch((error) => {
+        console.log("Register error:", error);
+      });
   };
 
   const goToLogin = () => {
@@ -222,12 +228,15 @@ export default function RegisterScreen() {
                 value={name}
                 onChangeText={(text) => {
                   setName(text);
-                  if (errors.fullname) setErrors(prev => ({ ...prev, fullname: "" }));
+                  if (errors.name)
+                    setErrors((prev) => ({ ...prev, name: "" }));
                 }}
                 autoCapitalize="words"
               />
             </View>
-            {errors.fullname && <Text style={styles.errorText}>{errors.fullname}</Text>}
+            {errors.name && (
+              <Text style={styles.errorText}>{errors.name}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -245,16 +254,42 @@ export default function RegisterScreen() {
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
-                  if (errors.email) setErrors(prev => ({ ...prev, email: "" }));
+                  if (errors.email)
+                    setErrors((prev) => ({ ...prev, email: "" }));
                 }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </View>
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            {errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
           </View>
-
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Năm sinh</Text>
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="birthday.cake"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Ví dụ: 2000"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={YOB}
+                onChangeText={(text) => {
+                  setYOB(text);
+                  if (errors.YOB) setErrors((prev) => ({ ...prev, YOB: "" }));
+                }}
+                autoCapitalize="none"
+                keyboardType="numeric"
+                maxLength={4}
+              />
+            </View>
+            {errors.YOB && <Text style={styles.errorText}>{errors.YOB}</Text>}
+          </View>
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Số điện thoại</Text>
             <View style={styles.inputWithIcon}>
@@ -270,12 +305,15 @@ export default function RegisterScreen() {
                 value={phone}
                 onChangeText={(text) => {
                   setPhone(text);
-                  if (errors.phone_number) setErrors(prev => ({ ...prev, phone_number: "" }));
+                  if (errors.phone)
+                    setErrors((prev) => ({ ...prev, phone: "" }));
                 }}
                 autoCapitalize="none"
               />
             </View>
-            {errors.phone_number && <Text style={styles.errorText}>{errors.phone_number}</Text>}
+            {errors.phone && (
+              <Text style={styles.errorText}>{errors.phone}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -293,7 +331,8 @@ export default function RegisterScreen() {
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
-                  if (errors.password) setErrors(prev => ({ ...prev, password: "" }));
+                  if (errors.password)
+                    setErrors((prev) => ({ ...prev, password: "" }));
                 }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
@@ -309,7 +348,9 @@ export default function RegisterScreen() {
                 />
               </Pressable>
             </View>
-            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            {errors.password && (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            )}
           </View>
 
           <View style={styles.inputContainer}>
@@ -327,7 +368,8 @@ export default function RegisterScreen() {
                 value={confirmPassword}
                 onChangeText={(text) => {
                   setConfirmPassword(text);
-                  if (errors.confirm_password) setErrors(prev => ({ ...prev, confirm_password: "" }));
+                  if (errors.confirm_password)
+                    setErrors((prev) => ({ ...prev, confirm_password: "" }));
                 }}
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
@@ -343,7 +385,9 @@ export default function RegisterScreen() {
                 />
               </Pressable>
             </View>
-            {errors.confirm_password && <Text style={styles.errorText}>{errors.confirm_password}</Text>}
+            {errors.confirmPassword && (
+              <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+            )}
           </View>
 
           <Pressable
