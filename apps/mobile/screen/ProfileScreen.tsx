@@ -98,11 +98,7 @@ function ProfileScreen() {
       {
         text: "Đăng xuất",
         onPress: async () => {
-          const refreshToken = await getRefreshToken();
-          if (!refreshToken)
-            return;
-          logOut(String(refreshToken));
-          navigation.navigate("Login" as never);
+          await logOut();
         },
       },
     ]);

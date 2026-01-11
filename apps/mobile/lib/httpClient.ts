@@ -14,8 +14,8 @@ import {
 } from "@utils/tokenManager";
 import axios from "axios";
 import { print } from "graphql";
-import { Platform } from "react-native";
-import { REFRESH_TOKEN_MUTATION } from "@graphql";
+import { DeviceEventEmitter, Platform } from "react-native";
+import { REFRESH_TOKEN_MUTATION } from "@/graphql";
 
 // Constants
 export const HTTP_STATUS = {
@@ -70,10 +70,10 @@ export class HttpClient {
     );
   }
 
-  private handleRequest = (
+  private handleRequest = async (
     config: InternalAxiosRequestConfig,
-  ): InternalAxiosRequestConfig => {
-    const accessToken = getAccessToken();
+  ): Promise<InternalAxiosRequestConfig> => {
+    const accessToken = await getAccessToken();
     const isRefreshTokenRequest = this.checkIsRefreshTokenRequest(config);
     if (accessToken && !isRefreshTokenRequest) {
       config.headers = config.headers || {};
@@ -140,7 +140,7 @@ export class HttpClient {
   }
 
   private shouldSkipTokenRefresh(config: InternalAxiosRequestConfig): boolean {
-    if (this.checkIsAuthRequest(config))
+    if (this.checkIsAuthRequest(config) || this.checkIsRefreshTokenRequest(config))
       return true;
     if (config.url && NO_RETRY_URLS.some(url => config.url?.includes(url))) {
       return true;
@@ -183,11 +183,11 @@ export class HttpClient {
       if (!result?.accessToken || !result?.refreshToken) {
         throw new Error("Invalid refresh response structure");
       }
-      setTokens(result.accessToken, result.refreshToken);
+      await setTokens(result.accessToken, result.refreshToken);
       return result.accessToken;
     }
     catch (error) {
-      clearTokens();
+      await clearTokens();
       throw error;
     }
   }
@@ -205,9 +205,7 @@ export class HttpClient {
   }
 
   private dispatchAuthEvent(eventName: string) {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event(eventName));
-    }
+    DeviceEventEmitter.emit(eventName);
   }
 
   // --- Public API ---
