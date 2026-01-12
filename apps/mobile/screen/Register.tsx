@@ -180,7 +180,7 @@ export default function RegisterScreen() {
     })
       .then(() => {
         clearForm();
-        navigation.navigate("EmailVerification", { email });
+        navigation.navigate("Main",);
       })
       .catch((error) => {
         console.log("Register error:", error);

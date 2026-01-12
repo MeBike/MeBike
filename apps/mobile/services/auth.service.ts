@@ -130,17 +130,22 @@ export const authService = {
   refreshToken: async (
     refresh_token: string
   ): Promise<AxiosResponse<RefreshTokenResponse>> => {
-    return fetchHttpClient.mutation<RefreshTokenResponse>(
-      print(REFRESH_TOKEN_MUTATION)
+    const response = await fetchHttpClient.mutation<RefreshTokenResponse>(
+      print(REFRESH_TOKEN_MUTATION),
+      { refreshToken: refresh_token }
     );
+    return response;
   },
   updateProfile: async (
     data: Partial<UpdateProfileSchemaFormData>
   ): Promise<AxiosResponse<UpdateProfileResponse>> => {
-    return fetchHttpClient.mutation<UpdateProfileResponse>(
+    const response = await fetchHttpClient.mutation<UpdateProfileResponse>(
       print(UPDATE_PROFILE),
-      { data }
+      {
+        data,
+      }
     );
+    return response;
   },
   changePassword: async (
     data: ChangePasswordSchemaFormData
@@ -159,33 +164,44 @@ export const authService = {
   forgotPassword: async (
     data: ForgotPasswordSchemaFormData
   ): Promise<AxiosResponse<ForgotPasswordRequestResponse>> => {
-    return fetchHttpClient.mutation<ForgotPasswordRequestResponse>(
-      print(CREATE_FORGOT_PASSWORD_REQUEST),
-      { email: data.email }
-    );
+    const response =
+      await fetchHttpClient.mutation<ForgotPasswordRequestResponse>(
+        print(CREATE_FORGOT_PASSWORD_REQUEST),
+        {
+          email: data.email,
+        }
+      );
+    return response;
   },
-  verifyForgotPassword: async (data: {
-    email: string;
-    otp: string;
-  }): Promise<AxiosResponse<VerifyForgotPasswordTokenResponse>> => {
-    return fetchHttpClient.mutation<VerifyForgotPasswordTokenResponse>(
+   verifyForgotPassword: async (
+    email_forgot_password_token: string,
+    otp : string,
+  ): Promise<AxiosResponse<VerifyForgotPasswordTokenResponse>> => {
+    const response = await fetchHttpClient.mutation<VerifyForgotPasswordTokenResponse>(
       print(VERIFY_FORGOT_PASSWORD_TOKEN),
-      { data }
+      { 
+        data : {
+          email : email_forgot_password_token,
+          otp : otp
+        }
+       }
     );
+    return response;
   },
   resetPassword: async (
     data: ResetPasswordSchemaFormData
   ): Promise<AxiosResponse<ResetPasswordResponse>> => {
-    return fetchHttpClient.mutation<ResetPasswordResponse>(
-      print(RESET_PASSWORD),
-      {
-        data: {
-          email: data.email,
-          otp: data.otp,
-          password: data.password,
-          confirm_password: data.confirm_password,
-        },
-      }
-    );
+    const response =
+      await fetchHttpClient.mutation<ResetPasswordResponse>(
+        print(RESET_PASSWORD),
+        {
+          data: {
+            confirmPassword: data.confirm_password,
+            newPassword: data.password,
+            resetToken: data.otp,
+          },
+        }
+      );
+    return response;
   },
 };

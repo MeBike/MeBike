@@ -24,7 +24,7 @@ export interface GraphQLMutationResponse<
     [K in MutationName]: BaseMutationResponse<Payload>;
   } | null;
   errors?: (string | ErrorObject)[] | null;
-  }
+}
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;

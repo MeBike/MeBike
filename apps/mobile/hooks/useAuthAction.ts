@@ -31,6 +31,7 @@ interface ErrorResponse {
 }
 import { AuthTokens } from "@graphql";
 import { getErrorMessage } from "@/utils/getErrorMessage";
+import { HTTP_STATUS } from "@/lib/httpClient";
 interface ErrorWithMessage {
   message: string;
 }
@@ -92,14 +93,14 @@ export const useAuthActions = (
         useLogin.mutate(data, {
           onSuccess: async (result) => {
             const loginData = result.data.data?.LoginUser;
-            if (loginData?.success) {
-              const { accessToken, refreshToken } = loginData.data as AuthTokens;
+            if (result.status === HTTP_STATUS.OK && loginData?.success) {
+              const { accessToken, refreshToken } = loginData?.data as AuthTokens;
               await setTokens(accessToken, refreshToken);
               await onTokenUpdate?.();
               await queryClient.invalidateQueries({ queryKey: ["user", "me"] });             
               Alert.alert(
                 "Đăng nhập thành công",
-                loginData.message || "Chào mừng bạn quay lại!"
+                loginData?.message || "Chào mừng bạn quay lại!"
               );
               navigation?.navigate("Main");
               resolve();
@@ -125,7 +126,7 @@ export const useAuthActions = (
         useRegister.mutate(data, {
           onSuccess: async (result) => {
             const registerData = result.data.data?.RegisterUser;
-            if (registerData?.success) {
+            if (registerData?.success && result.status === HTTP_STATUS.OK) {
               const { accessToken, refreshToken } = registerData.data as AuthTokens;
               await setTokens(accessToken, refreshToken);
               await onTokenUpdate?.();
