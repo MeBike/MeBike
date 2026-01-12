@@ -61,6 +61,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const sessionExpiredSub = DeviceEventEmitter.addListener("auth:session_expired", async () => {
       console.log(">>> [Auth] Event: auth:session_expired received");
+      
+      const token = await getAccessToken();
+      const state = navigation.getState();
+      const currentRoute = state?.routes[state?.index]?.name;
+
+      if (!token || currentRoute === "Login") {
+        console.log(">>> [Auth] Already logged out or on Login screen, skipping redirect");
+        return;
+      }
+
       await clearTokens();
       setHasToken(false);
       queryClient.clear();

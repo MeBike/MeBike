@@ -163,9 +163,15 @@ export const useAuthActions = (
             await clearTokens();
             await onTokenUpdate?.();
             queryClient.clear();
-            Alert.alert("Thành công", "Đăng xuất thành công");
-            navigation?.navigate("Login");
-            resolve();
+            Alert.alert("Thành công", "Đăng xuất thành công", [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation?.navigate("Login");
+                  resolve();
+                },
+              },
+            ]);
           },
           onError: async (error: unknown) => {
             console.log(">>> [AuthAction] logOut onError:", error);
@@ -173,9 +179,15 @@ export const useAuthActions = (
             await clearTokens();
             await onTokenUpdate?.();
             queryClient.clear();
-            Alert.alert("Thông báo", "Đã đăng xuất (phiên làm việc kết thúc).");
-            navigation?.navigate("Login");
-            resolve();
+            Alert.alert("Thông báo", "Đã đăng xuất (phiên làm việc kết thúc).", [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation?.navigate("Login");
+                  resolve();
+                },
+              },
+            ]);
           },
         });
       });
