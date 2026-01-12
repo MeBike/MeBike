@@ -25,7 +25,9 @@
     "worker:wallet-withdrawal-sweep-once": "tsx src/worker/commands/wallet-withdrawal-sweep-once.ts",
     "start": "node dist/src/http/server.js",
     "seed": "pnpm prisma db seed",
-    "seed:bikes": "tsx prisma/seed-bikes.ts"
+    "seed:bikes": "tsx prisma/seed-bikes.ts",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@date-fns/tz": "^1.4.1",
@@ -52,7 +54,10 @@
     "prisma-kysely": "^2.2.1",
     "stripe": "^20.1.0",
     "uuidv7": "^1.1.0",
-    "zod": "^4.1.11"
+    "zod": "^4.3.5",
+    "expo": "~54.0.31",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
   },
   "devDependencies": {
     "@mebike/eslint-config": "workspace:*",
