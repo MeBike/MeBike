@@ -180,7 +180,7 @@ export function Sidebar() {
   const { user, logOut, isAuthenticated } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending,] = useTransition();
 
   const handleLogout = () => {
     const refreshToken = getRefreshToken();
@@ -190,136 +190,162 @@ export function Sidebar() {
     }
   };
 
-  const menuItems = getMenuItems(user?.role as "STAFF" | "ADMIN" | "USER");
+  const menuItems = getMenuItems(user?.role as "STAFF" | "ADMIN" | "USER" | "SOS");
   const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER")
+    item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER" | "SOS")
   );
+
+  const getSidebarStyles = (role: string) => {
+    switch (role) {
+      case "SOS":
+        return "bg-slate-950 border-red-900/30 text-slate-200";
+      case "STAFF":
+        return "bg-slate-900 border-indigo-900/30 text-indigo-50";
+      case "USER":
+        return "bg-emerald-950 border-emerald-900/30 text-emerald-50";
+      case "ADMIN":
+        return "bg-sidebar border-sidebar-border text-sidebar-foreground";
+      default:
+        return "bg-sidebar border-sidebar-border text-sidebar-foreground";
+    }
+  };
+
+  const getActiveStyles = (role: string) => {
+    switch (role) {
+      case "SOS":
+        return "bg-red-600 text-white";
+      case "STAFF":
+        return "bg-indigo-600 text-white";
+      case "USER":
+        return "bg-emerald-600 text-white";
+      case "ADMIN":
+        return "bg-sidebar-primary text-sidebar-primary-foreground";
+      default:
+        return "bg-sidebar-primary text-sidebar-primary-foreground";
+    }
+  };
+
+  const getHoverStyles = (role: string) => {
+    switch (role) {
+      case "SOS":
+        return "hover:bg-red-900/40 hover:text-red-200";
+      case "STAFF":
+        return "hover:bg-indigo-900/40 hover:text-indigo-200";
+      case "USER":
+        return "hover:bg-emerald-900/40 hover:text-emerald-200";
+      default:
+        return "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
+    }
+  };
 
   // Navigation handler with progress
   const handleNav = (href: string) => {
-  if (pathname === href) return;
+    if (pathname === href) return;
 
-  NProgress.start();
-  
-  // Bỏ startTransition, gọi trực tiếp router.push
-  router.push(href); 
-  setMobileOpen(false);
-  
-  // NProgress sẽ kết thúc khi component mới mounted hoặc dùng useEffect ở Layout
-  setTimeout(() => NProgress.done(), 600); 
-};
+    NProgress.start();
+    router.push(href);
+    setMobileOpen(false);
+    setTimeout(() => NProgress.done(), 600);
+  };
+
+  const sidebarBg = getSidebarStyles(user?.role || "");
+  const activeStyle = getActiveStyles(user?.role || "");
+  const hoverStyle = getHoverStyles(user?.role || "");
 
   return (
     <>
-      {/* Mobile Toggle Button */}
       <button
-        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-sidebar border border-sidebar-border rounded-lg text-sidebar-foreground hover:bg-sidebar-accent"
+        className={cn(
+          "fixed top-4 left-4 z-50 md:hidden p-2 rounded-lg border transition-colors",
+          user?.role === "SOS" ? "bg-red-950 border-red-900 text-red-500" : "bg-sidebar border-sidebar-border text-sidebar-foreground"
+        )}
         onClick={() => setMobileOpen(!mobileOpen)}
       >
-        {mobileOpen ? (
-          <X className="w-5 h-5" />
-        ) : (
-          <Menu className="w-5 h-5" />
-        )}
+        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          className="fixed inset-0 z-30 bg-black/50 md:hidden backdrop-blur-sm"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
+          "fixed left-0 top-0 z-40 h-screen border-r transition-all duration-300",
           "w-64 md:translate-x-0",
+          sidebarBg,
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
         style={{ opacity: isPending ? 0.65 : 1, transition: "opacity .2s" }}
       >
-      <div className="flex h-full flex-col">
-        {/* Logo Section */}
-        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-sidebar-primary rounded-lg">
-                <Bike className="w-5 h-5 text-sidebar-primary-foreground" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-sidebar-foreground">
-                  MeBike
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Quản lý cho thuê
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-2">
-            {filteredMenuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <li key={item.href}>
-                  <button
-                    type="button"
-                    onClick={() => handleNav(item.href)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 w-full rounded-lg transition-colors group",
-                      isActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    )}
-                    disabled={isPending || isActive}
-                    style={{ cursor: isPending ? "wait" : "pointer" }}
-                  >
-                    <Icon
-                      className={cn(
-                        "w-5 h-5 flex-shrink-0",
-                        isActive && "text-sidebar-primary-foreground"
-                      )}
-                    />
-                    {!collapsed && (
-                      <span className="text-sm font-medium">{item.title}</span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
-
-        <div className="border-t border-sidebar-border p-2">
-          {/* <button
-            type="button"
-            onClick={() =>
-              handleNav(
-                `${user?.role === "ADMIN" ? "/admin" : user?.role === "USER" ? "/user" : user?.role === "SOS" ? "/sos" : "/staff"}/profile`
-              )
-            }
-            className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-            disabled={isPending}
-          >
-            <User className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">Hồ sơ</span>}
-          </button> */}
-          <button
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-red-600 hover:text-white transition-colors cursor-pointer hover:opacity-90"
-            onClick={() => handleLogout()}
-            disabled={isPending}
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
+        <div className="flex h-full flex-col">
+          <div className="flex h-16 items-center justify-between border-b border-white/5 px-4">
             {!collapsed && (
-              <span className="text-sm font-medium">Đăng xuất</span>
+              <div className="flex items-center gap-2">
+                <div className={cn(
+                  "p-1.5 rounded-lg shadow-lg",
+                  user?.role === "SOS" ? "bg-red-600" : user?.role === "STAFF" ? "bg-indigo-600" : "bg-emerald-600"
+                )}>
+                  <Bike className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold tracking-tight">
+                    MeBike
+                  </h2>
+                  <p className="text-[10px] opacity-60 uppercase font-semibold">
+                    {user?.role || "user"} Dashboard
+                  </p>
+                </div>
+              </div>
             )}
-          </button>
+          </div>
+          <nav className="flex-1 overflow-y-auto py-6">
+            <ul className="space-y-1.5 px-3">
+              {filteredMenuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <li key={item.href}>
+                    <button
+                      type="button"
+                      onClick={() => handleNav(item.href)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 w-full rounded-lg transition-all duration-200 group",
+                        isActive
+                          ? cn(activeStyle, "shadow-md scale-[1.02]")
+                          : cn("text-inherit opacity-70", hoverStyle)
+                      )}
+                      disabled={isPending || isActive}
+                    >
+                      <Icon
+                        className={cn(
+                          "w-5 h-5 shrink-0 transition-transform group-hover:scale-110",
+                          isActive ? "text-white" : ""
+                        )}
+                      />
+                      {!collapsed && (
+                        <span className="text-sm font-semibold">{item.title}</span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          <div className="mt-auto border-t border-white/5 p-4">
+            <button
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white transition-all duration-200 cursor-pointer font-bold text-sm"
+              onClick={() => handleLogout()}
+              disabled={isPending}
+            >
+              <LogOut className="w-5 h-5 shrink-0" />
+              {!collapsed && <span>Đăng xuất</span>}
+            </button>
+          </div>
         </div>
-      </div>
       </aside>
     </>
   );

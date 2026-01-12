@@ -2,7 +2,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Alert } from "react-native";
 
-import type { ForgotPasswordSchemaFormData, LoginSchemaFormData, RegisterSchemaFormData, ResetPasswordSchemaFormData, UpdateProfileSchemaFormData } from "@schemas/authSchema";
+import type {
+  ForgotPasswordSchemaFormData,
+  LoginSchemaFormData,
+  RegisterSchemaFormData,
+  ResetPasswordSchemaFormData,
+  UpdateProfileSchemaFormData,
+} from "@schemas/authSchema";
 
 import { clearTokens, setTokens } from "@utils/tokenManager";
 
@@ -15,7 +21,6 @@ import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
-
 interface ErrorResponse {
   response?: {
     data?: {
@@ -24,30 +29,18 @@ interface ErrorResponse {
     };
   };
 }
-
+import { AuthTokens } from "@/types";
+import { getErrorMessage } from "@/utils/getErrorMessage";
+import { HTTP_STATUS } from "@/lib/httpClient";
 interface ErrorWithMessage {
   message: string;
 }
 
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
 
-  return defaultMessage;
-};
-
-export const useAuthActions = (navigation?: { navigate: (route: string) => void }, onTokenUpdate?: () => void) => {
+export const useAuthActions = (
+  navigation?: { navigate: (route: string) => void },
+  onTokenUpdate?: () => void
+) => {
   const queryClient = useQueryClient();
   const useLogin = useLoginMutation();
   const useRegister = useRegisterMutation();
@@ -59,17 +52,23 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
   const useResetPassword = useResetPasswordMutation();
   const useResendVerifyEmail = useResendVerifyEmailMutation();
   const changePassword = useCallback(
-    (old_password: string, password: string, confirm_password: string): Promise<void> => {
+    (
+      oldPassword: string,
+      newPassword: string,
+      confirmPassword: string
+    ): Promise<void> => {
       return new Promise((resolve, reject) => {
         useChangePassword.mutate(
-          { old_password, password, confirm_password },
+          { oldPassword, newPassword, confirmPassword },
           {
             onSuccess: (result) => {
-              if (result.status === 200) {
-                Alert.alert("Success", result.data.message);
+              const changeData = result.data.data?.ChangePassword;
+              if (changeData?.success) {
+                Alert.alert("Thành công", changeData.message);
                 resolve();
               } else {
-                const errorMessage = result.data?.message || "Error changing password";
+                const errorMessage =
+                  changeData?.message || "Lỗi khi đổi mật khẩu";
                 Alert.alert("Lỗi", errorMessage);
                 reject(new Error(errorMessage));
               }
@@ -77,7 +76,7 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
             onError: (error: unknown) => {
               const errorMessage = getErrorMessage(
                 error,
-                "Error changing password"
+                "Lỗi khi đổi mật khẩu"
               );
               Alert.alert("Lỗi", errorMessage);
               reject(error);
@@ -93,40 +92,55 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { access_token, refresh_token } = result.data.result;
-            setTokens(access_token, refresh_token);
-            onTokenUpdate?.();
-            await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-            Alert.alert("Đăng nhập thành công", "Chào mừng trở lại!");
-            navigation?.navigate("Main");
-            resolve();
+            const loginData = result.data.data?.LoginUser;
+            if (result.status === HTTP_STATUS.OK && loginData?.success) {
+              const { accessToken, refreshToken } = loginData?.data as AuthTokens;
+              await setTokens(accessToken, refreshToken);
+              await onTokenUpdate?.();
+              await queryClient.invalidateQueries({ queryKey: ["user", "me"] });             
+              Alert.alert(
+                "Đăng nhập thành công",
+                loginData?.message || "Chào mừng bạn quay lại!"
+              );
+              navigation?.navigate("Main");
+              resolve();
+            } else {
+              const errorMsg = loginData?.message || "Đăng nhập thất bại";
+              Alert.alert("Lỗi", errorMsg);
+              reject(new Error(errorMsg));
+            }
           },
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(error, "Lỗi khi đăng nhập");
-            Alert.alert("Lỗi đăng nhập", errorMessage);
+            Alert.alert("Lỗi", errorMessage);
             reject(error);
           },
         });
       });
     },
-    [useLogin, queryClient, onTokenUpdate, navigation]
+    [useLogin, queryClient, navigation, onTokenUpdate]
   );
   const register = useCallback(
     (data: RegisterSchemaFormData) => {
       return new Promise<void>((resolve, reject) => {
         useRegister.mutate(data, {
           onSuccess: async (result) => {
-            if (result.status === 200) {
-              const { access_token, refresh_token } = result.data.result;
-              setTokens(access_token, refresh_token);
+            const registerData = result.data.data?.RegisterUser;
+            if (registerData?.success && result.status === HTTP_STATUS.OK) {
+              const { accessToken, refreshToken } = registerData.data as AuthTokens;
+              await setTokens(accessToken, refreshToken);
               await onTokenUpdate?.();
               await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-              Alert.alert("Thành công", "Đăng ký thành công. Tài khoản của bạn đã được tạo.");
+              Alert.alert(
+                "Đăng ký thành công",
+                registerData.message || "Tài khoản của bạn đã được tạo."
+              );
+              navigation?.navigate("Main");
               resolve();
             } else {
-              const errorMessage = result.data?.message || "Lỗi khi đăng ký";
-              Alert.alert("Lỗi", errorMessage);
-              reject(new Error(errorMessage));
+              const errorMsg = registerData?.message || "Lỗi khi đăng ký";
+              Alert.alert("Lỗi", errorMsg);
+              reject(new Error(errorMsg));
             }
           },
           onError: (error: unknown) => {
@@ -137,67 +151,78 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
         });
       });
     },
-    [useRegister, queryClient, onTokenUpdate]
+    [useRegister, queryClient, onTokenUpdate, navigation]
   );
   const logOut = useCallback(
-    (refresh_token: string) => {
-      useLogout.mutate(refresh_token, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            clearTokens();
-            onTokenUpdate?.();
+    () => {
+      return new Promise<void>((resolve) => {
+        console.log(">>> [AuthAction] logOut starting...");
+        useLogout.mutate(undefined, {
+          onSuccess: async (result) => {
+            console.log(">>> [AuthAction] logOut onSuccess");
+            await clearTokens();
+            await onTokenUpdate?.();
             queryClient.clear();
-            Alert.alert("Thành công", "Đăng xuất thành công");
-            navigation?.navigate("Login");
-          } else {
-            const errorMessage = result.data?.message || "Lỗi khi đăng xuất";
-            Alert.alert("Lỗi", errorMessage);
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi đăng xuất");
-          Alert.alert("Lỗi", errorMessage);
-        },
+            Alert.alert("Thành công", "Đăng xuất thành công", [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation?.navigate("Login");
+                  resolve();
+                },
+              },
+            ]);
+          },
+          onError: async (error: unknown) => {
+            console.log(">>> [AuthAction] logOut onError:", error);
+            // Always force local logout even if server fails
+            await clearTokens();
+            await onTokenUpdate?.();
+            queryClient.clear();
+            Alert.alert("Thông báo", "Đã đăng xuất (phiên làm việc kết thúc).", [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation?.navigate("Login");
+                  resolve();
+                },
+              },
+            ]);
+          },
+        });
       });
     },
     [useLogout, queryClient, onTokenUpdate, navigation]
   );
   const verifyEmail = useCallback(
-    ({email , otp} : {email: string; otp: string}): Promise<void> => {
+    ({ email, otp }: { email: string; otp: string }): Promise<void> => {
       return new Promise((resolve, reject) => {
-        useVerifyEmail.mutate({ email, otp }, {
-          onSuccess: (result) => {
-            console.log("verifyEmail onSuccess:", result.status);
-            if (result.status === 200) {
-              const accessToken = result.data.result?.access_token;
-              const refreshToken = result.data.result?.refresh_token;
-              if (!accessToken || !refreshToken) {
-                const errMsg = "Thiếu access hoặc refresh token";
-                Alert.alert("Lỗi", errMsg);
-                reject(new Error(errMsg));
-                return;
+        useVerifyEmail.mutate(
+          { email, otp },
+          {
+            onSuccess: (result) => {
+              const verifyData = result.data.data?.VerifyEmailProcess;
+              if (verifyData?.success) {
+                Alert.alert("Thành công", verifyData.message);
+                queryClient.invalidateQueries({ queryKey: ["user", "me"] });
+                resolve();
+              } else {
+                const errorMessage =
+                  verifyData?.message || "Lỗi khi xác minh email";
+                Alert.alert("Lỗi", errorMessage);
+                reject(new Error(errorMessage));
               }
-              setTokens(accessToken, refreshToken);
-              Alert.alert("Thành công", result.data.message);
-              queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-              resolve();
-            } else {
-              const errorMessage =
-                result.data?.message || "Lỗi khi xác minh email";
+            },
+            onError: (error: unknown) => {
+              const errorMessage = getErrorMessage(
+                error,
+                "OTP không hợp lệ hoặc đã hết hạn"
+              );
               Alert.alert("Lỗi", errorMessage);
-              reject(new Error(errorMessage));
-            }
-          },
-          onError: (error: unknown) => {
-            console.log("verifyEmail onError:", error);
-            const errorMessage = getErrorMessage(
-              error,
-              "OTP không hợp lệ hoặc đã hết hạn"
-            );
-            Alert.alert("Lỗi", errorMessage);
-            reject(error);
-          },
-        });
+              reject(error);
+            },
+          }
+        );
       });
     },
     [useVerifyEmail, queryClient]
@@ -206,12 +231,16 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
     return new Promise<void>((resolve, reject) => {
       useResendVerifyEmail.mutate(undefined, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            Alert.alert("Thành công", "Email xác minh đã được gửi lại thành công");
+          const resendData = result.data.data?.VerifyEmail;
+          if (resendData?.success) {
+            Alert.alert(
+              "Thành công",
+              resendData.message || "Email xác minh đã được gửi lại thành công"
+            );
             resolve();
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi gửi lại email xác minh";
+              resendData?.message || "Lỗi khi gửi lại email xác minh";
             Alert.alert("Lỗi", errorMessage);
             reject(new Error(errorMessage));
           }
@@ -231,11 +260,15 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
     (data: ForgotPasswordSchemaFormData) => {
       useForgotPassword.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === 200) {
-            Alert.alert("Thành công", "Email đặt lại mật khẩu đã được gửi thành công");
+          const forgotData = result.data.data?.ResetPasswordRequest;
+          if (forgotData?.success) {
+            Alert.alert(
+              "Thành công",
+              forgotData.message || "Email đặt lại mật khẩu đã được gửi thành công"
+            );
           } else {
             const errorMessage =
-              result.data?.message || "Lỗi khi gửi email đặt lại mật khẩu";
+              forgotData?.message || "Lỗi khi gửi email đặt lại mật khẩu";
             Alert.alert("Lỗi", errorMessage);
           }
         },
@@ -250,20 +283,20 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
     },
     [useForgotPassword]
   );
-  
 
   const resetPassword = useCallback(
     (data: ResetPasswordSchemaFormData): Promise<void> => {
       return new Promise((resolve, reject) => {
         useResetPassword.mutate(data, {
           onSuccess: (result) => {
-            if (result.status === 200) {
-              Alert.alert("Thành công", "Đặt lại mật khẩu thành công");
+            const resetData = result.data.data?.ResetPassword;
+            if (resetData?.success) {
+              Alert.alert("Thành công", resetData.message || "Đặt lại mật khẩu thành công");
               navigation?.navigate("Login");
               resolve();
             } else {
               const errorMessage =
-                result.data?.message || "Lỗi khi đặt lại mật khẩu";
+                resetData?.message || "Lỗi khi đặt lại mật khẩu";
               Alert.alert("Lỗi", errorMessage);
               reject(new Error(errorMessage));
             }
@@ -286,18 +319,22 @@ export const useAuthActions = (navigation?: { navigate: (route: string) => void 
       return new Promise((resolve, reject) => {
         useUpdateProfile.mutate(data, {
           onSuccess: (result) => {
-            if (result.status === 200) {
-              Alert.alert("Thành công", "Cập nhật thông tin thành công");
+            const updateData = result.data.data?.UpdateProfile;
+            if (updateData?.success) {
+              Alert.alert("Thành công", updateData.message || "Cập nhật thông tin thành công");
               queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               resolve();
             } else {
               const errorMessage =
-                result.data?.message || "Lỗi khi cập nhật thông tin";
+                updateData?.message || "Lỗi khi cập nhật thông tin";
               reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật thông tin");
+            const errorMessage = getErrorMessage(
+              error,
+              "Lỗi khi cập nhật thông tin"
+            );
             reject(new Error(errorMessage));
           },
         });

@@ -1,7 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DeviceEventEmitter } from "react-native";
 
 const ACCESS_TOKEN = "access_token";
 const REFRESH_TOKEN = "refresh_token";
+
+export const AUTH_EVENTS = {
+  TOKEN_UPDATED: "auth:token_updated",
+};
 
 export async function getAccessToken(): Promise<string | null> {
   try {
@@ -29,6 +34,7 @@ export async function setTokens(access_token: string, refresh_token: string): Pr
       [ACCESS_TOKEN, access_token],
       [REFRESH_TOKEN, refresh_token],
     ]);
+    DeviceEventEmitter.emit(AUTH_EVENTS.TOKEN_UPDATED);
   }
   catch (error) {
     console.error("Error saving tokens:", error);
@@ -38,6 +44,7 @@ export async function setTokens(access_token: string, refresh_token: string): Pr
 export async function clearTokens(): Promise<void> {
   try {
     await AsyncStorage.multiRemove([ACCESS_TOKEN, REFRESH_TOKEN]);
+    DeviceEventEmitter.emit(AUTH_EVENTS.TOKEN_UPDATED);
   }
   catch (error) {
     console.error("Error clearing tokens:", error);
