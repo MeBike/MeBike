@@ -9,7 +9,7 @@ import { useWalletActions } from "@/hooks/use-wallet";
 import { walletColumn } from "@/columns/wallet-column";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { Wallet } from "@/services/wallet.service";
+import { Wallet } from "@/types/wallet";
 import { Loader2 } from "lucide-react";
 interface TransactionDetails {
   fee?: number;
@@ -109,7 +109,7 @@ export default function WalletPage() {
     );
   }
   return (
-    <div className="w-full bg-background">
+    <div className="w-full">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
@@ -139,19 +139,19 @@ export default function WalletPage() {
             <DataTable
               columns={walletColumn({
                 onView: ({ id }) => {
-                  const wallet = allWallets?.find((w) => w._id === id);
+                  const wallet = allWallets?.find((w) => w.id === id);
                   if (wallet) handleOpenDetailModal(wallet);
                 },
                 onDeposit: ({ id }) => {
-                  const wallet = allWallets?.find((w) => w._id === id);
+                  const wallet = allWallets?.find((w) => w.id === id);
                   if (wallet) handleOpenModal(wallet);
                 },
                 onEdit: ({ id }) => {
-                  const wallet = allWallets?.find((w) => w._id === id);
+                  const wallet = allWallets?.find((w) => w.id === id);
                   if (wallet) {
                     // Toggle status - try with "KHÓA" if backend expects it
-                    const newStatus: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG" = 
-                      wallet.status === "ĐANG HOẠT ĐỘNG" ? "ĐÃ BỊ ĐÓNG BĂNG" : "ĐANG HOẠT ĐỘNG";
+                    const newStatus: "ACTIVE" | "INACTIVE" = 
+                      wallet.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
                     console.log("🔄 Updating wallet status:", { id, newStatus, currentStatus: wallet.status });
                     updateStatusWallet(newStatus, id);
                   }
