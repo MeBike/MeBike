@@ -32,7 +32,8 @@
       "@contexts/*": ["./src/contexts/*"],
       "@providers/*": ["./src/providers/*"],
       "@custom-types": ["./src/types/index"],
-      "@constants/*": ["./src/constants/*"]
+      "@constants/*": ["./src/constants/*"],
+      "@graphql": ["./src/graphql/index.ts"],
 
     }
   },

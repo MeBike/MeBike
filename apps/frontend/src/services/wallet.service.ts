@@ -1,6 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { WalletOverview , DetailWallet } from "@/types/Wallet";
+import { GET_ALL_WALLET } from "@graphql";
 interface ApiResponse<T> {
   data: T;
   pagination: {
