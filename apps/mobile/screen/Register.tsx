@@ -368,8 +368,8 @@ export default function RegisterScreen() {
                 value={confirmPassword}
                 onChangeText={(text) => {
                   setConfirmPassword(text);
-                  if (errors.confirm_password)
-                    setErrors((prev) => ({ ...prev, confirm_password: "" }));
+                  if (errors.confirmPassword)
+                    setErrors((prev) => ({ ...prev, confirmPassword: "" }));
                 }}
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"

@@ -29,7 +29,7 @@ interface ErrorResponse {
     };
   };
 }
-import { AuthTokens } from "@graphql";
+import { AuthTokens } from "@/types";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import { HTTP_STATUS } from "@/lib/httpClient";
 interface ErrorWithMessage {

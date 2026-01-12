@@ -10,21 +10,6 @@ import type {
 } from "@schemas/authSchema";
 
 import fetchHttpClient from "@lib/httpClient";
-
-type AuthResponse = {
-  message: string;
-  result: {
-    access_token: string;
-    refresh_token: string;
-  };
-};
-type MessageResponse = {
-  result?: {
-    access_token: string;
-    refresh_token: string;
-  };
-  message: string;
-};
 export const ROLES = ["USER", "ADMIN", "STAFF", "SOS"] as const;
 export type RoleType = (typeof ROLES)[number];
 export type DetailUser = {
@@ -57,7 +42,7 @@ import {
   ForgotPasswordRequestResponse,
   VerifyForgotPasswordTokenResponse,
   ResetPasswordResponse,
-} from "@/types";
+} from "@custom-types";
 import {
   LOGIN_MUTATION,
   GET_ME,
@@ -71,7 +56,7 @@ import {
   CREATE_FORGOT_PASSWORD_REQUEST,
   VERIFY_FORGOT_PASSWORD_TOKEN,
   RESET_PASSWORD,
-} from "@/graphql";
+} from "@graphql";
 import { print } from "graphql";
 
 export const authService = {
