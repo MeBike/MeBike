@@ -158,7 +158,7 @@ export function useWalletActions(
         { id, newStatus },
         {
           onSuccess: (result) => {
-            if (result.status === HTTP_STATUS.OK) {
+            if (result.status === HTTP_STATUS.OK && result.data?.data?.UpdateWalletStatus.success) {
               toast.success(result.data?.data?.UpdateWalletStatus.message || MESSAGE.UPDATE_STATUS_WALLET_SUCCESS);
               queryClient.invalidateQueries({
                 queryKey: ["all-wallet-users"],
