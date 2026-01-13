@@ -166,4 +166,46 @@ export const authService = {
       });
     }
   },
+
+  resendVerifyEmail: async (payload: z.output<typeof AuthContracts.SendVerifyEmailRequestSchema>): Promise<Result<void, AuthError>> => {
+    try {
+      const response = await kyClient.post(routePath(ServerRoutes.auth.resendVerifyEmail), {
+        json: payload,
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        return ok(undefined);
+      }
+
+      return err(await parseAuthError(response));
+    }
+    catch (error) {
+      return err({
+        _tag: "NetworkError",
+        message: error instanceof Error ? error.message : undefined,
+      });
+    }
+  },
+
+  verifyEmailOtp: async (payload: z.output<typeof AuthContracts.VerifyEmailOtpRequestSchema>): Promise<Result<void, AuthError>> => {
+    try {
+      const response = await kyClient.post(routePath(ServerRoutes.auth.verifyEmailOtp), {
+        json: payload,
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        return ok(undefined);
+      }
+
+      return err(await parseAuthError(response));
+    }
+    catch (error) {
+      return err({
+        _tag: "NetworkError",
+        message: error instanceof Error ? error.message : undefined,
+      });
+    }
+  },
 };

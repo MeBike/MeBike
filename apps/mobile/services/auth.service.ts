@@ -1,6 +1,5 @@
-import type { AxiosResponse } from "axios";
-
 import type { ChangePasswordSchemaFormData, ForgotPasswordSchemaFormData, LoginSchemaFormData, RegisterSchemaFormData, ResetPasswordSchemaFormData, UpdateProfileSchemaFormData } from "@schemas/authSchema";
+import type { AxiosResponse } from "axios";
 
 import fetchHttpClient from "@lib/httpClient";
 
@@ -18,7 +17,7 @@ type MessageResponse = {
   };
   message: string;
 };
-export const ROLES = ["USER", "ADMIN", "STAFF" , "SOS"] as const;
+export const ROLES = ["USER", "ADMIN", "STAFF", "SOS"] as const;
 export type RoleType = typeof ROLES[number];
 export type DetailUser = {
   _id: string;

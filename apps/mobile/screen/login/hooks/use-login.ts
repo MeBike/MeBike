@@ -75,7 +75,9 @@ export function useLogin() {
         Alert.alert("Đăng nhập thất bại", result._tag === "ApiError" && result.message
           ? result.message
           : "Không thể đăng nhập. Vui lòng thử lại.");
+        return;
       }
+      navigation.navigate("Main");
     }
     catch {
       rotateAnim.stopAnimation();

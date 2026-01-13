@@ -1,10 +1,11 @@
 import type { AuthError } from "@services/auth/auth-error";
 import type { UserError } from "@services/users/user-error";
 
+import { useMeQuery } from "@hooks/query/auth-next/use-me-query";
 import { clearTokens, getAccessToken, getRefreshToken } from "@lib/auth-tokens";
 import { log } from "@lib/log";
 import { authService } from "@services/auth/auth-service";
-import { userService } from "@services/users/user-service";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 type UserDetail = import("@services/users/user-service").UserDetail;
@@ -28,69 +29,64 @@ type AuthContextValue = {
 const AuthContextNext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [status, setStatus] = useState<AuthStatus>("loading");
-  const [user, setUser] = useState<UserDetail | null>(null);
-  const [lastError, setLastError] = useState<UserError | null>(null);
+  const queryClient = useQueryClient();
+  const [hasToken, setHasToken] = useState<boolean | null>(null);
 
-  const hydrate = useCallback(async () => {
-    setStatus("loading");
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
-      setUser(null);
-      setStatus("unauthenticated");
-      return;
-    }
+  const meQuery = useMeQuery(hasToken === true);
 
-    const meResult = await userService.me();
-    if (!meResult.ok) {
-      log.warn("AuthProviderNext hydrate failed", meResult.error);
-      setLastError(meResult.error);
-      setUser(null);
-
-      if (meResult.error._tag === "ApiError" && meResult.error.code === "UNAUTHORIZED") {
-        await clearTokens();
-      }
-
-      setStatus("unauthenticated");
-      return;
-    }
-
-    setUser(meResult.value);
-    setLastError(null);
-    setStatus("authenticated");
+  useEffect(() => {
+    let active = true;
+    getAccessToken()
+      .then((token) => {
+        if (!active) {
+          return;
+        }
+        setHasToken(Boolean(token));
+      })
+      .catch((err) => {
+        log.warn("AuthProviderNext token check failed", err);
+        if (active) {
+          setHasToken(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+    const error = meQuery.error;
+    if (!error || !hasToken) {
+      return;
+    }
+    if (error._tag === "ApiError" && error.code === "UNAUTHORIZED") {
+      void clearTokens().finally(() => {
+        setHasToken(false);
+        queryClient.removeQueries({ queryKey: ["authNext", "me"] });
+      });
+    }
+  }, [meQuery.error, hasToken, queryClient]);
+
+  const hydrate = useCallback(async () => {
+    if (!hasToken) {
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["authNext", "me"] });
+  }, [hasToken, queryClient]);
 
   const login = useCallback(
     async (
       payload: import("@services/auth/auth-service").LoginRequest,
     ): Promise<AuthError | UserError | null> => {
-      setStatus("loading");
       const result = await authService.login(payload);
       if (!result.ok) {
-        setUser(null);
-        setStatus("unauthenticated");
         return result.error;
       }
-
-      const meResult = await userService.me();
-      if (!meResult.ok) {
-        log.warn("AuthProviderNext login: failed to fetch profile", meResult.error);
-        setLastError(meResult.error);
-        setUser(null);
-        setStatus("unauthenticated");
-        return meResult.error;
-      }
-
-      setUser(meResult.value);
-      setLastError(null);
-      setStatus("authenticated");
+      setHasToken(true);
+      await queryClient.invalidateQueries({ queryKey: ["authNext", "me"] });
       return null;
     },
-    [],
+    [queryClient],
   );
 
   const logout = useCallback(async () => {
@@ -99,13 +95,19 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
       await authService.logout({ refreshToken });
     }
     await clearTokens();
-    setUser(null);
-    setLastError(null);
-    setStatus("unauthenticated");
-  }, []);
+    setHasToken(false);
+    queryClient.removeQueries({ queryKey: ["authNext", "me"] });
+  }, [queryClient]);
 
   const value = useMemo<AuthContextValue>(() => {
+    const user = meQuery.data ?? null;
     const role = user?.role;
+    const lastError = meQuery.error ?? null;
+    const status: AuthStatus = hasToken === null
+      ? "loading"
+      : hasToken
+        ? (user ? "authenticated" : "loading")
+        : "unauthenticated";
     return {
       status,
       user,
@@ -119,7 +121,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
       logout,
       hydrate,
     };
-  }, [status, user, lastError, login, logout, hydrate]);
+  }, [meQuery.data, meQuery.error, hasToken, login, logout, hydrate]);
 
   return <AuthContextNext.Provider value={value}>{children}</AuthContextNext.Provider>;
 };
