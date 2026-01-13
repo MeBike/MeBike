@@ -8,6 +8,7 @@ import { CustomerStats } from "@/components/customers/customer-stats";
 import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Label } from "@radix-ui/react-label";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
   CreateUserFormData,
   createUserSchema,
@@ -29,7 +30,8 @@ export default function CustomersClient() {
   } = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
   });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +55,7 @@ export default function CustomersClient() {
     page: currentPage,
     verify: verifyFilter === "all" ? "" : verifyFilter,
     role: roleFilter === "all" ? "" : (roleFilter as UserRole),
-    searchQuery: searchQuery,
+    searchQuery: debouncedSearch,
     id: selectedUserId || "",
   });
   useEffect(() => {
