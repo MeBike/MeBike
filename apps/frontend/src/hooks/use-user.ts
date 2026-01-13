@@ -48,7 +48,7 @@ export const useUserActions = ({
     page,
     limit,
     role: role || "",
-    search : searchQuery || "",
+    search: searchQuery || "",
     verify: verify || "",
   });
   const {

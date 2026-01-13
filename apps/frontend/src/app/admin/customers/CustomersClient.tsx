@@ -63,6 +63,7 @@ export default function CustomersClient() {
     getAllStatistics();
     getRefetchDashboardStats();
   }, [
+    debouncedSearch,
     searchQuery,
     verifyFilter,
     roleFilter,
