@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetAllUserQuery } from "./query/User/useGetAllUserQuery";
-import { use, useCallback } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { VerifyStatus } from "@/types";

@@ -5,8 +5,9 @@ export interface Wallet {
     id : string;
     accountId : string;
     balance : number;
-    status : "ACTIVE" | "INACTIVE";
+    status : "ACTIVE" | "BLOCKED";
     createdAt : string;
     updatedAt : string;
 }
 export type GetAllWalletResponse = GraphQLMutationResponse<"GetAllWallets", Wallet[]>;
+export type UpdateWalletStatusResponse = GraphQLMutationResponse<"UpdateWalletStatus", Wallet>;

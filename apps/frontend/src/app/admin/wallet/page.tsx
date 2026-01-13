@@ -9,7 +9,7 @@ import { useWalletActions } from "@/hooks/use-wallet";
 import { walletColumn } from "@/columns/wallet-column";
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
-import { Wallet } from "@/types/wallet";
+import type { Wallet } from "@/types/wallet";
 import { Loader2 } from "lucide-react";
 interface TransactionDetails {
   fee?: number;
@@ -73,13 +73,13 @@ export default function WalletPage() {
 
   const handleOpenModal = (wallet: Wallet) => {
     setSelectedWallet(wallet);
-    setSelectedUserId(wallet.user_id);
+    setSelectedUserId(wallet.accountId);
     setIsModalOpen(true);
   };
 
   const handleOpenDetailModal = (wallet: Wallet) => {
     setSelectedWallet(wallet);
-    setSelectedUserId(wallet.user_id);
+    setSelectedUserId(wallet.accountId);
     setIsDetailModalOpen(true);
   };
 
@@ -149,9 +149,8 @@ export default function WalletPage() {
                 onEdit: ({ id }) => {
                   const wallet = allWallets?.find((w) => w.id === id);
                   if (wallet) {
-                    // Toggle status - try with "KHÓA" if backend expects it
-                    const newStatus: "ACTIVE" | "INACTIVE" = 
-                      wallet.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+                    const newStatus: "ACTIVE" | "BLOCKED" = 
+                      wallet.status === "ACTIVE" ? "BLOCKED" : "ACTIVE";
                     console.log("🔄 Updating wallet status:", { id, newStatus, currentStatus: wallet.status });
                     updateStatusWallet(newStatus, id);
                   }
@@ -166,7 +165,7 @@ export default function WalletPage() {
           </div>
           <div className="pt-3">
             <PaginationDemo
-              currentPage={paginationWallet?.currentPage || 1}
+              currentPage={paginationWallet?.page || 1}
               totalPages={paginationWallet?.totalPages || 1}
               onPageChange={(page) => setPage(page)}
             />
@@ -182,8 +181,8 @@ export default function WalletPage() {
         user={
           selectedWallet
             ? {
-                _id: selectedWallet.user_id,
-                userId: selectedWallet.user_id,
+                _id: selectedWallet.accountId,
+                userId: selectedWallet.accountId,
                 fullName: "User Name",
                 email: "user@example.com",
                 avatar: "/diverse-user-avatars.png",
@@ -204,8 +203,8 @@ export default function WalletPage() {
         user={
           selectedWallet
             ? {
-                _id: selectedWallet.user_id,
-                userId: selectedWallet.user_id,
+                _id: selectedWallet.accountId,
+                userId: selectedWallet.accountId,
                 fullName: "User Name",
                 email: "user@example.com",
                 avatar: "/diverse-user-avatars.png",

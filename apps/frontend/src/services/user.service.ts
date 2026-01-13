@@ -5,7 +5,7 @@ import { CreateUserFormData, UserProfile } from "@/schemas/userSchema";
 import { GET_DETAIL_USER ,  GET_USERS , GET_USER_STATS , CHANGE_STATUS_USER , CREATE_USER} from "@/graphql";
 import { print } from "graphql";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
-import { GetUsersResponse, GetDetailUserResponse , CreateUserResponse} from "@/types/auth.type";
+import { GetUsersResponse, GetDetailUserResponse, CreateUserResponse, ResetPasswordResponse, UpdateProfileResponse } from "@/types/auth.type";
 import { GetUserStatsResponse } from "@/types/user.type";
 import { ChangeStatusUserResponse } from "@/types/auth.type";
 interface ApiReponse<T> {
@@ -27,9 +27,8 @@ export interface UserStatistics {
   total_unverified: number;
   total_banned: number;
 }
-export interface ResetPasswordResponse {
-  message: string;
-}
+// Local ResetPasswordResponse removed in favor of imported version
+
 export interface GetActiveStatisticsUser {
   active_users_count: number;
   date: string;

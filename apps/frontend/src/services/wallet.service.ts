@@ -1,22 +1,14 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import { WalletOverview , DetailWallet } from "@/types/Wallet";
-import { GET_ALL_WALLET } from "@graphql";
+import { GET_ALL_WALLET, UPDATE_STATUS_WALLET } from "@graphql";
 import { print } from "graphql";
-interface ApiResponse<T> {
-  data: T;
-  pagination: {
-    totalPages: number;
-    currentPage: number;
-    limit: number;
-    totalRecords: number;
-  };
-  message: string;
-}
-interface DetailApiResponse<T> {
-  result: T;
-  message: string;
-}
+import type {
+  TopUpSchemaFormData,
+  DecreaseSchemaFormData,
+} from "@/schemas/walletSchema";
+import { GetAllWalletResponse, UpdateWalletStatusResponse } from "@/types/wallet";
+import { ApiResponse, DetailApiResponse } from "@/types/Response";
+
 export interface MyWallet {
   _id: string;
   user_id: string;
@@ -27,6 +19,7 @@ export interface MyWallet {
   created_at: string;
   updated_at: string;
 }
+
 export interface ManageTransactionsResponse {
   _id: string;
   wallet_id: string;
@@ -39,25 +32,7 @@ export interface ManageTransactionsResponse {
   status: "THÀNH CÔNG" | "THẤT BẠI" | "ĐANG XỬ LÝ";
   created_at: string;
 }
-export interface Wallet {
-  _id: string;
-  user_id: string;
-  balance: number;
-  status: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG";
-  created_at: string;
-  updated_at: string;
-  fullname: string;
-}
-export interface UpdateWalletStatusResponse {
-  _id: string;
-  user_id: string;
-  balance: {
-    $numberDecimal: string;
-  };
-  status : "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG";
-  created_at: string;
-  updated_at: string;
-}
+
 const WALLET_BASE = "/wallets";
 const WALLET_ENDPOINTS = {
   BASE: WALLET_BASE,
@@ -70,11 +45,7 @@ const WALLET_ENDPOINTS = {
   DETAIL_WALLET: (user_id: string) => `${WALLET_BASE}/manage-wallet/${user_id}`,
   UPDATE_STATUS: (id: string) => `${WALLET_BASE}/${id}`,
 } as const;
-import type {
-  TopUpSchemaFormData,
-  DecreaseSchemaFormData,
-} from "@/schemas/walletSchema";
-import { GetAllWalletResponse } from "@/types/wallet";
+
 export const walletService = {
   topUpWallet: async (
     data: TopUpSchemaFormData
@@ -82,7 +53,7 @@ export const walletService = {
     const response = await fetchHttpClient.put<DetailApiResponse<MyWallet>>(
       WALLET_ENDPOINTS.TOP_UP,
       data
-  );
+    );
     return response;
   },
   debitWallet: async (
@@ -101,14 +72,14 @@ export const walletService = {
   }: { page?: number; limit?: number; search?: string } = {}): Promise<
     AxiosResponse<GetAllWalletResponse>
   > => {
-    const response = await fetchHttpClient.mutation<GetAllWalletResponse>(
-      print(GET_ALL_WALLET) , 
+    const response = await fetchHttpClient.query<GetAllWalletResponse>(
+      print(GET_ALL_WALLET),
       {
         params: {
-          limit : limit ,
-          page : page ,
-          search : search
-        }
+          limit: limit,
+          page: page,
+          search: search,
+        },
       }
     );
     return response;
@@ -127,35 +98,41 @@ export const walletService = {
     });
     return response;
   },
-  getWalletOverview: async (): Promise<
-    AxiosResponse<DetailApiResponse<WalletOverview>>
-  > => {
-    const response = await fetchHttpClient.get<
-      DetailApiResponse<WalletOverview>
-    >(WALLET_ENDPOINTS.OVERVIEW);
-    return response;
-  },
-  getDetailWallet: async ({
-    user_id,
-  }: {
-    user_id: string;
-  }): Promise<AxiosResponse<ApiResponse<DetailWallet[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<DetailWallet[]>>(
-      `${WALLET_ENDPOINTS.DETAIL_WALLET(user_id)}` ,
+  // getWalletOverview: async (): Promise<
+  //   AxiosResponse<DetailApiResponse<WalletOverview>>
+  // > => {
+  //   const response = await fetchHttpClient.get<
+  //     DetailApiResponse<WalletOverview>
+  //   >(WALLET_ENDPOINTS.OVERVIEW);
+  //   return response;
+  // },
+  // getDetailWallet: async ({
+  //   user_id,
+  // }: {
+  //   user_id: string;
+  // }): Promise<AxiosResponse<ApiResponse<DetailWallet[]>>> => {
+  //   const response = await fetchHttpClient.get<ApiResponse<DetailWallet[]>>(
+  //     `${WALLET_ENDPOINTS.DETAIL_WALLET(user_id)}` ,
+  //     {
+  //       page : 1,
+  //       limit : 100
+  //     }
+  //   );
+  //   return response;
+  // },
+  updateWalletStatus: async (
+    id: string,
+    newStatus: "ACTIVE" | "BLOCKED"
+  ): Promise<AxiosResponse<UpdateWalletStatusResponse>> => {
+    const response = await fetchHttpClient.mutation<UpdateWalletStatusResponse>(
+      print(UPDATE_STATUS_WALLET),
       {
-        page : 1,
-        limit : 100
+        body: {
+          id: id,
+          status: newStatus,
+        },
       }
     );
     return response;
   },
-  updateStatusWallet: async (
-    id: string,
-    newStatus: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG"
-  ): Promise<AxiosResponse<DetailApiResponse<UpdateWalletStatusResponse>>> => {
-    const response = await fetchHttpClient.patch<
-      DetailApiResponse<UpdateWalletStatusResponse>
-    >(WALLET_ENDPOINTS.UPDATE_STATUS(id), { newStatus });
-    return response;
-  },
-}; 
+};
