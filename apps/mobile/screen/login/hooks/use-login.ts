@@ -1,17 +1,24 @@
-import type { LoginSchemaFormData } from "@schemas/authSchema";
-
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AuthContracts } from "@mebike/shared";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
-import { loginSchema } from "@schemas/authSchema";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Alert, Animated } from "react-native";
+import * as z from "zod";
 
 import type { LoginScreenNavigationProp } from "@/types/navigation";
 
+import { log } from "@/lib/log";
 import { testBackendConnection } from "@/utils/test-connection";
 
 export type BackendStatus = "checking" | "online" | "offline";
+
+const loginSchema = AuthContracts.LoginRequestSchema.extend({
+  email: z.string().min(1, { message: "Email là bắt buộc" }).email("Email không hợp lệ"),
+  password: z.string().min(1, { message: "Mật khẩu là bắt buộc" }),
+});
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function useLogin() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
@@ -24,8 +31,8 @@ export function useLogin() {
     control,
     handleSubmit,
     formState: { errors },
-    setError,
-  } = useForm<LoginSchemaFormData>({
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
@@ -40,22 +47,17 @@ export function useLogin() {
     checkBackend();
   }, []);
 
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      log.warn("Login form errors", { errors });
+    }
+  }, [errors]);
+
   const toggleShowPassword = () => {
     setShowPassword(value => !value);
   };
 
   const submit = handleSubmit(async (data) => {
-    const parsed = loginSchema.safeParse(data);
-    if (!parsed.success) {
-      parsed.error.issues.forEach((issue) => {
-        const field = issue.path[0];
-        if (field === "email" || field === "password") {
-          setError(field, { message: issue.message });
-        }
-      });
-      return;
-    }
-
     const rotationAnimation = Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
@@ -67,7 +69,7 @@ export function useLogin() {
     try {
       setIsSubmitting(true);
       rotationAnimation.start();
-      const { email, password } = parsed.data;
+      const { email, password } = data;
       const result = await login({ email, password });
       if (result) {
         Alert.alert("Đăng nhập thất bại", result._tag === "ApiError" && result.message

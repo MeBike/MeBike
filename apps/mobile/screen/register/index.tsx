@@ -1,9 +1,9 @@
 import { BikeColors } from "@constants/BikeColors";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 
-import LoginForm from "./components/login-form";
-import LoginHeader from "./components/login-header";
-import { useLogin } from "./hooks/use-login";
+import RegisterForm from "./components/register-form";
+import RegisterHeader from "./components/register-header";
+import { useRegister } from "./hooks/use-register";
 
 const styles = StyleSheet.create({
   container: {
@@ -25,39 +25,37 @@ const styles = StyleSheet.create({
   },
 });
 
-function LoginScreen() {
+function RegisterScreen() {
   const {
     control,
     errors,
     showPassword,
-    toggleShowPassword,
-    backendStatus,
-    rotateAnim,
+    setShowPassword,
+    showConfirmPassword,
+    setShowConfirmPassword,
     submit,
     isSubmitting,
-    goToRegister,
     goBack,
-    handleForgotPassword,
-  } = useLogin();
+  } = useRegister();
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <LoginHeader onBack={goBack} backendStatus={backendStatus} />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <RegisterHeader onBack={goBack} />
         <View style={styles.body}>
-          <LoginForm
+          <RegisterForm
             control={control}
             errors={errors}
             showPassword={showPassword}
-            toggleShowPassword={toggleShowPassword}
+            setShowPassword={setShowPassword}
+            showConfirmPassword={showConfirmPassword}
+            setShowConfirmPassword={setShowConfirmPassword}
             onSubmit={submit}
-            onForgotPassword={handleForgotPassword}
-            onRegister={goToRegister}
+            onGoToLogin={goBack}
             isSubmitting={isSubmitting}
-            rotateAnim={rotateAnim}
           />
         </View>
       </ScrollView>
@@ -65,4 +63,4 @@ function LoginScreen() {
   );
 }
 
-export default LoginScreen;
+export default RegisterScreen;

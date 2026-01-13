@@ -1,6 +1,7 @@
 import type { LoginSchemaFormData } from "@schemas/authSchema";
 import type { Control, FieldErrors } from "react-hook-form";
 
+import { AuthSegmentedToggle } from "@components/auth-segmented-toggle";
 import { IconSymbol } from "@components/IconSymbol";
 import { BikeColors } from "@constants/BikeColors";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +12,9 @@ const styles = StyleSheet.create({
   formContainer: {
     flex: 1,
     padding: 20,
+  },
+  segmentedToggle: {
+    marginBottom: 18,
   },
   inputContainer: {
     marginBottom: 14,
@@ -28,13 +32,17 @@ const styles = StyleSheet.create({
     borderColor: BikeColors.divider,
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: "white",
+    paddingVertical: 8,
+    minHeight: 48,
+    backgroundColor: BikeColors.background,
   },
   inputIconStyle: {
     flex: 1,
     marginLeft: 10,
-    fontSize: 15,
+    fontSize: 14,
+    lineHeight: 20,
+    paddingVertical: 0,
+    includeFontPadding: false,
     color: BikeColors.textPrimary,
   },
   eyeButton: {
@@ -65,20 +73,6 @@ const styles = StyleSheet.create({
   loginButtonText: {
     color: "white",
     fontSize: 18,
-    fontWeight: "600",
-  },
-  registerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  registerText: {
-    color: BikeColors.textSecondary,
-    fontSize: 16,
-  },
-  registerLink: {
-    color: BikeColors.primary,
-    fontSize: 16,
     fontWeight: "600",
   },
   errorText: {
@@ -113,6 +107,14 @@ function LoginForm({
 }: LoginFormProps) {
   return (
     <View style={styles.formContainer}>
+      <View style={styles.segmentedToggle}>
+        <AuthSegmentedToggle
+          value="login"
+          onChange={(next) => {
+            if (next === "register") onRegister();
+          }}
+        />
+      </View>
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Email</Text>
         <View style={styles.inputWithIcon}>
@@ -213,12 +215,6 @@ function LoginForm({
               <Text style={styles.loginButtonText}>Đăng nhập</Text>
             )}
       </Pressable>
-      <View style={styles.registerContainer}>
-        <Text style={styles.registerText}>Chưa có tài khoản? </Text>
-        <Pressable onPress={onRegister}>
-          <Text style={styles.registerLink}>Đăng ký ngay</Text>
-        </Pressable>
-      </View>
     </View>
   );
 }

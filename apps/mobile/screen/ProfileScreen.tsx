@@ -1,8 +1,14 @@
+import type { DetailUser } from "@services/auth.service";
+
+import { VerifyEmailModal } from "@components/VerifyEmailModal";
 import { Ionicons } from "@expo/vector-icons";
+import { useGetRentalCountsQuery } from "@hooks/query/Rent/useGetRentalCountsQuery";
+import { useAuth } from "@providers/auth-providers";
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
-import { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { getRefreshToken } from "@utils/tokenManager";
+import { LinearGradient } from "expo-linear-gradient";
+import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -15,13 +21,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import type { DetailUser } from "@services/auth.service";
-
-import { useAuth } from "@providers/auth-providers";
-import { getRefreshToken } from "@utils/tokenManager";
-import { VerifyEmailModal } from "@components/VerifyEmailModal";
-import { useGetRentalCountsQuery } from "@hooks/query/Rent/useGetRentalCountsQuery";
 
 function ProfileScreen() {
   const navigation = useNavigation();
@@ -124,7 +123,7 @@ function ProfileScreen() {
   };
   const handleSOS = () => {
     navigation.navigate("MySOS" as never);
-  }
+  };
 
   const handleSubscriptions = () => {
     navigation.navigate("Subscriptions" as never);
@@ -141,9 +140,11 @@ function ProfileScreen() {
       await resendVerifyEmail();
       Alert.alert("Success", "Mã OTP mới đã được gửi đến email của bạn!");
       setIsVerifyEmailModalOpen(true);
-    } catch (error) {
+    }
+    catch (error) {
       console.log("Resend OTP error:", error);
-    } finally {
+    }
+    finally {
       setIsResendingOtp(false);
     }
   };
@@ -156,7 +157,8 @@ function ProfileScreen() {
         setIsVerifyEmailModalOpen(false);
       }, 500);
       // Profile will auto-update via useEffect from user context
-    } catch (error) {
+    }
+    catch (error) {
       console.log("Verify email error:", error);
       // Error alert already shown by verifyEmail function
     }
@@ -273,7 +275,9 @@ function ProfileScreen() {
             }}
             numberOfLines={1}
           >
-            Thành viên từ {formatDate(profile.created_at)}
+            Thành viên từ
+            {" "}
+            {formatDate(profile.created_at)}
           </Text>
           <View
             style={{
@@ -331,7 +335,7 @@ function ProfileScreen() {
               "help-circle",
               "Báo cáo sự cố xe đạp",
               "Liên hệ với đội hỗ trợ",
-              handleSupport
+              handleSupport,
             )}
             {isCustomer && (
               <>
@@ -339,19 +343,19 @@ function ProfileScreen() {
                   "ribbon",
                   "Gói tháng",
                   "Ưu đãi và lịch sử gói",
-                  handleSubscriptions
+                  handleSubscriptions,
                 )}
                 {renderMenuOption(
                   "calendar",
                   "Đặt trước của tôi",
                   "Theo dõi các lượt đặt trước",
-                  handleReservations
+                  handleReservations,
                 )}
                 {renderMenuOption(
                   "medical",
                   "Yêu cầu cứu hộ của tôi",
                   "Theo dõi các yêu cầu cứu hộ",
-                  handleSOS
+                  handleSOS,
                 )}
               </>
             )}
@@ -364,7 +368,7 @@ function ProfileScreen() {
               <View style={styles.emailVerificationCard}>
                 <View style={styles.verificationStatusRow}>
                   <View style={styles.verificationStatusLeft}>
-                    <Ionicons name={"mail"} size={24} color={"#FFA500"} />
+                    <Ionicons name="mail" size={24} color="#FFA500" />
                     <View style={styles.verificationStatusContent}>
                       <Text style={styles.verificationStatusTitle}>
                         Email Chưa Xác Thực
@@ -410,13 +414,13 @@ function ProfileScreen() {
               "person-outline",
               "Thông tin cá nhân",
               "Quản lý thông tin cá nhân của bạn",
-              handleUpdateProfile
+              handleUpdateProfile,
             )}
             {renderMenuOption(
               "lock-closed",
               "Đổi mật khẩu",
               "Cập nhật mật khẩu của bạn",
-              handleChangePassword
+              handleChangePassword,
             )}
             <TouchableOpacity
               style={styles.logoutButton}

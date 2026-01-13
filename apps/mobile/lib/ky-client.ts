@@ -2,6 +2,7 @@ import type { Options } from "ky";
 
 import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@lib/auth-tokens";
 import { routePath, ServerRoutes } from "@lib/server-routes";
+import { StatusCodes } from "http-status-codes";
 import ky from "ky";
 
 import { API_BASE_URL } from "@/lib/api-base-url";
@@ -15,11 +16,6 @@ type RefreshEnvelope = {
     accessToken?: string;
     refreshToken?: string;
   };
-};
-
-const HTTP_STATUS = {
-  OK: 200,
-  UNAUTHORIZED: 401,
 };
 
 let refreshPromise: Promise<string | null> | null = null;
@@ -38,7 +34,7 @@ async function refreshAccessToken(): Promise<string | null> {
       body: JSON.stringify({ refreshToken }),
     });
 
-    if (response.status !== HTTP_STATUS.OK) {
+    if (response.status !== StatusCodes.OK) {
       await clearTokens();
       return null;
     }
@@ -82,7 +78,7 @@ export const kyClient = ky.create({
     afterResponse: [
       async (request, options, response, state) => {
         const { skipAuth } = options as KyRequestOptions;
-        if (skipAuth || response.status !== HTTP_STATUS.UNAUTHORIZED) {
+        if (skipAuth || response.status !== StatusCodes.UNAUTHORIZED) {
           return response;
         }
 

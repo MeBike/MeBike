@@ -7,6 +7,7 @@ import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
 import { AuthContracts } from "@mebike/shared";
+import { StatusCodes } from "http-status-codes";
 
 import type { ApiAuthError, AuthError } from "./auth-error";
 
@@ -14,12 +15,9 @@ export type Tokens = z.output<typeof AuthContracts.TokensSchema>;
 
 export type LoginRequest = z.output<typeof AuthContracts.LoginRequestSchema>;
 
-export type RefreshRequest = z.output<typeof AuthContracts.RefreshRequestSchema>;
+export type RegisterRequest = z.output<typeof AuthContracts.RegisterRequestSchema>;
 
-const HTTP_STATUS = {
-  OK: 200,
-  UNAUTHORIZED: 401,
-};
+export type RefreshRequest = z.output<typeof AuthContracts.RefreshRequestSchema>;
 
 async function parseAuthError(response: Response): Promise<AuthError> {
   try {
@@ -60,7 +58,7 @@ export const authService = {
         skipAuth: true,
       });
 
-      if (response.status === HTTP_STATUS.OK) {
+      if (response.status === StatusCodes.OK) {
         const tokens = await parseTokens(response);
         if (tokens.ok) {
           await setTokens(tokens.value.accessToken, tokens.value.refreshToken);
@@ -68,7 +66,37 @@ export const authService = {
         return tokens;
       }
 
-      if (response.status === HTTP_STATUS.UNAUTHORIZED) {
+      if (response.status === StatusCodes.UNAUTHORIZED) {
+        return err(await parseAuthError(response));
+      }
+
+      return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
+    }
+    catch (error) {
+      return err({
+        _tag: "NetworkError",
+        message: error instanceof Error ? error.message : undefined,
+      });
+    }
+  },
+
+  register: async (payload: RegisterRequest): Promise<Result<Tokens, AuthError>> => {
+    try {
+      const response = await kyClient.post(routePath(ServerRoutes.auth.register), {
+        json: payload,
+        throwHttpErrors: false,
+        skipAuth: true,
+      });
+
+      if (response.status === StatusCodes.CREATED) {
+        const tokens = await parseTokens(response);
+        if (tokens.ok) {
+          await setTokens(tokens.value.accessToken, tokens.value.refreshToken);
+        }
+        return tokens;
+      }
+
+      if (response.status === StatusCodes.CONFLICT) {
         return err(await parseAuthError(response));
       }
 
@@ -90,7 +118,7 @@ export const authService = {
         skipAuth: true,
       });
 
-      if (response.status === HTTP_STATUS.OK) {
+      if (response.status === StatusCodes.OK) {
         const tokens = await parseTokens(response);
         if (tokens.ok) {
           await setTokens(tokens.value.accessToken, tokens.value.refreshToken);
@@ -98,7 +126,7 @@ export const authService = {
         return tokens;
       }
 
-      if (response.status === HTTP_STATUS.UNAUTHORIZED) {
+      if (response.status === StatusCodes.UNAUTHORIZED) {
         return err(await parseAuthError(response));
       }
 
@@ -120,12 +148,12 @@ export const authService = {
         skipAuth: true,
       });
 
-      if (response.status === HTTP_STATUS.OK) {
+      if (response.status === StatusCodes.OK) {
         await clearTokens();
         return ok(undefined);
       }
 
-      if (response.status === HTTP_STATUS.UNAUTHORIZED) {
+      if (response.status === StatusCodes.UNAUTHORIZED) {
         return err(await parseAuthError(response));
       }
 

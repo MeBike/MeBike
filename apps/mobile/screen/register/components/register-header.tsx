@@ -1,9 +1,8 @@
-import { IconSymbol } from "@components/IconSymbol";
-import { BikeColors } from "@constants/BikeColors";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import BackendStatusIndicator from "./backend-status";
+import { IconSymbol } from "../../../components/IconSymbol";
+import { BikeColors } from "../../../constants/BikeColors";
 
 const styles = StyleSheet.create({
   header: {
@@ -30,14 +29,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "rgba(255, 255, 255, 0.9)",
   },
+  statusSpacer: {
+    marginTop: 12,
+    height: 16,
+  },
 });
 
-type LoginHeaderProps = {
+type RegisterHeaderProps = {
   onBack: () => void;
-  backendStatus: "checking" | "online" | "offline";
 };
 
-function LoginHeader({ onBack, backendStatus }: LoginHeaderProps) {
+function RegisterHeader({ onBack }: RegisterHeaderProps) {
   return (
     <LinearGradient
       colors={[BikeColors.primary, BikeColors.secondary]}
@@ -49,12 +51,12 @@ function LoginHeader({ onBack, backendStatus }: LoginHeaderProps) {
 
       <View style={styles.headerContent}>
         <IconSymbol name="bicycle" size={44} color="white" />
-        <Text style={styles.headerTitle}>Đăng nhập</Text>
-        <Text style={styles.headerSubtitle}>Chào mừng bạn trở lại!</Text>
-        <BackendStatusIndicator backendStatus={backendStatus} />
+        <Text style={styles.headerTitle}>Tạo tài khoản</Text>
+        <Text style={styles.headerSubtitle}>Tham gia cộng đồng MeBike</Text>
+        <View style={styles.statusSpacer} />
       </View>
     </LinearGradient>
   );
 }
 
-export default LoginHeader;
+export default RegisterHeader;

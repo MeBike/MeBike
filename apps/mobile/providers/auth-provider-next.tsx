@@ -17,6 +17,9 @@ type AuthContextValue = {
   lastError: UserError | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isStaff: boolean;
+  isCustomer: boolean;
+  isSOS: boolean;
   login: (payload: import("@services/auth/auth-service").LoginRequest) => Promise<AuthError | UserError | null>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
@@ -102,12 +105,16 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const value = useMemo<AuthContextValue>(() => {
+    const role = user?.role;
     return {
       status,
       user,
       lastError,
       isAuthenticated: status === "authenticated",
       isLoading: status === "loading",
+      isStaff: role === "STAFF",
+      isCustomer: role === "USER",
+      isSOS: role === "SOS",
       login,
       logout,
       hydrate,
