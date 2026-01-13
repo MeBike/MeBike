@@ -14,6 +14,7 @@ import { useGetDetailWalletQuery } from "./query/Wallet/useGetDetailWalletQuery"
 import { useUpdateStatusWalletMutation } from "./mutations/Wallet/useUpdateStatusWalletMutation";
 import { useRouter } from "next/navigation";
 import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index";
+import { UpdateWalletStatusResponse } from "@/types/wallet";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -148,7 +149,7 @@ export function useWalletActions(
   }, [isRefetchingDetailWallet, hasToken]);
   const useUpdateWallet = useUpdateStatusWalletMutation();
   const updateStatusWallet = useCallback(
-    (newStatus: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG", id: string) => {
+    (newStatus: "ACTIVE" | "BLOCKED", id: string) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -156,19 +157,15 @@ export function useWalletActions(
       useUpdateWallet.mutate(
         { id, newStatus },
         {
-          onSuccess: (result: {
-            status: number;
-            data?: { message?: string };
-          }) => {
-            if (result.status === HTTP_STATUS.OK) {
-              toast.success(result.data?.message || MESSAGE.UPDATE_STATUS_WALLET_SUCCESS);
+          onSuccess: (result) => {
+            if (result.status === HTTP_STATUS.OK && result.data?.data?.UpdateWalletStatus.success) {
+              toast.success(result.data?.data?.UpdateWalletStatus.message || MESSAGE.UPDATE_STATUS_WALLET_SUCCESS);
               queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
+                queryKey: ["all-wallet-users"],
               });
-            } else {
-              const errorMessage =
-                result.data?.message || MESSAGE.UPDATE_STATUS_WALLET_FAILED;
-              toast.error(errorMessage);
+              queryClient.invalidateQueries({
+                queryKey: ["wallet-overview"],
+              });
             }
           },
           onError: (error) => {

@@ -7,7 +7,7 @@ export const useUpdateStatusWalletMutation = () => {
       newStatus,
     }: {
       id: string;
-      newStatus: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG";
-    }) => walletService.updateStatusWallet(id, newStatus),
+      newStatus: "ACTIVE" | "BLOCKED";
+    }) => walletService.updateWalletStatus(id, newStatus),
   });
 };

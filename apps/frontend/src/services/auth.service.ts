@@ -22,7 +22,7 @@ import {
   RESET_PASSWORD,
   VERIFY_EMAIL,
   VERIFY_EMAIL_PROCESS
-} from "@/graphql";
+} from "@graphql";
 import {print} from "graphql"
 import {
   LoginResponse,

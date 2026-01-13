@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetAllUserQuery } from "./query/User/useGetAllUserQuery";
-import { use, useCallback } from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { VerifyStatus } from "@/types";
@@ -18,8 +18,6 @@ import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
 import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
 import { getErrorMessage } from "@/utils/message";
-import type { Me } from "@/types/GraphQL";
-import type { DetailUser } from "@/services/auth.service";
 import { useChangeStatusMutation } from "./mutations/User/useChangeStatusMutation";
 export const useUserActions = ({
   hasToken,
