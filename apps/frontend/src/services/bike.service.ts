@@ -125,9 +125,11 @@ export const bikeService = {
   getAllBikes: async ({
     limit,
     page,
+    search,
   }: {
     limit?: number;
     page?: number;
+    search?: string;
   }): Promise<AxiosResponse<GetBikesResponse>> => {
     const response = await fetchHttpClient.query<GetBikesResponse>(
       print(GET_BIKES),
@@ -135,6 +137,7 @@ export const bikeService = {
         params: {
           limit: limit ?? 10,
           page: page ?? 1,
+          search : search
         },
       }
     );
