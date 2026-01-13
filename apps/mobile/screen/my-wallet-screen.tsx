@@ -226,43 +226,16 @@ function MyWalletScreen() {
   };
 
   const currentData = getCurrentData();
-  if (currentData.length === 0) {
-    return (
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
-        {renderListHeader()}
-        {renderEmptyState()}
-        <TopUpModal
-          visible={showTopUp}
-          onClose={() => setShowTopUp(false)}
-          onConfirm={handleConfirmTopUp}
-        />
-        <TransactionDetailModal
-          visible={showTransactionDetail}
-          onClose={() => setShowTransactionDetail(false)}
-          transaction={selectedTransaction}
-        />
-        <WithdrawDetailModal
-          visible={showWithdrawDetail}
-          onClose={() => setShowWithdrawDetail(false)}
-          withdrawal={selectedWithdraw}
-        />
-        {/* <RefundDetailModal
-          visible={showRefundDetail}
-          onClose={() => setShowRefundDetail(false)}
-          refund={selectedRefund}
-        /> */}
-      </View>
-    );
-  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
       <FlatList
         data={currentData}
         renderItem={renderItem}
-        keyExtractor={item => item._id}
+        keyExtractor={(item, index) => item._id || index.toString()}
         ListHeaderComponent={renderListHeader}
+        ListEmptyComponent={renderEmptyState}
         ListFooterComponent={renderFooter}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
