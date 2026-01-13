@@ -48,6 +48,7 @@ export const useUserActions = ({
     page,
     limit,
     role: role || "",
+    search: searchQuery || "",
     verify: verify || "",
   });
   const {
