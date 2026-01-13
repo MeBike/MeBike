@@ -3,6 +3,6 @@ import { walletService } from "@services/wallet.service";
 export function useCreatePaymentMutation() {
   return useMutation({
     mutationFn: ({accountId , amount} : {accountId : string , amount : number}) =>
-      walletService.createPaymnet({accountId , amount}),
+      walletService.createPayment({accountId , amount}),
   });
 }

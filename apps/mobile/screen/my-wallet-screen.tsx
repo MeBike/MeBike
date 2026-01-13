@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { MyWalletNavigationProp } from "../types/navigation";
 import { LoadingScreen } from "../components/LoadingScreen";
 import { LoadingSpinner } from "../components/wallet/loading-spinner";
-import { QRModal } from "../components/wallet/qr-modal";
+import { TopUpModal } from "../components/wallet/top-up-modal";
 import { RefundDetailModal } from "../components/wallet/refund-detail-modal";
 import { TransactionDetailModal } from "../components/wallet/transaction-detail-modal";
 import { TransactionItem } from "../components/wallet/transaction-item";
@@ -17,10 +17,12 @@ import { WithdrawDetailModal } from "../components/wallet/withdraw-detail-modal"
 import { useWallet } from "../hooks/wallet/use-wallet";
 import { myWalletScreenStyles as styles } from "../styles/wallet/my-wallet-screen";
 import { TAB_TYPES } from "../utils/wallet/constants";
+import { useAuth } from "@/providers/auth-providers";
 
 function MyWalletScreen() {
   const navigation = useNavigation<MyWalletNavigationProp>();
-  const [showQR, setShowQR] = useState(false);
+  const [showTopUp, setShowTopUp] = useState(false);
+  const {user} = useAuth()
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"transactions" | "withdrawals" | "refunds">("transactions");
   const [showTransactionDetail, setShowTransactionDetail] = useState(false);
@@ -47,7 +49,7 @@ function MyWalletScreen() {
   };
 
   const handleTopUp = () => {
-    setShowQR(true);
+    setShowTopUp(true);
   };
 
   const handleWithdraw = () => {
@@ -62,7 +64,14 @@ function MyWalletScreen() {
     console.log(wallet.myWallet);
     return <LoadingSpinner message="Chưa có ví nào" />;
   }
-
+  const handleConfirmTopUp = (amount: number) => {
+    if (user?.accountId) {
+      wallet.createPayment({ accountId: user.accountId, amount });
+    }
+    else {
+      alert("Không tìm thấy thông tin tài khoản");
+    }
+  };
   const renderListHeader = () => (
     <>
       <LinearGradient
@@ -223,10 +232,10 @@ function MyWalletScreen() {
         <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
         {renderListHeader()}
         {renderEmptyState()}
-        <QRModal
-          visible={showQR}
-          onClose={() => setShowQR(false)}
-          userId={wallet.myWallet?.accountId || ""}
+        <TopUpModal
+          visible={showTopUp}
+          onClose={() => setShowTopUp(false)}
+          onConfirm={handleConfirmTopUp}
         />
         <TransactionDetailModal
           visible={showTransactionDetail}
@@ -272,10 +281,10 @@ function MyWalletScreen() {
           />
         }
       />
-      <QRModal
-        visible={showQR}
-        onClose={() => setShowQR(false)}
-        userId={wallet.myWallet?.accountId || ""}
+      <TopUpModal
+        visible={showTopUp}
+        onClose={() => setShowTopUp(false)}
+        onConfirm={handleConfirmTopUp}
       />
       <TransactionDetailModal
         visible={showTransactionDetail}

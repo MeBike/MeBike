@@ -1,11 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
+import { Linking } from "react-native";
 
 import type { Transaction } from "@services/wallet.service";
 
 import { useGetMyTransactionsQuery } from "./query/Wallet/useGetMyTransactionQuery";
 import { useGetMyWalletQuery } from "./query/Wallet/useGetMyWalletQuery";
-
+import { useCreatePaymentMutation } from "./mutations/Wallet/useCreatePayment";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -74,6 +75,34 @@ export function useWalletActions(hasToken: boolean, limit: number = 5) {
     return deduped;
   }, [useGetMyTransaction.data]);
   const totalTransactions = useGetMyTransaction.data?.pages[0]?.pagination?.totalRecords || 0;
+  const useCreatePayment = useCreatePaymentMutation();
+  const createPayment = useCallback(
+    async ({accountId , amount} : {accountId : string , amount : number}) => {
+      if (!hasToken) {
+        return;
+      }
+      useCreatePayment.mutate({accountId , amount} , {
+        onSuccess : async ( result : any ) => {
+          if (result.status === 200) {
+            const paymentUrl = result.data?.data?.CreatePayment.data?.paymentUrl;
+            if (paymentUrl) {
+              await Linking.openURL(paymentUrl);
+            } else {
+              alert(result.data?.data?.CreatePayment.message || "Payment created successfully");
+            }
+            await queryClient.invalidateQueries({
+              queryKey: ["my-wallet"],
+              refetchType: "all",
+            });
+            await refetch();
+          }
+        },
+        onError : (error) => {
+          const errorMessage = getErrorMessage(error, "Failed to create payment");
+          alert(errorMessage);
+        }
+      })
+    },[hasToken,useCreatePayment])
   return {
     getMyWallet,
     myWallet: response,
@@ -85,5 +114,6 @@ export function useWalletActions(hasToken: boolean, limit: number = 5) {
     hasNextPageTransactions: useGetMyTransaction.hasNextPage,
     isFetchingNextPageTransactions: useGetMyTransaction.isFetchingNextPage,
     totalTransactions,
+    createPayment,
   };
 }

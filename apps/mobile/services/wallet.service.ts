@@ -50,7 +50,7 @@ export const walletService = {
       print(GET_MY_WALLET)
     );
   },
-  createPaymnet: async ({accountId , amount} : {accountId : string , amount : number}): Promise<AxiosResponse<CreatePaymentResponse>> => {
+  createPayment: async ({accountId , amount} : {accountId : string , amount : number}): Promise<AxiosResponse<CreatePaymentResponse>> => {
     return await fetchHttpClient.mutation<CreatePaymentResponse>(
       print(CREATE_PAYMENT) ,
       {
