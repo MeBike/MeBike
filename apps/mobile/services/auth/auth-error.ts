@@ -1,8 +1,12 @@
-import type { ServerContracts } from "@mebike/shared";
-
 export type AuthError = ApiAuthError | NetworkAuthError | DecodeAuthError | UnknownAuthError;
 
-type AuthErrorCode = ServerContracts.AuthContracts.AuthErrorResponse["details"]["code"];
+export type AuthErrorCode
+  = | "INVALID_CREDENTIALS"
+    | "INVALID_REFRESH_TOKEN"
+    | "INVALID_OTP"
+    | "DUPLICATE_EMAIL"
+    | "DUPLICATE_PHONE_NUMBER"
+    | "UNKNOWN";
 
 export type ApiAuthError = {
   _tag: "ApiError";

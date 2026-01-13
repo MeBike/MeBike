@@ -1,9 +1,8 @@
+import { AuthContracts } from "@mebike/shared";
 import * as z from "zod";
 
 const vietnamesePhoneNumberRegex = /^(0[3|5789])+(\d{8})\b/;
-export const loginSchema = z.object({
-  email: z.email({ message: "Email không hợp lệ" }),
-  password: z.string().min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
+export const loginSchema = AuthContracts.LoginRequestSchema.extend({
   rememberMe: z.boolean().optional(),
 });
 export type LoginSchemaFormData = z.infer<typeof loginSchema>;

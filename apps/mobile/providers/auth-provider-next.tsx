@@ -1,4 +1,3 @@
-import type { ServerContracts } from "@mebike/shared";
 import type { AuthError } from "@services/auth/auth-error";
 import type { UserError } from "@services/users/user-error";
 
@@ -8,7 +7,7 @@ import { authService } from "@services/auth/auth-service";
 import { userService } from "@services/users/user-service";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-type UserDetail = ServerContracts.UsersContracts.UserDetail;
+type UserDetail = import("@services/users/user-service").UserDetail;
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
@@ -18,7 +17,7 @@ type AuthContextValue = {
   lastError: UserError | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (payload: ServerContracts.AuthContracts.LoginRequest) => Promise<AuthError | UserError | null>;
+  login: (payload: import("@services/auth/auth-service").LoginRequest) => Promise<AuthError | UserError | null>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
 };
@@ -47,11 +46,9 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
 
       if (meResult.error._tag === "ApiError" && meResult.error.code === "UNAUTHORIZED") {
         await clearTokens();
-        setStatus("unauthenticated");
-        return;
       }
 
-      setStatus("loading");
+      setStatus("unauthenticated");
       return;
     }
 
@@ -66,7 +63,7 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const login = useCallback(
     async (
-      payload: ServerContracts.AuthContracts.LoginRequest,
+      payload: import("@services/auth/auth-service").LoginRequest,
     ): Promise<AuthError | UserError | null> => {
       setStatus("loading");
       const result = await authService.login(payload);

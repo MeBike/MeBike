@@ -1,16 +1,20 @@
 import type { Result } from "@lib/result";
+import type { z } from "zod";
 
+import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { clearTokens, setTokens } from "@lib/auth-tokens";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
-import { ServerContracts } from "@mebike/shared";
+import { AuthContracts } from "@mebike/shared";
 
-import type { AuthError } from "./auth-error";
+import type { ApiAuthError, AuthError } from "./auth-error";
 
-type Tokens = ServerContracts.AuthContracts.Tokens;
-type LoginRequest = ServerContracts.AuthContracts.LoginRequest;
-type RefreshRequest = ServerContracts.AuthContracts.RefreshRequest;
+export type Tokens = z.output<typeof AuthContracts.TokensSchema>;
+
+export type LoginRequest = z.output<typeof AuthContracts.LoginRequestSchema>;
+
+export type RefreshRequest = z.output<typeof AuthContracts.RefreshRequestSchema>;
 
 const HTTP_STATUS = {
   OK: 200,
@@ -19,13 +23,13 @@ const HTTP_STATUS = {
 
 async function parseAuthError(response: Response): Promise<AuthError> {
   try {
-    const data = await response.json();
-    const parsed = ServerContracts.AuthContracts.AuthErrorResponseSchema.safeParse(data);
-    if (parsed.success) {
+    const data = await readJson(response);
+    const parsed = decodeWithSchema(AuthContracts.AuthErrorResponseSchema, data);
+    if (parsed.ok) {
       return {
         _tag: "ApiError",
-        code: parsed.data.details.code,
-        message: parsed.data.error,
+        code: parsed.value.details.code as ApiAuthError["code"],
+        message: parsed.value.error,
       };
     }
   }
@@ -33,17 +37,14 @@ async function parseAuthError(response: Response): Promise<AuthError> {
     return { _tag: "DecodeError" };
   }
 
-  return { _tag: "UnknownError" };
+  return { _tag: "UnknownError", message: "Unknown auth error" };
 }
 
 async function parseTokens(response: Response): Promise<Result<Tokens, AuthError>> {
   try {
-    const data = await response.json();
-    const parsed = ServerContracts.AuthContracts.TokensEnvelopeSchema.safeParse(data);
-    if (!parsed.success) {
-      return err({ _tag: "DecodeError" });
-    }
-    return ok(parsed.data.data);
+    const data = await readJson(response);
+    const parsed = decodeWithSchema(AuthContracts.TokensEnvelopeSchema, data);
+    return parsed.ok ? ok(parsed.value.data) : err({ _tag: "DecodeError" });
   }
   catch {
     return err({ _tag: "DecodeError" });

@@ -1,30 +1,31 @@
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 import type { RouteProp } from "@react-navigation/native";
 // Common navigation hook types
 import type { StackNavigationProp } from "@react-navigation/stack";
 
-// Navigation Types for React Navigation
-import type { Reservation } from "./reservation-types";
-import type { Bike } from "./BikeTypes";
-import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
 import type { ResolveSOSSchema } from "@/schema/sosSchema";
 
+import type { Bike } from "./BikeTypes";
+// Navigation Types for React Navigation
+import type { Reservation } from "./reservation-types";
+
 export type RootStackParamList = {
-  Booking: undefined;
-  Tôi: undefined;
-  Main: undefined;
-  Nhà: undefined;
-  Login: undefined;
-  Intro: undefined;
-  Register: undefined;
-  EmailVerification: { email: string };
-  StationDetail: { stationId: string };
-  Trạm: undefined;
-  Modal: undefined;
-  FormSheet: undefined;
-  TransparentModal: undefined;
-  Wallet: undefined;
-  BookingHistoryDetail: { bookingId: string };
-  BikeDetail: {
+  "Booking": undefined;
+  "Tôi": undefined;
+  "Main": undefined;
+  "Nhà": undefined;
+  "Login": undefined;
+  "Intro": undefined;
+  "Register": undefined;
+  "EmailVerification": { email: string };
+  "StationDetail": { stationId: string };
+  "Trạm": undefined;
+  "Modal": undefined;
+  "FormSheet": undefined;
+  "TransparentModal": undefined;
+  "Wallet": undefined;
+  "BookingHistoryDetail": { bookingId: string };
+  "BikeDetail": {
     bike: Bike;
     station: {
       id: string;
@@ -32,44 +33,44 @@ export type RootStackParamList = {
       address: string;
     };
   };
-  StaffRentalDetail: { rentalId: string };
-  StaffPhoneLookup: undefined;
-  RentalQr: { bookingId: string };
-  ChangePassword: undefined;
-  ForgotPassword: undefined;
-  ResetPasswordOTP: { email: string };
-  ResetPasswordForm: { email: string; otp: string };
-  UpdateProfile: undefined;
-  MyWallet: undefined;
-  Ví: undefined;
-  Subscriptions: undefined;
-  Xe: undefined;
-  Reservations: undefined;
-  ReservationDetail: {
+  "StaffRentalDetail": { rentalId: string };
+  "StaffPhoneLookup": undefined;
+  "RentalQr": { bookingId: string };
+  "ChangePassword": undefined;
+  "ForgotPassword": undefined;
+  "ResetPasswordOTP": { email: string };
+  "ResetPasswordForm": { email: string; otp: string };
+  "UpdateProfile": undefined;
+  "MyWallet": undefined;
+  "Ví": undefined;
+  "Subscriptions": undefined;
+  "Xe": undefined;
+  "Reservations": undefined;
+  "ReservationDetail": {
     reservationId: string;
     reservation?: Reservation;
   };
   "SOS Dashboard": undefined;
-  ResolveSOSScreen: {
+  "ResolveSOSScreen": {
     sosId: string;
     solvable: boolean;
     onSubmit: (data: ResolveSOSSchema) => Promise<void>;
   };
-  CreateSOSRequest: {
+  "CreateSOSRequest": {
     rentalId: string;
   };
-  MySOS: undefined;
-  MySOSDetail: {
+  "MySOS": undefined;
+  "MySOSDetail": {
     sosId: string;
   };
-  SOSAgentDetail: {
+  "SOSAgentDetail": {
     sosId: string;
   };
-  ResolveSOSForm: {
+  "ResolveSOSForm": {
     sosId: string;
     solvable: boolean;
   };
-  ReservationFlow: {
+  "ReservationFlow": {
     stationId: string;
     stationName?: string;
     stationAddress?: string;
@@ -79,30 +80,30 @@ export type RootStackParamList = {
     initialSubscriptionId?: string;
     lockPaymentSelection?: boolean;
   };
-  FixedSlotTemplates: {
+  "FixedSlotTemplates": {
     stationId?: string;
     stationName?: string;
   };
-  FixedSlotDetail: {
+  "FixedSlotDetail": {
     templateId: string;
   };
-  FixedSlotEditor: {
+  "FixedSlotEditor": {
     stationId?: string;
     stationName?: string;
     templateId?: string;
   };
-  TransactionDetail: { transactionId: string };
-  WithdrawDetail: { withdrawId: string };
-  Withdraw: undefined;
-  RefundDetail: { refundId: string };
-  Support: undefined;
-  ReportDetail: { reportId: string };
-  Report: {
+  "TransactionDetail": { transactionId: string };
+  "WithdrawDetail": { withdrawId: string };
+  "Withdraw": undefined;
+  "RefundDetail": { refundId: string };
+  "Support": undefined;
+  "ReportDetail": { reportId: string };
+  "Report": {
     bike_id?: string;
     station_id?: string;
     rental_id?: string;
   };
-  QRScanner: undefined;
+  "QRScanner": undefined;
   "Công cụ": undefined;
 };
 export type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, "Nhà">;
@@ -208,4 +209,3 @@ export type ReportScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "Report"
 >;
-

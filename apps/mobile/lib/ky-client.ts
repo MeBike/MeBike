@@ -35,7 +35,7 @@ async function refreshAccessToken(): Promise<string | null> {
     const response = await fetch(`${API_BASE_URL}/${routePath(ServerRoutes.auth.refresh)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
+      body: JSON.stringify({ refreshToken }),
     });
 
     if (response.status !== HTTP_STATUS.OK) {

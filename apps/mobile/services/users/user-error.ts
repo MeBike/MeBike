@@ -1,10 +1,11 @@
-import type { ServerContracts } from "@mebike/shared";
-
 export type UserError = ApiUserError | NetworkUserError | DecodeUserError | UnknownUserError;
 
-type UserErrorCode
-  = | ServerContracts.UnauthorizedErrorResponse["details"]["code"]
-    | ServerContracts.UsersContracts.UserErrorResponse["details"]["code"];
+export type UserErrorCode
+  = | "UNAUTHORIZED"
+    | "USER_NOT_FOUND"
+    | "DUPLICATE_EMAIL"
+    | "DUPLICATE_PHONE_NUMBER"
+    | "UNKNOWN";
 
 export type ApiUserError = {
   _tag: "ApiError";

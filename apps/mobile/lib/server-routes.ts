@@ -1,8 +1,17 @@
-import { ServerContracts } from "@mebike/shared";
+import { serverRoutes } from "@mebike/shared";
 
-export const ServerRoutes = ServerContracts.serverRoutes;
+type RouteWithPath = {
+  path: string;
+  getRoutingPath?: () => string;
+};
 
-export function routePath(route: { getRoutingPath: () => string }): string {
-  const path = route.getRoutingPath();
+export const ServerRoutes = serverRoutes;
+
+export function routePath(routeOrPath: RouteWithPath | string): string {
+  const path = typeof routeOrPath === "string"
+    ? routeOrPath
+    : routeOrPath.getRoutingPath
+      ? routeOrPath.getRoutingPath()
+      : routeOrPath.path;
   return path.startsWith("/") ? path.slice(1) : path;
 }

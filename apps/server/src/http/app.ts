@@ -15,6 +15,7 @@ import logger from "@/lib/logger";
 
 import { registerAuthRoutes } from "./routes/auth";
 import { registerBikeRoutes } from "./routes/bikes";
+import { registerHealthRoutes } from "./routes/health";
 import { registerRatingRoutes } from "./routes/ratings";
 import { registerRentalRoutes } from "./routes/rentals";
 import { registerReservationRoutes } from "./routes/reservations";
@@ -88,6 +89,7 @@ export function createHttpApp() {
   );
 
   registerStationRoutes(app);
+  registerHealthRoutes(app);
   registerBikeRoutes(app);
   registerRentalRoutes(app);
   registerReservationRoutes(app);

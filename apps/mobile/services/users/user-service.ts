@@ -1,13 +1,16 @@
 import type { Result } from "@lib/result";
+import type { UsersContracts } from "@mebike/shared";
+import type { z } from "zod";
 
+import { decodeWithSchema, readJson } from "@lib/api-decode";
 import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
-import { ServerContracts } from "@mebike/shared";
 
-import type { UserError } from "./user-error";
+import type { ApiUserError, UserError } from "./user-error";
 
-type UserDetail = ServerContracts.UsersContracts.UserDetail;
+export type UserDetail = z.output<typeof UsersContracts.UserDetailSchema>;
+type MeStatus = keyof typeof ServerRoutes.users.me.responses;
 
 const HTTP_STATUS = {
   OK: 200,
@@ -15,46 +18,31 @@ const HTTP_STATUS = {
   NOT_FOUND: 404,
 };
 
-async function parseUserError(response: Response): Promise<UserError> {
-  try {
-    const data = await response.json();
-    const unauthorizedParsed = ServerContracts.UnauthorizedErrorResponseSchema.safeParse(data);
-    if (unauthorizedParsed.success) {
-      return {
-        _tag: "ApiError",
-        code: unauthorizedParsed.data.details.code,
-        message: unauthorizedParsed.data.error,
-      };
-    }
+function parseUserError(data: unknown): UserError {
+  const unauthorizedSchema
+    = ServerRoutes.users.me.responses[401].content["application/json"].schema;
+  const notFoundSchema
+    = ServerRoutes.users.me.responses[404].content["application/json"].schema;
 
-    const userParsed = ServerContracts.UsersContracts.UserErrorResponseSchema.safeParse(data);
-    if (userParsed.success) {
-      return {
-        _tag: "ApiError",
-        code: userParsed.data.details.code,
-        message: userParsed.data.error,
-      };
-    }
-  }
-  catch {
-    return { _tag: "DecodeError" };
+  const unauthorized = decodeWithSchema(unauthorizedSchema, data);
+  if (unauthorized.ok) {
+    return {
+      _tag: "ApiError",
+      code: unauthorized.value.details.code as ApiUserError["code"],
+      message: unauthorized.value.error,
+    };
   }
 
-  return { _tag: "UnknownError" };
-}
+  const notFound = decodeWithSchema(notFoundSchema, data);
+  if (notFound.ok) {
+    return {
+      _tag: "ApiError",
+      code: notFound.value.details.code as ApiUserError["code"],
+      message: notFound.value.error,
+    };
+  }
 
-async function parseMeResponse(response: Response): Promise<Result<UserDetail, UserError>> {
-  try {
-    const data = await response.json();
-    const parsed = ServerContracts.UsersContracts.MeResponseSchema.safeParse(data);
-    if (!parsed.success) {
-      return err({ _tag: "DecodeError" });
-    }
-    return ok(parsed.data.data);
-  }
-  catch {
-    return err({ _tag: "DecodeError" });
-  }
+  return { _tag: "DecodeError" };
 }
 
 export const userService = {
@@ -64,15 +52,22 @@ export const userService = {
         throwHttpErrors: false,
       });
 
-      if (response.status === HTTP_STATUS.OK) {
-        return await parseMeResponse(response);
+      const status = response.status as MeStatus | number;
+      switch (status) {
+        case HTTP_STATUS.OK: {
+          const data = await readJson(response);
+          const okSchema = ServerRoutes.users.me.responses[200].content["application/json"].schema;
+          const parsed = decodeWithSchema(okSchema, data);
+          return parsed.ok ? ok(parsed.value.data) : err({ _tag: "DecodeError" });
+        }
+        case HTTP_STATUS.UNAUTHORIZED:
+        case HTTP_STATUS.NOT_FOUND: {
+          const data = await readJson(response);
+          return err(parseUserError(data));
+        }
+        default:
+          return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
       }
-
-      if (response.status === HTTP_STATUS.UNAUTHORIZED || response.status === HTTP_STATUS.NOT_FOUND) {
-        return err(await parseUserError(response));
-      }
-
-      return err({ _tag: "UnknownError", message: `Unexpected status ${response.status}` });
     }
     catch (error) {
       return err({
