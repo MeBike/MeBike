@@ -8,7 +8,7 @@ import type {
 } from "@/schemas/walletSchema";
 import { GetAllWalletResponse, UpdateWalletStatusResponse } from "@/types/wallet";
 import { ApiResponse, DetailApiResponse } from "@/types/Response";
-
+import { WalletOverview , DetailWallet } from "@/types/wallet";
 export interface MyWallet {
   _id: string;
   user_id: string;
@@ -98,28 +98,28 @@ export const walletService = {
     });
     return response;
   },
-  // getWalletOverview: async (): Promise<
-  //   AxiosResponse<DetailApiResponse<WalletOverview>>
-  // > => {
-  //   const response = await fetchHttpClient.get<
-  //     DetailApiResponse<WalletOverview>
-  //   >(WALLET_ENDPOINTS.OVERVIEW);
-  //   return response;
-  // },
-  // getDetailWallet: async ({
-  //   user_id,
-  // }: {
-  //   user_id: string;
-  // }): Promise<AxiosResponse<ApiResponse<DetailWallet[]>>> => {
-  //   const response = await fetchHttpClient.get<ApiResponse<DetailWallet[]>>(
-  //     `${WALLET_ENDPOINTS.DETAIL_WALLET(user_id)}` ,
-  //     {
-  //       page : 1,
-  //       limit : 100
-  //     }
-  //   );
-  //   return response;
-  // },
+  getWalletOverview: async (): Promise<
+    AxiosResponse<DetailApiResponse<WalletOverview>>
+  > => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<WalletOverview>
+    >(WALLET_ENDPOINTS.OVERVIEW);
+    return response;
+  },
+  getDetailWallet: async ({
+    user_id,
+  }: {
+    user_id: string;
+  }): Promise<AxiosResponse<ApiResponse<DetailWallet[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<DetailWallet[]>>(
+      `${WALLET_ENDPOINTS.DETAIL_WALLET(user_id)}` ,
+      {
+        page : 1,
+        limit : 100
+      }
+    );
+    return response;
+  },
   updateWalletStatus: async (
     id: string,
     newStatus: "ACTIVE" | "BLOCKED"

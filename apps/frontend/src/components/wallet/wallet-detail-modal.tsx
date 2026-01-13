@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { UserWallet, DetailWallet } from "@/types/Wallet";
+import type { UserWallet , DetailWallet } from "@/types/wallet";
 import { formatDateUTC } from "@/utils/formatDateTime";
 
 interface WalletDetailModalProps {
