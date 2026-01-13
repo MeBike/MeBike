@@ -5,11 +5,13 @@ import { HTTP_STATUS } from "@/constants";
 const getAllBikes = async (
   page?: number,
   limit?: number,
+  search?: string,
 ) => {
   try {
     const response = await bikeService.getAllBikes({
       page: page,
       limit: limit,
+      search : search,
     });
     if (response.status === HTTP_STATUS.OK) {
       return response.data;
@@ -22,12 +24,14 @@ const getAllBikes = async (
 export const useGetAllBikeQuery = ({
   page,
   limit,
+  search,
 }: {
   page?: number;
   limit?: number;
+  search?: string,
 }) => {
   return useSuspenseQuery({
-    queryKey: QUERY_KEYS.BIKE.ALL(page, limit),
-    queryFn: () => getAllBikes(page, limit),
+    queryKey: QUERY_KEYS.BIKE.ALL(page,limit,search),
+    queryFn: () => getAllBikes(page,limit,search),
   });
 };

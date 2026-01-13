@@ -14,6 +14,7 @@ import { useSupplierActions } from "@/hooks/use-supplier";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import BikeManagementSkeleton from "./loading";
+import { useDebounce } from "@/hooks/use-debounce";
 export default function BikeClient() {
   const [detailId, setDetailId] = useState<string>("");
   const [editId, setEditId] = useState<string>("");
@@ -23,6 +24,8 @@ export default function BikeClient() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const debounceSearch = useDebounce(searchQuery, 500);
   const [newBike, setNewBike] = useState({
     stationid: "",
     supplierid: "",
@@ -61,12 +64,13 @@ export default function BikeClient() {
     undefined,
     statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
     limit,
-    page
+    page,
+    debounceSearch
   );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [showBikeRevenue, setShowBikeRevenue] = useState(false);
   const [expandedStations, setExpandedStations] = useState<Set<string>>(new Set());
-  
+
   const toggleStation = (stationId: string) => {
     setExpandedStations(prev => {
       const newSet = new Set(prev);
@@ -85,15 +89,11 @@ export default function BikeClient() {
     setIsDetailModalOpen(true);
   }
   const handleEditBike = (bikeId: string) => {
-  // Set the bike ID to edit and fetch its details
-  setEditId(bikeId);
-  getBikeByID();
-  // The useEffect will open the edit modal when the data is loaded
-};
-  useEffect(() => {
-    getBikes();
-    console.log(data?.data?.Bikes.data);
-  }, [page, limit, statusFilter, getBikes]);
+    // Set the bike ID to edit and fetch its details
+    setEditId(bikeId);
+    getBikeByID();
+    // The useEffect will open the edit modal when the data is loaded
+  };
   useEffect(() => {
     if (!isLoadingDetail && detailBike && editId) {
       setEditBike(detailBike);
@@ -140,13 +140,16 @@ export default function BikeClient() {
       // getBikeStats();
       // getRentalBikes();
     }
-  } , [detailId , getBikeByID]);
+  }, [detailId, getBikeByID]);
 
   useEffect(() => {
     if (editId) {
       getBikeByID();
     }
-  }, [editId , getBikeByID]);
+  }, [editId, getBikeByID]);
+  useEffect(() => {
+  setPage(1);
+}, [debounceSearch]);
   // const available = statisticData?.result["CÓ SẴN"] || 0;
   // const renting = statisticData?.result["ĐANG ĐƯỢC THUÊ"] || 0;
   // const broken = statisticData?.result["BỊ HỎNG"] || 0;
@@ -163,31 +166,31 @@ export default function BikeClient() {
   if (!data?.data?.Bikes) {
     notFound();
   }
-  if (isLoadingDetail){
+  if (isLoadingDetail) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
         <Loader2 className="animate-spin w-16 h-16 text-primary" />
       </div>
     );
   }
-    return (
-      <Suspense fallback={<BikeManagementSkeleton />}>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                Quản lý xe đạp
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Quản lý danh sách xe đạp băng chân
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Thêm xe mới
-              </Button>
-              {/* <Button
+  return (
+    <Suspense fallback={<BikeManagementSkeleton />}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Quản lý xe đạp
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Quản lý danh sách xe đạp băng chân
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Thêm xe mới
+            </Button>
+            {/* <Button
                 variant="outline"
                 onClick={() => {
                   if (!showBikeRevenue) {
@@ -200,10 +203,10 @@ export default function BikeClient() {
                   ? "Ẩn báo cáo doanh thu"
                   : "Xem báo cáo doanh thu"}
               </Button> */}
-            </div>
           </div>
+        </div>
 
-          {/* {showBikeRevenue && responseStationBikeRevenue?.result && (
+        {/* {showBikeRevenue && responseStationBikeRevenue?.result && (
             <div className="space-y-6 animate-in fade-in duration-500">
               <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border rounded-2xl p-8 shadow-lg">
                 <div className="flex items-center justify-between mb-6">
@@ -656,7 +659,7 @@ export default function BikeClient() {
             </div>
           )} */}
 
-          {/* <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Tổng số xe</p>
               <p className="text-2xl font-bold text-foreground mt-1">
@@ -689,138 +692,141 @@ export default function BikeClient() {
             </div>
           </div> */}
 
-          <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-            <div className="flex items-center gap-4">
-              <select
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(e.target.value as BikeStatus | "all")
-                }
-                className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
-              >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="Available">Có sẵn</option>
-                <option value="Booked">Đang được thuê</option>
-                <option value="Broken">Bị hỏng</option>
-                <option value="Reserved">Đã đặt trước</option>
-                <option value="Maintenance">Đang bảo trì</option>
-                <option value="NotAvailable">Không có sẵn</option>
-              </select>
+        <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+          <div className="flex items-center gap-4">
+            <select
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(e.target.value as BikeStatus | "all")
+              }
+              className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="Available">Có sẵn</option>
+              <option value="Booked">Đang được thuê</option>
+              <option value="Broken">Bị hỏng</option>
+              <option value="Reserved">Đã đặt trước</option>
+              <option value="Maintenance">Đang bảo trì</option>
+              <option value="NotAvailable">Không có sẵn</option>
+            </select>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setStatusFilter("all");
+              }}
+            >
+              Đặt lại
+            </Button>
+          </div>
+        </div>
+
+        <div className="w-full rounded-lg space-y-4  flex flex-col">
+          <DataTable
+            title="Danh sách xe đạp"
+            columns={bikeColumn({
+              onView: ({ id }: { id: string }) => {
+                handleViewDetails(id);
+              },
+              onEdit: ({ id }: { id: string }) => {
+                handleEditBike(id);
+              },
+            })}
+            data={data?.data?.Bikes?.data || []}
+            searchValue={searchQuery}
+            filterPlaceholder="Search bike with chip id"
+            onSearchChange={setSearchQuery}
+          />
+          <PaginationDemo
+            currentPage={paginationBikes?.page ?? 1}
+            onPageChange={setPage}
+            totalPages={paginationBikes?.totalPages ?? 1}
+          />
+        </div>
+
+        <p className="text-sm text-muted-foreground">
+          Trang {paginationBikes?.page} / {paginationBikes?.totalPages} xe đạp
+        </p>
+      </div>
+
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-foreground mb-4">
+              Thêm xe đạp mới
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-foreground">
+                  Trạm xe
+                </label>
+                <select
+                  value={newBike.stationid}
+                  onChange={(e) =>
+                    setNewBike({ ...newBike, stationid: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                >
+                  <option value="">Chọn trạm xe</option>
+                  {stations.map((station) => (
+                    <option key={station.id} value={station.id}>
+                      {station.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground">
+                  Nhà cung cấp
+                </label>
+                <select
+                  value={newBike.supplierid}
+                  onChange={(e) =>
+                    setNewBike({ ...newBike, supplierid: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                >
+                  <option value="">Chọn nhà cung cấp</option>
+                  {allSupplier?.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground">
+                  Chip ID
+                </label>
+                <input
+                  type="text"
+                  value={newBike.chipid}
+                  onChange={(e) =>
+                    setNewBike({ ...newBike, chipid: e.target.value })
+                  }
+                  placeholder="Nhập Chip ID"
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
               <Button
                 variant="outline"
-                onClick={() => {
-                  setStatusFilter("all");
-                }}
+                onClick={() => setIsCreateModalOpen(false)}
+                className="flex-1"
               >
-                Đặt lại
+                Hủy
+              </Button>
+              <Button onClick={handleCreateBike} className="flex-1">
+                Thêm xe đạp
               </Button>
             </div>
           </div>
-
-          <div className="w-full rounded-lg space-y-4  flex flex-col">
-            <DataTable
-              title="Danh sách xe đạp"
-              columns={bikeColumn({
-                onView: ({ id }: { id: string }) => {
-                  handleViewDetails(id);
-                },
-                onEdit: ({ id }: { id: string }) => {
-                  handleEditBike(id);
-                },
-              })}
-              data={data?.data?.Bikes?.data || []}
-            />
-            <PaginationDemo
-              currentPage={paginationBikes?.page ?? 1}
-              onPageChange={setPage}
-              totalPages={paginationBikes?.totalPages ?? 1}
-            />
-          </div>
-
-          <p className="text-sm text-muted-foreground">
-            Trang {paginationBikes?.page} / {paginationBikes?.totalPages} xe đạp
-          </p>
         </div>
-
-        {isCreateModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-              <h2 className="text-xl font-bold text-foreground mb-4">
-                Thêm xe đạp mới
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Trạm xe
-                  </label>
-                  <select
-                    value={newBike.stationid}
-                    onChange={(e) =>
-                      setNewBike({ ...newBike, stationid: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  >
-                    <option value="">Chọn trạm xe</option>
-                    {stations.map((station) => (
-                      <option key={station.id} value={station.id}>
-                        {station.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Nhà cung cấp
-                  </label>
-                  <select
-                    value={newBike.supplierid}
-                    onChange={(e) =>
-                      setNewBike({ ...newBike, supplierid: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  >
-                    <option value="">Chọn nhà cung cấp</option>
-                    {allSupplier?.map((supplier) => (
-                      <option key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Chip ID
-                  </label>
-                  <input
-                    type="text"
-                    value={newBike.chipid}
-                    onChange={(e) =>
-                      setNewBike({ ...newBike, chipid: e.target.value })
-                    }
-                    placeholder="Nhập Chip ID"
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="flex-1"
-                >
-                  Hủy
-                </Button>
-                <Button onClick={handleCreateBike} className="flex-1">
-                  Thêm xe đạp
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* {isDetailModalOpen && detailBike && (
+      )}
+      {/* {isDetailModalOpen && detailBike && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-card border border-border rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <h2 className="text-xl font-bold text-foreground mb-4">
@@ -1162,106 +1168,106 @@ export default function BikeClient() {
             </div>
           </div>
         )} */}
-        {isEditModalOpen && editBike && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-              <h2 className="text-xl font-bold text-foreground mb-4">
-                Chỉnh sửa xe đạp
-              </h2>
+      {isEditModalOpen && editBike && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-foreground mb-4">
+              Chỉnh sửa xe đạp
+            </h2>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Trạm xe
-                  </label>
-                  <select
-                    value={editBike?.station.id || ""}
-                    onChange={(e) =>
-                      setEditBike(
-                        editBike
-                          ? {
-                              ...editBike,
-                              station: {
-                                ...editBike.station,
-                                id: e.target.value,
-                              },
-                            }
-                          : null
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  >
-                    {stations.map((station) => (
-                      <option key={station.id} value={station.id}>
-                        {station.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Nhà cung cấp
-                  </label>
-                  <select
-                    value={editBike?.supplier.id || ""}
-                    onChange={(e) =>
-                      setEditBike(
-                        editBike
-                          ? {
-                              ...editBike,
-                              supplier: {
-                                ...editBike.supplier,
-                                id: e.target.value,
-                              },
-                            }
-                          : null
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  >
-                    {allSupplier?.map((supplier) => (
-                      <option key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground">
-                    Chip ID
-                  </label>
-                  <input
-                    type="text"
-                    value={editBike?.chipId || ""}
-                    onChange={(e) =>
-                      setEditBike(
-                        editBike
-                          ? { ...editBike, chipId: e.target.value }
-                          : null
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
-                  />
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-foreground">
+                  Trạm xe
+                </label>
+                <select
+                  value={editBike?.station.id || ""}
+                  onChange={(e) =>
+                    setEditBike(
+                      editBike
+                        ? {
+                          ...editBike,
+                          station: {
+                            ...editBike.station,
+                            id: e.target.value,
+                          },
+                        }
+                        : null
+                    )
+                  }
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                >
+                  {stations.map((station) => (
+                    <option key={station.id} value={station.id}>
+                      {station.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <div className="flex gap-3 mt-6">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="flex-1"
+              <div>
+                <label className="text-sm font-medium text-foreground">
+                  Nhà cung cấp
+                </label>
+                <select
+                  value={editBike?.supplier.id || ""}
+                  onChange={(e) =>
+                    setEditBike(
+                      editBike
+                        ? {
+                          ...editBike,
+                          supplier: {
+                            ...editBike.supplier,
+                            id: e.target.value,
+                          },
+                        }
+                        : null
+                    )
+                  }
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                 >
-                  Hủy
-                </Button>
-                <Button onClick={handleUpdateBike} className="flex-1">
-                  Cập nhật
-                </Button>
+                  {allSupplier?.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground">
+                  Chip ID
+                </label>
+                <input
+                  type="text"
+                  value={editBike?.chipId || ""}
+                  onChange={(e) =>
+                    setEditBike(
+                      editBike
+                        ? { ...editBike, chipId: e.target.value }
+                        : null
+                    )
+                  }
+                  className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
+                />
               </div>
             </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setIsEditModalOpen(false)}
+                className="flex-1"
+              >
+                Hủy
+              </Button>
+              <Button onClick={handleUpdateBike} className="flex-1">
+                Cập nhật
+              </Button>
+            </div>
           </div>
-        )}
-      </Suspense>
-    );
+        </div>
+      )}
+    </Suspense>
+  );
 }

@@ -27,7 +27,8 @@ export const useBikeActions = (
   supplier_id?: string,
   status?: BikeStatus,
   limit?: number,
-  page?: number
+  page?: number,
+  search?: string,
 ) => {
   const router = useRouter();
   // const {
@@ -79,6 +80,7 @@ export const useBikeActions = (
   } = useGetAllBikeQuery({
     page: page,
     limit: limit,
+    search:search
   });
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
