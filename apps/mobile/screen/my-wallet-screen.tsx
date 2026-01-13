@@ -59,6 +59,7 @@ function MyWalletScreen() {
   }
 
   if (!wallet.myWallet) {
+    console.log(wallet.myWallet);
     return <LoadingSpinner message="Chưa có ví nào" />;
   }
 
@@ -72,7 +73,7 @@ function MyWalletScreen() {
       >
         <WalletHeader />
         <WalletBalance
-          balance={wallet.myWallet?.balance?.$numberDecimal || "0"}
+          balance={wallet.myWallet?.balance || "0"}
           status={wallet.myWallet?.status || ""}
         />
       </LinearGradient>
@@ -225,7 +226,7 @@ function MyWalletScreen() {
         <QRModal
           visible={showQR}
           onClose={() => setShowQR(false)}
-          userId={wallet.myWallet?.user_id || ""}
+          userId={wallet.myWallet?.accountId || ""}
         />
         <TransactionDetailModal
           visible={showTransactionDetail}
@@ -274,7 +275,7 @@ function MyWalletScreen() {
       <QRModal
         visible={showQR}
         onClose={() => setShowQR(false)}
-        userId={wallet.myWallet?.user_id || ""}
+        userId={wallet.myWallet?.accountId || ""}
       />
       <TransactionDetailModal
         visible={showTransactionDetail}

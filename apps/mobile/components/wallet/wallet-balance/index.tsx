@@ -8,7 +8,7 @@ import { formatBalance } from "../../../utils/wallet/formatters";
 import { styles } from "./styles";
 
 type WalletBalanceProps = {
-  balance: string;
+  balance: string | number;
   status: string;
 };
 
