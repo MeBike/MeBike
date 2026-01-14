@@ -2,6 +2,7 @@
 
 import { useState, Suspense, useEffect , Dispatch , SetStateAction} from "react";
 import { useRouter } from "next/navigation";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useDebounce } from "@/hooks/use-debounce";
 import StationHeader from "./components/station-header";
 import StationStats from "./components/StationStats";
@@ -51,7 +52,7 @@ function StationDashboard({
   setSearchQuery: Dispatch<SetStateAction<string>>;
   debouncedSearchQuery: string;
   handleAddStation: () => void;
-  router: any;
+  router: AppRouterInstance ;
 }) {
   const { inactiveStation, activeStation, totalStation } = useStationActions({
     hasToken: true,
