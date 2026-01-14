@@ -36,7 +36,15 @@ export default function StationClient() {
     </div>
   );
 }
-
+interface StationDashboardProps {
+  page: number;
+  setPage: Dispatch<SetStateAction<number>>;
+  searchQuery: string;
+  setSearchQuery: Dispatch<SetStateAction<string>>;
+  debouncedSearchQuery: string;
+  handleAddStation: () => void;
+  router: AppRouterInstance ;
+}
 function StationDashboard({
   page,
   setPage,
@@ -45,15 +53,7 @@ function StationDashboard({
   debouncedSearchQuery,
   handleAddStation,
   router,
-}: {
-  page: number;
-  setPage: Dispatch<SetStateAction<number>>;
-  searchQuery: string;
-  setSearchQuery: Dispatch<SetStateAction<string>>;
-  debouncedSearchQuery: string;
-  handleAddStation: () => void;
-  router: AppRouterInstance ;
-}) {
+}: StationDashboardProps) {
   const { inactiveStation, activeStation, totalStation } = useStationActions({
     hasToken: true,
     name: debouncedSearchQuery,

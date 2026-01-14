@@ -21,7 +21,6 @@ export default function StationTableSection({
   router: AppRouterInstance;
   debouncedSearchQuery: string;
 }) {
-  // Hook gọi ở đây mới kích hoạt được Suspense fallback ở cha
   const { stations, paginationStations } = useStationActions({
     page,
     limit,
@@ -36,7 +35,7 @@ export default function StationTableSection({
           onView: ({ id }) => router.push(`/admin/stations/detail/${id}`),
         })}
         searchValue={searchQuery}
-        filterPlaceholder="Tìm kiếm người dùng"
+        filterPlaceholder="Tìm kiếm trạm theo tên"
         onSearchChange={setSearchQuery}
         data={stations}
       />
