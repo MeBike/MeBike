@@ -18,7 +18,8 @@ import { useWallet } from "../hooks/wallet/use-wallet";
 import { myWalletScreenStyles as styles } from "../styles/wallet/my-wallet-screen";
 import { TAB_TYPES } from "../utils/wallet/constants";
 import { useAuth } from "@/providers/auth-providers";
-
+import { useQueryClient } from "@tanstack/react-query";
+import { AppState } from "react-native";
 function MyWalletScreen() {
   const navigation = useNavigation<MyWalletNavigationProp>();
   const [showTopUp, setShowTopUp] = useState(false);
@@ -31,15 +32,23 @@ function MyWalletScreen() {
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [selectedWithdraw, setSelectedWithdraw] = useState<any>(null);
   const [selectedRefund, setSelectedRefund] = useState<any>(null);
-
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        queryClient.invalidateQueries({
+          queryKey: ["my-wallet"],
+        });
+      }
+    });
+    return () => subscription.remove();
+  }, []);
   const wallet = useWallet();
-
   useEffect(() => {
     wallet.getMyWallet();
     wallet.getMyTransaction();
     wallet.getMyWithdrawals();
   }, []);
-
   const onRefresh = async () => {
     setRefreshing(true);
     await wallet.getMyWallet();
