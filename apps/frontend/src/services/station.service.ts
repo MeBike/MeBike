@@ -75,12 +75,13 @@ export const stationService = {
     const response = await fetchHttpClient.mutation<GetAllStationsResponse>(
       print(GET_STATIONS),
       {
-        page,
-        limit,
-        name,
-        latitude,
-        longitude,
-        search,
+        params : {
+          page : page,
+          limit : limit,
+          latitude : latitude,
+          longitude : longitude,
+          search : search,
+        }
       }
     );
     return response;

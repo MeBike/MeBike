@@ -40,6 +40,7 @@ export const useStationActions = ({
     page: page,
     limit: limit,
     name: name,
+    search: name,
   });
   const {
     refetch: fetchingStationID,
