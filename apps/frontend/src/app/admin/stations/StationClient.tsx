@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense, useEffect } from "react";
+import { useState, Suspense, useEffect , Dispatch , SetStateAction} from "react";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/use-debounce";
 import StationHeader from "./components/station-header";
@@ -44,7 +44,15 @@ function StationDashboard({
   debouncedSearchQuery,
   handleAddStation,
   router,
-}: any) {
+}: {
+  page: number;
+  setPage: Dispatch<SetStateAction<number>>;
+  searchQuery: string;
+  setSearchQuery: Dispatch<SetStateAction<string>>;
+  debouncedSearchQuery: string;
+  handleAddStation: () => void;
+  router: any;
+}) {
   const { inactiveStation, activeStation, totalStation } = useStationActions({
     hasToken: true,
     name: debouncedSearchQuery,
