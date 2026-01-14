@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { getStatusColor } from "@/utils/status-style";
 import { formatToVNTime } from "@/lib/formateVNDate";
 import { useRouter } from "next/navigation";
+import { useDebounce } from "@/hooks/use-debounce";
 export default function SuppliersPage() {
   const router = useRouter();
   const {
@@ -52,6 +53,7 @@ export default function SuppliersPage() {
   });
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState<
     "Active" | "Inactive" | ""
   >("");
@@ -76,7 +78,7 @@ export default function SuppliersPage() {
     getUpdateSupplier,
     paginationAllSupplier,
     allSupplier,
-  } = useSupplierActions({hasToken:true, supplier_id : selectedSupplier?.id , limit : limit , page : page });
+  } = useSupplierActions({hasToken:true, supplier_id : selectedSupplier?.id , limit : limit , page : page , search : debouncedSearch });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   useEffect(() => {
@@ -218,15 +220,8 @@ export default function SuppliersPage() {
             </div> */}
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-            <div className="flex items-center gap-4">
-              <input
-                type="text"
-                placeholder="Tìm kiếm theo tên nhà cung cấp..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground"
-              />
+            <div className="border border-border rounded-lg p-4 space-y-4">
+              <div className="flex items-center gap-4">
               <select
                 value={statusFilter}
                 onChange={(e) =>
@@ -270,6 +265,9 @@ export default function SuppliersPage() {
                   setIsEditModalOpen(true);
                 },
               })}
+              searchValue={searchQuery}
+              filterPlaceholder="Tìm kiếm nhà cung cấp theo tên"
+              onSearchChange={setSearchQuery}
               data={allSupplier ?? []}
             />
             <PaginationDemo
