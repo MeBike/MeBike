@@ -9,6 +9,14 @@ export type StationRow = {
   capacity: number;
   latitude: number;
   longitude: number;
+  totalBikes: number;
+  availableBikes: number;
+  bookedBikes: number;
+  brokenBikes: number;
+  reservedBikes: number;
+  maintainedBikes: number;
+  unavailableBikes: number;
+  emptySlots: number;
 };
 
 export type CreateStationInput = {

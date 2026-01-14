@@ -7,6 +7,14 @@ export const StationSummarySchema = z.object({
   capacity: z.number(),
   latitude: z.number(),
   longitude: z.number(),
+  totalBikes: z.number(),
+  availableBikes: z.number(),
+  bookedBikes: z.number(),
+  brokenBikes: z.number(),
+  reservedBikes: z.number(),
+  maintainedBikes: z.number(),
+  unavailableBikes: z.number(),
+  emptySlots: z.number(),
 });
 
 export const StationStatsCurrentBikesSchema = z.object({

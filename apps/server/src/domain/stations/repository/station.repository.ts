@@ -16,8 +16,15 @@ import type {
   StationRow,
   StationSortField,
 } from "../models";
+import type { NearestStationRowDb } from "./station.repository.helpers";
 
 import { StationRepositoryError } from "../errors";
+import {
+  applyCounts,
+  getBikeCounts,
+
+  stationSelect,
+} from "./station.repository.helpers";
 
 // TODO: If create/update name is added, handle Station_name_key unique violation → DuplicateStationName
 export type StationRepo = {
@@ -66,15 +73,6 @@ export function toStationOrderBy(
 }
 
 export function makeStationRepository(client: PrismaClient): StationRepo {
-  const stationSelect = {
-    id: true,
-    name: true,
-    address: true,
-    capacity: true,
-    latitude: true,
-    longitude: true,
-  } as const;
-
   return {
     listWithOffset(
       filter: StationFilter,
@@ -121,7 +119,13 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
           }),
         ]);
 
-        return makePageResult(items, total, page, pageSize);
+        const stationIds = items.map(item => item.id);
+        const countsMap = yield* getBikeCounts(client, stationIds);
+        const mappedItems = items.map(item =>
+          applyCounts(item, countsMap.get(item.id)),
+        );
+
+        return makePageResult(mappedItems, total, page, pageSize);
       });
     },
 
@@ -139,7 +143,11 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
               cause: e,
             }),
         });
-        return Option.fromNullable(row);
+        if (!row) {
+          return Option.none();
+        }
+        const countsMap = yield* getBikeCounts(client, [row.id]);
+        return Option.some(applyCounts(row, countsMap.get(row.id)));
       });
     },
 
@@ -157,7 +165,11 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
               cause: e,
             }),
         });
-        return Option.fromNullable(row);
+        if (!row) {
+          return Option.none();
+        }
+        const countsMap = yield* getBikeCounts(client, [row.id]);
+        return Option.some(applyCounts(row, countsMap.get(row.id)));
       });
     },
 
@@ -182,7 +194,7 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
         const whereRadius
           = maxDistanceMeters != null
             ? Effect.tryPromise(() =>
-                client.$queryRaw<NearestStationRow[]>`
+                client.$queryRaw<NearestStationRowDb[]>`
                   SELECT
                     id,
                     name,
@@ -214,7 +226,7 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
                 ),
               )
             : Effect.tryPromise(() =>
-                client.$queryRaw<NearestStationRow[]>`
+                client.$queryRaw<NearestStationRowDb[]>`
                   SELECT
                     id,
                     name,
@@ -292,8 +304,20 @@ export function makeStationRepository(client: PrismaClient): StationRepo {
               );
 
         const [items, total] = yield* Effect.all([whereRadius, countEffect]);
+        const stationIds = items.map(item => item.id);
+        const countsMap = yield* getBikeCounts(client, stationIds);
+        const mappedItems: NearestStationRow[] = items.map((item) => {
+          const stationWithCounts = applyCounts(
+            item,
+            countsMap.get(item.id),
+          );
+          return {
+            ...stationWithCounts,
+            distanceMeters: item.distance_meters ?? 0,
+          };
+        });
 
-        return makePageResult(items, total, p, ps);
+        return makePageResult(mappedItems, total, p, ps);
       });
     },
   };

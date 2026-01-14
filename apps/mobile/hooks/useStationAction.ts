@@ -1,21 +1,10 @@
 import { useCallback, useState } from "react";
 
-import { useGetAllStation } from "./query/Station/useGetAllStationQuery";
-import { useGetNearMeStations } from "./query/Station/useGetNearMeStationQuery";
-import { useGetStationById } from "./query/Station/useGetStationByIDQuery";
+import { useGetAllStation } from "./query/Station/use-get-all-station-query";
+import { useGetNearMeStations } from "./query/Station/use-get-near-me-station-query";
+import { useGetStationById } from "./query/Station/use-get-station-by-id-query";
 
-type ErrorResponse = {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-};
 
-type ErrorWithMessage = {
-  message: string;
-};
 
 // const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 //   const axiosError = error as ErrorResponse;

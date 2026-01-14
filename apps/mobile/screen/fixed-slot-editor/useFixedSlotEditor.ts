@@ -1,14 +1,13 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
-import { Alert, Platform } from "react-native";
-
 import { useCreateFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useCreateFixedSlotTemplateMutation";
 import { useUpdateFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useUpdateFixedSlotTemplateMutation";
 import { useFixedSlotTemplateDetailQuery } from "@hooks/query/FixedSlots/useFixedSlotTemplateDetailQuery";
-import { useGetStationById } from "@hooks/query/Station/useGetStationByIDQuery";
+import { useGetStationById } from "@hooks/query/Station/use-get-station-by-id-query";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
+import { useQueryClient } from "@tanstack/react-query";
 import { getApiErrorMessage } from "@utils/error";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Platform } from "react-native";
 
 import type {
   FixedSlotEditorNavigationProp,
@@ -84,7 +83,7 @@ export function useFixedSlotEditor({ navigation, routeParams }: FixedSlotEditorH
   }, []);
 
   const removeDate = useCallback((value: string) => {
-    setSelectedDates((prev) => prev.filter((item) => item !== value));
+    setSelectedDates(prev => prev.filter(item => item !== value));
   }, []);
 
   const handleAddDate = useCallback(() => {
