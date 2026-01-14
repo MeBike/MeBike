@@ -43,13 +43,22 @@ export const supplierService = {
     page,
     limit,
     status,
+    search,
   }: {
     page?: number;
     limit?: number;
     status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | "";
+    search?: string;
   }): Promise<AxiosResponse<GetSupplierResponse>> => {
     const response = await fetchHttpClient.query<GetSupplierResponse>(
-      print(GET_ALL_SUPPLIER)
+      print(GET_ALL_SUPPLIER) , 
+      {
+        params : {
+          page : page,
+          limit : limit,
+          search : search,
+        }
+      }
     );
     return response;
   },

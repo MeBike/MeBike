@@ -16,16 +16,17 @@ interface SupplierActionProps {
   hasToken : boolean,
   supplier_id ?: string,
   limit ?: number,
-  page ?: number
+  page ?: number,
+  search ?: string
 }
-export const useSupplierActions = ({hasToken , supplier_id , limit , page}: SupplierActionProps) => {
+export const useSupplierActions = ({hasToken , supplier_id , limit , page, search}: SupplierActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const {
     refetch: refetchAllSuppliers,
     data: allSupplier,
     isLoading:isLoadingAllSupplier
-  } = useGetAllSupplierQuery(page, limit);
+  } = useGetAllSupplierQuery(page, limit, "", search);
   const { data: allStatsSupplier, isLoading: isLoadingAllStatsSupplier , refetch : fetchAllStatsSupplier } =
     useGetAllStatsSupplierQuery();
   const useCreateSupplier = useCreateSupplierMutation();
