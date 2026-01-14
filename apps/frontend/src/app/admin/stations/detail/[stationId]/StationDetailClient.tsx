@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { useStationActions } from "@/hooks/use-station";
 import { Loader2 } from "lucide-react";
 import { Suspense } from "react";
+import Loading from "./loading";
 export default function StationDetailClient({
   params,
 }: {
@@ -15,9 +16,7 @@ export default function StationDetailClient({
     useStationActions({ hasToken: true, stationId: stationId });
   if (isLoadingGetStationByID) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-        <Loader2 className="animate-spin w-16 h-16 text-primary" />
-      </div>
+      <Loading/>
     );
   }
   if (!responseStationDetail?.data) {
@@ -25,7 +24,7 @@ export default function StationDetailClient({
   }
   return (
     <Suspense
-      fallback={<Loader2 className="animate-spin w-16 h-16 text-primary" />}
+      fallback={<Loading />}
     >
       <StationDetail station={responseStationDetail.data} onSubmit={updateStation} />
     </Suspense>
