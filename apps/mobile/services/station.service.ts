@@ -64,7 +64,7 @@ export const stationService = {
   },
   getStationById: async (stationId: string): Promise<StationType> => {
     const path = routePath(ServerRoutes.stations.getStation)
-      .replace("{stationId}", stationId);
+      .replace(":stationId", stationId);
     const response = await kyClient
       .get(path)
       .json<StationSummary>();

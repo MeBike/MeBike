@@ -1,5 +1,15 @@
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
+
+import { BikeColors } from "@constants/BikeColors";
 import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/use-get-bike-by-id-query";
+import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
+import { useRentalsActions } from "@hooks/useRentalAction";
+import { useReservationActions } from "@hooks/useReservationActions";
+import { useWalletActions } from "@hooks/useWalletAction";
+import { useAuth } from "@providers/auth-providers";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { formatVietnamDateTime } from "@utils/date";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,23 +21,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
-import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
-import { BikeColors } from "@constants/BikeColors";
-import { useAuth } from "@providers/auth-providers";
-import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
-import { formatVietnamDateTime } from "@utils/date";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { Bike } from "../types/BikeTypes";
-import type { Reservation } from "../types/reservation-types";
 import type { BikeDetailNavigationProp } from "../types/navigation";
+import type { Reservation } from "../types/reservation-types";
 
-import { useRentalsActions } from "@hooks/useRentalAction";
-import { useWalletActions } from "@hooks/useWalletAction";
-import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
-import { useReservationActions } from "@hooks/useReservationActions";
-import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/useGetBIkeByIDAll";
+import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
 
 type RouteParams = {
   bike: Bike;
@@ -49,8 +49,9 @@ const BIKE_STATUS_COLORS: Record<Bike["status"], string> = {
   "KHÔNG CÓ SẴN": "#999999",
 };
 
-const getBikeStatusColor = (status: Bike["status"]) =>
-  BIKE_STATUS_COLORS[status] ?? "#999999";
+function getBikeStatusColor(status: Bike["status"]) {
+  return BIKE_STATUS_COLORS[status] ?? "#999999";
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -274,7 +275,7 @@ function BikeDetailScreen() {
   );
 
   const canUseSubscription = activeSubscriptions.length > 0;
-  const currentBike: Bike = bikeDetailResponse?.result ?? bike;
+  const currentBike: Bike = bikeDetailResponse ?? bike;
   const isBikeAvailable = currentBike.status === "CÓ SẴN";
 
   useEffect(() => {
@@ -284,7 +285,7 @@ function BikeDetailScreen() {
       return;
     }
     if (paymentMode === "subscription") {
-      const stillValid = activeSubscriptions.some((subscription) => subscription._id === selectedSubscriptionId);
+      const stillValid = activeSubscriptions.some(subscription => subscription._id === selectedSubscriptionId);
       if (!stillValid) {
         setSelectedSubscriptionId(activeSubscriptions[0]?._id ?? null);
       }
@@ -297,7 +298,7 @@ function BikeDetailScreen() {
 
   const currentReservation: Reservation | undefined = useMemo(
     () =>
-      pendingReservations.find((reservation) => reservation.bike_id === currentBike._id),
+      pendingReservations.find(reservation => reservation.bike_id === currentBike._id),
     [pendingReservations, currentBike._id],
   );
 
@@ -385,10 +386,10 @@ function BikeDetailScreen() {
         "Bạn cần đăng ký gói tháng trước khi sử dụng hình thức này.",
         [
           { text: "Để sau", style: "cancel" },
-            {
-              text: "Xem gói tháng",
-              onPress: () => navigation.navigate("Subscriptions"),
-            },
+          {
+            text: "Xem gói tháng",
+            onPress: () => navigation.navigate("Subscriptions"),
+          },
         ],
       );
       return;
@@ -479,7 +480,8 @@ function BikeDetailScreen() {
           <View style={[styles.card, styles.reservationCard]}>
             <Text style={styles.sectionTitle}>Bạn đang giữ xe này</Text>
             <Text style={styles.helperText}>
-              Bắt đầu lúc{" "}
+              Bắt đầu lúc
+              {" "}
               {formatVietnamDateTime(currentReservation.start_time)}
             </Text>
             <TouchableOpacity
@@ -544,7 +546,8 @@ function BikeDetailScreen() {
                 ? (
                     <View style={styles.emptyState}>
                       <Text style={styles.helperText}>
-                        Bạn chưa có gói tháng hoạt động.{" "}
+                        Bạn chưa có gói tháng hoạt động.
+                        {" "}
                         <Text
                           style={styles.linkText}
                           onPress={() => navigation.navigate("Subscriptions")}
