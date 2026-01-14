@@ -4,14 +4,13 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
 import React, { useState } from "react";
-import { ActivityIndicator, FlatList, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { StationDetailScreenNavigationProp } from "../types/navigation";
-import type { StationType } from "../types/StationType";
 
+import StationMap from "../components/station-map";
 import { StationCard } from "../components/StationCard";
-import StationMap from "../components/StationMap";
 
 const styles = StyleSheet.create({
   container: {

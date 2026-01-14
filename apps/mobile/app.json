@@ -45,7 +45,8 @@
         {
           "cameraPermission": "Cho phép MeBike truy cập máy ảnh của bạn để quét mã QR."
         }
-      ]
+      ],
+      "@rnmapbox/maps"
     ],
     "extra": {
       "eas": {

@@ -57,15 +57,19 @@ const styles = StyleSheet.create({
 type StationSelectHeaderProps = {
   showingNearby: boolean;
   isLoadingNearbyStations: boolean;
+  viewMode: "list" | "map";
   insets: { top: number };
   onFindNearby: () => void;
+  onToggleViewMode: () => void;
 };
 
 export function StationSelectHeader({
   showingNearby,
   isLoadingNearbyStations,
+  viewMode,
   insets,
   onFindNearby,
+  onToggleViewMode,
 }: StationSelectHeaderProps) {
   return (
     <LinearGradient
@@ -97,6 +101,16 @@ export function StationSelectHeader({
                   </Text>
                 </>
               )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.findNearbyButton}
+          onPress={onToggleViewMode}
+          accessibilityLabel={viewMode === "map" ? "Chuyển sang dạng danh sách" : "Chuyển sang bản đồ"}
+        >
+          <Ionicons name={viewMode === "map" ? "list" : "map"} size={16} color="#fff" />
+          <Text style={styles.findNearbyButtonText}>
+            {viewMode === "map" ? "Danh sách" : "Bản đồ"}
+          </Text>
         </TouchableOpacity>
 
       </View>

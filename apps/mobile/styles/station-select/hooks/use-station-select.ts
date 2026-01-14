@@ -1,5 +1,6 @@
 import { useStationActions } from "@hooks/useStationAction";
 import { log } from "@lib/log";
+import { getRouteLine } from "@lib/mapbox-directions";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,6 +14,9 @@ export function useStationSelect() {
   const insets = useSafeAreaInsets();
   const [showingNearby, setShowingNearby] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
+  const [selectedStationId, setSelectedStationId] = React.useState<string | null>(null);
+  const [route, setRoute] = React.useState<import("@lib/mapbox-directions").MapboxRouteLine | null>(null);
+  const [isRouting, setIsRouting] = React.useState(false);
   const { location: currentLocation, refresh: refreshLocation } = useCurrentLocation();
 
   const {
@@ -59,14 +63,74 @@ export function useStationSelect() {
 
   const stations = showingNearby ? nearbyStations : data;
 
+  const handleSelectStationForRoute = async (stationId: string) => {
+    const station = stations.find(s => s._id === stationId);
+    if (!station)
+      return;
+
+    setSelectedStationId(stationId);
+    setRoute(null);
+
+    if (!currentLocation) {
+      await refreshLocation();
+    }
+  };
+
+  const clearRoute = () => {
+    setRoute(null);
+  };
+
+  const buildRouteToSelectedStation = async () => {
+    if (!selectedStationId)
+      return;
+
+    const station = stations.find(s => s._id === selectedStationId);
+    if (!station)
+      return;
+
+    if (!currentLocation) {
+      await refreshLocation();
+      return;
+    }
+
+    setIsRouting(true);
+    try {
+      const nextRoute = await getRouteLine(
+        currentLocation,
+        {
+          latitude: Number.parseFloat(station.latitude),
+          longitude: Number.parseFloat(station.longitude),
+        },
+      );
+      setRoute(nextRoute);
+    }
+    finally {
+      setIsRouting(false);
+    }
+  };
+
+  const openSelectedStationDetail = () => {
+    if (!selectedStationId)
+      return;
+    handleSelectStation(selectedStationId);
+  };
+
   return {
     stations,
     refreshing,
     showingNearby,
+    selectedStationId,
+    route,
+    isRouting,
     isLoadingNearbyStations,
     handleSelectStation,
+    handleSelectStationForRoute,
     handleFindNearbyStations,
     handleRefresh,
+    buildRouteToSelectedStation,
+    clearRoute,
+    openSelectedStationDetail,
     insets,
+    currentLocation,
   };
 }
