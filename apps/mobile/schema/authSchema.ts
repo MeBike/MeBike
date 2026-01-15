@@ -62,31 +62,36 @@ export const changePasswordSchema = z
     message: "Mật khẩu xác nhận không khớp",
     path: ["confirmPassword"],
   });
-export const profileUpdateSchema = z.object({
-  fullname: z
-    .string()
-    .min(3, { message: "Họ và tên phải có ít nhất 3 ký tự" })
-    .max(50, { message: "Họ và tên không được vượt quá 50 ký tự" }),
-  location: z
-    .string()
-    .optional(),
-  username: z
-    .string()
-    .min(3, "Tên đăng nhập phải có ít nhất 3 ký tự.")
-    .max(30, "Tên đăng nhập không được vượt quá 30 ký tự.")
-    .regex(
-      /^\w+$/,
-      "Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới.",
-    )
-    .or(z.literal("")),
-  phone_number: z
-    .string()
-    .optional(),
-  avatar: z
-    .url({ message: "URL ảnh đại diện không hợp lệ" })
-    .optional()
-    .or(z.literal("")),
-});
+  export const profileUpdateSchema = z.object({
+    name: z
+      .string()
+      .min(3, { message: "Họ và tên phải có ít nhất 3 ký tự" })
+      .max(50, { message: "Họ và tên không được vượt quá 50 ký tự" }),
+    YOB: z
+      .number()
+      .min(1900, { message: "Năm sinh không hợp lệ" })
+      .max(2025, { message: "Năm sinh không hợp lệ" }),
+    address: z
+      .string()
+      .min(10, { message: "Địa chỉ phải có ít nhất 10 ký tự" })
+      .max(50, { message: "Địa chỉ không được vượt quá 100 ký tự" }),
+    phone: z
+      .string()
+      .regex(vietnamesePhoneNumberRegex, {
+        message: "Số điện thoại không hợp lệ",
+      })
+      .optional()
+      .or(z.literal("")),
+    avatarUrl: z
+      .string()
+      .url({ message: "Avatar phải là một URL hợp lệ" })
+      .optional(),
+    nfcCardUid: z
+      .string()
+      .min(1, { message: "NFC không được để trống" })
+      .max(30, { message: "NFC không được vượt quá 30 ký tự" })
+      .optional(),
+  });
 export const resetPasswordSchema = z.object({
   password: z
     .string()

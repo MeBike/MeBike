@@ -16,13 +16,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
-
 import { useAuth } from "@providers/auth-providers";
 import { uploadImageToFirebase } from "@lib/imageUpload";
+import type { UpdateProfileSchemaFormData } from "@schemas/authSchema";
 
-// TomTom API
 const TOMTOM_API_KEY = process.env.EXPO_PUBLIC_TOMTOM_API_KEY;
-
 const fetchTomTomReverseGeocode = async (
   latitude: string,
   longitude: string
@@ -57,11 +55,11 @@ function UpdateProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, updateProfile, isUpdatingProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [fullname, setFullname] = useState(user?.fullname || "");
-  const [username, setUsername] = useState(user?.username || "");
-  const [phone, setPhone] = useState(user?.phone_number || "");
-  const [location, setLocation] = useState(user?.location || "");
-  const [avatar, setAvatar] = useState(user?.avatar || "");
+  const [name, setName] = useState(user?.name || "");
+  const [phone, setPhone] = useState(user?.phone || "");
+  const [address, setAddress] = useState(user?.address || "");
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || "");
+  const [YOB, setYOB] = useState(user?.YOB?.toString() || "");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -71,9 +69,8 @@ function UpdateProfileScreen() {
   };
 
   const handleLocationChange = async (text: string) => {
-    setLocation(text);
+    setAddress(text);
     if (typingTimeout) clearTimeout(typingTimeout);
-    
     if (text.length > 3) {
       const timeout = setTimeout(async () => {
         try {
@@ -90,16 +87,16 @@ function UpdateProfileScreen() {
   };
 
   const handleSelectSuggestion = async (item: any) => {
-    setLocation(item.address);
+    setAddress(item.address);
     setAddressSuggestions([]);
     
-    const address = await fetchTomTomReverseGeocode(
+    const addressText = await fetchTomTomReverseGeocode(
       item.latitude.toString(),
       item.longitude.toString()
     );
     
-    if (address) {
-      setLocation(address);
+    if (addressText) {
+      setAddress(addressText);
     }
   };
 
@@ -115,7 +112,7 @@ function UpdateProfileScreen() {
       if (!result.canceled && result.assets[0]) {
         setIsUploadingAvatar(true);
         const uploadedUrl = await uploadImageToFirebase(result.assets[0]);
-        setAvatar(uploadedUrl);
+        setAvatarUrl(uploadedUrl);
         setIsUploadingAvatar(false);
         Alert.alert("Thành công", "Ảnh đã được upload!");
       }
@@ -128,21 +125,30 @@ function UpdateProfileScreen() {
   };
 
   const handleSave = async () => {
-    if (!fullname.trim()) {
+    if (!name.trim()) {
       Alert.alert("Lỗi", "Vui lòng nhập họ tên");
       return;
     }
-    if (!phone.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
+    if (!address.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập địa chỉ");
+      return;
+    }
+    if (!YOB.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập năm sinh");
+      return;
+    }
+    const yobNumber = parseInt(YOB, 10);
+    if (isNaN(yobNumber) || yobNumber < 1900 || yobNumber > 2025) {
+      Alert.alert("Lỗi", "Năm sinh không hợp lệ");
       return;
     }
 
-    const changedData: any = {};
-    if (fullname !== (user?.fullname || "")) changedData.fullname = fullname;
-    if (username !== (user?.username || "")) changedData.username = username;
-    if (phone !== (user?.phone_number || "")) changedData.phone_number = phone;
-    if (location !== (user?.location || "")) changedData.location = location;
-    if (avatar !== (user?.avatar || "")) changedData.avatar = avatar;
+    const changedData: Partial<UpdateProfileSchemaFormData> = {};
+    if (name !== (user?.name || "")) changedData.name = name;
+    if (phone !== (user?.phone || "")) changedData.phone = phone;
+    if (address !== (user?.address || "")) changedData.address = address;
+    if (avatarUrl !== (user?.avatarUrl || "")) changedData.avatarUrl = avatarUrl;
+    if (yobNumber !== (user?.YOB || 0)) changedData.YOB = yobNumber;
 
     if (Object.keys(changedData).length === 0) {
       Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
@@ -162,11 +168,11 @@ function UpdateProfileScreen() {
   };
 
   const handleCancel = () => {
-    setFullname(user?.fullname || "");
-    setUsername(user?.username || "");
-    setPhone(user?.phone_number || "");
-    setLocation(user?.location || "");
-    setAvatar(user?.avatar || "");
+    setName(user?.name || "");
+    setPhone(user?.phone || "");
+    setAddress(user?.address || "");
+    setAvatarUrl(user?.avatarUrl || "");
+    setYOB(user?.YOB?.toString() || "");
     setIsEditing(false);
   };
 
@@ -190,7 +196,7 @@ function UpdateProfileScreen() {
         <View style={styles.avatarSection}>
           <Image
             source={{
-              uri: avatar || "https://via.placeholder.com/100",
+              uri: avatarUrl || "https://via.placeholder.com/100",
             }}
             style={styles.avatar}
           />
@@ -212,7 +218,7 @@ function UpdateProfileScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
         <View style={styles.formSection}>
-          {/* Fullname */}
+          {/* Name */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Họ và tên</Text>
             <View style={styles.inputWrapper}>
@@ -226,30 +232,31 @@ function UpdateProfileScreen() {
                 style={[styles.input, !isEditing && styles.inputDisabled]}
                 placeholder="Nhập họ và tên"
                 placeholderTextColor="#ccc"
-                value={fullname}
-                onChangeText={setFullname}
+                value={name}
+                onChangeText={setName}
                 editable={isEditing}
               />
             </View>
           </View>
 
-          {/* Username */}
+          {/* YOB */}
           <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Username</Text>
+            <Text style={styles.fieldLabel}>Năm sinh</Text>
             <View style={styles.inputWrapper}>
               <Ionicons
-                name="person"
+                name="calendar"
                 size={18}
                 color="#0066FF"
                 style={styles.inputIcon}
               />
               <TextInput
                 style={[styles.input, !isEditing && styles.inputDisabled]}
-                placeholder="Nhập username"
+                placeholder="Nhập năm sinh"
                 placeholderTextColor="#ccc"
-                value={username}
-                onChangeText={setUsername}
+                value={YOB}
+                onChangeText={setYOB}
                 editable={isEditing}
+                keyboardType="numeric"
               />
             </View>
           </View>
@@ -268,7 +275,7 @@ function UpdateProfileScreen() {
                 style={[styles.input, styles.inputDisabled]}
                 placeholder="Email"
                 placeholderTextColor="#ccc"
-                value={user?.email || ""}
+                value={user?.userAccount.email || ""}
                 editable={false}
               />
             </View>
@@ -296,7 +303,7 @@ function UpdateProfileScreen() {
             </View>
           </View>
 
-          {/* Location */}
+          {/* Address */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Địa chỉ</Text>
             <View>
@@ -311,7 +318,7 @@ function UpdateProfileScreen() {
                   style={[styles.input, !isEditing && styles.inputDisabled]}
                   placeholder="Nhập địa chỉ"
                   placeholderTextColor="#ccc"
-                  value={location}
+                  value={address}
                   onChangeText={handleLocationChange}
                   editable={isEditing}
                 />
