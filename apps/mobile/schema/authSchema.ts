@@ -92,11 +92,10 @@ export const resetPasswordSchema = z.object({
     .string()
     .min(8, { message: "Mật khẩu mới phải có ít nhất 8 ký tự" })
     .max(30, { message: "Mật khẩu không được vượt quá 32 ký tự" }),
-  confirm_password: z
+  confirmPassword: z
     .string()
     .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" })
     .max(30, { message: "Mật khẩu không được vượt quá 30 ký tự" }),
-  forgot_password_token: z.string().optional(),
-  email: z.string().optional(),
-  otp: z.string().optional(),
+  resetToken: z.string() .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" })
+  .max(30, { message: "Mật khẩu không được vượt quá 30 ký tự" }),
 });

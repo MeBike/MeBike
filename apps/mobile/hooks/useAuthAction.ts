@@ -10,7 +10,7 @@ import type {
   UpdateProfileSchemaFormData,
 } from "@schemas/authSchema";
 
-import { clearTokens, setTokens } from "@utils/tokenManager";
+import { clearTokens, setTokens , setResetToken ,} from "@utils/tokenManager";
 
 import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePasswordMutation";
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
@@ -21,14 +21,7 @@ import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
+import { useVerifyOTPMutation } from "./mutations/Auth/Password/useVerifyOTPMutation";
 import { AuthTokens } from "@/types";
 import { getErrorMessage } from "@/utils/getErrorMessage";
 import { HTTP_STATUS } from "@/lib/httpClient";
@@ -342,6 +335,37 @@ export const useAuthActions = (
     },
     [useUpdateProfile, queryClient]
   );
+  const useVerifyOTP = useVerifyOTPMutation();
+  const verifyOTP = useCallback(({email, otp}: {email: string; otp: string}) => {
+    return new Promise<void>((resolve, reject) => {
+      useVerifyOTP.mutate({email, otp}, {
+        onSuccess: async (result) => {
+          if (result.status === HTTP_STATUS.OK) {
+            const resetToken = result.data?.data?.VerifyOTP.data?.resetToken;
+            console.log("Reset token from API:", resetToken);
+            if (resetToken) {
+              await setResetToken(resetToken);
+              console.log("Reset token saved to AsyncStorage");
+            } else {
+              console.warn("No reset token in API response");
+            }
+            Alert.alert ("Thành công", result.data?.data?.VerifyOTP.message || "Mã OTP đã được xác minh thành công");
+            resolve();
+          } else {
+            reject(new Error("Xác minh OTP thất bại"));
+          }
+        },
+        onError: (error: unknown) => {
+          const errorMessage = getErrorMessage(
+            error,
+            "Lỗi khi xác minh OTP"
+          );
+          Alert.alert("Lỗi", errorMessage);
+          reject(error);
+        },
+      });
+    });
+  }, [useVerifyOTP]);
   return {
     changePassword,
     logIn,
@@ -352,6 +376,7 @@ export const useAuthActions = (
     forgotPassword,
     resetPassword,
     updateProfile,
+    verifyOTP,
     isUpdatingProfile: useUpdateProfile.isPending,
     isChangingPassword: useChangePassword.isPending,
     isRegistering: useRegister.isPending,
