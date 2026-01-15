@@ -72,9 +72,14 @@ export const changePasswordSchema = z
       .min(1900, { message: "Năm sinh không hợp lệ" })
       .max(2025, { message: "Năm sinh không hợp lệ" }),
     address: z
-      .string()
-      .min(10, { message: "Địa chỉ phải có ít nhất 10 ký tự" })
-      .max(100, { message: "Địa chỉ không được vượt quá 100 ký tự" }),
+      .union([
+        z
+          .string()
+          .min(10, { message: "Địa chỉ phải có ít nhất 10 ký tự" })
+          .max(100, { message: "Địa chỉ không được vượt quá 100 ký tự" }),
+        z.literal(""),
+      ])
+      .optional(),
     phone: z
       .string()
       .regex(vietnamesePhoneNumberRegex, {
