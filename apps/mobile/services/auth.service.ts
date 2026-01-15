@@ -181,9 +181,9 @@ export const authService = {
         print(RESET_PASSWORD),
         {
           data: {
-            confirmPassword: data.confirm_password,
+            confirmPassword: data.confirmPassword,
             newPassword: data.password,
-            resetToken: data.otp,
+            resetToken: data.resetToken,
           },
         }
       );

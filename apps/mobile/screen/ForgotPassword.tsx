@@ -35,7 +35,6 @@ function ForgotPasswordScreen() {
     
     forgotPassword({ email });
     
-    // Navigate to OTP verification screen after sending email
     setTimeout(() => {
       navigation.navigate("ResetPasswordOTP", {
         email,
