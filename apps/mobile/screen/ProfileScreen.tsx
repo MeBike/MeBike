@@ -131,11 +131,9 @@ function ProfileScreen() {
       Alert.alert("Info", "Email của bạn đã được xác thực.");
       return;
     }
-
     setIsResendingOtp(true);
     try {
       await resendVerifyEmail();
-      Alert.alert("Success", "Mã OTP mới đã được gửi đến email của bạn!");
       setIsVerifyEmailModalOpen(true);
     } catch (error) {
       console.log("Resend OTP error:", error);
@@ -146,8 +144,7 @@ function ProfileScreen() {
 
   const handleVerifyEmail = async (otp: string) => {
     try {
-      await verifyEmail({ email: profile.email, otp });
-      // Close modal after successful verification
+      await verifyEmail({ otp });
       setTimeout(() => {
         setIsVerifyEmailModalOpen(false);
       }, 500);
@@ -354,7 +351,7 @@ function ProfileScreen() {
           </View>
 
           {/* Email Verification Section */}
-          {profile.verify !== "VERIFIED" && (
+          {profile.verify !== "Verified" && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Xác thực Email</Text>
               <View style={styles.emailVerificationCard}>
