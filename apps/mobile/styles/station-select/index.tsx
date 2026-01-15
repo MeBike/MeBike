@@ -30,12 +30,14 @@ export default function StationSelectScreen() {
     showingNearby,
     route,
     isRouting,
+    routeProfile,
     isLoadingNearbyStations,
     handleSelectStationForRoute,
     handleFindNearbyStations,
     handleRefresh,
     buildRouteToSelectedStation,
     clearRoute,
+    setRouteProfile,
     openSelectedStationDetail,
     currentLocation,
     selectedStationId,
@@ -59,7 +61,7 @@ export default function StationSelectScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       <StationMap
         stations={stations}
         route={route}
@@ -73,12 +75,16 @@ export default function StationSelectScreen() {
         destinationLabel={selectedStationId
           ? stations.find(s => s._id === selectedStationId)?.name ?? "Trạm đã chọn"
           : "Chọn một trạm trên bản đồ"}
+        routeProfile={routeProfile}
+        routeDistanceMeters={route?.properties.distanceMeters ?? null}
+        routeDurationSeconds={route?.properties.durationSeconds ?? null}
         isRouting={isRouting}
         hasDestination={Boolean(selectedStationId)}
         hasRoute={Boolean(route)}
         onToggleNearby={handleFindNearbyStations}
         onOpenList={() => setIsListOpen(true)}
         onBuildRoute={buildRouteToSelectedStation}
+        onChangeRouteProfile={setRouteProfile}
         onOpenStationDetail={openSelectedStationDetail}
         onClearRoute={clearRoute}
       />

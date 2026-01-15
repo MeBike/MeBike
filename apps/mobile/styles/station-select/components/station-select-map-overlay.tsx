@@ -4,6 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
+import type { MapboxDirectionsProfile } from "@/lib/mapbox-directions";
+
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
@@ -66,6 +68,32 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 4,
   },
+  modeRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 6,
+  },
+  modeButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.22)",
+  },
+  modeButtonActive: {
+    backgroundColor: "rgba(255, 255, 255, 0.24)",
+    borderColor: "rgba(255, 255, 255, 0.35)",
+  },
+  modeButtonText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "white",
+  },
   smallButton: {
     flex: 1,
     flexDirection: "row",
@@ -122,6 +150,15 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "white",
   },
+  routeSummary: {
+    marginTop: 10,
+    alignSelf: "center",
+  },
+  routeSummaryText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "rgba(255, 255, 255, 0.92)",
+  },
   detailLink: {
     marginTop: 10,
     alignSelf: "center",
@@ -138,30 +175,65 @@ type StationSelectMapOverlayProps = {
   showingNearby: boolean;
   isLoadingNearbyStations: boolean;
   destinationLabel: string;
+  routeProfile: MapboxDirectionsProfile;
+  routeDistanceMeters?: number | null;
+  routeDurationSeconds?: number | null;
   isRouting: boolean;
   hasDestination: boolean;
   hasRoute: boolean;
   onToggleNearby: () => void;
   onOpenList: () => void;
   onBuildRoute: () => void;
+  onChangeRouteProfile: (profile: MapboxDirectionsProfile) => void;
   onOpenStationDetail: () => void;
   onClearRoute: () => void;
 };
+
+function formatDistance(meters: number): string {
+  if (!Number.isFinite(meters) || meters <= 0)
+    return "";
+  if (meters < 1000)
+    return `${Math.round(meters)} m`;
+  const km = meters / 1000;
+  const formatted = km < 10 ? km.toFixed(1) : km.toFixed(0);
+  return `${formatted} km`;
+}
+
+function formatDuration(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0)
+    return "";
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60)
+    return `${minutes} phút`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (remainingMinutes === 0)
+    return `${hours} giờ`;
+  return `${hours} giờ ${remainingMinutes} phút`;
+}
 
 export function StationSelectMapOverlay({
   safeTop,
   showingNearby,
   isLoadingNearbyStations,
   destinationLabel,
+  routeProfile,
+  routeDistanceMeters,
+  routeDurationSeconds,
   isRouting,
   hasDestination,
   hasRoute,
   onToggleNearby,
   onOpenList,
   onBuildRoute,
+  onChangeRouteProfile,
   onOpenStationDetail,
   onClearRoute,
 }: StationSelectMapOverlayProps) {
+  const routeSummary = hasRoute && routeDistanceMeters && routeDurationSeconds
+    ? `${formatDistance(routeDistanceMeters)} • ${formatDuration(routeDurationSeconds)}`
+    : null;
+
   return (
     <View style={styles.container}>
       <View style={styles.card}>
@@ -207,6 +279,35 @@ export function StationSelectMapOverlay({
             </Pressable>
           </View>
 
+          <View style={styles.modeRow}>
+            <Pressable
+              style={[styles.modeButton, routeProfile === "walking" && styles.modeButtonActive]}
+              onPress={() => onChangeRouteProfile("walking")}
+              disabled={isRouting}
+            >
+              <Ionicons name="walk" size={16} color="white" />
+              <Text style={styles.modeButtonText}>Đi bộ</Text>
+            </Pressable>
+
+            <Pressable
+              style={[styles.modeButton, routeProfile === "cycling" && styles.modeButtonActive]}
+              onPress={() => onChangeRouteProfile("cycling")}
+              disabled={isRouting}
+            >
+              <Ionicons name="bicycle" size={16} color="white" />
+              <Text style={styles.modeButtonText}>Xe đạp</Text>
+            </Pressable>
+
+            <Pressable
+              style={[styles.modeButton, routeProfile === "driving" && styles.modeButtonActive]}
+              onPress={() => onChangeRouteProfile("driving")}
+              disabled={isRouting}
+            >
+              <Ionicons name="car" size={16} color="white" />
+              <Text style={styles.modeButtonText}>Ô tô</Text>
+            </Pressable>
+          </View>
+
           <View style={styles.primaryRow}>
             <Pressable
               style={[styles.primaryButton, (!hasDestination || isRouting) && styles.primaryButtonDisabled]}
@@ -226,6 +327,14 @@ export function StationSelectMapOverlay({
                 )
               : null}
           </View>
+
+          {routeSummary
+            ? (
+                <View style={styles.routeSummary}>
+                  <Text style={styles.routeSummaryText}>{routeSummary}</Text>
+                </View>
+              )
+            : null}
 
           {hasDestination
             ? (

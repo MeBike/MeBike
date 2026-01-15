@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   markerContainerZero: {
-    opacity: 0.7,
+    opacity: 1,
   },
   marker: {
     width: 34,
@@ -32,8 +32,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   markerZero: {
-    backgroundColor: BikeColors.lightGray,
-    borderColor: BikeColors.divider,
+    backgroundColor: BikeColors.error,
+    borderColor: BikeColors.background,
   },
   badge: {
     position: "absolute",
@@ -61,9 +61,9 @@ export function StationMapMarker({ count }: StationMapMarkerProps) {
     <View style={[styles.markerContainer, count === 0 && styles.markerContainerZero]}>
       <View style={[styles.marker, count === 0 && styles.markerZero]}>
         <Ionicons
-          name={count === 0 ? "close" : "bicycle"}
+          name="bicycle"
           size={18}
-          color={count === 0 ? BikeColors.textSecondary : "white"}
+          color="white"
         />
       </View>
       {count > 0

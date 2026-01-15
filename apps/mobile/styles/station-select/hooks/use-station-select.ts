@@ -1,6 +1,8 @@
+import type { MapboxDirectionsProfile } from "@lib/mapbox-directions";
+
+import { useStationRouteQuery } from "@hooks/query/Station/use-station-route-query";
 import { useStationActions } from "@hooks/useStationAction";
 import { log } from "@lib/log";
-import { getRouteLine } from "@lib/mapbox-directions";
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,8 +17,8 @@ export function useStationSelect() {
   const [showingNearby, setShowingNearby] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
   const [selectedStationId, setSelectedStationId] = React.useState<string | null>(null);
-  const [route, setRoute] = React.useState<import("@lib/mapbox-directions").MapboxRouteLine | null>(null);
-  const [isRouting, setIsRouting] = React.useState(false);
+  const [routeProfile, setRouteProfile] = React.useState<MapboxDirectionsProfile>("walking");
+  const [routeRequested, setRouteRequested] = React.useState(false);
   const { location: currentLocation, refresh: refreshLocation } = useCurrentLocation();
 
   const {
@@ -63,13 +65,39 @@ export function useStationSelect() {
 
   const stations = showingNearby ? nearbyStations : data;
 
+  const selectedStation = React.useMemo(() => {
+    if (!selectedStationId)
+      return null;
+    return stations.find(s => s._id === selectedStationId) ?? null;
+  }, [selectedStationId, stations]);
+
+  const destination = React.useMemo(() => {
+    if (!selectedStation)
+      return null;
+
+    return {
+      latitude: Number.parseFloat(selectedStation.latitude),
+      longitude: Number.parseFloat(selectedStation.longitude),
+    };
+  }, [selectedStation]);
+
+  const routeQuery = useStationRouteQuery({
+    origin: currentLocation ?? null,
+    destination,
+    profile: routeProfile,
+    enabled: routeRequested,
+  });
+
+  const route = routeQuery.data ?? null;
+  const isRouting = routeQuery.isFetching;
+
   const handleSelectStationForRoute = async (stationId: string) => {
     const station = stations.find(s => s._id === stationId);
     if (!station)
       return;
 
     setSelectedStationId(stationId);
-    setRoute(null);
+    setRouteRequested(false);
 
     if (!currentLocation) {
       await refreshLocation();
@@ -77,15 +105,14 @@ export function useStationSelect() {
   };
 
   const clearRoute = () => {
-    setRoute(null);
+    setRouteRequested(false);
   };
 
-  const buildRouteToSelectedStation = async () => {
+  const buildRouteToSelectedStation = React.useCallback(async () => {
     if (!selectedStationId)
       return;
 
-    const station = stations.find(s => s._id === selectedStationId);
-    if (!station)
+    if (!selectedStation)
       return;
 
     if (!currentLocation) {
@@ -93,21 +120,8 @@ export function useStationSelect() {
       return;
     }
 
-    setIsRouting(true);
-    try {
-      const nextRoute = await getRouteLine(
-        currentLocation,
-        {
-          latitude: Number.parseFloat(station.latitude),
-          longitude: Number.parseFloat(station.longitude),
-        },
-      );
-      setRoute(nextRoute);
-    }
-    finally {
-      setIsRouting(false);
-    }
-  };
+    setRouteRequested(true);
+  }, [currentLocation, refreshLocation, selectedStation, selectedStationId]);
 
   const openSelectedStationDetail = () => {
     if (!selectedStationId)
@@ -122,6 +136,7 @@ export function useStationSelect() {
     selectedStationId,
     route,
     isRouting,
+    routeProfile,
     isLoadingNearbyStations,
     handleSelectStation,
     handleSelectStationForRoute,
@@ -129,6 +144,7 @@ export function useStationSelect() {
     handleRefresh,
     buildRouteToSelectedStation,
     clearRoute,
+    setRouteProfile,
     openSelectedStationDetail,
     insets,
     currentLocation,

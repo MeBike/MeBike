@@ -1,3 +1,5 @@
+import ky from "ky";
+
 import { log } from "@lib/log";
 
 type Coordinates = {
@@ -5,11 +7,14 @@ type Coordinates = {
   longitude: number;
 };
 
+export type MapboxDirectionsProfile = "walking" | "cycling" | "driving";
+
 export type MapboxRouteLine = {
   type: "Feature";
   properties: {
     distanceMeters: number;
     durationSeconds: number;
+    profile: MapboxDirectionsProfile;
   };
   geometry: {
     type: "LineString";
@@ -28,9 +33,15 @@ type DirectionsResponse = {
   }>;
 };
 
+const mapboxKy = ky.create({
+  retry: { limit: 0 },
+  timeout: 15000,
+});
+
 export async function getRouteLine(
   origin: Coordinates,
   destination: Coordinates,
+  profile: MapboxDirectionsProfile = "walking",
 ): Promise<MapboxRouteLine | null> {
   const token = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN;
   if (!token) {
@@ -44,22 +55,24 @@ export async function getRouteLine(
   const destinationPart = `${destination.longitude},${destination.latitude}`;
 
   const url = new URL(
-    `https://api.mapbox.com/directions/v5/mapbox/walking/${originPart};${destinationPart}`,
+    `https://api.mapbox.com/directions/v5/mapbox/${profile}/${originPart};${destinationPart}`,
   );
   url.searchParams.set("geometries", "geojson");
   url.searchParams.set("overview", "full");
   url.searchParams.set("steps", "false");
   url.searchParams.set("access_token", token);
 
-  const response = await fetch(url.toString());
-  if (!response.ok) {
+  let json: DirectionsResponse;
+  try {
+    json = await mapboxKy.get(url.toString()).json<DirectionsResponse>();
+  }
+  catch (error) {
     log.warn("Mapbox directions request failed", {
-      status: response.status,
+      error: String(error),
     });
     return null;
   }
 
-  const json = await response.json() as DirectionsResponse;
   const firstRoute = json.routes?.[0];
   if (!firstRoute) {
     return null;
@@ -70,6 +83,7 @@ export async function getRouteLine(
     properties: {
       distanceMeters: firstRoute.distance,
       durationSeconds: firstRoute.duration,
+      profile,
     },
     geometry: {
       type: "LineString",
