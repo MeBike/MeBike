@@ -74,7 +74,7 @@ export const changePasswordSchema = z
     address: z
       .string()
       .min(10, { message: "Địa chỉ phải có ít nhất 10 ký tự" })
-      .max(50, { message: "Địa chỉ không được vượt quá 100 ký tự" }),
+      .max(100, { message: "Địa chỉ không được vượt quá 100 ký tự" }),
     phone: z
       .string()
       .regex(vietnamesePhoneNumberRegex, {
