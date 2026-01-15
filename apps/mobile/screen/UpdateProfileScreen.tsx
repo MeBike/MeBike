@@ -1,7 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -16,13 +16,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
-
 import { useAuth } from "@providers/auth-providers";
 import { uploadImageToFirebase } from "@lib/imageUpload";
+import { profileUpdateSchema, type UpdateProfileSchemaFormData } from "@schemas/authSchema";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-// TomTom API
 const TOMTOM_API_KEY = process.env.EXPO_PUBLIC_TOMTOM_API_KEY;
-
 const fetchTomTomReverseGeocode = async (
   latitude: string,
   longitude: string
@@ -57,23 +57,54 @@ function UpdateProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, updateProfile, isUpdatingProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [fullname, setFullname] = useState(user?.fullname || "");
-  const [username, setUsername] = useState(user?.username || "");
-  const [phone, setPhone] = useState(user?.phone_number || "");
-  const [location, setLocation] = useState(user?.location || "");
-  const [avatar, setAvatar] = useState(user?.avatar || "");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+    reset,
+  } = useForm<UpdateProfileSchemaFormData>({
+    resolver: zodResolver(profileUpdateSchema),
+    defaultValues: {
+      name: user?.name || "",
+      phone: user?.phone || "",
+      address: user?.address || "",
+      avatarUrl: user?.avatarUrl || "",
+      YOB: user?.YOB ?? 0,
+      nfcCardUid: user?.nfcCardUid || undefined,
+    },
+  });
+
+  const nameValue = watch("name");
+  const phoneValue = watch("phone");
+  const addressValue = watch("address");
+  const avatarUrlValue = watch("avatarUrl");
+  const yobValue = watch("YOB");
+
+  useEffect(() => {
+    // Keep form in sync if user changes (e.g. after refetch)
+    reset({
+      name: user?.name || "",
+      phone: user?.phone || "",
+      address: user?.address || "",
+      avatarUrl: user?.avatarUrl || "",
+      YOB: user?.YOB ?? 0,
+      nfcCardUid: user?.nfcCardUid || undefined,
+    });
+  }, [reset, user]);
 
   const handleEditPress = () => {
     setIsEditing(true);
   };
 
   const handleLocationChange = async (text: string) => {
-    setLocation(text);
+    setValue("address", text, { shouldDirty: true, shouldValidate: true });
     if (typingTimeout) clearTimeout(typingTimeout);
-    
     if (text.length > 3) {
       const timeout = setTimeout(async () => {
         try {
@@ -90,16 +121,16 @@ function UpdateProfileScreen() {
   };
 
   const handleSelectSuggestion = async (item: any) => {
-    setLocation(item.address);
+    setValue("address", item.address, { shouldDirty: true, shouldValidate: true });
     setAddressSuggestions([]);
     
-    const address = await fetchTomTomReverseGeocode(
+    const addressText = await fetchTomTomReverseGeocode(
       item.latitude.toString(),
       item.longitude.toString()
     );
     
-    if (address) {
-      setLocation(address);
+    if (addressText) {
+      setValue("address", addressText, { shouldDirty: true, shouldValidate: true });
     }
   };
 
@@ -115,7 +146,7 @@ function UpdateProfileScreen() {
       if (!result.canceled && result.assets[0]) {
         setIsUploadingAvatar(true);
         const uploadedUrl = await uploadImageToFirebase(result.assets[0]);
-        setAvatar(uploadedUrl);
+        setValue("avatarUrl", uploadedUrl, { shouldDirty: true, shouldValidate: true });
         setIsUploadingAvatar(false);
         Alert.alert("Thành công", "Ảnh đã được upload!");
       }
@@ -127,46 +158,38 @@ function UpdateProfileScreen() {
     }
   };
 
-  const handleSave = async () => {
-    if (!fullname.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập họ tên");
-      return;
-    }
-    if (!phone.trim()) {
-      Alert.alert("Lỗi", "Vui lòng nhập số điện thoại");
-      return;
-    }
-
-    const changedData: any = {};
-    if (fullname !== (user?.fullname || "")) changedData.fullname = fullname;
-    if (username !== (user?.username || "")) changedData.username = username;
-    if (phone !== (user?.phone_number || "")) changedData.phone_number = phone;
-    if (location !== (user?.location || "")) changedData.location = location;
-    if (avatar !== (user?.avatar || "")) changedData.avatar = avatar;
+  const handleSave = handleSubmit(async (data) => {
+    const changedData: Partial<UpdateProfileSchemaFormData> = {};
+    if (data.name !== (user?.name || "")) changedData.name = data.name;
+    if ((data.phone || "") !== (user?.phone || "")) changedData.phone = data.phone;
+    if ((data.address || "") !== (user?.address || "")) changedData.address = data.address;
+    if ((data.avatarUrl || "") !== (user?.avatarUrl || "")) changedData.avatarUrl = data.avatarUrl;
+    if (data.YOB !== (user?.YOB || 0)) changedData.YOB = data.YOB;
 
     if (Object.keys(changedData).length === 0) {
       Alert.alert("Không có thay đổi", "Bạn chưa thay đổi thông tin nào.");
       setIsEditing(false);
       return;
     }
-
     try {
       await updateProfile(changedData);
       setIsEditing(false);
       Alert.alert("Thành công", "Cập nhật thông tin thành công!");
-    }
-    catch (e) {
+    } catch (e) {
       const errorMsg = e instanceof Error ? e.message : "Cập nhật thất bại. Vui lòng thử lại.";
       Alert.alert("Lỗi", errorMsg);
     }
-  };
+  });
 
   const handleCancel = () => {
-    setFullname(user?.fullname || "");
-    setUsername(user?.username || "");
-    setPhone(user?.phone_number || "");
-    setLocation(user?.location || "");
-    setAvatar(user?.avatar || "");
+    reset({
+      name: user?.name || "",
+      phone: user?.phone || "",
+      address: user?.address || "",
+      avatarUrl: user?.avatarUrl || "",
+      YOB: user?.YOB ?? 0,
+      nfcCardUid: user?.nfcCardUid || undefined,
+    });
     setIsEditing(false);
   };
 
@@ -190,7 +213,7 @@ function UpdateProfileScreen() {
         <View style={styles.avatarSection}>
           <Image
             source={{
-              uri: avatar || "https://via.placeholder.com/100",
+              uri: avatarUrlValue || "https://via.placeholder.com/100",
             }}
             style={styles.avatar}
           />
@@ -212,7 +235,7 @@ function UpdateProfileScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
         <View style={styles.formSection}>
-          {/* Fullname */}
+          {/* Name */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Họ và tên</Text>
             <View style={styles.inputWrapper}>
@@ -222,36 +245,69 @@ function UpdateProfileScreen() {
                 color="#0066FF"
                 style={styles.inputIcon}
               />
-              <TextInput
-                style={[styles.input, !isEditing && styles.inputDisabled]}
-                placeholder="Nhập họ và tên"
-                placeholderTextColor="#ccc"
-                value={fullname}
-                onChangeText={setFullname}
-                editable={isEditing}
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      !isEditing && styles.inputDisabled,
+                      errors.name && { borderColor: "red" },
+                    ]}
+                    placeholder="Nhập họ và tên"
+                    placeholderTextColor="#ccc"
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    editable={isEditing}
+                  />
+                )}
               />
             </View>
+            {!!errors.name?.message && <Text style={styles.errorText}>{errors.name.message}</Text>}
           </View>
 
-          {/* Username */}
+          {/* YOB */}
           <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Username</Text>
+            <Text style={styles.fieldLabel}>Năm sinh</Text>
             <View style={styles.inputWrapper}>
               <Ionicons
-                name="person"
+                name="calendar"
                 size={18}
                 color="#0066FF"
                 style={styles.inputIcon}
               />
-              <TextInput
-                style={[styles.input, !isEditing && styles.inputDisabled]}
-                placeholder="Nhập username"
-                placeholderTextColor="#ccc"
-                value={username}
-                onChangeText={setUsername}
-                editable={isEditing}
+              <Controller
+                control={control}
+                name="YOB"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      !isEditing && styles.inputDisabled,
+                      errors.YOB && { borderColor: "red" },
+                    ]}
+                    placeholder="Nhập năm sinh"
+                    placeholderTextColor="#ccc"
+                    value={value ? String(value) : ""}
+                    onBlur={onBlur}
+                    onChangeText={(text) => {
+                      const trimmed = text.trim();
+                      if (trimmed === "") {
+                        onChange(undefined);
+                        return;
+                      }
+                      const asNumber = Number(trimmed);
+                      onChange(Number.isFinite(asNumber) ? asNumber : undefined);
+                    }}
+                    editable={isEditing}
+                    keyboardType="numeric"
+                  />
+                )}
               />
             </View>
+            {!!errors.YOB?.message && <Text style={styles.errorText}>{errors.YOB.message}</Text>}
           </View>
 
           {/* Email (read-only) */}
@@ -268,7 +324,7 @@ function UpdateProfileScreen() {
                 style={[styles.input, styles.inputDisabled]}
                 placeholder="Email"
                 placeholderTextColor="#ccc"
-                value={user?.email || ""}
+                value={user?.userAccount.email || ""}
                 editable={false}
               />
             </View>
@@ -284,19 +340,31 @@ function UpdateProfileScreen() {
                 color="#0066FF"
                 style={styles.inputIcon}
               />
-              <TextInput
-                style={[styles.input, !isEditing && styles.inputDisabled]}
-                placeholder="Nhập số điện thoại"
-                placeholderTextColor="#ccc"
-                value={phone}
-                onChangeText={setPhone}
-                editable={isEditing}
-                keyboardType="phone-pad"
+              <Controller
+                control={control}
+                name="phone"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      !isEditing && styles.inputDisabled,
+                      errors.phone && { borderColor: "red" },
+                    ]}
+                    placeholder="Nhập số điện thoại"
+                    placeholderTextColor="#ccc"
+                    value={value || ""}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    editable={isEditing}
+                    keyboardType="phone-pad"
+                  />
+                )}
               />
             </View>
+            {!!errors.phone?.message && <Text style={styles.errorText}>{errors.phone.message}</Text>}
           </View>
 
-          {/* Location */}
+          {/* Address */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Địa chỉ</Text>
             <View>
@@ -307,15 +375,29 @@ function UpdateProfileScreen() {
                   color="#0066FF"
                   style={styles.inputIcon}
                 />
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  placeholder="Nhập địa chỉ"
-                  placeholderTextColor="#ccc"
-                  value={location}
-                  onChangeText={handleLocationChange}
-                  editable={isEditing}
+                <Controller
+                  control={control}
+                  name="address"
+                  render={({ field: { onBlur, value } }) => (
+                    <TextInput
+                      style={[
+                        styles.input,
+                        !isEditing && styles.inputDisabled,
+                        errors.address && { borderColor: "red" },
+                      ]}
+                      placeholder="Nhập địa chỉ"
+                      placeholderTextColor="#ccc"
+                      value={value || ""}
+                      onBlur={onBlur}
+                      onChangeText={handleLocationChange}
+                      editable={isEditing}
+                    />
+                  )}
                 />
               </View>
+              {!!errors.address?.message && (
+                <Text style={styles.errorText}>{errors.address.message}</Text>
+              )}
               {addressSuggestions.length > 0 && (
                 <View
                   style={{
