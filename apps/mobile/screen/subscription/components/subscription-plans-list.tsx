@@ -1,8 +1,10 @@
 import type { SubscriptionPackageInfo } from "@constants/subscriptionPackages";
 
+import { Ionicons } from "@expo/vector-icons";
+
 import { SubscriptionPackageCard } from "@components/subscription/subscription-package-card";
 import React from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import type {
   SubscriptionListItem,
@@ -16,6 +18,7 @@ type Props = {
   canSubscribe: boolean;
   subscribingPackage: SubscriptionPackage | null;
   onSubscribe: (pkg: SubscriptionPackage) => void;
+  emptySubtitle?: string;
 };
 
 const styles = StyleSheet.create({
@@ -24,6 +27,37 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111827",
     marginVertical: 12,
+  },
+  emptyState: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  emptyIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F3F4F6",
+    marginBottom: 10,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  emptySubtitle: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#6B7280",
+    textAlign: "center",
   },
 });
 
@@ -34,23 +68,35 @@ export function SubscriptionPlansList({
   canSubscribe,
   subscribingPackage,
   onSubscribe,
+  emptySubtitle = "Hiện chưa có gói nào khả dụng. Vui lòng thử lại sau.",
 }: Props) {
   return (
     <>
       <Text style={styles.title}>Chọn gói phù hợp</Text>
-      {packages.map(pkg => (
-        <SubscriptionPackageCard
-          key={pkg.id}
-          info={pkg}
-          disabled={!canSubscribe}
-          isCurrent={
-            pkg.id === activeSubscription?.package_name
-            || pkg.id === pendingSubscription?.package_name
-          }
-          loading={subscribingPackage === pkg.id}
-          onSubscribe={() => onSubscribe(pkg.id)}
-        />
-      ))}
+
+      {packages.length === 0 ? (
+        <View style={styles.emptyState}>
+          <View style={styles.emptyIconWrap}>
+            <Ionicons name="pricetags-outline" size={26} color="#9CA3AF" />
+          </View>
+          <Text style={styles.emptyTitle}>Chưa có gói đăng ký</Text>
+          <Text style={styles.emptySubtitle}>{emptySubtitle}</Text>
+        </View>
+      ) : (
+        packages.map((pkg) => (
+          <SubscriptionPackageCard
+            key={pkg.id}
+            info={pkg}
+            disabled={!canSubscribe}
+            isCurrent={
+              pkg.id === activeSubscription?.package_name ||
+              pkg.id === pendingSubscription?.package_name
+            }
+            loading={subscribingPackage === pkg.id}
+            onSubscribe={() => onSubscribe(pkg.id)}
+          />
+        ))
+      )}
     </>
   );
 }

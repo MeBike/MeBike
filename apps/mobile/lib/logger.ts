@@ -1,6 +1,6 @@
-import { createLogger } from "react-native-logs";
+import { logger } from "react-native-logs";
 
-export const log = createLogger({
+export const log = logger.createLogger({
   levels: {
     debug: 0,
     info: 1,

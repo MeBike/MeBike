@@ -33,27 +33,25 @@ function mapPackages(
   packages: PackageListItem[],
   defaults: SubscriptionPackageInfo[],
 ) {
-  if (!packages.length)
-    return defaults;
+  if (!packages.length) return [];
 
-  const activePackages = packages.filter(pkg => pkg.status === "Active");
-  if (!activePackages.length)
-    return defaults;
+  const activePackages = packages.filter((pkg) => pkg.status === "Active");
+  if (!activePackages.length) return [];
 
   return activePackages.map((pkg) => {
     const normalized = pkg.name;
-    const isUnlimited
-      = pkg.usageType === "Infinite"
-        || normalized.includes("khong")
-        || normalized.includes("gioi han");
+    const isUnlimited =
+      pkg.usageType === "Infinite" ||
+      normalized.includes("khong") ||
+      normalized.includes("gioi han");
     const isPremium = normalized.includes("nang") || (pkg.maxUsages ?? 0) >= 60;
     const fallbackKey = isUnlimited
       ? "unlimited"
       : isPremium
         ? "premium"
         : "basic";
-    const fallback
-      = defaults.find(item => item.id === fallbackKey) ?? defaults[0];
+    const fallback =
+      defaults.find((item) => item.id === fallbackKey) ?? defaults[0];
     return {
       ...fallback,
       title: pkg.name,
@@ -125,14 +123,12 @@ export default function SubscriptionScreen() {
               await subscribe({ package_name: packageName });
               Alert.alert("Thành công", "Đăng ký gói tháng thành công");
               invalidateSubscriptions();
-            }
-            catch (error) {
+            } catch (error) {
               Alert.alert(
                 "Không thể đăng ký",
                 getSubscriptionErrorMessage(error, "Vui lòng thử lại sau"),
               );
-            }
-            finally {
+            } finally {
               setSubscribingPackage(null);
             }
           },
@@ -142,8 +138,7 @@ export default function SubscriptionScreen() {
   };
 
   const handleActivate = () => {
-    if (!pendingSubscription)
-      return;
+    if (!pendingSubscription) return;
     Alert.alert(
       "Kích hoạt gói",
       "Gói sẽ bắt đầu tính thời gian ngay sau khi kích hoạt.",
@@ -156,8 +151,7 @@ export default function SubscriptionScreen() {
               await activate({ id: pendingSubscription._id });
               Alert.alert("Thành công", "Gói đã được kích hoạt");
               invalidateSubscriptions();
-            }
-            catch (error) {
+            } catch (error) {
               Alert.alert(
                 "Không thể kích hoạt",
                 getSubscriptionErrorMessage(error, "Vui lòng thử lại sau"),
@@ -203,6 +197,11 @@ export default function SubscriptionScreen() {
               canSubscribe={canSubscribe}
               subscribingPackage={subscribingPackage}
               onSubscribe={handleSubscribe}
+              emptySubtitle={
+                packagesQuery.isError
+                  ? "Không thể tải danh sách gói. Vui lòng kéo để tải lại."
+                  : "Hiện chưa có gói nào khả dụng. Vui lòng thử lại sau."
+              }
             />
           )}
 
