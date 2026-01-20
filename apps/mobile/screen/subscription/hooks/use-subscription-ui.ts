@@ -4,6 +4,7 @@ import { SUBSCRIPTION_PACKAGES } from "@constants/subscriptionPackages";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { log } from "@/lib/logger";
 import type { SubscriptionPackage } from "@/types/subscription-types";
 
 const SECTION_STORAGE_KEY = "subscription_active_section";
@@ -26,10 +27,11 @@ export function useSubscriptionUi() {
       try {
         const saved = await AsyncStorage.getItem(SECTION_STORAGE_KEY);
         if (saved === "plans" || saved === "history") {
-          setState(prev => ({ ...prev, activeSection: saved }));
+          setState((prev) => ({ ...prev, activeSection: saved }));
         }
+      } catch (error) {
+        log.warn("[Subscription] Failed to load section preference", error);
       }
-      catch {}
     };
 
     loadSection();
@@ -37,22 +39,23 @@ export function useSubscriptionUi() {
 
   const handleSectionChange = useCallback(
     async (section: SubscriptionSectionKey) => {
-      setState(prev => ({ ...prev, activeSection: section }));
+      setState((prev) => ({ ...prev, activeSection: section }));
       try {
         await AsyncStorage.setItem(SECTION_STORAGE_KEY, section);
+      } catch (error) {
+        log.warn("[Subscription] Failed to persist section preference", error);
       }
-      catch {}
     },
     [],
   );
 
   const setSelectedId = useCallback((id?: string) => {
-    setState(prev => ({ ...prev, selectedId: id }));
+    setState((prev) => ({ ...prev, selectedId: id }));
   }, []);
 
   const setSubscribingPackage = useCallback(
     (pkg: SubscriptionPackage | null) => {
-      setState(prev => ({ ...prev, subscribingPackage: pkg }));
+      setState((prev) => ({ ...prev, subscribingPackage: pkg }));
     },
     [],
   );
