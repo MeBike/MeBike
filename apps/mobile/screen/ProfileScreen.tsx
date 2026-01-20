@@ -15,9 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import type { DetailUser } from "@services/auth.service";
-
+import type { Me } from "@/types";
 import { useAuth } from "@providers/auth-providers";
 import { getRefreshToken } from "@utils/tokenManager";
 import { VerifyEmailModal } from "@components/VerifyEmailModal";
@@ -28,19 +26,25 @@ function ProfileScreen() {
   const { user, logOut, verifyEmail, resendVerifyEmail, isCustomer } = useAuth();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const hasToken = Boolean(user?._id);
-  const [profile, setProfile] = useState<DetailUser>(() => ({
-    _id: user?._id ?? "",
-    fullname: user?.fullname ?? "",
-    email: user?.email ?? "",
-    verify: user?.verify ?? "",
-    location: user?.location ?? "",
-    username: user?.username ?? "",
-    phone_number: user?.phone_number ?? "",
-    avatar: user?.avatar ?? "",
+  const hasToken = Boolean(user?.id);
+  const [profile, setProfile] = useState<Me>(() => ({
+    id: user?.id ?? "",
+    accountId: user?.accountId ?? "",
+    name: user?.name ?? "",
+    YOB: user?.YOB ?? 0,
     role: user?.role ?? "USER",
-    created_at: user?.created_at ?? "",
-    updated_at: user?.updated_at ?? "",
+    verify: user?.verify ?? "",
+    email: user?.email ?? "",
+    status: user?.status ?? "Active",
+    phone: user?.phone ?? "",
+    userAccount: user?.userAccount ?? { email: "", id: "", password: "" },
+    address: user?.address ?? "",
+    location: user?.location ?? "",
+    avatarUrl: user?.avatarUrl ?? "",
+    username: user?.username ?? "",
+    createdAt: user?.createdAt ?? "",
+    updatedAt: user?.updatedAt ?? "",
+    nfcCardUid: user?.nfcCardUid,
   }));
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
   const [isResendingOtp, setIsResendingOtp] = useState(false);
@@ -62,17 +66,23 @@ function ProfileScreen() {
   useEffect(() => {
     if (user) {
       setProfile({
-        _id: user._id ?? "",
-        fullname: user.fullname ?? "",
-        email: user.email ?? "",
-        verify: user.verify ?? "",
-        location: user.location ?? "",
-        username: user.username ?? "",
-        phone_number: user.phone_number ?? "",
-        avatar: user.avatar ?? "",
+        id: user.id ?? "",
+        accountId: user.accountId ?? "",
+        name: user.name ?? "",
+        YOB: user.YOB ?? 0,
         role: user.role ?? "USER",
-        created_at: user.created_at ?? "",
-        updated_at: user.updated_at ?? "",
+        verify: user.verify ?? "",
+        email: user.email ?? "",
+        status: user.status ?? "Active",
+        phone: user.phone ?? "",
+        userAccount: user.userAccount ?? { email: "", id: "", password: "" },
+        address: user.address ?? "",
+        location: user.location ?? "",
+        avatarUrl: user.avatarUrl ?? "",
+        username: user.username ?? "",
+        createdAt: user.createdAt ?? "",
+        updatedAt: user.updatedAt ?? "",
+        nfcCardUid: user.nfcCardUid,
       });
     }
   }, [user]);
@@ -131,11 +141,9 @@ function ProfileScreen() {
       Alert.alert("Info", "Email của bạn đã được xác thực.");
       return;
     }
-
     setIsResendingOtp(true);
     try {
       await resendVerifyEmail();
-      Alert.alert("Success", "Mã OTP mới đã được gửi đến email của bạn!");
       setIsVerifyEmailModalOpen(true);
     } catch (error) {
       console.log("Resend OTP error:", error);
@@ -146,8 +154,7 @@ function ProfileScreen() {
 
   const handleVerifyEmail = async (otp: string) => {
     try {
-      await verifyEmail({ email: profile.email, otp });
-      // Close modal after successful verification
+      await verifyEmail({ otp });
       setTimeout(() => {
         setIsVerifyEmailModalOpen(false);
       }, 500);
@@ -224,8 +231,8 @@ function ProfileScreen() {
           <View>
             <Image
               source={
-                profile.avatar
-                  ? { uri: profile.avatar }
+                profile.avatarUrl
+                  ? { uri: profile.avatarUrl }
                   : require("../assets/avatar2.png")
               }
               style={{
@@ -257,7 +264,7 @@ function ProfileScreen() {
             }}
             numberOfLines={1}
           >
-            {profile.fullname}
+            {profile.name}
           </Text>
           {/* Thành viên + Stats */}
           <Text
@@ -269,7 +276,7 @@ function ProfileScreen() {
             }}
             numberOfLines={1}
           >
-            Thành viên từ {formatDate(profile.created_at)}
+            Thành viên từ {formatDate(profile.createdAt ?? "")}
           </Text>
           <View
             style={{
@@ -305,7 +312,7 @@ function ProfileScreen() {
                 <View style={styles.infoContent}>
                   <Text style={styles.infoLabel}>Điện thoại</Text>
                   <Text style={styles.infoValue}>
-                    {profile.phone_number || "Chưa cập nhật"}
+                    {profile.phone || "Chưa cập nhật"}
                   </Text>
                 </View>
               </View>
@@ -315,7 +322,7 @@ function ProfileScreen() {
                 <View style={styles.infoContent}>
                   <Text style={styles.infoLabel}>Địa chỉ</Text>
                   <Text style={styles.infoValue}>
-                    {profile.location || "Chưa cập nhật"}
+                    {profile.address || profile.location || "Chưa cập nhật"}
                   </Text>
                 </View>
               </View>

@@ -188,34 +188,37 @@ export const useAuthActions = (
     [useLogout, queryClient, onTokenUpdate, navigation]
   );
   const verifyEmail = useCallback(
-    ({ email, otp }: { email: string; otp: string }): Promise<void> => {
+    ({otp} : {otp: string}): Promise<void> => {
       return new Promise((resolve, reject) => {
-        useVerifyEmail.mutate(
-          { email, otp },
-          {
-            onSuccess: (result) => {
-              const verifyData = result.data.data?.VerifyEmailProcess;
-              if (verifyData?.success) {
-                Alert.alert("Thành công", verifyData.message);
-                queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-                resolve();
-              } else {
-                const errorMessage =
-                  verifyData?.message || "Lỗi khi xác minh email";
-                Alert.alert("Lỗi", errorMessage);
-                reject(new Error(errorMessage));
-              }
-            },
-            onError: (error: unknown) => {
-              const errorMessage = getErrorMessage(
-                error,
-                "OTP không hợp lệ hoặc đã hết hạn"
-              );
-              Alert.alert("Lỗi", errorMessage);
-              reject(error);
-            },
-          }
-        );
+        useVerifyEmail.mutate({ otp }, {
+          onSuccess: (result) => {
+            console.log("verifyEmail onSuccess:", result.status);
+            if (result.status === HTTP_STATUS.OK) {
+              // const accessToken = result.data.data?.VerifyOTP.data.?.access_token;
+              // const refreshToken = result.data.result?.refresh_token;
+              // if (!accessToken || !refreshToken) {
+              //   const errMsg = "Thiếu access hoặc refresh token";
+              //   toast.error(errMsg);
+              //   reject(new Error(errMsg));
+              //   return;
+              // }
+              // setTokens(accessToken, refreshToken);
+              // window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
+              Alert.alert(result.data?.data?.VerifyEmailProcess.message || "Verify email successfuly");
+              queryClient.invalidateQueries({ queryKey: ["user","me"] });
+              resolve();
+            }
+          },
+          onError: (error: unknown) => {
+            console.log("verifyEmail onError:", error);
+            const errorMessage = getErrorMessage(
+              error,
+              "OTP expired"
+            );
+            Alert.alert(errorMessage);
+            reject(error);
+          },
+        });
       });
     },
     [useVerifyEmail, queryClient]

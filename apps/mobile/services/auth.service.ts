@@ -99,18 +99,23 @@ export const authService = {
     return response;
   },
   resendVerifyEmail: async (): Promise<AxiosResponse<VerifyEmailResponse>> => {
-    return fetchHttpClient.mutation<VerifyEmailResponse>(print(VERIFY_EMAIL));
+    const response = await fetchHttpClient.mutation<VerifyEmailResponse>(
+      print(VERIFY_EMAIL)
+    );
+    return response;
   },
   verifyEmail: async ({
     otp,
   }: {
-    email: string;
     otp: string;
   }): Promise<AxiosResponse<VerifyEmailProcessResponse>> => {
-    return fetchHttpClient.mutation<VerifyEmailProcessResponse>(
+    const response = await fetchHttpClient.mutation<VerifyEmailProcessResponse>(
       print(VERIFY_EMAIL_PROCESS),
-      { otp }
+      {
+        "otp" : otp
+      }
     );
+    return response;
   },
   refreshToken: async (
     refresh_token: string
