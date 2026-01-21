@@ -1,21 +1,20 @@
+import type { SubscriptionPackageInfo } from "@constants/subscriptionPackages";
+
+import { SubscriptionPackageCard } from "@components/subscription/subscription-package-card";
 import React from "react";
 import { StyleSheet, Text } from "react-native";
 
 import type {
   SubscriptionListItem,
-  SubscriptionPackage,
 } from "@/types/subscription-types";
-
-import type { SubscriptionPackageInfo } from "@constants/subscriptionPackages";
-import { SubscriptionPackageCard } from "@components/subscription/subscription-package-card";
 
 type Props = {
   packages: SubscriptionPackageInfo[];
   activeSubscription: SubscriptionListItem | null;
   pendingSubscription: SubscriptionListItem | null;
   canSubscribe: boolean;
-  isLoading: (pkg: SubscriptionPackage) => boolean;
-  onSubscribe: (pkg: SubscriptionPackage) => void;
+  isLoading: (pkgId: string) => boolean;
+  onSubscribe: (pkgId: string) => void;
 };
 
 export function SubscriptionPlansSection({
@@ -29,14 +28,17 @@ export function SubscriptionPlansSection({
   return (
     <>
       <Text style={styles.title}>Chọn gói phù hợp</Text>
-      {packages.map((pkg) => (
+      {packages.map(pkg => (
         <SubscriptionPackageCard
-          key={pkg.id}
+          key={pkg.backendId ?? pkg.id}
           info={pkg}
           disabled={!canSubscribe}
-          isCurrent={pkg.id === activeSubscription?.package_name || pkg.id === pendingSubscription?.package_name}
-          loading={isLoading(pkg.id)}
-          onSubscribe={() => onSubscribe(pkg.id)}
+          isCurrent={
+            pkg.backendId === activeSubscription?.packageId
+            || pkg.backendId === pendingSubscription?.packageId
+          }
+          loading={isLoading(pkg.backendId ?? pkg.id)}
+          onSubscribe={() => onSubscribe(pkg.backendId ?? pkg.id)}
         />
       ))}
     </>

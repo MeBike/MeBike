@@ -17,7 +17,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import type {
   PackageListItem,
-  SubscriptionPackage,
 } from "@/types/subscription-types";
 
 import { SubscriptionHistoryList } from "./components/subscription-history-list";
@@ -106,7 +105,7 @@ export default function SubscriptionScreen() {
     />
   );
 
-  const handleSubscribe = (packageName: SubscriptionPackage) => {
+  const handleSubscribe = (packageId: string) => {
     if (!isAuthenticated) {
       Alert.alert("Đăng nhập trước", "Bạn cần đăng nhập để đăng ký gói tháng", [
         { text: "Hủy", style: "cancel" },
@@ -120,15 +119,15 @@ export default function SubscriptionScreen() {
 
     Alert.alert(
       "Xác nhận đăng ký",
-      `Bạn chắc chắn đăng ký gói ${packageName.toUpperCase()}?`,
+      "Bạn chắc chắn đăng ký gói này?",
       [
         { text: "Hủy", style: "cancel" },
         {
           text: "Đồng ý",
           onPress: async () => {
-            setSubscribingPackage(packageName);
+            setSubscribingPackage(packageId);
             try {
-              await subscribe({ package_name: packageName });
+              await subscribe({ packageId });
               Alert.alert("Thành công", "Đăng ký gói tháng thành công");
               invalidateSubscriptions();
             }

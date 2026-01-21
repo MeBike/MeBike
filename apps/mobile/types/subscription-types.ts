@@ -1,10 +1,10 @@
 import type { Pagination } from "./Pagination";
 
-export type SubscriptionStatus =
-  | "ĐANG CHỜ XỬ LÍ"
-  | "ĐANG HOẠT ĐỘNG"
-  | "ĐÃ HẾT HẠN"
-  | "ĐÃ HUỶ";
+export type SubscriptionStatus
+  = | "ĐANG CHỜ XỬ LÍ"
+    | "ĐANG HOẠT ĐỘNG"
+    | "ĐÃ HẾT HẠN"
+    | "ĐÃ HUỶ";
 
 export type SubscriptionPackage = "basic" | "premium" | "unlimited";
 
@@ -39,25 +39,9 @@ export type PackageListPagination = {
 
 export type SubscriptionRecord = {
   _id: string;
-  user_id: string;
-  package_name: SubscriptionPackage;
-  activated_at?: string | null;
-  expires_at?: string | null;
-  max_usages?: number | null;
-  usage_count: number;
-  price: MongoDecimal;
-  status: SubscriptionStatus;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type SubscriptionListItem = {
-  _id: string;
-  user: {
-    _id: string;
-    fullname: string;
-  };
-  package_name: SubscriptionPackage;
+  user_id?: string;
+  package_name: string;
+  packageId?: string;
   activated_at?: string | null;
   expires_at?: string | null;
   max_usages?: number | null;
@@ -66,13 +50,20 @@ export type SubscriptionListItem = {
   status: SubscriptionStatus;
   created_at?: string;
   updated_at?: string;
+  user?: {
+    _id?: string;
+    fullname?: string;
+    email?: string;
+  };
 };
+
+export type SubscriptionListItem = SubscriptionRecord;
 
 export type SubscriptionDetail = {
   subscription: Omit<SubscriptionRecord, "price"> & { price: number };
   user: {
-    fullname: string;
-    email: string;
+    fullname?: string;
+    email?: string;
   };
 };
 
@@ -100,7 +91,8 @@ export type PackageListQueryResult = {
 };
 
 export type CreateSubscriptionPayload = {
-  package_name: SubscriptionPackage;
+  packageId: string;
+  isActivated?: boolean;
 };
 
 export type SubscriptionListParams = {

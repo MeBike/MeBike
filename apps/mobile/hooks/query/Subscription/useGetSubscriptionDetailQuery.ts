@@ -1,6 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { subscriptionService } from "@services/subscription.service";
+import { useQuery } from "@tanstack/react-query";
 
 export function useGetSubscriptionDetailQuery(
   id: string,
@@ -11,7 +10,7 @@ export function useGetSubscriptionDetailQuery(
     enabled: enabled && Boolean(id),
     queryFn: async () => {
       const response = await subscriptionService.getDetail(id);
-      return response.data.result;
+      return response;
     },
   });
 }

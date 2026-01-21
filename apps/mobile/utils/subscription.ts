@@ -3,7 +3,7 @@ import type { MongoDecimal, SubscriptionRecord, SubscriptionStatus } from "@/typ
 const STATUS_COLORS: Record<SubscriptionStatus, { text: string; background: string }> = {
   "ĐANG CHỜ XỬ LÍ": { text: "#B45309", background: "#FEF3C7" },
   "ĐANG HOẠT ĐỘNG": { text: "#15803D", background: "#DCFCE7" },
-  "ĐÃ HẾT HẠN": { text: "#555" , background: "#E5E7EB" },
+  "ĐÃ HẾT HẠN": { text: "#555", background: "#E5E7EB" },
   "ĐÃ HUỶ": { text: "#9B1C1C", background: "#FEE2E2" },
 };
 
@@ -24,7 +24,8 @@ export function formatDate(date?: string | null): string {
 }
 
 export function parseDecimal(value: MongoDecimal): number {
-  if (typeof value === "number") return value;
+  if (typeof value === "number")
+    return value;
   if (typeof value === "string") {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -41,9 +42,11 @@ export function getStatusStyle(status: SubscriptionStatus) {
 }
 
 export function extractLatestSubscription(subscriptions: SubscriptionRecord[]): SubscriptionRecord | null {
-  if (!subscriptions.length) return null;
+  if (!subscriptions.length)
+    return null;
   return subscriptions.reduce((latest, current) => {
-    if (!latest) return current;
+    if (!latest)
+      return current;
     const latestTime = new Date(latest.created_at ?? 0).getTime();
     const currentTime = new Date(current.created_at ?? 0).getTime();
     return currentTime > latestTime ? current : latest;

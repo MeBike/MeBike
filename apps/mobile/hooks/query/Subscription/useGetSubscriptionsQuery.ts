@@ -1,8 +1,7 @@
+import { subscriptionService } from "@services/subscription.service";
 import { useQuery } from "@tanstack/react-query";
 
 import type { SubscriptionListParams } from "@/types/subscription-types";
-
-import { subscriptionService } from "@services/subscription.service";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -43,7 +42,7 @@ export function useGetSubscriptionsQuery(
         start_date,
         end_date,
       });
-      return response.data;
+      return response;
     },
   });
 }

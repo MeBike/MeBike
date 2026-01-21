@@ -7,7 +7,6 @@ import { StyleSheet, Text, View } from "react-native";
 
 import type {
   SubscriptionListItem,
-  SubscriptionPackage,
 } from "@/types/subscription-types";
 
 type Props = {
@@ -15,8 +14,8 @@ type Props = {
   activeSubscription: SubscriptionListItem | null;
   pendingSubscription: SubscriptionListItem | null;
   canSubscribe: boolean;
-  subscribingPackage: SubscriptionPackage | null;
-  onSubscribe: (pkg: SubscriptionPackage) => void;
+  subscribingPackage: string | null;
+  onSubscribe: (pkgId: string) => void;
   emptySubtitle?: string;
 };
 
@@ -90,11 +89,11 @@ export function SubscriptionPlansList({
                 info={pkg}
                 disabled={!canSubscribe}
                 isCurrent={
-                  pkg.id === activeSubscription?.package_name
-                  || pkg.id === pendingSubscription?.package_name
+                  pkg.backendId === activeSubscription?.packageId
+                  || pkg.backendId === pendingSubscription?.packageId
                 }
-                loading={subscribingPackage === pkg.id}
-                onSubscribe={() => onSubscribe(pkg.id)}
+                loading={subscribingPackage === pkg.backendId}
+                onSubscribe={() => onSubscribe(pkg.backendId ?? pkg.id)}
               />
             ))
           )}

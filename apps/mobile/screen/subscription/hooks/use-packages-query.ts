@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 
 import type {
   PackageListParams,
-  PackageListQueryResult,
 } from "@/types/subscription-types";
 
 export function usePackagesQuery(params: PackageListParams = {}) {
@@ -12,13 +11,11 @@ export function usePackagesQuery(params: PackageListParams = {}) {
   return useQuery({
     queryKey: ["packages", page, limit, search ?? null],
     queryFn: async () => {
-      const response = await subscriptionService.getPackages({
+      return await subscriptionService.getPackages({
         page,
         limit,
         search,
       });
-      const payload: PackageListQueryResult = response.data;
-      return payload.data?.Packages?.data ?? [];
     },
   });
 }

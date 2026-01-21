@@ -20,10 +20,12 @@ export function useSubscriptionData() {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
 
-  const { data, isLoading, isFetching, refetch } = useGetSubscriptionsQuery(
+  const subscriptionsQuery = useGetSubscriptionsQuery(
     { page: 1, limit: PAGE_SIZE },
     isAuthenticated,
   );
+
+  const { data, isLoading, isFetching, refetch } = subscriptionsQuery;
 
   const subscribeMutation = useSubscribeMutation();
   const activateMutation = useActivateSubscriptionMutation();
