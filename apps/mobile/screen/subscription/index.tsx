@@ -33,27 +33,35 @@ function mapPackages(
   packages: PackageListItem[],
   defaults: SubscriptionPackageInfo[],
 ) {
-  if (!packages.length) return [];
+  if (!packages.length)
+    return [];
 
-  const activePackages = packages.filter((pkg) => pkg.status === "Active");
-  if (!activePackages.length) return [];
+  const activePackages = packages.filter(pkg => pkg.status === "Active");
+  if (!activePackages.length)
+    return [];
 
   return activePackages.map((pkg) => {
-    const normalized = pkg.name;
-    const isUnlimited =
-      pkg.usageType === "Infinite" ||
-      normalized.includes("khong") ||
-      normalized.includes("gioi han");
-    const isPremium = normalized.includes("nang") || (pkg.maxUsages ?? 0) >= 60;
+    const normalized = pkg.name.toLowerCase();
+    const isUnlimited
+      = pkg.usageType === "Infinite"
+        || normalized.includes("unlimited")
+        || normalized.includes("khong")
+        || normalized.includes("gioi han");
+    const isPremium
+      = normalized.includes("pro")
+        || normalized.includes("premium")
+        || normalized.includes("nang")
+        || (pkg.maxUsages ?? 0) >= 30;
     const fallbackKey = isUnlimited
       ? "unlimited"
       : isPremium
         ? "premium"
         : "basic";
-    const fallback =
-      defaults.find((item) => item.id === fallbackKey) ?? defaults[0];
+    const fallback
+      = defaults.find(item => item.id === fallbackKey) ?? defaults[0];
     return {
       ...fallback,
+      backendId: pkg.id,
       title: pkg.name,
       price: Number(pkg.price),
       monthlyLimit: pkg.maxUsages ?? null,
@@ -123,12 +131,14 @@ export default function SubscriptionScreen() {
               await subscribe({ package_name: packageName });
               Alert.alert("Thành công", "Đăng ký gói tháng thành công");
               invalidateSubscriptions();
-            } catch (error) {
+            }
+            catch (error) {
               Alert.alert(
                 "Không thể đăng ký",
                 getSubscriptionErrorMessage(error, "Vui lòng thử lại sau"),
               );
-            } finally {
+            }
+            finally {
               setSubscribingPackage(null);
             }
           },
@@ -138,7 +148,8 @@ export default function SubscriptionScreen() {
   };
 
   const handleActivate = () => {
-    if (!pendingSubscription) return;
+    if (!pendingSubscription)
+      return;
     Alert.alert(
       "Kích hoạt gói",
       "Gói sẽ bắt đầu tính thời gian ngay sau khi kích hoạt.",
@@ -151,7 +162,8 @@ export default function SubscriptionScreen() {
               await activate({ id: pendingSubscription._id });
               Alert.alert("Thành công", "Gói đã được kích hoạt");
               invalidateSubscriptions();
-            } catch (error) {
+            }
+            catch (error) {
               Alert.alert(
                 "Không thể kích hoạt",
                 getSubscriptionErrorMessage(error, "Vui lòng thử lại sau"),

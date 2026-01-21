@@ -2,6 +2,7 @@ import type { SubscriptionPackage } from "@/types/subscription-types";
 
 export type SubscriptionPackageInfo = {
   id: SubscriptionPackage;
+  backendId?: string;
   title: string;
   price: number;
   monthlyLimit: number | null;

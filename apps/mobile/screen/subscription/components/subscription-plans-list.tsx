@@ -1,8 +1,7 @@
 import type { SubscriptionPackageInfo } from "@constants/subscriptionPackages";
 
-import { Ionicons } from "@expo/vector-icons";
-
 import { SubscriptionPackageCard } from "@components/subscription/subscription-package-card";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -74,29 +73,31 @@ export function SubscriptionPlansList({
     <>
       <Text style={styles.title}>Chọn gói phù hợp</Text>
 
-      {packages.length === 0 ? (
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIconWrap}>
-            <Ionicons name="pricetags-outline" size={26} color="#9CA3AF" />
-          </View>
-          <Text style={styles.emptyTitle}>Chưa có gói đăng ký</Text>
-          <Text style={styles.emptySubtitle}>{emptySubtitle}</Text>
-        </View>
-      ) : (
-        packages.map((pkg) => (
-          <SubscriptionPackageCard
-            key={pkg.id}
-            info={pkg}
-            disabled={!canSubscribe}
-            isCurrent={
-              pkg.id === activeSubscription?.package_name ||
-              pkg.id === pendingSubscription?.package_name
-            }
-            loading={subscribingPackage === pkg.id}
-            onSubscribe={() => onSubscribe(pkg.id)}
-          />
-        ))
-      )}
+      {packages.length === 0
+        ? (
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="pricetags-outline" size={26} color="#9CA3AF" />
+              </View>
+              <Text style={styles.emptyTitle}>Chưa có gói đăng ký</Text>
+              <Text style={styles.emptySubtitle}>{emptySubtitle}</Text>
+            </View>
+          )
+        : (
+            packages.map(pkg => (
+              <SubscriptionPackageCard
+                key={pkg.backendId ?? pkg.id}
+                info={pkg}
+                disabled={!canSubscribe}
+                isCurrent={
+                  pkg.id === activeSubscription?.package_name
+                  || pkg.id === pendingSubscription?.package_name
+                }
+                loading={subscribingPackage === pkg.id}
+                onSubscribe={() => onSubscribe(pkg.id)}
+              />
+            ))
+          )}
     </>
   );
 }
