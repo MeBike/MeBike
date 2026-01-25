@@ -11,6 +11,7 @@ export type BikeGraphql = {
   } | null;
   supplier?: {
     id: string;
+    name?: string | null;
   } | null;
 };
 
@@ -39,6 +40,7 @@ export function toBikeType(bike: BikeGraphql): Bike {
     chip_id: bike.chipId,
     station_id: bike.station?.id ?? "",
     supplier_id: bike.supplier?.id ?? null,
+    supplier_name: bike.supplier?.name ?? null,
     status: mapBikeStatus(bike.status),
     created_at: bike.createdAt ?? "",
     updated_at: bike.updatedAt ?? "",

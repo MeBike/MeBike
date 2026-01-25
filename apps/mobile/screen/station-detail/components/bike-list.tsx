@@ -119,7 +119,6 @@ function BikeListItem({
 
   return (
     <TouchableOpacity
-      key={bike._id}
       style={styles.bikeItem}
       onPress={() => onPress(bike)}
       activeOpacity={0.85}
@@ -137,29 +136,18 @@ function BikeListItem({
         />
         <View>
           <Text style={styles.bikeId}>
-            ChipID: #
-            {bike.chip_id || bike._id.slice(-4)}
+            ChipID: #{bike.chip_id || bike._id.slice(-4)}
           </Text>
           <Text style={styles.bikeType}>Xe thường</Text>
-          {bike.total_ratings !== undefined
-            ? (
-                bike.total_ratings > 0
-                  ? (
-                      <Text style={styles.bikeRating}>
-                        ⭐
-                        {" "}
-                        {bike.average_rating?.toFixed(1)}
-                        {" "}
-                        (
-                        {bike.total_ratings}
-                        )
-                      </Text>
-                    )
-                  : (
-                      <Text style={styles.bikeRating}>Chưa có đánh giá</Text>
-                    )
-              )
-            : null}
+          {bike.total_ratings !== undefined ? (
+            bike.total_ratings > 0 ? (
+              <Text style={styles.bikeRating}>
+                ⭐ {bike.average_rating?.toFixed(1)} ({bike.total_ratings})
+              </Text>
+            ) : (
+              <Text style={styles.bikeRating}>Chưa có đánh giá</Text>
+            )
+          ) : null}
         </View>
       </View>
 
@@ -196,12 +184,8 @@ export function BikeList({
   if (bikes && bikes.length > 0) {
     return (
       <View style={styles.bikeListSection}>
-        <Text style={styles.sectionTitle}>
-          Danh sách xe (
-          {bikes.length}
-          )
-        </Text>
-        {bikes.map(bike => (
+        <Text style={styles.sectionTitle}>Danh sách xe ({bikes.length})</Text>
+        {bikes.map((bike) => (
           <BikeListItem key={bike._id} bike={bike} onPress={onBikePress} />
         ))}
         {hasMore && bikes.length <= totalRecords && (
@@ -210,13 +194,11 @@ export function BikeList({
             onPress={onLoadMore}
             disabled={isFetching}
           >
-            {isFetching
-              ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                )
-              : (
-                  <Text style={styles.loadMoreButtonText}>Tải thêm xe</Text>
-                )}
+            {isFetching ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.loadMoreButtonText}>Tải thêm xe</Text>
+            )}
           </TouchableOpacity>
         )}
       </View>
