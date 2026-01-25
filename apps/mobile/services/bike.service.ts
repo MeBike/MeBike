@@ -1,8 +1,13 @@
+import type { BikeGraphql } from "@lib/mappers/bike";
 import type { AxiosResponse } from "axios";
 
-import type { Bike } from "../types/BikeTypes";
+import fetchHttpClient from "@lib/httpClient";
+import { toBikeType } from "@lib/mappers/bike";
+import { print } from "graphql";
 
-import fetchHttpClient from "../lib/httpClient";
+import { GET_BIKES, GET_DETAIL_BIKES } from "@/graphql";
+
+import type { Bike } from "../types/BikeTypes";
 
 type ApiReponse<T> = {
   data: T;
@@ -13,17 +18,34 @@ type ApiReponse<T> = {
     currentPage: number;
   };
 };
-interface DetailApiResponse<T> {
-  result: T;
+
+type DetailApiResponse<T> = {
+  result: T | null;
   message: string;
-}
-const BIKE_BASE = "/bikes";
-const BIKE_ENDPOINTS = {
-  BASE: BIKE_BASE,
-  BY_ID: (id: string) => `${BIKE_BASE}/${id}/rentals`,
-  BY_ID_FOR_ALL: (id: string) => `${BIKE_BASE}/${id}`,
-  REPORT_BROKEN: (id: string) => `${BIKE_BASE}/report-broken/${id}`,
-} as const;
+};
+
+type BikesQueryResult = {
+  data?: {
+    Bikes?: {
+      data?: BikeGraphql[];
+      pagination?: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      };
+    };
+  };
+};
+
+type BikeDetailQueryResult = {
+  data?: {
+    Bike?: {
+      data?: BikeGraphql | null;
+    };
+  };
+};
+
 export type GetAllBikesQueryParams = {
   page: number;
   limit: number;
@@ -37,30 +59,63 @@ export type GetAllBikesQueryParams = {
     | "ĐANG BẢO TRÌ"
     | "KHÔNG CÓ SẴN";
 };
+
 export const bikeService = {
-   // for user
+  // for user
   reportBrokenBike: async (id: string): Promise<AxiosResponse> => {
-    const response = await fetchHttpClient.patch(
-      BIKE_ENDPOINTS.REPORT_BROKEN(id)
-    );
+    const response = await fetchHttpClient.patch(`/bikes/report-broken/${id}`);
     return response;
   },
   // all
   getBikeByIdForAll: async (
-    id: string
+    id: string,
   ): Promise<AxiosResponse<DetailApiResponse<Bike>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Bike>>(
-      BIKE_ENDPOINTS.BY_ID_FOR_ALL(id)
+    const response = await fetchHttpClient.query<BikeDetailQueryResult>(
+      print(GET_DETAIL_BIKES),
+      {
+        bikeId: id,
+      },
     );
-    return response;
+    const bike = response.data?.data?.Bike?.data ?? null;
+    return {
+      ...response,
+      data: {
+        result: bike ? toBikeType(bike) : null,
+        message: bike ? "OK" : "Bike not found",
+      },
+    };
   },
   getAllBikes: async (
-    data: Partial<GetAllBikesQueryParams>
+    data: Partial<GetAllBikesQueryParams>,
   ): Promise<AxiosResponse<ApiReponse<Bike[]>>> => {
-    const response = await fetchHttpClient.get<ApiReponse<Bike[]>>(
-      BIKE_ENDPOINTS.BASE,
-      { ...data }
+    const search = data.station_id || data.supplier_id || "";
+    const response = await fetchHttpClient.query<BikesQueryResult>(
+      print(GET_BIKES),
+      {
+        params: {
+          page: data.page ?? 1,
+          limit: data.limit ?? 20,
+          search,
+        },
+      },
     );
-    return response;
+    const result = response.data?.data?.Bikes;
+    const bikes = result?.data ?? [];
+    const pagination = result?.pagination;
+
+    return {
+      ...response,
+      data: {
+        data: bikes.map(toBikeType),
+        pagination: pagination
+          ? {
+              totalPages: pagination.totalPages,
+              totalRecords: pagination.total,
+              limit: pagination.limit,
+              currentPage: pagination.page,
+            }
+          : undefined,
+      },
+    };
   },
 };

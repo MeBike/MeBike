@@ -10,12 +10,18 @@ type BikeActionsProps = {
   page?: number;
   limit?: number;
 };
-export function useBikeActions({hasToken , bike_id , station_id , page , limit} : BikeActionsProps) {
+export function useBikeActions({
+  hasToken,
+  bike_id,
+  station_id,
+  page,
+  limit,
+}: BikeActionsProps) {
   const {
     refetch: useGetBikes,
     data: allBikesResponse,
     isFetching: isFetchingAllBikes,
-  } = useGetAllBikeQuery({ page : page || 1, limit : limit || 20, station_id });
+  } = useGetAllBikeQuery({ page: page || 1, limit: limit || 20, station_id });
 
   const allBikes = allBikesResponse?.data || [];
   const totalRecords = allBikesResponse?.pagination?.totalRecords || 0;
@@ -23,7 +29,7 @@ export function useBikeActions({hasToken , bike_id , station_id , page , limit} 
     refetch: useGetDetailBike,
     data: detailBike,
     isFetching: isFetchingBikeDetail,
-  } = useGetBikeByIDAllQuery(bike_id || "");
+  } = useGetBikeByIDAllQuery(bike_id);
   const getBikes = useCallback(() => {
     if (!hasToken) {
       return;
@@ -31,11 +37,11 @@ export function useBikeActions({hasToken , bike_id , station_id , page , limit} 
     useGetBikes();
   }, [useGetBikes, hasToken]);
   const getBikeByID = useCallback(() => {
-    if (!hasToken) {
+    if (!hasToken || !bike_id) {
       return;
     }
     useGetDetailBike();
-  }, [useGetDetailBike]);
+  }, [useGetDetailBike, hasToken, bike_id]);
   return {
     getBikes,
     getBikeByID,

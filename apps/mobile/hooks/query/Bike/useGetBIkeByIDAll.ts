@@ -1,19 +1,25 @@
+import { bikeService } from "@services/bike.service";
 import { useQuery } from "@tanstack/react-query";
 
-import { bikeService } from "@services/bike.service";
-const fetchDetailBikeByID = async (id: string) => {
+async function fetchDetailBikeByID(id?: string) {
+  if (!id) {
+    return null;
+  }
   try {
     const response = await bikeService.getBikeByIdForAll(id);
-    if(response.status === 200){
+    if (response.status === 200) {
       return response.data;
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching bike details:", error);
   }
+  return null;
 }
-export function useGetBikeByIDAllQuery(id: string) {
+export function useGetBikeByIDAllQuery(id?: string) {
   return useQuery({
-    queryKey: ["bikes", "detail", id],
+    queryKey: ["bikes", "detail", id ?? ""],
     queryFn: () => fetchDetailBikeByID(id),
+    enabled: Boolean(id),
   });
 }

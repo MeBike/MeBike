@@ -32,12 +32,12 @@ import ResolveSOSScreen from "../screen/ResolveSOSScreen";
 import SOSAgentDetailScreen from "../screen/SOSAgentDetailScreen";
 import StaffPhoneLookupScreen from "../screen/StaffPhoneLookupScreen";
 import StaffRentalDetailScreen from "../screen/StaffRentalDetailScreen";
-import StationDetailScreen from "../screen/StationDetail";
+import StationDetailScreen from "../screen/station-detail";
+import StationSelectScreen from "../screen/station-select";
 import SubscriptionScreen from "../screen/subscription";
 import SupportScreen from "../screen/SupportScreen";
 import UpdateProfileScreen from "../screen/UpdateProfileScreen";
 import WithdrawScreen from "../screen/withdraw-screen";
-import StationSelectScreen from "../styles/StationSelect";
 import MainTabNavigator from "./MainTabNavigator";
 
 const Stack = createStackNavigator<RootStackParamList>();
