@@ -17,12 +17,12 @@ export type StationType = {
   average_rating?: number;
   total_ratings?: number;
 };
-export interface StationLocation {
+export type StationLocation = {
   type: "Point";
   coordinates: [number, number];
-}
+};
 
-export interface Station {
+export type Station = {
   _id: string;
   name: string;
   address: string;
@@ -43,4 +43,4 @@ export interface Station {
   unavailableBikes: number;
   average_rating?: number;
   total_ratings?: number;
-}
+};

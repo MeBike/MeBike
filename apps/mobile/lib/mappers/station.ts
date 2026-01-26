@@ -1,22 +1,9 @@
-import type { StationType } from "../../types/StationType";
+import type { z } from "zod";
 
-export type StationGraphql = {
-  id: string;
-  name: string;
-  address: string;
-  latitude: number | string;
-  longitude: number | string;
-  capacity: number | string;
-  totalBike?: number | null;
-  availableBike?: number | null;
-  bookedBike?: number | null;
-  brokenBike?: number | null;
-  reservedBike?: number | null;
-  maintanedBike?: number | null;
-  unavailable?: number | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-};
+import type { StationType } from "../../types/StationType";
+import type { StationGraphqlSchema } from "../schemas/stations.schema";
+
+export type StationGraphql = z.infer<typeof StationGraphqlSchema>;
 
 export function toStationType(station: StationGraphql): StationType {
   const capacity = Number(station.capacity) || 0;

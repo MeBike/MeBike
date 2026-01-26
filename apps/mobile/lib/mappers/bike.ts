@@ -1,19 +1,9 @@
-import type { Bike } from "../../types/BikeTypes";
+import type { z } from "zod";
 
-export type BikeGraphql = {
-  id: string;
-  chipId: string;
-  status: string;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-  station?: {
-    id: string;
-  } | null;
-  supplier?: {
-    id: string;
-    name?: string | null;
-  } | null;
-};
+import type { Bike } from "../../types/BikeTypes";
+import type { BikeGraphqlSchema } from "../schemas/bikes.schema";
+
+export type BikeGraphql = z.infer<typeof BikeGraphqlSchema>;
 
 export function mapBikeStatus(status?: string | null): Bike["status"] {
   switch (status) {

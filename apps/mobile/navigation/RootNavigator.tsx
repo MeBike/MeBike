@@ -3,7 +3,7 @@ import React from "react";
 
 import type { RootStackParamList } from "../types/navigation";
 
-import BikeDetailScreen from "../screen/BikeDetailScreen";
+import BikeDetailScreen from "../screen/bike-detail";
 import BookingHistoryDetail from "../screen/booking-history-detail/booking-history-detail-screen";
 import ChangePasswordScreen from "../screen/ChangePasswordScreen";
 import CreateSOSRequestScreen from "../screen/CreateSOSRequestScreen";
