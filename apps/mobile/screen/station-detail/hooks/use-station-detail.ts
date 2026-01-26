@@ -1,4 +1,4 @@
-import { useBikeActions } from "@hooks/useBikeAction";
+import { useBikeActions } from "@hooks/use-bike-action";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
@@ -32,8 +32,8 @@ export function useStationDetail() {
     enabled: Boolean(stationId),
   });
 
-  const { allBikes, isFetchingAllBikes, getBikes, totalRecords }
-    = useBikeActions({
+  const { allBikes, isFetchingAllBikes, getBikes, totalRecords } =
+    useBikeActions({
       hasToken: true,
       station_id: stationId,
       page: currentPage,
@@ -50,13 +50,11 @@ export function useStationDetail() {
     if (allBikes && allBikes.length > 0) {
       if (currentPage === 1) {
         setLoadedBikes(allBikes);
-      }
-      else {
-        setLoadedBikes(prev => [...prev, ...allBikes]);
+      } else {
+        setLoadedBikes((prev) => [...prev, ...allBikes]);
       }
       setHasMore(allBikes.length === PAGE_SIZE);
-    }
-    else if (currentPage > 1) {
+    } else if (currentPage > 1) {
       setHasMore(false);
     }
     if (refreshing) {
@@ -95,7 +93,7 @@ export function useStationDetail() {
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isFetchingAllBikes) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
     }
   }, [hasMore, isFetchingAllBikes]);
 

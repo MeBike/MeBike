@@ -1,13 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { stationService } from "@services/station.service";
+import { fetchStations } from "@/screen/station-select/api/stations.api";
 
 async function fetchAllStations() {
   try {
-    const response = await stationService.getAllStations();
-    if (response.status === 200) {
-      return response.data.data;
-    }
+    const response = await fetchStations();
+    return response.stations;
   }
   catch (error) {
     throw new Error("Failed to fetch stations");

@@ -1,7 +1,7 @@
 import { LoadingScreen } from "@components/LoadingScreen";
 import StationMap2D from "@components/StationMap2D";
 import { Ionicons } from "@expo/vector-icons";
-import { useBikeActions } from "@hooks/useBikeAction";
+import { useBikeActions } from "@hooks/use-bike-action";
 import { useStationActions } from "@hooks/useStationAction";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -47,24 +47,17 @@ export default function StationDetailScreen() {
   const [bikeId, setBikeID] = useState<string | undefined>(undefined);
   const [focusedBike, setFocusedBike] = useState<Bike | null>(null);
 
-  const {
-    getStationByID,
-    responseStationDetail,
-    isLoadingGetStationByID,
-  } = useStationActions(true, stationId);
+  const { getStationByID, responseStationDetail, isLoadingGetStationByID } =
+    useStationActions(true, stationId);
 
-  const {
-    allBikes,
-    isFetchingAllBikes,
-    getBikes,
-    totalRecords,
-  } = useBikeActions({
-    hasToken: true,
-    bike_id: bikeId,
-    station_id: stationId,
-    page: currentPage,
-    limit,
-  });
+  const { allBikes, isFetchingAllBikes, getBikes, totalRecords } =
+    useBikeActions({
+      hasToken: true,
+      bike_id: bikeId,
+      station_id: stationId,
+      page: currentPage,
+      limit,
+    });
 
   useEffect(() => {
     if (stationId) {
@@ -77,17 +70,14 @@ export default function StationDetailScreen() {
     if (allBikes && allBikes.length > 0) {
       if (currentPage === 1) {
         setLoadedBikes(allBikes);
-      }
-      else {
-        setLoadedBikes(prev => [...prev, ...allBikes]);
+      } else {
+        setLoadedBikes((prev) => [...prev, ...allBikes]);
       }
       setHasMore(allBikes.length === limit);
-    }
-    else if (currentPage > 1) {
+    } else if (currentPage > 1) {
       setHasMore(false);
     }
-    if (refreshing)
-      setRefreshing(false);
+    if (refreshing) setRefreshing(false);
   }, [allBikes, currentPage, limit, refreshing]);
 
   const station = responseStationDetail as StationType | null;
@@ -95,8 +85,7 @@ export default function StationDetailScreen() {
 
   const handleBikePress = useCallback(
     (bike: Bike) => {
-      if (!station)
-        return;
+      if (!station) return;
       setFocusedBike(bike);
       navigation.navigate("BikeDetail", {
         bike,
@@ -130,7 +119,7 @@ export default function StationDetailScreen() {
   }
   const handleLoadMore = () => {
     if (hasMore && !isFetchingAllBikes) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
@@ -138,14 +127,14 @@ export default function StationDetailScreen() {
     <View style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={(
+        refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
             colors={[BikeColors.primary]}
             tintColor={BikeColors.primary}
           />
-        )}
+        }
       >
         <LinearGradient
           colors={["#0066FF", "#00B4D8"]}
@@ -174,12 +163,11 @@ export default function StationDetailScreen() {
               {station.total_ratings !== undefined ? (
                 station.total_ratings > 0 ? (
                   <Text style={styles.stationRating}>
-                    ⭐ {station.average_rating?.toFixed(1)} ({station.total_ratings} đánh giá)
+                    ⭐ {station.average_rating?.toFixed(1)} (
+                    {station.total_ratings} đánh giá)
                   </Text>
                 ) : (
-                  <Text style={styles.stationRating}>
-                    Chưa có đánh giá
-                  </Text>
+                  <Text style={styles.stationRating}>Chưa có đánh giá</Text>
                 )
               ) : null}
             </View>
@@ -200,7 +188,8 @@ export default function StationDetailScreen() {
             navigation.navigate("FixedSlotTemplates", {
               stationId,
               stationName: station.name,
-            })}
+            })
+          }
           activeOpacity={0.85}
         >
           <View style={{ flex: 1 }}>
@@ -214,7 +203,11 @@ export default function StationDetailScreen() {
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <IconSymbol name="bicycle.circle.fill" size={24} color={BikeColors.primary} />
+            <IconSymbol
+              name="bicycle.circle.fill"
+              size={24}
+              color={BikeColors.primary}
+            />
             <Text style={styles.statNumber}>{station.totalBikes}</Text>
             <Text style={styles.statLabel}>Tổng số Xe</Text>
           </View>
@@ -249,9 +242,7 @@ export default function StationDetailScreen() {
         {loadedBikes && loadedBikes.length > 0 ? (
           <View style={styles.bikeListSection}>
             <Text style={styles.sectionTitle}>
-              Danh sách xe (
-              {loadedBikes.length}
-              )
+              Danh sách xe ({loadedBikes.length})
             </Text>
             {loadedBikes.map((bike: Bike, index: number) => {
               const isAvailable = bike.status === "CÓ SẴN";
@@ -276,14 +267,14 @@ export default function StationDetailScreen() {
                     />
                     <View>
                       <Text style={styles.bikeId}>
-                        ChipID: #
-                        {bike.chip_id || bike._id.slice(-4)}
+                        ChipID: #{bike.chip_id || bike._id.slice(-4)}
                       </Text>
                       <Text style={styles.bikeType}>Xe thường</Text>
                       {bike.total_ratings !== undefined ? (
                         bike.total_ratings > 0 ? (
                           <Text style={styles.bikeRating}>
-                            ⭐ {bike.average_rating?.toFixed(1)} ({bike.total_ratings})
+                            ⭐ {bike.average_rating?.toFixed(1)} (
+                            {bike.total_ratings})
                           </Text>
                         ) : (
                           <Text style={styles.bikeRating}>
@@ -309,7 +300,11 @@ export default function StationDetailScreen() {
                       {isAvailable ? "Có sẵn" : "Đang thuê"}
                     </Text>
 
-                    <Ionicons name="chevron-forward" size={16} color={BikeColors.onSurfaceVariant} />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={16}
+                      color={BikeColors.onSurfaceVariant}
+                    />
                   </View>
                 </TouchableOpacity>
               );
@@ -320,13 +315,11 @@ export default function StationDetailScreen() {
                 onPress={handleLoadMore}
                 disabled={isFetchingAllBikes}
               >
-                {isFetchingAllBikes
-                  ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    )
-                  : (
-                      <Text style={styles.loadMoreButtonText}>Tải thêm xe</Text>
-                    )}
+                {isFetchingAllBikes ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.loadMoreButtonText}>Tải thêm xe</Text>
+                )}
               </TouchableOpacity>
             )}
           </View>

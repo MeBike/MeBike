@@ -1,41 +1,31 @@
-import type { StationGraphql } from "@lib/mappers/station";
-
 import fetchHttpClient from "@lib/httpClient";
 import { toStationType } from "@lib/mappers/station";
 import { print } from "graphql";
 
 import { GET_STATIONS } from "@/graphql";
-
-type StationsQueryResult = {
-  data?: {
-    Stations?: {
-      data?: StationGraphql[];
-      pagination?: {
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-      };
-    };
-  };
-};
+import { StationsResponseSchema } from "@/lib/schemas/stations.schema";
+import { parseOrWarn } from "@/lib/validation/parse-or-warn";
 
 export async function fetchStations(params?: {
   page?: number;
   limit?: number;
 }) {
-  const response = await fetchHttpClient.query<StationsQueryResult>(
-    print(GET_STATIONS),
-    {
-      params: {
-        page: params?.page ?? 1,
-        limit: params?.limit ?? 30,
-      },
+  const response = await fetchHttpClient.query(print(GET_STATIONS), {
+    params: {
+      page: params?.page ?? 1,
+      limit: params?.limit ?? 30,
     },
+  });
+
+  const parsed = parseOrWarn(
+    StationsResponseSchema,
+    response.data,
+    { op: "Stations" },
+    { data: { Stations: { data: [], pagination: undefined } } },
   );
 
-  const stations = response.data?.data?.Stations?.data ?? [];
-  const pagination = response.data?.data?.Stations?.pagination;
+  const stations = parsed.data.data?.Stations?.data ?? [];
+  const pagination = parsed.data.data?.Stations?.pagination;
 
   return {
     stations: stations.map(toStationType),

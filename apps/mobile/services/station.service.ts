@@ -6,12 +6,10 @@ import type { Station, StationType } from "../types/StationType";
 
 const STATION_BASE = "/stations";
 const STATION_ENDPOINTS = {
-   BASE: STATION_BASE,
-   ALL: `${STATION_BASE}?limit=30`,
-   DETAIL: (id: string) => `${STATION_BASE}/${id}`,
-   NEAR_ME: (lat: number, lng: number) =>
-     `${STATION_BASE}/nearby?limit=30`,
- } as const;
+  BASE: STATION_BASE,
+  DETAIL: (id: string) => `${STATION_BASE}/${id}`,
+  NEAR_ME: (lat: number, lng: number) => `${STATION_BASE}/nearby?limit=30`,
+} as const;
 type ApiResponse<T> = {
   data: T;
   pagination?: {
@@ -27,12 +25,6 @@ type ApiDetailResponse<T> = {
 };
 
 export const stationService = {
-  getAllStations: async (): Promise<AxiosResponse<ApiResponse<StationType[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<StationType[]>>(
-      STATION_ENDPOINTS.ALL,
-    );
-    return response;
-  },
   getStationById: async (
     stationId: string,
   ): Promise<AxiosResponse<ApiDetailResponse<StationType>>> => {

@@ -2,7 +2,6 @@ import type { ReservationMode } from "@components/reservation-flow/ReservationMo
 
 import { BikeColors } from "@constants/BikeColors";
 import { Ionicons } from "@expo/vector-icons";
-import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/useGetBIkeByIDAll";
 import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 import { useRentalsActions } from "@hooks/useRentalAction";
 import { useReservationActions } from "@hooks/useReservationActions";
@@ -26,6 +25,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { useBikeDetailQuery } from "@/screen/bike-detail/hooks/use-bike-detail-query";
 
 import type { Bike } from "../types/BikeTypes";
 import type { BikeDetailNavigationProp } from "../types/navigation";
@@ -231,7 +232,7 @@ function BikeDetailScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { bike, station } = route.params as RouteParams;
-  const hasToken = Boolean(user?._id);
+  const hasToken = Boolean(user?.id);
 
   const [paymentMode, setPaymentMode] = useState<PaymentMode>("wallet");
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<
@@ -255,7 +256,7 @@ function BikeDetailScreen() {
     data: bikeDetailResponse,
     refetch: refetchBikeDetail,
     isFetching: isFetchingBikeDetail,
-  } = useGetBikeByIDAllQuery(bike._id);
+  } = useBikeDetailQuery(bike._id);
 
   useEffect(() => {
     if (hasToken) {
@@ -297,9 +298,7 @@ function BikeDetailScreen() {
     }
   }, [activeSubscriptions, canUseSubscription, paymentMode]);
 
-  const walletBalance = myWallet
-    ? Number(myWallet.balance.$numberDecimal || 0)
-    : null;
+  const walletBalance = myWallet ? Number(myWallet.balance ?? 0) : null;
 
   const currentReservation: Reservation | undefined = useMemo(
     () =>
