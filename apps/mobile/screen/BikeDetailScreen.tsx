@@ -1,5 +1,19 @@
+import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
+
+import { BikeColors } from "@constants/BikeColors";
 import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/useGetBIkeByIDAll";
+import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
+import { useRentalsActions } from "@hooks/useRentalAction";
+import { useReservationActions } from "@hooks/useReservationActions";
+import { useWalletActions } from "@hooks/useWalletAction";
+import { useAuth } from "@providers/auth-providers";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
+import { formatVietnamDateTime } from "@utils/date";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,23 +25,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
-import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
-import { BikeColors } from "@constants/BikeColors";
-import { useAuth } from "@providers/auth-providers";
-import { useNavigation, useRoute, useFocusEffect } from "@react-navigation/native";
-import { formatVietnamDateTime } from "@utils/date";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { Bike } from "../types/BikeTypes";
-import type { Reservation } from "../types/reservation-types";
 import type { BikeDetailNavigationProp } from "../types/navigation";
+import type { Reservation } from "../types/reservation-types";
 
-import { useRentalsActions } from "@hooks/useRentalAction";
-import { useWalletActions } from "@hooks/useWalletAction";
-import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
-import { useReservationActions } from "@hooks/useReservationActions";
-import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/useGetBIkeByIDAll";
+import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
 
 type RouteParams = {
   bike: Bike;
@@ -49,8 +53,9 @@ const BIKE_STATUS_COLORS: Record<Bike["status"], string> = {
   "KHÔNG CÓ SẴN": "#999999",
 };
 
-const getBikeStatusColor = (status: Bike["status"]) =>
-  BIKE_STATUS_COLORS[status] ?? "#999999";
+function getBikeStatusColor(status: Bike["status"]) {
+  return BIKE_STATUS_COLORS[status] ?? "#999999";
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -97,15 +102,19 @@ const styles = StyleSheet.create({
   },
   infoRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
     marginTop: 10,
   },
   infoLabel: {
     color: BikeColors.onSurfaceVariant,
+    flex: 1,
   },
   infoValue: {
     fontWeight: "600",
     color: BikeColors.onSurface,
+    flex: 1,
+    textAlign: "right",
   },
   reservationCard: {
     borderLeftWidth: 4,
@@ -225,7 +234,9 @@ function BikeDetailScreen() {
   const hasToken = Boolean(user?._id);
 
   const [paymentMode, setPaymentMode] = useState<PaymentMode>("wallet");
-  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
+  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<
+    string | null
+  >(null);
 
   const { postRent, isPostRentLoading } = useRentalsActions(
     hasToken,
@@ -233,16 +244,9 @@ function BikeDetailScreen() {
     station.id,
   );
   const { myWallet, getMyWallet } = useWalletActions(hasToken);
-  const {
-    data: subscriptionResponse,
-    refetch: refetchSubscriptions,
-  } = useGetSubscriptionsQuery(
-    { status: "ĐANG HOẠT ĐỘNG" },
-    hasToken,
-  );
-  const {
-    pendingReservations,
-  } = useReservationActions({
+  const { data: subscriptionResponse, refetch: refetchSubscriptions }
+    = useGetSubscriptionsQuery({ status: "ĐANG HOẠT ĐỘNG" }, hasToken);
+  const { pendingReservations } = useReservationActions({
     hasToken,
     autoFetch: hasToken,
     pendingLimit: 5,
@@ -284,7 +288,9 @@ function BikeDetailScreen() {
       return;
     }
     if (paymentMode === "subscription") {
-      const stillValid = activeSubscriptions.some((subscription) => subscription._id === selectedSubscriptionId);
+      const stillValid = activeSubscriptions.some(
+        subscription => subscription._id === selectedSubscriptionId,
+      );
       if (!stillValid) {
         setSelectedSubscriptionId(activeSubscriptions[0]?._id ?? null);
       }
@@ -297,7 +303,9 @@ function BikeDetailScreen() {
 
   const currentReservation: Reservation | undefined = useMemo(
     () =>
-      pendingReservations.find((reservation) => reservation.bike_id === currentBike._id),
+      pendingReservations.find(
+        reservation => reservation.bike_id === currentBike._id,
+      ),
     [pendingReservations, currentBike._id],
   );
 
@@ -307,7 +315,10 @@ function BikeDetailScreen() {
       return false;
     }
     if (user?.verify === "UNVERIFIED") {
-      Alert.alert("Tài khoản chưa xác thực", "Vui lòng xác thực tài khoản để tiếp tục.");
+      Alert.alert(
+        "Tài khoản chưa xác thực",
+        "Vui lòng xác thực tài khoản để tiếp tục.",
+      );
       return false;
     }
     return true;
@@ -346,10 +357,12 @@ function BikeDetailScreen() {
       ? `Chip #${currentBike.chip_id}`
       : `#${currentBike._id.slice(-4)}`;
 
-    const reservationMode: ReservationMode = paymentMode === "subscription" ? "GÓI THÁNG" : "MỘT LẦN";
-    const subscriptionForReservation = paymentMode === "subscription"
-      ? selectedSubscriptionId ?? activeSubscriptions[0]?._id ?? undefined
-      : undefined;
+    const reservationMode: ReservationMode
+      = paymentMode === "subscription" ? "GÓI THÁNG" : "MỘT LẦN";
+    const subscriptionForReservation
+      = paymentMode === "subscription"
+        ? (selectedSubscriptionId ?? activeSubscriptions[0]?._id ?? undefined)
+        : undefined;
 
     navigation.navigate("ReservationFlow", {
       stationId: station.id,
@@ -385,10 +398,10 @@ function BikeDetailScreen() {
         "Bạn cần đăng ký gói tháng trước khi sử dụng hình thức này.",
         [
           { text: "Để sau", style: "cancel" },
-            {
-              text: "Xem gói tháng",
-              onPress: () => navigation.navigate("Subscriptions"),
-            },
+          {
+            text: "Xem gói tháng",
+            onPress: () => navigation.navigate("Subscriptions"),
+          },
         ],
       );
       return;
@@ -399,7 +412,10 @@ function BikeDetailScreen() {
     };
     if (paymentMode === "subscription") {
       if (!selectedSubscriptionId) {
-        Alert.alert("Chọn gói tháng", "Vui lòng chọn một gói tháng để tiếp tục.");
+        Alert.alert(
+          "Chọn gói tháng",
+          "Vui lòng chọn một gói tháng để tiếp tục.",
+        );
         return;
       }
       payload.subscription_id = selectedSubscriptionId;
@@ -442,7 +458,9 @@ function BikeDetailScreen() {
       >
         <View style={styles.card}>
           <Text style={styles.bikeTitle}>
-            {currentBike.chip_id ? `Chip #${currentBike.chip_id}` : `Xe #${currentBike._id.slice(-4)}`}
+            {currentBike.chip_id
+              ? `Chip #${currentBike.chip_id}`
+              : `Xe #${currentBike._id.slice(-4)}`}
           </Text>
           <View style={styles.bikeMetaRow}>
             <Text
@@ -457,11 +475,17 @@ function BikeDetailScreen() {
           </View>
           <View style={{ marginTop: 16, gap: 10 }}>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Nhà cung cấp</Text>
-              <Text style={styles.infoValue}>{currentBike.supplier_id ?? "Chưa cập nhật"}</Text>
+              <Text style={styles.infoLabel}>Nhà cung cấp:</Text>
+              <Text style={styles.infoValue}>
+                {currentBike.supplier_name
+                  ?? (currentBike.supplier_id
+                    ? `...${currentBike.supplier_id.slice(-6)}`
+                    : null)
+                  ?? "Chưa cập nhật"}
+              </Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Ngày tạo</Text>
+              <Text style={styles.infoLabel}>Ngày tạo:</Text>
               <Text style={styles.infoValue}>
                 {formatVietnamDateTime(currentBike.created_at)}
               </Text>
@@ -479,7 +503,8 @@ function BikeDetailScreen() {
           <View style={[styles.card, styles.reservationCard]}>
             <Text style={styles.sectionTitle}>Bạn đang giữ xe này</Text>
             <Text style={styles.helperText}>
-              Bắt đầu lúc{" "}
+              Bắt đầu lúc
+              {" "}
               {formatVietnamDateTime(currentReservation.start_time)}
             </Text>
             <TouchableOpacity
@@ -490,7 +515,9 @@ function BikeDetailScreen() {
                   reservation: currentReservation,
                 })}
             >
-              <Text style={styles.secondaryButtonText}>Xem chi tiết giữ xe</Text>
+              <Text style={styles.secondaryButtonText}>
+                Xem chi tiết giữ xe
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -522,7 +549,9 @@ function BikeDetailScreen() {
             >
               <Text style={styles.paymentButtonLabel}>Gói tháng</Text>
               <Text style={styles.paymentButtonHint}>
-                {canUseSubscription ? "Sử dụng gói đã đăng ký" : "Chưa có gói hoạt động"}
+                {canUseSubscription
+                  ? "Sử dụng gói đã đăng ký"
+                  : "Chưa có gói hoạt động"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -544,7 +573,8 @@ function BikeDetailScreen() {
                 ? (
                     <View style={styles.emptyState}>
                       <Text style={styles.helperText}>
-                        Bạn chưa có gói tháng hoạt động.{" "}
+                        Bạn chưa có gói tháng hoạt động.
+                        {" "}
                         <Text
                           style={styles.linkText}
                           onPress={() => navigation.navigate("Subscriptions")}
@@ -557,10 +587,15 @@ function BikeDetailScreen() {
                 : (
                     <View style={styles.subscriptionList}>
                       {activeSubscriptions.map((subscription) => {
-                        const remaining = subscription.max_usages != null
-                          ? Math.max(0, subscription.max_usages - subscription.usage_count)
-                          : null;
-                        const isActive = subscription._id === selectedSubscriptionId;
+                        const remaining
+                          = subscription.max_usages != null
+                            ? Math.max(
+                                0,
+                                subscription.max_usages - subscription.usage_count,
+                              )
+                            : null;
+                        const isActive
+                          = subscription._id === selectedSubscriptionId;
                         return (
                           <TouchableOpacity
                             key={subscription._id}
@@ -568,7 +603,8 @@ function BikeDetailScreen() {
                               styles.subscriptionCard,
                               isActive && styles.subscriptionCardActive,
                             ]}
-                            onPress={() => setSelectedSubscriptionId(subscription._id)}
+                            onPress={() =>
+                              setSelectedSubscriptionId(subscription._id)}
                             activeOpacity={0.9}
                           >
                             <View>
@@ -582,7 +618,9 @@ function BikeDetailScreen() {
                               </Text>
                             </View>
                             <Ionicons
-                              name={isActive ? "checkmark-circle" : "ellipse-outline"}
+                              name={
+                                isActive ? "checkmark-circle" : "ellipse-outline"
+                              }
                               size={22}
                               color={BikeColors.primary}
                             />
@@ -611,8 +649,12 @@ function BikeDetailScreen() {
           disabled={isPrimaryDisabled}
         >
           {isPostRentLoading
-            ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.primaryButtonText}>Thuê ngay</Text>}
+            ? (
+                <ActivityIndicator color="#fff" />
+              )
+            : (
+                <Text style={styles.primaryButtonText}>Thuê ngay</Text>
+              )}
         </TouchableOpacity>
         <TouchableOpacity
           style={[
