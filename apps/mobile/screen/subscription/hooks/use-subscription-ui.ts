@@ -1,5 +1,6 @@
 import type { SubscriptionSectionKey } from "@components/subscription/subscription-toggle";
 
+import { SUBSCRIPTION_PACKAGES } from "@constants/subscriptionPackages";
 import { log } from "@lib/logger";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -52,12 +53,9 @@ export function useSubscriptionUi() {
     setState(prev => ({ ...prev, selectedId: id }));
   }, []);
 
-  const setSubscribingPackage = useCallback(
-    (pkg: string | null) => {
-      setState(prev => ({ ...prev, subscribingPackage: pkg }));
-    },
-    [],
-  );
+  const setSubscribingPackage = useCallback((pkg: string | null) => {
+    setState(prev => ({ ...prev, subscribingPackage: pkg }));
+  }, []);
 
   const packageCards = useMemo(() => Object.values(SUBSCRIPTION_PACKAGES), []);
 

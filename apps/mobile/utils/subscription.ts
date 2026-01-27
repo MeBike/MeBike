@@ -1,6 +1,13 @@
-import type { MongoDecimal, SubscriptionRecord, SubscriptionStatus } from "@/types/subscription-types";
+import type {
+  DecimalValue,
+  SubscriptionRecord,
+  SubscriptionStatus,
+} from "@/types/subscription-types";
 
-const STATUS_COLORS: Record<SubscriptionStatus, { text: string; background: string }> = {
+const STATUS_COLORS: Record<
+  SubscriptionStatus,
+  { text: string; background: string }
+> = {
   "ĐANG CHỜ XỬ LÍ": { text: "#B45309", background: "#FEF3C7" },
   "ĐANG HOẠT ĐỘNG": { text: "#15803D", background: "#DCFCE7" },
   "ĐÃ HẾT HẠN": { text: "#555", background: "#E5E7EB" },
@@ -23,15 +30,11 @@ export function formatDate(date?: string | null): string {
   return `${day}/${month}/${year}`;
 }
 
-export function parseDecimal(value: MongoDecimal): number {
+export function parseDecimal(value: DecimalValue): number {
   if (typeof value === "number")
     return value;
   if (typeof value === "string") {
     const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  if (value && "$numberDecimal" in value) {
-    const parsed = Number(value.$numberDecimal);
     return Number.isFinite(parsed) ? parsed : 0;
   }
   return 0;
@@ -41,7 +44,9 @@ export function getStatusStyle(status: SubscriptionStatus) {
   return STATUS_COLORS[status];
 }
 
-export function extractLatestSubscription(subscriptions: SubscriptionRecord[]): SubscriptionRecord | null {
+export function extractLatestSubscription(
+  subscriptions: SubscriptionRecord[],
+): SubscriptionRecord | null {
   if (!subscriptions.length)
     return null;
   return subscriptions.reduce((latest, current) => {

@@ -1,4 +1,6 @@
-export const CREATE_SUBSCRIPTION_MUTATION = `
+import { gql } from "@apollo/client";
+
+export const CREATE_SUBSCRIPTION = gql`
   mutation CreateSubscription($body: CreateSubscriptionInput!) {
     CreateSubscription(body: $body) {
       success
@@ -9,6 +11,8 @@ export const CREATE_SUBSCRIPTION_MUTATION = `
         activatedAt
         expiredAt
         usageCounts
+        createdAt
+        updatedAt
         package {
           id
           name
@@ -24,7 +28,7 @@ export const CREATE_SUBSCRIPTION_MUTATION = `
   }
 `;
 
-export const ACTIVATE_SUBSCRIPTION_MUTATION = `
+export const ACTIVATE_SUBSCRIPTION = gql`
   mutation ActivateSubscription($id: String!) {
     ActivateSubscription(id: $id) {
       success
@@ -35,6 +39,8 @@ export const ACTIVATE_SUBSCRIPTION_MUTATION = `
         activatedAt
         expiredAt
         usageCounts
+        createdAt
+        updatedAt
         package {
           id
           name

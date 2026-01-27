@@ -1,9 +1,21 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, ToastAndroid } from "react-native";
-import { useQueryClient } from "@tanstack/react-query";
+import type { BikeStatusUpdate } from "@hooks/useBikeStatusStream";
 
-import { useBikeStatusStream, type BikeStatusUpdate } from "@hooks/useBikeStatusStream";
+import {
+
+  useBikeStatusStream,
+} from "@hooks/useBikeStatusStream";
 import { useAuth } from "@providers/auth-providers";
+import { useQueryClient } from "@tanstack/react-query";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Platform, ToastAndroid } from "react-native";
 
 type Subscriber = (payload: BikeStatusUpdate) => void;
 
@@ -13,9 +25,15 @@ type BikeStatusStreamContextValue = {
   subscribe: (listener: Subscriber) => () => void;
 };
 
-const BikeStatusStreamContext = createContext<BikeStatusStreamContextValue | undefined>(undefined);
+const BikeStatusStreamContext = createContext<
+  BikeStatusStreamContextValue | undefined
+>(undefined);
 
-export function BikeStatusStreamProvider({ children }: { children: React.ReactNode }) {
+export function BikeStatusStreamProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const subscribersRef = useRef<Set<Subscriber>>(new Set());
@@ -25,7 +43,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
     subscribersRef.current.forEach((listener) => {
       try {
         listener(payload);
-      } catch (error) {
+      }
+      catch (error) {
         console.warn("[BikeStatusStream] subscriber error", error);
       }
     });
@@ -47,7 +66,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
 
         if (status.includes("ĐANG ĐƯỢC THUÊ")) {
           message = "Thuê xe thành công";
-        } else if (status.includes("CÓ SẴN")) {
+        }
+        else if (status.includes("CÓ SẴN")) {
           message = "Kết thúc phiên thuê xe thành công";
         }
 
@@ -56,12 +76,10 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
 
       notifySubscribers(payload);
     },
-    [notifySubscribers, queryClient]
+    [notifySubscribers, queryClient],
   );
 
-  const handleError = useCallback((error: Error) => {
-    console.warn("[BikeStatusStream] SSE error", error);
-  }, []);
+  const handleError = useCallback((_error: Error) => {}, []);
 
   const { isConnected, connect, disconnect } = useBikeStatusStream({
     autoConnect: false,
@@ -72,7 +90,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     if (!isAuthenticated) {
       disconnect();
-    } else {
+    }
+    else {
       connect();
     }
   }, [connect, disconnect, isAuthenticated]);
@@ -90,16 +109,22 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
       lastUpdate,
       subscribe,
     }),
-    [isConnected, lastUpdate, subscribe]
+    [isConnected, lastUpdate, subscribe],
   );
 
-  return <BikeStatusStreamContext.Provider value={value}>{children}</BikeStatusStreamContext.Provider>;
+  return (
+    <BikeStatusStreamContext.Provider value={value}>
+      {children}
+    </BikeStatusStreamContext.Provider>
+  );
 }
 
 export function useBikeStatusStreamContext() {
   const ctx = useContext(BikeStatusStreamContext);
   if (!ctx) {
-    throw new Error("useBikeStatusStreamContext must be used within BikeStatusStreamProvider");
+    throw new Error(
+      "useBikeStatusStreamContext must be used within BikeStatusStreamProvider",
+    );
   }
   return ctx;
 }

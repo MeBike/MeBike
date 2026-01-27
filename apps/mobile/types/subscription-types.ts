@@ -8,7 +8,7 @@ export type SubscriptionStatus
 
 export type SubscriptionPackage = "basic" | "premium" | "unlimited";
 
-export type MongoDecimal = number | string | { $numberDecimal?: string };
+export type DecimalValue = number | string;
 
 export type PackageUsageType = "Finite" | "Infinite";
 export type PackageStatus = "Active" | "Inactive";
@@ -60,7 +60,7 @@ export type SubscriptionRecord = {
 export type SubscriptionListItem = SubscriptionRecord;
 
 export type SubscriptionDetail = {
-  subscription: Omit<SubscriptionRecord, "price"> & { price: number };
+  subscription: (Omit<SubscriptionRecord, "price"> & { price: number }) | null;
   user: {
     fullname?: string;
     email?: string;

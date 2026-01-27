@@ -8,35 +8,7 @@ type Props = {
   title?: string;
   subtitle?: string;
 };
-
-export function SubscriptionHeader({ title = "Gói thành viên", subtitle = "Tối ưu chi phí và giữ xe dễ dàng hơn" }: Props) {
-  const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
-  const canGoBack = navigation.canGoBack();
-
-  return (
-    <View style={[styles.container, { paddingTop: insets.top + 16 }]}> 
-      <View style={styles.row}>
-        {canGoBack && (
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="chevron-back" size={22} color="#fff" />
-          </TouchableOpacity>
-        )}
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
-        </View>
-      </View>
-    </View>
-  );
-}
-
 const HEADER_COLOR = "#0066FF";
-
 const styles = StyleSheet.create({
   container: {
     backgroundColor: HEADER_COLOR,
@@ -71,3 +43,29 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 });
+
+export function SubscriptionHeader({ title = "Gói thành viên", subtitle = "Tối ưu chi phí và giữ xe dễ dàng hơn" }: Props) {
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  const canGoBack = navigation.canGoBack();
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top + 16 }]}>
+      <View style={styles.row}>
+        {canGoBack && (
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="chevron-back" size={22} color="#fff" />
+          </TouchableOpacity>
+        )}
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}

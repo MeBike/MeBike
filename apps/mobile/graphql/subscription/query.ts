@@ -1,4 +1,6 @@
-export const PACKAGES_QUERY = `
+import { gql } from "@apollo/client";
+
+export const GET_PACKAGES = gql`
   query Packages($params: GetPackageListInput) {
     Packages(params: $params) {
       success
@@ -25,7 +27,7 @@ export const PACKAGES_QUERY = `
   }
 `;
 
-export const SUBSCRIPTIONS_QUERY = `
+export const GET_SUBSCRIPTIONS = gql`
   query Subscriptions($params: GetSubscriptionListInput) {
     Subscriptions(params: $params) {
       success
@@ -36,6 +38,8 @@ export const SUBSCRIPTIONS_QUERY = `
         activatedAt
         expiredAt
         usageCounts
+        createdAt
+        updatedAt
         package {
           id
           name
@@ -57,7 +61,7 @@ export const SUBSCRIPTIONS_QUERY = `
   }
 `;
 
-export const SUBSCRIPTION_DETAIL_QUERY = `
+export const GET_SUBSCRIPTION_DETAIL = gql`
   query Subscription($id: String!) {
     Subscription(id: $id) {
       success
@@ -68,6 +72,8 @@ export const SUBSCRIPTION_DETAIL_QUERY = `
         activatedAt
         expiredAt
         usageCounts
+        createdAt
+        updatedAt
         package {
           id
           name

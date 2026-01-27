@@ -1,4 +1,4 @@
-import type { MongoDecimal } from "./subscription-types";
+import type { DecimalValue } from "./subscription-types";
 
 export type RentingHistory = {
   _id: string;
@@ -9,7 +9,7 @@ export type RentingHistory = {
   start_time: string;
   end_time: string | null;
   duration: number;
-  total_price: MongoDecimal;
+  total_price: DecimalValue;
   subscription_id?: string;
   status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY";
   created_at: string;
@@ -55,7 +55,7 @@ export type RentalDetail = {
   start_time: string;
   end_time: string | null;
   duration: number;
-  total_price: MongoDecimal;
+  total_price: DecimalValue;
   subscription_id?: string;
   status: "ĐANG THUÊ" | "HOÀN THÀNH" | "ĐÃ HỦY";
   created_at: string;

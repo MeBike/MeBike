@@ -1,1 +1,1 @@
-export { subscriptionFeatureService as subscriptionService } from "@/features/subscription";
+export { subscriptionService } from "@/screen/subscription/api/subscription.api";
