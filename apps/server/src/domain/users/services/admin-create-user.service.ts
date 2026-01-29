@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { UserRow } from "../models";
 
 import { hashPassword } from "../../auth/services/auth.service";
-import { UserServiceTag } from "../services/user.service";
+import { UserServiceTag } from "./user.service";
 
 export function adminCreateUserUseCase(args: {
   fullname: string;
@@ -25,18 +25,8 @@ export function adminCreateUserUseCase(args: {
 > {
   return Effect.gen(function* () {
     const service = yield* UserServiceTag;
-    const passwordHash = yield* hashPassword(args.password);
-    return yield* service.create({
-      fullname: args.fullname,
-      email: args.email,
-      passwordHash,
-      phoneNumber: args.phoneNumber,
-      username: args.username,
-      avatar: args.avatar,
-      location: args.location,
-      role: args.role,
-      verify: args.verify,
-      nfcCardUid: args.nfcCardUid,
-    });
+    const { password, ...rest } = args;
+    const passwordHash = yield* hashPassword(password);
+    return yield* service.create({ ...rest, passwordHash });
   });
 }
