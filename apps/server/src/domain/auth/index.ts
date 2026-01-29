@@ -6,4 +6,4 @@ export * from "./otp";
 export * from "./repository/auth-event.repository";
 export * from "./repository/auth.repository";
 export * from "./services/auth.service";
-export * from "./use-cases/auth.use-cases";
+export * from "./services/register.service";

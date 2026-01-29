@@ -9,7 +9,7 @@ import {
 import { Effect, Match } from "effect";
 
 import { AuthServiceTag } from "@/domain/auth";
-import { registerUseCase } from "@/domain/auth/use-cases/auth.use-cases";
+import { registerUseCase } from "@/domain/auth/services/register.service";
 import { withLoggedCause } from "@/domain/shared";
 import { withAuthDeps } from "@/http/shared/providers";
 

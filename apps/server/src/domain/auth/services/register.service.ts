@@ -12,7 +12,7 @@ import type { Tokens } from "../jwt";
 
 import { AuthEventRepository } from "../repository/auth-event.repository";
 import { AuthRepository } from "../repository/auth.repository";
-import { AuthServiceTag, createSessionForUser, hashPassword } from "../services/auth.service";
+import { AuthServiceTag, createSessionForUser, hashPassword } from "./auth.service";
 
 export function registerUseCase(args: {
   fullname: string;
