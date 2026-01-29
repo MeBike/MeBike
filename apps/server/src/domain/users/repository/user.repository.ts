@@ -18,6 +18,7 @@ import type {
 } from "../models";
 
 import { makePageResult, normalizedPage } from "../../shared/pagination";
+import { pickDefined } from "../../shared/pick-defined";
 import {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
@@ -34,21 +35,10 @@ export type UserRepo = {
   readonly findById: (
     id: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
-  readonly findByIdInTx: (
-    tx: PrismaTypes.TransactionClient,
-    id: string,
-  ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
   readonly findByEmail: (
     email: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
   readonly createUser: (
-    data: CreateUserInput,
-  ) => Effect.Effect<
-    UserRow,
-    UserRepositoryError | DuplicateUserEmail | DuplicateUserPhoneNumber
-  >;
-  readonly createUserInTx: (
-    tx: PrismaTypes.TransactionClient,
     data: CreateUserInput,
   ) => Effect.Effect<
     UserRow,
@@ -115,7 +105,10 @@ export class UserRepository extends Effect.Service<UserRepository>()(
   },
 ) {}
 
-export function makeUserRepository(client: PrismaClient): UserRepo {
+export function makeUserRepository(
+  db: PrismaClient | PrismaTypes.TransactionClient,
+): UserRepo {
+  const client = db;
   const toOrderBy = (
     pageReq: PageRequest<UserSortField>,
   ): UserOrderBy => {
@@ -158,24 +151,6 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
         catch: err =>
           new UserRepositoryError({
             operation: "findById",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(toUserRow)),
-        ),
-      ),
-
-    findByIdInTx: (tx, id) =>
-      Effect.tryPromise({
-        try: () =>
-          tx.user.findUnique({
-            where: { id },
-            select: selectUserRow,
-          }),
-        catch: err =>
-          new UserRepositoryError({
-            operation: "findByIdInTx",
             cause: err,
           }),
       }).pipe(
@@ -240,44 +215,6 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
         },
       }).pipe(Effect.map(toUserRow)),
 
-    createUserInTx: (tx, data) =>
-      Effect.tryPromise({
-        try: () =>
-          tx.user.create({
-            data: {
-              fullname: data.fullname,
-              email: data.email,
-              passwordHash: data.passwordHash,
-              phoneNumber: data.phoneNumber ?? null,
-              username: data.username ?? null,
-              avatar: data.avatar ?? null,
-              location: data.location ?? null,
-              role: data.role ?? UserRole.USER,
-              verify: data.verify ?? UserVerifyStatus.UNVERIFIED,
-              nfcCardUid: data.nfcCardUid ?? null,
-            },
-            select: selectUserRow,
-          }),
-        catch: (err) => {
-          if (isPrismaUniqueViolation(err)) {
-            const targets = uniqueTargets(err);
-            if (targets.some(isEmailTarget)) {
-              return new DuplicateUserEmail({ email: data.email });
-            }
-
-            if (targets.some(isPhoneTarget)) {
-              return new DuplicateUserPhoneNumber({
-                phoneNumber: data.phoneNumber ?? "unknown",
-              });
-            }
-          }
-          return new UserRepositoryError({
-            operation: "createUserInTx",
-            cause: err,
-          });
-        },
-      }).pipe(Effect.map(toUserRow)),
-
     updateProfile: (id, patch) =>
       Effect.gen(function* () {
         const existing = yield* Effect.tryPromise({
@@ -300,20 +237,16 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
           try: () =>
             client.user.update({
               where: { id },
-              data: {
-                ...(patch.fullname !== undefined ? { fullname: patch.fullname } : {}),
-                ...(patch.phoneNumber !== undefined
-                  ? { phoneNumber: patch.phoneNumber }
-                  : {}),
-                ...(patch.username !== undefined ? { username: patch.username } : {}),
-                ...(patch.avatar !== undefined ? { avatar: patch.avatar } : {}),
-                ...(patch.location !== undefined ? { location: patch.location } : {}),
-                ...(patch.role !== undefined ? { role: patch.role } : {}),
-                ...(patch.verify !== undefined ? { verify: patch.verify } : {}),
-                ...(patch.nfcCardUid !== undefined
-                  ? { nfcCardUid: patch.nfcCardUid }
-                  : {}),
-              },
+              data: pickDefined({
+                fullname: patch.fullname,
+                phoneNumber: patch.phoneNumber,
+                username: patch.username,
+                avatar: patch.avatar,
+                location: patch.location,
+                role: patch.role,
+                verify: patch.verify,
+                nfcCardUid: patch.nfcCardUid,
+              }),
               select: selectUserRow,
             }),
           catch: (err) => {
@@ -358,21 +291,17 @@ export function makeUserRepository(client: PrismaClient): UserRepo {
           try: () =>
             client.user.update({
               where: { id },
-              data: {
-                ...(patch.fullname !== undefined ? { fullname: patch.fullname } : {}),
-                ...(patch.email !== undefined ? { email: patch.email } : {}),
-                ...(patch.phoneNumber !== undefined
-                  ? { phoneNumber: patch.phoneNumber }
-                  : {}),
-                ...(patch.username !== undefined ? { username: patch.username } : {}),
-                ...(patch.avatar !== undefined ? { avatar: patch.avatar } : {}),
-                ...(patch.location !== undefined ? { location: patch.location } : {}),
-                ...(patch.role !== undefined ? { role: patch.role } : {}),
-                ...(patch.verify !== undefined ? { verify: patch.verify } : {}),
-                ...(patch.nfcCardUid !== undefined
-                  ? { nfcCardUid: patch.nfcCardUid }
-                  : {}),
-              },
+              data: pickDefined({
+                fullname: patch.fullname,
+                email: patch.email,
+                phoneNumber: patch.phoneNumber,
+                username: patch.username,
+                avatar: patch.avatar,
+                location: patch.location,
+                role: patch.role,
+                verify: patch.verify,
+                nfcCardUid: patch.nfcCardUid,
+              }),
               select: selectUserRow,
             }),
           catch: (err) => {

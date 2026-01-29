@@ -16,7 +16,7 @@ import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
 import { StationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
-import { UserRepository } from "@/domain/users";
+import { makeUserRepository } from "@/domain/users";
 import { WalletServiceTag } from "@/domain/wallets";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
@@ -79,7 +79,6 @@ export function reserveBikeUseCase(
   | ReservationHoldServiceTag
   | BikeRepository
   | StationRepository
-  | UserRepository
   | WalletServiceTag
   | SubscriptionServiceTag
   | RentalRepository
@@ -90,7 +89,6 @@ export function reserveBikeUseCase(
     const reservationHoldService = yield* ReservationHoldServiceTag;
     const bikeRepo = yield* BikeRepository;
     const stationRepo = yield* StationRepository;
-    const userRepo = yield* UserRepository;
     const walletService = yield* WalletServiceTag;
     const subscriptionService = yield* SubscriptionServiceTag;
     const rentalRepo = yield* RentalRepository;
@@ -246,8 +244,9 @@ export function reserveBikeUseCase(
         // TODO(env): Provide a real callback URL once we standardize a `FRONTEND_URL`/`APP_WEB_URL` env.
         // TODO(iot): send reservation "reserve" command once IoT integration is ready.
         {
+          const txUserRepo = makeUserRepository(tx);
           const [userOpt, stationOpt] = yield* Effect.all([
-            userRepo.findByIdInTx(tx, reservation.userId).pipe(
+            txUserRepo.findById(reservation.userId).pipe(
               Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
             ),
             stationRepo.getByIdInTx(tx, reservation.stationId).pipe(

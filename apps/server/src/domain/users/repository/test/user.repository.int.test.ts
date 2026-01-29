@@ -130,12 +130,13 @@ describe("userRepository Integration", () => {
     await broken.stop();
   });
 
-  describe("transaction methods (*InTx)", () => {
-    it("findByIdInTx returns user within transaction", async () => {
+  describe("transaction-bound repository", () => {
+    it("findById returns user within transaction", async () => {
       const user = await Effect.runPromise(repo.createUser(createUserInput()));
 
       const result = await client.$transaction(async (tx) => {
-        return Effect.runPromise(repo.findByIdInTx(tx, user.id));
+        const txRepo = makeUserRepository(tx);
+        return Effect.runPromise(txRepo.findById(user.id));
       });
 
       expect(Option.isSome(result)).toBe(true);
@@ -144,19 +145,21 @@ describe("userRepository Integration", () => {
       }
     });
 
-    it("findByIdInTx returns Option.none for missing user", async () => {
+    it("findById returns Option.none for missing user", async () => {
       const result = await client.$transaction(async (tx) => {
-        return Effect.runPromise(repo.findByIdInTx(tx, uuidv7()));
+        const txRepo = makeUserRepository(tx);
+        return Effect.runPromise(txRepo.findById(uuidv7()));
       });
 
       expect(Option.isNone(result)).toBe(true);
     });
 
-    it("createUserInTx creates user within transaction", async () => {
+    it("createUser creates user within transaction", async () => {
       const input = createUserInput();
 
       const created = await client.$transaction(async (tx) => {
-        return Effect.runPromise(repo.createUserInTx(tx, input));
+        const txRepo = makeUserRepository(tx);
+        return Effect.runPromise(txRepo.createUser(input));
       });
 
       expect(created.email).toBe(input.email);
@@ -166,27 +169,29 @@ describe("userRepository Integration", () => {
       expect(Option.isSome(fetched)).toBe(true);
     });
 
-    it("createUserInTx rejects duplicate email within transaction", async () => {
+    it("createUser rejects duplicate email within transaction", async () => {
       const email = "tx-dup@example.com";
       await Effect.runPromise(repo.createUser(createUserInput({ email })));
 
       const result = await client.$transaction(async (tx) => {
+        const txRepo = makeUserRepository(tx);
         return Effect.runPromise(
-          repo.createUserInTx(tx, createUserInput({ email })).pipe(Effect.either),
+          txRepo.createUser(createUserInput({ email })).pipe(Effect.either),
         );
       });
 
       expectLeftTag(result, "DuplicateUserEmail");
     });
 
-    it("createUserInTx rejects duplicate phone within transaction", async () => {
+    it("createUser rejects duplicate phone within transaction", async () => {
       const phoneNumber = "0987654321";
       await Effect.runPromise(repo.createUser(createUserInput({ phoneNumber })));
 
       const result = await client.$transaction(async (tx) => {
+        const txRepo = makeUserRepository(tx);
         return Effect.runPromise(
-          repo
-            .createUserInTx(tx, createUserInput({ phoneNumber, email: `tx-${uuidv7()}@example.com` }))
+          txRepo
+            .createUser(createUserInput({ phoneNumber, email: `tx-${uuidv7()}@example.com` }))
             .pipe(Effect.either),
         );
       });
@@ -202,10 +207,11 @@ describe("userRepository Integration", () => {
 
       try {
         await client.$transaction(async (tx) => {
-          await Effect.runPromise(repo.createUserInTx(tx, createUserInput({ email: firstEmail })));
+          const txRepo = makeUserRepository(tx);
+          await Effect.runPromise(txRepo.createUser(createUserInput({ email: firstEmail })));
 
           // Second user - will fail due to duplicate email, causing tx rollback
-          await Effect.runPromise(repo.createUserInTx(tx, createUserInput({ email: duplicateEmail })));
+          await Effect.runPromise(txRepo.createUser(createUserInput({ email: duplicateEmail })));
         });
         throw new Error("Transaction should have failed");
       }
@@ -220,12 +226,13 @@ describe("userRepository Integration", () => {
       expect(Option.isNone(firstUser)).toBe(true);
     });
 
-    it("transaction rollback: changes NOT persisted when Error thrown after createUserInTx", async () => {
+    it("transaction rollback: changes NOT persisted when Error thrown after createUser", async () => {
       const email = `rollback-${uuidv7()}@example.com`;
 
       try {
         await client.$transaction(async (tx) => {
-          await Effect.runPromise(repo.createUserInTx(tx, createUserInput({ email })));
+          const txRepo = makeUserRepository(tx);
+          await Effect.runPromise(txRepo.createUser(createUserInput({ email })));
           throw new Error("Simulated business logic failure");
         });
         throw new Error("Transaction should have failed");
@@ -240,15 +247,16 @@ describe("userRepository Integration", () => {
       expect(Option.isNone(user)).toBe(true);
     });
 
-    it("findByIdInTx sees uncommitted changes from same transaction", async () => {
+    it("findById sees uncommitted changes from same transaction", async () => {
       const input = createUserInput();
 
       const result = await client.$transaction(async (tx) => {
         // Create user in tx
-        const created = await Effect.runPromise(repo.createUserInTx(tx, input));
+        const txRepo = makeUserRepository(tx);
+        const created = await Effect.runPromise(txRepo.createUser(input));
 
         // Should be able to find it in same tx before commit
-        const found = await Effect.runPromise(repo.findByIdInTx(tx, created.id));
+        const found = await Effect.runPromise(txRepo.findById(created.id));
 
         return { created, found };
       });

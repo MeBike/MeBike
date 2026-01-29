@@ -2,7 +2,7 @@ import { Effect } from "effect";
 
 import type { DuplicateUserEmail, DuplicateUserPhoneNumber } from "@/domain/users";
 
-import { UserRepository } from "@/domain/users";
+import { makeUserRepository } from "@/domain/users";
 import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { WalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
@@ -22,13 +22,12 @@ export function registerUseCase(args: {
 }): Effect.Effect<
   Tokens,
   DuplicateUserEmail | DuplicateUserPhoneNumber,
-  AuthServiceTag | AuthRepository | AuthEventRepository | UserRepository | WalletRepository | Prisma
+  AuthServiceTag | AuthRepository | AuthEventRepository | WalletRepository | Prisma
 > {
   return Effect.gen(function* () {
     const authService = yield* AuthServiceTag;
     const authRepo = yield* AuthRepository;
     const authEventRepo = yield* AuthEventRepository;
-    const userRepo = yield* UserRepository;
     const walletRepo = yield* WalletRepository;
     const { client } = yield* Prisma;
 
@@ -36,7 +35,8 @@ export function registerUseCase(args: {
 
     const user = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
-        const created = yield* userRepo.createUserInTx(tx, {
+        const userRepo = makeUserRepository(tx);
+        const created = yield* userRepo.createUser({
           fullname: args.fullname,
           email: args.email,
           passwordHash,
