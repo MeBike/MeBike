@@ -65,17 +65,14 @@ export function makeUserStatsService(repo: UserStatsRepo): UserStatsService {
 
     getActiveUsersSeries: ({ startDate, endDate, groupBy }) =>
       Effect.gen(function* () {
-        // Validate date range
         if (startDate > endDate) {
           return yield* Effect.fail(new InvalidStatsRange({ startDate, endDate }));
         }
 
-        // Validate groupBy
         if (groupBy !== "day" && groupBy !== "month") {
           return yield* Effect.fail(new InvalidStatsGroupBy({ groupBy }));
         }
 
-        // Call repository
         const rows = yield* repo
           .getActiveUsersSeries({ startDate, endDate, groupBy })
           .pipe(
@@ -118,7 +115,6 @@ export function makeUserStatsService(repo: UserStatsRepo): UserStatsService {
             ),
           );
 
-        // Calculate percentage change
         const percentageChange
           = counts.lastMonth === 0
             ? counts.thisMonth === 0
@@ -149,7 +145,6 @@ export function makeUserStatsService(repo: UserStatsRepo): UserStatsService {
             ),
           );
 
-        // Calculate average spending
         const averageSpending
           = raw.totalCustomers === 0
             ? 0
