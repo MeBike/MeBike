@@ -6,6 +6,7 @@ import { UserRepository } from "@/domain/users";
 import { UserRepositoryError } from "@/domain/users/domain-errors";
 import { WalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
+import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { Tokens } from "../jwt";
 
@@ -25,9 +26,6 @@ export function registerUseCase(args: {
 > {
   return Effect.gen(function* () {
     const authService = yield* AuthServiceTag;
-    // TODO(architecture): This use-case reaches into `UserRepository`/`WalletRepository` (and Prisma tx) directly.
-    // Consider moving "register user + create wallet + start session" orchestration into an AuthService method
-    // (or an AuthRegistrationService) so the use-case only depends on domain services (not persistence adapters).
     const authRepo = yield* AuthRepository;
     const authEventRepo = yield* AuthEventRepository;
     const userRepo = yield* UserRepository;
@@ -36,44 +34,29 @@ export function registerUseCase(args: {
 
     const passwordHash = yield* hashPassword(args.password);
 
-    class TxAbort<E> extends Error {
-      constructor(readonly payload: E) {
-        super("TxAbort");
-      }
-    }
-
-    const user = yield* Effect.tryPromise({
-      try: () =>
-        client.$transaction(async (tx) => {
-          try {
-            const created = await Effect.runPromise(userRepo.createUserInTx(tx, {
-              fullname: args.fullname,
-              email: args.email,
-              passwordHash,
-              phoneNumber: args.phoneNumber ?? null,
-            }));
-            await Effect.runPromise(walletRepo.createForUserInTx(tx, created.id));
-            return created;
-          }
-          catch (err) {
-            throw new TxAbort(err);
-          }
-        }),
-      catch: (err) => {
-        if (err instanceof TxAbort) {
-          return err.payload;
-        }
-        return new UserRepositoryError({
-          operation: "register.createUserWithWallet",
-          cause: err,
+    const user = yield* runPrismaTransaction(client, tx =>
+      Effect.gen(function* () {
+        const created = yield* userRepo.createUserInTx(tx, {
+          fullname: args.fullname,
+          email: args.email,
+          passwordHash,
+          phoneNumber: args.phoneNumber ?? null,
         });
-      },
-    }).pipe(
+        yield* walletRepo.createForUserInTx(tx, created.id);
+        return created;
+      })).pipe(
+      Effect.catchTag("PrismaTransactionError", err =>
+        Effect.die(
+          new UserRepositoryError({
+            operation: "register.createUserWithWallet",
+            cause: err.cause,
+          }),
+        )),
       Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
       Effect.catchTag("WalletUniqueViolation", err => Effect.die(err)),
     );
-
+    // hmm not transactional, but ok
     yield* authService.sendVerifyEmail({
       userId: user.id,
       email: user.email,
