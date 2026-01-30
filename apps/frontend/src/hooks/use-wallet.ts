@@ -13,8 +13,7 @@ import { useGetWalletOverviewQuery } from "./query/Wallet/useGetWalletOverviewQu
 import { useGetDetailWalletQuery } from "./query/Wallet/useGetDetailWalletQuery";
 import { useUpdateStatusWalletMutation } from "./mutations/Wallet/useUpdateStatusWalletMutation";
 import { useRouter } from "next/navigation";
-import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index";
-import { UpdateWalletStatusResponse } from "@/types/wallet";
+import { QUERY_KEYS } from "@/constants/queryKey";
 type ErrorResponse = {
   response?: {
     data?: {
@@ -85,10 +84,8 @@ export function useWalletActions(
       }
       useTopUpWallet.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === HTTP_STATUS.OK) {
-            toast.success(
-              result.data?.message || MESSAGE.TOP_UP_WALLET_SUCCESS
-            );
+          if (result.status === 200) {
+            toast.success(result.data?.message || "Đã nạp tiền vào ví thành công");
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
             });
@@ -97,14 +94,14 @@ export function useWalletActions(
             });
           } else {
             const errorMessage =
-              result.data?.message || MESSAGE.TOP_UP_WALLET_FAILED;
+              result.data?.message || "Lỗi khi nạp tiền vào ví";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            MESSAGE.TOP_UP_WALLET_FAILED
+            "Error topping up wallet"
           );
           toast.error(errorMessage);
         },
@@ -119,8 +116,8 @@ export function useWalletActions(
       }
       useDebitWallet.mutate(data, {
         onSuccess: (result) => {
-          if (result.status === HTTP_STATUS.OK) {
-            toast.success(result.data?.message || MESSAGE.DEBIT_WALLET_SUCCESS);
+          if (result.status === 200) {
+            toast.success(result.data?.message || "Đã trừ tiền vào ví thành công");
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
             });
@@ -129,12 +126,12 @@ export function useWalletActions(
             });
           } else {
             const errorMessage =
-              result.data?.message || MESSAGE.DEBIT_WALLET_FAILED;
+              result.data?.message || "Lỗi khi trừ tiền vào ví";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.DEBIT_WALLET_FAILED);
+          const errorMessage = getErrorMessage(error, "Lỗi khi trừ tiền vào ví");
           toast.error(errorMessage);
         },
       });
@@ -149,7 +146,7 @@ export function useWalletActions(
   }, [isRefetchingDetailWallet, hasToken]);
   const useUpdateWallet = useUpdateStatusWalletMutation();
   const updateStatusWallet = useCallback(
-    (newStatus: "ACTIVE" | "BLOCKED", id: string) => {
+    (newStatus: "ĐANG HOẠT ĐỘNG" | "ĐÃ BỊ ĐÓNG BĂNG", id: string) => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -157,21 +154,25 @@ export function useWalletActions(
       useUpdateWallet.mutate(
         { id, newStatus },
         {
-          onSuccess: (result) => {
-            if (result.status === HTTP_STATUS.OK && result.data?.data?.UpdateWalletStatus.success) {
-              toast.success(result.data?.data?.UpdateWalletStatus.message || MESSAGE.UPDATE_STATUS_WALLET_SUCCESS);
+          onSuccess: (result: {
+            status: number;
+            data?: { message?: string };
+          }) => {
+            if (result.status === 200) {
+              toast.success(result.data?.message || "Cập nhật trạng thái ví thành công");
               queryClient.invalidateQueries({
-                queryKey: ["all-wallet-users"],
+                queryKey: QUERY_KEYS.WALLET.ALL_WALLET_USER(),
               });
-              queryClient.invalidateQueries({
-                queryKey: ["wallet-overview"],
-              });
+            } else {
+              const errorMessage =
+                result.data?.message || "Lỗi khi cập nhật trạng thái ví";
+              toast.error(errorMessage);
             }
           },
           onError: (error) => {
             const errorMessage = getErrorMessage(
               error,
-              MESSAGE.UPDATE_STATUS_WALLET_FAILED
+              "Error updating wallet status"
             );
             toast.error(errorMessage);
           },

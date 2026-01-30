@@ -12,7 +12,7 @@ import { useConfirmSOSRequestMutation } from "./mutations/SOS/useConfirmSOSReque
 import { useResolveSOSRequestMutation } from "./mutations/SOS/useResolveSOSRequestMutaiton";
 import { useCreateRentalSOSRequestMutation } from "./mutations/SOS/useCreateRentalBySOSMutation";
 import { useCancelSOSRequestMutation } from "./mutations/SOS/useCancelSOSRequestMutation";
-import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index";
+import { QUERY_KEYS } from "@/constants/queryKey";
 interface UseSOSProps {
   hasToken: boolean;
   page?: number;
@@ -91,20 +91,19 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
             status: number;
             data?: { message?: string };
           }) => {
-            if (result.status === HTTP_STATUS.OK) {
+            if (result.status === 200) {
               toast.success(
                 result.data?.message ||
-                  MESSAGE.ASSIGN_SOS_GUEST_SUCCESS
+                  "Yêu cầu cứu hộ đã được phân công thành công"
               );
               await queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.SOS.ALL(),
+                queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
               });
               await refetchSOSRequest();
               await refetchSOSDetail();
               resolve(result);
             } else {
-              const errorMessage =
-                result.data?.message || MESSAGE.ASSIGN_SOS_GUEST_FAILED;
+              const errorMessage = result.data?.message || "Không thể phân công yêu cầu SOS";
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }
@@ -112,7 +111,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
           onError: (error) => {
             const errorMessage = getErrorMessage(
               error,
-              MESSAGE.ASSIGN_SOS_GUEST_FAILED
+              "Failed to assign SOS request"
             );
             toast.error(errorMessage);
             reject(new Error(errorMessage));
@@ -134,16 +133,16 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
             status: number;
             data?: { message?: string };
           }) => {
-            if (result.status === HTTP_STATUS.OK) {
-              toast.success(result.data?.message || MESSAGE.ASSIGN_SOS_GUEST_SUCCESS);
+            if (result.status === 200) {
+              toast.success(result.data?.message || "Xác nhận yêu cầu cứu hộ thành công");
               await queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.SOS.ALL(),
+                queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
               });
               await refetchSOSRequest();
               await refetchSOSDetail();
               resolve(result);
             } else {
-              const errorMessage = result.data?.message || MESSAGE.ASSIGN_SOS_GUEST_FAILED;
+              const errorMessage = result.data?.message || "Error confirming SOS request";
               toast.error(errorMessage);
               reject(new Error(errorMessage));
             }
@@ -151,7 +150,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
           onError: (error) => {
             const errorMessage = getErrorMessage(
               error,
-              MESSAGE.ASSIGN_SOS_GUEST_FAILED
+              "Failed to confirm SOS request"
             );
             toast.error(errorMessage);
             reject(new Error(errorMessage));
@@ -184,7 +183,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
         }) => {
           if (result.status === 200) {
             toast.success(
-              result.data?.message || MESSAGE.RESOLVE_SOS_SUCCESS
+              result.data?.message || "Giải quyết yêu cầu cứu hộ thành công"
             );
             await queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
@@ -194,7 +193,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
             resolve(result);
           } else {
             const errorMessage =
-              result.data?.message || MESSAGE.RESOLVE_SOS_FAILED;
+              result.data?.message || "Lỗi khi giải quyết yêu cầu cứu hộ";
             toast.error(errorMessage);
             reject(new Error(errorMessage));
           }
@@ -202,7 +201,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            MESSAGE.RESOLVE_SOS_FAILED
+            "Failed to resolve SOS request"
           );
           toast.error(errorMessage);
           reject(new Error(errorMessage));
@@ -234,7 +233,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
         }) => {
           if (result.status === 200) {
             toast.success(
-              result.data?.message || MESSAGE.CREATE_SOS_SUCCESS
+              result.data?.message || "Tạo thuê xe thành công"
             );
             await queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
@@ -244,7 +243,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
             resolve(result);
           } else {
             const errorMessage =
-              result.data?.message || MESSAGE.CREATE_SOS_FAILED;
+              result.data?.message || "Lỗi khi tạo thuê xe";
             toast.error(errorMessage);
             reject(new Error(errorMessage));
           }
@@ -252,7 +251,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            MESSAGE.CREATE_SOS_FAILED
+            "Failed to create rental request"
           );
           toast.error(errorMessage);
           reject(new Error(errorMessage));
@@ -284,17 +283,17 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
         }) => {
           if (result.status === 200) {
             toast.success(
-              result.data?.message || MESSAGE.CANCEL_SOS_SUCCESS
+              result.data?.message || "Hủy yêu cầu SOS thành công"
             );
             await queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.SOS.ALL(),
+              queryKey: QUERY_KEYS.SOS.ALL(page, limit, status),
             });
             await refetchSOSRequest();
             await refetchSOSDetail();
             resolve(result);
           } else {
             const errorMessage =
-              result.data?.message || MESSAGE.CANCEL_SOS_FAILED;
+              result.data?.message || "Lỗi khi hủy yêu cầu SOS";
             toast.error(errorMessage);
             reject(new Error(errorMessage));
           }
@@ -302,7 +301,7 @@ export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            MESSAGE.CANCEL_SOS_FAILED
+            "Failed to cancel SOS request"
           );
           toast.error(errorMessage);
           reject(new Error(errorMessage));

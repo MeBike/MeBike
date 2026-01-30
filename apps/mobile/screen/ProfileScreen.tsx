@@ -15,7 +15,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { Me } from "@/types";
+
+import type { DetailUser } from "@services/auth.service";
+
 import { useAuth } from "@providers/auth-providers";
 import { getRefreshToken } from "@utils/tokenManager";
 import { VerifyEmailModal } from "@components/VerifyEmailModal";
@@ -26,25 +28,19 @@ function ProfileScreen() {
   const { user, logOut, verifyEmail, resendVerifyEmail, isCustomer } = useAuth();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const hasToken = Boolean(user?.id);
-  const [profile, setProfile] = useState<Me>(() => ({
-    id: user?.id ?? "",
-    accountId: user?.accountId ?? "",
-    name: user?.name ?? "",
-    YOB: user?.YOB ?? 0,
-    role: user?.role ?? "USER",
-    verify: user?.verify ?? "",
+  const hasToken = Boolean(user?._id);
+  const [profile, setProfile] = useState<DetailUser>(() => ({
+    _id: user?._id ?? "",
+    fullname: user?.fullname ?? "",
     email: user?.email ?? "",
-    status: user?.status ?? "Active",
-    phone: user?.phone ?? "",
-    userAccount: user?.userAccount ?? { email: "", id: "", password: "" },
-    address: user?.address ?? "",
+    verify: user?.verify ?? "",
     location: user?.location ?? "",
-    avatarUrl: user?.avatarUrl ?? "",
     username: user?.username ?? "",
-    createdAt: user?.createdAt ?? "",
-    updatedAt: user?.updatedAt ?? "",
-    nfcCardUid: user?.nfcCardUid,
+    phone_number: user?.phone_number ?? "",
+    avatar: user?.avatar ?? "",
+    role: user?.role ?? "USER",
+    created_at: user?.created_at ?? "",
+    updated_at: user?.updated_at ?? "",
   }));
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
   const [isResendingOtp, setIsResendingOtp] = useState(false);
@@ -66,23 +62,17 @@ function ProfileScreen() {
   useEffect(() => {
     if (user) {
       setProfile({
-        id: user.id ?? "",
-        accountId: user.accountId ?? "",
-        name: user.name ?? "",
-        YOB: user.YOB ?? 0,
-        role: user.role ?? "USER",
-        verify: user.verify ?? "",
+        _id: user._id ?? "",
+        fullname: user.fullname ?? "",
         email: user.email ?? "",
-        status: user.status ?? "Active",
-        phone: user.phone ?? "",
-        userAccount: user.userAccount ?? { email: "", id: "", password: "" },
-        address: user.address ?? "",
+        verify: user.verify ?? "",
         location: user.location ?? "",
-        avatarUrl: user.avatarUrl ?? "",
         username: user.username ?? "",
-        createdAt: user.createdAt ?? "",
-        updatedAt: user.updatedAt ?? "",
-        nfcCardUid: user.nfcCardUid,
+        phone_number: user.phone_number ?? "",
+        avatar: user.avatar ?? "",
+        role: user.role ?? "USER",
+        created_at: user.created_at ?? "",
+        updated_at: user.updated_at ?? "",
       });
     }
   }, [user]);
@@ -108,7 +98,11 @@ function ProfileScreen() {
       {
         text: "Đăng xuất",
         onPress: async () => {
-          await logOut();
+          const refreshToken = await getRefreshToken();
+          if (!refreshToken)
+            return;
+          logOut(String(refreshToken));
+          navigation.navigate("Login" as never);
         },
       },
     ]);
@@ -141,9 +135,11 @@ function ProfileScreen() {
       Alert.alert("Info", "Email của bạn đã được xác thực.");
       return;
     }
+
     setIsResendingOtp(true);
     try {
       await resendVerifyEmail();
+      Alert.alert("Success", "Mã OTP mới đã được gửi đến email của bạn!");
       setIsVerifyEmailModalOpen(true);
     } catch (error) {
       console.log("Resend OTP error:", error);
@@ -154,7 +150,8 @@ function ProfileScreen() {
 
   const handleVerifyEmail = async (otp: string) => {
     try {
-      await verifyEmail({ otp });
+      await verifyEmail({ email: profile.email, otp });
+      // Close modal after successful verification
       setTimeout(() => {
         setIsVerifyEmailModalOpen(false);
       }, 500);
@@ -231,8 +228,8 @@ function ProfileScreen() {
           <View>
             <Image
               source={
-                profile.avatarUrl
-                  ? { uri: profile.avatarUrl }
+                profile.avatar
+                  ? { uri: profile.avatar }
                   : require("../assets/avatar2.png")
               }
               style={{
@@ -264,7 +261,7 @@ function ProfileScreen() {
             }}
             numberOfLines={1}
           >
-            {profile.name}
+            {profile.fullname}
           </Text>
           {/* Thành viên + Stats */}
           <Text
@@ -276,7 +273,7 @@ function ProfileScreen() {
             }}
             numberOfLines={1}
           >
-            Thành viên từ {formatDate(profile.createdAt ?? "")}
+            Thành viên từ {formatDate(profile.created_at)}
           </Text>
           <View
             style={{
@@ -312,7 +309,7 @@ function ProfileScreen() {
                 <View style={styles.infoContent}>
                   <Text style={styles.infoLabel}>Điện thoại</Text>
                   <Text style={styles.infoValue}>
-                    {profile.phone || "Chưa cập nhật"}
+                    {profile.phone_number || "Chưa cập nhật"}
                   </Text>
                 </View>
               </View>
@@ -322,7 +319,7 @@ function ProfileScreen() {
                 <View style={styles.infoContent}>
                   <Text style={styles.infoLabel}>Địa chỉ</Text>
                   <Text style={styles.infoValue}>
-                    {profile.address || profile.location || "Chưa cập nhật"}
+                    {profile.location || "Chưa cập nhật"}
                   </Text>
                 </View>
               </View>

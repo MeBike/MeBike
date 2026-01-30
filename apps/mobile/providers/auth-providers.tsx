@@ -3,12 +3,13 @@ import type { AppStateStatus } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { AppState, DeviceEventEmitter } from "react-native";
+import { AppState } from "react-native";
 
-import type { Me } from "@/types";
+import type { DetailUser } from "@services/auth.service";
+
 import { useUserProfileQuery } from "@hooks/query/useUserProfileQuery";
 import { useAuthActions } from "@hooks/useAuthAction";
-import { clearTokens, getAccessToken, AUTH_EVENTS } from "@utils/tokenManager";
+import { clearTokens, getAccessToken } from "@utils/tokenManager";
 
 type AuthError = {
   response?: {
@@ -16,7 +17,7 @@ type AuthError = {
   };
 };
 type AuthContextType = ReturnType<typeof useAuthActions> & {
-  user: Me | null;
+  user: DetailUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isStaff: boolean;
@@ -25,95 +26,66 @@ type AuthContextType = ReturnType<typeof useAuthActions> & {
   actions: ReturnType<typeof useAuthActions>;
 };
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hasToken, setHasToken] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-  const { data: userProfile, isLoading: isUserProfileLoading, isError, isSuccess, refetch } = useUserProfileQuery(hasToken);
+  const { data: userProfile, isLoading: isUserProfileLoading, isError, isSuccess } = useUserProfileQuery(hasToken);
 
   // Debug logging
-  console.log("AuthProvider render state:", { hasToken, isInitialized, user: !!userProfile, isSuccess });
+  console.log("AuthProvider state:", { hasToken, isInitialized });
 
+  // Callback to update hasToken when token is saved or cleared
   const handleTokenUpdate = useCallback(async () => {
     const token = await getAccessToken();
-    console.log(">>> [Auth] handleTokenUpdate triggered, token exists:", !!token);
     setHasToken(!!token);
-    if (!token) {
-      console.log(">>> [Auth] No token, clearing cache");
-      queryClient.clear();
-    }
-  }, [queryClient]);
+  }, [getAccessToken]);
 
   const actions = useAuthActions(navigation, handleTokenUpdate);
-
-  useEffect(() => {
-    const tokenUpdatedSub = DeviceEventEmitter.addListener(AUTH_EVENTS.TOKEN_UPDATED, () => {
-      console.log(">>> [Auth] Event: TOKEN_UPDATED received");
-      handleTokenUpdate();
-    });
-
-    const tokenRefreshedSub = DeviceEventEmitter.addListener("auth:token_refreshed", () => {
-      console.log(">>> [Auth] Event: auth:token_refreshed received");
-      handleTokenUpdate();
-    });
-
-    const sessionExpiredSub = DeviceEventEmitter.addListener("auth:session_expired", async () => {
-      console.log(">>> [Auth] Event: auth:session_expired received");
-      
-      const token = await getAccessToken();
-      const state = navigation.getState();
-      const currentRoute = state?.routes[state?.index]?.name;
-
-      if (!token || currentRoute === "Login") {
-        console.log(">>> [Auth] Already logged out or on Login screen, skipping redirect");
-        return;
-      }
-
-      await clearTokens();
-      setHasToken(false);
-      queryClient.clear();
-      navigation.navigate("Login" as never);
-    });
-
-    return () => {
-      tokenUpdatedSub.remove();
-      tokenRefreshedSub.remove();
-      sessionExpiredSub.remove();
-    };
-  }, [handleTokenUpdate, queryClient, navigation]);
-
   useEffect(() => {
     const initializeAuth = async () => {
       const token = await getAccessToken();
-      console.log(">>> [Auth] Initializing, token exists:", !!token);
       setHasToken(!!token);
       setIsInitialized(true);
     };
 
     initializeAuth();
 
+    const handleAuthFailure = async () => {
+      await clearTokens();
+      setHasToken(false);
+      queryClient.clear();
+    };
+
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (nextAppState === "active") {
+        // Kiểm tra lại token khi app active
         const token = await getAccessToken();
         setHasToken(!!token);
       }
     };
 
     const subscription = AppState.addEventListener("change", handleAppStateChange);
+
+    // Custom event listener for auth failures (có thể trigger từ API calls)
+    // Thay thế window events bằng custom event system nếu cần
+
     return () => {
       subscription?.remove();
     };
-  }, []);
+  }, [queryClient]);
 
   useEffect(() => {
     if (isError && hasToken && isInitialized) {
       const authError = isError as unknown as AuthError;
-      const status = authError?.response?.status;
-      if (status === 401 || status === 403) {
-        console.log(">>> [Auth] Auth error detected, clearing state");
+      const hasResponse = authError?.response && typeof authError.response === "object";
+      const status = hasResponse && authError.response ? authError.response.status : undefined;
+      const isAuthError = hasResponse && (status === 401 || status === 403);
+
+      if (isAuthError) {
         const clearAuth = async () => {
+          console.log("Auth error detected, clearing auth state");
           await clearTokens();
           setHasToken(false);
           queryClient.clear();
@@ -123,9 +95,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [isError, hasToken, queryClient, isInitialized]);
 
+  // Additional effect to ensure queries are properly disabled when token is cleared
+  useEffect(() => {
+    if (!hasToken && isInitialized) {
+      console.log("No token detected, clearing query cache");
+      queryClient.clear();
+    }
+  }, [hasToken, isInitialized, queryClient]);
+
   const value: AuthContextType = React.useMemo(() => {
-    const user = userProfile as Me | null;
-    const isAuthenticated = !!user && isSuccess && isInitialized && hasToken;
+    const user = userProfile as DetailUser | null;
+    const isAuthenticated = !!user && isSuccess && isInitialized;
     const role = user?.role;
 
     return {
@@ -138,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isSOS: role === "SOS",
       actions,
     };
-  }, [userProfile, isUserProfileLoading, isSuccess, actions, isInitialized, hasToken]);
+  }, [userProfile, isUserProfileLoading, isSuccess, actions, isInitialized]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

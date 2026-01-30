@@ -40,6 +40,7 @@ export function QRModal({ visible, onClose, userId }: QRModalProps) {
         <View style={styles.content}>
           <Text style={styles.title}>Quét mã QR để nạp tiền</Text>
           <Image
+            // eslint-disable-next-line ts/no-require-imports
             source={require("../../../assets/qr.png")}
             style={styles.qrImage}
             resizeMode="contain"

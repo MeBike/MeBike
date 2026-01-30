@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
-import { useBikeDetailQuery } from "@/screen/bike-detail/hooks/use-bike-detail-query";
-import { useBikesQuery } from "@/screen/station-detail/hooks/use-bikes-query";
+import { useGetAllBikeQuery } from "./query/Bike/useGetAllBikeCus";
+import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
 
 type BikeActionsProps = {
   hasToken: boolean;
@@ -10,18 +10,12 @@ type BikeActionsProps = {
   page?: number;
   limit?: number;
 };
-export function useBikeActions({
-  hasToken,
-  bike_id,
-  station_id,
-  page,
-  limit,
-}: BikeActionsProps) {
+export function useBikeActions({hasToken , bike_id , station_id , page , limit} : BikeActionsProps) {
   const {
     refetch: useGetBikes,
     data: allBikesResponse,
     isFetching: isFetchingAllBikes,
-  } = useBikesQuery({ page: page || 1, limit: limit || 20, station_id });
+  } = useGetAllBikeQuery({ page : page || 1, limit : limit || 20, station_id });
 
   const allBikes = allBikesResponse?.data || [];
   const totalRecords = allBikesResponse?.pagination?.totalRecords || 0;
@@ -29,7 +23,7 @@ export function useBikeActions({
     refetch: useGetDetailBike,
     data: detailBike,
     isFetching: isFetchingBikeDetail,
-  } = useBikeDetailQuery(bike_id);
+  } = useGetBikeByIDAllQuery(bike_id || "");
   const getBikes = useCallback(() => {
     if (!hasToken) {
       return;
@@ -37,17 +31,18 @@ export function useBikeActions({
     useGetBikes();
   }, [useGetBikes, hasToken]);
   const getBikeByID = useCallback(() => {
-    if (!hasToken || !bike_id) {
+    if (!hasToken) {
       return;
     }
     useGetDetailBike();
-  }, [useGetDetailBike, hasToken, bike_id]);
+  }, [useGetDetailBike]);
   return {
     getBikes,
     getBikeByID,
     isFetchingBikeDetail,
     isFetchingBike: isFetchingBikeDetail,
     useGetBikes,
+    useGetAllBikeQuery,
     isFetchingAllBikes,
     allBikes: Array.isArray(allBikes) ? allBikes : [],
     totalRecords,

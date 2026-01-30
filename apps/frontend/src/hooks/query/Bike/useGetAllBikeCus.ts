@@ -1,19 +1,23 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { bikeService } from "@/services/bike.service";
+import type { BikeStatus } from "@/types";
 import { QUERY_KEYS } from "@/constants/queryKey";
-import { HTTP_STATUS } from "@/constants";
 const getAllBikes = async (
   page?: number,
   limit?: number,
-  search?: string,
+  station_id?: string,
+  supplier_id?: string,
+  status?: BikeStatus
 ) => {
   try {
     const response = await bikeService.getAllBikes({
       page: page,
       limit: limit,
-      search : search,
+      station_id: station_id,
+      supplier_id: supplier_id,
+      status: status,
     });
-    if (response.status === HTTP_STATUS.OK) {
+    if (response.status === 200) {
       return response.data;
     }
   } catch (error) {
@@ -24,14 +28,18 @@ const getAllBikes = async (
 export const useGetAllBikeQuery = ({
   page,
   limit,
-  search,
+  station_id,
+  supplier_id,
+  status,
 }: {
   page?: number;
   limit?: number;
-  search?: string,
+  station_id?: string;
+  supplier_id?: string;
+  status?: BikeStatus;
 }) => {
-  return useSuspenseQuery({
-    queryKey: QUERY_KEYS.BIKE.ALL(page,limit,search),
-    queryFn: () => getAllBikes(page,limit,search),
+  return useQuery({
+    queryKey: QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id),
+    queryFn: () => getAllBikes(page, limit, station_id, supplier_id, status),
   });
 };

@@ -1,7 +1,10 @@
 "use client";
 
 import type React from "react";
+
 import { useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
+import type { DetailUser } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,10 +18,8 @@ import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
 import Link from "next/link";
 import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 import { uploadImageToFirebase } from "@/lib/firebase";
-import { Me } from "@/types/GraphQL";
-import { formatToVNTime } from "@/lib/formateVNDate";
-import Profile from "@/components/common/Profile";
-type FormDataWithAvatar = Me & { avatarFile?: File };
+
+type FormDataWithAvatar = DetailUser & { avatarFile?: File };
 
 // Compress image function
 const compressImage = async (file: File): Promise<File> => {
@@ -56,12 +57,7 @@ const compressImage = async (file: File): Promise<File> => {
 
         canvas.toBlob(
           (blob) => {
-            resolve(
-              new File([blob!], file.name, {
-                type: "image/jpeg",
-                lastModified: Date.now(),
-              })
-            );
+            resolve(new File([blob!], file.name, { type: "image/jpeg", lastModified: Date.now() }));
           },
           "image/jpeg",
           0.7
@@ -70,15 +66,14 @@ const compressImage = async (file: File): Promise<File> => {
     };
   });
 };
-
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [data, setData] = useState<Me | null>(null);
+  const [data, setData] = useState<DetailUser | null>(null);
   const [formData, setFormData] = useState<FormDataWithAvatar>(
-    () => user || ({} as Me)
+    () => user || ({} as DetailUser)
   );
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? "");
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
@@ -87,8 +82,8 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       setData(user);
-      setFormData(user as Me);
-      setAvatarPreview(user.avatarUrl ?? "");
+      setFormData(user as DetailUser);
+      setAvatarPreview(user.avatar ?? "");
       console.log(user);
     }
   }, [user]);
@@ -99,21 +94,10 @@ export default function ProfilePage() {
       </div>
     );
   }
-  const handleInputChange = (field: keyof Me, value: string) => {
+  const handleInputChange = (field: keyof DetailUser, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
-  const handleUserAccountChange = (
-    key: keyof Me["userAccount"],
-    value: string
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      userAccount: {
-        ...prev.userAccount,
-        [key]: value,
-      },
-    }));
-  };
+  
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -131,29 +115,27 @@ export default function ProfilePage() {
   };
   const handleSave = async () => {
     if (!user) return;
-
+    
     setIsSaving(true);
-
-    const fields: (keyof UpdateProfileSchemaFormData)[] = [
-      "name",
-      "YOB",
-      "avatarUrl",
-      "nfcCardUid",
-      "phone",
-      "address",
+    
+    const updatedData: Partial<UpdateProfileSchemaFormData> = {};
+    
+    // Kiểm tra các field text
+    const textFields: (keyof UpdateProfileSchemaFormData)[] = [
+      "fullname",
+      "username",
+      "phone_number",
+      "location",
     ];
 
-    const updatedData = fields.reduce<Partial<UpdateProfileSchemaFormData>>(
-      (acc, field) => {
-        const newValue = formData[field];
-        const oldValue = user[field as keyof Me];
-        if (newValue !== oldValue) {
-          (acc as Record<string, unknown>)[field] = newValue;
-        }
-        return acc;
-      },
-      {}
-    );
+    textFields.forEach((field) => {
+      const newValue = formData[field as keyof DetailUser];
+      const oldValue = user[field as keyof DetailUser] ?? "";
+
+      if (newValue !== oldValue) {
+        updatedData[field] = newValue || "";
+      }
+    });
 
     // Upload ảnh lên Firebase khi Save (nếu có file mới)
     if (formData.avatarFile) {
@@ -162,7 +144,7 @@ export default function ProfilePage() {
         // Compress ảnh trước khi upload
         const compressedFile = await compressImage(formData.avatarFile);
         const imageUrl = await uploadImageToFirebase(compressedFile, "avatars");
-        updatedData.avatarUrl = imageUrl;
+        updatedData.avatar = imageUrl;
       } catch (error) {
         console.error("Error uploading avatar:", error);
         alert("Lỗi khi tải ảnh lên. Vui lòng thử lại.");
@@ -172,18 +154,15 @@ export default function ProfilePage() {
       } finally {
         setIsUploadingAvatar(false);
       }
-    } else if (
-      formData.avatarUrl !== user.avatarUrl &&
-      !avatarPreview.startsWith("data:")
-    ) {
+    } else if (formData.avatar !== user.avatar && !avatarPreview.startsWith("data:")) {
       // Avatar đã thay đổi và đã là URL Firebase
-      updatedData.avatarUrl = formData.avatarUrl;
+      updatedData.avatar = formData.avatar;
     }
 
     // Nếu có field nào thay đổi mới gọi API
     if (Object.keys(updatedData).length > 0) {
       try {
-         await updateProfile(updatedData);
+        await updateProfile(updatedData);
       } catch (error) {
         console.error("Error updating profile:", error);
         alert("Lỗi khi cập nhật hồ sơ. Vui lòng thử lại.");
@@ -198,8 +177,8 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     if (data) {
-      setFormData(data as Me);
-      setAvatarPreview(data.avatarUrl || "");
+      setFormData(data as DetailUser);
+      setAvatarPreview(data.avatar || "");
     }
     setIsEditing(false);
   };
@@ -211,32 +190,328 @@ export default function ProfilePage() {
     setIsVerifyEmailModalOpen(true);
   };
 
-  const handleVerifyEmailSubmit = async (otp: string) => {
+  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
     setIsVerifyingEmail(true);
     try {
-      await verifyEmail({ otp });
+      await verifyEmail({email, otp});
       setIsVerifyEmailModalOpen(false);
     } finally {
       setIsVerifyingEmail(false);
     }
   };
   return (
-    <div>
-      <Profile
-        user={user}
-        formData={formData}
-        handleAvatarChange={handleAvatarChange}
-        handleInputChange={handleInputChange}
-        handleResendVerifyEmail={handleResendVerifyEmail}
-        handleUserAccountChange={handleUserAccountChange}
-        setIsVerifyEmailModalOpen={setIsVerifyEmailModalOpen}
-        handleSave={handleSave}
-        isEditing={isEditing}
-        isSaving={isSaving}
-        setIsEditing={setIsEditing}
-        avatarPreview={avatarPreview}
-        handleCancel={handleCancel}
-      />
+    <DashboardLayout user={data}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Hồ sơ cá nhân
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Quản lý thông tin tài khoản của bạn
+            </p>
+          </div>
+          {!isEditing ? (
+            <Button
+              onClick={() => setIsEditing(true)}
+              className="bg-primary hover:bg-primary/90 cursor-pointer gap-2"
+            >
+              Chỉnh sửa hồ sơ
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                onClick={handleCancel}
+                variant="outline"
+                className="gap-2 bg-transparent cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+                Hủy
+              </Button>
+              <Button
+                onClick={() => handleSave()}
+                className="bg-primary hover:bg-primary/90 gap-2 cursor-pointer"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Đang lưu...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Lưu thay đổi
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-8">
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative group">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/20 bg-muted flex items-center justify-center">
+                  <Image
+                    src={avatarPreview || "/placeholder.svg"}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                    width={128}
+                    height={128}
+                    priority
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAA4ADgDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8VAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA8A/9k="
+                  />
+                </div>
+                {isEditing && (
+                  <label
+                    htmlFor="avatar-upload"
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    {isUploadingAvatar ? (
+                      <Loader2 className="w-8 h-8 text-white animate-spin" />
+                    ) : (
+                      <Camera className="w-8 h-8 text-white" />
+                    )}
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                      disabled={isUploadingAvatar}
+                    />
+                  </label>
+                )}
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-foreground">
+                  {formData?.fullname || "Chưa có tên"}
+                </p>
+                <p
+                  className={cn(
+                    "text-xs px-2 py-1 rounded-full inline-block mt-1",
+                    formData?.role === "ADMIN"
+                      ? "bg-primary/20 text-primary"
+                      : "bg-accent/20 text-accent-foreground"
+                  )}
+                >
+                  {formData?.role === "ADMIN" ? "Quản trị viên" : "Nhân viên"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="fullname"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Họ và tên
+                  </Label>
+                  <Input
+                    id="fullname"
+                    value={formData?.fullname || ""}
+                    onChange={(e) =>
+                      handleInputChange("fullname", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="username"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Tên đăng nhập
+                  </Label>
+                  <Input
+                    id="username"
+                    value={formData?.username || ""}
+                    onChange={(e) =>
+                      handleInputChange("username", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="email"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData?.email || ""}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    disabled
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="phone"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Số điện thoại
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={formData?.phone_number || ""}
+                    onChange={(e) =>
+                      handleInputChange("phone_number", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label
+                    htmlFor="location"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    Địa chỉ
+                  </Label>
+                  <Input
+                    id="location"
+                    value={formData?.location || ""}
+                    onChange={(e) =>
+                      handleInputChange("location", e.target.value)
+                    }
+                    disabled={!isEditing}
+                    className={cn(
+                      "bg-background border-border",
+                      !isEditing && "opacity-70 cursor-not-allowed"
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-4">
+                  Thông tin tài khoản
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Trạng thái xác thực</p>
+                    <p
+                      className={cn(
+                        "font-medium mt-1",
+                        formData?.verify === "VERIFIED"
+                          ? "text-accent"
+                          : "text-destructive"
+                      )}
+                    >
+                      {formData?.verify === "VERIFIED"
+                        ? "Đã xác thực"
+                        : "Chưa xác thực"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Ngày tạo tài khoản</p>
+                    <p className="font-medium text-foreground mt-1">
+                      {formData?.created_at
+                        ? new Date(formData.created_at).toLocaleDateString(
+                            "vi-VN"
+                          )
+                        : "Chưa có thông tin"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Cập nhật lần cuối</p>
+                    <p className="font-medium text-foreground mt-1">
+                      {formData?.updated_at
+                        ? new Date(formData.updated_at).toLocaleDateString(
+                            "vi-VN"
+                          )
+                        : "Chưa có thông tin"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">ID tài khoản</p>
+                    <p className="font-medium text-foreground mt-1 font-mono text-xs">
+                      {formData?._id || "Chưa có ID"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Security Section */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            Bảo mật
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-foreground">Đổi mật khẩu</p>
+                <p className="text-sm text-muted-foreground">
+                  Cập nhật mật khẩu của bạn
+                </p>
+              </div>
+              <Link href="/user/profile/change-password">
+                <Button variant="outline" className="cursor-pointer">Thay đổi</Button>
+              </Link>
+            </div>
+            <div className="flex items-center justify-between pt-4 border-t border-border">
+              <div>
+                <p className="font-medium text-foreground">Xác thực email</p>
+                <p className="text-sm text-muted-foreground">
+                  Tăng cường bảo mật tài khoản
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                {formData?.verify !== "VERIFIED" && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsVerifyEmailModalOpen(true)}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Xác thực với OTP
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => handleResendVerifyEmail()}
+                  className="gap-2 cursor-pointer"
+                  disabled={formData?.verify === "VERIFIED"}
+                >
+                  <Mail className="w-4 h-4" />
+                  {formData?.verify === "VERIFIED"
+                    ? "Đã xác thực"
+                    : "Gửi email xác thực"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <VerifyEmailModal
         isOpen={isVerifyEmailModalOpen}
@@ -244,6 +519,6 @@ export default function ProfilePage() {
         onSubmit={handleVerifyEmailSubmit}
         isLoading={isVerifyingEmail}
       />
-    </div>
+    </DashboardLayout>
   );
 }

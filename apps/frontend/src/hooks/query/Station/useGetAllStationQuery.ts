@@ -1,11 +1,10 @@
-import { useSuspenseQuery} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
-import { HTTP_STATUS } from "@/constants";
-const getAllStations = async ({page,limit,name,search} : {page ?: number , limit ?: number, name ?: string, search ?: string}) => {
+const fetchAllStations = async ({page,limit,name} : {page ?: number , limit ?: number, name ?: string}) => {
   try {
-    const response = await stationService.getAllStations({page,limit,name,search});
-    if (response.status === HTTP_STATUS.OK) {
+    const response = await stationService.getAllStations({page,limit,name});
+    if (response.status === 200) {
       return response.data; 
     }
   } catch (error) {
@@ -13,10 +12,9 @@ const getAllStations = async ({page,limit,name,search} : {page ?: number , limit
     throw error;    
   }
 };
-export const useGetAllStation = ({page,limit,name,search} : {page ?: number , limit ?: number, name ?: string, search ?: string}) => {
-  return useSuspenseQuery ({
-    queryKey: QUERY_KEYS.STATION.ALL(page, limit, name, search),
-    queryFn: () => getAllStations({ page, limit, name, search }),
-    staleTime : 1000 * 60 * 5,
+export const useGetAllStation = ({page,limit,name} : {page ?: number , limit ?: number, name ?: string}) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
+    queryFn: () => fetchAllStations({ page, limit, name }),
   });
 };

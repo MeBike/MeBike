@@ -3,21 +3,6 @@ import type { AxiosResponse } from "axios";
 import type { Supplier } from "@/types/Supplier";
 import { CreateSupplierSchema } from "@/schemas/supplier.schema";
 import type { StatsSupplierBike } from "@custom-types";
-import {
-  GET_ALL_SUPPLIER,
-  GET_DETAIL_SUPPLIER,
-  CREATE_SUPPLIER,
-  GET_STATS_SUPPLIER,
-  UPDATE_SUPPLIER,
-} from "@/graphql";
-import { print } from "graphql";
-import {
-  GetSupplierResponse,
-  GetDetailSupplierResponse,
-  CreateSupplierResponse,
-  GetStatsSupplierResponse,
-  UpdateSupplierResponse,
-} from "../types/supplier.type";
 interface ApiResponse<T> {
   data: T[];
   pagination: {
@@ -43,49 +28,33 @@ export const supplierService = {
     page,
     limit,
     status,
-    search,
   }: {
     page?: number;
     limit?: number;
     status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | "";
-    search?: string;
-  }): Promise<AxiosResponse<GetSupplierResponse>> => {
-    const response = await fetchHttpClient.query<GetSupplierResponse>(
-      print(GET_ALL_SUPPLIER) , 
+  }): Promise<AxiosResponse<ApiResponse<Supplier>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Supplier>>(
+      SUPPLIER_ENDPOINTS.BASE,
       {
-        params : {
-          page : page,
-          limit : limit,
-          search : search,
-        }
+        page: page,
+        limit: limit,
+        status: status,
       }
     );
     return response;
   },
-  getSupplierById: async (
-    id: string
-  ): Promise<AxiosResponse<GetDetailSupplierResponse>> => {
-    const response = await fetchHttpClient.query<GetDetailSupplierResponse>(
-      print(GET_DETAIL_SUPPLIER),
-      {
-        supplierId: id,
-      }
+  getSupplierById: async (id: string): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
+    const response = await fetchHttpClient.get<DetailApiResponse<Supplier>>(
+      SUPPLIER_ENDPOINTS.WITH_ID(id)
     );
     return response;
   },
   createSupplier: async (
     supplierData: CreateSupplierSchema
-  ): Promise<AxiosResponse<CreateSupplierResponse>> => {
-    const response = await fetchHttpClient.mutation<CreateSupplierResponse>(
-      print(CREATE_SUPPLIER),
-      {
-        body: {
-          address: supplierData.address,
-          contactFee: supplierData.contactFee,
-          name: supplierData.name,
-          phone: supplierData.phone,
-        },
-      }
+  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<Supplier>>(
+      SUPPLIER_ENDPOINTS.BASE,
+      supplierData
     );
     return response;
   },
@@ -99,24 +68,12 @@ export const supplierService = {
   //   );
   //   return response.data;
   // },
-  updateSupplier: async ({
-    id,
-    data,
-  }: {
-    id: string;
-    data: Partial<CreateSupplierSchema>;
-  }): Promise<AxiosResponse<UpdateSupplierResponse>> => {
-    const response = await fetchHttpClient.mutation<UpdateSupplierResponse>(
-      print(UPDATE_SUPPLIER),
-      {
-        body: {
-          address: data.address,
-          contactFee: data.contactFee,
-          name: data.name,
-          phone: data.phone,
-        },
-        updateSupplierId: id,
-      }
+  updateSupplier: async (
+    {id,data} : {id: string, data: Partial<CreateSupplierSchema>}
+  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
+    const response = await fetchHttpClient.put<DetailApiResponse<Supplier>>(
+      SUPPLIER_ENDPOINTS.WITH_ID(id),
+      data
     );
     return response;
   },
@@ -128,10 +85,12 @@ export const supplierService = {
     >(SUPPLIER_ENDPOINTS.WITH_STATS_BIKE(id));
     return response;
   },
-  statsSupplier: async (): Promise<AxiosResponse<GetStatsSupplierResponse>> => {
-    const response = await fetchHttpClient.query<GetStatsSupplierResponse>(
-      print(GET_STATS_SUPPLIER)
-    );
+  statsSupplier: async (): Promise<
+    AxiosResponse<DetailApiResponse<StatsSupplierBike[]>>
+  > => {
+    const response = await fetchHttpClient.get<
+      DetailApiResponse<StatsSupplierBike[]>
+    >(SUPPLIER_ENDPOINTS.STATS);
     return response;
   },
   changeStatusSupplier: async (
@@ -139,7 +98,7 @@ export const supplierService = {
     newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG"
   ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.patch<DetailApiResponse<Supplier>>(
-      print(GET_STATS_SUPPLIER),
+      SUPPLIER_ENDPOINTS.WITH_ID(id),
       { newStatus }
     );
     return response;

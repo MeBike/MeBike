@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useUpdateWithdrawRequestMutation } from "./mutations/Withdrawal/useUpdateWithdrawalRequestMutation";
 import { toast } from "sonner";
 import { useGetAllWithdrawalOverviewQuery } from "./query/Withdrawal/useGetAllWithdrawalOverviewQuery";
-import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index";
+import { QUERY_KEYS } from "@/constants/queryKey";
 export const useWithdrawAction = ({
   page,
   limit,
@@ -53,8 +53,8 @@ export const useWithdrawAction = ({
         return;
       }
       await useUpdateWithdrawRequest.mutateAsync(data, {
-        onSuccess: (result) => {
-          toast.success(result.data?.message || MESSAGE.APPROVE_WITHDRAW_SUCCESS);
+        onSuccess: () => {
+          toast.success("Cập nhật yêu cầu rút tiền thành công");
           queryClient.invalidateQueries({
             queryKey: QUERY_KEYS.WITHDRAW.ALL_WITHDRAW_REQUESTS(),
           });
@@ -66,7 +66,6 @@ export const useWithdrawAction = ({
         },
         onError: (error) => {
           console.log(error);
-          toast.error(MESSAGE.APPROVE_WITHDRAW_FAILED);
         },
       });
     },

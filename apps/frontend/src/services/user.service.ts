@@ -1,13 +1,8 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import { DetailUser } from "./auth.service";
-import { CreateUserFormData, UserProfile } from "@/schemas/userSchema";
-import { GET_DETAIL_USER ,  GET_USERS , GET_USER_STATS , CHANGE_STATUS_USER , CREATE_USER} from "@/graphql";
-import { print } from "graphql";
+import { UserProfile } from "@/schemas/userSchema";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
-import { GetUsersResponse, GetDetailUserResponse, CreateUserResponse, ResetPasswordResponse, UpdateProfileResponse } from "@/types/auth.type";
-import { GetUserStatsResponse } from "@/types/user.type";
-import { ChangeStatusUserResponse } from "@/types/auth.type";
 interface ApiReponse<T> {
   data: T;
   pagination?: {
@@ -27,8 +22,9 @@ export interface UserStatistics {
   total_unverified: number;
   total_banned: number;
 }
-// Local ResetPasswordResponse removed in favor of imported version
-
+export interface ResetPasswordResponse {
+  message: string;
+}
 export interface GetActiveStatisticsUser {
   active_users_count: number;
   date: string;
@@ -88,32 +84,28 @@ export const userService = {
     limit,
     verify,
     role,
-    search
   }: {
     page?: number;
     limit?: number;
     verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
     role?: "ADMIN" | "USER" | "STAFF" | "";
-    search?: string;
-  }): Promise<AxiosResponse<GetUsersResponse>> => {
-    return fetchHttpClient.query<GetUsersResponse>(print(GET_USERS), {
-      params: {
+  }): Promise<AxiosResponse<ApiReponse<DetailUser[]>>> => {
+    const response = await fetchHttpClient.get<ApiReponse<DetailUser[]>>(
+      USER_ENDPOINTS.MANAGE_USER,
+      {
         page: page,
         limit: limit,
-        verify: verify === "" ? undefined : verify,
-        role: role === "" ? undefined : role,
-        search: search,
-      },
-    });
+        verify: verify,
+        role: role,
+      }
+    );
+    return response;
   },
   getDetailUser: async (
     id: string
-  ): Promise<AxiosResponse<GetDetailUserResponse>> => {
-    const response = await fetchHttpClient.query<GetDetailUserResponse>(
-      print(GET_DETAIL_USER),
-      {
-        params: id,
-      }
+  ): Promise<ApiReponse<DetailUserResponse<DetailUser>>> => {
+    const response = await fetchHttpClient.get<DetailUserResponse<DetailUser>>(
+      USER_ENDPOINTS.BY_ID(id)
     );
     return response;
   },
@@ -170,19 +162,11 @@ export const userService = {
     return response;
   },
   createUser: async (
-    data: CreateUserFormData
-  ): Promise<AxiosResponse<CreateUserResponse>> => {
-    const response = await fetchHttpClient.mutation<CreateUserResponse>(
-      print(CREATE_USER),
-      {
-        body: {
-          YOB: data.YOB,
-          email: data.email,
-          name: data.name,
-          phone: data.phone,
-          role: data.role,
-        },
-      }
+    data: UserProfile
+  ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
+    const response = await fetchHttpClient.post<DetailUserResponse<DetailUser>>(
+      USER_ENDPOINTS.CREATE_USER,
+      data
     );
     return response;
   },
@@ -203,9 +187,12 @@ export const userService = {
     return response;
   },
   getDashboardUserStats: async (): Promise<
-    AxiosResponse<GetUserStatsResponse>
+    AxiosResponse<DetailUserResponse<DashboardUserStats>>
   > => {
-    return fetchHttpClient.query<GetUserStatsResponse>(print(GET_USER_STATS));
+    const response = await fetchHttpClient.get<
+      DetailUserResponse<DashboardUserStats>
+    >(USER_ENDPOINTS.DASHBOARD_USER_STATS);
+    return response;
   },
   postResetPassword: async (
     id: string,
@@ -224,23 +211,5 @@ export const userService = {
       DetailUserResponse<DetailUser>
     >(USER_ENDPOINTS.UPDATE_PROFILE_ADMIN(id), data);
     return response;
-  },
-  changeStatus: async ({
-    accountId,
-    status
-  }: {
-    accountId: string;
-    status: "Active" | "Inactive";
-  }): Promise<AxiosResponse<ChangeStatusUserResponse>> => {
-    const response = await fetchHttpClient.mutation<ChangeStatusUserResponse>(
-      print(CHANGE_STATUS_USER),
-      {
-        data: {
-          accountId : accountId,
-          status : status,
-        },
-      }
-    );
-    return response;
-  },
+  }
 };

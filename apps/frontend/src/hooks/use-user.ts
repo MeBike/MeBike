@@ -12,13 +12,40 @@ import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
 import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
 import { useGetDashboardStatsQuery } from "./query/User/useGetDashboardStatsQuery";
-import { CreateUserFormData, ResetPasswordRequest } from "@/schemas/userSchema";
+import { ResetPasswordRequest } from "@/schemas/userSchema";
 import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
-import { QUERY_KEYS , HTTP_STATUS , MESSAGE} from "@constants/index";
-import { getErrorMessage } from "@/utils/message";
-import { useChangeStatusMutation } from "./mutations/User/useChangeStatusMutation";
+import { QUERY_KEYS } from "@/constants/queryKey";
+interface ErrorWithMessage {
+  message: string;
+}
+interface ErrorResponse {
+  response?: {
+    data?: {
+      errors?: Record<string, { msg?: string }>;
+      message?: string;
+    };
+  };
+}
+
+const getErrorMessage = (error: unknown, defaultMessage: string): string => {
+  const axiosError = error as ErrorResponse;
+  if (axiosError?.response?.data) {
+    const { errors, message } = axiosError.response.data;
+    if (errors) {
+      const firstError = Object.values(errors)[0];
+      if (firstError?.msg) return firstError.msg;
+    }
+    if (message) return message;
+  }
+  const simpleError = error as ErrorWithMessage;
+  if (simpleError?.message) {
+    return simpleError.message;
+  }
+
+  return defaultMessage;
+};
 export const useUserActions = ({
   hasToken,
   verify,
@@ -48,7 +75,6 @@ export const useUserActions = ({
     page,
     limit,
     role: role || "",
-    search: searchQuery || "",
     verify: verify || "",
   });
   const {
@@ -103,7 +129,7 @@ export const useUserActions = ({
       return;
     }
     refetchDetailUser();
-  }, [hasToken, router, refetchDetailUser , id]);
+  }, [hasToken, router, refetchDetailUser]);
   const getNewRegistrationStats = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -133,37 +159,38 @@ export const useUserActions = ({
     }
     refetchSearch();
   }, [hasToken, router, refetchSearch]);
+  const users =
+    searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
   const createUser = useCallback(
-    async (userData: CreateUserFormData) => {
+    async (userData: UserProfile) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
       useCreateUser.mutate(userData, {
-        onSuccess: (result) => {
-          if (result?.status === HTTP_STATUS.OK) {
-            toast.success(
-              result.data?.data?.CreateUser.message ||
-                MESSAGE.CREATE_USER_SUCCESS
-            );
+        onSuccess: (result: {
+          status: number;
+          data?: { message?: string };
+        }) => {
+          if (result?.status === 201) {
+            toast.success("Tạo người dùng thành công");
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.USER.ALL(),
             });
-            queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.USER.STATISTICS,
-            });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
             if (searchQuery && searchQuery.length > 0) {
               refetchSearch();
-            } else {
+            } else {  
               refetch();
             }
+          } else {
+            const errorMessage =
+              result?.data?.message || "Lỗi khi tạo người dùng";
+            toast.error(errorMessage);
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(
-            error,
-            MESSAGE.CREATE_USER_FAILED
-          );
+          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
           toast.error(errorMessage);
         },
       });
@@ -195,12 +222,12 @@ export const useUserActions = ({
           status: number;
           data?: { message?: string };
         }) => {
-          if (result?.status === HTTP_STATUS.OK) {
-            toast.success(result.data?.message || MESSAGE.UPDATE_PASSWORD_USER_SUCCESS);
+          if (result?.status === 200) {
+            toast.success("Đặt lại mật khẩu thành công");
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, MESSAGE.UPDATE_PASSWORD_USER_FAILED);
+          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
           toast.error(errorMessage);
         },
       });
@@ -210,49 +237,6 @@ export const useUserActions = ({
       router,
       id,
       useResetPassword,
-    ]
-  );
-  const useChangeStatusUser = useChangeStatusMutation();
-  const changeStatusUser = useCallback(
-    async ({accountId , status}: {accountId : string , status : "Active" | "Inactive"}) => {
-      if (!hasToken) {
-        router.push("/login");
-        return;
-      }
-      useChangeStatusUser.mutate(
-        { accountId: accountId || "", status: status },
-        {
-          onSuccess: (result) => {
-            if (result?.status === HTTP_STATUS.OK) {
-              queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.USER.ALL(),
-              });
-              queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.USER.STATISTICS,
-              });
-              refetchDetailUser();
-              refetch();
-              toast.success(MESSAGE.UPDATE_PROFILE_SUCCESS);
-            }
-          },
-          onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(
-              error,
-              MESSAGE.UPDATE_PROFILE_FAILED
-            );
-            toast.error(errorMessage);
-          },
-        }
-      );
-    },
-    [
-      hasToken,
-      router,
-      id,
-      useChangeStatusUser,
-      queryClient,
-      refetchDetailUser,
-      refetch,
     ]
   );
   const updateProfileUser = useCallback(
@@ -268,20 +252,25 @@ export const useUserActions = ({
             status: number;
             data?: { message?: string };
           }) => {
-            if (result?.status === HTTP_STATUS.OK) {
+            if (result?.status === 200) {
               queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.USER.ALL(),
+                queryKey: QUERY_KEYS.USER.ALL(
+                  page,
+                  limit,
+                  verify || "all",
+                  role || "all"
+                ),
               });
               queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
               refetchDetailUser();
               refetch();
-              toast.success(MESSAGE.UPDATE_PROFILE_SUCCESS);
+              toast.success("Cập nhật thông tin người dùng thành công");
             }
           },
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(
               error,
-              MESSAGE.UPDATE_PROFILE_FAILED
+              "Lỗi khi cập nhật người dùng"
             );
             toast.error(errorMessage);
           },
@@ -303,7 +292,7 @@ export const useUserActions = ({
     ]
   );
   return {
-    users: data?.data?.Users.data,
+    users: users,
     refetch,
     isLoading,
     isFetching,
@@ -326,16 +315,15 @@ export const useUserActions = ({
     isLoadingTopRenter,
     getSearchUsers,
     createUser,
-    paginationUser: data?.data?.Users.pagination,
+    paginationUser: data?.pagination,
     isLoadingSearch,
-    totalRecordUser: data?.data?.Users?.total || 0,
+    totalRecordUser: data?.pagination?.totalRecords || 0,
     getDetailUser,
-    detailUserData: detailUserData?.data.data?.User?.data,
+    detailUserData,
     isLoadingDetailUser,
     dashboardStatsData,
     resetPassword,
     updateProfileUser,
     getRefetchDashboardStats,
-    changeStatusUser,
   };
 };

@@ -9,7 +9,6 @@ export type Bike = {
     | "ĐANG BẢO TRÌ"
     | "KHÔNG CÓ SẴN";
   supplier_id: string | null;
-  supplier_name?: string | null;
   created_at: string;
   updated_at: string;
   chip_id: string;

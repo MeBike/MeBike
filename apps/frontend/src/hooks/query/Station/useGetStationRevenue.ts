@@ -1,11 +1,10 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
-import { HTTP_STATUS } from "@/constants";
 const getStationRevenue = async () => {
   try {
     const response = await stationService.getStationRevenue();
-    if (response.status === HTTP_STATUS.OK) {
+    if (response.status === 200) {
       return response.data;
     }
   } catch (error) {
@@ -14,8 +13,9 @@ const getStationRevenue = async () => {
   }
 };
 export const useGetStationRevenue = () => {
-  return useSuspenseQuery({
+  return useQuery({
     queryKey: QUERY_KEYS.STATION.STATION_REVENUE,
     queryFn: () => getStationRevenue(),
+    enabled: false,
   });
 };

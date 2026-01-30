@@ -7,13 +7,11 @@ const fetchAllUserRequests = async ({
   limit,
   verify,
   role,
-  search
 }: {
   page?: number;
   limit?: number;
   verify?: VerifyStatus;
   role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
-  search?: string;
 }) => {
   try {
     const query: Record<string, number | string> = {
@@ -22,7 +20,7 @@ const fetchAllUserRequests = async ({
     };
     if (verify) query.verify = verify;
     if (role) query.role = role;
-    if (search) query.search = search;
+
     const response = await userService.getAllUsers(query);
     if (response.status === 200) {
       return response.data;
@@ -37,16 +35,14 @@ export const useGetAllUserQuery = ({
   limit,
   verify,
   role,
-  search
 }: {
   page?: number;
   limit?: number;
   verify?: VerifyStatus;
   role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
-  search?: string;
 }) => {
   return useQuery({
-    queryKey: QUERY_KEYS.USER.ALL(page, limit, verify, role, search),
-    queryFn: () => fetchAllUserRequests({ page, limit, verify, role, search }),
+    queryKey: QUERY_KEYS.USER.ALL(page, limit, verify, role),
+    queryFn: () => fetchAllUserRequests({ page, limit, verify, role }),
   });
 };

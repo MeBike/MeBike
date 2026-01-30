@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 interface ResetPasswordOtpFormProps {
   email: string;
-  onSubmit: (otp: string) => Promise<void>;
+  onSubmit: (email: string, otp: string) => Promise<void>;
   onBack: () => void;
   isLoading?: boolean;
   timeLeft: number;
@@ -44,6 +44,8 @@ export function ResetPasswordOtpForm({
     timerRef.current = setInterval(() => {
       if (timeLeft <= 1) {
         if (timerRef.current) clearInterval(timerRef.current);
+        // Don't auto-back, just let timer reach 0
+        // User can click "Gửi lại OTP" to resend
         onTimeLeftChange(0);
       } else {
         onTimeLeftChange(timeLeft - 1);
@@ -112,7 +114,7 @@ export function ResetPasswordOtpForm({
     setIsSubmitting(true);
     try {
       console.log("📤 Verifying OTP for password reset...");
-      await onSubmit(otpString);
+      await onSubmit(email, otpString);
       console.log("✅ OTP verified, moving to password reset");
     } catch (err) {
       console.log("❌ OTP verification failed:", err);

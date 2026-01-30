@@ -72,20 +72,22 @@ export default function RentalsPage() {
         : undefined,
   });
 
-  const { stations } = useStationActions({
+  const { stations, getAllStations } = useStationActions({
     hasToken: true,
     page: 1,
     limit: 100,
   });
   useEffect(() => {
+    getAllStations();
     getTodayRevenue();
-  }, [ getTodayRevenue]);
+  }, [ getAllStations, getTodayRevenue]);
   useEffect(() => {
     getSummaryRental();
   }, [getSummaryRental]);
   const rentals = allRentalsData || [];
 
   const handleReset = () => {
+    setSearchQuery("");
     setStatusFilter("all");
   };
 
@@ -95,7 +97,33 @@ export default function RentalsPage() {
     setIsUpdateModalOpen(false);
   };
 
-
+  const stats = {
+    pending: rentals.filter((r) => {
+      const statusMap = {
+        "ĐANG THUÊ": "active",
+        "HOÀN THÀNH": "completed",
+        "ĐÃ HỦY": "cancelled",
+      };
+      return (
+        (statusMap[r.status as keyof typeof statusMap] || "pending") ===
+        "pending"
+      );
+    }).length,
+    active: rentals.filter((r) => r.status === "ĐANG THUÊ").length,
+    completed: rentals.filter((r) => r.status === "HOÀN THÀNH").length,
+    cancelled: rentals.filter((r) => r.status === "ĐÃ HỦY").length,
+    overdue: 0, // No overdue in RentingHistory
+    todayRevenue:
+      todayRevenueData?.data?.reduce(
+        (sum: number, item: { totalRevenue: number }) => sum + item.totalRevenue,
+        0
+      ) || 0,
+    totalRevenue:
+      revenueData?.data?.reduce(
+        (sum: number, item: { totalRevenue: number }) => sum + item.totalRevenue,
+        0
+      ) || 0,
+  };
 
   return (
     <div>
@@ -118,9 +146,8 @@ export default function RentalsPage() {
           </div>
         </div>
 
+        {/* Stats */}
         {
-
-
           summaryRental&& <RentalStats params={summaryRental.result} />
         }
 
@@ -629,7 +656,7 @@ export default function RentalsPage() {
                     >
                       <option value="">Chọn trạm</option>
                       {stations.map((station) => (
-                        <option key={station.id} value={station.id}>
+                        <option key={station._id} value={station._id}>
                           {station.name} - {station.address}
                         </option>
                       ))}

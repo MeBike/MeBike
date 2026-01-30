@@ -1,10 +1,8 @@
-import type { Transaction } from "@services/wallet.service";
-
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import { Alert, Linking } from "react-native";
 
-import { useCreatePaymentMutation } from "./mutations/Wallet/useCreatePayment";
+import type { Transaction } from "@services/wallet.service";
+
 import { useGetMyTransactionsQuery } from "./query/Wallet/useGetMyTransactionQuery";
 import { useGetMyWalletQuery } from "./query/Wallet/useGetMyWalletQuery";
 
@@ -65,7 +63,7 @@ export function useWalletActions(hasToken: boolean, limit: number = 5) {
     const pages = useGetMyTransaction.data?.pages ?? [];
     const seen = new Set<string>();
     const deduped: Transaction[] = [];
-    pages.forEach((page) => {
+    pages.forEach(page => {
       page.data.forEach((transaction) => {
         if (!seen.has(transaction._id)) {
           seen.add(transaction._id);
@@ -76,36 +74,6 @@ export function useWalletActions(hasToken: boolean, limit: number = 5) {
     return deduped;
   }, [useGetMyTransaction.data]);
   const totalTransactions = useGetMyTransaction.data?.pages[0]?.pagination?.totalRecords || 0;
-  const useCreatePayment = useCreatePaymentMutation();
-  const createPayment = useCallback(
-    async ({ accountId, amount }: { accountId: string; amount: number }) => {
-      if (!hasToken) {
-        return;
-      }
-      useCreatePayment.mutate({ accountId, amount }, {
-        onSuccess: async (result: any) => {
-          if (result.status === 200) {
-            const paymentUrl = result.data?.data?.CreatePayment.data?.paymentUrl;
-            if (paymentUrl) {
-              await Linking.openURL(paymentUrl);
-            }
-            else {
-              Alert.alert(result.data?.data?.CreatePayment.message || "Payment created successfully");
-            }
-            await queryClient.invalidateQueries({
-              queryKey: ["my-wallet"],
-            });
-            await refetch();
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Failed to create payment");
-          Alert.alert(errorMessage);
-        },
-      });
-    },
-    [hasToken, useCreatePayment],
-  );
   return {
     getMyWallet,
     myWallet: response,
@@ -117,6 +85,5 @@ export function useWalletActions(hasToken: boolean, limit: number = 5) {
     hasNextPageTransactions: useGetMyTransaction.hasNextPage,
     isFetchingNextPageTransactions: useGetMyTransaction.isFetchingNextPage,
     totalTransactions,
-    createPayment,
   };
 }

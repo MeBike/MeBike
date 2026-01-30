@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import type { Me } from "@/types/GraphQL";
+import type { DetailUser } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,19 +20,19 @@ import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [data, setData] = useState<Me | null>(null);
-  const [formData, setFormData] = useState<Me>(
-    () => user || ({} as Me)
+  const [data, setData] = useState<DetailUser | null>(null);
+  const [formData, setFormData] = useState<DetailUser>(
+    () => user || ({} as DetailUser)
   );
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatarUrl ?? "");
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar ?? "");
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
   const { resendVerifyEmail, verifyEmail } = useAuthActions();
   useEffect(() => {
     if (user) {
       setData(user);
-      setFormData(user);
-      setAvatarPreview(user.avatarUrl ?? "");
+      setFormData(user as DetailUser);
+      setAvatarPreview(user.avatar ?? "");
       console.log(user);
     }
   }, [user]);
@@ -43,7 +43,7 @@ export default function ProfilePage() {
       </div>
     );
   }
-  const handleInputChange = (field: keyof Me, value: string) => {
+  const handleInputChange = (field: keyof DetailUser, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,17 +59,18 @@ export default function ProfilePage() {
   const handleSave = () => {
     if (!user) return;
     const fields: (keyof UpdateProfileSchemaFormData)[] = [
-      "name",
-      "phone",
-      "address",
+      "fullname",
+      "username",
+      "phone_number",
+      "location",
     ];
 
     const updatedData = fields.reduce((acc, field) => {
       const newValue = formData[field];
-      const oldValue = user[field as keyof Me] ?? "";
+      const oldValue = user[field as keyof DetailUser] ?? "";
 
       if (newValue !== oldValue) {
-        (acc as Record<string, unknown>)[field] = newValue;
+        acc[field] = newValue || "";
       }
       return acc;
     }, {} as UpdateProfileSchemaFormData);
@@ -84,8 +85,8 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     if (data) {
-      setFormData(data);
-      setAvatarPreview(data.avatarUrl || "");
+      setFormData(data as DetailUser);
+      setAvatarPreview(data.avatar || "");
     }
     setIsEditing(false);
   };
@@ -97,10 +98,10 @@ export default function ProfilePage() {
     setIsVerifyEmailModalOpen(true);
   };
 
-  const handleVerifyEmailSubmit = async (otp: string) => {
+  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
     setIsVerifyingEmail(true);
     try {
-      await verifyEmail({otp});
+      await verifyEmail({email, otp});
       setIsVerifyEmailModalOpen(false);
     } finally {
       setIsVerifyingEmail(false);
@@ -178,7 +179,7 @@ export default function ProfilePage() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">
-                  {formData?.name || "Chưa có tên"}
+                  {formData?.fullname || "Chưa có tên"}
                 </p>
                 <p
                   className={cn(
@@ -197,16 +198,16 @@ export default function ProfilePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label
-                    htmlFor="name"
+                    htmlFor="fullname"
                     className="text-sm font-medium text-foreground"
                   >
                     Họ và tên
                   </Label>
                   <Input
-                    id="name"
-                    value={formData?.name || ""}
+                    id="fullname"
+                    value={formData?.fullname || ""}
                     onChange={(e) =>
-                      handleInputChange("name", e.target.value)
+                      handleInputChange("fullname", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(
@@ -228,10 +229,10 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       handleInputChange("username", e.target.value)
                     }
-                    disabled={true}
+                    disabled={!isEditing}
                     className={cn(
                       "bg-background border-border",
-                      true && "opacity-70 cursor-not-allowed"
+                      !isEditing && "opacity-70 cursor-not-allowed"
                     )}
                   />
                 </div>
@@ -247,8 +248,8 @@ export default function ProfilePage() {
                   <Input
                     id="email"
                     type="email"
-                    value={formData?.userAccount?.email || ""}
-                    onChange={() => {}}
+                    value={formData?.email || ""}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     disabled
                     className={cn(
                       "bg-background border-border",
@@ -265,9 +266,9 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="phone"
-                    value={formData?.phone || ""}
+                    value={formData?.phone_number || ""}
                     onChange={(e) =>
-                      handleInputChange("phone", e.target.value)
+                      handleInputChange("phone_number", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(
@@ -278,16 +279,16 @@ export default function ProfilePage() {
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label
-                    htmlFor="address"
+                    htmlFor="location"
                     className="text-sm font-medium text-foreground"
                   >
                     Địa chỉ
                   </Label>
                   <Input
-                    id="address"
-                    value={formData?.address || ""}
+                    id="location"
+                    value={formData?.location || ""}
                     onChange={(e) =>
-                      handleInputChange("address", e.target.value)
+                      handleInputChange("location", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(
@@ -321,8 +322,8 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">Ngày tạo tài khoản</p>
                     <p className="font-medium text-foreground mt-1">
-                      {formData?.createdAt
-                        ? new Date(formData.createdAt).toLocaleDateString(
+                      {formData?.created_at
+                        ? new Date(formData.created_at).toLocaleDateString(
                             "vi-VN"
                           )
                         : "Chưa có thông tin"}
@@ -331,8 +332,8 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">Cập nhật lần cuối</p>
                     <p className="font-medium text-foreground mt-1">
-                      {formData?.updatedAt
-                        ? new Date(formData.updatedAt).toLocaleDateString(
+                      {formData?.updated_at
+                        ? new Date(formData.updated_at).toLocaleDateString(
                             "vi-VN"
                           )
                         : "Chưa có thông tin"}
@@ -341,7 +342,7 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">ID tài khoản</p>
                     <p className="font-medium text-foreground mt-1 font-mono text-xs">
-                      {formData?.id || "Chưa có ID"}
+                      {formData?._id || "Chưa có ID"}
                     </p>
                   </div>
                 </div>

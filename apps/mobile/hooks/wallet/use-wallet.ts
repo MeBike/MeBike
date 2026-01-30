@@ -47,7 +47,5 @@ export function useWallet() {
     isCreatingWithdrawal: withdrawals.isCreating,
     createRefund: refunds.createRefund,
     isCreatingRefund: refunds.isCreating,
-
-    createPayment : wallet.createPayment,
   };
 }

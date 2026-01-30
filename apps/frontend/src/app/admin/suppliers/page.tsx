@@ -1,11 +1,11 @@
 "use client";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { Supplier } from "@/types/supplier.type";
+import type { Supplier } from "@custom-types";
 import { Plus, X } from "lucide-react";
-import { useSupplierActions } from "@/hooks/use-supplier";
+import { useSupplierActions } from "@/hooks/useSupplierAction";
 import { useBikeActions } from "@/hooks/use-bike";
 import { columns } from "@/columns/supplier-column";
 import { Loader2 } from "lucide-react";
@@ -16,12 +16,13 @@ import {
 import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@components/PaginationCustomer";
 import { Input } from "@/components/ui/input";
-import { getStatusColor } from "@/utils/status-style";
-import { formatToVNTime } from "@/lib/formateVNDate";
-import { useRouter } from "next/navigation";
-import { useDebounce } from "@/hooks/use-debounce";
+const getStatusColor = (status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
+  return status === "HOẠT ĐỘNG"
+    ? "bg-green-100 text-green-800"
+    : "bg-red-100 text-red-800";
+};
+
 export default function SuppliersPage() {
-  const router = useRouter();
   const {
     register: create,
     handleSubmit,
@@ -32,8 +33,8 @@ export default function SuppliersPage() {
     defaultValues: {
       name: "",
       address: "",
-      phone: "",
-      contactFee: 0,
+      phone_number: "",
+      contract_fee: "",
     },
   });
   
@@ -47,15 +48,14 @@ export default function SuppliersPage() {
     defaultValues: {
       name: "",
       address: "",
-      phone: "",
-      contactFee: 0,
+      phone_number: "",
+      contract_fee: "",
     },
   });
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedSearch = useDebounce(searchQuery, 500);
   const [statusFilter, setStatusFilter] = useState<
-    "Active" | "Inactive" | ""
+    "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
   >("");
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
@@ -74,43 +74,48 @@ export default function SuppliersPage() {
     changeStatusSupplier,
     isLoadingAllStatsSupplier,
     getAllStatsSupplier,
-    isLoadingAllSupplier,
     getUpdateSupplier,
-    paginationAllSupplier,
-    allSupplier,
-  } = useSupplierActions({hasToken:true, supplier_id : selectedSupplier?.id , limit : limit , page : page , search : debouncedSearch });
+  } = useSupplierActions(true, selectedSupplier?._id);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: supplierData, isLoading: isLoadingGetAllSuppliers } =
+    useGetAllSupplierQuery(page, limit, statusFilter);
   useEffect(() => {
     setPage(1);
     setLimit(10);
   }, [statusFilter, searchQuery]);
-  // const { data: bikeData, isLoading: isLoadingBike } = useGetAllBikeQuery({
-  //   page: 1,
-  //   limit: 1000,
-  //   supplier_id: selectedSupplier?._id,
-  // });
-  const handleAddSupplier: SubmitHandler<CreateSupplierSchema> = (data) => {
+  const { data: bikeData, isLoading: isLoadingBike } = useGetAllBikeQuery({
+    page: 1,
+    limit: 1000,
+    supplier_id: selectedSupplier?._id,
+  });
+  const handleAddSupplier = (data: CreateSupplierSchema) => {
     console.log("[v0] Adding supplier:", data);
     createSupplier({
       name: data.name,
       address: data.address,
-      phone: data.phone,
-      contactFee: data.contactFee,
+      phone_number: data.phone_number,
+      contract_fee: data.contract_fee,
     });
     resetForm();
     setIsModalOpen(false);
   };
 
   const handleChangeStatusFilter = (
-    status: "Active" | "Inactive" | ""
+    status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
   ) => {
     setStatusFilter(status);
   };
 
   const handleViewSupplier = (supplier: Supplier) => {
     if (!supplier) return;
-    router.push(`/admin/suppliers/detail/${supplier.id}`);
+    if (selectedSupplier?._id === supplier._id && !isDetailModalOpen) {
+      setIsDetailModalOpen(true);
+      return;
+    }
+    setSelectedSupplier(supplier);
+    setIsLoadingDetail(true);
+    setIsDetailModalOpen(false);
   };
 
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -143,15 +148,15 @@ export default function SuppliersPage() {
     allStatsSupplier,
   ]);
 
-  const handleUpdateSupplier: SubmitHandler<CreateSupplierSchema> = (data) => {
+  const handleUpdateSupplier = (data: CreateSupplierSchema) => {
     if (!editingSupplier) return;
     getUpdateSupplier({
-      id: editingSupplier.id,
+      id: editingSupplier._id,
       data: {
         name: data.name,
         address: data.address,
-        phone: data.phone,
-        contactFee: data.contactFee,
+        phone_number: data.phone_number,
+        contract_fee: data.contract_fee,
       },
     });
     resetEditForm();
@@ -160,7 +165,9 @@ export default function SuppliersPage() {
   };
   return (
     <div>
-      {isLoadingAllSupplier ? (
+      {isLoadingGetAllSuppliers ||
+      isLoadingBike ||
+      isLoadingBikeStatsSupplier ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
           <Loader2 className="animate-spin w-16 h-16 text-primary" />
         </div>
@@ -188,24 +195,12 @@ export default function SuppliersPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">Total suppliers</p>
-              <p className="text-2xl font-bold text-foreground mt-1 text-blue-500">
-                {allStatsSupplier?.data?.GetSupplierStats.data?.totalSupplier || 0}
+              <p className="text-sm text-muted-foreground">Tổng nhà cung cấp</p>
+              <p className="text-2xl font-bold text-foreground mt-1">
+                {supplierData?.pagination.totalRecords || 0}
               </p>
             </div>
             <div className="bg-card border border-border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">Total active suppliers</p>
-              <p className="text-2xl font-bold text-foreground mt-1 text-green-500">
-                {allStatsSupplier?.data?.GetSupplierStats.data?.totalSupplierActive || 0}
-              </p>
-            </div>
-            <div className="bg-card border border-border rounded-lg p-4">
-              <p className="text-sm text-muted-foreground">Total inactive suppliers </p>
-              <p className="text-2xl font-bold text-foreground mt-1 text-red-500">
-                {allStatsSupplier?.data?.GetSupplierStats.data?.totalSupplierInactive || 0}
-              </p>
-            </div>
-            {/* <div className="bg-card border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Đang hoạt động</p>
               <p className="text-2xl font-bold text-green-500 mt-1">
                 {supplierData?.data?.filter((s) => s.status === "HOẠT ĐỘNG")
@@ -217,16 +212,23 @@ export default function SuppliersPage() {
               <p className="text-2xl font-bold text-blue-500 mt-1">
                 {bikeData?.pagination.totalRecords || 0}
               </p>
-            </div> */}
+            </div>
           </div>
 
-            <div className="border border-border rounded-lg p-4 space-y-4">
-              <div className="flex items-center gap-4">
+          <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+            <div className="flex items-center gap-4">
+              <input
+                type="text"
+                placeholder="Tìm kiếm theo tên nhà cung cấp..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-3 py-2 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground"
+              />
               <select
                 value={statusFilter}
                 onChange={(e) =>
                   handleChangeStatusFilter(
-                    e.target.value as "Active" | "Inactive" | ""
+                    e.target.value as "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
                   )
                 }
                 className="px-3 py-2 border border-border rounded-lg bg-background text-foreground"
@@ -258,27 +260,24 @@ export default function SuppliersPage() {
                   setEditingSupplier(supplier);
                   resetEditForm({
                     name: supplier.name,
-                    address: supplier.contactInfo.address,
-                    phone: supplier.contactInfo.phone,
-                    contactFee: supplier.contactFee,
+                    address: supplier.contact_info.address,
+                    phone_number: supplier.contact_info.phone_number,
+                    contract_fee: supplier.contract_fee,
                   });
                   setIsEditModalOpen(true);
                 },
               })}
-              searchValue={searchQuery}
-              filterPlaceholder="Tìm kiếm nhà cung cấp theo tên"
-              onSearchChange={setSearchQuery}
-              data={allSupplier ?? []}
+              data={supplierData?.data ?? []}
             />
             <PaginationDemo
-              totalPages={paginationAllSupplier?.totalPages ?? 1}
-              currentPage={paginationAllSupplier?.page ?? 1}
+              totalPages={supplierData?.pagination?.totalPages ?? 1}
+              currentPage={supplierData?.pagination?.currentPage ?? 1}
               onPageChange={setPage}
             />
           </div>
 
           <div className="space-y-4">
-            {/* <div className="space-y-4">
+            <div className="space-y-4">
               <h2 className="text-xl font-bold text-foreground">
                 Thống kê xe đạp theo nhà cung cấp
               </h2>
@@ -336,10 +335,10 @@ export default function SuppliersPage() {
                   </div>
                 ))}
               </div>
-            </div> */}
+            </div>
             <p className="text-sm text-muted-foreground">
-              Hiển thị {paginationAllSupplier?.total} /{" "}
-              {paginationAllSupplier?.total} nhà cung cấp
+              Hiển thị {supplierData?.pagination.totalRecords} /{" "}
+              {supplierData?.pagination.totalRecords} nhà cung cấp
             </p>
           </div>
 
@@ -368,7 +367,7 @@ export default function SuppliersPage() {
                         Tên nhà cung cấp
                       </label>
                       <Input
-                        id="name"
+                        id="full_name"
                         {...create("name")}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập tên nhà cung cấp"
@@ -399,8 +398,8 @@ export default function SuppliersPage() {
                       </label>
                       <Input
                         type="text"
-                        id="phone"
-                        {...create("phone")}
+                        id="phone_number"
+                        {...create("phone_number")}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập số điện thoại"
                       />
@@ -412,17 +411,17 @@ export default function SuppliersPage() {
                       </label>
                       <Input
                         type="number"
-                        id="contactFee"
+                        id="contract_fee"
                         step="0.01"
                         min="0"
                         max="1"
-                        {...create("contactFee", { valueAsNumber: true })}
+                        {...create("contract_fee")}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập phí hợp đồng (ví dụ: 0.1)"
                       />
-                      {errors.contactFee && (
+                      {errors.contract_fee && (
                         <p className="text-sm text-red-500 mt-1">
-                          {errors.contactFee.message}
+                          {errors.contract_fee.message}
                         </p>
                       )}
                     </div>
@@ -474,7 +473,7 @@ export default function SuppliersPage() {
                             Địa chỉ
                           </p>
                           <p className="text-foreground font-medium">
-                            {selectedSupplier.contactInfo.address}
+                            {selectedSupplier.contact_info.address}
                           </p>
                         </div>
                         <div>
@@ -482,7 +481,7 @@ export default function SuppliersPage() {
                             Số điện thoại
                           </p>
                           <p className="text-foreground font-medium">
-                            {selectedSupplier.contactInfo.phone}
+                            {selectedSupplier.contact_info.phone_number}
                           </p>
                         </div>
                         <div>
@@ -490,7 +489,7 @@ export default function SuppliersPage() {
                             Phí hợp đồng
                           </p>
                           <p className="text-foreground font-medium">
-                            {selectedSupplier.contactFee} VND
+                            {selectedSupplier.contract_fee} VND
                           </p>
                         </div>
                         <div>
@@ -508,8 +507,9 @@ export default function SuppliersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {selectedSupplier.createdAt ??
-                              formatToVNTime(selectedSupplier.createdAt)}
+                            {new Date(
+                              selectedSupplier.created_at
+                            ).toLocaleDateString("vi-VN")}
                           </p>
                         </div>
                       </div>
@@ -646,13 +646,13 @@ export default function SuppliersPage() {
                       </label>
                       <Input
                         type="text"
-                        {...editRegister("phone")}
+                        {...editRegister("phone_number")}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập số điện thoại"
                       />
-                      {editErrors.phone && (
+                      {editErrors.phone_number && (
                         <p className="text-sm text-red-500 mt-1">
-                          {editErrors.phone.message}
+                          {editErrors.phone_number.message}
                         </p>
                       )}
                     </div>
@@ -666,13 +666,13 @@ export default function SuppliersPage() {
                         step="0.01"
                         min="0"
                         max="1"
-                        {...editRegister("contactFee", { valueAsNumber: true })}
+                        {...editRegister("contract_fee")}
                         className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground"
                         placeholder="Nhập phí hợp đồng (ví dụ: 0.1)"
                       />
-                      {editErrors.contactFee && (
+                      {editErrors.contract_fee && (
                         <p className="text-sm text-red-500 mt-1">
-                          {editErrors.contactFee.message}
+                          {editErrors.contract_fee.message}
                         </p>
                       )}
                     </div>

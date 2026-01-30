@@ -1,26 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { authService } from "@/services/auth.service";
-import { Me } from "@/types/GraphQL";
+import type { DetailUser } from "@/services/auth.service";
 import { AxiosError } from "axios";
 import { QUERY_KEYS } from "@/constants/queryKey";
 
 
-export const fetchUserProfile = async (): Promise<Me> => {
+export const fetchUserProfile = async (): Promise<DetailUser> => {
   const response = await authService.getMe();
-  if (response.status === 200) {
-    return response.data?.data?.User.data as Me;
+  if(response.status === 200){
+    return response.data.result;
   }
   throw new Error("Failed to fetch user profile");
-};
+}
 export function useUserProfileQuery(isAuthenticated: boolean) {
-    return useQuery<Me, AxiosError>({
-      queryKey: QUERY_KEYS.AUTH.USER_PROFILE_QUERY_KEY,
-      queryFn: fetchUserProfile,
-      enabled: isAuthenticated,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-      refetchOnReconnect: true, // Don't retry failed requests
+    return useQuery<DetailUser, AxiosError>({
+        queryKey: QUERY_KEYS.AUTH.USER_PROFILE_QUERY_KEY,
+        queryFn: fetchUserProfile,
+        enabled: isAuthenticated,
+        staleTime : 0,
     });
 } 

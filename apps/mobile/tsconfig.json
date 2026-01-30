@@ -16,8 +16,7 @@
       "@utils/*": ["./utils/*"],
       "@contexts/*": ["./contexts/*"],
       "@providers/*": ["./providers/*"],
-      "@custom-types": ["./types/index"],
-      "@graphql": ["./graphql/index.ts"]
+      "@custom-types": ["./types/index"]
     },
     "strict": true
   }

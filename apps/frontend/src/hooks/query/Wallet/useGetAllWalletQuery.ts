@@ -7,7 +7,7 @@ const fetchAllWalletUser = async (
   try {
     const response = await walletService.getAllWalletUser({page, limit});
     if (response.status === 200) {
-      return response.data.data?.GetAllWallets;
+      return response.data;
     }
   } catch (error) {
     console.log(error);

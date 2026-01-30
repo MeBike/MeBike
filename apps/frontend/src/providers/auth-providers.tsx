@@ -2,16 +2,16 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuthActions } from "@hooks/useAuthAction";
 import { getAccessToken , clearTokens} from "@/utils/tokenManager";
+import { DetailUser } from "@/services/auth.service";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserProfileQuery } from "@hooks/query/useUserProfileQuery";
-import { Me } from "@/types/GraphQL";
 interface AuthError {
   response?: {
     status: number;
   };
 }
 type AuthContextType = ReturnType<typeof useAuthActions> & {
-  user : Me | null;
+  user : DetailUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   actions : ReturnType<typeof useAuthActions>;
@@ -57,7 +57,7 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
       const hasResponse = authError?.response && typeof authError.response === "object";
       const status = hasResponse && authError.response ? authError.response.status : undefined;
       const isAuthError = hasResponse && (status === 401 || status === 403);
-
+      
       if (isAuthError) {
         clearTokens();
         setHasToken(false);
@@ -67,7 +67,7 @@ export const AuthProvider:React.FC<{children : React.ReactNode}> = ({ children }
   }, [isError, hasToken, queryClient, isInitialized]);
 
  const value: AuthContextType = React.useMemo(() => {
-    const user = userProfile as Me || null;
+    const user = userProfile as DetailUser || null;
     const isAuthenticated = !!user && isSuccess && isInitialized;
     return {
       ...actions,

@@ -20,6 +20,6 @@ export const useGetSupplierByIDQuery = (id: string) => {
     queryFn: () => {
         return fetchDetailSupplierByID(id);
     },
-    enabled: !!id && id !== "",
+    enabled: !!id,
   });
 };

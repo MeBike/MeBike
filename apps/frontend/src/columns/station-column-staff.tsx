@@ -41,11 +41,11 @@ export const stationColumns = (): ColumnDef<Station>[] => [
   {
     accessorKey: "created_at",
     header: "Ngày tạo",
-    cell: ({ row }) => formatDateVN(row.original.createdAt),
+    cell: ({ row }) => formatDateVN(row.original.created_at),
   },
   {
     accessorKey: "updated_at",
     header: "Ngày cập nhật",
-    cell: ({ row }) => formatDateVN(row.original.updatedAt),
+    cell: ({ row }) => formatDateVN(row.original.updated_at),
   },
 ];

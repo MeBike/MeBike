@@ -3,6 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,12 +15,10 @@ import {
 } from "react-native";
 
 import type { RegisterScreenNavigationProp } from "../types/navigation";
-import { registerSchema, RegisterSchemaFormData } from "../schema/authSchema";
+import { registerSchema } from "../schema/authSchema";
 
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 
 const styles = StyleSheet.create({
   container: {
@@ -76,9 +75,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     backgroundColor: "white",
   },
-  inputWithIconError: {
-    borderColor: "#EF4444",
-  },
   input: {
     flex: 1,
     marginLeft: 10,
@@ -127,44 +123,62 @@ const styles = StyleSheet.create({
 
 export default function RegisterScreen() {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const { register, isRegistering } = useAuth();
   const isLoading = isRegistering;
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<RegisterSchemaFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      YOB: undefined,
-      phone: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
+  const clearForm = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setPhone("");
+    setErrors({});
+  };
+  const handleRegister = () => {
+    // Validate using schema
+    const validationResult = registerSchema.safeParse({
+      fullname: name,
+      email,
+      password,
+      confirm_password: confirmPassword,
+      phone_number: phone || undefined,
+    });
 
-  const onSubmit = (data: RegisterSchemaFormData) => {
+    if (!validationResult.success) {
+      // Get all field errors
+      const fieldErrors: Record<string, string> = {};
+      Object.entries(validationResult.error.flatten().fieldErrors).forEach(
+        ([field, messages]) => {
+          if (messages && messages[0]) {
+            fieldErrors[field] = messages[0];
+          }
+        }
+      );
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setErrors({});
     register({
-      name: data.name,
-      YOB: Number(data.YOB),
-      email: data.email,
-      password: data.password,
-      confirmPassword: data.confirmPassword,
-      phone: data.phone,
-    })
-      .then(() => {
-        reset();
-        navigation.navigate("Main");
-      })
-      .catch((error) => {
-        console.log("Register error:", error);
-      });
+      fullname: name,
+      email,
+      password,
+      confirm_password: confirmPassword,
+      phone_number: phone || undefined,
+    }).then(() => {
+      clearForm();
+      navigation.navigate("EmailVerification", { email });
+    }).catch((error) => {
+      console.log("Register error:", error);
+    });
   };
 
   const goToLogin = () => {
@@ -193,214 +207,148 @@ export default function RegisterScreen() {
         </LinearGradient>
 
         <View style={styles.formContainer}>
-          {/* Họ và tên */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Họ và tên</Text>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={[styles.inputWithIcon, errors.name && styles.inputWithIconError]}>
-                  <IconSymbol
-                    name="person"
-                    size={20}
-                    color={BikeColors.textSecondary}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Nhập họ và tên"
-                    placeholderTextColor={BikeColors.textSecondary}
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    autoCapitalize="words"
-                  />
-                </View>
-              )}
-            />
-            {errors.name && (
-              <Text style={styles.errorText}>{errors.name.message}</Text>
-            )}
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="person"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập họ và tên"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={name}
+                onChangeText={(text) => {
+                  setName(text);
+                  if (errors.fullname) setErrors(prev => ({ ...prev, fullname: "" }));
+                }}
+                autoCapitalize="words"
+              />
+            </View>
+            {errors.fullname && <Text style={styles.errorText}>{errors.fullname}</Text>}
           </View>
 
-          {/* Email */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Email</Text>
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={[styles.inputWithIcon, errors.email && styles.inputWithIconError]}>
-                  <IconSymbol
-                    name="envelope"
-                    size={20}
-                    color={BikeColors.textSecondary}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Nhập email"
-                    placeholderTextColor={BikeColors.textSecondary}
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-              )}
-            />
-            {errors.email && (
-              <Text style={styles.errorText}>{errors.email.message}</Text>
-            )}
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="envelope"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập email"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (errors.email) setErrors(prev => ({ ...prev, email: "" }));
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
           </View>
 
-          {/* Năm sinh */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Năm sinh</Text>
-            <Controller
-              control={control}
-              name="YOB"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={[styles.inputWithIcon, errors.YOB && styles.inputWithIconError]}>
-                  <IconSymbol
-                    name="birthday.cake"
-                    size={20}
-                    color={BikeColors.textSecondary}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ví dụ: 2000"
-                    placeholderTextColor={BikeColors.textSecondary}
-                    onBlur={onBlur}
-                    onChangeText={(text) => onChange(text ? Number(text) : undefined)}
-                    value={value ? value.toString() : ""}
-                    autoCapitalize="none"
-                    keyboardType="numeric"
-                    maxLength={4}
-                  />
-                </View>
-              )}
-            />
-            {errors.YOB && <Text style={styles.errorText}>{errors.YOB.message}</Text>}
-          </View>
-
-          {/* Số điện thoại */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Số điện thoại</Text>
-            <Controller
-              control={control}
-              name="phone"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={[styles.inputWithIcon, errors.phone && styles.inputWithIconError]}>
-                  <IconSymbol
-                    name="phone"
-                    size={20}
-                    color={BikeColors.textSecondary}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Nhập số điện thoại"
-                    placeholderTextColor={BikeColors.textSecondary}
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    autoCapitalize="none"
-                    keyboardType="phone-pad"
-                  />
-                </View>
-              )}
-            />
-            {errors.phone && (
-              <Text style={styles.errorText}>{errors.phone.message}</Text>
-            )}
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="phone"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập số điện thoại"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={phone}
+                onChangeText={(text) => {
+                  setPhone(text);
+                  if (errors.phone_number) setErrors(prev => ({ ...prev, phone_number: "" }));
+                }}
+                autoCapitalize="none"
+              />
+            </View>
+            {errors.phone_number && <Text style={styles.errorText}>{errors.phone_number}</Text>}
           </View>
 
-          {/* Mật khẩu */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Mật khẩu</Text>
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={[styles.inputWithIcon, errors.password && styles.inputWithIconError]}>
-                  <IconSymbol
-                    name="lock"
-                    size={20}
-                    color={BikeColors.textSecondary}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Nhập mật khẩu"
-                    placeholderTextColor={BikeColors.textSecondary}
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                  />
-                  <Pressable
-                    onPress={() => setShowPassword(!showPassword)}
-                    style={styles.eyeButton}
-                  >
-                    <IconSymbol
-                      name={showPassword ? "eye.slash" : "eye"}
-                      size={20}
-                      color={BikeColors.textSecondary}
-                    />
-                  </Pressable>
-                </View>
-              )}
-            />
-            {errors.password && (
-              <Text style={styles.errorText}>{errors.password.message}</Text>
-            )}
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="lock"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập mật khẩu"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (errors.password) setErrors(prev => ({ ...prev, password: "" }));
+                }}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+              >
+                <IconSymbol
+                  name={showPassword ? "eye.slash" : "eye"}
+                  size={20}
+                  color={BikeColors.textSecondary}
+                />
+              </Pressable>
+            </View>
+            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
           </View>
 
-          {/* Xác nhận mật khẩu */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Xác nhận mật khẩu</Text>
-            <Controller
-              control={control}
-              name="confirmPassword"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={[styles.inputWithIcon, errors.confirmPassword && styles.inputWithIconError]}>
-                  <IconSymbol
-                    name="lock"
-                    size={20}
-                    color={BikeColors.textSecondary}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Xác nhận mật khẩu"
-                    placeholderTextColor={BikeColors.textSecondary}
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    secureTextEntry={!showConfirmPassword}
-                    autoCapitalize="none"
-                  />
-                  <Pressable
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={styles.eyeButton}
-                  >
-                    <IconSymbol
-                      name={showConfirmPassword ? "eye.slash" : "eye"}
-                      size={20}
-                      color={BikeColors.textSecondary}
-                    />
-                  </Pressable>
-                </View>
-              )}
-            />
-            {errors.confirmPassword && (
-              <Text style={styles.errorText}>{errors.confirmPassword.message}</Text>
-            )}
+            <View style={styles.inputWithIcon}>
+              <IconSymbol
+                name="lock"
+                size={20}
+                color={BikeColors.textSecondary}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Xác nhận mật khẩu"
+                placeholderTextColor={BikeColors.textSecondary}
+                value={confirmPassword}
+                onChangeText={(text) => {
+                  setConfirmPassword(text);
+                  if (errors.confirm_password) setErrors(prev => ({ ...prev, confirm_password: "" }));
+                }}
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
+              />
+              <Pressable
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={styles.eyeButton}
+              >
+                <IconSymbol
+                  name={showConfirmPassword ? "eye.slash" : "eye"}
+                  size={20}
+                  color={BikeColors.textSecondary}
+                />
+              </Pressable>
+            </View>
+            {errors.confirm_password && <Text style={styles.errorText}>{errors.confirm_password}</Text>}
           </View>
 
           <Pressable
             style={[styles.registerButton, isLoading && styles.disabledButton]}
-            onPress={handleSubmit(onSubmit)}
+            onPress={handleRegister}
             disabled={isLoading}
           >
             <Text style={styles.registerButtonText}>
