@@ -146,9 +146,10 @@ describe("rentalRepository Integration", () => {
     const reservationId = uuidv7();
     const startTime = new Date();
 
-    const reserved = await client.$transaction(async tx =>
-      Effect.runPromise(
-        repo.createReservedRentalForReservationInTx(tx, {
+    const reserved = await client.$transaction(async (tx) => {
+      const txRepo = makeRentalRepository(tx);
+      return Effect.runPromise(
+        txRepo.createReservedRentalForReservation({
           reservationId,
           userId,
           bikeId,
@@ -156,8 +157,8 @@ describe("rentalRepository Integration", () => {
           startTime,
           subscriptionId: null,
         }),
-      ),
-    );
+      );
+    });
 
     expect(reserved.id).toBe(reservationId);
     expect(reserved.status).toBe("RESERVED");
@@ -180,7 +181,9 @@ describe("rentalRepository Integration", () => {
     const started = await client.$transaction(async tx =>
       Effect.runPromise(
         Effect.gen(function* () {
-          yield* repo.createReservedRentalForReservationInTx(tx, {
+          const txRepo = makeRentalRepository(tx);
+
+          yield* txRepo.createReservedRentalForReservation({
             reservationId,
             userId,
             bikeId,
@@ -189,8 +192,7 @@ describe("rentalRepository Integration", () => {
             subscriptionId: null,
           });
 
-          return yield* repo.startReservedRentalInTx(
-            tx,
+          return yield* txRepo.startReservedRental(
             reservationId,
             startTime,
             startTime,
@@ -221,7 +223,9 @@ describe("rentalRepository Integration", () => {
     const cancelled = await client.$transaction(async tx =>
       Effect.runPromise(
         Effect.gen(function* () {
-          yield* repo.createReservedRentalForReservationInTx(tx, {
+          const txRepo = makeRentalRepository(tx);
+
+          yield* txRepo.createReservedRentalForReservation({
             reservationId,
             userId,
             bikeId,
@@ -230,7 +234,7 @@ describe("rentalRepository Integration", () => {
             subscriptionId: null,
           });
 
-          return yield* repo.cancelReservedRentalInTx(tx, reservationId, cancelledAt);
+          return yield* txRepo.cancelReservedRental(reservationId, cancelledAt);
         }),
       ),
     );
@@ -269,8 +273,11 @@ describe("rentalRepository Integration", () => {
       }),
     );
 
-    expect(updated.status).toBe("COMPLETED");
-    expect(updated.totalPrice).toBe(1000);
+    if (Option.isNone(updated)) {
+      throw new Error("Expected rental to be updated");
+    }
+    expect(updated.value.status).toBe("COMPLETED");
+    expect(updated.value.totalPrice).toBe(1000);
 
     const found = await Effect.runPromise(repo.findById(rental.id));
     if (Option.isNone(found)) {

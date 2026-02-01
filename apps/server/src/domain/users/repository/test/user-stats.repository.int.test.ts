@@ -6,9 +6,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { DB } from "generated/kysely/types";
 
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
-
-import { getTestDatabase } from "@/test/db/test-database";
 import { seed } from "@/test/db/seed";
+import { getTestDatabase } from "@/test/db/test-database";
 
 import type { UserStatsRepo } from "../user-stats.repository";
 
@@ -21,7 +20,6 @@ describe("userStatsRepository Integration", () => {
 
   beforeAll(async () => {
     container = await getTestDatabase();
-    
 
     testDb = makeTestDb(container.url);
 

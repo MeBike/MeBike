@@ -18,7 +18,6 @@ import {
 import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import logger from "@/lib/logger";
-
 import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
@@ -36,7 +35,6 @@ describe("startRentalUseCase Integration", () => {
 
   beforeAll(async () => {
     container = await getTestDatabase();
-    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });
@@ -365,8 +363,9 @@ describe("startRentalUseCase Integration", () => {
     const { id: bikeId } = await createBike({ stationId });
 
     const byBike = await client.$transaction(async (tx) => {
+      const txRentalRepo = makeRentalRepository(tx);
       const first = await Effect.runPromise(
-        rentalRepo.createRentalInTx(tx, {
+        txRentalRepo.createRental({
           userId,
           bikeId,
           startStationId: stationId,
@@ -379,7 +378,7 @@ describe("startRentalUseCase Integration", () => {
       }
 
       return Effect.runPromise(
-        rentalRepo.createRentalInTx(tx, {
+        txRentalRepo.createRental({
           userId: uuidv7(),
           bikeId,
           startStationId: stationId,
@@ -398,23 +397,25 @@ describe("startRentalUseCase Integration", () => {
     expect(byBike.left._tag).toBe("RentalUniqueViolation");
 
     const bike2Id = (await createBike({ stationId })).id;
-    const byUser = await client.$transaction(async tx =>
-      Effect.runPromise(
+    const byUser = await client.$transaction(async (tx) => {
+      const txRentalRepo = makeRentalRepository(tx);
+      return Effect.runPromise(
         Effect.all([
-          rentalRepo.createRentalInTx(tx, {
+          txRentalRepo.createRental({
             userId,
             bikeId: bike2Id,
             startStationId: stationId,
             startTime: new Date(),
           }),
-          rentalRepo.createRentalInTx(tx, {
+          txRentalRepo.createRental({
             userId,
             bikeId: uuidv7(),
             startStationId: stationId,
             startTime: new Date(),
           }),
         ]).pipe(Effect.either),
-      ));
+      );
+    });
 
     if (Either.isRight(byUser)) {
       throw new Error("Expected unique violation by user, got Right");

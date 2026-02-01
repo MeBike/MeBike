@@ -37,7 +37,10 @@ export type {
   UpdateRentalOnEndInput,
 } from "./rental.repository.types";
 
-export function makeRentalRepository(client: PrismaClient): RentalRepo {
+export function makeRentalRepository(
+  db: PrismaClient | PrismaTypes.TransactionClient,
+): RentalRepo {
+  const client = db;
   const select = rentalSelect;
 
   const createRentalWithClient = (
@@ -230,56 +233,14 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
       });
     },
 
-    findActiveByBikeIdInTx(tx, bikeId) {
-      return Effect.gen(function* () {
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            tx.rental.findFirst({
-              where: { bikeId, status: "RENTED" },
-              select,
-            }),
-          catch: e =>
-            new RentalRepositoryError({
-              operation: "findActiveByBikeIdInTx",
-              cause: e,
-            }),
-        });
-
-        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
-      });
-    },
-
-    findActiveByUserIdInTx(tx, userId) {
-      return Effect.gen(function* () {
-        const raw = yield* Effect.tryPromise({
-          try: () =>
-            tx.rental.findFirst({
-              where: { userId, status: "RENTED" },
-              select,
-            }),
-          catch: e =>
-            new RentalRepositoryError({
-              operation: "findActiveByUserIdInTx",
-              cause: e,
-            }),
-        });
-
-        return Option.fromNullable(raw).pipe(Option.map(mapToRentalRow));
-      });
-    },
-
     createRental(data) {
       return createRentalWithClient(client, data);
     },
 
-    createRentalInTx(tx, data) {
-      return createRentalWithClient(tx, data);
-    },
-
-    createReservedRentalForReservationInTx(tx, data) {
+    createReservedRentalForReservation(data) {
       return Effect.tryPromise({
         try: () =>
-          tx.rental.create({
+          client.rental.create({
             data: {
               id: data.reservationId,
               userId: data.userId,
@@ -295,13 +256,13 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
           Match.value(error).pipe(
             Match.when(isPrismaUniqueViolation, e =>
               new RentalUniqueViolation({
-                operation: "createReservedRentalForReservationInTx",
+                operation: "createReservedRentalForReservation",
                 constraint: uniqueTargets(e),
                 cause: e,
               })),
             Match.orElse(e =>
               new RentalRepositoryError({
-                operation: "createReservedRentalForReservationInTx",
+                operation: "createReservedRentalForReservation",
                 cause: e,
               })),
           ),
@@ -310,30 +271,8 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
 
     updateRentalOnEnd(data) {
       return Effect.tryPromise({
-        try: () =>
-          client.rental.update({
-            where: { id: data.rentalId },
-            data: {
-              endStationId: data.endStationId,
-              endTime: data.endTime,
-              duration: data.durationMinutes,
-              totalPrice: data.totalPrice === null ? null : String(data.totalPrice),
-              status: data.newStatus,
-            },
-            select,
-          }),
-        catch: e =>
-          new RentalRepositoryError({
-            operation: "updateRentalOnEnd",
-            cause: e,
-          }),
-      }).pipe(Effect.map(mapToRentalRow));
-    },
-
-    updateRentalOnEndInTx(tx, data) {
-      return Effect.tryPromise({
         try: async () => {
-          const updated = await tx.rental.updateMany({
+          const updated = await client.rental.updateMany({
             where: {
               id: data.rentalId,
               status: "RENTED",
@@ -351,14 +290,14 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
             return null;
           }
 
-          return await tx.rental.findUnique({
+          return await client.rental.findUnique({
             where: { id: data.rentalId },
             select,
           });
         },
         catch: e =>
           new RentalRepositoryError({
-            operation: "updateRentalOnEndInTx",
+            operation: "updateRentalOnEnd",
             cause: e,
           }),
       }).pipe(
@@ -387,10 +326,10 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
       );
     },
 
-    assignBikeToReservedRentalInTx(tx, rentalId, bikeId, updatedAt) {
+    assignBikeToReservedRental(rentalId, bikeId, updatedAt) {
       return Effect.tryPromise({
         try: async () => {
-          const updated = await tx.rental.updateMany({
+          const updated = await client.rental.updateMany({
             where: {
               id: rentalId,
               bikeId: null,
@@ -405,16 +344,16 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
         },
         catch: e =>
           new RentalRepositoryError({
-            operation: "assignBikeToReservedRentalInTx",
+            operation: "assignBikeToReservedRental",
             cause: e,
           }),
       });
     },
 
-    startReservedRentalInTx(tx, rentalId, startTime, updatedAt, subscriptionId) {
+    startReservedRental(rentalId, startTime, updatedAt, subscriptionId) {
       return Effect.tryPromise({
         try: async () => {
-          const updated = await tx.rental.updateMany({
+          const updated = await client.rental.updateMany({
             where: {
               id: rentalId,
               status: "RESERVED",
@@ -430,16 +369,16 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
         },
         catch: e =>
           new RentalRepositoryError({
-            operation: "startReservedRentalInTx",
+            operation: "startReservedRental",
             cause: e,
           }),
       });
     },
 
-    cancelReservedRentalInTx(tx, rentalId, updatedAt) {
+    cancelReservedRental(rentalId, updatedAt) {
       return Effect.tryPromise({
         try: async () => {
-          const updated = await tx.rental.updateMany({
+          const updated = await client.rental.updateMany({
             where: {
               id: rentalId,
               status: "RESERVED",
@@ -453,7 +392,7 @@ export function makeRentalRepository(client: PrismaClient): RentalRepo {
         },
         catch: e =>
           new RentalRepositoryError({
-            operation: "cancelReservedRentalInTx",
+            operation: "cancelReservedRental",
             cause: e,
           }),
       });

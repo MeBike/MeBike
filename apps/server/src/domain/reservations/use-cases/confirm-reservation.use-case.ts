@@ -3,7 +3,7 @@ import { Effect, Option } from "effect";
 import type { BikeRepository } from "@/domain/bikes";
 
 import { makeBikeRepository } from "@/domain/bikes";
-import { RentalRepository } from "@/domain/rentals";
+import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -33,11 +33,12 @@ export function confirmReservationUseCase(
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const reservationService = yield* ReservationServiceTag;
-    const rentalRepo = yield* RentalRepository;
+    yield* RentalRepository;
     const now = input.now ?? new Date();
 
     const reservation = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
+        const txRentalRepo = makeRentalRepository(tx);
         const bikeRepo = makeBikeRepository(tx);
         const { reservation, bikeId } = yield* reservationService.confirmPendingInTx(
           tx,
@@ -48,8 +49,7 @@ export function confirmReservationUseCase(
           },
         );
 
-        const rentalStarted = yield* rentalRepo.startReservedRentalInTx(
-          tx,
+        const rentalStarted = yield* txRentalRepo.startReservedRental(
           reservation.id,
           now,
           now,

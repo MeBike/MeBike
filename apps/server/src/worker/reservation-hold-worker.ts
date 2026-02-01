@@ -4,7 +4,11 @@ import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs"
 import { Effect, Option } from "effect";
 
 import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
-import { RentalRepository, RentalRepositoryLive } from "@/domain/rentals";
+import {
+  makeRentalRepository,
+  RentalRepository,
+  RentalRepositoryLive,
+} from "@/domain/rentals";
 import {
   ReservationRepository,
   ReservationRepositoryLive,
@@ -167,8 +171,8 @@ export async function handleReservationExpireHold(
   const result = await runReservationEffect(
     Effect.gen(function* () {
       const reservationRepo = yield* ReservationRepository;
-      const bikeRepo = yield* BikeRepository;
-      const rentalRepo = yield* RentalRepository;
+      yield* BikeRepository;
+      yield* RentalRepository;
       const userRepo = yield* UserRepository;
       const stationRepo = yield* StationRepository;
       const { client } = yield* Prisma;
@@ -178,6 +182,7 @@ export async function handleReservationExpireHold(
         try: async () => {
           return await client.$transaction(async (tx) => {
             const txBikeRepo = makeBikeRepository(tx);
+            const txRentalRepo = makeRentalRepository(tx);
             const reservationOpt = await Effect.runPromise(
               reservationRepo.findByIdInTx(tx, payload.reservationId).pipe(
                 Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
@@ -209,7 +214,7 @@ export async function handleReservationExpireHold(
             }
 
             await Effect.runPromise(
-              rentalRepo.cancelReservedRentalInTx(tx, reservation.id, now).pipe(
+              txRentalRepo.cancelReservedRental(reservation.id, now).pipe(
                 Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
               ),
             );

@@ -7,9 +7,8 @@ import { uuidv7 } from "uuidv7";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { makeUserRepository } from "@/domain/users/repository/user.repository";
-
-import { getTestDatabase } from "@/test/db/test-database";
 import { startRedis } from "@/test/db/redis";
+import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
 import { makeAuthEventRepository } from "../../repository/auth-event.repository";

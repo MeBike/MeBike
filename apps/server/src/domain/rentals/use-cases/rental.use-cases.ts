@@ -34,7 +34,7 @@ import {
 } from "../domain-errors";
 import { startRentalFailureFromBikeStatus } from "../guards/bike-status";
 import { computeSubscriptionCoverage } from "../pricing";
-import { RentalRepository } from "../repository/rental.repository";
+import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
 import { rentalUniqueViolationToFailure } from "./unique-violation-mapper";
 
 export function startRentalUseCase(
@@ -46,8 +46,8 @@ export function startRentalUseCase(
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
-    const rentalRepo = yield* RentalRepository;
-    const bikeRepo = yield* BikeRepository;
+    yield* RentalRepository;
+    yield* BikeRepository;
     const walletRepo = yield* WalletRepository;
     const subscriptionService = yield* SubscriptionServiceTag;
     const { userId, bikeId, startStationId, startTime, subscriptionId } = input;
@@ -55,14 +55,16 @@ export function startRentalUseCase(
     const rental = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
         const txBikeRepo = makeBikeRepository(tx);
-        const existingByUser = yield* rentalRepo.findActiveByUserIdInTx(tx, userId).pipe(
+        const txRentalRepo = makeRentalRepository(tx);
+
+        const existingByUser = yield* txRentalRepo.findActiveByUserId(userId).pipe(
           Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
         );
         if (Option.isSome(existingByUser)) {
           return yield* Effect.fail(new ActiveRentalExists({ userId }));
         }
 
-        const existingByBike = yield* rentalRepo.findActiveByBikeIdInTx(tx, bikeId).pipe(
+        const existingByBike = yield* txRentalRepo.findActiveByBikeId(bikeId).pipe(
           Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
         );
         if (Option.isSome(existingByBike)) {
@@ -145,7 +147,7 @@ export function startRentalUseCase(
         // - mark reservation consumed/expired appropriately
         // - apply reservation prepaid deduction to end-rental pricing
 
-        const rental = yield* rentalRepo.createRentalInTx(tx, {
+        const rental = yield* txRentalRepo.createRental({
           userId,
           bikeId,
           startStationId,
@@ -196,7 +198,7 @@ export function endRentalUseCase(
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const repo = yield* RentalRepository;
-    const bikeRepo = yield* BikeRepository;
+    yield* BikeRepository;
     const subscriptionRepo = yield* SubscriptionRepository;
     const reservationRepo = yield* ReservationRepository;
     const walletService = yield* WalletServiceTag;
@@ -250,6 +252,7 @@ export function endRentalUseCase(
     const updated = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
         const txBikeRepo = makeBikeRepository(tx);
+        const txRentalRepo = makeRentalRepository(tx);
         let basePrice = Math.ceil(durationMinutes / 30) * env.PRICE_PER_30_MINS;
         const durationHours = durationMinutes / 60;
         let usageToAdd = 0;
@@ -343,7 +346,7 @@ export function endRentalUseCase(
           );
         }
 
-        return yield* repo.updateRentalOnEndInTx(tx, {
+        return yield* txRentalRepo.updateRentalOnEnd({
           rentalId,
           endStationId,
           endTime,

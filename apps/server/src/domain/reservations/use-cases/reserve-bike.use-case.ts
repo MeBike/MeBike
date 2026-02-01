@@ -12,7 +12,7 @@ import type { ReservationOption } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { makeBikeRepository } from "@/domain/bikes";
-import { RentalRepository } from "@/domain/rentals";
+import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
 import { StationRepository } from "@/domain/stations";
@@ -91,12 +91,13 @@ export function reserveBikeUseCase(
     const stationRepo = yield* StationRepository;
     const walletService = yield* WalletServiceTag;
     const subscriptionService = yield* SubscriptionServiceTag;
-    const rentalRepo = yield* RentalRepository;
+    yield* RentalRepository;
     const now = input.now ?? new Date();
 
     const reservation = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
         const bikeRepo = makeBikeRepository(tx);
+        const txRentalRepo = makeRentalRepository(tx);
         if (input.reservationOption === "FIXED_SLOT") {
           return yield* Effect.fail(
             new ReservationOptionNotSupported({ option: input.reservationOption }),
@@ -193,7 +194,7 @@ export function reserveBikeUseCase(
           prepaid,
         });
 
-        yield* rentalRepo.createReservedRentalForReservationInTx(tx, {
+        yield* txRentalRepo.createReservedRentalForReservation({
           reservationId: reservation.id,
           userId: reservation.userId,
           bikeId: reservation.bikeId ?? input.bikeId,

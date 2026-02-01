@@ -1,7 +1,7 @@
 import type { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { Prisma as PrismaTypes, RentalStatus } from "generated/prisma/client";
+import type { RentalStatus } from "generated/prisma/client";
 
 import type { RentalRepoError, RentalRepositoryError } from "../domain-errors";
 import type {
@@ -71,36 +71,16 @@ export type RentalRepo = {
     userId: string,
   ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
 
-  findActiveByBikeIdInTx: (
-    tx: PrismaTypes.TransactionClient,
-    bikeId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
-  findActiveByUserIdInTx: (
-    tx: PrismaTypes.TransactionClient,
-    userId: string,
-  ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
-
   // Core rental operations
   createRental: (
     data: CreateRentalInput,
   ) => Effect.Effect<RentalRow, RentalRepoError>;
 
-  createRentalInTx: (
-    tx: PrismaTypes.TransactionClient,
-    data: CreateRentalInput,
-  ) => Effect.Effect<RentalRow, RentalRepoError>;
-
-  createReservedRentalForReservationInTx: (
-    tx: PrismaTypes.TransactionClient,
+  createReservedRentalForReservation: (
     data: CreateReservedRentalInput,
   ) => Effect.Effect<RentalRow, RentalRepoError>;
 
   updateRentalOnEnd: (
-    data: UpdateRentalOnEndInput,
-  ) => Effect.Effect<RentalRow, RentalRepositoryError>;
-  updateRentalOnEndInTx: (
-    tx: PrismaTypes.TransactionClient,
     data: UpdateRentalOnEndInput,
   ) => Effect.Effect<Option.Option<RentalRow>, RentalRepositoryError>;
 
@@ -112,8 +92,7 @@ export type RentalRepo = {
    * EN: Assign bike to a reserved rental if it is still unassigned.
    * VI: Gán bike cho rental RESERVED nếu vẫn chưa có bike.
    */
-  assignBikeToReservedRentalInTx: (
-    tx: PrismaTypes.TransactionClient,
+  assignBikeToReservedRental: (
     rentalId: string,
     bikeId: string,
     updatedAt: Date,
@@ -123,8 +102,7 @@ export type RentalRepo = {
    * EN: Start a RESERVED rental by marking it RENTED and setting start time.
    * VI: Bắt đầu rental RESERVED bằng cách chuyển sang RENTED và set start time.
    */
-  startReservedRentalInTx: (
-    tx: PrismaTypes.TransactionClient,
+  startReservedRental: (
     rentalId: string,
     startTime: Date,
     updatedAt: Date,
@@ -135,8 +113,7 @@ export type RentalRepo = {
    * EN: Cancel a RESERVED rental (no-op if status already changed).
    * VI: Hủy rental RESERVED (không làm gì nếu status đã đổi).
    */
-  cancelReservedRentalInTx: (
-    tx: PrismaTypes.TransactionClient,
+  cancelReservedRental: (
     rentalId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, RentalRepositoryError>;

@@ -4,7 +4,7 @@ import type { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { RentalRepository } from "@/domain/rentals";
+import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
@@ -110,8 +110,8 @@ export function assignFixedSlotReservationsUseCase(args: {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const reservationRepo = yield* ReservationRepository;
-    const bikeRepo = yield* BikeRepository;
-    const rentalRepo = yield* RentalRepository;
+    yield* BikeRepository;
+    yield* RentalRepository;
     const assignmentTime = args.assignmentTime ?? new Date();
     const slotDate = args.slotDate ?? normalizeSlotDate(assignmentTime);
     const slotDateKey = toSlotDateKey(slotDate);
@@ -152,6 +152,7 @@ export function assignFixedSlotReservationsUseCase(args: {
           client.$transaction(async tx =>
             Effect.runPromise(Effect.gen(function* () {
               const bikeRepo = makeBikeRepository(tx);
+              const txRentalRepo = makeRentalRepository(tx);
               const reservationOpt = yield* reservationRepo.findPendingFixedSlotByTemplateAndStartInTx(
                 tx,
                 template.id,
@@ -208,8 +209,7 @@ export function assignFixedSlotReservationsUseCase(args: {
                 return "CONFLICT" as const;
               }
 
-              const rentalAssigned = yield* rentalRepo.assignBikeToReservedRentalInTx(
-                tx,
+              const rentalAssigned = yield* txRentalRepo.assignBikeToReservedRental(
                 reservation.id,
                 bike.id,
                 now,
