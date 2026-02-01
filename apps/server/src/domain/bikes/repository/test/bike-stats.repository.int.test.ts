@@ -8,7 +8,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { DB } from "generated/kysely/types";
 
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
-
 import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
@@ -22,7 +21,6 @@ describe("bikeStatsRepository Integration", () => {
 
   beforeAll(async () => {
     container = await getTestDatabase();
-    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });

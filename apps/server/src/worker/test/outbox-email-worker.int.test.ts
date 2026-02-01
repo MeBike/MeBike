@@ -10,7 +10,6 @@ import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import { JobDeadLetters, resolveQueueOptions } from "@/infrastructure/jobs/queue-policy";
 import { destroyTestDb, makeTestDb } from "@/test/db/kysely";
-
 import { getTestDatabase } from "@/test/db/test-database";
 import { handleEmailJob } from "@/worker/email-worker";
 import { dispatchOutboxOnce } from "@/worker/outbox-dispatcher";
@@ -26,7 +25,6 @@ describe("outbox + email worker integration", () => {
 
   beforeAll(async () => {
     container = await getTestDatabase();
-    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });

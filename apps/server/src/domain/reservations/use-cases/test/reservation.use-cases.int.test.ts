@@ -31,7 +31,6 @@ import { makeWalletRepository, WalletRepository } from "@/domain/wallets";
 import { WalletServiceLive } from "@/domain/wallets/services/wallet.service";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { Prisma } from "@/infrastructure/prisma";
-
 import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
@@ -57,7 +56,6 @@ describe("reservation use-cases integration", () => {
 
   beforeAll(async () => {
     container = await getTestDatabase();
-    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });

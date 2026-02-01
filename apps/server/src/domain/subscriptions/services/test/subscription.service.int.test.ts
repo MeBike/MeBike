@@ -6,7 +6,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { Prisma as PrismaNS } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
-
 import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
@@ -27,7 +26,6 @@ describe("subscriptionService Integration", () => {
 
   beforeAll(async () => {
     container = await getTestDatabase();
-    
 
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });
