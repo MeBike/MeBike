@@ -15,6 +15,7 @@ export default async function setup(project: TestProject) {
 }
 
 declare module "vitest" {
+  // eslint-disable-next-line ts/consistent-type-definitions
   export interface ProvidedContext {
     testDatabaseUrl: string;
   }

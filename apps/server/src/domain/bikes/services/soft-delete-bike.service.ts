@@ -1,15 +1,8 @@
 import { Effect, Option } from "effect";
 
-import type { PageRequest } from "@/domain/shared/pagination";
-import type { BikeStatus } from "generated/prisma/enums";
-
 import { Prisma } from "@/infrastructure/prisma";
 
-import type {
-  BikeFilter,
-  BikeRow,
-  BikeSortField,
-} from "../models";
+import type { BikeRow } from "../models";
 
 import {
   BikeCurrentlyRented,
@@ -17,63 +10,6 @@ import {
   BikeNotFound,
 } from "../domain-errors";
 import { BikeRepository } from "../repository/bike.repository";
-import { BikeServiceTag } from "../services/bike.service";
-
-export type CreateBikeInput = {
-  chipId: string;
-  stationId: string;
-  supplierId: string;
-  status?: BikeStatus;
-};
-
-export function createBikeUseCase(input: CreateBikeInput) {
-  return Effect.gen(function* () {
-    const service = yield* BikeServiceTag;
-    return yield* service.createBike(input);
-  });
-}
-
-export type ListBikesInput = {
-  filter: BikeFilter;
-  pageReq: PageRequest<BikeSortField>;
-};
-
-export function listBikesUseCase(input: ListBikesInput) {
-  return Effect.gen(function* () {
-    const service = yield* BikeServiceTag;
-    return yield* service.listBikes(input.filter, input.pageReq);
-  });
-}
-
-export function getBikeDetailUseCase(bikeId: string) {
-  return Effect.gen(function* () {
-    const service = yield* BikeServiceTag;
-    return yield* service.getBikeDetail(bikeId);
-  });
-}
-
-export function reportBrokenBikeUseCase(bikeId: string) {
-  return Effect.gen(function* () {
-    const service = yield* BikeServiceTag;
-    return yield* service.reportBrokenBike(bikeId);
-  });
-}
-
-export function adminUpdateBikeUseCase(bikeId: string, patch: Partial<{
-  chipId: string;
-  stationId: string;
-  status: BikeStatus;
-  supplierId: string | null;
-}>): Effect.Effect<
-  Option.Option<BikeRow>,
-  BikeCurrentlyRented | BikeCurrentlyReserved | BikeNotFound,
-  BikeServiceTag
-> {
-  return Effect.gen(function* () {
-    const service = yield* BikeServiceTag;
-    return yield* service.adminUpdateBike(bikeId, patch);
-  });
-}
 
 export function softDeleteBikeUseCase(bikeId: string): Effect.Effect<
   Option.Option<BikeRow>,

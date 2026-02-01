@@ -8,8 +8,7 @@ import type {
 } from "@/domain/subscriptions";
 
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
-import { startRentalUseCase } from "@/domain/rentals/use-cases/rental.use-cases";
+import { makeRentalRepository, RentalRepository, startRentalUseCase } from "@/domain/rentals";
 import {
   makeSubscriptionRepository,
   SubscriptionRepository,

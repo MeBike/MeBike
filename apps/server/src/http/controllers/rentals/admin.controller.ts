@@ -5,7 +5,7 @@ import { Effect, Match } from "effect";
 
 import {
   adminGetRentalDetailUseCase,
-  adminListRentalsUseCase,
+  RentalRepository,
 } from "@/domain/rentals";
 import { withLoggedCause } from "@/domain/shared";
 import {
@@ -26,20 +26,23 @@ const adminListRentals: RouteHandler<RentalsRoutes["adminListRentals"]> = async 
   const query = c.req.valid("query");
 
   const eff = withLoggedCause(
-    adminListRentalsUseCase({
-      filter: {
-        userId: query.userId,
-        bikeId: query.bikeId,
-        startStationId: query.startStation,
-        endStationId: query.endStation,
-        status: query.status,
-      },
-      pageReq: {
-        page: Number(query.page ?? 1),
-        pageSize: Number(query.pageSize ?? 50),
-        sortBy: query.sortBy ?? "startTime",
-        sortDir: query.sortDir ?? "desc",
-      },
+    Effect.gen(function* () {
+      const repo = yield* RentalRepository;
+      return yield* repo.adminListRentals(
+        {
+          userId: query.userId,
+          bikeId: query.bikeId,
+          startStationId: query.startStation,
+          endStationId: query.endStation,
+          status: query.status,
+        },
+        {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: query.sortBy ?? "startTime",
+          sortDir: query.sortDir ?? "desc",
+        },
+      );
     }),
     "GET /v1/admin/rentals",
   );

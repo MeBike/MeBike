@@ -4,4 +4,4 @@ export * from "./repository/bike-stats.repository";
 export * from "./repository/bike.repository";
 export * from "./services/bike-stats.service";
 export * from "./services/bike.service";
-export * from "./use-cases/bike.use-cases";
+export * from "./services/soft-delete-bike.service";

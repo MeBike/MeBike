@@ -3,9 +3,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect, Match } from "effect";
 
 import {
-  getBikeDetailUseCase,
-  listBikesUseCase,
-  reportBrokenBikeUseCase,
+  BikeServiceTag,
 } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
 import { toBikeSummary } from "@/http/presenters/bikes.presenter";
@@ -22,19 +20,22 @@ const listBikes: RouteHandler<BikesRoutes["listBikes"]> = async (c) => {
   const query = c.req.valid("query");
 
   const eff = withLoggedCause(
-    listBikesUseCase({
-      filter: {
-        id: query.id,
-        stationId: query.stationId,
-        supplierId: query.supplierId,
-        status: query.status,
-      },
-      pageReq: {
-        page: query.page ?? 1,
-        pageSize: query.pageSize ?? 50,
-        sortBy: (query.sortBy) ?? "status",
-        sortDir: query.sortDir ?? "asc",
-      },
+    Effect.gen(function* () {
+      const service = yield* BikeServiceTag;
+      return yield* service.listBikes(
+        {
+          id: query.id,
+          stationId: query.stationId,
+          supplierId: query.supplierId,
+          status: query.status,
+        },
+        {
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 50,
+          sortBy: (query.sortBy) ?? "status",
+          sortDir: query.sortDir ?? "asc",
+        },
+      );
     }),
     "GET /v1/bikes",
   );
@@ -57,7 +58,10 @@ const listBikes: RouteHandler<BikesRoutes["listBikes"]> = async (c) => {
 const getBike: RouteHandler<BikesRoutes["getBike"]> = async (c) => {
   const { id } = c.req.valid("param");
 
-  const eff = getBikeDetailUseCase(id);
+  const eff = Effect.gen(function* () {
+    const service = yield* BikeServiceTag;
+    return yield* service.getBikeDetail(id);
+  });
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
@@ -80,7 +84,10 @@ const getBike: RouteHandler<BikesRoutes["getBike"]> = async (c) => {
 const reportBrokenBike: RouteHandler<BikesRoutes["reportBrokenBike"]> = async (c) => {
   const { id } = c.req.valid("param");
 
-  const eff = reportBrokenBikeUseCase(id);
+  const eff = Effect.gen(function* () {
+    const service = yield* BikeServiceTag;
+    return yield* service.reportBrokenBike(id);
+  });
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(

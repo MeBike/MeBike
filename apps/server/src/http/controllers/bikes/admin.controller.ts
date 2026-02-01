@@ -3,8 +3,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 import { Effect, Match } from "effect";
 
 import {
-  adminUpdateBikeUseCase,
-  createBikeUseCase,
+  BikeServiceTag,
   softDeleteBikeUseCase,
 } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
@@ -22,11 +21,14 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
   const body = c.req.valid("json");
 
   const eff = withLoggedCause(
-    createBikeUseCase({
-      chipId: body.chipId,
-      stationId: body.stationId,
-      supplierId: body.supplierId,
-      status: body.status,
+    Effect.gen(function* () {
+      const service = yield* BikeServiceTag;
+      return yield* service.createBike({
+        chipId: body.chipId,
+        stationId: body.stationId,
+        supplierId: body.supplierId,
+        status: body.status,
+      });
     }),
     "POST /v1/bikes",
   );
@@ -53,11 +55,14 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
   const { id } = c.req.valid("param");
   const body = c.req.valid("json");
 
-  const eff = adminUpdateBikeUseCase(id, {
-    ...(body.chipId ? { chipId: body.chipId } : {}),
-    ...(body.stationId ? { stationId: body.stationId } : {}),
-    ...(body.status ? { status: body.status } : {}),
-    ...(body.supplierId !== undefined ? { supplierId: body.supplierId } : {}),
+  const eff = Effect.gen(function* () {
+    const service = yield* BikeServiceTag;
+    return yield* service.adminUpdateBike(id, {
+      ...(body.chipId ? { chipId: body.chipId } : {}),
+      ...(body.stationId ? { stationId: body.stationId } : {}),
+      ...(body.status ? { status: body.status } : {}),
+      ...(body.supplierId !== undefined ? { supplierId: body.supplierId } : {}),
+    });
   });
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
