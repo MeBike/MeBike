@@ -4,10 +4,10 @@ import { createMiddleware } from "hono/factory";
 import jwt from "jsonwebtoken";
 
 import type { AccessTokenPayload } from "@/domain/auth";
+import type { RunPromise } from "@/http/shared/runtime";
 
 import { requireJwtSecret } from "@/domain/auth";
 import { UserServiceTag } from "@/domain/users";
-import { withUserDeps } from "@/http/shared/providers";
 
 const unauthorizedBody = {
   error: unauthorizedErrorMessages.UNAUTHORIZED,
@@ -18,6 +18,7 @@ export type AuthEnv = {
   Variables: {
     currentUser?: AccessTokenPayload;
     authFailure?: "forbidden";
+    runPromise: RunPromise;
   };
 };
 
@@ -44,11 +45,11 @@ function verifyAccessToken(token: string): AccessTokenPayload | null {
   }
 }
 
-async function loadUser(userId: string) {
-  return await Effect.runPromise(withUserDeps(Effect.gen(function* () {
+async function loadUser(runPromise: RunPromise, userId: string) {
+  return await runPromise(Effect.gen(function* () {
     const service = yield* UserServiceTag;
     return yield* service.getById(userId);
-  })));
+  }));
 }
 
 export const currentUserMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
@@ -56,7 +57,7 @@ export const currentUserMiddleware = createMiddleware<AuthEnv>(async (c, next) =
   if (token) {
     const payload = verifyAccessToken(token);
     if (payload) {
-      const userOpt = await loadUser(payload.userId);
+      const userOpt = await loadUser(c.var.runPromise, payload.userId);
       if (Option.isNone(userOpt) || userOpt.value.verify === "BANNED") {
         c.set("authFailure", "forbidden");
       }

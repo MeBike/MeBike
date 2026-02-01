@@ -12,7 +12,6 @@ import {
   adminCreateUserUseCase,
   UserServiceTag,
 } from "@/domain/users";
-import { withUserDeps } from "@/http/shared/providers";
 import { routeContext } from "@/http/shared/route-context";
 
 import { mapUserDetail, pickDefined } from "../shared";
@@ -23,7 +22,7 @@ const users = serverRoutes.users;
 const adminList: RouteHandler<UsersRoutes["adminList"]> = async (c) => {
   const query = c.req.valid("query");
   const eff = withLoggedCause(
-    withUserDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserServiceTag;
       return yield* service.listWithOffset({
         fullname: query.fullname,
@@ -35,11 +34,11 @@ const adminList: RouteHandler<UsersRoutes["adminList"]> = async (c) => {
         sortBy: query.sortBy,
         sortDir: query.sortDir,
       });
-    })),
+    }),
     routeContext(users.adminList),
   );
 
-  const data = await Effect.runPromise(eff);
+  const data = await c.var.runPromise(eff);
   return c.json<UsersContracts.AdminUserListResponse, 200>(
     {
       data: data.items.map(mapUserDetail),
@@ -57,28 +56,28 @@ const adminList: RouteHandler<UsersRoutes["adminList"]> = async (c) => {
 const adminSearch: RouteHandler<UsersRoutes["adminSearch"]> = async (c) => {
   const query = c.req.valid("query");
   const eff = withLoggedCause(
-    withUserDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserServiceTag;
       return yield* service.searchByQuery(query.q);
-    })),
+    }),
     routeContext(users.adminSearch),
   );
 
-  const data = await Effect.runPromise(eff);
+  const data = await c.var.runPromise(eff);
   return c.json<UsersContracts.AdminUserSearchResponse, 200>({ data: data.map(mapUserDetail) }, 200);
 };
 
 const adminDetail: RouteHandler<UsersRoutes["adminDetail"]> = async (c) => {
   const { userId } = c.req.valid("param");
   const eff = withLoggedCause(
-    withUserDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserServiceTag;
       return yield* service.getById(userId);
-    })),
+    }),
     routeContext(users.adminDetail),
   );
 
-  const result = await Effect.runPromise(eff);
+  const result = await c.var.runPromise(eff);
   if (result._tag === "Some") {
     return c.json<UsersContracts.AdminUserDetailResponse, 200>({ data: mapUserDetail(result.value) }, 200);
   }
@@ -96,14 +95,14 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
   const { userId } = c.req.valid("param");
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withUserDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserServiceTag;
       return yield* service.updateAdminById(userId, pickDefined(body));
-    })),
+    }),
     routeContext(users.adminUpdate),
   );
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
       if (right._tag === "Some") {
@@ -140,14 +139,9 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
             },
             409,
           )),
-        Match.orElse(() =>
-          c.json<UsersContracts.UserErrorResponse, 404>(
-            {
-              error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
-              details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
-            },
-            404,
-          )),
+        Match.orElse((err) => {
+          throw err;
+        }),
       )),
     Match.exhaustive,
   );
@@ -155,9 +149,9 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
 
 const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
   const body = c.req.valid("json");
-  const eff = withLoggedCause(withUserDeps(adminCreateUserUseCase(body)), routeContext(users.adminCreate));
+  const eff = withLoggedCause(adminCreateUserUseCase(body), routeContext(users.adminCreate));
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
       c.json<UsersContracts.AdminUserDetailResponse, 201>({ data: mapUserDetail(right) }, 201)),
@@ -193,15 +187,15 @@ const adminResetPassword: RouteHandler<UsersRoutes["adminResetPassword"]> = asyn
   const { userId } = c.req.valid("param");
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withUserDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserServiceTag;
       const passwordHash = yield* hashPassword(body.newPassword);
       return yield* service.updatePassword(userId, passwordHash);
-    })),
+    }),
     routeContext(users.adminResetPassword),
   );
 
-  const result = await Effect.runPromise(eff);
+  const result = await c.var.runPromise(eff);
   if (result._tag === "Some") {
     return c.json<undefined, 200>(undefined, 200);
   }

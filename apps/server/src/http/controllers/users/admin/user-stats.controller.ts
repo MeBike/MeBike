@@ -8,7 +8,6 @@ import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
 import { UserStatsServiceTag } from "@/domain/users";
-import { withUserStatsDeps } from "@/http/shared/providers";
 import { routeContext } from "@/http/shared/route-context";
 
 type UsersRoutes = typeof import("@mebike/shared")["serverRoutes"]["users"];
@@ -16,14 +15,14 @@ const users = serverRoutes.users;
 
 const adminStats: RouteHandler<UsersRoutes["adminStats"]> = async (c) => {
   const eff = withLoggedCause(
-    withUserStatsDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserStatsServiceTag;
       return yield* service.getOverviewStats();
-    })),
+    }),
     routeContext(users.adminStats),
   );
 
-  const data = await Effect.runPromise(eff);
+  const data = await c.var.runPromise(eff);
   return c.json<UsersContracts.AdminUserStatsResponse, 200>({ data }, 200);
 };
 
@@ -33,18 +32,18 @@ const adminActiveUsers: RouteHandler<UsersRoutes["adminActiveUsers"]> = async (c
   const endDate = new Date(query.endDate);
 
   const eff = withLoggedCause(
-    withUserStatsDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserStatsServiceTag;
       return yield* service.getActiveUsersSeries({
         groupBy: query.groupBy,
         startDate,
         endDate,
       });
-    })),
+    }),
     routeContext(users.adminActiveUsers),
   );
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
@@ -82,17 +81,17 @@ const adminActiveUsers: RouteHandler<UsersRoutes["adminActiveUsers"]> = async (c
 const adminTopRenters: RouteHandler<UsersRoutes["adminTopRenters"]> = async (c) => {
   const query = c.req.valid("query");
   const eff = withLoggedCause(
-    withUserStatsDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserStatsServiceTag;
       return yield* service.getTopRenters({
         page: query.page ?? 1,
         pageSize: query.pageSize ?? 50,
       });
-    })),
+    }),
     routeContext(users.adminTopRenters),
   );
 
-  const data = await Effect.runPromise(eff);
+  const data = await c.var.runPromise(eff);
   return c.json<UsersContracts.TopRentersResponse, 200>(
     {
       data: data.items,
@@ -109,27 +108,27 @@ const adminTopRenters: RouteHandler<UsersRoutes["adminTopRenters"]> = async (c) 
 
 const adminNewUsers: RouteHandler<UsersRoutes["adminNewUsers"]> = async (c) => {
   const eff = withLoggedCause(
-    withUserStatsDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserStatsServiceTag;
       return yield* service.getNewUsersStats(new Date());
-    })),
+    }),
     routeContext(users.adminNewUsers),
   );
 
-  const data = await Effect.runPromise(eff);
+  const data = await c.var.runPromise(eff);
   return c.json<UsersContracts.NewUsersStatsResponse, 200>({ data }, 200);
 };
 
 const adminDashboardStats: RouteHandler<UsersRoutes["adminDashboardStats"]> = async (c) => {
   const eff = withLoggedCause(
-    withUserStatsDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserStatsServiceTag;
       return yield* service.getDashboardStats(new Date());
-    })),
+    }),
     routeContext(users.adminDashboardStats),
   );
 
-  const data = await Effect.runPromise(eff);
+  const data = await c.var.runPromise(eff);
   return c.json<UsersContracts.DashboardStatsResponse, 200>({ data }, 200);
 };
 

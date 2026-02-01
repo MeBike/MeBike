@@ -6,10 +6,7 @@ import {
   getStationDetailsUseCase,
   listNearestStationsUseCase,
   listStationsUseCase,
-  StationRepositoryLive,
-  StationServiceLive,
 } from "@/domain/stations";
-import { PrismaLive } from "@/infrastructure/prisma";
 
 export function registerStationRoutes(
   app: import("@hono/zod-openapi").OpenAPIHono,
@@ -31,15 +28,11 @@ export function registerStationRoutes(
           sortBy: query.sortBy ?? "name",
           sortDir: query.sortDir ?? "asc",
         },
-      }).pipe(
-        Effect.provide(StationServiceLive),
-        Effect.provide(StationRepositoryLive),
-        Effect.provide(PrismaLive),
-      ),
+      }),
       "GET /v1/stations",
     );
 
-    return Effect.runPromise(
+    return c.var.runPromise(
       eff.pipe(
         Effect.matchEffect({
           onSuccess: value =>
@@ -97,15 +90,9 @@ export function registerStationRoutes(
       maxDistanceMeters: query.maxDistance,
       page: query.page ?? 1,
       pageSize: query.pageSize ?? 50,
-    })
-      .pipe(
-        Effect.provide(StationServiceLive),
-        Effect.provide(StationRepositoryLive),
-        Effect.provide(PrismaLive),
-      )
-      .pipe(effect => withLoggedCause(effect, "GET /v1/stations/nearby"));
+    }).pipe(effect => withLoggedCause(effect, "GET /v1/stations/nearby"));
 
-    return Effect.runPromise(
+    return c.var.runPromise(
       eff.pipe(
         Effect.matchEffect({
           onSuccess: value =>
@@ -144,13 +131,9 @@ export function registerStationRoutes(
 
   app.openapi(stations.getStation, async (c) => {
     const { stationId } = c.req.valid("param");
-    const eff = getStationDetailsUseCase(stationId).pipe(
-      Effect.provide(StationServiceLive),
-      Effect.provide(StationRepositoryLive),
-      Effect.provide(PrismaLive),
-    );
+    const eff = getStationDetailsUseCase(stationId);
 
-    return Effect.runPromise(
+    return c.var.runPromise(
       eff.pipe(
         Effect.matchEffect({
           onSuccess: value =>

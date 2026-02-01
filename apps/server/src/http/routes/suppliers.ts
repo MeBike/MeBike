@@ -11,7 +11,6 @@ import {
   updateSupplierStatusUseCase,
   updateSupplierUseCase,
 } from "@/domain/suppliers";
-import { withSupplierDeps } from "@/http/shared/providers";
 import { Prisma as PrismaTypes } from "generated/prisma/client";
 
 type SupplierSummary = SuppliersContracts.SupplierSummary;
@@ -50,7 +49,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
       },
     });
 
-    const result = await Effect.runPromise(withSupplierDeps(eff));
+    const result = await c.var.runPromise(eff);
 
     return c.json<SuppliersContracts.SupplierListResponse, 200>(
       {
@@ -71,9 +70,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
 
     const eff = getSupplierDetailsUseCase(supplierId);
 
-    const result = await Effect.runPromise(
-      withSupplierDeps(eff).pipe(Effect.either),
-    );
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -113,9 +110,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
       status: body.status,
     });
 
-    const result = await Effect.runPromise(
-      withSupplierDeps(eff).pipe(Effect.either),
-    );
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -156,9 +151,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
       status: body.status,
     });
 
-    const result = await Effect.runPromise(
-      withSupplierDeps(eff).pipe(Effect.either),
-    );
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -201,9 +194,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
 
     const eff = updateSupplierStatusUseCase(supplierId, body.status);
 
-    const result = await Effect.runPromise(
-      withSupplierDeps(eff).pipe(Effect.either),
-    );
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -245,9 +236,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
 
     const eff = deleteSupplierUseCase(supplierId);
 
-    const result = await Effect.runPromise(
-      withSupplierDeps(eff).pipe(Effect.either),
-    );
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -275,7 +264,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
 
   app.openapi(suppliers.getAllSupplierStats, async (c) => {
     const eff = getAllSupplierStatsUseCase();
-    const rows = await Effect.runPromise(withSupplierDeps(eff));
+    const rows = await c.var.runPromise(eff);
     return c.json<{ data: SupplierStats[] }, 200>(
       { data: Array.from(rows) },
       200,
@@ -287,9 +276,7 @@ export function registerSupplierRoutes(app: import("@hono/zod-openapi").OpenAPIH
 
     const eff = getSupplierStatsUseCase(supplierId);
 
-    const result = await Effect.runPromise(
-      withSupplierDeps(eff).pipe(Effect.either),
-    );
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>

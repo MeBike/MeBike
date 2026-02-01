@@ -17,7 +17,6 @@ import {
 import { listSubscriptionPackages } from "@/domain/subscriptions/package-config";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { UserServiceTag } from "@/domain/users";
-import { withSubscriptionDeps } from "@/http/shared/providers";
 
 class AuthenticatedUserMissing extends Data.TaggedError("AuthenticatedUserMissing")<Record<string, never>> {}
 
@@ -64,13 +63,11 @@ export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").Open
     const { subscriptionId } = c.req.valid("param");
 
     const eff = withLoggedCause(
-      withSubscriptionDeps(
-        Effect.flatMap(SubscriptionServiceTag, service => service.findById(subscriptionId)),
-      ),
+      Effect.flatMap(SubscriptionServiceTag, service => service.findById(subscriptionId)),
       "GET /v1/subscriptions/{subscriptionId}",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) => {
@@ -107,14 +104,12 @@ export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").Open
     const pageSize = query.pageSize ?? 50;
 
     const eff = withLoggedCause(
-      withSubscriptionDeps(
-        Effect.flatMap(SubscriptionServiceTag, service =>
-          service.listForUser(userId, { status: query.status }, { page, pageSize })),
-      ),
+      Effect.flatMap(SubscriptionServiceTag, service =>
+        service.listForUser(userId, { status: query.status }, { page, pageSize })),
       "GET /v1/subscriptions",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -146,7 +141,7 @@ export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").Open
     const body = c.req.valid("json");
 
     const eff = withLoggedCause(
-      withSubscriptionDeps(Effect.gen(function* () {
+      Effect.gen(function* () {
         const service = yield* UserServiceTag;
         const userOpt = yield* service.getById(userId);
         if (Option.isNone(userOpt)) {
@@ -159,11 +154,11 @@ export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").Open
           email: user.email,
           fullName: user.fullname,
         });
-      })),
+      }),
       "POST /v1/subscriptions/subscribe",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -213,11 +208,11 @@ export function registerSubscriptionRoutes(app: import("@hono/zod-openapi").Open
     const { subscriptionId } = c.req.valid("param");
 
     const eff = withLoggedCause(
-      withSubscriptionDeps(activateSubscriptionUseCase({ subscriptionId })),
+      activateSubscriptionUseCase({ subscriptionId }),
       "POST /v1/subscriptions/{subscriptionId}/activate",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>

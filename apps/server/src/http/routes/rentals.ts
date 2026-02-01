@@ -17,7 +17,6 @@ import {
   toContractRentalWithPrice,
 } from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";
-import { withRentalDeps } from "@/http/shared/providers";
 
 const {
   RentalErrorCodeSchema,
@@ -32,17 +31,17 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const body = c.req.valid("json");
 
     const eff = withLoggedCause(
-      withRentalDeps(startRentalUseCase({
+      startRentalUseCase({
         userId,
         bikeId: body.bikeId,
         startStationId: body.startStationId,
         startTime: new Date(),
         subscriptionId: body.subscriptionId,
-      })),
+      }),
       "POST /v1/rentals",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -165,25 +164,23 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const userId = c.var.currentUser!.userId;
     const query = c.req.valid("query");
     const eff = withLoggedCause(
-      withRentalDeps(
-        Effect.gen(function* () {
-          const service = yield* RentalServiceTag;
-          return yield* service.listMyRentals(userId, {
-            status: query.status,
-            startStationId: query.startStation,
-            endStationId: query.endStation,
-          }, {
-            page: Number(query.page ?? 1),
-            pageSize: Number(query.pageSize ?? 50),
-            sortBy: "startTime",
-            sortDir: "desc",
-          });
-        }),
-      ),
+      Effect.gen(function* () {
+        const service = yield* RentalServiceTag;
+        return yield* service.listMyRentals(userId, {
+          status: query.status,
+          startStationId: query.startStation,
+          endStationId: query.endStation,
+        }, {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: "startTime",
+          sortDir: "desc",
+        });
+      }),
       "GET /v1/rentals/me",
     );
 
-    const value = await Effect.runPromise(eff);
+    const value = await c.var.runPromise(eff);
     const response: RentalsContracts.MyRentalListResponse = {
       data: value.items.map(toContractRental),
       pagination: toContractPage(value),
@@ -195,21 +192,19 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const userId = c.var.currentUser!.userId;
     const query = c.req.valid("query");
     const eff = withLoggedCause(
-      withRentalDeps(
-        Effect.gen(function* () {
-          const service = yield* RentalServiceTag;
-          return yield* service.listMyCurrentRentals(userId, {
-            page: Number(query.page ?? 1),
-            pageSize: Number(query.pageSize ?? 50),
-            sortBy: "startTime",
-            sortDir: "desc",
-          });
-        }),
-      ),
+      Effect.gen(function* () {
+        const service = yield* RentalServiceTag;
+        return yield* service.listMyCurrentRentals(userId, {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: "startTime",
+          sortDir: "desc",
+        });
+      }),
       "GET /v1/rentals/me/current",
     );
 
-    const value = await Effect.runPromise(eff);
+    const value = await c.var.runPromise(eff);
     const response: RentalsContracts.MyRentalListResponse = {
       data: value.items.map(toContractRental),
       pagination: toContractPage(value),
@@ -222,16 +217,14 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const { rentalId } = c.req.valid("param");
 
     const eff = withLoggedCause(
-      withRentalDeps(
-        Effect.gen(function* () {
-          const service = yield* RentalServiceTag;
-          return yield* service.getMyRentalById(userId, rentalId);
-        }),
-      ),
+      Effect.gen(function* () {
+        const service = yield* RentalServiceTag;
+        return yield* service.getMyRentalById(userId, rentalId);
+      }),
       "GET /v1/rentals/me/{rentalId}",
     );
 
-    const result = await Effect.runPromise(eff);
+    const result = await c.var.runPromise(eff);
     if (Option.isSome(result)) {
       return c.json(
         {
@@ -257,16 +250,14 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   app.openapi(rentals.getMyRentalCounts, async (c) => {
     const userId = c.var.currentUser!.userId;
     const eff = withLoggedCause(
-      withRentalDeps(
-        Effect.gen(function* () {
-          const service = yield* RentalServiceTag;
-          return yield* service.getMyRentalCounts(userId);
-        }),
-      ),
+      Effect.gen(function* () {
+        const service = yield* RentalServiceTag;
+        return yield* service.getMyRentalCounts(userId);
+      }),
       "GET /v1/rentals/me/counts",
     );
 
-    const result = await Effect.runPromise(eff);
+    const result = await c.var.runPromise(eff);
     return c.json<RentalsContracts.RentalCountsResponse, 200>(
       { message: "OK", result },
       200,
@@ -279,18 +270,16 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const body = c.req.valid("json");
 
     const eff = withLoggedCause(
-      withRentalDeps(
-        endRentalUseCase({
-          userId,
-          rentalId,
-          endStationId: body.endStation,
-          endTime: new Date(),
-        }),
-      ),
+      endRentalUseCase({
+        userId,
+        rentalId,
+        endStationId: body.endStation,
+        endTime: new Date(),
+      }),
       "PUT /v1/rentals/me/{rentalId}/end",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -387,27 +376,25 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
       const query = c.req.valid("query");
 
       const eff = withLoggedCause(
-        withRentalDeps(
-          adminListRentalsUseCase({
-            filter: {
-              userId: query.userId,
-              bikeId: query.bikeId,
-              startStationId: query.startStation,
-              endStationId: query.endStation,
-              status: query.status,
-            },
-            pageReq: {
-              page: Number(query.page ?? 1),
-              pageSize: Number(query.pageSize ?? 50),
-              sortBy: query.sortBy ?? "startTime",
-              sortDir: query.sortDir ?? "desc",
-            },
-          }),
-        ),
+        adminListRentalsUseCase({
+          filter: {
+            userId: query.userId,
+            bikeId: query.bikeId,
+            startStationId: query.startStation,
+            endStationId: query.endStation,
+            status: query.status,
+          },
+          pageReq: {
+            page: Number(query.page ?? 1),
+            pageSize: Number(query.pageSize ?? 50),
+            sortBy: query.sortBy ?? "startTime",
+            sortDir: query.sortDir ?? "desc",
+          },
+        }),
         "GET /v1/admin/rentals",
       );
 
-      const value = await Effect.runPromise(eff);
+      const value = await c.var.runPromise(eff);
       const response: RentalsContracts.AdminRentalsListResponse = {
         data: value.items.map(toContractAdminRentalListItem),
         pagination: toContractPage(value),
@@ -422,11 +409,11 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
       const { rentalId } = c.req.valid("param");
 
       const eff = withLoggedCause(
-        withRentalDeps(adminGetRentalDetailUseCase(rentalId)),
+        adminGetRentalDetailUseCase(rentalId),
         "GET /v1/admin/rentals/{rentalId}",
       );
 
-      const result = await Effect.runPromise(eff.pipe(Effect.either));
+      const result = await c.var.runPromise(eff.pipe(Effect.either));
 
       return Match.value(result).pipe(
         Match.tag("Right", ({ right }) => {

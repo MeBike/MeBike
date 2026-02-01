@@ -10,7 +10,6 @@ import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
 import { UserServiceTag } from "@/domain/users";
-import { withUserDeps } from "@/http/shared/providers";
 import { routeContext } from "@/http/shared/route-context";
 
 import { mapUserDetail, pickDefined } from "./shared";
@@ -31,13 +30,13 @@ const me: RouteHandler<UsersRoutes["me"]> = async (c) => {
   }
 
   const eff = withLoggedCause(
-    withUserDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserServiceTag;
       return yield* service.getById(userId);
-    })),
+    }),
     routeContext(users.me),
   );
-  const result = await Effect.runPromise(eff);
+  const result = await c.var.runPromise(eff);
 
   if (result._tag === "Some") {
     return c.json<UsersContracts.MeResponse, 200>({ data: mapUserDetail(result.value) }, 200);
@@ -66,14 +65,14 @@ const updateMe: RouteHandler<UsersRoutes["updateMe"]> = async (c) => {
 
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withUserDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* UserServiceTag;
       return yield* service.updateProfile(userId, pickDefined(body));
-    })),
+    }),
     routeContext(users.updateMe),
   );
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
@@ -108,14 +107,9 @@ const updateMe: RouteHandler<UsersRoutes["updateMe"]> = async (c) => {
             },
             409,
           )),
-        Match.orElse(() =>
-          c.json<UsersContracts.UserErrorResponse, 404>(
-            {
-              error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
-              details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
-            },
-            404,
-          )),
+        Match.orElse((err) => {
+          throw err;
+        }),
       )),
     Match.exhaustive,
   );

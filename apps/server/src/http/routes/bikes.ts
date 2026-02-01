@@ -19,7 +19,6 @@ import {
   toBikeSummary,
   toHighestRevenueBike,
 } from "@/http/presenters/bikes.presenter";
-import { withBikeDeps } from "@/http/shared/providers";
 
 type BikeSummary = BikesContracts.BikeSummary;
 type BikeNotFoundResponse = BikesContracts.BikeNotFoundResponse;
@@ -57,18 +56,16 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const body = c.req.valid("json");
 
     const eff = withLoggedCause(
-      withBikeDeps(
-        createBikeUseCase({
-          chipId: body.chipId,
-          stationId: body.stationId,
-          supplierId: body.supplierId,
-          status: body.status,
-        }),
-      ),
+      createBikeUseCase({
+        chipId: body.chipId,
+        stationId: body.stationId,
+        supplierId: body.supplierId,
+        status: body.status,
+      }),
       "POST /v1/bikes",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
         c.json<BikeSummary, 201>(toBikeSummary(right), 201)),
@@ -90,26 +87,24 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const query = c.req.valid("query");
 
     const eff = withLoggedCause(
-      withBikeDeps(
-        listBikesUseCase({
-          filter: {
-            id: query.id,
-            stationId: query.stationId,
-            supplierId: query.supplierId,
-            status: query.status,
-          },
-          pageReq: {
-            page: query.page ?? 1,
-            pageSize: query.pageSize ?? 50,
-            sortBy: (query.sortBy) ?? "status",
-            sortDir: query.sortDir ?? "asc",
-          },
-        }),
-      ),
+      listBikesUseCase({
+        filter: {
+          id: query.id,
+          stationId: query.stationId,
+          supplierId: query.supplierId,
+          status: query.status,
+        },
+        pageReq: {
+          page: query.page ?? 1,
+          pageSize: query.pageSize ?? 50,
+          sortBy: (query.sortBy) ?? "status",
+          sortDir: query.sortDir ?? "asc",
+        },
+      }),
       "GET /v1/bikes",
     );
 
-    const value = await Effect.runPromise(eff);
+    const value = await c.var.runPromise(eff);
     return c.json<BikeListResponse, 200>(
       {
         data: value.items.map(toBikeSummary),
@@ -127,9 +122,9 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   app.openapi(bikes.getBike, async (c) => {
     const { id } = c.req.valid("param");
 
-    const eff = withBikeDeps(getBikeDetailUseCase(id));
+    const eff = getBikeDetailUseCase(id);
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
         right._tag === "Some"
@@ -151,16 +146,14 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const { id } = c.req.valid("param");
     const body = c.req.valid("json");
 
-    const eff = withBikeDeps(
-      adminUpdateBikeUseCase(id, {
-        ...(body.chipId ? { chipId: body.chipId } : {}),
-        ...(body.stationId ? { stationId: body.stationId } : {}),
-        ...(body.status ? { status: body.status } : {}),
-        ...(body.supplierId !== undefined ? { supplierId: body.supplierId } : {}),
-      }),
-    );
+    const eff = adminUpdateBikeUseCase(id, {
+      ...(body.chipId ? { chipId: body.chipId } : {}),
+      ...(body.stationId ? { stationId: body.stationId } : {}),
+      ...(body.status ? { status: body.status } : {}),
+      ...(body.supplierId !== undefined ? { supplierId: body.supplierId } : {}),
+    });
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
         right._tag === "Some"
@@ -198,9 +191,9 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   app.openapi(bikes.reportBrokenBike, async (c) => {
     const { id } = c.req.valid("param");
 
-    const eff = withBikeDeps(reportBrokenBikeUseCase(id));
+    const eff = reportBrokenBikeUseCase(id);
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
         right._tag === "Some"
@@ -219,9 +212,9 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
   app.openapi(bikes.deleteBike, async (c) => {
     const { id } = c.req.valid("param");
 
-    const eff = withBikeDeps(softDeleteBikeUseCase(id));
+    const eff = softDeleteBikeUseCase(id);
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
         right._tag === "Some"
@@ -258,14 +251,14 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   app.openapi(bikes.getBikeStats, async (c) => {
     const eff = withLoggedCause(
-      withBikeDeps(Effect.gen(function* () {
+      Effect.gen(function* () {
         const svc = yield* BikeStatsServiceTag;
         return yield* svc.getRentalStats();
-      })),
+      }),
       "GET /v1/bikes/stats/summary",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
         c.json<BikeRentalStatsResponse, 200>({ data: toBikeRentalStats(right) }, 200)),
@@ -278,14 +271,14 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   app.openapi(bikes.getHighestRevenueBike, async (c) => {
     const eff = withLoggedCause(
-      withBikeDeps(Effect.gen(function* () {
+      Effect.gen(function* () {
         const svc = yield* BikeStatsServiceTag;
         return yield* svc.getHighestRevenueBike();
-      })),
+      }),
       "GET /v1/bikes/stats/highest-revenue",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
         c.json<HighestRevenueBikeResponse, 200>({
@@ -302,14 +295,14 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const { id } = c.req.valid("param");
 
     const eff = withLoggedCause(
-      withBikeDeps(Effect.gen(function* () {
+      Effect.gen(function* () {
         const svc = yield* BikeStatsServiceTag;
         return yield* svc.getBikeActivityStats({ bikeId: id });
-      })),
+      }),
       "GET /v1/bikes/{id}/activity-stats",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
         c.json<BikeActivityStatsResponse, 200>({
@@ -334,7 +327,7 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
     const query = c.req.valid("query");
 
     const eff = withLoggedCause(
-      withBikeDeps(Effect.gen(function* () {
+      Effect.gen(function* () {
         const svc = yield* BikeStatsServiceTag;
         return yield* svc.getBikeRentalHistory(id, {
           page: query.page ?? 1,
@@ -342,11 +335,11 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
           sortBy: query.sortBy ?? "endTime",
           sortDir: query.sortDir ?? "desc",
         });
-      })),
+      }),
       "GET /v1/bikes/{id}/rental-history",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
         c.json<BikeRentalHistoryResponse, 200>({

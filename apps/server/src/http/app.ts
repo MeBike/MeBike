@@ -4,6 +4,8 @@ import { Scalar } from "@scalar/hono-api-reference";
 import { cors } from "hono/cors";
 import { logger as honoLogger } from "hono/logger";
 
+import type { RunPromise } from "@/http/shared/runtime";
+
 import { env } from "@/config/env";
 import {
   currentUserMiddleware,
@@ -27,7 +29,7 @@ import { registerSupplierRoutes } from "./routes/suppliers";
 import { registerUserRoutes } from "./routes/users";
 import { registerWalletRoutes } from "./routes/wallets";
 
-export function createHttpApp() {
+export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   const app = new OpenAPIHono({
     defaultHook: (result, c) => {
       if (result.success) {
@@ -61,6 +63,10 @@ export function createHttpApp() {
   });
   app.use("*", cors());
   app.use("*", honoLogger(message => logger.info(message)));
+  app.use("*", async (c, next) => {
+    c.set("runPromise", runPromise);
+    await next();
+  });
   app.use("*", currentUserMiddleware);
   app.use("/v1/rentals/*", requireAuthMiddleware);
   app.use("/v1/users/*", requireAuthMiddleware);

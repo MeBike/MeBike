@@ -10,7 +10,6 @@ import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
 import { startStripeConnectOnboardingUseCase } from "@/domain/wallets/withdrawals";
-import { withWithdrawalDeps } from "@/http/shared/providers";
 
 export function registerStripeConnectRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const stripeRoutes = serverRoutes.stripe;
@@ -28,17 +27,15 @@ export function registerStripeConnectRoutes(app: import("@hono/zod-openapi").Ope
     const body = c.req.valid("json");
 
     const eff = withLoggedCause(
-      withWithdrawalDeps(
-        startStripeConnectOnboardingUseCase({
-          userId,
-          returnUrl: body.returnUrl,
-          refreshUrl: body.refreshUrl,
-        }),
-      ),
+      startStripeConnectOnboardingUseCase({
+        userId,
+        returnUrl: body.returnUrl,
+        refreshUrl: body.refreshUrl,
+      }),
       "POST /v1/stripe/connect/onboarding/start",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>

@@ -11,15 +11,14 @@ import { Effect, Match } from "effect";
 import { AuthServiceTag } from "@/domain/auth";
 import { registerUseCase } from "@/domain/auth/services/register.service";
 import { withLoggedCause } from "@/domain/shared";
-import { withAuthDeps } from "@/http/shared/providers";
 
 type AuthRoutes = typeof import("@mebike/shared")["serverRoutes"]["auth"];
 
 const register: RouteHandler<AuthRoutes["register"]> = async (c) => {
   const body = c.req.valid("json");
-  const eff = withLoggedCause(withAuthDeps(registerUseCase(body)), "POST /v1/auth/register");
+  const eff = withLoggedCause(registerUseCase(body), "POST /v1/auth/register");
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
     return c.json<{ data: AuthContracts.Tokens }, 201>({ data: result.right }, 201);
@@ -45,14 +44,14 @@ const register: RouteHandler<AuthRoutes["register"]> = async (c) => {
 const login: RouteHandler<AuthRoutes["login"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withAuthDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* AuthServiceTag;
       return yield* service.loginWithPassword(body);
-    })),
+    }),
     "POST /v1/auth/login",
   );
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
     return c.json<{ data: AuthContracts.Tokens }, 200>({ data: result.right }, 200);
@@ -75,14 +74,14 @@ const login: RouteHandler<AuthRoutes["login"]> = async (c) => {
 const refresh: RouteHandler<AuthRoutes["refresh"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withAuthDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* AuthServiceTag;
       return yield* service.refreshTokens(body);
-    })),
+    }),
     "POST /v1/auth/refresh",
   );
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
     return c.json<{ data: AuthContracts.Tokens }, 200>({ data: result.right }, 200);
@@ -105,14 +104,14 @@ const refresh: RouteHandler<AuthRoutes["refresh"]> = async (c) => {
 const logout: RouteHandler<AuthRoutes["logout"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withAuthDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* AuthServiceTag;
       return yield* service.logout({ refreshToken: body.refreshToken });
-    })),
+    }),
     "POST /v1/auth/logout",
   );
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   return Match.value(result).pipe(
     Match.tag("Right", () => c.json<undefined, 200>(undefined, 200)),
@@ -140,53 +139,53 @@ const logoutAll: RouteHandler<AuthRoutes["logoutAll"]> = async (c) => {
   }
 
   const eff = withLoggedCause(
-    withAuthDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* AuthServiceTag;
       return yield* service.logoutAll({ userId });
-    })),
+    }),
     "POST /v1/auth/logout-all",
   ).pipe(Effect.orDie);
-  await Effect.runPromise(eff);
+  await c.var.runPromise(eff);
   return c.json<undefined, 200>(undefined, 200);
 };
 
 const sendVerifyEmail: RouteHandler<AuthRoutes["sendVerifyEmail"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withAuthDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* AuthServiceTag;
       return yield* service.sendVerifyEmail(body);
-    })),
+    }),
     "POST /v1/auth/verify-email/send",
   ).pipe(Effect.orDie);
-  await Effect.runPromise(eff);
+  await c.var.runPromise(eff);
   return c.json<undefined, 200>(undefined, 200);
 };
 
 const resendVerifyEmail: RouteHandler<AuthRoutes["resendVerifyEmail"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withAuthDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* AuthServiceTag;
       return yield* service.sendVerifyEmail(body);
-    })),
+    }),
     "POST /v1/auth/verify-email/resend",
   ).pipe(Effect.orDie);
-  await Effect.runPromise(eff);
+  await c.var.runPromise(eff);
   return c.json<undefined, 200>(undefined, 200);
 };
 
 const verifyEmailOtp: RouteHandler<AuthRoutes["verifyEmailOtp"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withAuthDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* AuthServiceTag;
       return yield* service.verifyEmailOtp(body);
-    })),
+    }),
     "POST /v1/auth/verify-email/otp",
   );
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
     return c.json<undefined, 200>(undefined, 200);
@@ -201,27 +200,27 @@ const verifyEmailOtp: RouteHandler<AuthRoutes["verifyEmailOtp"]> = async (c) => 
 const sendResetPassword: RouteHandler<AuthRoutes["sendResetPassword"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withAuthDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* AuthServiceTag;
       return yield* service.sendResetPassword(body);
-    })),
+    }),
     "POST /v1/auth/password/reset/send",
   ).pipe(Effect.orDie);
-  await Effect.runPromise(eff);
+  await c.var.runPromise(eff);
   return c.json<undefined, 200>(undefined, 200);
 };
 
 const resetPassword: RouteHandler<AuthRoutes["resetPassword"]> = async (c) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
-    withAuthDeps(Effect.gen(function* () {
+    Effect.gen(function* () {
       const service = yield* AuthServiceTag;
       return yield* service.resetPassword(body);
-    })),
+    }),
     "POST /v1/auth/password/reset/confirm",
   );
 
-  const result = await Effect.runPromise(eff.pipe(Effect.either));
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
     return c.json<undefined, 200>(undefined, 200);

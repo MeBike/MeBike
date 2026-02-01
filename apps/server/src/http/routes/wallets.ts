@@ -11,7 +11,6 @@ import {
   listWalletTransactionsForUserUseCase,
   requestWithdrawalUseCase,
 } from "@/domain/wallets";
-import { withStripeTopupDeps, withWalletDeps, withWithdrawalDeps } from "@/http/shared/providers";
 
 export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const wallets = serverRoutes.wallets;
@@ -67,11 +66,11 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     }
 
     const eff = withLoggedCause(
-      withWalletDeps(getRequiredWalletByUserIdUseCase(userId)),
+      getRequiredWalletByUserIdUseCase(userId),
       "GET /v1/wallets/me",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -106,16 +105,14 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const pageSize = query.pageSize ?? 50;
 
     const eff = withLoggedCause(
-      withWalletDeps(
-        listWalletTransactionsForUserUseCase({
-          userId,
-          pageReq: { page, pageSize },
-        }),
-      ),
+      listWalletTransactionsForUserUseCase({
+        userId,
+        pageReq: { page, pageSize },
+      }),
       "GET /v1/wallets/me/transactions",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -158,18 +155,18 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const fee = body.fee !== undefined ? toMinorUnit(body.fee) : undefined;
 
     const eff = withLoggedCause(
-      withWalletDeps(creditWalletUseCase({
+      creditWalletUseCase({
         userId,
         amount,
         fee,
         description: body.description ?? null,
         hash: body.hash ?? null,
         type: body.type,
-      })),
+      }),
       "POST /v1/wallets/me/credit",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -205,17 +202,17 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const amount = toMinorUnit(body.amount);
 
     const eff = withLoggedCause(
-      withWalletDeps(debitWalletUseCase({
+      debitWalletUseCase({
         userId,
         amount,
         description: body.description ?? null,
         hash: body.hash ?? null,
         type: body.type,
-      })),
+      }),
       "POST /v1/wallets/me/debit",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -283,16 +280,16 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     }
 
     const eff = withLoggedCause(
-      withStripeTopupDeps(createStripeCheckoutSessionUseCase({
+      createStripeCheckoutSessionUseCase({
         userId,
         amountMinor: Number(amountMinor),
         successUrl: body.successUrl,
         cancelUrl: body.cancelUrl,
-      })),
+      }),
       "POST /v1/wallets/me/topups/stripe/checkout",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -361,20 +358,18 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     }
 
     const eff = withLoggedCause(
-      withWithdrawalDeps(
-        requestWithdrawalUseCase({
-          userId,
-          amount,
-          currency: body.currency,
-          idempotencyKey: body.idempotencyKey && body.idempotencyKey.trim()
-            ? body.idempotencyKey.trim()
-            : undefined,
-        }),
-      ),
+      requestWithdrawalUseCase({
+        userId,
+        amount,
+        currency: body.currency,
+        idempotencyKey: body.idempotencyKey && body.idempotencyKey.trim()
+          ? body.idempotencyKey.trim()
+          : undefined,
+      }),
       "POST /v1/wallets/me/withdrawals",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>

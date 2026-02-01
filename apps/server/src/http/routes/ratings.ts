@@ -6,7 +6,6 @@ import {
   getRatingByRentalIdUseCase,
 } from "@/domain/ratings";
 import { withLoggedCause } from "@/domain/shared";
-import { withRatingDeps } from "@/http/shared/providers";
 
 export function registerRatingRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const ratings = serverRoutes.ratings;
@@ -25,17 +24,17 @@ export function registerRatingRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const body = c.req.valid("json");
 
     const eff = withLoggedCause(
-      withRatingDeps(createRatingWithGuardsUseCase({
+      createRatingWithGuardsUseCase({
         rentalId,
         userId,
         rating: body.rating,
         reasonIds: body.reasonIds,
         comment: body.comment ?? null,
-      })),
+      }),
       "POST /v1/ratings/{rentalId}",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -93,11 +92,11 @@ export function registerRatingRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     const { rentalId } = c.req.valid("param");
 
     const eff = withLoggedCause(
-      withRatingDeps(getRatingByRentalIdUseCase(rentalId)),
+      getRatingByRentalIdUseCase(rentalId),
       "GET /v1/ratings/{rentalId}",
     );
 
-    const result = await Effect.runPromise(eff);
+    const result = await c.var.runPromise(eff);
 
     if (result._tag === "None") {
       return c.json<RatingsContracts.RatingErrorResponse, 404>({

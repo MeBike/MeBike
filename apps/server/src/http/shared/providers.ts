@@ -27,6 +27,7 @@ import {
 } from "@/domain/reservations";
 import {
   StationRepositoryLive,
+  StationServiceLive,
 } from "@/domain/stations";
 import {
   SubscriptionRepositoryLive,
@@ -68,6 +69,16 @@ const BikeReposLive = BikeRepositoryLive.pipe(
 
 const StationReposLive = StationRepositoryLive.pipe(
   Layer.provide(PrismaLive),
+);
+
+const StationServiceLayer = StationServiceLive.pipe(
+  Layer.provide(StationReposLive),
+);
+
+export const StationDepsLive = Layer.mergeAll(
+  StationReposLive,
+  StationServiceLayer,
+  PrismaLive,
 );
 
 const BikeServiceLayer = BikeServiceLive.pipe(
@@ -362,3 +373,25 @@ export const ReservationDepsLive = Layer.mergeAll(
 export function withReservationDeps<R, E, A>(eff: Effect.Effect<A, E, R>) {
   return eff.pipe(Effect.provide(ReservationDepsLive));
 }
+
+export const HttpDepsLive = Layer.mergeAll(
+  AuthDepsLive,
+  BikeDepsLive,
+  RatingDepsLive,
+  RentalDepsLive,
+  ReservationDepsLive,
+  StripeTopupDepsLive,
+  StripeWebhookDepsLive,
+  SubscriptionDepsLive,
+  StationDepsLive,
+  SupplierDepsLive,
+  UserDepsLive,
+  UserStatsDepsLive,
+  WalletDepsLive,
+  WithdrawalDepsLive,
+).pipe(
+  Layer.provide(PrismaLive),
+  Layer.provide(RedisLive),
+  Layer.provide(EmailLive),
+  Layer.provide(StripeLive),
+);

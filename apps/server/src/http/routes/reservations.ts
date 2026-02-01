@@ -12,7 +12,6 @@ import {
   reserveBikeUseCase,
 } from "@/domain/reservations";
 import { withLoggedCause } from "@/domain/shared";
-import { withReservationDeps } from "@/http/shared/providers";
 
 const {
   ReservationErrorCodeSchema,
@@ -50,7 +49,7 @@ export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenA
     const startTime = body.startTime ? new Date(body.startTime) : now;
 
     const eff = withLoggedCause(
-      withReservationDeps(reserveBikeUseCase({
+      reserveBikeUseCase({
         userId,
         bikeId: body.bikeId,
         stationId: body.stationId,
@@ -59,11 +58,11 @@ export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenA
         startTime,
         endTime: null,
         now,
-      })),
+      }),
       "POST /v1/reservations",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -189,15 +188,15 @@ export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenA
     const now = new Date();
 
     const eff = withLoggedCause(
-      withReservationDeps(confirmReservationUseCase({
+      confirmReservationUseCase({
         reservationId,
         userId,
         now,
-      })),
+      }),
       "POST /v1/reservations/{reservationId}/confirm",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -280,15 +279,15 @@ export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenA
     const now = new Date();
 
     const eff = withLoggedCause(
-      withReservationDeps(cancelReservationUseCase({
+      cancelReservationUseCase({
         reservationId,
         userId,
         now,
-      })),
+      }),
       "POST /v1/reservations/{reservationId}/cancel",
     );
 
-    const result = await Effect.runPromise(eff.pipe(Effect.either));
+    const result = await c.var.runPromise(eff.pipe(Effect.either));
 
     return Match.value(result).pipe(
       Match.tag("Right", ({ right }) =>
@@ -354,25 +353,23 @@ export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenA
     const query = c.req.valid("query");
 
     const eff = withLoggedCause(
-      withReservationDeps(
-        Effect.gen(function* () {
-          const service = yield* ReservationServiceTag;
-          return yield* service.listForUser(userId, {
-            status: query.status,
-            stationId: query.stationId,
-            reservationOption: query.reservationOption,
-          }, {
-            page: Number(query.page ?? 1),
-            pageSize: Number(query.pageSize ?? 50),
-            sortBy: "startTime",
-            sortDir: "desc",
-          });
-        }),
-      ),
+      Effect.gen(function* () {
+        const service = yield* ReservationServiceTag;
+        return yield* service.listForUser(userId, {
+          status: query.status,
+          stationId: query.stationId,
+          reservationOption: query.reservationOption,
+        }, {
+          page: Number(query.page ?? 1),
+          pageSize: Number(query.pageSize ?? 50),
+          sortBy: "startTime",
+          sortDir: "desc",
+        });
+      }),
       "GET /v1/reservations/me",
     );
 
-    const value = await Effect.runPromise(eff);
+    const value = await c.var.runPromise(eff);
 
     return c.json<ReservationsContracts.ListMyReservationsResponse, 200>({
       data: value.items.map(toContractReservation),
@@ -390,16 +387,14 @@ export function registerReservationRoutes(app: import("@hono/zod-openapi").OpenA
     const { reservationId } = c.req.valid("param");
 
     const eff = withLoggedCause(
-      withReservationDeps(
-        Effect.gen(function* () {
-          const service = yield* ReservationServiceTag;
-          return yield* service.getById(reservationId);
-        }),
-      ),
+      Effect.gen(function* () {
+        const service = yield* ReservationServiceTag;
+        return yield* service.getById(reservationId);
+      }),
       "GET /v1/reservations/me/{reservationId}",
     );
 
-    const reservationOpt = await Effect.runPromise(eff);
+    const reservationOpt = await c.var.runPromise(eff);
 
     if (Option.isNone(reservationOpt)) {
       return c.json<ReservationErrorResponse, 400>({
