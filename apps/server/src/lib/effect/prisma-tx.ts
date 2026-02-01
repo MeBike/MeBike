@@ -9,7 +9,7 @@ class TxAbort extends Error {
     super("TxAbort");
   }
 }
-
+// nho nem exception on fail de no con rollback dc thoi la khoi luon
 export function runPrismaTransaction<A, E>(
   client: import("generated/prisma/client").PrismaClient,
   run: (

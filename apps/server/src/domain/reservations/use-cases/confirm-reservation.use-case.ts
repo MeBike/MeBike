@@ -1,6 +1,8 @@
 import { Effect, Option } from "effect";
 
-import { BikeRepository } from "@/domain/bikes";
+import type { BikeRepository } from "@/domain/bikes";
+
+import { makeBikeRepository } from "@/domain/bikes";
 import { RentalRepository } from "@/domain/rentals";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -31,12 +33,12 @@ export function confirmReservationUseCase(
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const reservationService = yield* ReservationServiceTag;
-    const bikeRepo = yield* BikeRepository;
     const rentalRepo = yield* RentalRepository;
     const now = input.now ?? new Date();
 
     const reservation = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
+        const bikeRepo = makeBikeRepository(tx);
         const { reservation, bikeId } = yield* reservationService.confirmPendingInTx(
           tx,
           {
@@ -59,15 +61,11 @@ export function confirmReservationUseCase(
           return yield* Effect.fail(new ReservedRentalNotFound({ reservationId: reservation.id }));
         }
 
-        const bikeBooked = yield* bikeRepo.bookBikeIfReservedInTx(
-          tx,
-          bikeId,
-          now,
-        ).pipe(
+        const bikeBooked = yield* bikeRepo.bookBikeIfReserved(bikeId, now).pipe(
           Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
         );
         if (!bikeBooked) {
-          const bikeOpt = yield* bikeRepo.getByIdInTx(tx, bikeId).pipe(
+          const bikeOpt = yield* bikeRepo.getById(bikeId).pipe(
             Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
           );
           if (Option.isNone(bikeOpt)) {

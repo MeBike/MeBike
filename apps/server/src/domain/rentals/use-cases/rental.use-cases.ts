@@ -3,7 +3,7 @@ import { Effect, Option } from "effect";
 import type { RentalStatus } from "generated/prisma/enums";
 
 import { env } from "@/config/env";
-import { BikeRepository } from "@/domain/bikes";
+import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { ReservationRepository } from "@/domain/reservations/repository/reservation.repository";
 import { toMinorUnit } from "@/domain/shared/money";
 import {
@@ -54,6 +54,7 @@ export function startRentalUseCase(
 
     const rental = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
+        const txBikeRepo = makeBikeRepository(tx);
         const existingByUser = yield* rentalRepo.findActiveByUserIdInTx(tx, userId).pipe(
           Effect.catchTag("RentalRepositoryError", err => Effect.die(err)),
         );
@@ -68,7 +69,7 @@ export function startRentalUseCase(
           return yield* Effect.fail(new BikeAlreadyRented({ bikeId }));
         }
 
-        const bikeOpt = yield* bikeRepo.getByIdInTx(tx, bikeId).pipe(
+        const bikeOpt = yield* txBikeRepo.getById(bikeId).pipe(
           Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
         );
         if (Option.isNone(bikeOpt)) {
@@ -119,11 +120,11 @@ export function startRentalUseCase(
           );
         }
 
-        const booked = yield* bikeRepo.bookBikeIfAvailableInTx(tx, bikeId, startTime).pipe(
+        const booked = yield* txBikeRepo.bookBikeIfAvailable(bikeId, startTime).pipe(
           Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
         );
         if (!booked) {
-          const latestBike = yield* bikeRepo.getByIdInTx(tx, bikeId).pipe(
+          const latestBike = yield* txBikeRepo.getById(bikeId).pipe(
             Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
           );
           if (Option.isNone(latestBike)) {
@@ -248,6 +249,7 @@ export function endRentalUseCase(
 
     const updated = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
+        const txBikeRepo = makeBikeRepository(tx);
         let basePrice = Math.ceil(durationMinutes / 30) * env.PRICE_PER_30_MINS;
         const durationHours = durationMinutes / 60;
         let usageToAdd = 0;
@@ -328,12 +330,7 @@ export function endRentalUseCase(
           );
         }
 
-        const updatedBike = yield* bikeRepo.updateStatusInTx(
-          tx,
-          bikeId,
-          "AVAILABLE",
-          endTime,
-        ).pipe(
+        const updatedBike = yield* txBikeRepo.updateStatusAt(bikeId, "AVAILABLE", endTime).pipe(
           Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
         );
         if (Option.isNone(updatedBike)) {

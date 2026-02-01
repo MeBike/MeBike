@@ -3,7 +3,7 @@ import { Effect, Option } from "effect";
 import type { enqueueOutboxJob } from "@/infrastructure/jobs/outbox-enqueue";
 import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
-import { BikeRepository } from "@/domain/bikes";
+import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
 import { RentalRepository } from "@/domain/rentals";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
@@ -151,6 +151,7 @@ export function assignFixedSlotReservationsUseCase(args: {
         try: () =>
           client.$transaction(async tx =>
             Effect.runPromise(Effect.gen(function* () {
+              const bikeRepo = makeBikeRepository(tx);
               const reservationOpt = yield* reservationRepo.findPendingFixedSlotByTemplateAndStartInTx(
                 tx,
                 template.id,
@@ -164,7 +165,7 @@ export function assignFixedSlotReservationsUseCase(args: {
               }
               const reservation = reservationOpt.value;
 
-              const bikeOpt = yield* bikeRepo.findAvailableByStationInTx(tx, template.stationId).pipe(
+              const bikeOpt = yield* bikeRepo.findAvailableByStation(template.stationId).pipe(
                 Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
               );
 
@@ -219,11 +220,7 @@ export function assignFixedSlotReservationsUseCase(args: {
                 return "CONFLICT" as const;
               }
 
-              const bikeReserved = yield* bikeRepo.reserveBikeIfAvailableInTx(
-                tx,
-                bike.id,
-                now,
-              ).pipe(
+              const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(bike.id, now).pipe(
                 Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
               );
               if (!bikeReserved) {

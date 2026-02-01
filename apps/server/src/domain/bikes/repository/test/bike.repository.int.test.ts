@@ -200,9 +200,10 @@ describe("bikeRepository Integration", () => {
     const { id: bikeId } = await createBike(stationId, "AVAILABLE");
     const now = new Date();
 
-    const reserved = await client.$transaction(async tx =>
-      Effect.runPromise(repo.reserveBikeIfAvailableInTx(tx, bikeId, now)),
-    );
+    const reserved = await client.$transaction(async (tx) => {
+      const txRepo = makeBikeRepository(tx);
+      return Effect.runPromise(txRepo.reserveBikeIfAvailable(bikeId, now));
+    });
 
     expect(reserved).toBe(true);
 
@@ -218,9 +219,10 @@ describe("bikeRepository Integration", () => {
     const { id: bikeId } = await createBike(stationId, "RESERVED");
     const now = new Date();
 
-    const booked = await client.$transaction(async tx =>
-      Effect.runPromise(repo.bookBikeIfReservedInTx(tx, bikeId, now)),
-    );
+    const booked = await client.$transaction(async (tx) => {
+      const txRepo = makeBikeRepository(tx);
+      return Effect.runPromise(txRepo.bookBikeIfReserved(bikeId, now));
+    });
 
     expect(booked).toBe(true);
 
@@ -236,9 +238,10 @@ describe("bikeRepository Integration", () => {
     const { id: bikeId } = await createBike(stationId, "RESERVED");
     const now = new Date();
 
-    const released = await client.$transaction(async tx =>
-      Effect.runPromise(repo.releaseBikeIfReservedInTx(tx, bikeId, now)),
-    );
+    const released = await client.$transaction(async (tx) => {
+      const txRepo = makeBikeRepository(tx);
+      return Effect.runPromise(txRepo.releaseBikeIfReserved(bikeId, now));
+    });
 
     expect(released).toBe(true);
 

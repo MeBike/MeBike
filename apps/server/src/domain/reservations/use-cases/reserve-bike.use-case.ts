@@ -1,6 +1,7 @@
 import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Option } from "effect";
 
+import type { BikeRepository } from "@/domain/bikes";
 import type {
   SubscriptionNotFound,
   SubscriptionNotUsable,
@@ -10,7 +11,7 @@ import type { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets
 import type { ReservationOption } from "generated/prisma/client";
 
 import { env } from "@/config/env";
-import { BikeRepository } from "@/domain/bikes";
+import { makeBikeRepository } from "@/domain/bikes";
 import { RentalRepository } from "@/domain/rentals";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
@@ -87,7 +88,6 @@ export function reserveBikeUseCase(
     const { client } = yield* Prisma;
     const reservationService = yield* ReservationServiceTag;
     const reservationHoldService = yield* ReservationHoldServiceTag;
-    const bikeRepo = yield* BikeRepository;
     const stationRepo = yield* StationRepository;
     const walletService = yield* WalletServiceTag;
     const subscriptionService = yield* SubscriptionServiceTag;
@@ -96,6 +96,7 @@ export function reserveBikeUseCase(
 
     const reservation = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
+        const bikeRepo = makeBikeRepository(tx);
         if (input.reservationOption === "FIXED_SLOT") {
           return yield* Effect.fail(
             new ReservationOptionNotSupported({ option: input.reservationOption }),
@@ -128,7 +129,7 @@ export function reserveBikeUseCase(
           return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
         }
 
-        const bikeOpt = yield* bikeRepo.getByIdInTx(tx, input.bikeId).pipe(
+        const bikeOpt = yield* bikeRepo.getById(input.bikeId).pipe(
           Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
         );
         if (Option.isNone(bikeOpt)) {
@@ -204,11 +205,9 @@ export function reserveBikeUseCase(
           Effect.catchTag("RentalUniqueViolation", err => Effect.die(err)),
         );
 
-        const bikeReserved = yield* bikeRepo.reserveBikeIfAvailableInTx(
-          tx,
-          input.bikeId,
-          now,
-        ).pipe(Effect.catchTag("BikeRepositoryError", err => Effect.die(err)));
+        const bikeReserved = yield* bikeRepo.reserveBikeIfAvailable(input.bikeId, now).pipe(
+          Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
+        );
         if (!bikeReserved) {
           return yield* Effect.fail(new BikeAlreadyReserved({ bikeId: input.bikeId }));
         }

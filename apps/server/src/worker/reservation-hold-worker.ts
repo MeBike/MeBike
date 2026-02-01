@@ -3,7 +3,7 @@ import type { Job, PgBoss } from "pg-boss";
 import { JobTypes, parseJobPayload } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Option } from "effect";
 
-import { BikeRepository, BikeRepositoryLive } from "@/domain/bikes";
+import { BikeRepository, BikeRepositoryLive, makeBikeRepository } from "@/domain/bikes";
 import { RentalRepository, RentalRepositoryLive } from "@/domain/rentals";
 import {
   ReservationRepository,
@@ -177,6 +177,7 @@ export async function handleReservationExpireHold(
       const outcome = yield* Effect.tryPromise({
         try: async () => {
           return await client.$transaction(async (tx) => {
+            const txBikeRepo = makeBikeRepository(tx);
             const reservationOpt = await Effect.runPromise(
               reservationRepo.findByIdInTx(tx, payload.reservationId).pipe(
                 Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
@@ -214,7 +215,7 @@ export async function handleReservationExpireHold(
             );
 
             await Effect.runPromise(
-              bikeRepo.releaseBikeIfReservedInTx(tx, reservation.bikeId, now).pipe(
+              txBikeRepo.releaseBikeIfReserved(reservation.bikeId, now).pipe(
                 Effect.catchTag("BikeRepositoryError", err => Effect.die(err)),
               ),
             );

@@ -22,12 +22,7 @@ export type BikeRepo = {
   ) => Effect.Effect<BikeRow, BikeRepositoryError | DuplicateChipId>;
 
   getById: (bikeId: string) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
-  getByIdInTx: (
-    tx: PrismaTypes.TransactionClient,
-    bikeId: string,
-  ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
-  findAvailableByStationInTx: (
-    tx: PrismaTypes.TransactionClient,
+  findAvailableByStation: (
     stationId: string,
   ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
   listByStationWithOffset: (
@@ -39,29 +34,24 @@ export type BikeRepo = {
     bikeId: string,
     status: BikeStatus,
   ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
-  updateStatusInTx: (
-    tx: PrismaTypes.TransactionClient,
+  updateStatusAt: (
     bikeId: string,
     status: BikeStatus,
     updatedAt: Date,
   ) => Effect.Effect<Option.Option<BikeRow>, BikeRepositoryError>;
-  bookBikeIfAvailableInTx: (
-    tx: PrismaTypes.TransactionClient,
+  bookBikeIfAvailable: (
     bikeId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, BikeRepositoryError>;
-  reserveBikeIfAvailableInTx: (
-    tx: PrismaTypes.TransactionClient,
+  reserveBikeIfAvailable: (
     bikeId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, BikeRepositoryError>;
-  bookBikeIfReservedInTx: (
-    tx: PrismaTypes.TransactionClient,
+  bookBikeIfReserved: (
     bikeId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, BikeRepositoryError>;
-  releaseBikeIfReservedInTx: (
-    tx: PrismaTypes.TransactionClient,
+  releaseBikeIfReserved: (
     bikeId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, BikeRepositoryError>;
@@ -92,7 +82,10 @@ export function toBikeOrderBy(
   }
 }
 
-export function makeBikeRepository(client: PrismaClient): BikeRepo {
+export function makeBikeRepository(
+  db: PrismaClient | PrismaTypes.TransactionClient,
+): BikeRepo {
+  const client = db;
   const select = {
     id: true,
     chipId: true,
@@ -145,27 +138,16 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
           }),
       }).pipe(Effect.map(Option.fromNullable)),
 
-    getByIdInTx: (tx, bikeId) =>
-      Effect.tryPromise({
-        try: () => findById(tx, bikeId),
-        catch: e =>
-          new BikeRepositoryError({
-            operation: "getByIdInTx",
-            cause: e,
-            message: "Failed to fetch bike by id",
-          }),
-      }).pipe(Effect.map(Option.fromNullable)),
-
-    findAvailableByStationInTx: (tx, stationId) =>
+    findAvailableByStation: stationId =>
       Effect.tryPromise({
         try: () =>
-          tx.bike.findFirst({
+          client.bike.findFirst({
             where: { stationId, status: "AVAILABLE" },
             select,
           }),
         catch: e =>
           new BikeRepositoryError({
-            operation: "findAvailableByStationInTx",
+            operation: "findAvailableByStation",
             cause: e,
             message: "Failed to find available bike by station",
           }),
@@ -244,17 +226,17 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
         return Option.fromNullable(row);
       }),
 
-    updateStatusInTx: (tx, bikeId, status, updatedAt) =>
+    updateStatusAt: (bikeId, status, updatedAt) =>
       Effect.gen(function* () {
         const updated = yield* Effect.tryPromise({
           try: () =>
-            tx.bike.updateMany({
+            client.bike.updateMany({
               where: { id: bikeId },
               data: { status, updatedAt },
             }),
           catch: e =>
             new BikeRepositoryError({
-              operation: "updateStatusInTx.updateMany",
+              operation: "updateStatusAt.updateMany",
               cause: e,
               message: "Failed to update bike status",
             }),
@@ -265,10 +247,10 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
         }
 
         const row = yield* Effect.tryPromise({
-          try: () => findById(tx, bikeId),
+          try: () => findById(client, bikeId),
           catch: e =>
             new BikeRepositoryError({
-              operation: "updateStatusInTx.findUnique",
+              operation: "updateStatusAt.findUnique",
               cause: e,
               message: "Failed to fetch bike after status update",
             }),
@@ -277,10 +259,10 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
         return Option.fromNullable(row);
       }),
 
-    bookBikeIfAvailableInTx: (tx, bikeId, updatedAt) =>
+    bookBikeIfAvailable: (bikeId, updatedAt) =>
       Effect.tryPromise({
         try: async () => {
-          const updated = await tx.bike.updateMany({
+          const updated = await client.bike.updateMany({
             where: { id: bikeId, status: "AVAILABLE" },
             data: { status: "BOOKED", updatedAt },
           });
@@ -288,16 +270,16 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
         },
         catch: e =>
           new BikeRepositoryError({
-            operation: "bookBikeIfAvailableInTx",
+            operation: "bookBikeIfAvailable",
             cause: e,
             message: "Failed to book available bike",
           }),
       }),
 
-    reserveBikeIfAvailableInTx: (tx, bikeId, updatedAt) =>
+    reserveBikeIfAvailable: (bikeId, updatedAt) =>
       Effect.tryPromise({
         try: async () => {
-          const updated = await tx.bike.updateMany({
+          const updated = await client.bike.updateMany({
             where: { id: bikeId, status: "AVAILABLE" },
             data: { status: "RESERVED", updatedAt },
           });
@@ -305,15 +287,16 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
         },
         catch: e =>
           new BikeRepositoryError({
-            operation: "reserveBikeIfAvailableInTx",
+            operation: "reserveBikeIfAvailable",
             cause: e,
             message: "Failed to reserve available bike",
           }),
       }),
-    bookBikeIfReservedInTx: (tx, bikeId, updatedAt) =>
+
+    bookBikeIfReserved: (bikeId, updatedAt) =>
       Effect.tryPromise({
         try: async () => {
-          const updated = await tx.bike.updateMany({
+          const updated = await client.bike.updateMany({
             where: { id: bikeId, status: "RESERVED" },
             data: { status: "BOOKED", updatedAt },
           });
@@ -321,15 +304,16 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
         },
         catch: e =>
           new BikeRepositoryError({
-            operation: "bookBikeIfReservedInTx",
+            operation: "bookBikeIfReserved",
             cause: e,
             message: "Failed to book reserved bike",
           }),
       }),
-    releaseBikeIfReservedInTx: (tx, bikeId, updatedAt) =>
+
+    releaseBikeIfReserved: (bikeId, updatedAt) =>
       Effect.tryPromise({
         try: async () => {
-          const updated = await tx.bike.updateMany({
+          const updated = await client.bike.updateMany({
             where: { id: bikeId, status: "RESERVED" },
             data: { status: "AVAILABLE", updatedAt },
           });
@@ -337,7 +321,7 @@ export function makeBikeRepository(client: PrismaClient): BikeRepo {
         },
         catch: e =>
           new BikeRepositoryError({
-            operation: "releaseBikeIfReservedInTx",
+            operation: "releaseBikeIfReserved",
             cause: e,
             message: "Failed to release reserved bike",
           }),
