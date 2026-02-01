@@ -108,7 +108,7 @@ function verifyRefreshToken(token: string): Effect.Effect<
 > {
   return Effect.try({
     try: () =>
-      jwt.verify(token, requireJwtSecret()) as RefreshTokenPayload & jwt.JwtPayload,
+      jwt.verify(token, requireJwtSecret(), { algorithms: ["HS256"] }) as RefreshTokenPayload & jwt.JwtPayload,
     catch: () => new InvalidRefreshToken({}),
   }).pipe(
     Effect.flatMap(payload =>

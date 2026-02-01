@@ -41,9 +41,11 @@ export function makeTokensForUser(user: UserRow, sessionId: string): Tokens {
 
   return {
     accessToken: jwt.sign(accessPayload, secret, {
+      algorithm: "HS256",
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
     }),
     refreshToken: jwt.sign(refreshPayload, secret, {
+      algorithm: "HS256",
       expiresIn: REFRESH_TOKEN_EXPIRES_IN,
     }),
   };
