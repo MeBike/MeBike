@@ -1,10 +1,13 @@
 import { Effect, Option } from "effect";
 
+import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
+import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { SubscriptionPackage } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 import { toMinorUnit } from "@/domain/shared/money";
-import { WalletServiceTag } from "@/domain/wallets";
+import { makeWalletRepository } from "@/domain/wallets";
+import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
@@ -45,8 +48,8 @@ export type UseSubscriptionFailure
 export type CreateSubscriptionFailure
   = | SubscriptionPendingOrActiveExists
     | SubscriptionRepositoryError
-    | import("../../wallets/domain-errors").InsufficientWalletBalance
-    | import("../../wallets/domain-errors").WalletNotFound
+    | InsufficientWalletBalance
+    | WalletNotFound
     | import("../../wallets/domain-errors").WalletRepositoryError;
 
 export type ActivateSubscriptionFailure
@@ -75,11 +78,10 @@ export function createSubscriptionUseCase(args: {
 }): Effect.Effect<
   SubscriptionRow,
   CreateSubscriptionFailure,
-  SubscriptionServiceTag | WalletServiceTag | Prisma
+  SubscriptionServiceTag | Prisma
 > {
   return Effect.gen(function* () {
     const service = yield* SubscriptionServiceTag;
-    const walletService = yield* WalletServiceTag;
     const { client } = yield* Prisma;
     const now = args.now ?? new Date();
     const packageConfig = getSubscriptionPackageConfig(args.packageName);
@@ -114,7 +116,7 @@ export function createSubscriptionUseCase(args: {
         });
 
         const priceMinor = toMinorUnit(packageConfig.price);
-        yield* walletService.debitWalletInTx(tx, {
+        yield* debitWallet(makeWalletRepository(tx), {
           userId: args.userId,
           amount: priceMinor,
           description: `Subscription payment ${pending.id}`,
@@ -151,6 +153,23 @@ export function createSubscriptionUseCase(args: {
 
     return created;
   });
+}
+
+function debitWallet(
+  repo: ReturnType<typeof makeWalletRepository>,
+  input: DecreaseBalanceInput,
+) {
+  return repo.decreaseBalance(input).pipe(
+    Effect.catchTag("WalletRecordNotFound", () =>
+      Effect.fail(new WalletNotFound({ userId: input.userId }))),
+    Effect.catchTag("WalletBalanceConstraint", (err: WalletBalanceConstraint) =>
+      Effect.fail(new InsufficientWalletBalance({
+        walletId: err.walletId,
+        userId: err.userId,
+        balance: err.balance,
+        attemptedDebit: err.attemptedDebit,
+      }))),
+  );
 }
 
 export function activateSubscriptionUseCase(args: {

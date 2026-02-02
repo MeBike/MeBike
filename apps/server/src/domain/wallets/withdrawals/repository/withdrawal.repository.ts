@@ -72,16 +72,28 @@ export type WithdrawalRepositoryType = {
   findByIdempotencyKey: (
     idempotencyKey: string,
   ) => Effect.Effect<Option.Option<WalletWithdrawalRow>, WithdrawalRepositoryError>;
+  markProcessing: (
+    input: MarkWithdrawalProcessingInput,
+  ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
   markProcessingInTx: (
     tx: PrismaTypes.TransactionClient,
     input: MarkWithdrawalProcessingInput,
+  ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
+  setStripeRefs: (
+    input: import("../models").UpdateWithdrawalStripeRefsInput,
   ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
   setStripeRefsInTx: (
     tx: PrismaTypes.TransactionClient,
     input: import("../models").UpdateWithdrawalStripeRefsInput,
   ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
+  markSucceeded: (
+    input: MarkWithdrawalResultInput,
+  ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
   markSucceededInTx: (
     tx: PrismaTypes.TransactionClient,
+    input: MarkWithdrawalResultInput,
+  ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
+  markFailed: (
     input: MarkWithdrawalResultInput,
   ) => Effect.Effect<boolean, WithdrawalRepositoryError>;
   markFailedInTx: (
@@ -140,7 +152,9 @@ async function findByIdempotencyKey(
   });
 }
 
-export function makeWithdrawalRepository(client: PrismaClient): WithdrawalRepositoryType {
+export function makeWithdrawalRepository(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+): WithdrawalRepositoryType {
   return {
     createPending: input =>
       Effect.tryPromise({
@@ -285,6 +299,40 @@ export function makeWithdrawalRepository(client: PrismaClient): WithdrawalReposi
           }),
       }),
 
+    markProcessing: input =>
+      Effect.tryPromise({
+        try: async () => {
+          const where: PrismaTypes.WalletWithdrawalWhereInput = input.staleBefore
+            ? {
+                OR: [
+                  { id: input.withdrawalId, status: WalletWithdrawalStatus.PENDING },
+                  {
+                    id: input.withdrawalId,
+                    status: WalletWithdrawalStatus.PROCESSING,
+                    updatedAt: { lte: input.staleBefore },
+                  },
+                ],
+              }
+            : { id: input.withdrawalId, status: WalletWithdrawalStatus.PENDING };
+
+          const updated = await client.walletWithdrawal.updateMany({
+            where,
+            data: {
+              status: "PROCESSING",
+              stripeTransferId: input.stripeTransferId ?? undefined,
+              stripePayoutId: input.stripePayoutId ?? undefined,
+              failureReason: null,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WithdrawalRepositoryError({
+            operation: "markProcessing",
+            cause: err,
+          }),
+      }),
+
     markProcessingInTx: (tx, input) =>
       Effect.tryPromise({
         try: async () => {
@@ -319,6 +367,25 @@ export function makeWithdrawalRepository(client: PrismaClient): WithdrawalReposi
           }),
       }),
 
+    setStripeRefs: input =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.walletWithdrawal.updateMany({
+            where: { id: input.withdrawalId, status: "PROCESSING" },
+            data: {
+              stripeTransferId: input.stripeTransferId ?? undefined,
+              stripePayoutId: input.stripePayoutId ?? undefined,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WithdrawalRepositoryError({
+            operation: "setStripeRefs",
+            cause: err,
+          }),
+      }),
+
     setStripeRefsInTx: (tx, input) =>
       Effect.tryPromise({
         try: async () => {
@@ -334,6 +401,26 @@ export function makeWithdrawalRepository(client: PrismaClient): WithdrawalReposi
         catch: err =>
           new WithdrawalRepositoryError({
             operation: "setStripeRefsInTx",
+            cause: err,
+          }),
+      }),
+
+    markSucceeded: input =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.walletWithdrawal.updateMany({
+            where: { id: input.withdrawalId, status: { in: ["PENDING", "PROCESSING"] } },
+            data: {
+              status: "SUCCEEDED",
+              stripePayoutId: input.stripePayoutId ?? undefined,
+              failureReason: null,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WithdrawalRepositoryError({
+            operation: "markSucceeded",
             cause: err,
           }),
       }),
@@ -354,6 +441,26 @@ export function makeWithdrawalRepository(client: PrismaClient): WithdrawalReposi
         catch: err =>
           new WithdrawalRepositoryError({
             operation: "markSucceededInTx",
+            cause: err,
+          }),
+      }),
+
+    markFailed: input =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.walletWithdrawal.updateMany({
+            where: { id: input.withdrawalId, status: { in: ["PENDING", "PROCESSING"] } },
+            data: {
+              status: "FAILED",
+              stripePayoutId: input.stripePayoutId ?? undefined,
+              failureReason: input.failureReason ?? null,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WithdrawalRepositoryError({
+            operation: "markFailed",
             cause: err,
           }),
       }),

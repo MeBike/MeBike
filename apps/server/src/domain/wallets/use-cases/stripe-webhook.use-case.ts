@@ -37,9 +37,7 @@ export function handleStripeWebhookUseCase(
   | InsufficientWalletBalance
   | UserRepositoryError,
   | import("@/domain/wallets/topups/services/stripe-topup.service").StripeTopupServiceTag
-  | import("@/domain/wallets/withdrawals/services/withdrawal.service").WithdrawalServiceTag
-  | import("@/domain/wallets/services/wallet-hold.service").WalletHoldServiceTag
-  | import("@/domain/wallets/services/wallet.service").WalletServiceTag
+  | import("@/domain/wallets/withdrawals/repository/withdrawal.repository").WithdrawalRepository
   | import("@/domain/users/services/user.service").UserServiceTag
   | import("@/infrastructure/prisma").Prisma
 > {

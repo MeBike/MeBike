@@ -8,23 +8,16 @@ import type {
 
 import { env } from "@/config/env";
 import { UserServiceTag } from "@/domain/users/services/user.service";
-import { WalletHoldServiceTag } from "@/domain/wallets/services/wallet-hold.service";
-import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
+import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type {
-  WithdrawalNotFound,
-  WithdrawalProviderError,
+import type { WithdrawalProviderError, WithdrawalRepositoryError } from "../domain-errors";
 
-  WithdrawalRepositoryError,
-} from "../domain-errors";
-
-import {
-  WithdrawalUserNotFound,
-} from "../domain-errors";
+import { WithdrawalNotFound, WithdrawalUserNotFound } from "../domain-errors";
+import { makeWithdrawalRepository, WithdrawalRepository } from "../repository/withdrawal.repository";
 import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";
-import { WithdrawalServiceTag } from "../services/withdrawal.service";
 
 export type ExecuteWithdrawalOutcome
   = | { readonly status: "missing"; readonly withdrawalId: string }
@@ -74,12 +67,10 @@ export function executeWithdrawalUseCase(
   | WalletHoldRepositoryError
   | WalletRepositoryError
   | UserRepositoryError,
-  Prisma | WithdrawalServiceTag | WalletHoldServiceTag | WalletServiceTag | UserServiceTag | StripeWithdrawalServiceTag
+  Prisma | WithdrawalRepository | UserServiceTag | StripeWithdrawalServiceTag
 > {
   return Effect.gen(function* () {
-    const withdrawalService = yield* WithdrawalServiceTag;
-    const walletHoldService = yield* WalletHoldServiceTag;
-    const walletService = yield* WalletServiceTag;
+    const withdrawalRepo = yield* WithdrawalRepository;
     const userService = yield* UserServiceTag;
     const stripeService = yield* StripeWithdrawalServiceTag;
     const { client } = yield* Prisma;
@@ -88,7 +79,11 @@ export function executeWithdrawalUseCase(
     const processingStaleBefore = new Date(now.getTime() - processingTtlMs);
     const slaMs = env.WITHDRAWAL_SLA_MINUTES * 60 * 1000;
 
-    const withdrawalResult = yield* withdrawalService.getById(withdrawalId).pipe(
+    const withdrawalResult = yield* withdrawalRepo.findById(withdrawalId).pipe(
+      Effect.flatMap(maybe =>
+        maybe._tag === "Some"
+          ? Effect.succeed(maybe.value)
+          : Effect.fail(new WithdrawalNotFound({ withdrawalId }))),
       Effect.either,
     );
 
@@ -146,9 +141,6 @@ export function executeWithdrawalUseCase(
           if (!accountId) {
             return yield* markFailedAndReleaseHold(
               client,
-              withdrawalService,
-              walletHoldService,
-              walletService,
               withdrawal,
               "stripe_account_missing",
             );
@@ -157,9 +149,6 @@ export function executeWithdrawalUseCase(
           if (user.stripePayoutsEnabled !== true) {
             return yield* markFailedAndReleaseHold(
               client,
-              withdrawalService,
-              walletHoldService,
-              walletService,
               withdrawal,
               "payouts_not_enabled",
             );
@@ -169,16 +158,13 @@ export function executeWithdrawalUseCase(
           if (!amountMinor) {
             return yield* markFailedAndReleaseHold(
               client,
-              withdrawalService,
-              walletHoldService,
-              walletService,
               withdrawal,
               "amount_out_of_range",
             );
           }
 
           const marked = yield* runPrismaTransaction(client, tx =>
-            withdrawalService.markProcessingInTx(tx, {
+            makeWithdrawalRepository(tx).markProcessing({
               withdrawalId,
               staleBefore: processingStaleBefore,
             })).pipe(
@@ -192,9 +178,6 @@ export function executeWithdrawalUseCase(
           if (withdrawal.currency.toLowerCase() !== "usd") {
             return yield* markFailedAndReleaseHold(
               client,
-              withdrawalService,
-              walletHoldService,
-              walletService,
               withdrawal,
               "unsupported_currency",
             );
@@ -224,9 +207,6 @@ export function executeWithdrawalUseCase(
             if (errorCode === "balance_insufficient" && slaExceeded) {
               return yield* markFailedAndReleaseHold(
                 client,
-                withdrawalService,
-                walletHoldService,
-                walletService,
                 withdrawal,
                 "provider_balance_insufficient",
               );
@@ -237,7 +217,7 @@ export function executeWithdrawalUseCase(
           const { transfer, payout } = providerResult.right;
 
           yield* runPrismaTransaction(client, tx =>
-            withdrawalService.setStripeRefsInTx(tx, {
+            makeWithdrawalRepository(tx).setStripeRefs({
               withdrawalId,
               stripeTransferId: transfer.id,
               stripePayoutId: payout.id,
@@ -259,9 +239,6 @@ export function executeWithdrawalUseCase(
 
 function markFailedAndReleaseHold(
   client: import("generated/prisma/client").PrismaClient,
-  withdrawalService: import("../services/withdrawal.service").WithdrawalService,
-  walletHoldService: import("@/domain/wallets/services/wallet-hold.service").WalletHoldService,
-  walletService: import("@/domain/wallets/services/wallet.service").WalletService,
   withdrawal: import("../models").WalletWithdrawalRow,
   reason: string,
 ): Effect.Effect<
@@ -273,7 +250,11 @@ function markFailedAndReleaseHold(
   return Effect.gen(function* () {
     const updated = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
-        const markFailed = yield* withdrawalService.markFailedInTx(tx, {
+        const txWithdrawalRepo = makeWithdrawalRepository(tx);
+        const txWalletHoldRepo = makeWalletHoldRepository(tx);
+        const txWalletRepo = makeWalletRepository(tx);
+
+        const markFailed = yield* txWithdrawalRepo.markFailed({
           withdrawalId: withdrawal.id,
           failureReason: reason,
         });
@@ -282,13 +263,12 @@ function markFailedAndReleaseHold(
           return false;
         }
 
-        yield* walletService.releaseReservedBalanceInTx(tx, {
+        yield* txWalletRepo.releaseReservedBalance({
           walletId: withdrawal.walletId,
           amount: withdrawal.amount,
         });
 
-        const released = yield* walletHoldService.releaseByWithdrawalIdInTx(
-          tx,
+        const released = yield* txWalletHoldRepo.releaseByWithdrawalId(
           withdrawal.id,
           new Date(),
         );

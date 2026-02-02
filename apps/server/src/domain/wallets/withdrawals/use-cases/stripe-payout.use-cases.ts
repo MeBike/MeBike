@@ -3,26 +3,47 @@ import type Stripe from "stripe";
 import { Effect, Match } from "effect";
 
 import type {
-  InsufficientWalletBalance,
+  WalletBalanceConstraint,
   WalletHoldRepositoryError,
-  WalletNotFound,
   WalletRepositoryError,
 } from "@/domain/wallets/domain-errors";
+import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 
-import { WalletHoldServiceTag } from "@/domain/wallets/services/wallet-hold.service";
-import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
+import {
+  InsufficientWalletBalance,
+  WalletNotFound,
+} from "@/domain/wallets/domain-errors";
+import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
+import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { WithdrawalRepositoryError } from "../domain-errors";
 
-import { WithdrawalServiceTag } from "../services/withdrawal.service";
+import { makeWithdrawalRepository, WithdrawalRepository } from "../repository/withdrawal.repository";
 
 export type StripePayoutOutcome
   = | { readonly status: "ignored"; readonly reason: string }
     | { readonly status: "missing"; readonly payoutId: string }
     | { readonly status: "succeeded"; readonly payoutId: string; readonly withdrawalId: string }
     | { readonly status: "failed"; readonly payoutId: string; readonly withdrawalId: string; readonly reason: string };
+
+function debitWallet(
+  repo: ReturnType<typeof makeWalletRepository>,
+  input: DecreaseBalanceInput,
+) {
+  return repo.decreaseBalance(input).pipe(
+    Effect.catchTag("WalletRecordNotFound", () =>
+      Effect.fail(new WalletNotFound({ userId: input.userId }))),
+    Effect.catchTag("WalletBalanceConstraint", (err: WalletBalanceConstraint) =>
+      Effect.fail(new InsufficientWalletBalance({
+        walletId: err.walletId,
+        userId: err.userId,
+        balance: err.balance,
+        attemptedDebit: err.attemptedDebit,
+      }))),
+  );
+}
 
 export function handleStripePayoutWebhookUseCase(
   event: Stripe.Event,
@@ -33,7 +54,7 @@ export function handleStripePayoutWebhookUseCase(
   | WalletNotFound
   | WalletRepositoryError
   | InsufficientWalletBalance,
-  Prisma | WithdrawalServiceTag | WalletServiceTag | WalletHoldServiceTag
+  Prisma | WithdrawalRepository
 > {
   return Effect.gen(function* () {
     if (!event.type.startsWith("payout.")) {
@@ -45,14 +66,12 @@ export function handleStripePayoutWebhookUseCase(
 
     const payout = event.data.object as Stripe.Payout;
     const payoutId = payout.id;
-    const withdrawalService = yield* WithdrawalServiceTag;
-    const walletService = yield* WalletServiceTag;
-    const walletHoldService = yield* WalletHoldServiceTag;
+    const withdrawalRepo = yield* WithdrawalRepository;
     const { client } = yield* Prisma;
     const now = new Date();
 
     const withdrawalOrOutcome = yield* Match.value(
-      yield* withdrawalService.findByStripePayoutId(payoutId),
+      yield* withdrawalRepo.findByStripePayoutId(payoutId),
     ).pipe(
       Match.tag("None", () => Effect.succeed({
         _tag: "Outcome",
@@ -71,7 +90,11 @@ export function handleStripePayoutWebhookUseCase(
         if (event.type === "payout.paid") {
           const updated = yield* runPrismaTransaction(client, tx =>
             Effect.gen(function* () {
-              const marked = yield* withdrawalService.markSucceededInTx(tx, {
+              const txWithdrawalRepo = makeWithdrawalRepository(tx);
+              const txWalletHoldRepo = makeWalletHoldRepository(tx);
+              const txWalletRepo = makeWalletRepository(tx);
+
+              const marked = yield* txWithdrawalRepo.markSucceeded({
                 withdrawalId: withdrawal.id,
                 stripePayoutId: payoutId,
               });
@@ -80,8 +103,7 @@ export function handleStripePayoutWebhookUseCase(
                 return false;
               }
 
-              const settled = yield* walletHoldService.settleByWithdrawalIdInTx(
-                tx,
+              const settled = yield* txWalletHoldRepo.settleByWithdrawalId(
                 withdrawal.id,
                 now,
               );
@@ -90,12 +112,12 @@ export function handleStripePayoutWebhookUseCase(
                 return true;
               }
 
-              yield* walletService.releaseReservedBalanceInTx(tx, {
+              yield* txWalletRepo.releaseReservedBalance({
                 walletId: withdrawal.walletId,
                 amount: withdrawal.amount,
               });
 
-              yield* walletService.debitWalletInTx(tx, {
+              yield* debitWallet(txWalletRepo, {
                 userId: withdrawal.userId,
                 amount: withdrawal.amount,
                 description: "Withdrawal settled",
@@ -123,7 +145,11 @@ export function handleStripePayoutWebhookUseCase(
           const reason = payout.failure_message ?? event.type;
           const updated = yield* runPrismaTransaction(client, tx =>
             Effect.gen(function* () {
-              const marked = yield* withdrawalService.markFailedInTx(tx, {
+              const txWithdrawalRepo = makeWithdrawalRepository(tx);
+              const txWalletHoldRepo = makeWalletHoldRepository(tx);
+              const txWalletRepo = makeWalletRepository(tx);
+
+              const marked = yield* txWithdrawalRepo.markFailed({
                 withdrawalId: withdrawal.id,
                 stripePayoutId: payoutId,
                 failureReason: reason,
@@ -133,8 +159,7 @@ export function handleStripePayoutWebhookUseCase(
                 return false;
               }
 
-              const released = yield* walletHoldService.releaseByWithdrawalIdInTx(
-                tx,
+              const released = yield* txWalletHoldRepo.releaseByWithdrawalId(
                 withdrawal.id,
                 now,
               );
@@ -143,7 +168,7 @@ export function handleStripePayoutWebhookUseCase(
                 return true;
               }
 
-              yield* walletService.releaseReservedBalanceInTx(tx, {
+              yield* txWalletRepo.releaseReservedBalance({
                 walletId: withdrawal.walletId,
                 amount: withdrawal.amount,
               });

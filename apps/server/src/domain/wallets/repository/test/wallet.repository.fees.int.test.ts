@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+import { makeWalletRepository } from "../wallet.repository";
 import { setupWalletRepositoryTests } from "./test-helpers";
 
 describe("wallet Repository - Fee Handling", () => {
@@ -24,15 +25,16 @@ describe("wallet Repository - Fee Handling", () => {
     expect(transactions.items[0].fee.toString()).toBe("10");
   });
 
-  it("increaseBalanceInTx deducts fees from amount", async () => {
+  it("increaseBalance deducts fees from amount inside a transaction", async () => {
     const client = getClient();
     const repo = getRepo();
     const { id: userId } = await createUser();
     await Effect.runPromise(repo.createForUser(userId));
 
     await client.$transaction(async (tx) => {
+      const txRepo = makeWalletRepository(tx);
       const increased = await Effect.runPromise(
-        repo.increaseBalanceInTx(tx, { userId, amount: 100n, fee: 15n }),
+        txRepo.increaseBalance({ userId, amount: 100n, fee: 15n }),
       );
       expect(increased.balance.toString()).toBe("85");
     });

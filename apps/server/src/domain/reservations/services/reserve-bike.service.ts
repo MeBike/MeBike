@@ -7,7 +7,8 @@ import type {
   SubscriptionNotUsable,
   SubscriptionUsageExceeded,
 } from "@/domain/subscriptions/domain-errors";
-import type { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
+import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
+import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { ReservationOption } from "generated/prisma/client";
 
 import { env } from "@/config/env";
@@ -18,7 +19,8 @@ import { toMinorUnit } from "@/domain/shared/money";
 import { StationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserRepository } from "@/domain/users";
-import { WalletServiceTag } from "@/domain/wallets";
+import { makeWalletRepository } from "@/domain/wallets";
+import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -80,7 +82,6 @@ export function reserveBikeUseCase(
   | ReservationHoldServiceTag
   | BikeRepository
   | StationRepository
-  | WalletServiceTag
   | SubscriptionServiceTag
   | RentalRepository
 > {
@@ -89,7 +90,6 @@ export function reserveBikeUseCase(
     const reservationService = yield* ReservationServiceTag;
     const reservationHoldService = yield* ReservationHoldServiceTag;
     const stationRepo = yield* StationRepository;
-    const walletService = yield* WalletServiceTag;
     const subscriptionService = yield* SubscriptionServiceTag;
     yield* RentalRepository;
     const now = input.now ?? new Date();
@@ -172,13 +172,11 @@ export function reserveBikeUseCase(
           prepaidMinor = 0n;
         }
         else {
-          yield* walletService.debitWalletInTx(tx, {
+          yield* debitWallet(makeWalletRepository(tx), {
             userId: input.userId,
             amount: prepaidMinor,
             description: `Reservation prepaid ${input.userId}`,
-          }).pipe(
-            Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-          );
+          });
         }
 
         const endTime = input.endTime ?? computeEndTime(input.startTime);
@@ -294,4 +292,22 @@ export function reserveBikeUseCase(
 
     return reservation;
   });
+}
+
+function debitWallet(
+  repo: ReturnType<typeof makeWalletRepository>,
+  input: DecreaseBalanceInput,
+) {
+  return repo.decreaseBalance(input).pipe(
+    Effect.catchTag("WalletRecordNotFound", () =>
+      Effect.fail(new WalletNotFound({ userId: input.userId }))),
+    Effect.catchTag("WalletBalanceConstraint", (err: WalletBalanceConstraint) =>
+      Effect.fail(new InsufficientWalletBalance({
+        walletId: err.walletId,
+        userId: err.userId,
+        balance: err.balance,
+        attemptedDebit: err.attemptedDebit,
+      }))),
+    Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+  );
 }

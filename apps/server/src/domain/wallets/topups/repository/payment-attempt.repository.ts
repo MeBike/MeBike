@@ -59,10 +59,18 @@ export type PaymentAttemptRepositoryType = {
     id: string,
     providerRef: string,
   ) => Effect.Effect<PaymentAttemptRow, PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation>;
+  markSucceededIfPending: (
+    id: string,
+    providerRef: string,
+  ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
   markSucceededIfPendingInTx: (
     tx: PrismaTypes.TransactionClient,
     id: string,
     providerRef: string,
+  ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
+  markFailedIfPending: (
+    id: string,
+    failureReason: string,
   ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
   markFailedIfPendingInTx: (
     tx: PrismaTypes.TransactionClient,
@@ -76,7 +84,9 @@ export class PaymentAttemptRepository extends Context.Tag("PaymentAttemptReposit
   PaymentAttemptRepositoryType
 >() {}
 
-export function makePaymentAttemptRepository(client: PrismaClient): PaymentAttemptRepositoryType {
+export function makePaymentAttemptRepository(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+): PaymentAttemptRepositoryType {
   return {
     create: input =>
       Effect.tryPromise({
@@ -170,6 +180,26 @@ export function makePaymentAttemptRepository(client: PrismaClient): PaymentAttem
         },
       }),
 
+    markSucceededIfPending: (id, providerRef) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.paymentAttempt.updateMany({
+            where: { id, status: "PENDING" },
+            data: {
+              status: "SUCCEEDED",
+              providerRef,
+              failureReason: null,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new PaymentAttemptRepositoryError({
+            operation: "markSucceededIfPending",
+            cause: err,
+          }),
+      }),
+
     markSucceededIfPendingInTx: (tx, id, providerRef) =>
       Effect.tryPromise({
         try: async () => {
@@ -186,6 +216,25 @@ export function makePaymentAttemptRepository(client: PrismaClient): PaymentAttem
         catch: err =>
           new PaymentAttemptRepositoryError({
             operation: "markSucceededIfPendingInTx",
+            cause: err,
+          }),
+      }),
+
+    markFailedIfPending: (id, failureReason) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.paymentAttempt.updateMany({
+            where: { id, status: "PENDING" },
+            data: {
+              status: "FAILED",
+              failureReason,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new PaymentAttemptRepositoryError({
+            operation: "markFailedIfPending",
             cause: err,
           }),
       }),

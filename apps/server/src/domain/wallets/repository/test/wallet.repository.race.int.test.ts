@@ -2,6 +2,7 @@ import { Effect, Either, Option } from "effect";
 import { uuidv7 } from "uuidv7";
 import { describe, expect, it } from "vitest";
 
+import { makeWalletRepository } from "../wallet.repository";
 import { setupWalletRepositoryTests } from "./test-helpers";
 
 describe("wallet Repository - Race Conditions", () => {
@@ -47,19 +48,29 @@ describe("wallet Repository - Race Conditions", () => {
 
     const results = await Promise.allSettled([
       client.$transaction(tx =>
-        Effect.runPromise(repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 30n })),
+        Effect.runPromise(
+          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+        ),
       ),
       client.$transaction(tx =>
-        Effect.runPromise(repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 30n })),
+        Effect.runPromise(
+          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+        ),
       ),
       client.$transaction(tx =>
-        Effect.runPromise(repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 30n })),
+        Effect.runPromise(
+          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+        ),
       ),
       client.$transaction(tx =>
-        Effect.runPromise(repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 30n })),
+        Effect.runPromise(
+          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+        ),
       ),
       client.$transaction(tx =>
-        Effect.runPromise(repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 30n })),
+        Effect.runPromise(
+          makeWalletRepository(tx).reserveBalance({ walletId: wallet.id, amount: 30n }),
+        ),
       ),
     ]);
 

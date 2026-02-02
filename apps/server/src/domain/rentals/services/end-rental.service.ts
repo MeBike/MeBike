@@ -1,5 +1,7 @@
 import { Effect, Option } from "effect";
 
+import type { WalletBalanceConstraint } from "@/domain/wallets/domain-errors";
+import type { DecreaseBalanceInput } from "@/domain/wallets/models";
 import type { RentalStatus } from "generated/prisma/enums";
 
 import { env } from "@/config/env";
@@ -11,7 +13,7 @@ import {
   SubscriptionUsageExceeded,
 } from "@/domain/subscriptions/domain-errors";
 import { SubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
-import { WalletServiceTag } from "@/domain/wallets";
+import { makeWalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
@@ -38,7 +40,6 @@ export function endRentalUseCase(
   | Prisma
   | RentalRepository
   | BikeRepository
-  | WalletServiceTag
   | SubscriptionRepository
 > {
   return Effect.gen(function* () {
@@ -46,7 +47,6 @@ export function endRentalUseCase(
     const repo = yield* RentalRepository;
     yield* BikeRepository;
     const subscriptionRepo = yield* SubscriptionRepository;
-    const walletService = yield* WalletServiceTag;
     const { userId, rentalId, endStationId, endTime } = input;
 
     const currentOpt = yield* repo.getMyRentalById(userId, rentalId).pipe(
@@ -163,23 +163,13 @@ export function endRentalUseCase(
           );
 
           if (totalPrice > 0) {
-            yield* walletService.debitWalletInTx(tx, {
+            yield* debitWallet(makeWalletRepository(tx), {
               userId,
               amount: BigInt(totalPrice),
               description: `Rental ${rentalId}`,
               hash: `rental:${rentalId}`,
               type: "DEBIT",
-            }).pipe(
-              Effect.catchTag("WalletNotFound", () =>
-                Effect.fail(new UserWalletNotFound({ userId }))),
-              Effect.catchTag("InsufficientWalletBalance", ({ balance, attemptedDebit }) =>
-                Effect.fail(new InsufficientBalanceToRent({
-                  userId,
-                  requiredBalance: Number(attemptedDebit),
-                  currentBalance: Number(balance),
-                }))),
-              Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
-            );
+            });
           }
 
           const updatedBike = yield* txBikeRepo.updateStatusAt(bikeId, "AVAILABLE", endTime).pipe(
@@ -220,4 +210,21 @@ export function endRentalUseCase(
 
     return updated.value;
   });
+}
+
+function debitWallet(
+  repo: ReturnType<typeof makeWalletRepository>,
+  input: DecreaseBalanceInput,
+) {
+  return repo.decreaseBalance(input).pipe(
+    Effect.catchTag("WalletRecordNotFound", () =>
+      Effect.fail(new UserWalletNotFound({ userId: input.userId }))),
+    Effect.catchTag("WalletBalanceConstraint", (err: WalletBalanceConstraint) =>
+      Effect.fail(new InsufficientBalanceToRent({
+        userId: err.userId,
+        requiredBalance: Number(err.attemptedDebit),
+        currentBalance: Number(err.balance),
+      }))),
+    Effect.catchTag("WalletRepositoryError", err => Effect.die(err)),
+  );
 }

@@ -39,22 +39,39 @@ function toWalletHoldRow(
 }
 
 export type WalletHoldRepo = {
+  create: (
+    input: CreateWalletHoldInput,
+  ) => Effect.Effect<WalletHoldRow, WalletHoldRepositoryError>;
   createInTx: (
     tx: PrismaTypes.TransactionClient,
     input: CreateWalletHoldInput,
   ) => Effect.Effect<WalletHoldRow, WalletHoldRepositoryError>;
+  findByWithdrawalId: (
+    withdrawalId: string,
+  ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
   findByWithdrawalIdInTx: (
     tx: PrismaTypes.TransactionClient,
     withdrawalId: string,
   ) => Effect.Effect<Option.Option<WalletHoldRow>, WalletHoldRepositoryError>;
+  sumActiveAmountByWallet: (
+    walletId: string,
+  ) => Effect.Effect<bigint, WalletHoldRepositoryError>;
   sumActiveAmountByWalletInTx: (
     tx: PrismaTypes.TransactionClient,
     walletId: string,
   ) => Effect.Effect<bigint, WalletHoldRepositoryError>;
+  releaseByWithdrawalId: (
+    withdrawalId: string,
+    releasedAt: Date,
+  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
   releaseByWithdrawalIdInTx: (
     tx: PrismaTypes.TransactionClient,
     withdrawalId: string,
     releasedAt: Date,
+  ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
+  settleByWithdrawalId: (
+    withdrawalId: string,
+    settledAt: Date,
   ) => Effect.Effect<boolean, WalletHoldRepositoryError>;
   settleByWithdrawalIdInTx: (
     tx: PrismaTypes.TransactionClient,
@@ -68,8 +85,32 @@ export class WalletHoldRepository extends Context.Tag("WalletHoldRepository")<
   WalletHoldRepo
 >() {}
 
-export function makeWalletHoldRepository(_client: PrismaClient): WalletHoldRepo {
+export function makeWalletHoldRepository(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+): WalletHoldRepo {
   return {
+    create: input =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await client.walletHold.create({
+            data: {
+              walletId: input.walletId,
+              withdrawalId: input.withdrawalId,
+              amount: input.amount,
+              status: "ACTIVE",
+              reason: input.reason ?? "WITHDRAWAL",
+            },
+            select: selectWalletHoldRow,
+          });
+          return toWalletHoldRow(row);
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "create",
+            cause: err,
+          }),
+      }),
+
     createInTx: (tx, input) =>
       Effect.tryPromise({
         try: async () => {
@@ -92,6 +133,22 @@ export function makeWalletHoldRepository(_client: PrismaClient): WalletHoldRepo 
           }),
       }),
 
+    findByWithdrawalId: withdrawalId =>
+      Effect.tryPromise({
+        try: async () => {
+          const row = await client.walletHold.findUnique({
+            where: { withdrawalId },
+            select: selectWalletHoldRow,
+          });
+          return Option.fromNullable(row).pipe(Option.map(toWalletHoldRow));
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "findByWithdrawalId",
+            cause: err,
+          }),
+      }),
+
     findByWithdrawalIdInTx: (tx, withdrawalId) =>
       Effect.tryPromise({
         try: async () => {
@@ -104,6 +161,22 @@ export function makeWalletHoldRepository(_client: PrismaClient): WalletHoldRepo 
         catch: err =>
           new WalletHoldRepositoryError({
             operation: "findByWithdrawalIdInTx",
+            cause: err,
+          }),
+      }),
+
+    sumActiveAmountByWallet: walletId =>
+      Effect.tryPromise({
+        try: async () => {
+          const result = await client.walletHold.aggregate({
+            where: { walletId, status: "ACTIVE" },
+            _sum: { amount: true },
+          });
+          return result._sum.amount ?? 0n;
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "sumActiveAmountByWallet",
             cause: err,
           }),
       }),
@@ -124,6 +197,25 @@ export function makeWalletHoldRepository(_client: PrismaClient): WalletHoldRepo 
           }),
       }),
 
+    releaseByWithdrawalId: (withdrawalId, releasedAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.walletHold.updateMany({
+            where: { withdrawalId, status: "ACTIVE" },
+            data: {
+              status: "RELEASED",
+              releasedAt,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "releaseByWithdrawalId",
+            cause: err,
+          }),
+      }),
+
     releaseByWithdrawalIdInTx: (tx, withdrawalId, releasedAt) =>
       Effect.tryPromise({
         try: async () => {
@@ -139,6 +231,25 @@ export function makeWalletHoldRepository(_client: PrismaClient): WalletHoldRepo 
         catch: err =>
           new WalletHoldRepositoryError({
             operation: "releaseByWithdrawalIdInTx",
+            cause: err,
+          }),
+      }),
+
+    settleByWithdrawalId: (withdrawalId, settledAt) =>
+      Effect.tryPromise({
+        try: async () => {
+          const updated = await client.walletHold.updateMany({
+            where: { withdrawalId, status: "ACTIVE" },
+            data: {
+              status: "SETTLED",
+              settledAt,
+            },
+          });
+          return updated.count > 0;
+        },
+        catch: err =>
+          new WalletHoldRepositoryError({
+            operation: "settleByWithdrawalId",
             cause: err,
           }),
       }),

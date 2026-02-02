@@ -33,33 +33,12 @@ export type WalletService = {
     input: IncreaseBalanceInput,
   ) => Effect.Effect<WalletRow, WalletNotFound | WalletRepositoryError>;
 
-  creditWalletInTx: (
-    tx: import("generated/prisma/client").Prisma.TransactionClient,
-    input: IncreaseBalanceInput,
-  ) => Effect.Effect<WalletRow, WalletNotFound | WalletRepositoryError>;
-
   debitWallet: (
     input: DecreaseBalanceInput,
   ) => Effect.Effect<
     WalletRow,
     WalletNotFound | InsufficientWalletBalance | WalletRepositoryError
   >;
-
-  debitWalletInTx: (
-    tx: import("generated/prisma/client").Prisma.TransactionClient,
-    input: DecreaseBalanceInput,
-  ) => Effect.Effect<
-    WalletRow,
-    WalletNotFound | InsufficientWalletBalance | WalletRepositoryError
-  >;
-  reserveBalanceInTx: (
-    tx: import("generated/prisma/client").Prisma.TransactionClient,
-    input: { readonly walletId: string; readonly amount: bigint },
-  ) => Effect.Effect<boolean, WalletRepositoryError>;
-  releaseReservedBalanceInTx: (
-    tx: import("generated/prisma/client").Prisma.TransactionClient,
-    input: { readonly walletId: string; readonly amount: bigint },
-  ) => Effect.Effect<boolean, WalletRepositoryError>;
 
   listTransactionsForUser: (
     args: { userId: string; pageReq: PageRequest<"createdAt"> },
@@ -102,12 +81,6 @@ export const WalletServiceLive = Layer.effect(
           getByUserId(input.userId)),
       );
 
-    const creditWalletInTx: WalletService["creditWalletInTx"] = (tx, input) =>
-      repo.increaseBalanceInTx(tx, input).pipe(
-        Effect.catchTag("WalletRecordNotFound", () =>
-          Effect.fail(new WalletNotFound({ userId: input.userId }))),
-      );
-
     const debitWallet: WalletService["debitWallet"] = input =>
       repo.decreaseBalance(input).pipe(
         Effect.catchTag("WalletRecordNotFound", () =>
@@ -123,27 +96,6 @@ export const WalletServiceLive = Layer.effect(
         ),
       );
 
-    const debitWalletInTx: WalletService["debitWalletInTx"] = (tx, input) =>
-      repo.decreaseBalanceInTx(tx, input).pipe(
-        Effect.catchTag("WalletRecordNotFound", () =>
-          Effect.fail(new WalletNotFound({ userId: input.userId }))),
-        Effect.catchTag(
-          "WalletBalanceConstraint",
-          err => Effect.fail(new InsufficientWalletBalance({
-            walletId: err.walletId,
-            userId: err.userId,
-            balance: err.balance,
-            attemptedDebit: err.attemptedDebit,
-          })),
-        ),
-      );
-
-    const reserveBalanceInTx: WalletService["reserveBalanceInTx"] = (tx, input) =>
-      repo.reserveBalanceInTx(tx, input);
-
-    const releaseReservedBalanceInTx: WalletService["releaseReservedBalanceInTx"] = (tx, input) =>
-      repo.releaseReservedBalanceInTx(tx, input);
-
     const listTransactionsForUser: WalletService["listTransactionsForUser"] = ({ userId, pageReq }) =>
       Effect.gen(function* () {
         const wallet = yield* getByUserId(userId);
@@ -155,11 +107,7 @@ export const WalletServiceLive = Layer.effect(
       getByUserId,
       createForUser,
       creditWallet,
-      creditWalletInTx,
       debitWallet,
-      debitWalletInTx,
-      reserveBalanceInTx,
-      releaseReservedBalanceInTx,
       listTransactionsForUser,
     };
 

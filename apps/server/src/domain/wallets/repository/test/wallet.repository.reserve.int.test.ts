@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+import { makeWalletRepository } from "../wallet.repository";
 import { setupWalletRepositoryTests } from "./test-helpers";
 
 describe("wallet Repository - Reserve/Release Balance", () => {
@@ -14,8 +15,9 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await client.$transaction(async (tx) => {
+      const txRepo = makeWalletRepository(tx);
       const reserved = await Effect.runPromise(
-        repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 30n }),
+        txRepo.reserveBalance({ walletId: wallet.id, amount: 30n }),
       );
       expect(reserved).toBe(true);
     });
@@ -33,8 +35,9 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await client.$transaction(async (tx) => {
+      const txRepo = makeWalletRepository(tx);
       const reserved = await Effect.runPromise(
-        repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 150n }),
+        txRepo.reserveBalance({ walletId: wallet.id, amount: 150n }),
       );
       expect(reserved).toBe(false);
     });
@@ -51,14 +54,16 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await client.$transaction(async (tx) => {
+      const txRepo = makeWalletRepository(tx);
       await Effect.runPromise(
-        repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 30n }),
+        txRepo.reserveBalance({ walletId: wallet.id, amount: 30n }),
       );
     });
 
     await client.$transaction(async (tx) => {
+      const txRepo = makeWalletRepository(tx);
       const released = await Effect.runPromise(
-        repo.releaseReservedBalanceInTx(tx, { walletId: wallet.id, amount: 30n }),
+        txRepo.releaseReservedBalance({ walletId: wallet.id, amount: 30n }),
       );
       expect(released).toBe(true);
     });
@@ -75,8 +80,9 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await client.$transaction(async (tx) => {
+      const txRepo = makeWalletRepository(tx);
       const released = await Effect.runPromise(
-        repo.releaseReservedBalanceInTx(tx, { walletId: wallet.id, amount: 30n }),
+        txRepo.releaseReservedBalance({ walletId: wallet.id, amount: 30n }),
       );
       expect(released).toBe(false);
     });
@@ -93,8 +99,9 @@ describe("wallet Repository - Reserve/Release Balance", () => {
     await Effect.runPromise(repo.increaseBalance({ userId, amount: 100n }));
 
     await client.$transaction(async (tx) => {
+      const txRepo = makeWalletRepository(tx);
       await Effect.runPromise(
-        repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 80n }),
+        txRepo.reserveBalance({ walletId: wallet.id, amount: 80n }),
       );
     });
 
@@ -118,8 +125,9 @@ describe("wallet Repository - Reserve/Release Balance", () => {
 
     try {
       await client.$transaction(async (tx) => {
+        const txRepo = makeWalletRepository(tx);
         await Effect.runPromise(
-          repo.reserveBalanceInTx(tx, { walletId: wallet.id, amount: 30n }),
+          txRepo.reserveBalance({ walletId: wallet.id, amount: 30n }),
         );
         throw new Error("Simulated transaction failure");
       });

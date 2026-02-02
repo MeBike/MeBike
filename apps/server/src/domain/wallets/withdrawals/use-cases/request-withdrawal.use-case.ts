@@ -11,25 +11,44 @@ import type {
 import { env } from "@/config/env";
 import { UserServiceTag } from "@/domain/users/services/user.service";
 import { InsufficientWalletBalance, WalletNotFound } from "@/domain/wallets/domain-errors";
-import { WalletRepository } from "@/domain/wallets/repository/wallet.repository";
-import { WalletHoldServiceTag } from "@/domain/wallets/services/wallet-hold.service";
+import { makeWalletHoldRepository } from "@/domain/wallets/repository/wallet-hold.repository";
+import { makeWalletRepository } from "@/domain/wallets/repository/wallet.repository";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
-import type {
-  DuplicateWithdrawalRequest,
-  WithdrawalRepositoryError,
-} from "../domain-errors";
-import type { WalletWithdrawalRow } from "../models";
+import type { WithdrawalRepositoryError, WithdrawalUniqueViolation } from "../domain-errors";
+import type { CreateWalletWithdrawalInput, WalletWithdrawalRow } from "../models";
 
 import {
+  DuplicateWithdrawalRequest,
   InvalidWithdrawalRequest,
   StripeConnectNotLinked,
   StripePayoutsNotEnabled,
   WithdrawalUserNotFound,
 } from "../domain-errors";
-import { WithdrawalServiceTag } from "../services/withdrawal.service";
+import { makeWithdrawalRepository } from "../repository/withdrawal.repository";
+
+function createPendingWithdrawal(
+  repo: ReturnType<typeof makeWithdrawalRepository>,
+  input: CreateWalletWithdrawalInput,
+) {
+  return repo.createPending(input).pipe(
+    Effect.catchTag("WithdrawalUniqueViolation", (err: WithdrawalUniqueViolation) =>
+      repo.findByIdempotencyKey(input.idempotencyKey).pipe(
+        Effect.flatMap(maybeExisting =>
+          maybeExisting._tag === "Some"
+            ? Effect.fail(new DuplicateWithdrawalRequest({
+                idempotencyKey: input.idempotencyKey,
+                existing: maybeExisting.value,
+              }))
+            : Effect.die(new Error(
+                `Invariant violated: WithdrawalUniqueViolation but no row found for idempotencyKey ${input.idempotencyKey} (cause: ${String(err.cause)})`,
+              )),
+        ),
+      )),
+  );
+}
 
 export type RequestWithdrawalInput = {
   readonly userId: string;
@@ -54,7 +73,7 @@ export function requestWithdrawalUseCase(
   | UserRepositoryError
   | WithdrawalRepositoryError
   | WithdrawalUserNotFound,
-  Prisma | WithdrawalServiceTag | WalletRepository | WalletHoldServiceTag | UserServiceTag
+  Prisma | UserServiceTag
 > {
   return Effect.gen(function* () {
     const minAmount = BigInt(env.MIN_WITHDRAWAL_AMOUNT);
@@ -65,9 +84,6 @@ export function requestWithdrawalUseCase(
     }
 
     const userService = yield* UserServiceTag;
-    const withdrawalService = yield* WithdrawalServiceTag;
-    const walletRepo = yield* WalletRepository;
-    const walletHoldService = yield* WalletHoldServiceTag;
     const { client } = yield* Prisma;
 
     const userOpt = yield* userService.getById(input.userId);
@@ -101,14 +117,18 @@ export function requestWithdrawalUseCase(
 
     const withdrawal = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
-        const walletOpt = yield* walletRepo.findByUserIdInTx(tx, user.id);
+        const txWalletRepo = makeWalletRepository(tx);
+        const txWalletHoldRepo = makeWalletHoldRepository(tx);
+        const txWithdrawalRepo = makeWithdrawalRepository(tx);
+
+        const walletOpt = yield* txWalletRepo.findByUserId(user.id);
         const wallet = yield* Match.value(walletOpt).pipe(
           Match.tag("Some", ({ value }) => Effect.succeed(value)),
           Match.tag("None", () => Effect.fail(new WalletNotFound({ userId: user.id }))),
           Match.exhaustive,
         );
 
-        const withdrawal = yield* withdrawalService.createPendingInTx(tx, {
+        const withdrawal = yield* createPendingWithdrawal(txWithdrawalRepo, {
           userId: user.id,
           walletId: wallet.id,
           amount: input.amount,
@@ -116,7 +136,7 @@ export function requestWithdrawalUseCase(
           idempotencyKey,
         });
 
-        const reservedRows = yield* walletRepo.reserveBalanceInTx(tx, {
+        const reservedRows = yield* txWalletRepo.reserveBalance({
           walletId: wallet.id,
           amount: input.amount,
         });
@@ -131,7 +151,7 @@ export function requestWithdrawalUseCase(
           }));
         }
 
-        yield* walletHoldService.createInTx(tx, {
+        yield* txWalletHoldRepo.create({
           walletId: wallet.id,
           withdrawalId: withdrawal.id,
           amount: input.amount,

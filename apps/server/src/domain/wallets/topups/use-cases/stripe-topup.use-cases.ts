@@ -6,11 +6,15 @@ import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { WalletNotFound, WalletRepositoryError } from "../../domain-errors";
+import type { IncreaseBalanceInput } from "../../models";
 import type { InvalidTopupRequest, PaymentAttemptRepositoryError, PaymentAttemptUniqueViolation } from "../domain-errors";
 import type { StripeCheckoutAttemptInput, StripeTopupSessionResult, StripeWebhookOutcome } from "../services/stripe-topup.service";
 
+import { WalletNotFound as WalletNotFoundError } from "../../domain-errors";
+import { makeWalletRepository } from "../../repository/wallet.repository";
 import { WalletServiceTag } from "../../services/wallet.service";
 import { TopupProviderError } from "../domain-errors";
+import { makePaymentAttemptRepository } from "../repository/payment-attempt.repository";
 import { StripeTopupServiceTag } from "../services/stripe-topup.service";
 
 // TODO(future): Add a Stripe Connect-based “top-up” flow (destination charge or direct charge),
@@ -78,16 +82,32 @@ export function createStripeCheckoutSessionUseCase(
   });
 }
 
+function creditWallet(
+  repo: ReturnType<typeof makeWalletRepository>,
+  input: IncreaseBalanceInput,
+) {
+  return repo.increaseBalance(input).pipe(
+    Effect.catchTag("WalletRecordNotFound", () =>
+      Effect.fail(new WalletNotFoundError({ userId: input.userId }))),
+    Effect.catchTag("WalletUniqueViolation", () =>
+      repo.findByUserId(input.userId).pipe(
+        Effect.flatMap(maybeWallet =>
+          maybeWallet._tag === "Some"
+            ? Effect.succeed(maybeWallet.value)
+            : Effect.fail(new WalletNotFoundError({ userId: input.userId }))),
+      )),
+  );
+}
+
 export function handleStripeTopupWebhookEventUseCase(
   event: Stripe.Event,
 ): Effect.Effect<
   StripeWebhookOutcome,
   TopupProviderError | PaymentAttemptRepositoryError,
-  StripeTopupServiceTag | Prisma | WalletServiceTag
+  StripeTopupServiceTag | Prisma
 > {
   return Effect.gen(function* () {
     const service = yield* StripeTopupServiceTag;
-    const walletService = yield* WalletServiceTag;
     const { client } = yield* Prisma;
 
     if (event.type !== "checkout.session.completed") {
@@ -128,7 +148,8 @@ export function handleStripeTopupWebhookEventUseCase(
       yield* Effect.tryPromise({
         try: () =>
           client.$transaction(async (tx) => {
-            await Effect.runPromise(service.markFailedIfPendingInTx(tx, attempt.id, reason));
+            const txRepo = makePaymentAttemptRepository(tx);
+            await Effect.runPromise(txRepo.markFailedIfPending(attempt.id, reason));
           }),
         catch: cause =>
           new TopupProviderError({
@@ -142,12 +163,15 @@ export function handleStripeTopupWebhookEventUseCase(
 
     return yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
-        const updated = yield* service.markSucceededIfPendingInTx(tx, attempt.id, session.id);
+        const txPaymentAttemptRepo = makePaymentAttemptRepository(tx);
+        const txWalletRepo = makeWalletRepository(tx);
+
+        const updated = yield* txPaymentAttemptRepo.markSucceededIfPending(attempt.id, session.id);
         if (!updated) {
           return { status: "ignored", reason: "already_processed" } as StripeWebhookOutcome;
         }
 
-        const creditResult = yield* walletService.creditWalletInTx(tx, {
+        const creditResult = yield* creditWallet(txWalletRepo, {
           userId: attempt.userId,
           amount: receivedMinor,
           description: "Stripe top-up",
@@ -160,7 +184,7 @@ export function handleStripeTopupWebhookEventUseCase(
             Effect.succeed({ status: "succeeded", paymentAttemptId: attempt.id } as StripeWebhookOutcome)),
           Match.tag("Left", ({ left }) => {
             if (left._tag === "WalletNotFound") {
-              return service.markFailedIfPendingInTx(tx, attempt.id, "wallet_missing").pipe(
+              return txPaymentAttemptRepo.markFailedIfPending(attempt.id, "wallet_missing").pipe(
                 Effect.as({
                   status: "failed",
                   paymentAttemptId: attempt.id,
