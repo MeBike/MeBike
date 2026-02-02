@@ -35,7 +35,7 @@ import {
 import { startRentalFailureFromBikeStatus } from "../guards/bike-status";
 import { computeSubscriptionCoverage } from "../pricing";
 import { makeRentalRepository, RentalRepository } from "../repository/rental.repository";
-import { rentalUniqueViolationToFailure } from "./unique-violation-mapper";
+import { rentalUniqueViolationToFailure } from "../services/unique-violation-mapper";
 
 export function startRentalUseCase(
   input: StartRentalInput,
