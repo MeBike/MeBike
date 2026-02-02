@@ -10,6 +10,7 @@ import {
   RentalRepositoryLive,
 } from "@/domain/rentals";
 import {
+  makeReservationRepository,
   ReservationRepository,
   ReservationRepositoryLive,
 } from "@/domain/reservations/repository/reservation.repository";
@@ -170,7 +171,6 @@ export async function handleReservationExpireHold(
 
   const result = await runReservationEffect(
     Effect.gen(function* () {
-      const reservationRepo = yield* ReservationRepository;
       yield* BikeRepository;
       yield* RentalRepository;
       const userRepo = yield* UserRepository;
@@ -183,8 +183,9 @@ export async function handleReservationExpireHold(
           return await client.$transaction(async (tx) => {
             const txBikeRepo = makeBikeRepository(tx);
             const txRentalRepo = makeRentalRepository(tx);
+            const txReservationRepo = makeReservationRepository(tx);
             const reservationOpt = await Effect.runPromise(
-              reservationRepo.findByIdInTx(tx, payload.reservationId).pipe(
+              txReservationRepo.findById(payload.reservationId).pipe(
                 Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
               ),
             );
@@ -205,7 +206,7 @@ export async function handleReservationExpireHold(
             }
 
             const expired = await Effect.runPromise(
-              reservationRepo.expirePendingHoldInTx(tx, reservation.id, now).pipe(
+              txReservationRepo.expirePendingHold(reservation.id, now).pipe(
                 Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
               ),
             );

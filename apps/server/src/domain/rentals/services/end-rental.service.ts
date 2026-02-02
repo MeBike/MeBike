@@ -4,7 +4,7 @@ import type { RentalStatus } from "generated/prisma/enums";
 
 import { env } from "@/config/env";
 import { BikeRepository, makeBikeRepository } from "@/domain/bikes";
-import { ReservationRepository } from "@/domain/reservations/repository/reservation.repository";
+import { makeReservationRepository } from "@/domain/reservations/repository/reservation.repository";
 import { toMinorUnit } from "@/domain/shared/money";
 import {
   SubscriptionNotFound,
@@ -40,14 +40,12 @@ export function endRentalUseCase(
   | BikeRepository
   | WalletServiceTag
   | SubscriptionRepository
-  | ReservationRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const repo = yield* RentalRepository;
     yield* BikeRepository;
     const subscriptionRepo = yield* SubscriptionRepository;
-    const reservationRepo = yield* ReservationRepository;
     const walletService = yield* WalletServiceTag;
     const { userId, rentalId, endStationId, endTime } = input;
 
@@ -104,7 +102,8 @@ export function endRentalUseCase(
           let usageToAdd = 0;
           let prepaidMinor = 0n;
 
-          const reservationOpt = yield* reservationRepo.findByIdInTx(tx, rentalId).pipe(
+          const txReservationRepo = makeReservationRepository(tx);
+          const reservationOpt = yield* txReservationRepo.findById(rentalId).pipe(
             Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
           );
           if (Option.isSome(reservationOpt)) {
@@ -191,7 +190,7 @@ export function endRentalUseCase(
           }
 
           if (Option.isSome(reservationOpt) && reservationOpt.value.status === "ACTIVE") {
-            yield* reservationRepo.expireActiveInTx(tx, reservationOpt.value.id, endTime).pipe(
+            yield* txReservationRepo.expireActive(reservationOpt.value.id, endTime).pipe(
               Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
             );
           }

@@ -34,7 +34,9 @@ export class ReservationRepository extends Context.Tag("ReservationRepository")<
   ReservationRepo
 >() {}
 
-export function makeReservationRepository(client: PrismaClient): ReservationRepo {
+export function makeReservationRepository(
+  client: PrismaClient | PrismaTypes.TransactionClient,
+): ReservationRepo {
   const findNextUpcomingByUserIdWithClient = (
     tx: PrismaClient | PrismaTypes.TransactionClient,
     userId: string,
@@ -128,8 +130,6 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
   return {
     createReservation: input => createReservationWithClient(client, input),
 
-    createReservationInTx: (tx, input) => createReservationWithClient(tx, input),
-
     findById: reservationId =>
       Effect.tryPromise({
         try: () =>
@@ -140,24 +140,6 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
         catch: err =>
           new ReservationRepositoryError({
             operation: "findById",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(toReservationRow)),
-        ),
-      ),
-
-    findByIdInTx: (tx, reservationId) =>
-      Effect.tryPromise({
-        try: () =>
-          tx.reservation.findUnique({
-            where: { id: reservationId },
-            select: selectReservationRow,
-          }),
-        catch: err =>
-          new ReservationRepositoryError({
-            operation: "findByIdInTx",
             cause: err,
           }),
       }).pipe(
@@ -210,50 +192,6 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
         ),
       ),
 
-    findLatestPendingOrActiveByUserIdInTx: (tx, userId) =>
-      Effect.tryPromise({
-        try: () =>
-          tx.reservation.findFirst({
-            where: {
-              userId,
-              ...activeStatusWhere(),
-            },
-            orderBy: { updatedAt: "desc" },
-            select: selectReservationRow,
-          }),
-        catch: err =>
-          new ReservationRepositoryError({
-            operation: "findLatestPendingOrActiveByUserIdInTx",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(toReservationRow)),
-        ),
-      ),
-
-    findLatestPendingOrActiveByBikeIdInTx: (tx, bikeId) =>
-      Effect.tryPromise({
-        try: () =>
-          tx.reservation.findFirst({
-            where: {
-              bikeId,
-              ...activeStatusWhere(),
-            },
-            orderBy: { updatedAt: "desc" },
-            select: selectReservationRow,
-          }),
-        catch: err =>
-          new ReservationRepositoryError({
-            operation: "findLatestPendingOrActiveByBikeIdInTx",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(toReservationRow)),
-        ),
-      ),
-
     findPendingHoldByUserIdNow: (userId, now) =>
       Effect.tryPromise({
         try: () =>
@@ -298,54 +236,10 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
         ),
       ),
 
-    findPendingHoldByUserIdNowInTx: (tx, userId, now) =>
+    findActiveByUserId: userId =>
       Effect.tryPromise({
         try: () =>
-          tx.reservation.findFirst({
-            where: {
-              userId,
-              ...pendingHoldWhere(now),
-            },
-            orderBy: { endTime: "asc" },
-            select: selectReservationRow,
-          }),
-        catch: err =>
-          new ReservationRepositoryError({
-            operation: "findPendingHoldByUserIdNowInTx",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(toReservationRow)),
-        ),
-      ),
-
-    findPendingHoldByBikeIdNowInTx: (tx, bikeId, now) =>
-      Effect.tryPromise({
-        try: () =>
-          tx.reservation.findFirst({
-            where: {
-              bikeId,
-              ...pendingHoldWhere(now),
-            },
-            orderBy: { endTime: "asc" },
-            select: selectReservationRow,
-          }),
-        catch: err =>
-          new ReservationRepositoryError({
-            operation: "findPendingHoldByBikeIdNowInTx",
-            cause: err,
-          }),
-      }).pipe(
-        Effect.map(row =>
-          Option.fromNullable(row).pipe(Option.map(toReservationRow)),
-        ),
-      ),
-
-    findActiveByUserIdInTx: (tx, userId) =>
-      Effect.tryPromise({
-        try: () =>
-          tx.reservation.findFirst({
+          client.reservation.findFirst({
             where: {
               userId,
               status: ReservationStatus.ACTIVE,
@@ -354,7 +248,7 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
           }),
         catch: err =>
           new ReservationRepositoryError({
-            operation: "findActiveByUserIdInTx",
+            operation: "findActiveByUserId",
             cause: err,
           }),
       }).pipe(
@@ -363,10 +257,10 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
         ),
       ),
 
-    findPendingFixedSlotByTemplateAndStartInTx: (tx, templateId, startTime) =>
+    findPendingFixedSlotByTemplateAndStart: (templateId, startTime) =>
       Effect.tryPromise({
         try: () =>
-          tx.reservation.findFirst({
+          client.reservation.findFirst({
             where: {
               fixedSlotTemplateId: templateId,
               reservationOption: "FIXED_SLOT",
@@ -378,7 +272,7 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
           }),
         catch: err =>
           new ReservationRepositoryError({
-            operation: "findPendingFixedSlotByTemplateAndStartInTx",
+            operation: "findPendingFixedSlotByTemplateAndStart",
             cause: err,
           }),
       }).pipe(
@@ -387,10 +281,10 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
         ),
       ),
 
-    assignBikeToPendingReservationInTx: (tx, reservationId, bikeId, updatedAt) =>
+    assignBikeToPendingReservation: (reservationId, bikeId, updatedAt) =>
       Effect.tryPromise({
         try: async () => {
-          const updated = await tx.reservation.updateMany({
+          const updated = await client.reservation.updateMany({
             where: {
               id: reservationId,
               bikeId: null,
@@ -405,16 +299,13 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
         },
         catch: err =>
           new ReservationRepositoryError({
-            operation: "assignBikeToPendingReservationInTx",
+            operation: "assignBikeToPendingReservation",
             cause: err,
           }),
       }),
 
     findNextUpcomingByUserId: (userId, now, options) =>
       findNextUpcomingByUserIdWithClient(client, userId, now, options),
-
-    findNextUpcomingByUserIdInTx: (tx, userId, now, options) =>
-      findNextUpcomingByUserIdWithClient(tx, userId, now, options),
 
     listForUser: (userId, filter, pageReq) =>
       Effect.gen(function* () {
@@ -455,12 +346,10 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
 
     updateStatus: input => updateStatusWithClient(client, input),
 
-    updateStatusInTx: (tx, input) => updateStatusWithClient(tx, input),
-
-    expireActiveInTx: (tx, reservationId, updatedAt) =>
+    expireActive: (reservationId, updatedAt) =>
       Effect.tryPromise({
         try: async () => {
-          const result = await tx.reservation.updateMany({
+          const result = await client.reservation.updateMany({
             where: {
               id: reservationId,
               status: ReservationStatus.ACTIVE,
@@ -471,15 +360,15 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
         },
         catch: err =>
           new ReservationRepositoryError({
-            operation: "expireActiveInTx",
+            operation: "expireActive",
             cause: err,
           }),
       }),
 
-    expirePendingHoldInTx: (tx, reservationId, now) =>
+    expirePendingHold: (reservationId, now) =>
       Effect.tryPromise({
         try: async () => {
-          const result = await tx.reservation.updateMany({
+          const result = await client.reservation.updateMany({
             where: {
               id: reservationId,
               status: ReservationStatus.PENDING,
@@ -491,7 +380,7 @@ export function makeReservationRepository(client: PrismaClient): ReservationRepo
         },
         catch: err =>
           new ReservationRepositoryError({
-            operation: "expirePendingHoldInTx",
+            operation: "expirePendingHold",
             cause: err,
           }),
       }),

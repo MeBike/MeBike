@@ -1,7 +1,6 @@
 import type { Effect, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import type {
   ReservationNotFound,
@@ -21,28 +20,10 @@ export type ReservationRepo = {
   ) => Effect.Effect<ReservationRow, ReservationRepositoryError | ReservationUniqueViolation>;
 
   /**
-   * EN: Creates a reservation row inside an existing Prisma transaction.
-   * VI: Tạo reservation bên trong Prisma transaction hiện có.
-   */
-  createReservationInTx: (
-    tx: PrismaTypes.TransactionClient,
-    input: CreateReservationInput,
-  ) => Effect.Effect<ReservationRow, ReservationRepositoryError | ReservationUniqueViolation>;
-
-  /**
    * EN: Finds reservation by id.
    * VI: Tìm reservation theo id.
    */
   findById: (
-    reservationId: string,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
-
-  /**
-   * EN: Finds reservation by id inside an existing Prisma transaction.
-   * VI: Tìm reservation theo id bên trong Prisma transaction hiện có.
-   */
-  findByIdInTx: (
-    tx: PrismaTypes.TransactionClient,
     reservationId: string,
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
 
@@ -59,16 +40,6 @@ export type ReservationRepo = {
    * This is intentionally NOT "current hold"; use `findPendingHoldBy*Now` for that.
    */
   findLatestPendingOrActiveByBikeId: (
-    bikeId: string,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
-
-  findLatestPendingOrActiveByUserIdInTx: (
-    tx: PrismaTypes.TransactionClient,
-    userId: string,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
-
-  findLatestPendingOrActiveByBikeIdInTx: (
-    tx: PrismaTypes.TransactionClient,
     bikeId: string,
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
 
@@ -95,24 +66,11 @@ export type ReservationRepo = {
     now: Date,
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
 
-  findPendingHoldByUserIdNowInTx: (
-    tx: PrismaTypes.TransactionClient,
-    userId: string,
-    now: Date,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
-
-  findPendingHoldByBikeIdNowInTx: (
-    tx: PrismaTypes.TransactionClient,
-    bikeId: string,
-    now: Date,
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
-
   /**
-   * EN: Find ACTIVE reservation by user id inside a Prisma transaction.
-   * VI: Tìm reservation ACTIVE theo user id bên trong Prisma transaction.
+   * EN: Find ACTIVE reservation by user id.
+   * VI: Tìm reservation ACTIVE theo user id.
    */
-  findActiveByUserIdInTx: (
-    tx: PrismaTypes.TransactionClient,
+  findActiveByUserId: (
     userId: string,
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
 
@@ -120,8 +78,7 @@ export type ReservationRepo = {
    * EN: Find a PENDING FIXED_SLOT reservation for a template at a specific start time (bike unassigned).
    * VI: Tìm reservation FIXED_SLOT ở trạng thái PENDING theo template + thời điểm bắt đầu (chưa gán bike).
    */
-  findPendingFixedSlotByTemplateAndStartInTx: (
-    tx: PrismaTypes.TransactionClient,
+  findPendingFixedSlotByTemplateAndStart: (
     templateId: string,
     startTime: Date,
   ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
@@ -130,8 +87,7 @@ export type ReservationRepo = {
    * EN: Assign bike to a pending reservation if it is still unassigned.
    * VI: Gán bike cho reservation pending nếu vẫn chưa có bike.
    */
-  assignBikeToPendingReservationInTx: (
-    tx: PrismaTypes.TransactionClient,
+  assignBikeToPendingReservation: (
     reservationId: string,
     bikeId: string,
     updatedAt: Date,
@@ -142,17 +98,6 @@ export type ReservationRepo = {
    * VI: Trả về reservation PENDING sắp tới (startTime > now). Hữu ích cho UX FIXED_SLOT.
    */
   findNextUpcomingByUserId: (
-    userId: string,
-    now: Date,
-    options?: { readonly onlyFixedSlot?: boolean },
-  ) => Effect.Effect<Option.Option<ReservationRow>, ReservationRepositoryError>;
-
-  /**
-   * EN: Same as `findNextUpcomingByUserId` but runs inside an existing Prisma transaction.
-   * VI: Giống `findNextUpcomingByUserId` nhưng chạy trong Prisma transaction hiện có.
-   */
-  findNextUpcomingByUserIdInTx: (
-    tx: PrismaTypes.TransactionClient,
     userId: string,
     now: Date,
     options?: { readonly onlyFixedSlot?: boolean },
@@ -182,20 +127,10 @@ export type ReservationRepo = {
   ) => Effect.Effect<ReservationRow, ReservationNotFound | ReservationRepositoryError>;
 
   /**
-   * EN: Updates reservation status inside a Prisma transaction.
-   * VI: Cập nhật status reservation bên trong Prisma transaction.
-   */
-  updateStatusInTx: (
-    tx: PrismaTypes.TransactionClient,
-    input: UpdateReservationStatusInput,
-  ) => Effect.Effect<ReservationRow, ReservationNotFound | ReservationRepositoryError>;
-
-  /**
    * EN: Expire an ACTIVE reservation by id (idempotent).
    * VI: Hết hạn reservation ACTIVE theo id (idempotent).
    */
-  expireActiveInTx: (
-    tx: PrismaTypes.TransactionClient,
+  expireActive: (
     reservationId: string,
     updatedAt: Date,
   ) => Effect.Effect<boolean, ReservationRepositoryError>;
@@ -204,8 +139,7 @@ export type ReservationRepo = {
    * EN: Expire a single PENDING reservation if endTime < now (idempotent).
    * VI: Hết hạn một reservation PENDING nếu endTime < now (idempotent).
    */
-  expirePendingHoldInTx: (
-    tx: PrismaTypes.TransactionClient,
+  expirePendingHold: (
     reservationId: string,
     now: Date,
   ) => Effect.Effect<boolean, ReservationRepositoryError>;

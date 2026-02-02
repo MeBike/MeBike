@@ -241,7 +241,7 @@ describe("reservationRepository Integration", () => {
     // Re-enable once we finalize fixed-slot semantics and adjust the constraint accordingly.
   });
 
-  it("findPendingFixedSlotByTemplateAndStartInTx + assignBikeToPendingReservationInTx are idempotent", async () => {
+  it("findPendingFixedSlotByTemplateAndStart + assignBikeToPendingReservation are idempotent", async () => {
     const now = new Date();
     const user = await createUser(client);
     const station = await createStation(client, { name: "Station E" });
@@ -270,20 +270,23 @@ describe("reservationRepository Integration", () => {
       select: { id: true },
     });
 
-    const found = await client.$transaction(async tx =>
-      Effect.runPromise(repo.findPendingFixedSlotByTemplateAndStartInTx(tx, template.id, startTime)),
-    );
+    const found = await client.$transaction(async (tx) => {
+      const txRepo = makeReservationRepository(tx);
+      return Effect.runPromise(txRepo.findPendingFixedSlotByTemplateAndStart(template.id, startTime));
+    });
     expect(Option.isSome(found)).toBe(true);
     expect(Option.getOrThrow(found).id).toBe(reservation.id);
 
-    const firstAssign = await client.$transaction(async tx =>
-      Effect.runPromise(repo.assignBikeToPendingReservationInTx(tx, reservation.id, bike.id, now)),
-    );
+    const firstAssign = await client.$transaction(async (tx) => {
+      const txRepo = makeReservationRepository(tx);
+      return Effect.runPromise(txRepo.assignBikeToPendingReservation(reservation.id, bike.id, now));
+    });
     expect(firstAssign).toBe(true);
 
-    const secondAssign = await client.$transaction(async tx =>
-      Effect.runPromise(repo.assignBikeToPendingReservationInTx(tx, reservation.id, bike.id, now)),
-    );
+    const secondAssign = await client.$transaction(async (tx) => {
+      const txRepo = makeReservationRepository(tx);
+      return Effect.runPromise(txRepo.assignBikeToPendingReservation(reservation.id, bike.id, now));
+    });
     expect(secondAssign).toBe(false);
   });
 

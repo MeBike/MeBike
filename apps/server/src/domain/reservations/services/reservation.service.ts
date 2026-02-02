@@ -15,7 +15,7 @@ import {
   ReservationNotFound,
   ReservationNotOwned,
 } from "../domain-errors";
-import { ReservationRepository } from "../repository/reservation.repository";
+import { makeReservationRepository, ReservationRepository } from "../repository/reservation.repository";
 import { mapReservationUniqueViolation } from "../repository/unique-violation";
 
 export type ConfirmPendingReservationResult = {
@@ -146,7 +146,7 @@ function makeReservationService(
       ),
 
     getLatestPendingOrActiveForUserInTx: (tx, userId) =>
-      repo.findLatestPendingOrActiveByUserIdInTx(tx, userId).pipe(
+      makeReservationRepository(tx).findLatestPendingOrActiveByUserId(userId).pipe(
         Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
       ),
 
@@ -162,7 +162,8 @@ function makeReservationService(
 
     confirmPendingInTx: (tx, input) =>
       Effect.gen(function* () {
-        const reservationOpt = yield* repo.findByIdInTx(tx, input.reservationId).pipe(
+        const txRepo = makeReservationRepository(tx);
+        const reservationOpt = yield* txRepo.findById(input.reservationId).pipe(
           Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
         );
         if (Option.isNone(reservationOpt)) {
@@ -197,7 +198,7 @@ function makeReservationService(
           return yield* Effect.fail(new ReservationMissingBike({ reservationId: reservation.id }));
         }
 
-        const updatedReservation = yield* repo.updateStatusInTx(tx, {
+        const updatedReservation = yield* txRepo.updateStatus({
           reservationId: reservation.id,
           status: "ACTIVE",
           updatedAt: input.now,
@@ -213,7 +214,8 @@ function makeReservationService(
 
     cancelPendingInTx: (tx, input) =>
       Effect.gen(function* () {
-        const reservationOpt = yield* repo.findByIdInTx(tx, input.reservationId).pipe(
+        const txRepo = makeReservationRepository(tx);
+        const reservationOpt = yield* txRepo.findById(input.reservationId).pipe(
           Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
         );
         if (Option.isNone(reservationOpt)) {
@@ -236,7 +238,7 @@ function makeReservationService(
           }));
         }
 
-        return yield* repo.updateStatusInTx(tx, {
+        return yield* txRepo.updateStatus({
           reservationId: reservation.id,
           status: "CANCELLED",
           updatedAt: input.now,
@@ -246,7 +248,7 @@ function makeReservationService(
       }),
 
     reserveHoldInTx: (tx, input) =>
-      repo.createReservationInTx(tx, {
+      makeReservationRepository(tx).createReservation({
         userId: input.userId,
         bikeId: input.bikeId,
         stationId: input.stationId,

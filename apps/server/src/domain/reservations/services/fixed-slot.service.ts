@@ -14,7 +14,7 @@ import {
   buildFixedSlotNoBikeEmail,
 } from "@/lib/email-templates";
 
-import { ReservationRepository } from "../repository/reservation.repository";
+import { makeReservationRepository } from "../repository/reservation.repository";
 
 export type FixedSlotAssignmentSummary = {
   readonly slotDate: string;
@@ -105,11 +105,10 @@ export function assignFixedSlotReservationsUseCase(args: {
 }): Effect.Effect<
   FixedSlotAssignmentSummary,
   never,
-  Prisma | ReservationRepository | BikeRepository | RentalRepository
+  Prisma | BikeRepository | RentalRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
-    const reservationRepo = yield* ReservationRepository;
     yield* BikeRepository;
     yield* RentalRepository;
     const assignmentTime = args.assignmentTime ?? new Date();
@@ -153,8 +152,8 @@ export function assignFixedSlotReservationsUseCase(args: {
             Effect.runPromise(Effect.gen(function* () {
               const bikeRepo = makeBikeRepository(tx);
               const txRentalRepo = makeRentalRepository(tx);
-              const reservationOpt = yield* reservationRepo.findPendingFixedSlotByTemplateAndStartInTx(
-                tx,
+              const txReservationRepo = makeReservationRepository(tx);
+              const reservationOpt = yield* txReservationRepo.findPendingFixedSlotByTemplateAndStart(
                 template.id,
                 slotStartAt,
               ).pipe(
@@ -197,8 +196,7 @@ export function assignFixedSlotReservationsUseCase(args: {
               }
               const bike = bikeOpt.value;
 
-              const reservationAssigned = yield* reservationRepo.assignBikeToPendingReservationInTx(
-                tx,
+              const reservationAssigned = yield* txReservationRepo.assignBikeToPendingReservation(
                 reservation.id,
                 bike.id,
                 now,

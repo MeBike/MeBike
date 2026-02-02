@@ -4,7 +4,7 @@ import { Effect, Layer } from "effect";
 
 import type { ReservationRow } from "../models";
 
-import { ReservationRepository } from "../repository/reservation.repository";
+import { makeReservationRepository, ReservationRepository } from "../repository/reservation.repository";
 
 export type ReservationHoldService = {
   /**
@@ -56,7 +56,7 @@ function makeReservationHoldService(
       ),
 
     getCurrentHoldForUserNowInTx: (tx, userId, now) =>
-      repo.findPendingHoldByUserIdNowInTx(tx, userId, now).pipe(
+      makeReservationRepository(tx).findPendingHoldByUserIdNow(userId, now).pipe(
         Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
       ),
 
@@ -66,7 +66,7 @@ function makeReservationHoldService(
       ),
 
     getCurrentHoldForBikeNowInTx: (tx, bikeId, now) =>
-      repo.findPendingHoldByBikeIdNowInTx(tx, bikeId, now).pipe(
+      makeReservationRepository(tx).findPendingHoldByBikeIdNow(bikeId, now).pipe(
         Effect.catchTag("ReservationRepositoryError", err => Effect.die(err)),
       ),
   };
