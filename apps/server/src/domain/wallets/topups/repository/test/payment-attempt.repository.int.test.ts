@@ -263,8 +263,9 @@ describe("paymentAttemptRepository Integration", () => {
 
     const providerRef = `cs_test_${uuidv7()}`;
     const updated = await client.$transaction(async (tx) => {
+      const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
-        repo.markSucceededIfPendingInTx(tx, created.id, providerRef),
+        txRepo.markSucceededIfPending(created.id, providerRef),
       );
     });
 
@@ -295,15 +296,17 @@ describe("paymentAttemptRepository Integration", () => {
 
     // First mark as succeeded
     await client.$transaction(async (tx) => {
+      const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
-        repo.markSucceededIfPendingInTx(tx, created.id, "ref1"),
+        txRepo.markSucceededIfPending(created.id, "ref1"),
       );
     });
 
     // Try to mark again (should return false - idempotent)
     const secondAttempt = await client.$transaction(async (tx) => {
+      const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
-        repo.markSucceededIfPendingInTx(tx, created.id, "ref2"),
+        txRepo.markSucceededIfPending(created.id, "ref2"),
       );
     });
 
@@ -326,8 +329,9 @@ describe("paymentAttemptRepository Integration", () => {
 
     const failureReason = "User cancelled checkout";
     const updated = await client.$transaction(async (tx) => {
+      const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
-        repo.markFailedIfPendingInTx(tx, created.id, failureReason),
+        txRepo.markFailedIfPending(created.id, failureReason),
       );
     });
 
@@ -358,15 +362,17 @@ describe("paymentAttemptRepository Integration", () => {
 
     // First mark as failed
     await client.$transaction(async (tx) => {
+      const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
-        repo.markFailedIfPendingInTx(tx, created.id, "First failure"),
+        txRepo.markFailedIfPending(created.id, "First failure"),
       );
     });
 
     // Try to mark again (should return false - idempotent)
     const secondAttempt = await client.$transaction(async (tx) => {
+      const txRepo = makePaymentAttemptRepository(tx);
       return Effect.runPromise(
-        repo.markFailedIfPendingInTx(tx, created.id, "Second failure"),
+        txRepo.markFailedIfPending(created.id, "Second failure"),
       );
     });
 

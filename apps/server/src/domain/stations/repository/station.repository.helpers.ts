@@ -64,7 +64,7 @@ export function applyCounts(
 }
 
 export function getBikeCounts(
-  client: PrismaClient,
+  client: PrismaClient | PrismaTypes.TransactionClient,
   stationIds: string[],
 ): Effect.Effect<Map<string, BikeCounts>, StationRepositoryError> {
   if (stationIds.length === 0) {

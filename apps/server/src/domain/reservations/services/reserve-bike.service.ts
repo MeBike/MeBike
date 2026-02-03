@@ -16,7 +16,7 @@ import { makeBikeRepository } from "@/domain/bikes";
 import { makeRentalRepository, RentalRepository } from "@/domain/rentals";
 import { toPrismaDecimal } from "@/domain/shared/decimal";
 import { toMinorUnit } from "@/domain/shared/money";
-import { StationRepository } from "@/domain/stations";
+import { makeStationRepository } from "@/domain/stations";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeUserRepository } from "@/domain/users";
 import { makeWalletRepository } from "@/domain/wallets";
@@ -81,7 +81,6 @@ export function reserveBikeUseCase(
   | ReservationServiceTag
   | ReservationHoldServiceTag
   | BikeRepository
-  | StationRepository
   | SubscriptionServiceTag
   | RentalRepository
 > {
@@ -89,7 +88,6 @@ export function reserveBikeUseCase(
     const { client } = yield* Prisma;
     const reservationService = yield* ReservationServiceTag;
     const reservationHoldService = yield* ReservationHoldServiceTag;
-    const stationRepo = yield* StationRepository;
     const subscriptionService = yield* SubscriptionServiceTag;
     yield* RentalRepository;
     const now = input.now ?? new Date();
@@ -243,11 +241,12 @@ export function reserveBikeUseCase(
         // TODO(iot): send reservation "reserve" command once IoT integration is ready.
         {
           const txUserRepo = makeUserRepository(tx);
+          const txStationRepo = makeStationRepository(tx);
           const [userOpt, stationOpt] = yield* Effect.all([
             txUserRepo.findById(reservation.userId).pipe(
               Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
             ),
-            stationRepo.getByIdInTx(tx, reservation.stationId).pipe(
+            txStationRepo.getById(reservation.stationId).pipe(
               Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
             ),
           ]);

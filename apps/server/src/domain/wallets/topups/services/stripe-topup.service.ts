@@ -50,16 +50,6 @@ export type StripeTopupService = {
   resolveAttemptForSession: (
     session: Stripe.Checkout.Session,
   ) => Effect.Effect<Option.Option<PaymentAttemptRow>, PaymentAttemptRepositoryError>;
-  markFailedIfPendingInTx: (
-    tx: import("generated/prisma/client").Prisma.TransactionClient,
-    attemptId: string,
-    reason: string,
-  ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
-  markSucceededIfPendingInTx: (
-    tx: import("generated/prisma/client").Prisma.TransactionClient,
-    attemptId: string,
-    providerRef: string,
-  ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
 };
 
 export class StripeTopupServiceTag extends Context.Tag("StripeTopupService")<
@@ -164,19 +154,11 @@ export const StripeTopupServiceLive = Layer.effect(
         : repo.findByProviderRef("STRIPE", providerRef);
     };
 
-    const markFailedIfPendingInTx: StripeTopupService["markFailedIfPendingInTx"] = (tx, attemptId, reason) =>
-      repo.markFailedIfPendingInTx(tx, attemptId, reason);
-
-    const markSucceededIfPendingInTx: StripeTopupService["markSucceededIfPendingInTx"] = (tx, attemptId, providerRef) =>
-      repo.markSucceededIfPendingInTx(tx, attemptId, providerRef);
-
     const service: StripeTopupService = {
       prepareCheckoutAttempt,
       createCheckoutSession,
       attachProviderRef,
       resolveAttemptForSession,
-      markFailedIfPendingInTx,
-      markSucceededIfPendingInTx,
     };
 
     return service;

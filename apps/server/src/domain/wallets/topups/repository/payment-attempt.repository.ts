@@ -63,17 +63,7 @@ export type PaymentAttemptRepositoryType = {
     id: string,
     providerRef: string,
   ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
-  markSucceededIfPendingInTx: (
-    tx: PrismaTypes.TransactionClient,
-    id: string,
-    providerRef: string,
-  ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
   markFailedIfPending: (
-    id: string,
-    failureReason: string,
-  ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
-  markFailedIfPendingInTx: (
-    tx: PrismaTypes.TransactionClient,
     id: string,
     failureReason: string,
   ) => Effect.Effect<boolean, PaymentAttemptRepositoryError>;
@@ -200,26 +190,6 @@ export function makePaymentAttemptRepository(
           }),
       }),
 
-    markSucceededIfPendingInTx: (tx, id, providerRef) =>
-      Effect.tryPromise({
-        try: async () => {
-          const updated = await tx.paymentAttempt.updateMany({
-            where: { id, status: "PENDING" },
-            data: {
-              status: "SUCCEEDED",
-              providerRef,
-              failureReason: null,
-            },
-          });
-          return updated.count > 0;
-        },
-        catch: err =>
-          new PaymentAttemptRepositoryError({
-            operation: "markSucceededIfPendingInTx",
-            cause: err,
-          }),
-      }),
-
     markFailedIfPending: (id, failureReason) =>
       Effect.tryPromise({
         try: async () => {
@@ -239,24 +209,6 @@ export function makePaymentAttemptRepository(
           }),
       }),
 
-    markFailedIfPendingInTx: (tx, id, failureReason) =>
-      Effect.tryPromise({
-        try: async () => {
-          const updated = await tx.paymentAttempt.updateMany({
-            where: { id, status: "PENDING" },
-            data: {
-              status: "FAILED",
-              failureReason,
-            },
-          });
-          return updated.count > 0;
-        },
-        catch: err =>
-          new PaymentAttemptRepositoryError({
-            operation: "markFailedIfPendingInTx",
-            cause: err,
-          }),
-      }),
   };
 }
 

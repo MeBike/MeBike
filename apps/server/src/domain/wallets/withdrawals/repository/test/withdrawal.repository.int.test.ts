@@ -205,8 +205,9 @@ describe("withdrawalRepository Integration", () => {
 
     const stripeTransferId = `tr_test_${uuidv7()}`;
     const updated = await client.$transaction(async (tx) => {
+      const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
-        repo.markProcessingInTx(tx, {
+        txRepo.markProcessing({
           withdrawalId: created.id,
           stripeTransferId,
         }),
@@ -238,15 +239,17 @@ describe("withdrawalRepository Integration", () => {
 
     // First mark as processing
     await client.$transaction(async (tx) => {
+      const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
-        repo.markProcessingInTx(tx, { withdrawalId: created.id }),
+        txRepo.markProcessing({ withdrawalId: created.id }),
       );
     });
 
     // Try again (should return false - already processing)
     const secondAttempt = await client.$transaction(async (tx) => {
+      const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
-        repo.markProcessingInTx(tx, { withdrawalId: created.id }),
+        txRepo.markProcessing({ withdrawalId: created.id }),
       );
     });
 
@@ -268,8 +271,9 @@ describe("withdrawalRepository Integration", () => {
 
     const stripePayoutId = `po_test_${uuidv7()}`;
     const updated = await client.$transaction(async (tx) => {
+      const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
-        repo.markSucceededInTx(tx, {
+        txRepo.markSucceeded({
           withdrawalId: created.id,
           stripePayoutId,
         }),
@@ -301,15 +305,17 @@ describe("withdrawalRepository Integration", () => {
 
     // First mark as succeeded
     await client.$transaction(async (tx) => {
+      const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
-        repo.markSucceededInTx(tx, { withdrawalId: created.id }),
+        txRepo.markSucceeded({ withdrawalId: created.id }),
       );
     });
 
     // Try again (should return false - already succeeded)
     const secondAttempt = await client.$transaction(async (tx) => {
+      const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
-        repo.markSucceededInTx(tx, { withdrawalId: created.id }),
+        txRepo.markSucceeded({ withdrawalId: created.id }),
       );
     });
 
@@ -331,8 +337,9 @@ describe("withdrawalRepository Integration", () => {
 
     const failureReason = "Insufficient Stripe balance";
     const updated = await client.$transaction(async (tx) => {
+      const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
-        repo.markFailedInTx(tx, {
+        txRepo.markFailed({
           withdrawalId: created.id,
           failureReason,
         }),
@@ -364,8 +371,9 @@ describe("withdrawalRepository Integration", () => {
 
     // First mark as failed
     await client.$transaction(async (tx) => {
+      const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
-        repo.markFailedInTx(tx, {
+        txRepo.markFailed({
           withdrawalId: created.id,
           failureReason: "First failure",
         }),
@@ -374,8 +382,9 @@ describe("withdrawalRepository Integration", () => {
 
     // Try again (should return false - already failed)
     const secondAttempt = await client.$transaction(async (tx) => {
+      const txRepo = makeWithdrawalRepository(tx);
       return Effect.runPromise(
-        repo.markFailedInTx(tx, {
+        txRepo.markFailed({
           withdrawalId: created.id,
           failureReason: "Second failure",
         }),
