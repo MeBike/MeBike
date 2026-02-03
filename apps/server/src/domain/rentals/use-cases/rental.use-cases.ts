@@ -12,7 +12,7 @@ import {
   SubscriptionNotFound,
   SubscriptionUsageExceeded,
 } from "@/domain/subscriptions/domain-errors";
-import { makeSubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
+import { makeSubscriptionRepository, SubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
 import { SubscriptionServiceTag } from "@/domain/subscriptions/services/subscription.service";
 import { makeWalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
@@ -192,11 +192,13 @@ export function endRentalUseCase(
   | Prisma
   | RentalRepository
   | BikeRepository
+  | SubscriptionRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const repo = yield* RentalRepository;
     yield* BikeRepository;
+    yield* SubscriptionRepository;
     const { userId, rentalId, endStationId, endTime } = input;
 
     const currentOpt = yield* repo.getMyRentalById(userId, rentalId).pipe(

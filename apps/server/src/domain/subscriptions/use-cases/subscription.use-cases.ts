@@ -79,9 +79,10 @@ export function createSubscriptionUseCase(args: {
 }): Effect.Effect<
   SubscriptionRow,
   CreateSubscriptionFailure,
-  Prisma
+  SubscriptionServiceTag | Prisma
 > {
   return Effect.gen(function* () {
+    yield* SubscriptionServiceTag;
     const { client } = yield* Prisma;
     const now = args.now ?? new Date();
     const packageConfig = getSubscriptionPackageConfig(args.packageName);

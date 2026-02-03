@@ -1,7 +1,6 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
-import type { SubscriptionStatus } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 
@@ -10,7 +9,7 @@ import type {
   SubscriptionRepositoryError,
 } from "../domain-errors";
 import type { SubscriptionFilter, SubscriptionRow, SubscriptionSortField } from "../models";
-import type { ActivateSubscriptionInput, CreatePendingSubscriptionInput } from "../repository/subscription.repository";
+import type { SubscriptionRepo } from "../repository/subscription.repository";
 
 import {
   SubscriptionNotFound,
@@ -22,7 +21,7 @@ import { makeSubscriptionRepository, SubscriptionRepository } from "../repositor
 
 export type SubscriptionService = {
   createPending: (
-    input: CreatePendingSubscriptionInput,
+    input: Parameters<SubscriptionRepo["createPending"]>[0],
   ) => Effect.Effect<SubscriptionRow, SubscriptionRepositoryError>;
 
   findById: (
@@ -31,7 +30,7 @@ export type SubscriptionService = {
 
   findCurrentForUser: (
     userId: string,
-    statuses: readonly SubscriptionStatus[],
+    statuses: Parameters<SubscriptionRepo["findCurrentForUser"]>[1],
   ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
 
   listForUser: (
@@ -41,7 +40,7 @@ export type SubscriptionService = {
   ) => Effect.Effect<PageResult<SubscriptionRow>, SubscriptionRepositoryError>;
 
   activate: (
-    input: ActivateSubscriptionInput,
+    input: Parameters<SubscriptionRepo["activate"]>[0],
   ) => Effect.Effect<
     SubscriptionRow,
     SubscriptionRepositoryError | ActiveSubscriptionExists | SubscriptionNotFound | SubscriptionNotPending
