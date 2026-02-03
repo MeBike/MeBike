@@ -12,12 +12,12 @@ import type {
 import type { PaymentAttemptRepositoryError, TopupProviderError } from "@/domain/wallets/topups/domain-errors";
 import type { StripeWebhookOutcome as StripeTopupOutcome } from "@/domain/wallets/topups/services/stripe-topup.service";
 import type { WithdrawalRepositoryError } from "@/domain/wallets/withdrawals/domain-errors";
-import type { StripeAccountUpdatedOutcome } from "@/domain/wallets/withdrawals/use-cases/stripe-connect.use-cases";
-import type { StripePayoutOutcome } from "@/domain/wallets/withdrawals/use-cases/stripe-payout.use-cases";
+import type { StripeAccountUpdatedOutcome } from "@/domain/wallets/withdrawals/services/stripe-connect.service";
+import type { StripePayoutOutcome } from "@/domain/wallets/withdrawals/services/stripe-payout.service";
 
 import { handleStripeTopupWebhookEventUseCase } from "@/domain/wallets/topups";
-import { handleStripeAccountUpdatedUseCase } from "@/domain/wallets/withdrawals/use-cases/stripe-connect.use-cases";
-import { handleStripePayoutWebhookUseCase } from "@/domain/wallets/withdrawals/use-cases/stripe-payout.use-cases";
+import { handleStripeAccountUpdatedUseCase } from "@/domain/wallets/withdrawals/services/stripe-connect.service";
+import { handleStripePayoutWebhookUseCase } from "@/domain/wallets/withdrawals/services/stripe-payout.service";
 
 export type StripeWebhookDispatchOutcome
   = | StripeTopupOutcome

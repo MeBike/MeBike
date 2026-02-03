@@ -5,14 +5,8 @@ import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
-import {
-  createStripeCheckoutSessionUseCase,
-  creditWalletUseCase,
-  debitWalletUseCase,
-  getRequiredWalletByUserIdUseCase,
-  listWalletTransactionsForUserUseCase,
-  requestWithdrawalUseCase,
-} from "@/domain/wallets";
+import { createStripeCheckoutSessionUseCase, requestWithdrawalUseCase } from "@/domain/wallets";
+import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
 import {
   toWalletDetail,
   toWalletTransactionDetail,
@@ -30,7 +24,7 @@ const getMyWallet: RouteHandler<WalletsRoutes["getMyWallet"]> = async (c) => {
   }
 
   const eff = withLoggedCause(
-    getRequiredWalletByUserIdUseCase(userId),
+    Effect.flatMap(WalletServiceTag, service => service.getByUserId(userId)),
     "GET /v1/wallets/me",
   );
 
@@ -69,10 +63,8 @@ const listMyWalletTransactions: RouteHandler<WalletsRoutes["listMyWalletTransact
   const pageSize = query.pageSize ?? 50;
 
   const eff = withLoggedCause(
-    listWalletTransactionsForUserUseCase({
-      userId,
-      pageReq: { page, pageSize },
-    }),
+    Effect.flatMap(WalletServiceTag, service =>
+      service.listTransactionsForUser({ userId, pageReq: { page, pageSize } })),
     "GET /v1/wallets/me/transactions",
   );
 
@@ -117,14 +109,14 @@ const creditMyWallet: RouteHandler<WalletsRoutes["creditMyWallet"]> = async (c) 
   const fee = body.fee !== undefined ? toMinorUnit(body.fee) : undefined;
 
   const eff = withLoggedCause(
-    creditWalletUseCase({
+    Effect.flatMap(WalletServiceTag, service => service.creditWallet({
       userId,
       amount,
       fee,
       description: body.description ?? null,
       hash: body.hash ?? null,
       type: body.type,
-    }),
+    })),
     "POST /v1/wallets/me/credit",
   );
 
@@ -162,13 +154,13 @@ const debitMyWallet: RouteHandler<WalletsRoutes["debitMyWallet"]> = async (c) =>
   const amount = toMinorUnit(body.amount);
 
   const eff = withLoggedCause(
-    debitWalletUseCase({
+    Effect.flatMap(WalletServiceTag, service => service.debitWallet({
       userId,
       amount,
       description: body.description ?? null,
       hash: body.hash ?? null,
       type: body.type,
-    }),
+    })),
     "POST /v1/wallets/me/debit",
   );
 

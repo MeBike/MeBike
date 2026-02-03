@@ -2,14 +2,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
-import {
-  createSupplierUseCase,
-  deleteSupplierUseCase,
-  getSupplierDetailsUseCase,
-  listSuppliersUseCase,
-  updateSupplierStatusUseCase,
-  updateSupplierUseCase,
-} from "@/domain/suppliers";
+import { SupplierServiceTag } from "@/domain/suppliers/services/supplier.service";
 import { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import type { SupplierErrorResponse, SuppliersRoutes, SupplierSummary } from "./shared";
@@ -24,18 +17,16 @@ import {
 const listSuppliers: RouteHandler<SuppliersRoutes["listSuppliers"]> = async (c) => {
   const query = c.req.valid("query");
 
-  const eff = listSuppliersUseCase({
-    filter: {
+  const eff = Effect.flatMap(SupplierServiceTag, svc =>
+    svc.listSuppliers({
       name: query.name,
       status: query.status,
-    },
-    pageReq: {
+    }, {
       page: query.page ?? 1,
       pageSize: query.pageSize ?? 50,
       sortBy: query.sortBy ?? "name",
       sortDir: query.sortDir ?? "asc",
-    },
-  });
+    }));
 
   const result = await c.var.runPromise(eff);
 
@@ -56,7 +47,7 @@ const listSuppliers: RouteHandler<SuppliersRoutes["listSuppliers"]> = async (c) 
 const getSupplier: RouteHandler<SuppliersRoutes["getSupplier"]> = async (c) => {
   const { supplierId } = c.req.valid("param");
 
-  const eff = getSupplierDetailsUseCase(supplierId);
+  const eff = Effect.flatMap(SupplierServiceTag, svc => svc.getSupplierById(supplierId));
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
@@ -87,7 +78,7 @@ const getSupplier: RouteHandler<SuppliersRoutes["getSupplier"]> = async (c) => {
 const createSupplier: RouteHandler<SuppliersRoutes["createSupplier"]> = async (c) => {
   const body = c.req.valid("json");
 
-  const eff = createSupplierUseCase({
+  const eff = Effect.flatMap(SupplierServiceTag, svc => svc.createSupplier({
     name: body.name,
     address: body.address,
     phoneNumber: body.phoneNumber,
@@ -95,7 +86,7 @@ const createSupplier: RouteHandler<SuppliersRoutes["createSupplier"]> = async (c
       ? undefined
       : new PrismaTypes.Decimal(body.contractFee),
     status: body.status,
-  });
+  }));
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
@@ -127,7 +118,7 @@ const updateSupplier: RouteHandler<SuppliersRoutes["updateSupplier"]> = async (c
   const { supplierId } = c.req.valid("param");
   const body = c.req.valid("json");
 
-  const eff = updateSupplierUseCase(supplierId, {
+  const eff = Effect.flatMap(SupplierServiceTag, svc => svc.updateSupplier(supplierId, {
     name: body.name,
     address: body.address,
     phoneNumber: body.phoneNumber,
@@ -135,7 +126,7 @@ const updateSupplier: RouteHandler<SuppliersRoutes["updateSupplier"]> = async (c
       ? undefined
       : new PrismaTypes.Decimal(body.contractFee),
     status: body.status,
-  });
+  }));
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
@@ -178,7 +169,7 @@ const updateSupplierStatus: RouteHandler<SuppliersRoutes["updateSupplierStatus"]
   const { supplierId } = c.req.valid("param");
   const body = c.req.valid("json");
 
-  const eff = updateSupplierStatusUseCase(supplierId, body.status);
+  const eff = Effect.flatMap(SupplierServiceTag, svc => svc.updateSupplierStatus(supplierId, body.status));
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
@@ -220,7 +211,7 @@ const updateSupplierStatus: RouteHandler<SuppliersRoutes["updateSupplierStatus"]
 const deleteSupplier: RouteHandler<SuppliersRoutes["deleteSupplier"]> = async (c) => {
   const { supplierId } = c.req.valid("param");
 
-  const eff = deleteSupplierUseCase(supplierId);
+  const eff = Effect.flatMap(SupplierServiceTag, svc => svc.updateSupplierStatus(supplierId, "TERMINATED"));
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 

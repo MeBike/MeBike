@@ -3,7 +3,8 @@ import type { RatingsContracts } from "@mebike/shared";
 
 import { Effect, Match } from "effect";
 
-import { createRatingWithGuardsUseCase, getRatingByRentalIdUseCase } from "@/domain/ratings";
+import { createRatingWithGuardsUseCase } from "@/domain/ratings";
+import { RatingServiceTag } from "@/domain/ratings/services/rating.service";
 import { withLoggedCause } from "@/domain/shared";
 import { toRatingDetail } from "@/http/presenters/ratings.presenter";
 
@@ -88,7 +89,7 @@ const getByRental: RouteHandler<RatingsRoutes["getByRental"]> = async (c) => {
   const { rentalId } = c.req.valid("param");
 
   const eff = withLoggedCause(
-    getRatingByRentalIdUseCase(rentalId),
+    Effect.flatMap(RatingServiceTag, svc => svc.getByRentalId(rentalId)),
     "GET /v1/ratings/{rentalId}",
   );
 

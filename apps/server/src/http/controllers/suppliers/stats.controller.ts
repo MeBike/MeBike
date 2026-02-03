@@ -2,10 +2,7 @@ import type { RouteHandler } from "@hono/zod-openapi";
 
 import { Effect, Match } from "effect";
 
-import {
-  getAllSupplierStatsUseCase,
-  getSupplierStatsUseCase,
-} from "@/domain/suppliers";
+import { SupplierServiceTag } from "@/domain/suppliers/services/supplier.service";
 
 import type { SupplierErrorResponse, SuppliersRoutes, SupplierStats } from "./shared";
 
@@ -16,7 +13,7 @@ import {
 } from "./shared";
 
 const getAllSupplierStats: RouteHandler<SuppliersRoutes["getAllSupplierStats"]> = async (c) => {
-  const eff = getAllSupplierStatsUseCase();
+  const eff = Effect.flatMap(SupplierServiceTag, svc => svc.getAllStats());
   const rows = await c.var.runPromise(eff);
   return c.json<{ data: SupplierStats[] }, 200>({ data: Array.from(rows) }, 200);
 };
@@ -24,7 +21,7 @@ const getAllSupplierStats: RouteHandler<SuppliersRoutes["getAllSupplierStats"]> 
 const getSupplierStats: RouteHandler<SuppliersRoutes["getSupplierStats"]> = async (c) => {
   const { supplierId } = c.req.valid("param");
 
-  const eff = getSupplierStatsUseCase(supplierId);
+  const eff = Effect.flatMap(SupplierServiceTag, svc => svc.getSupplierStats(supplierId));
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 

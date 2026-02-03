@@ -1,46 +1,15 @@
-import type { Option } from "effect";
-
 import { Effect } from "effect";
 
 import { RentalServiceTag } from "@/domain/rentals";
 
 import type {
   CreateRatingFailure,
-  RatingRepositoryError as RatingRepoErrorAlias,
 } from "../domain-errors";
 import type { CreateRatingInput, RatingRow } from "../models";
 
-import {
-  CannotRateOthersRental,
-  CannotRateUncompletedRental,
-  RatingAlreadyExists,
-  RatingExpired,
-  RatingReasonNotFound,
-} from "../domain-errors";
+import { CannotRateOthersRental, CannotRateUncompletedRental, RatingAlreadyExists, RatingExpired, RatingReasonNotFound } from "../domain-errors";
 import { RatingReasonRepository } from "../repository/rating-reason.repository";
 import { RatingServiceTag } from "../services/rating.service";
-
-export function createRatingUseCase(input: CreateRatingInput): Effect.Effect<
-  RatingRow,
-  RatingRepoErrorAlias | RatingAlreadyExists,
-  RatingServiceTag
-> {
-  return Effect.gen(function* () {
-    const service = yield* RatingServiceTag;
-    return yield* service.create(input);
-  });
-}
-
-export function getRatingByRentalIdUseCase(rentalId: string): Effect.Effect<
-  Option.Option<RatingRow>,
-  RatingRepoErrorAlias,
-  RatingServiceTag
-> {
-  return Effect.gen(function* () {
-    const service = yield* RatingServiceTag;
-    return yield* service.getByRentalId(rentalId);
-  });
-}
 
 export function createRatingWithGuardsUseCase(input: CreateRatingInput): Effect.Effect<
   RatingRow,
