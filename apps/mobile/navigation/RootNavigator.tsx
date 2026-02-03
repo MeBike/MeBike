@@ -33,7 +33,7 @@ import SOSAgentDetailScreen from "../screen/SOSAgentDetailScreen";
 import StaffPhoneLookupScreen from "../screen/StaffPhoneLookupScreen";
 import StaffRentalDetailScreen from "../screen/StaffRentalDetailScreen";
 import StationDetailScreen from "../screen/StationDetail";
-import SubscriptionScreen from "../screen/SubscriptionScreen";
+import SubscriptionScreen from "../screen/subscription-screen";
 import SupportScreen from "../screen/SupportScreen";
 import UpdateProfileScreen from "../screen/UpdateProfileScreen";
 import WithdrawScreen from "../screen/withdraw-screen";

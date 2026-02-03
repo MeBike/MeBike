@@ -1,27 +1,25 @@
 import type { StackNavigationProp } from "@react-navigation/stack";
 
-import { useResendVerifyEmailMutation } from "@hooks/mutations/AuthNext/use-resend-verify-email-mutation";
-import { useVerifyEmailOtpMutation } from "@hooks/mutations/AuthNext/use-verify-email-otp-mutation";
-import { useAuthNext } from "@providers/auth-provider-next";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
+import { authService } from "@services/auth/auth-service";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
 
 import type { RootStackParamList } from "../../../types/navigation";
 
-type EmailVerificationRouteProp = import("@react-navigation/native").RouteProp<
+type ResetPasswordOTPRouteProp = import("@react-navigation/native").RouteProp<
   RootStackParamList,
-  "EmailVerification"
+  "ResetPasswordOTP"
 >;
 
-type EmailVerificationNavigationProp = StackNavigationProp<
+type ResetPasswordOTPNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "EmailVerification"
+  "ResetPasswordOTP"
 >;
 
 const OTP_LENGTH = 6;
-const OTP_EXPIRY_SECONDS = 10 * 60;
-const RESEND_COOLDOWN_SECONDS = 10 * 60;
+const OTP_EXPIRY_SECONDS = 5 * 60;
+const RESEND_COOLDOWN_SECONDS = 5 * 60;
 
 function formatTime(seconds: number) {
   const mins = Math.floor(seconds / 60);
@@ -29,20 +27,17 @@ function formatTime(seconds: number) {
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function useEmailVerification() {
-  const navigation = useNavigation<EmailVerificationNavigationProp>();
-  const route = useRoute<EmailVerificationRouteProp>();
+export function useResetPasswordOtp() {
+  const navigation = useNavigation<ResetPasswordOTPNavigationProp>();
+  const route = useRoute<ResetPasswordOTPRouteProp>();
   const { email } = route.params;
   const isFocused = useIsFocused();
-
-  const { user, status, hydrate } = useAuthNext();
-
-  const verifyMutation = useVerifyEmailOtpMutation();
-  const resendMutation = useResendVerifyEmailMutation();
 
   const [otp, setOtp] = useState<string[]>(Array.from({ length: OTP_LENGTH }, () => ""));
   const [timeLeft, setTimeLeft] = useState(OTP_EXPIRY_SECONDS);
   const [resendTimeLeft, setResendTimeLeft] = useState(RESEND_COOLDOWN_SECONDS);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
 
   const isFocusedRef = useRef(false);
   const otpTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -61,17 +56,6 @@ export function useEmailVerification() {
       }
     }
   }, [isFocused]);
-
-  const didHydrateRef = useRef(false);
-  useEffect(() => {
-    if (didHydrateRef.current) {
-      return;
-    }
-    if (status === "loading" && !user) {
-      didHydrateRef.current = true;
-      void hydrate();
-    }
-  }, [hydrate, status, user]);
 
   useEffect(() => {
     if (!isFocused) {
@@ -144,9 +128,8 @@ export function useEmailVerification() {
 
   const otpCode = useMemo(() => otp.join(""), [otp]);
   const isOtpComplete = otpCode.length === OTP_LENGTH && otp.every(d => d.length === 1);
-  const canSubmit = isOtpComplete && timeLeft > 0 && !verifyMutation.isPending;
-
-  const canResend = resendTimeLeft <= 0 && !resendMutation.isPending;
+  const canSubmit = isOtpComplete && timeLeft > 0 && !isVerifying;
+  const canResend = resendTimeLeft <= 0 && !isResending;
 
   const setOtpDigit = useCallback((index: number, value: string) => {
     const next = value.slice(-1);
@@ -157,85 +140,60 @@ export function useEmailVerification() {
     });
   }, []);
 
+  const goBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
   const verify = useCallback(async () => {
     if (!isOtpComplete) {
       Alert.alert("Lỗi", `Vui lòng nhập đủ ${OTP_LENGTH} ký tự OTP`);
       return;
     }
-    if (!user?.id) {
-      Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản. Vui lòng thử lại.");
-      return;
-    }
 
-    const result = await verifyMutation.mutateAsync({ userId: user.id, otp: otpCode });
-    if (!result.ok) {
-      if (result.error._tag === "ApiError") {
-        Alert.alert("Lỗi", result.error.message ?? "OTP không hợp lệ hoặc đã hết hạn");
-        return;
-      }
-      if (result.error._tag === "NetworkError") {
-        Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
-        return;
-      }
-      Alert.alert("Lỗi", "Không thể xác minh email");
-      return;
+    setIsVerifying(true);
+    try {
+      navigation.navigate("ResetPasswordForm", {
+        email,
+        otp: otpCode,
+      });
     }
-
-    await hydrate();
-    navigation.navigate("Main");
-  }, [hydrate, isOtpComplete, navigation, otpCode, user?.id, verifyMutation]);
+    finally {
+      setIsVerifying(false);
+    }
+  }, [email, isOtpComplete, navigation, otpCode]);
 
   const resend = useCallback(async () => {
     if (!canResend) {
       return;
     }
-    if (!user?.id || !user?.email || !user?.fullname) {
-      Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản để gửi lại OTP");
-      return;
-    }
-
-    const result = await resendMutation.mutateAsync({
-      userId: user.id,
-      email: user.email,
-      fullName: user.fullname,
-    });
-
-    if (!result.ok) {
-      if (result.error._tag === "ApiError") {
-        Alert.alert("Lỗi", result.error.message ?? "Không thể gửi lại OTP");
+    setIsResending(true);
+    try {
+      const result = await authService.sendResetPassword({ email });
+      if (!result.ok) {
+        if (result.error._tag === "ApiError") {
+          Alert.alert("Lỗi", result.error.message ?? "Không thể gửi lại OTP");
+          return;
+        }
+        if (result.error._tag === "NetworkError") {
+          Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
+          return;
+        }
+        Alert.alert("Lỗi", "Không thể gửi lại OTP");
         return;
       }
-      if (result.error._tag === "NetworkError") {
-        Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
-        return;
-      }
-      Alert.alert("Lỗi", "Không thể gửi lại OTP");
-      return;
+
+      Alert.alert("Thành công", "Mã OTP mới đã được gửi lại");
+      setTimeLeft(OTP_EXPIRY_SECONDS);
+      setResendTimeLeft(RESEND_COOLDOWN_SECONDS);
+      setOtp(Array.from({ length: OTP_LENGTH }, () => ""));
     }
-
-    Alert.alert("Thành công", "Mã OTP đã được gửi lại");
-    setTimeLeft(OTP_EXPIRY_SECONDS);
-    setResendTimeLeft(RESEND_COOLDOWN_SECONDS);
-    setOtp(Array.from({ length: OTP_LENGTH }, () => ""));
-  }, [canResend, resendMutation, user?.email, user?.fullname, user?.id]);
-
-  const skip = useCallback(() => {
-    Alert.alert(
-      "Bỏ qua xác nhận",
-      "Bạn chắc chắn muốn bỏ qua xác nhận email? Bạn có thể xác nhận sau.",
-      [
-        { text: "Không", style: "cancel" },
-        {
-          text: "Có, bỏ qua",
-          onPress: () => navigation.navigate("Main"),
-        },
-      ],
-    );
-  }, [navigation]);
+    finally {
+      setIsResending(false);
+    }
+  }, [canResend, email, isResending]);
 
   return {
     email,
-    user,
     otp,
     setOtpDigit,
     timeLeft,
@@ -243,9 +201,9 @@ export function useEmailVerification() {
     formatTime,
     verify,
     resend,
-    skip,
-    isVerifying: verifyMutation.isPending,
-    isResending: resendMutation.isPending,
+    goBack,
+    isVerifying,
+    isResending,
     canSubmit,
     canResend,
   };

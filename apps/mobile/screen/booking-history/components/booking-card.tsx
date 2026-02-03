@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { formatVietnamDateTime } from "@utils/date";
-import { parseDecimal } from "@utils/subscription";
+import { parseDecimal } from "@utils/money";
 import { memo, useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 

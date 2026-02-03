@@ -1,4 +1,4 @@
-import type { MongoDecimal } from "./subscription-types";
+import type { MongoDecimal } from "./money";
 
 export type RentingHistory = {
   _id: string;

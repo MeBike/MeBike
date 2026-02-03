@@ -3,7 +3,7 @@ import type { ReservationMode } from "@components/reservation-flow/ReservationMo
 import { BikeColors } from "@constants/BikeColors";
 import { Ionicons } from "@expo/vector-icons";
 import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/use-get-bike-by-id-query";
-import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
+import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
 import { useRentalsActions } from "@hooks/useRentalAction";
 import { useReservationActions } from "@hooks/useReservationActions";
 import { useWalletActions } from "@hooks/useWalletAction";
@@ -238,7 +238,7 @@ function BikeDetailScreen() {
     data: subscriptionResponse,
     refetch: refetchSubscriptions,
   } = useGetSubscriptionsQuery(
-    { status: "ĐANG HOẠT ĐỘNG" },
+    { status: "ACTIVE" },
     hasToken,
   );
   const {
@@ -285,9 +285,9 @@ function BikeDetailScreen() {
       return;
     }
     if (paymentMode === "subscription") {
-      const stillValid = activeSubscriptions.some(subscription => subscription._id === selectedSubscriptionId);
+      const stillValid = activeSubscriptions.some(subscription => subscription.id === selectedSubscriptionId);
       if (!stillValid) {
-        setSelectedSubscriptionId(activeSubscriptions[0]?._id ?? null);
+        setSelectedSubscriptionId(activeSubscriptions[0]?.id ?? null);
       }
     }
   }, [activeSubscriptions, canUseSubscription, paymentMode]);
@@ -349,8 +349,8 @@ function BikeDetailScreen() {
 
     const reservationMode: ReservationMode = paymentMode === "subscription" ? "GÓI THÁNG" : "MỘT LẦN";
     const subscriptionForReservation = paymentMode === "subscription"
-      ? selectedSubscriptionId ?? activeSubscriptions[0]?._id ?? undefined
-      : undefined;
+    ? selectedSubscriptionId ?? activeSubscriptions[0]?.id ?? undefined
+    : undefined;
 
     navigation.navigate("ReservationFlow", {
       stationId: station.id,
@@ -560,27 +560,27 @@ function BikeDetailScreen() {
                 : (
                     <View style={styles.subscriptionList}>
                       {activeSubscriptions.map((subscription) => {
-                        const remaining = subscription.max_usages != null
-                          ? Math.max(0, subscription.max_usages - subscription.usage_count)
+                        const remaining = subscription.maxUsages != null
+                          ? Math.max(0, subscription.maxUsages - subscription.usageCount)
                           : null;
-                        const isActive = subscription._id === selectedSubscriptionId;
+                        const isActive = subscription.id === selectedSubscriptionId;
                         return (
                           <TouchableOpacity
-                            key={subscription._id}
+                            key={subscription.id}
                             style={[
                               styles.subscriptionCard,
                               isActive && styles.subscriptionCardActive,
                             ]}
-                            onPress={() => setSelectedSubscriptionId(subscription._id)}
+                            onPress={() => setSelectedSubscriptionId(subscription.id)}
                             activeOpacity={0.9}
                           >
                             <View>
                               <Text style={styles.infoValue}>
-                                {subscription.package_name.toUpperCase()}
+                                {subscription.packageName.toUpperCase()}
                               </Text>
                               <Text style={styles.helperText}>
                                 {remaining != null
-                                  ? `${remaining} / ${subscription.max_usages} lượt`
+                                  ? `${remaining} / ${subscription.maxUsages} lượt`
                                   : "Không giới hạn"}
                               </Text>
                             </View>

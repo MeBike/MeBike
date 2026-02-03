@@ -1,14 +1,16 @@
-import { parseDecimal } from "@utils/subscription";
+import { parseDecimal } from "@utils/money";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
+
+import type { RentalDetail } from "../../../types/RentalTypes";
+
 import InfoCard from "./InfoCard";
-import { RentalDetail } from "../../../types/RentalTypes";
 
 type Props = {
   booking: RentalDetail;
 };
 
-const PaymentInfoCard = ({ booking }: Props) => {
+function PaymentInfoCard({ booking }: Props) {
   const totalAmount = parseDecimal(booking.total_price);
   const isSubscriptionRental = Boolean(booking.subscription_id);
   const paymentMethodLabel = isSubscriptionRental ? "Gói tháng" : "Ví MeBike";
@@ -34,7 +36,9 @@ const PaymentInfoCard = ({ booking }: Props) => {
         <View style={styles.paymentRow}>
           <Text style={styles.paymentLabel}>Tổng tiền:</Text>
           <Text style={styles.paymentAmount}>
-            {totalAmount.toLocaleString("vi-VN")} đ
+            {totalAmount.toLocaleString("vi-VN")}
+            {" "}
+            đ
           </Text>
         </View>
       )}
@@ -45,7 +49,7 @@ const PaymentInfoCard = ({ booking }: Props) => {
       )}
     </InfoCard>
   );
-};
+}
 
 const styles = StyleSheet.create({
   paymentRow: {
