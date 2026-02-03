@@ -1,9 +1,9 @@
+import type { ErrorEvent, ExceptionEvent, TimeoutEvent } from "react-native-sse";
+
+import { API_BASE_URL } from "@lib/api-base-url";
+import { clearTokens, getAccessToken } from "@lib/auth-tokens";
 import { useCallback, useEffect, useRef, useState } from "react";
 import EventSource from "react-native-sse";
-import type { ErrorEvent, TimeoutEvent, ExceptionEvent } from "react-native-sse";
-
-import { API_BASE_URL } from "@lib/httpClient";
-import { clearTokens, getAccessToken } from "@utils/tokenManager";
 
 export type BikeStatusUpdate = {
   bikeId: string;
@@ -56,7 +56,8 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
       const tokenCheck = await getAccessToken();
       if (tokenCheck) {
         suppressReconnectRef.current = false;
-      } else {
+      }
+      else {
         return;
       }
     }
@@ -99,7 +100,7 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
         const isExpired = typeof message === "string" && message.toLowerCase().includes("jwt expired");
         if (isExpired) {
           suppressReconnectRef.current = true;
-          void clearTokens(); 
+          void clearTokens();
           return;
         }
 

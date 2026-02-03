@@ -5,7 +5,7 @@ import {
   getAccessToken,
   getRefreshToken,
   setTokens,
-} from "@utils/tokenManager";
+} from "@lib/auth-tokens";
 import axios from "axios";
 import { Platform } from "react-native";
 
@@ -49,7 +49,7 @@ export class FetchHttpClient {
         console.log("API Response:", response.status, response.config.url);
         return response;
       },
-      async (error) => {
+        async (error) => {
         console.log(
           "API Error:",
           error.response?.status,
@@ -58,19 +58,8 @@ export class FetchHttpClient {
         );
         const originalRequest = error.config;
 
-        // Các endpoint không cần retry token refresh
-        const noAuthRetryEndpoints = [
-          "/users/verify-email",
-          "/users/verify-forgot-password",
-          "/users/reset-password",
-          "/users/resend-verify-email",
-          "/users/refresh-token",
-          "/users/change-password",
-        ];
-
-        const shouldSkipTokenRefresh = noAuthRetryEndpoints.some(
-          (endpoint) => originalRequest?.url?.includes(endpoint),
-        );
+        const shouldSkipTokenRefresh = typeof originalRequest?.url === "string"
+          && originalRequest.url.includes("/v1/auth/");
 
         if (
           error.response?.status === HTTP_STATUS.UNAUTHORIZED &&
@@ -140,8 +129,8 @@ export class FetchHttpClient {
       throw new Error("No refresh token available");
     }
     const response = await axios.post(
-      `${this.baseURL}/users/refresh-token`,
-      { refresh_token: refreshToken },
+      `${this.baseURL}/v1/auth/refresh`,
+      { refreshToken },
       { headers: { "Content-Type": "application/json" } },
     );
     console.log("Refresh token response:", response.status, response.data);
@@ -151,9 +140,15 @@ export class FetchHttpClient {
       // You should handle navigation using React Navigation instead
       throw new Error("Refresh token expired");
     }
-    const data = response.data;
-    await setTokens(data.result.access_token, data.result.refresh_token);
-    return data.result.access_token;
+    const data = response.data as { data?: { accessToken?: string; refreshToken?: string } };
+    const accessToken = data.data?.accessToken;
+    const nextRefreshToken = data.data?.refreshToken;
+    if (!accessToken || !nextRefreshToken) {
+      await clearTokens();
+      throw new Error("Invalid refresh response");
+    }
+    await setTokens(accessToken, nextRefreshToken);
+    return accessToken;
   }
 
   private processQueue(error: unknown, token: string | null) {

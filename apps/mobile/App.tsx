@@ -1,5 +1,4 @@
 import { AuthProviderNext } from "@providers/auth-provider-next";
-import { AuthProvider } from "@providers/auth-providers";
 import { BikeStatusStreamProvider } from "@providers/bike-status-stream-provider";
 import Providers from "@providers/providers";
 import { NavigationContainer } from "@react-navigation/native";
@@ -23,12 +22,10 @@ export default function App() {
     <Providers>
       <NavigationContainer>
         <AuthProviderNext>
-          <AuthProvider>
-            <BikeStatusStreamProvider>
-              <StatusBar style="auto" />
-              <RootNavigator />
-            </BikeStatusStreamProvider>
-          </AuthProvider>
+          <BikeStatusStreamProvider>
+            <StatusBar style="auto" />
+            <RootNavigator />
+          </BikeStatusStreamProvider>
         </AuthProviderNext>
       </NavigationContainer>
     </Providers>

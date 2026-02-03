@@ -19,7 +19,7 @@ import type { RouteProp } from "@react-navigation/native";
 import type { RootStackParamList } from "../types/navigation";
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
-import { useAuth } from "@providers/auth-providers";
+import { authService } from "@services/auth/auth-service";
 
 type ResetPasswordFormRouteProp = RouteProp<
   RootStackParamList,
@@ -121,7 +121,7 @@ export default function ResetPasswordFormScreen() {
   const navigation = useNavigation<ResetPasswordFormNavigationProp>();
   const route = useRoute<ResetPasswordFormRouteProp>();
   const { email, otp } = route.params;
-  const { resetPassword, isReseting } = useAuth();
+  const [isReseting, setIsReseting] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -136,16 +136,32 @@ export default function ResetPasswordFormScreen() {
     }
 
     try {
-      await resetPassword({
-        password: newPassword,
-        confirm_password: confirmPassword,
-        forgot_password_token: otp,
+      setIsReseting(true);
+      const result = await authService.resetPassword({
         email,
         otp,
+        newPassword,
       });
-      // resetPassword already navigates to Login on success
+
+      if (!result.ok) {
+        if (result.error._tag === "ApiError") {
+          Alert.alert("Lỗi", result.error.message ?? "OTP không hợp lệ hoặc đã hết hạn");
+          return;
+        }
+        if (result.error._tag === "NetworkError") {
+          Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
+          return;
+        }
+        Alert.alert("Lỗi", "Không thể đặt lại mật khẩu");
+        return;
+      }
+
+      Alert.alert("Thành công", "Đặt lại mật khẩu thành công");
+      navigation.navigate("Login");
     } catch (error) {
       console.log("Reset password error:", error);
+    } finally {
+      setIsReseting(false);
     }
   };
 

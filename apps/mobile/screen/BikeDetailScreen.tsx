@@ -7,7 +7,7 @@ import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscr
 import { useRentalsActions } from "@hooks/useRentalAction";
 import { useReservationActions } from "@hooks/useReservationActions";
 import { useWalletActions } from "@hooks/useWalletAction";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { formatVietnamDateTime } from "@utils/date";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -221,9 +221,9 @@ function BikeDetailScreen() {
   const navigation = useNavigation<BikeDetailNavigationProp>();
   const route = useRoute();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuthNext();
   const { bike, station } = route.params as RouteParams;
-  const hasToken = Boolean(user?._id);
+  const hasToken = isAuthenticated;
 
   const [paymentMode, setPaymentMode] = useState<PaymentMode>("wallet");
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);

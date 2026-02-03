@@ -19,5 +19,14 @@
       "@custom-types": ["./types/index"]
     },
     "strict": true
-  }
+  },
+  "include": ["./**/*.ts", "./**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "../frontend/**",
+    "../server/**",
+    "../backend/**",
+    "../iot-service/**",
+    "../../packages/**/dist/**"
+  ]
 }

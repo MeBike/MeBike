@@ -208,4 +208,48 @@ export const authService = {
       });
     }
   },
+
+  sendResetPassword: async (payload: z.output<typeof AuthContracts.SendResetPasswordRequestSchema>): Promise<Result<void, AuthError>> => {
+    try {
+      const response = await kyClient.post(routePath(ServerRoutes.auth.sendResetPassword), {
+        json: payload,
+        throwHttpErrors: false,
+        skipAuth: true,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        return ok(undefined);
+      }
+
+      return err(await parseAuthError(response));
+    }
+    catch (error) {
+      return err({
+        _tag: "NetworkError",
+        message: error instanceof Error ? error.message : undefined,
+      });
+    }
+  },
+
+  resetPassword: async (payload: z.output<typeof AuthContracts.ResetPasswordRequestSchema>): Promise<Result<void, AuthError>> => {
+    try {
+      const response = await kyClient.post(routePath(ServerRoutes.auth.resetPassword), {
+        json: payload,
+        throwHttpErrors: false,
+        skipAuth: true,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        return ok(undefined);
+      }
+
+      return err(await parseAuthError(response));
+    }
+    catch (error) {
+      return err({
+        _tag: "NetworkError",
+        message: error instanceof Error ? error.message : undefined,
+      });
+    }
+  },
 };

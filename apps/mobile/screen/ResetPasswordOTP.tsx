@@ -18,6 +18,7 @@ import type { RouteProp } from "@react-navigation/native";
 import type { RootStackParamList } from "../types/navigation";
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
+import { authService } from "@services/auth/auth-service";
 
 type ResetPasswordOTPRouteProp = RouteProp<
   RootStackParamList,
@@ -137,6 +138,7 @@ export default function ResetPasswordOTPScreen() {
   const [timeLeft, setTimeLeft] = useState(OTP_EXPIRY);
   const [resendTimeLeft, setResendTimeLeft] = useState(RESEND_COOLDOWN);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const otpInputRefs = useRef<(TextInput | null)[]>([]);
 
   // Timer cho OTP expiry
@@ -211,12 +213,30 @@ export default function ResetPasswordOTPScreen() {
   const handleResendOtp = async () => {
     if (resendTimeLeft > 0) return;
 
-    setResendTimeLeft(RESEND_COOLDOWN);
-    setTimeLeft(OTP_EXPIRY);
-    setOtp(["", "", "", "", "", ""]);
-    
-    // You can call resendVerifyEmail here if needed
-    Alert.alert("Thành công", "Mã OTP mới đã được gửi lại");
+    setIsResending(true);
+    try {
+      const result = await authService.sendResetPassword({ email });
+      if (!result.ok) {
+        if (result.error._tag === "ApiError") {
+          Alert.alert("Lỗi", result.error.message ?? "Không thể gửi lại OTP");
+          return;
+        }
+        if (result.error._tag === "NetworkError") {
+          Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
+          return;
+        }
+        Alert.alert("Lỗi", "Không thể gửi lại OTP");
+        return;
+      }
+
+      setResendTimeLeft(RESEND_COOLDOWN);
+      setTimeLeft(OTP_EXPIRY);
+      setOtp(["", "", "", "", "", ""]);
+      Alert.alert("Thành công", "Mã OTP mới đã được gửi lại");
+    }
+    finally {
+      setIsResending(false);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -302,16 +322,18 @@ export default function ResetPasswordOTPScreen() {
           <Pressable
             style={styles.resendButton}
             onPress={handleResendOtp}
-            disabled={resendTimeLeft > 0}
+            disabled={resendTimeLeft > 0 || isResending}
           >
             <Text
               style={
-                resendTimeLeft > 0
+                resendTimeLeft > 0 || isResending
                   ? styles.resendButtonTextDisabled
                   : styles.resendButtonText
               }
             >
-              {resendTimeLeft > 0
+              {isResending
+                ? "Đang gửi lại..."
+                : resendTimeLeft > 0
                 ? `Gửi lại trong ${formatTime(resendTimeLeft)}`
                 : "Gửi lại mã OTP"}
             </Text>

@@ -16,7 +16,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { rentalService } from "@services/rental.service";
 
 import type { RentalDetail } from "../types/RentalTypes";
@@ -217,8 +217,8 @@ function RentalQrScreen() {
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const { isAuthenticated } = useAuthNext();
+  const hasToken = isAuthenticated;
 
   const {
     data: rentalDetailResponse,

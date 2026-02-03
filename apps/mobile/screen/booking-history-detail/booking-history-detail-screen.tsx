@@ -1,6 +1,6 @@
 import RatingModal from "@components/RatingModal";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import React, { useEffect, useRef } from "react";
 import {
   RefreshControl,
@@ -47,8 +47,8 @@ function BookingHistoryDetail() {
   const navigation = useNavigation();
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
-  const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const { isAuthenticated } = useAuthNext();
+  const hasToken = isAuthenticated;
 
   const {
     booking,

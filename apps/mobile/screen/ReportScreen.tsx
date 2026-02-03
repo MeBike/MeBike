@@ -20,9 +20,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAuth } from "../providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useReportActions } from "../hooks/useReportActions";
-import { getAccessToken } from "../utils/tokenManager";
+import { getAccessToken } from "@lib/auth-tokens";
 import type { ReportScreenNavigationProp } from "../types/navigation";
 
 // TomTom API
@@ -70,7 +70,7 @@ function ReportScreen() {
   const params = route.params as RouteParams | undefined;
   const { bike_id, station_id, rental_id } = params || {};
   const insets = useSafeAreaInsets();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthNext();
   const [page , setPage] = useState(1);
   const [limit] = useState(10);
   const { createReport, isCreatingReport } = useReportActions({ page, limit });
@@ -86,7 +86,7 @@ function ReportScreen() {
     longitude: number;
   } | null>(null);
   const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
-  const [typingTimeout, setTypingTimeout] = useState<number | null>(null);
+  const [typingTimeout, setTypingTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [locationMode, setLocationMode] = useState<'manual' | 'current'>('current');
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);

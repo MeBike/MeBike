@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSOS } from "@/hooks/use-sos";
-import { useAuth } from "@/providers/auth-providers";
+import { useAuthNext } from "@/providers/auth-provider-next";
 import type { SOS } from "@/types/SOS";
 import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
@@ -26,7 +26,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export default function SOSAgentDashboardScreen() {
   const insets = useSafeAreaInsets();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthNext();
   const navigation = useNavigation<NavigationProp>();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);

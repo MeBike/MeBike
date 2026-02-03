@@ -68,11 +68,17 @@ export const AuthProviderNext: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [meQuery.error, hasToken, queryClient]);
 
   const hydrate = useCallback(async () => {
-    if (!hasToken) {
+    const token = await getAccessToken();
+    const nextHasToken = Boolean(token);
+    setHasToken(nextHasToken);
+
+    if (!nextHasToken) {
+      queryClient.removeQueries({ queryKey: ["authNext", "me"] });
       return;
     }
+
     await queryClient.invalidateQueries({ queryKey: ["authNext", "me"] });
-  }, [hasToken, queryClient]);
+  }, [queryClient]);
 
   const login = useCallback(
     async (

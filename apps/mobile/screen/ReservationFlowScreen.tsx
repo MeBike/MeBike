@@ -25,7 +25,7 @@ import {
 import { BikeColors } from "@constants/BikeColors";
 import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 import { useReservationActions } from "@hooks/useReservationActions";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 import type {
   ReservationFlowNavigationProp,
@@ -60,8 +60,8 @@ export default function ReservationFlowScreen() {
   const navigation = useNavigation<ReservationFlowNavigationProp>();
   const route = useRoute<ReservationFlowRouteProp>();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const { isAuthenticated } = useAuthNext();
+  const hasToken = isAuthenticated;
   const {
     stationId,
     stationName,

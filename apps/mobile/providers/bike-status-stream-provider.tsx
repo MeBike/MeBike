@@ -3,7 +3,7 @@ import { Platform, ToastAndroid } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useBikeStatusStream, type BikeStatusUpdate } from "@hooks/useBikeStatusStream";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 type Subscriber = (payload: BikeStatusUpdate) => void;
 
@@ -16,7 +16,7 @@ type BikeStatusStreamContextValue = {
 const BikeStatusStreamContext = createContext<BikeStatusStreamContextValue | undefined>(undefined);
 
 export function BikeStatusStreamProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthNext();
   const queryClient = useQueryClient();
   const subscribersRef = useRef<Set<Subscriber>>(new Set());
   const [lastUpdate, setLastUpdate] = useState<BikeStatusUpdate | null>(null);

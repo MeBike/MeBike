@@ -4,7 +4,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 
-import type { CreateWithdrawSchemaFormData } from "../../frontend/src/schemas/withdrawalSchema";
+import type { CreateWithdrawSchemaFormData } from "@schemas/withDrawalSchema";
 // import type { DetailWithdrawRequest } from "../types/Withdrawal";
 
 import { withdrawalsService } from "../services/withdraw.service";

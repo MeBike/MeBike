@@ -72,9 +72,22 @@ export function useLogin() {
       const { email, password } = data;
       const result = await login({ email, password });
       if (result) {
-        Alert.alert("Đăng nhập thất bại", result._tag === "ApiError" && result.message
-          ? result.message
-          : "Không thể đăng nhập. Vui lòng thử lại.");
+        const message = (() => {
+          if (result._tag === "ApiError") {
+            if (result.code === "INVALID_CREDENTIALS") {
+              return "Email hoặc mật khẩu không đúng.";
+            }
+            if (result.message) {
+              return result.message;
+            }
+          }
+          if (result._tag === "NetworkError") {
+            return "Không thể kết nối tới máy chủ.";
+          }
+          return "Không thể đăng nhập. Vui lòng thử lại.";
+        })();
+
+        Alert.alert("Đăng nhập thất bại", message);
         return;
       }
       navigation.navigate("Main");

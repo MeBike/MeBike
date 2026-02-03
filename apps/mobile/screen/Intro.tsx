@@ -1,4 +1,4 @@
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef, useState } from "react";
@@ -44,7 +44,7 @@ const introSlides = [
 ];
 
 export default function IntroScreen() {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthNext();
   const navigation = useNavigation<IntroScreenNavigationProp>();
   const [currentSlide, setCurrentSlide] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);

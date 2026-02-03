@@ -1,4 +1,4 @@
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import React, { useMemo } from "react";
 import { View } from "react-native";
 
@@ -10,8 +10,8 @@ import { ReservationsList } from "./components/reservations-list";
 import { useReservations } from "./hooks/use-reservations";
 
 function ReservationsScreen() {
-  const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const { isAuthenticated } = useAuthNext();
+  const hasToken = isAuthenticated;
 
   const {
     filters,

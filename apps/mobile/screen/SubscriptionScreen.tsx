@@ -27,7 +27,7 @@ import { SUBSCRIPTION_PACKAGES } from "@constants/subscriptionPackages";
 import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
 import { useActivateSubscriptionMutation } from "@hooks/mutations/Subscription/useActivateSubscriptionMutation";
 import { useSubscribeMutation } from "@hooks/mutations/Subscription/useSubscribeMutation";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 const PAGE_SIZE = 20;
 const SECTION_STORAGE_KEY = "subscription_active_section";
@@ -51,7 +51,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
 export default function SubscriptionScreen() {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthNext();
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [activeSection, setActiveSection] = useState<SubscriptionSectionKey>("plans");
   const [subscribingPackage, setSubscribingPackage] = useState<SubscriptionPackage | null>(null);

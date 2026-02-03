@@ -3,6 +3,7 @@ import { log } from "@lib/log";
 import { AuthContracts } from "@mebike/shared";
 import { useNavigation } from "@react-navigation/native";
 import { authService } from "@services/auth/auth-service";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -26,6 +27,7 @@ export type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function useRegister() {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
+  const { hydrate } = useAuthNext();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {
@@ -69,6 +71,7 @@ export function useRegister() {
     }
 
     const email = data.email;
+    await hydrate();
     reset();
     navigation.navigate("EmailVerification", { email });
   });
