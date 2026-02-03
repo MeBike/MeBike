@@ -1,6 +1,7 @@
 import { Context, Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import type { SubscriptionStatus } from "generated/prisma/client";
 
 import { env } from "@/config/env";
 
@@ -9,7 +10,7 @@ import type {
   SubscriptionRepositoryError,
 } from "../domain-errors";
 import type { SubscriptionFilter, SubscriptionRow, SubscriptionSortField } from "../models";
-import type { SubscriptionRepo } from "../repository/subscription.repository";
+import type { ActivateSubscriptionInput, CreatePendingSubscriptionInput } from "../repository/subscription.repository";
 
 import {
   SubscriptionNotFound,
@@ -17,16 +18,11 @@ import {
   SubscriptionNotUsable,
   SubscriptionUsageExceeded,
 } from "../domain-errors";
-import { SubscriptionRepository } from "../repository/subscription.repository";
+import { makeSubscriptionRepository, SubscriptionRepository } from "../repository/subscription.repository";
 
 export type SubscriptionService = {
   createPending: (
-    input: Parameters<SubscriptionRepo["createPending"]>[0],
-  ) => Effect.Effect<SubscriptionRow, SubscriptionRepositoryError>;
-
-  createPendingInTx: (
-    tx: import("generated/prisma/client").Prisma.TransactionClient,
-    input: Parameters<SubscriptionRepo["createPendingInTx"]>[1],
+    input: CreatePendingSubscriptionInput,
   ) => Effect.Effect<SubscriptionRow, SubscriptionRepositoryError>;
 
   findById: (
@@ -35,13 +31,7 @@ export type SubscriptionService = {
 
   findCurrentForUser: (
     userId: string,
-    statuses: Parameters<SubscriptionRepo["findCurrentForUser"]>[1],
-  ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
-
-  findCurrentForUserInTx: (
-    tx: import("generated/prisma/client").Prisma.TransactionClient,
-    userId: string,
-    statuses: Parameters<SubscriptionRepo["findCurrentForUserInTx"]>[2],
+    statuses: readonly SubscriptionStatus[],
   ) => Effect.Effect<Option.Option<SubscriptionRow>, SubscriptionRepositoryError>;
 
   listForUser: (
@@ -51,7 +41,7 @@ export type SubscriptionService = {
   ) => Effect.Effect<PageResult<SubscriptionRow>, SubscriptionRepositoryError>;
 
   activate: (
-    input: Parameters<SubscriptionRepo["activate"]>[0],
+    input: ActivateSubscriptionInput,
   ) => Effect.Effect<
     SubscriptionRow,
     SubscriptionRepositoryError | ActiveSubscriptionExists | SubscriptionNotFound | SubscriptionNotPending
@@ -100,17 +90,11 @@ export const SubscriptionServiceLive = Layer.effect(
       createPending: input =>
         repo.createPending(input),
 
-      createPendingInTx: (tx, input) =>
-        repo.createPendingInTx(tx, input),
-
       findById: subscriptionId =>
         repo.findById(subscriptionId),
 
       findCurrentForUser: (userId, statuses) =>
         repo.findCurrentForUser(userId, statuses),
-
-      findCurrentForUserInTx: (tx, userId, statuses) =>
-        repo.findCurrentForUserInTx(tx, userId, statuses),
 
       listForUser: (userId, filter, pageReq) =>
         repo.listForUser(userId, filter, pageReq),
@@ -156,7 +140,9 @@ export const SubscriptionServiceLive = Layer.effect(
 
       useOneInTx: (tx, input) =>
         Effect.gen(function* () {
-          const subscriptionOpt = yield* repo.findByIdInTx(tx, input.subscriptionId);
+          const txRepo = makeSubscriptionRepository(tx);
+
+          const subscriptionOpt = yield* txRepo.findById(input.subscriptionId);
           if (Option.isNone(subscriptionOpt)) {
             return yield* Effect.fail(new SubscriptionNotFound({
               subscriptionId: input.subscriptionId,
@@ -195,7 +181,7 @@ export const SubscriptionServiceLive = Layer.effect(
             const expiresAt = new Date(
               now.getTime() + env.EXPIRE_AFTER_DAYS * 24 * 60 * 60 * 1000,
             );
-            const activated = yield* repo.activateInTx(tx, {
+            const activated = yield* txRepo.activate({
               subscriptionId: subscription.id,
               activatedAt: now,
               expiresAt,
@@ -220,8 +206,7 @@ export const SubscriptionServiceLive = Layer.effect(
             current = activated.value;
           }
 
-          const updated = yield* repo.incrementUsageInTx(
-            tx,
+          const updated = yield* txRepo.incrementUsage(
             current.id,
             current.usageCount,
             1,

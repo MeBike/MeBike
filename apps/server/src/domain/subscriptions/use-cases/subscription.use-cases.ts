@@ -35,6 +35,7 @@ import {
   SubscriptionUsageExceeded as SubscriptionUsageExceededError,
 } from "../domain-errors";
 import { getSubscriptionPackageConfig } from "../package-config";
+import { makeSubscriptionRepository } from "../repository/subscription.repository";
 import { SubscriptionServiceTag } from "../services/subscription.service";
 
 export type UseSubscriptionFailure
@@ -78,10 +79,9 @@ export function createSubscriptionUseCase(args: {
 }): Effect.Effect<
   SubscriptionRow,
   CreateSubscriptionFailure,
-  SubscriptionServiceTag | Prisma
+  Prisma
 > {
   return Effect.gen(function* () {
-    const service = yield* SubscriptionServiceTag;
     const { client } = yield* Prisma;
     const now = args.now ?? new Date();
     const packageConfig = getSubscriptionPackageConfig(args.packageName);
@@ -97,8 +97,9 @@ export function createSubscriptionUseCase(args: {
 
     const created = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
-        const existing = yield* service.findCurrentForUserInTx(
-          tx,
+        const txRepo = makeSubscriptionRepository(tx);
+
+        const existing = yield* txRepo.findCurrentForUser(
           args.userId,
           ["PENDING", "ACTIVE"],
         );
@@ -108,7 +109,7 @@ export function createSubscriptionUseCase(args: {
           );
         }
 
-        const pending = yield* service.createPendingInTx(tx, {
+        const pending = yield* txRepo.createPending({
           userId: args.userId,
           packageName: args.packageName,
           maxUsages: packageConfig.maxUsages,

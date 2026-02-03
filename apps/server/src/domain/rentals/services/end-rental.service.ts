@@ -12,7 +12,7 @@ import {
   SubscriptionNotFound,
   SubscriptionUsageExceeded,
 } from "@/domain/subscriptions/domain-errors";
-import { SubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
+import { makeSubscriptionRepository } from "@/domain/subscriptions/repository/subscription.repository";
 import { makeWalletRepository } from "@/domain/wallets";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
@@ -40,13 +40,11 @@ export function endRentalUseCase(
   | Prisma
   | RentalRepository
   | BikeRepository
-  | SubscriptionRepository
 > {
   return Effect.gen(function* () {
     const { client } = yield* Prisma;
     const repo = yield* RentalRepository;
     yield* BikeRepository;
-    const subscriptionRepo = yield* SubscriptionRepository;
     const { userId, rentalId, endStationId, endTime } = input;
 
     const currentOpt = yield* repo.getMyRentalById(userId, rentalId).pipe(
@@ -111,10 +109,9 @@ export function endRentalUseCase(
           }
 
           if (current.subscriptionId) {
-            const subscriptionOpt = yield* subscriptionRepo.findByIdInTx(
-              tx,
-              current.subscriptionId,
-            ).pipe(
+            const txSubscriptionRepo = makeSubscriptionRepository(tx);
+
+            const subscriptionOpt = yield* txSubscriptionRepo.findById(current.subscriptionId).pipe(
               Effect.catchTag("SubscriptionRepositoryError", err => Effect.die(err)),
             );
 
@@ -134,8 +131,7 @@ export function endRentalUseCase(
             usageToAdd = coverage.usageToAdd;
 
             if (usageToAdd > 0) {
-              const incremented = yield* subscriptionRepo.incrementUsageInTx(
-                tx,
+              const incremented = yield* txSubscriptionRepo.incrementUsage(
                 subscription.id,
                 subscription.usageCount,
                 usageToAdd,
