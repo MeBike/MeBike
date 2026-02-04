@@ -10,6 +10,7 @@ export default defineConfig({
     globals: true,
     include: [
       "tests/**/*.{test,spec,int.test}.ts",
+      "examples/**/*.{test,spec}.ts",
       "src/**/test/**/*.{test,spec}.ts",
       "src/**/test/**/*.int.test.ts",
     ],
