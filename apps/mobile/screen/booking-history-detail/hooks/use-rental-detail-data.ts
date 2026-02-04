@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
-
-import { useRentalsActions } from "@hooks/useRentalAction";
+import { useMyRentalQuery } from "@hooks/query/rentals/use-my-rental-query";
 import { useStationActions } from "@hooks/useStationAction";
 import { useWalletActions } from "@hooks/useWalletAction";
+import { useCallback, useEffect, useState } from "react";
 
-import type { RentalDetail } from "@/types/RentalTypes";
+import type { Rental } from "@/types/rental-types";
 
 type Options = {
   onRentalEnd?: () => void;
@@ -13,49 +12,48 @@ type Options = {
 export function useRentalDetailData(bookingId: string, options?: Options) {
   const { onRentalEnd } = options || {};
   const { getMyWallet } = useWalletActions(true);
-  const { isLoadingGetAllStations, refetch: refetchStations } =
-    useStationActions(true);
+  const { stations, isLoadingGetAllStations, refetch: refetchStations }
+    = useStationActions(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const {
-    useGetDetailRental,
-    rentalDetailData,
-    isGetDetailRentalFetching,
-    isGetDetailRentalError,
-  } = useRentalsActions(true, bookingId, undefined, () => {
-    onRentalEnd?.();
-  });
+  const rentalQuery = useMyRentalQuery(bookingId, true);
 
   const refreshAll = useCallback(async () => {
     setIsRefreshing(true);
     try {
       await Promise.all([
-        useGetDetailRental(),
+        rentalQuery.refetch(),
         getMyWallet(),
         refetchStations(),
       ]);
-    } finally {
+    }
+    finally {
       setIsRefreshing(false);
     }
-  }, [useGetDetailRental, getMyWallet, refetchStations]);
+  }, [getMyWallet, refetchStations, rentalQuery]);
 
   useEffect(() => {
-    useGetDetailRental();
     getMyWallet();
     refetchStations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
-  const booking = rentalDetailData?.data?.result as RentalDetail | undefined;
-  const isInitialLoading = isGetDetailRentalFetching || isLoadingGetAllStations;
+  const booking = rentalQuery.data as Rental | undefined;
+  const isInitialLoading = rentalQuery.isLoading || isLoadingGetAllStations;
+
+  useEffect(() => {
+    if (booking?.status === "COMPLETED") {
+      onRentalEnd?.();
+    }
+  }, [booking?.status, onRentalEnd]);
 
   return {
     booking,
+    stations,
     isInitialLoading,
-    isError: isGetDetailRentalError,
+    isError: rentalQuery.isError,
     isRefreshing,
     onRefresh: refreshAll,
-    refetchDetail: useGetDetailRental,
+    refetchDetail: rentalQuery.refetch,
   };
 }
-

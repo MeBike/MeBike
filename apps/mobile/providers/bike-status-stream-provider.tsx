@@ -37,6 +37,10 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
       queryClient.invalidateQueries({ queryKey: ["rentals"] });
       queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
       queryClient.invalidateQueries({ queryKey: ["rentalsHistory"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "current"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] });
       queryClient.invalidateQueries({ queryKey: ["bikes", "all"] });
       queryClient.invalidateQueries({ queryKey: ["all-stations"] });
       queryClient.invalidateQueries({ queryKey: ["station"] });

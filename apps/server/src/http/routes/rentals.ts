@@ -3,7 +3,7 @@ import type { RouteConfig } from "@hono/zod-openapi";
 import { serverRoutes } from "@mebike/shared";
 
 import { RentalAdminController, RentalMeController } from "@/http/controllers/rentals";
-import { requireAdminMiddleware } from "@/http/middlewares/auth";
+import { requireAdminMiddleware, requireAdminOrStaffMiddleware } from "@/http/middlewares/auth";
 
 export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const rentals = serverRoutes.rentals;
@@ -19,6 +19,13 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   app.openapi(rentals.getMyRentalCounts, RentalMeController.getMyRentalCounts);
 
   app.openapi(rentals.endMyRental, RentalMeController.endMyRental);
+
+  const endByAdminRoute = {
+    ...rentals.endRentalByAdmin,
+    middleware: [requireAdminOrStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(endByAdminRoute, RentalAdminController.endRentalByAdmin);
 
   const adminListRoute = {
     ...rentals.adminListRentals,

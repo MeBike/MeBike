@@ -5,6 +5,7 @@ import { Effect, Match } from "effect";
 
 import {
   adminGetRentalDetailUseCase,
+  endRentalByAdminUseCase,
   RentalRepository,
 } from "@/domain/rentals";
 import { withLoggedCause } from "@/domain/shared";
@@ -13,6 +14,7 @@ import {
   toContractAdminRentalListItem,
 } from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";
+import { notifyBikeStatusUpdate } from "@/realtime/bike-status-events";
 
 import type { RentalsRoutes } from "./shared";
 
@@ -97,7 +99,109 @@ const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (c) 
   );
 };
 
+const endRentalByAdmin: RouteHandler<RentalsRoutes["endRentalByAdmin"]> = async (c) => {
+  const { rentalId } = c.req.valid("param");
+  const body = c.req.valid("json");
+
+  const eff = withLoggedCause(
+    endRentalByAdminUseCase({
+      rentalId,
+      endStationId: body.endStation,
+      endTime: body.endTime ? new Date(body.endTime) : new Date(),
+    }),
+    "PUT /v1/rentals/{rentalId}/end",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) => {
+      if (right.bikeId) {
+        void notifyBikeStatusUpdate({
+          userId: right.userId,
+          bikeId: right.bikeId,
+          status: "AVAILABLE",
+          rentalId: right.id,
+          at: new Date().toISOString(),
+        });
+      }
+
+      const detailEff = withLoggedCause(
+        adminGetRentalDetailUseCase(rentalId),
+        "GET /v1/admin/rentals/{rentalId}",
+      );
+
+      return c.var.runPromise(detailEff).then((detail) =>
+        c.json(
+          {
+            message: "Rental ended successfully",
+            result: toContractAdminRentalDetail(detail),
+          },
+          200,
+        ));
+    }),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("RentalNotFound", () =>
+          c.json(
+            {
+              error: rentalErrorMessages.RENTAL_NOT_FOUND,
+              details: {
+                code: RentalErrorCodeSchema.enum.RENTAL_NOT_FOUND,
+                rentalId,
+              },
+            },
+            400,
+          )),
+        Match.tag("EndStationMismatch", () =>
+          c.json(
+            {
+              error: rentalErrorMessages.MUST_END_AT_START_STATION,
+              details: {
+                code: RentalErrorCodeSchema.enum.MUST_END_AT_START_STATION,
+                rentalId,
+              },
+            },
+            400,
+          )),
+        Match.tag("InvalidRentalState", () =>
+          c.json(
+            {
+              error: rentalErrorMessages.NOT_FOUND_RENTED_RENTAL,
+              details: {
+                code: RentalErrorCodeSchema.enum.NOT_FOUND_RENTED_RENTAL,
+                rentalId,
+              },
+            },
+            400,
+          )),
+        Match.tag("UserWalletNotFound", ({ userId: missingUserId }) =>
+          c.json<RentalsContracts.RentalErrorResponse, 400>({
+            error: rentalErrorMessages.USER_NOT_HAVE_WALLET,
+            details: {
+              code: RentalErrorCodeSchema.enum.USER_NOT_HAVE_WALLET,
+              userId: missingUserId,
+            },
+          }, 400)),
+        Match.tag("InsufficientBalanceToRent", ({ requiredBalance, currentBalance }) =>
+          c.json<RentalsContracts.RentalErrorResponse, 400>({
+            error: rentalErrorMessages.NOT_ENOUGH_BALANCE_TO_RENT,
+            details: {
+              code: RentalErrorCodeSchema.enum.NOT_ENOUGH_BALANCE_TO_RENT,
+              requiredBalance,
+              currentBalance,
+            },
+          }, 400)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const RentalAdminController = {
   adminListRentals,
   adminGetRental,
+  endRentalByAdmin,
 } as const;

@@ -1,13 +1,13 @@
-import { useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-
 import type { BikeStatusUpdate } from "@hooks/useBikeStatusStream";
-import { useBikeStatusEvents } from "@hooks/useBikeStatusEvents";
 
-import type { RentalDetail } from "@/types/RentalTypes";
+import { useBikeStatusEvents } from "@hooks/useBikeStatusEvents";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
+
+import type { Rental } from "@/types/rental-types";
 
 type Options = {
-  booking?: RentalDetail;
+  booking?: Rental;
   hasToken: boolean;
   refetchDetail: () => Promise<unknown> | unknown;
 };
@@ -18,26 +18,27 @@ export function useRentalStatusWatcher({
   refetchDetail,
 }: Options) {
   const queryClient = useQueryClient();
-  const bikeId = booking?.bike?._id;
+  const bikeId = booking?.bikeId;
 
   const handleRealtimeUpdate = useCallback(
     (payload: BikeStatusUpdate) => {
-      if (!bikeId) return;
+      if (!bikeId)
+        return;
       const isTargetBike = payload.bikeId === bikeId;
-      const isRelevantStatus =
-        payload.status === "CÓ SẴN" || payload.status === "ĐANG ĐƯỢC THUÊ";
+      const isRelevantStatus
+        = payload.status === "CÓ SẴN" || payload.status === "ĐANG ĐƯỢC THUÊ";
 
       if (isTargetBike && isRelevantStatus) {
         refetchDetail();
-        queryClient.invalidateQueries({ queryKey: ["rentals"] });
-        queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
-        queryClient.invalidateQueries({ queryKey: ["rentals", "detail", booking?._id] });
+        queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
+        queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
+        queryClient.invalidateQueries({ queryKey: ["rentals", "me", "detail", booking?.id] });
       }
     },
-    [bikeId, booking?._id, queryClient, refetchDetail]
+    [bikeId, booking?.id, queryClient, refetchDetail],
   );
 
   useBikeStatusEvents(handleRealtimeUpdate, {
-    enabled: hasToken && Boolean(bikeId) && booking?.status === "ĐANG THUÊ",
+    enabled: hasToken && Boolean(bikeId) && booking?.status === "RENTED",
   });
 }

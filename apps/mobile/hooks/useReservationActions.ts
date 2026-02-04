@@ -190,6 +190,9 @@ type CreateReservationOptions = {
           queryClient.invalidateQueries({ queryKey: ["reservations", "history"] });
           queryClient.invalidateQueries({ queryKey: ["rentals", "all", 1, 10] });
           queryClient.invalidateQueries({ queryKey: ["rentals"] });
+          queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
+          queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
+          queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] });
           queryClient.invalidateQueries({ queryKey: ["all-stations"] });
           queryClient.invalidateQueries({ queryKey: ["station"] });
           queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
@@ -250,6 +253,9 @@ type CreateReservationOptions = {
             queryClient.invalidateQueries({ queryKey: ["reservations", "history"] });
             queryClient.invalidateQueries({ queryKey: ["rentals", "all", 1, 10] });
             queryClient.invalidateQueries({ queryKey: ["rentals"] });
+            queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
+            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
+            queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] });
             queryClient.invalidateQueries({ queryKey: ["all-stations"] });
             queryClient.invalidateQueries({ queryKey: ["station"] });
             callbacks?.onSuccess?.();
@@ -279,6 +285,9 @@ type CreateReservationOptions = {
           queryClient.invalidateQueries({ queryKey: ["reservations", "history"] });
           queryClient.invalidateQueries({ queryKey: ["rentals", "all", 1, 10] });
           queryClient.invalidateQueries({ queryKey: ["rentals"] });
+          queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
+          queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
+          queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] });
           queryClient.invalidateQueries({ queryKey: ["all-stations"] });
           queryClient.invalidateQueries({ queryKey: ["station"] });
           callbacks?.onSuccess?.();

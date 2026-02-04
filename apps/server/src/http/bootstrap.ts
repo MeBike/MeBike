@@ -6,6 +6,7 @@ import { Email } from "@/infrastructure/email";
 import { Prisma } from "@/infrastructure/prisma";
 import { Redis } from "@/infrastructure/redis";
 import logger from "@/lib/logger";
+import { startBikeStatusListener } from "@/realtime/pg-bike-status-listener";
 
 import { createHttpApp } from "./app";
 import { HttpDepsLive } from "./shared/providers";
@@ -19,6 +20,7 @@ export const startHonoServer = Effect.gen(function* () {
       yield* Email;
     })),
   );
+  yield* Effect.promise(() => startBikeStatusListener());
   const port = env.PORT;
   serve({
     fetch: createHttpApp({

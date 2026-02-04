@@ -14,6 +14,7 @@ import {
   toContractRentalWithPrice,
 } from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";
+import { notifyBikeStatusUpdate } from "@/realtime/bike-status-events";
 
 import type { RentalsRoutes } from "./shared";
 
@@ -280,13 +281,25 @@ const endMyRental: RouteHandler<RentalsRoutes["endMyRental"]> = async (c) => {
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json(
-        {
-          message: "Rental ended successfully",
-          result: toContractRental(right),
-        },
-        200,
-      )),
+      {
+        if (right.bikeId) {
+          void notifyBikeStatusUpdate({
+            userId,
+            bikeId: right.bikeId,
+            status: "AVAILABLE",
+            rentalId: right.id,
+            at: new Date().toISOString(),
+          });
+        }
+
+        return c.json(
+          {
+            message: "Rental ended successfully",
+            result: toContractRental(right),
+          },
+          200,
+        );
+      }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("RentalNotFound", () =>

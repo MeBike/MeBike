@@ -1,10 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { formatVietnamDateTime } from "@utils/date";
-import { parseDecimal } from "@utils/money";
 import { memo, useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import type { RentingHistory } from "../../../types/RentalTypes";
+import type { Rental, RentalStatus } from "@/types/rental-types";
 
 const styles = StyleSheet.create({
   card: {
@@ -94,14 +93,15 @@ const styles = StyleSheet.create({
 });
 
 type BookingCardProps = {
-  booking: RentingHistory;
+  booking: Rental;
   onPress: (bookingId: string) => void;
 };
 
 const BookingCard = memo(({ booking, onPress }: BookingCardProps) => {
   const priceText = useMemo(() => {
-    return `${parseDecimal(booking.total_price).toLocaleString("vi-VN")} đ`;
-  }, [booking.total_price]);
+    const total = booking.totalPrice ?? 0;
+    return `${total.toLocaleString("vi-VN")} đ`;
+  }, [booking.totalPrice]);
 
   return (
     <View style={styles.card}>
@@ -111,7 +111,7 @@ const BookingCard = memo(({ booking, onPress }: BookingCardProps) => {
           <View style={styles.bikeDetails}>
             <Text style={styles.bikeType}>Xe đạp</Text>
             <Text style={styles.location}>
-              {`ID: ${booking.start_station}`}
+              {`ID: ${booking.startStation}`}
             </Text>
           </View>
         </View>
@@ -130,18 +130,18 @@ const BookingCard = memo(({ booking, onPress }: BookingCardProps) => {
       <View style={styles.cardDetails}>
         <DetailRow
           icon="calendar"
-          text={formatVietnamDateTime(booking.start_time)}
+          text={formatVietnamDateTime(booking.startTime)}
         />
         <DetailRow
           icon="time"
-          text={formatDuration(booking.duration, Boolean(booking.end_time))}
+          text={formatDuration(booking.duration, Boolean(booking.endTime))}
         />
         <DetailRow icon="pricetag" text={priceText} isPrice />
       </View>
 
       <TouchableOpacity
         style={styles.detailButton}
-        onPress={() => onPress(booking._id)}
+        onPress={() => onPress(booking.id)}
       >
         <Text style={styles.detailButtonText}>Xem chi tiết</Text>
         <Ionicons name="chevron-forward" size={16} color="#0066FF" />
@@ -171,27 +171,31 @@ function DetailRow({ icon, text, isPrice = false }: DetailRowProps) {
   );
 }
 
-function getStatusColor(status: string) {
+function getStatusColor(status: RentalStatus) {
   switch (status) {
-    case "HOÀN THÀNH":
+    case "COMPLETED":
       return "#4CAF50";
-    case "ĐANG THUÊ":
+    case "RENTED":
       return "#FF9800";
-    case "ĐÃ HỦY":
+    case "CANCELLED":
       return "#F44336";
+    case "RESERVED":
+      return "#7C3AED";
     default:
       return "#999";
   }
 }
 
-function getStatusText(status: string) {
+function getStatusText(status: RentalStatus) {
   switch (status) {
-    case "HOÀN THÀNH":
+    case "COMPLETED":
       return "Hoàn thành";
-    case "ĐANG THUÊ":
+    case "RENTED":
       return "Đang thuê";
-    case "ĐÃ HỦY":
+    case "CANCELLED":
       return "Đã hủy";
+    case "RESERVED":
+      return "Đã đặt trước";
     default:
       return status;
   }

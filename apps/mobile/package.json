@@ -7,6 +7,8 @@
     "start": "expo start",
     "start:dev-client:emulator": "expo start --dev-client --host localhost -c",
     "start:dev-client:device": "expo start --dev-client --host lan -c",
+    "build:dev:android": "eas build --profile development --platform android",
+    "eas-build-post-install": "pnpm -C ../.. --filter @mebike/shared build",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",

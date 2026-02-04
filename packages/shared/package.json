@@ -62,6 +62,7 @@
   "scripts": {
     "prebuild": "pnpm clean",
     "build": "tsc -p tsconfig.build.json",
+    "prepare": "pnpm build",
     "clean": "rm -rf dist"
   },
   "dependencies": {

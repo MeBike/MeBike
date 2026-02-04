@@ -1,42 +1,30 @@
-import { rentalService } from "@services/rental.service";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 
-import type { RentingHistory } from "../../../types/RentalTypes";
+import { rentalServiceV1 } from "@services/rentals";
 
-type RentalHistoryPage = {
-  data: RentingHistory[];
-  pagination: {
-    totalPages: number;
-    currentPage: number;
-    limit: number;
-    totalRecords: number;
-  };
-};
+import type { Rental } from "@/types/rental-types";
 
 const PAGE_SIZE = 10;
 
-async function fetchRentalHistory(
-  page: number = 1,
-  limit: number = PAGE_SIZE
-): Promise<RentalHistoryPage> {
-  const response = await rentalService.userGetAllRentals(page, limit);
-  if (response.status === 200) {
-    return response.data as unknown as RentalHistoryPage;
+async function fetchRentalHistory(page: number = 1) {
+  const result = await rentalServiceV1.listMyRentals({ page, pageSize: PAGE_SIZE });
+  if (!result.ok) {
+    throw result.error;
   }
-  throw new Error("Failed to fetch rental history");
+  return result.value;
 }
 
 export function useBookingHistory() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const query = useInfiniteQuery({
-    queryKey: ["rentalsHistory"],
+    queryKey: ["rentals", "me", "history", PAGE_SIZE],
     queryFn: ({ pageParam = 1 }) =>
-      fetchRentalHistory(pageParam as number, PAGE_SIZE),
+      fetchRentalHistory(pageParam as number),
     getNextPageParam: (lastPage) => {
-      if (lastPage.pagination.currentPage < lastPage.pagination.totalPages) {
-        return lastPage.pagination.currentPage + 1;
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
       }
       return undefined;
     },
@@ -49,12 +37,12 @@ export function useBookingHistory() {
       return [];
     }
     const seenIds = new Set<string>();
-    const unique: RentingHistory[] = [];
+    const unique: Rental[] = [];
 
     query.data.pages.forEach((page) => {
       page.data.forEach((item) => {
-        if (item && !seenIds.has(item._id)) {
-          seenIds.add(item._id);
+        if (item && !seenIds.has(item.id)) {
+          seenIds.add(item.id);
           unique.push(item);
         }
       });

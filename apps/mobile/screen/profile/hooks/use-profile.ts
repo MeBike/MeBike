@@ -1,6 +1,6 @@
 import type { UserDetail } from "@services/users/user-service";
 
-import { useGetRentalCountsQuery } from "@hooks/query/Rent/useGetRentalCountsQuery";
+import { useMyRentalCountsQuery } from "@hooks/query/rentals/use-my-rental-counts-query";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -46,14 +46,14 @@ export function useProfile() {
     return "Yêu cầu thất bại. Vui lòng thử lại.";
   };
 
-  const { data: rentalCountsResponse, isLoading: isRentalCountsLoading } = useGetRentalCountsQuery("HOÀN THÀNH", hasToken);
-  const completedTrips = rentalCountsResponse?.data?.result?.counts ?? 0;
+  const { data: rentalCounts, isLoading: isRentalCountsLoading } = useMyRentalCountsQuery({ enabled: hasToken });
+  const completedTrips = rentalCounts?.COMPLETED ?? 0;
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["authNext", "me"] }),
-      queryClient.invalidateQueries({ queryKey: ["rentals", "counts"] }),
+      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] }),
       hydrate(),
     ]);
     setIsRefreshing(false);

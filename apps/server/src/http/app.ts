@@ -17,6 +17,7 @@ import logger from "@/lib/logger";
 
 import { registerAuthRoutes } from "./routes/auth";
 import { registerBikeRoutes } from "./routes/bikes";
+import { registerEventRoutes } from "./routes/events";
 import { registerHealthRoutes } from "./routes/health";
 import { registerRatingRoutes } from "./routes/ratings";
 import { registerRentalRoutes } from "./routes/rentals";
@@ -81,8 +82,9 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   app.use("/v1/users/manage-users/*", requireAdminOrStaffMiddleware);
   app.use("/v1/users/manage-users/create", requireAdminMiddleware);
   app.use("/v1/users/manage-users/admin-reset-password/*", requireAdminMiddleware);
-  app.use("/v1/admin/rentals", requireAdminMiddleware);
-  app.use("/v1/admin/rentals/*", requireAdminMiddleware);
+  app.use("/v1/admin/rentals", requireAdminOrStaffMiddleware);
+  app.use("/v1/admin/rentals/*", requireAdminOrStaffMiddleware);
+  app.use("/events", requireAuthMiddleware);
 
   app.doc("/docs/openapi.json", serverOpenApi);
   app.get(
@@ -97,6 +99,7 @@ export function createHttpApp({ runPromise }: { runPromise: RunPromise }) {
   registerStationRoutes(app);
   registerHealthRoutes(app);
   registerBikeRoutes(app);
+  registerEventRoutes(app);
   registerRentalRoutes(app);
   registerReservationRoutes(app);
   registerSupplierRoutes(app);

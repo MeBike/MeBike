@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useMyRentalQuery } from "@hooks/query/rentals/use-my-rental-query";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { useQuery } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -13,13 +14,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
-
-import { useAuthNext } from "@providers/auth-provider-next";
-import { rentalService } from "@services/rental.service";
-
-import type { RentalDetail } from "../types/RentalTypes";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type RouteParams = {
   bookingId: string;
@@ -220,28 +216,16 @@ function RentalQrScreen() {
   const { isAuthenticated } = useAuthNext();
   const hasToken = isAuthenticated;
 
-  const {
-    data: rentalDetailResponse,
-    isLoading: isRentalLoading,
-    refetch: refetchRentalDetail,
-    isRefetching,
-  } = useQuery({
-    queryKey: ["rentals", "detail", bookingId],
-    queryFn: () => rentalService.userGetRentalById(bookingId),
-    enabled: hasToken && Boolean(bookingId),
-  });
-
-  const rentalDetail = rentalDetailResponse?.data?.result as RentalDetail | undefined;
-  const bikeId = rentalDetail?.bike?._id;
+  const rentalQuery = useMyRentalQuery(bookingId, hasToken);
+  const rental = rentalQuery.data;
 
   const [isSessionCompleted, setIsSessionCompleted] = useState(false);
 
   useEffect(() => {
-    if (rentalDetail?.status === "HOÀN THÀNH") {
+    if (rental?.status === "COMPLETED") {
       setIsSessionCompleted(true);
     }
-  }, [rentalDetail?.status]);
-
+  }, [rental?.status]);
 
   return (
     <View style={styles.container}>
@@ -264,16 +248,16 @@ function RentalQrScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={
+        refreshControl={(
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetchRentalDetail}
+            refreshing={rentalQuery.isRefetching}
+            onRefresh={rentalQuery.refetch}
             tintColor="#0066FF"
             colors={["#0066FF"]}
           />
-        }
+        )}
       >
-        {isRentalLoading && !rentalDetail && (
+        {rentalQuery.isLoading && !rental && (
           <View style={styles.loadingRow}>
             <ActivityIndicator size="small" color="#0066FF" />
             <Text style={styles.loadingText}>Đang tải thông tin chuyến đi...</Text>
@@ -303,39 +287,41 @@ function RentalQrScreen() {
               {isSessionCompleted ? "ĐÃ TRẢ XE" : "MÃ THUÊ"}
             </Text>
           </View>
-          {isSessionCompleted ? (
-            <>
-              <Ionicons name="checkmark-circle" size={120} color="#10B981" />
-              <Text style={styles.completedTitle}>Phiên thuê đã kết thúc</Text>
-              <Text style={styles.completedSubtitle}>
-                Bạn có thể đóng màn hình hoặc xem lại chi tiết chuyến đi.
-              </Text>
-              <TouchableOpacity
-                style={[styles.primaryButton, { width: "100%", marginTop: 24 }]}
-                onPress={() =>
-                  (navigation as any).navigate("BookingHistoryDetail", { bookingId })}
-                activeOpacity={0.9}
-              >
-                <Text style={styles.primaryButtonText}>Chi tiết chuyến đi</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.secondaryAction}
-                onPress={() => navigation.goBack()}
-              >
-                <Text style={styles.secondaryActionText}>Quay lại</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <>
-              <QRCode
-                value={bookingId}
-                size={240}
-                backgroundColor="transparent"
-                color="#111"
-              />
-              <Text style={styles.qrValue}>{bookingId}</Text>
-            </>
-          )}
+          {isSessionCompleted
+            ? (
+                <>
+                  <Ionicons name="checkmark-circle" size={120} color="#10B981" />
+                  <Text style={styles.completedTitle}>Phiên thuê đã kết thúc</Text>
+                  <Text style={styles.completedSubtitle}>
+                    Bạn có thể đóng màn hình hoặc xem lại chi tiết chuyến đi.
+                  </Text>
+                  <TouchableOpacity
+                    style={[styles.primaryButton, { width: "100%", marginTop: 24 }]}
+                    onPress={() =>
+                      (navigation as any).navigate("BookingHistoryDetail", { bookingId })}
+                    activeOpacity={0.9}
+                  >
+                    <Text style={styles.primaryButtonText}>Chi tiết chuyến đi</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.secondaryAction}
+                    onPress={() => navigation.goBack()}
+                  >
+                    <Text style={styles.secondaryActionText}>Quay lại</Text>
+                  </TouchableOpacity>
+                </>
+              )
+            : (
+                <>
+                  <QRCode
+                    value={bookingId}
+                    size={240}
+                    backgroundColor="transparent"
+                    color="#111"
+                  />
+                  <Text style={styles.qrValue}>{bookingId}</Text>
+                </>
+              )}
         </View>
 
         {!isSessionCompleted && (

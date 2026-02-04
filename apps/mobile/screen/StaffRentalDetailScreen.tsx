@@ -13,20 +13,20 @@ import {
 } from "react-native";
 
 import BookingDetailHeader from "./booking-history-detail/components/BookingDetailHeader";
-import StatusCard from "./booking-history-detail/components/StatusCard";
-import BikeInfoCard from "./booking-history-detail/components/BikeInfoCard";
-import TimeInfoCard from "./booking-history-detail/components/TimeInfoCard";
-import PaymentInfoCard from "./booking-history-detail/components/PaymentInfoCard";
-import BookingIdCard from "./booking-history-detail/components/BookingIdCard";
-import UserInfoCard from "./booking-history-detail/components/UserInfoCard";
 import LoadingState from "./booking-history-detail/components/LoadingState";
 import ErrorState from "./booking-history-detail/components/ErrorState";
-
 import StaffEndRentalCard from "./booking-history-detail/components/StaffEndRentalCard";
+import { AdminBikeInfoCard } from "./booking-history-detail/v1/admin-bike-info-card";
+import { AdminUserInfoCard } from "./booking-history-detail/v1/admin-user-info-card";
+import { RentalBookingIdCard } from "./booking-history-detail/v1/booking-id-card";
+import { RentalPaymentInfoCard } from "./booking-history-detail/v1/payment-info-card";
+import { RentalStatusCard } from "./booking-history-detail/v1/status-card";
+import { RentalTimeInfoCard } from "./booking-history-detail/v1/time-info-card";
 import { useStationActions } from "@hooks/useStationAction";
-import usePutStaffEndRental from "@hooks/mutations/Rentals/usePutStaffEndRental";
-import { useStaffGetDetailRentalQuery } from "@hooks/query/Rent/useStaffGetDetailRentalQuery";
-import type { RentalDetail } from "../types/RentalTypes";
+import { useStaffEndRentalMutation } from "@hooks/mutations/rentals/use-staff-end-rental-mutation";
+import { useStaffRentalDetailQuery } from "@hooks/query/rentals/use-staff-rental-detail-query";
+import { rentalErrorMessage } from "@services/rentals";
+import type { RentalDetail } from "@/types/rental-types";
 import type { StationType } from "../types/StationType";
 
 type RouteParams = {
@@ -65,9 +65,9 @@ function StaffRentalDetailScreen() {
     isLoading: isRentalLoading,
     isError: isRentalError,
     refetch: refetchRental,
-  } = useStaffGetDetailRentalQuery(rentalId, true);
+  } = useStaffRentalDetailQuery(rentalId, true);
 
-  const endRentalMutation = usePutStaffEndRental();
+  const endRentalMutation = useStaffEndRentalMutation();
 
   useEffect(() => {
     setStations(stationData || []);
@@ -83,23 +83,20 @@ function StaffRentalDetailScreen() {
   }, [refetchRental, refetchStations]);
 
   const booking = useMemo(() => {
-    return rentalDetailData?.data?.result as RentalDetail | undefined;
-  }, [rentalDetailData?.data?.result]);
+    return rentalDetailData as RentalDetail | undefined;
+  }, [rentalDetailData]);
 
   const handleStaffEndRental = useCallback(
-    ({ end_station, reason }: { end_station: string; reason: string }) => {
+    ({ endStation, reason }: { endStation: string; reason: string }) => {
       endRentalMutation.mutate(
-        { id: rentalId, end_station, reason },
+        { rentalId, endStation, reason },
         {
           onSuccess: () => {
             Alert.alert("Thành công", "Đã kết thúc phiên thuê cho khách.");
             refetchRental();
           },
-          onError: (error: any) => {
-            const message =
-              error?.response?.data?.message ||
-              "Không thể kết thúc phiên thuê. Vui lòng thử lại.";
-            Alert.alert("Thất bại", message);
+          onError: (error) => {
+            Alert.alert("Thất bại", rentalErrorMessage(error));
           },
         },
       );
@@ -157,14 +154,14 @@ function StaffRentalDetailScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <StatusCard status={booking.status} />
-          <BikeInfoCard booking={booking} />
-          <TimeInfoCard booking={booking} />
-          <PaymentInfoCard booking={booking} />
-          <BookingIdCard booking={booking} />
-          <UserInfoCard booking={booking} />
+          <RentalStatusCard status={booking.status} />
+          <AdminBikeInfoCard booking={booking} />
+          <RentalTimeInfoCard rental={booking} />
+          <RentalPaymentInfoCard rental={booking} />
+          <RentalBookingIdCard rentalId={booking.id} />
+          <AdminUserInfoCard booking={booking} />
 
-          {booking.status === "ĐANG THUÊ" && (
+          {booking.status === "RENTED" && (
             <StaffEndRentalCard
               booking={booking}
               stations={stations}

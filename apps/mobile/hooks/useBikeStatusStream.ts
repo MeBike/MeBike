@@ -2,6 +2,7 @@ import type { ErrorEvent, ExceptionEvent, TimeoutEvent } from "react-native-sse"
 
 import { API_BASE_URL } from "@lib/api-base-url";
 import { clearTokens, getAccessToken } from "@lib/auth-tokens";
+import { log } from "@lib/log";
 import { useCallback, useEffect, useRef, useState } from "react";
 import EventSource from "react-native-sse";
 
@@ -25,7 +26,6 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
   const eventSourceRef = useRef<EventSource<CustomEventName> | null>(null);
   const onUpdateRef = useRef<typeof onUpdate>(onUpdate);
   const onErrorRef = useRef<typeof onError>(onError);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressReconnectRef = useRef(false);
 
   useEffect(() => {
@@ -42,13 +42,6 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
       eventSourceRef.current = null;
     }
     setIsConnected(false);
-  }, []);
-
-  const clearReconnectTimeout = useCallback(() => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
   }, []);
 
   const connect = useCallback(async () => {
@@ -84,7 +77,7 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
           }
         }
         catch (error) {
-          console.warn("Failed to parse bike status update", error);
+          log.warn("Failed to parse bike status update", error);
         }
       });
 
@@ -95,7 +88,6 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
           || "SSE connection error";
         onErrorRef.current?.(new Error(message));
         setIsConnected(false);
-        clearReconnectTimeout();
 
         const isExpired = typeof message === "string" && message.toLowerCase().includes("jwt expired");
         if (isExpired) {
@@ -103,33 +95,19 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
           void clearTokens();
           return;
         }
-
-        reconnectTimeoutRef.current = setTimeout(() => {
-          reconnectTimeoutRef.current = null;
-          if (autoConnect) {
-            connect();
-          }
-        }, 5000);
       });
 
       eventSourceRef.current = eventSource;
     }
     catch (error) {
       onErrorRef.current?.(error as Error);
-      clearReconnectTimeout();
       if (error instanceof Error && error.message.toLowerCase?.().includes("jwt expired")) {
         suppressReconnectRef.current = true;
         void clearTokens();
         return;
       }
-      reconnectTimeoutRef.current = setTimeout(() => {
-        reconnectTimeoutRef.current = null;
-        if (autoConnect) {
-          connect();
-        }
-      }, 5000);
     }
-  }, [autoConnect, clearReconnectTimeout, disconnect]);
+  }, [disconnect]);
 
   useEffect(() => {
     if (autoConnect) {
@@ -138,9 +116,8 @@ export function useBikeStatusStream(options?: UseBikeStatusStreamOptions) {
 
     return () => {
       disconnect();
-      clearReconnectTimeout();
     };
-  }, [autoConnect, connect, disconnect, clearReconnectTimeout]);
+  }, [autoConnect, connect, disconnect]);
 
   return {
     connect,
