@@ -74,10 +74,9 @@ export const subscriptionService = {
 
   activate: async (subscriptionId: string): Promise<Result<Subscription, SubscriptionError>> => {
     try {
-      const path = routePath(ServerRoutes.subscriptions.activateSubscription).replace(
-        "{subscriptionId}",
-        subscriptionId,
-      );
+      const path = routePath(ServerRoutes.subscriptions.activateSubscription)
+        .replace("{subscriptionId}", subscriptionId)
+        .replace(":subscriptionId", subscriptionId);
 
       const response = await kyClient.post(path, { throwHttpErrors: false });
 
@@ -133,10 +132,9 @@ export const subscriptionService = {
 
   getDetail: async (subscriptionId: string): Promise<Result<Subscription, SubscriptionError>> => {
     try {
-      const path = routePath(ServerRoutes.subscriptions.getSubscription).replace(
-        "{subscriptionId}",
-        subscriptionId,
-      );
+      const path = routePath(ServerRoutes.subscriptions.getSubscription)
+        .replace("{subscriptionId}", subscriptionId)
+        .replace(":subscriptionId", subscriptionId);
       const response = await kyClient.get(path, { throwHttpErrors: false });
 
       if (response.status === StatusCodes.OK) {

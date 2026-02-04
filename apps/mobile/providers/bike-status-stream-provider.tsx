@@ -1,9 +1,11 @@
+import { useAuthNext } from "@providers/auth-provider-next";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, ToastAndroid } from "react-native";
-import { useQueryClient } from "@tanstack/react-query";
 
-import { useBikeStatusStream, type BikeStatusUpdate } from "@hooks/useBikeStatusStream";
-import { useAuthNext } from "@providers/auth-provider-next";
+import type { BikeStatusUpdate } from "@/hooks/use-bike-status-stream";
+
+import { useBikeStatusStream } from "@/hooks/use-bike-status-stream";
 
 type Subscriber = (payload: BikeStatusUpdate) => void;
 
@@ -25,7 +27,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
     subscribersRef.current.forEach((listener) => {
       try {
         listener(payload);
-      } catch (error) {
+      }
+      catch (error) {
         console.warn("[BikeStatusStream] subscriber error", error);
       }
     });
@@ -51,7 +54,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
 
         if (status.includes("ĐANG ĐƯỢC THUÊ")) {
           message = "Thuê xe thành công";
-        } else if (status.includes("CÓ SẴN")) {
+        }
+        else if (status.includes("CÓ SẴN")) {
           message = "Kết thúc phiên thuê xe thành công";
         }
 
@@ -60,7 +64,7 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
 
       notifySubscribers(payload);
     },
-    [notifySubscribers, queryClient]
+    [notifySubscribers, queryClient],
   );
 
   const handleError = useCallback((error: Error) => {
@@ -76,7 +80,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     if (!isAuthenticated) {
       disconnect();
-    } else {
+    }
+    else {
       connect();
     }
   }, [connect, disconnect, isAuthenticated]);
@@ -94,7 +99,7 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
       lastUpdate,
       subscribe,
     }),
-    [isConnected, lastUpdate, subscribe]
+    [isConnected, lastUpdate, subscribe],
   );
 
   return <BikeStatusStreamContext.Provider value={value}>{children}</BikeStatusStreamContext.Provider>;

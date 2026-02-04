@@ -1,7 +1,7 @@
+import { useBikeStatusStreamContext } from "@providers/bike-status-stream-provider";
 import { useEffect } from "react";
 
-import type { BikeStatusUpdate } from "@hooks/useBikeStatusStream";
-import { useBikeStatusStreamContext } from "@providers/bike-status-stream-provider";
+import type { BikeStatusUpdate } from "@/hooks/use-bike-status-stream";
 
 type Options = {
   enabled?: boolean;
@@ -12,7 +12,8 @@ export function useBikeStatusEvents(onUpdate: (payload: BikeStatusUpdate) => voi
   const { subscribe, lastUpdate } = useBikeStatusStreamContext();
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled)
+      return;
     const unsubscribe = subscribe(onUpdate);
     return () => unsubscribe();
   }, [enabled, onUpdate, subscribe]);

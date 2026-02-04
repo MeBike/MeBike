@@ -1,9 +1,8 @@
-import type { BikeStatusUpdate } from "@hooks/useBikeStatusStream";
-
 import { useBikeStatusEvents } from "@hooks/useBikeStatusEvents";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
+import type { BikeStatusUpdate } from "@/hooks/use-bike-status-stream";
 import type { Rental } from "@/types/rental-types";
 
 type Options = {

@@ -29,6 +29,32 @@ const qrModalStyles = StyleSheet.create({
     fontSize: 12,
     color: "#333",
     textAlign: "center",
+    marginBottom: 12,
+  },
+  amountInput: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: "#111827",
+    marginBottom: 16,
+  },
+  primaryButton: {
+    width: "100%",
+    backgroundColor: "#0066FF",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  primaryButtonDisabled: {
+    opacity: 0.6,
+  },
+  primaryText: {
+    color: "#fff",
+    fontWeight: "600",
   },
   userId: {
     marginTop: 12,

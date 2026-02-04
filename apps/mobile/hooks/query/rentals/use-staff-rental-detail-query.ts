@@ -10,7 +10,7 @@ export function useStaffRentalDetailQuery(rentalId: string, enabled: boolean = t
     queryKey: ["rentals", "admin", "detail", rentalId],
     enabled: enabled && Boolean(rentalId),
     queryFn: async () => {
-      const result = await rentalServiceV1.getAdminRentalDetail(rentalId);
+      const result = await rentalServiceV1.getStaffRentalDetail(rentalId);
       if (!result.ok) {
         throw result.error;
       }

@@ -23,15 +23,6 @@ export function WalletTabs({ activeTab, onTabChange }: WalletTabsProps) {
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.tab, activeTab === TAB_TYPES.WITHDRAWALS && styles.activeTab]}
-        onPress={() => onTabChange(TAB_TYPES.WITHDRAWALS)}
-      >
-        <Text style={[styles.tabText, activeTab === TAB_TYPES.WITHDRAWALS && styles.activeTabText]}>
-          Yêu cầu rút tiền
-        </Text>
-      </TouchableOpacity>
-
       {/* <TouchableOpacity
         style={[styles.tab, activeTab === TAB_TYPES.REFUNDS && styles.activeTab]}
         onPress={() => onTabChange(TAB_TYPES.REFUNDS)}

@@ -14,13 +14,6 @@ const unauthorizedBody = {
   details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
 } as const;
 
-export type AuthEnv = {
-  Variables: {
-    currentUser?: AccessTokenPayload;
-    authFailure?: "forbidden";
-    runPromise: RunPromise;
-  };
-};
 
 function parseBearerToken(header: string | null | undefined): string | null {
   if (!header)
@@ -52,7 +45,7 @@ async function loadUser(runPromise: RunPromise, userId: string) {
   }));
 }
 
-export const currentUserMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
+export const currentUserMiddleware = createMiddleware(async (c, next) => {
   const token = parseBearerToken(c.req.header("Authorization"));
   if (token) {
     const payload = verifyAccessToken(token);
@@ -76,7 +69,7 @@ export const currentUserMiddleware = createMiddleware<AuthEnv>(async (c, next) =
   await next();
 });
 
-export const requireAuthMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
+export const requireAuthMiddleware = createMiddleware(async (c, next) => {
   const user = c.var.currentUser;
   if (!user) {
     if (c.var.authFailure === "forbidden") {
@@ -87,7 +80,7 @@ export const requireAuthMiddleware = createMiddleware<AuthEnv>(async (c, next) =
   await next();
 });
 
-export const requireAdminMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
+export const requireAdminMiddleware = createMiddleware(async (c, next) => {
   const user = c.var.currentUser;
   if (!user) {
     if (c.var.authFailure === "forbidden") {
@@ -101,7 +94,7 @@ export const requireAdminMiddleware = createMiddleware<AuthEnv>(async (c, next) 
   await next();
 });
 
-export const requireAdminOrStaffMiddleware = createMiddleware<AuthEnv>(async (c, next) => {
+export const requireAdminOrStaffMiddleware = createMiddleware(async (c, next) => {
   const user = c.var.currentUser;
   if (!user) {
     if (c.var.authFailure === "forbidden") {

@@ -6,9 +6,9 @@ import { TransactionItem } from "../transaction-item";
 import { styles } from "./styles";
 
 type Transaction = {
-  _id: string;
-  amount: number;
-  created_at: string;
+  id: string;
+  amount: string;
+  createdAt: string;
   status: string;
   description?: string;
   type?: string;
@@ -60,7 +60,7 @@ export function TransactionsTab({
     <FlatList
       data={transactions}
       renderItem={renderTransaction}
-      keyExtractor={item => item._id}
+      keyExtractor={item => item.id}
       onEndReached={() => {
         if (hasNextPage && !isFetchingNextPage) {
           onLoadMore();

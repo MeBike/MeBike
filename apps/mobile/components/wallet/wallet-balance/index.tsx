@@ -4,7 +4,7 @@ import React from "react";
 import { Text, View } from "react-native";
 
 import { WALLET_CONSTANTS } from "../../../utils/wallet/constants";
-import { formatBalance } from "../../../utils/wallet/formatters";
+import { formatBalance, formatWalletStatus } from "../../../utils/wallet/formatters";
 import { styles } from "./styles";
 
 type WalletBalanceProps = {
@@ -27,7 +27,11 @@ export function WalletBalance({ balance, status }: WalletBalanceProps) {
       <View style={styles.balanceCard}>
         <View style={styles.balanceContent}>
           <Text style={styles.balanceLabel}>Số dư hiện tại</Text>
-          <Text style={styles.balanceAmount}>{formatBalance(balance)} đ</Text>
+          <Text style={styles.balanceAmount}>
+            {formatBalance(balance)}
+            {" "}
+            đ
+          </Text>
           <View style={styles.statusBadge}>
             <View
               style={[
@@ -40,7 +44,7 @@ export function WalletBalance({ balance, status }: WalletBalanceProps) {
                 },
               ]}
             />
-            <Text style={styles.statusText}>{status}</Text>
+            <Text style={styles.statusText}>{formatWalletStatus(status)}</Text>
           </View>
         </View>
         <Ionicons

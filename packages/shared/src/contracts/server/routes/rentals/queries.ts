@@ -513,3 +513,50 @@ export const adminGetRental = createRoute({
     },
   },
 });
+
+export const staffGetRental = createRoute({
+  method: "get",
+  path: "/v1/staff/rentals/{rentalId}",
+  tags: ["Staff", "Rentals"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: RentalIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Detailed rental with all populated data (staff view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            RentalDetailSchemaOpenApi,
+            "Get staff rental detail response",
+          ),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Staff access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Rental not found",
+      content: {
+        "application/json": {
+          schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+  },
+});

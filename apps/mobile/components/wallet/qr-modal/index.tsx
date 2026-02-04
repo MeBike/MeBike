@@ -1,10 +1,14 @@
-import React from "react";
+import { walletTopupErrorMessage, walletTopupService } from "@services/wallet-topup.service";
+import React, { useCallback, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  Image,
+  KeyboardAvoidingView,
+  Linking,
   Modal,
-  Share,
+  Platform,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -18,16 +22,53 @@ type QRModalProps = {
 };
 
 export function QRModal({ visible, onClose, userId }: QRModalProps) {
-  const handleShareUserId = async () => {
+  const [amount, setAmount] = useState("5000");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const successUrl = useMemo(
+    () => `https://example.com/stripe-success?userId=${encodeURIComponent(userId)}`,
+    [userId],
+  );
+
+  const cancelUrl = useMemo(
+    () => `https://example.com/stripe-cancel?userId=${encodeURIComponent(userId)}`,
+    [userId],
+  );
+
+  const handleStartTopup = useCallback(async () => {
+    const trimmed = amount.trim();
+    if (!/^\d+$/.test(trimmed)) {
+      Alert.alert("So tien khong hop le", "Vui long nhap so tien dang so (don vi cent). ");
+      return;
+    }
+
+    if (Number(trimmed) < 5000) {
+      Alert.alert("So tien qua nho", "So tien toi thieu la 5000 (don vi cent). ");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await walletTopupService.createStripeCheckoutSession({
+      amount: trimmed,
+      currency: "usd",
+      successUrl,
+      cancelUrl,
+    });
+    setIsSubmitting(false);
+
+    if (!result.ok) {
+      Alert.alert("Khong the tao phien thanh toan", walletTopupErrorMessage(result.error));
+      return;
+    }
+
+    onClose();
     try {
-      await Share.share({
-        message: `user_id của tôi: ${userId}`,
-      });
+      await Linking.openURL(result.value.checkoutUrl);
     }
     catch {
-      Alert.alert("Lỗi", "Không thể chia sẻ user_id");
+      Alert.alert("Khong the mo trinh duyet", "Vui long thu lai sau.");
     }
-  };
+  }, [amount, cancelUrl, onClose, successUrl]);
 
   return (
     <Modal
@@ -37,29 +78,36 @@ export function QRModal({ visible, onClose, userId }: QRModalProps) {
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Quét mã QR để nạp tiền</Text>
-          <Image
-            // eslint-disable-next-line ts/no-require-imports
-            source={require("../../../assets/qr.png")}
-            style={styles.qrImage}
-            resizeMode="contain"
-          />
+        <KeyboardAvoidingView
+          behavior={Platform.select({ ios: "padding", android: undefined })}
+          style={styles.content}
+        >
+          <Text style={styles.title}>Nạp tiền bằng Stripe (dev)</Text>
           <Text style={styles.instruction}>
-            VUI LÒNG COPY ID VÀO TIN NHẮN CHUYỂN KHOẢN
+            Nhap so tien theo don vi cent (USD). Toi thieu 5000.
           </Text>
-          <Text selectable style={styles.userId}>
-            {`Mã giao dịch: ${userId}`}
-          </Text>
+          <TextInput
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="number-pad"
+            placeholder="5000"
+            style={styles.amountInput}
+          />
 
-          <TouchableOpacity style={styles.shareButton} onPress={handleShareUserId}>
-            <Text style={styles.shareText}>Copy mã</Text>
+          <TouchableOpacity
+            style={[styles.primaryButton, isSubmitting && styles.primaryButtonDisabled]}
+            onPress={handleStartTopup}
+            disabled={isSubmitting}
+          >
+            {isSubmitting
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.primaryText}>Mo Stripe Checkout</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>Đóng</Text>
+            <Text style={styles.closeText}>Dong</Text>
           </TouchableOpacity>
-        </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );

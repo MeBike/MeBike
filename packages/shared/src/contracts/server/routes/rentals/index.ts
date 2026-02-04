@@ -27,6 +27,7 @@ export {
   getRentalsByUser,
   getRentalSummary,
   getStationActivity,
+  staffGetRental,
 } from "./queries";
 
 export const rentalsRoutes = {

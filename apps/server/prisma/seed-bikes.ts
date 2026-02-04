@@ -24,7 +24,7 @@ const stationNameMap: Record<string, string> = {
   "68e0b2ae63beb4054de09d1d": "Ga Công viên Văn Thánh",
 };
 
-const DEFAULT_SUPPLIER_ID = "019b167a-3c00-0000-0000-000000000001";
+const DEFAULT_SUPPLIER_NAME = "YADEA Ho Chi Minh";
 
 const statusMap: Record<string, BikeStatus> = {
   "CÓ SẴN": BikeStatus.AVAILABLE,
@@ -49,16 +49,22 @@ async function main() {
   const prisma = new PrismaClient({ adapter });
 
   try {
-    await prisma.supplier.upsert({
-      where: { id: DEFAULT_SUPPLIER_ID },
-      update: {},
-      create: {
-        id: DEFAULT_SUPPLIER_ID,
-        name: "Default Supplier",
-        status: SupplierStatus.ACTIVE,
-        updatedAt: new Date(),
-      },
+    let supplier = await prisma.supplier.findFirst({
+      where: { name: DEFAULT_SUPPLIER_NAME },
     });
+    if (!supplier) {
+      supplier = await prisma.supplier.create({
+        data: {
+          id: uuidv7(),
+          name: DEFAULT_SUPPLIER_NAME,
+          status: SupplierStatus.ACTIVE,
+          updatedAt: new Date(),
+        },
+      });
+    }
+    if (!supplier) {
+      throw new Error("Default supplier not found");
+    }
 
     logger.info("Clearing existing bikes...");
     await prisma.bike.deleteMany();
@@ -82,7 +88,7 @@ async function main() {
           id: uuidv7(),
           chipId: bike.chip_id,
           stationId,
-          supplierId: DEFAULT_SUPPLIER_ID,
+          supplierId: supplier.id,
           status,
           updatedAt,
         },

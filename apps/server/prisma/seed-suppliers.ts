@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import process from "node:process";
+import { uuidv7 } from "uuidv7";
 
 import { PrismaClient, SupplierStatus } from "../generated/prisma/client";
 import logger from "../src/lib/logger";
@@ -8,7 +9,6 @@ import logger from "../src/lib/logger";
 const suppliers = [
   {
     oldId: "68e260a5d04813da448c56f1",
-    newId: "019b167a-3c00-0000-0000-000000000001",
     name: "YADEA Ho Chi Minh",
     address: "Quận 2, TP.HCM",
     phoneNumber: "0362583697",
@@ -19,7 +19,6 @@ const suppliers = [
   },
   {
     oldId: "691183a5f3d1e2af52f54ae8",
-    newId: "019b167a-3c00-0000-0000-000000000002",
     name: "HONDA Ho Chi Minh",
     address: "Quận 2, TP.HCM",
     phoneNumber: "0888219421",
@@ -30,7 +29,6 @@ const suppliers = [
   },
   {
     oldId: "60d5f1b3e7b3c9a4b4f4b3a2",
-    newId: "019b167a-3c00-0000-0000-000000000003",
     name: "Công ty TNHH YADEA Việt Nam",
     address: "123 Nguyễn Văn Linh, Quận 7, TP.HCM",
     phoneNumber: "0987654321",
@@ -39,7 +37,10 @@ const suppliers = [
     createdAt: "2025-10-05T19:12:21.230Z",
     updatedAt: "2025-11-20T12:44:38.818Z",
   },
-];
+].map((supplier) => ({
+  ...supplier,
+  newId: uuidv7(),
+}));
 
 const statusMap: Record<string, SupplierStatus> = {
   "HOẠT ĐỘNG": SupplierStatus.ACTIVE,

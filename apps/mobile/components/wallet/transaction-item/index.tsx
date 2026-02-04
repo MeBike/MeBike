@@ -5,6 +5,8 @@ import { Text, TouchableOpacity, View } from "react-native";
 import {
   formatCurrency,
   formatDate,
+  formatTransactionStatus,
+  formatTransactionType,
   getTransactionColor,
   getTransactionIcon,
   truncateId,
@@ -14,9 +16,9 @@ import { styles } from "./styles";
 export type TransactionType = "transaction" | "withdrawal" | "refund";
 
 type BaseItem = {
-  _id: string;
-  amount: number;
-  created_at: string;
+  id: string;
+  amount: string;
+  createdAt: string;
   status: string;
 };
 
@@ -25,8 +27,6 @@ type TransactionItemProps = {
   item: BaseItem & {
     description?: string;
     type?: string;
-    bank_name?: string;
-    transaction_id?: string;
   };
   onPress?: () => void;
 };
@@ -49,12 +49,6 @@ export function TransactionItem({ type, item, onPress }: TransactionItemProps) {
   };
 
   const getDescription = () => {
-    if (type === "withdrawal") {
-      return `Rút tiền về ${(item as any).bank}`;
-    }
-    if (type === "refund") {
-      return `Hoàn tiền cho giao dịch ${truncateId((item as any).transaction_id)}`;
-    }
     const description = (item as any).description;
     if (description && typeof description === "string") {
       //  1: "bike_id:" or "bike id:" or "bikeid:"
@@ -81,16 +75,9 @@ export function TransactionItem({ type, item, onPress }: TransactionItemProps) {
   };
 
   const getAmount = () => {
-    // Money OUT (negative) for: withdrawals, payments, bookings, top-ups
-    // Money IN (positive) for: refunds
-    const isMoneyOut
-      = type === "withdrawal"
-        || item.type === "RÚT TIỀN"
-        || item.type === "THANH TOÁN"
-        || item.type === "ĐẶT TRUỚC";
-
+    const isMoneyOut = item.type === "DEBIT";
     const prefix = isMoneyOut ? "-" : "+";
-    return `${prefix}${formatCurrency(item.amount.toString())}`;
+    return `${prefix}${formatCurrency(item.amount)}`;
   };
 
   const IconComponent = (
@@ -106,16 +93,17 @@ export function TransactionItem({ type, item, onPress }: TransactionItemProps) {
         <View style={styles.info}>
           <Text style={styles.description}>{getDescription()}</Text>
           <Text style={styles.date}>
-            {formatDate(item.created_at)}
+            {formatDate(item.createdAt)}
             {" "}
             •
             {" "}
-            <Text style={{ fontWeight: "bold" }}>{item.status}</Text>
+            <Text style={{ fontWeight: "bold" }}>{formatTransactionStatus(item.status)}</Text>
           </Text>
         </View>
       </View>
       <View style={styles.right}>
         <Text style={[styles.amount, { color: getColor() }]}>{getAmount()}</Text>
+        <Text style={styles.hint}>{formatTransactionType(item.type || "")}</Text>
       </View>
     </View>
   );

@@ -3,8 +3,6 @@ import type { RentalsContracts } from "@mebike/shared";
 
 import { Effect, Match } from "effect";
 
-import type { AuthEnv } from "@/http/middlewares/auth";
-
 import {
   adminGetRentalDetailUseCase,
   endRentalByAdminUseCase,
@@ -102,10 +100,7 @@ const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (c) 
   );
 };
 
-const getActiveRentalsByPhone: RouteHandler<
-  RentalsRoutes["getActiveRentalsByPhone"],
-  AuthEnv
-> = async (c) => {
+const getActiveRentalsByPhone: RouteHandler<RentalsRoutes["getActiveRentalsByPhone"]> = async (c) => {
   const { number } = c.req.valid("param");
   const query = c.req.valid("query");
 

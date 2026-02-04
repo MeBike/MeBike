@@ -187,6 +187,27 @@ export const rentalServiceV1 = {
     }
   },
 
+  getStaffRentalDetail: async (rentalId: string): Promise<Result<RentalDetail, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.staffGetRental)
+        .replace("{rentalId}", rentalId)
+        .replace(":rentalId", rentalId);
+
+      const response = await kyClient.get(path, { throwHttpErrors: false });
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.staffGetRental.responses[200].content["application/json"].schema;
+        const data = await readJson(response);
+        const parsed = decodeWithSchema(okSchema, data);
+        return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+      }
+
+      return err(await parseRentalError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
   endRentalByAdmin: async (args: {
     rentalId: string;
     endStation: string;

@@ -27,6 +27,13 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
 
   app.openapi(activeByPhoneRoute, RentalAdminController.getActiveRentalsByPhone);
 
+  const staffGetRoute = {
+    ...rentals.staffGetRental,
+    middleware: [requireAdminOrStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(staffGetRoute, RentalAdminController.adminGetRental);
+
   const endByAdminRoute = {
     ...rentals.endRentalByAdmin,
     middleware: [requireAdminOrStaffMiddleware] as const,
