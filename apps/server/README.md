@@ -9,7 +9,6 @@ Backend chinh cua MeBike.
 - Jobs: outbox table + PgBoss workers
 - Tests: Vitest (unit + integration voi Testcontainers)
 
-
 ## Quick Start
 
 From repo root:
@@ -208,13 +207,13 @@ Env can co (xem `apps/server/.env.example`):
 
 ### Forward webhook bang Stripe CLI
 
-1) Cai Stripe CLI va dang nhap (1 lan):
+1. Cai Stripe CLI va dang nhap (1 lan):
 
 ```bash
 stripe login
 ```
 
-2) Forward webhook ve local server:
+2. Forward webhook ve local server:
 
 ```bash
 stripe listen --forward-to http://localhost:4000/webhooks/stripe
@@ -273,10 +272,11 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
   issues: Array<{ path: string; message: string }>;
 }> {}
 
-export const validateName = (name: string) =>
-  name.trim().length > 0
+export function validateName(name: string) {
+  return name.trim().length > 0
     ? Effect.void
     : Effect.fail(new ValidationError({ issues: [{ path: "name", message: "required" }] }));
+}
 ```
 
 ### Chi wrap Promise o infra boundary
@@ -284,15 +284,16 @@ export const validateName = (name: string) =>
 Use `Effect.tryPromise` at the boundary (DB, Redis, HTTP clients), and return typed errors:
 
 ```ts
-import { Effect, Data } from "effect";
+import { Data, Effect } from "effect";
 
 export class DbError extends Data.TaggedError("DbError")<{ message: string }> {}
 
-export const findUser = (id: string) =>
-  Effect.tryPromise({
+export function findUser(id: string) {
+  return Effect.tryPromise({
     try: () => prisma.user.findUnique({ where: { id } }),
-    catch: (err) => new DbError({ message: String(err) }),
+    catch: err => new DbError({ message: String(err) }),
   });
+}
 ```
 
 ### Controller mong: run Effect 1 lan, map errors bang Match
@@ -312,7 +313,7 @@ return Match.value(result).pipe(
   Match.tag("Right", ({ right }) => c.json({ data: right }, 200)),
   Match.tag("Left", ({ left }) =>
     Match.value(left).pipe(
-      Match.tag("ValidationError", (e) => c.json({ error: "Invalid", details: e }, 400)),
+      Match.tag("ValidationError", e => c.json({ error: "Invalid", details: e }, 400)),
       Match.orElse(() => c.json({ error: "Internal" }, 500)),
     )),
   Match.exhaustive,
@@ -336,9 +337,9 @@ Repo hay tra ve `Option` khi query co the khong co record (vi du `findById`). Pa
 ```ts
 import { Effect, Match, Option } from "effect";
 
-const userOpt: Option.Option<User> = yield* repo.findById(id);
+const userOpt: Option.Option<User> = yield * repo.findById(id);
 
-const user = yield* Match.value(userOpt).pipe(
+const user = yield * Match.value(userOpt).pipe(
   Match.tag("Some", ({ value }) => Effect.succeed(value)),
   Match.tag("None", () => Effect.fail(new UserNotFound({ userId: id }))),
   Match.exhaustive,
