@@ -9,7 +9,6 @@ Backend chinh cua MeBike.
 - Jobs: outbox table + PgBoss workers
 - Tests: Vitest (unit + integration voi Testcontainers)
 
-Quy uoc trong `apps/server/AGENTS.md` la "bo nho" cua project. Hay tuan thu.
 
 ## Quick Start
 
@@ -22,6 +21,60 @@ pnpm install
 Chay Postgres + Redis, set env, migrate + seed, sau do chay server.
 
 ### 1) Chay Postgres + Redis (dev)
+
+#### Cach 1: Docker (khuyen dung)
+
+Tao 1 docker network rieng (de pgAdmin connect de dang):
+
+```bash
+docker network create mebike-dev || true
+```
+
+Chay Redis:
+
+```bash
+docker run --rm --name mebike-redis --network mebike-dev -p 6379:6379 redis:8.2.2-alpine
+```
+
+Chay Postgres (image nay co PostGIS + pgvector; dung chung voi integration tests):
+
+```bash
+# from apps/server
+docker build -t mebike-postgres -f infra/postgres/Dockerfile.pg .
+docker run --rm --name mebike-postgres --network mebike-dev -p 5432:5432 \
+  -e POSTGRES_USER=mebike \
+  -e POSTGRES_PASSWORD=mebike \
+  -e POSTGRES_DB=mebike \
+  mebike-postgres
+```
+
+Neu muon xem DB bang pgAdmin (optional):
+
+```bash
+docker run --rm --name mebike-pgadmin --network mebike-dev -p 5050:80 \
+  -e PGADMIN_DEFAULT_EMAIL=admin@mebike.dev \
+  -e PGADMIN_DEFAULT_PASSWORD=admin \
+  dpage/pgadmin4:8
+```
+
+Truy cap:
+
+- pgAdmin: `http://localhost:5050`
+- Login:
+  - Email: `admin@mebike.dev`
+  - Password: `admin`
+- Add server (trong pgAdmin):
+  - Host: `mebike-postgres`
+  - Port: `5432`
+  - Maintenance DB: `mebike`
+  - Username: `mebike`
+  - Password: `mebike`
+
+Ghi chu:
+
+- Repo khong commit san `docker-compose.yml` cho Postgres/pgAdmin. Neu ban muon dung `docker compose up`, hay tao 1 file compose local (gitignored) theo cac thong so tren.
+
+#### Cach 2: Docker run (toi gian)
 
 Redis (default trong code la `redis://localhost:6379`):
 
@@ -70,6 +123,31 @@ From `apps/server`:
 
 ```bash
 pnpm prisma migrate dev
+```
+
+Quy uoc (Prisma) — doc ky:
+
+- Tuyet doi KHONG sua tay cac file trong `apps/server/prisma/migrations/**` (ke ca chi "fix" nho).
+  Neu can thay doi schema: hay sua cac file `apps/server/prisma/*.prisma` roi tao migration moi.
+- Khong doi `apps/server/prisma.config.ts` neu khong co yeu cau ro rang.
+- Prisma schema trong repo nay la folder `apps/server/prisma/` (nhieu file theo domain). Dung tu y gom/chia lai.
+
+Tao migration moi (dev):
+
+```bash
+pnpm prisma migrate dev --name <ten_ngan_gon>
+```
+
+Ap migration (prod/CI/test):
+
+```bash
+pnpm prisma migrate deploy
+```
+
+Generate Prisma client (types) sau khi doi schema/migration:
+
+```bash
+pnpm prisma generate
 ```
 
 Ghi chu:
