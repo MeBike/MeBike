@@ -1,6 +1,5 @@
-import ky from "ky";
-
 import { log } from "@lib/log";
+import ky from "ky";
 
 type Coordinates = {
   latitude: number;
