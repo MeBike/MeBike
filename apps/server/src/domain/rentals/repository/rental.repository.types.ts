@@ -127,4 +127,9 @@ export type RentalRepo = {
   adminGetRentalById: (
     rentalId: string,
   ) => Effect.Effect<Option.Option<AdminRentalDetail>, RentalRepositoryError>;
+
+  listActiveRentalsByPhone: (
+    phoneNumber: string,
+    pageReq: PageRequest<RentalSortField>,
+  ) => Effect.Effect<PageResult<AdminRentalListItem>, RentalRepositoryError>;
 };

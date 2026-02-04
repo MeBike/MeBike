@@ -63,6 +63,29 @@ export function toContractAdminRentalListItem(
   };
 }
 
+export function toContractRentalListItem(
+  item: AdminRentalListItem,
+): RentalsContracts.RentalListResponse["data"][number] {
+  if (!item.bikeId) {
+    throw new Error("bikeId is required for rental list item");
+  }
+
+  return {
+    id: item.id,
+    user: item.user,
+    bikeId: item.bikeId,
+    status: item.status,
+    startStation: item.startStationId,
+    endStation: item.endStationId ?? undefined,
+    startTime: item.startTime.toISOString(),
+    endTime: item.endTime ? item.endTime.toISOString() : undefined,
+    duration: item.durationMinutes ?? 0,
+    totalPrice: item.totalPrice ?? 0,
+    subscriptionId: item.subscriptionId ?? undefined,
+    updatedAt: item.updatedAt.toISOString(),
+  };
+}
+
 export function toContractAdminRentalDetail(
   detail: AdminRentalDetail,
 ): RentalsContracts.RentalDetail {

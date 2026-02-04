@@ -458,6 +458,49 @@ export function makeRentalRepository(
         return Option.some(mapToAdminRentalDetail(raw));
       });
     },
+
+    listActiveRentalsByPhone(phoneNumber, pageReq) {
+      return Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage(pageReq);
+        const orderBy = toRentalOrderBy(pageReq);
+
+        const where = {
+          status: "RENTED",
+          bikeId: { not: null },
+          user: { phoneNumber },
+        } satisfies PrismaTypes.RentalWhereInput;
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.rental.count({ where }),
+            catch: e =>
+              new RentalRepositoryError({
+                operation: "listActiveRentalsByPhone.count",
+                cause: e,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.rental.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                select: adminRentalListSelect,
+              }),
+            catch: e =>
+              new RentalRepositoryError({
+                operation: "listActiveRentalsByPhone.findMany",
+                cause: e,
+              }),
+          }),
+        ]);
+
+        const mappedItems: AdminRentalListItem[] = items.map(mapToAdminRentalListItem);
+
+        return makePageResult(mappedItems, total, page, pageSize);
+      });
+    },
   };
 }
 

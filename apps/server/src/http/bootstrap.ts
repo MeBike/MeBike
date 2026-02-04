@@ -27,6 +27,7 @@ export const startHonoServer = Effect.gen(function* () {
       runPromise: httpRuntime.runPromise.bind(httpRuntime),
     }).fetch,
     port,
+    hostname: "0.0.0.0",
   });
-  logger.info(`Server listening on http://localhost:${port} (docs at /docs)`);
+  logger.info(`Server listening on http://0.0.0.0:${port} (docs at /docs)`);
 });

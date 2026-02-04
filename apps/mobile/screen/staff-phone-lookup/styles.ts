@@ -1,0 +1,156 @@
+import { StyleSheet } from "react-native";
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+  lookupCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  lookupTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  lookupDescription: {
+    marginTop: 8,
+    color: "#4B5563",
+    lineHeight: 20,
+  },
+  input: {
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#111827",
+  },
+  lookupButton: {
+    marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#0066FF",
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  lookupButtonDisabled: {
+    opacity: 0.6,
+  },
+  lookupButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  lookupSummary: {
+    marginTop: 12,
+    color: "#4B5563",
+  },
+  resultsContainer: {
+    marginTop: 16,
+    gap: 16,
+  },
+  resultCard: {
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: "#F9FAFB",
+    borderLeftWidth: 4,
+    borderLeftColor: "#0066FF",
+  },
+  resultHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  resultTitleWrapper: {
+    flex: 1,
+    marginRight: 12,
+  },
+  resultTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  resultSubTitle: {
+    marginTop: 4,
+    color: "#6B7280",
+    fontSize: 13,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    alignSelf: "flex-start",
+  },
+  statusBadgeText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 12,
+  },
+  resultBody: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  resultRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  resultRowText: {
+    color: "#374151",
+    fontSize: 14,
+    flex: 1,
+  },
+  cardFooter: {
+    marginTop: 4,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#E5E7EB",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  footerHint: {
+    color: "#6B7280",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  emptyState: {
+    marginTop: 32,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderStyle: "dashed",
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+    backgroundColor: "#fff",
+    gap: 12,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  emptySubtitle: {
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+});

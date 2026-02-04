@@ -8,13 +8,14 @@ import { StatusCodes } from "http-status-codes";
 
 import type {
   CreateRentalPayload,
+  MyRentalListResponse,
   Rental,
   RentalCounts,
+  RentalDetail,
   RentalListParams,
   RentalListResponse,
-  RentalDetail,
-  RentalWithPricing,
   RentalWithPrice,
+  RentalWithPricing,
 } from "@/types/rental-types";
 
 import type { RentalError } from "./rental-error";
@@ -56,7 +57,7 @@ export const rentalServiceV1 = {
     }
   },
 
-  listMyRentals: async (params: RentalListParams = {}): Promise<Result<RentalListResponse, RentalError>> => {
+  listMyRentals: async (params: RentalListParams = {}): Promise<Result<MyRentalListResponse, RentalError>> => {
     try {
       const response = await kyClient.get(routePath(ServerRoutes.rentals.getMyRentals), {
         searchParams: toSearchParams(params),
@@ -77,7 +78,7 @@ export const rentalServiceV1 = {
     }
   },
 
-  listMyCurrentRentals: async (params: RentalListParams = {}): Promise<Result<RentalListResponse, RentalError>> => {
+  listMyCurrentRentals: async (params: RentalListParams = {}): Promise<Result<MyRentalListResponse, RentalError>> => {
     try {
       const response = await kyClient.get(routePath(ServerRoutes.rentals.getMyCurrentRentals), {
         searchParams: toSearchParams(params),
@@ -211,6 +212,38 @@ export const rentalServiceV1 = {
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
         return parsed.ok ? ok(parsed.value.result) : err({ _tag: "DecodeError" });
+      }
+
+      return err(await parseRentalError(response));
+    }
+    catch (error) {
+      return asNetworkError(error);
+    }
+  },
+
+  listActiveRentalsByPhone: async (args: {
+    phone: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<Result<RentalListResponse, RentalError>> => {
+    try {
+      const path = routePath(ServerRoutes.rentals.getActiveRentalsByPhone)
+        .replace("{number}", args.phone)
+        .replace(":number", args.phone);
+
+      const response = await kyClient.get(path, {
+        searchParams: toSearchParams({
+          page: args.page,
+          pageSize: args.pageSize,
+        }),
+        throwHttpErrors: false,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const okSchema = ServerRoutes.rentals.getActiveRentalsByPhone.responses[200].content["application/json"].schema;
+        const data = await readJson(response);
+        const parsed = decodeWithSchema(okSchema, data);
+        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseRentalError(response));

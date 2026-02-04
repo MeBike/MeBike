@@ -36,13 +36,14 @@ describe("rentalRepository Integration", () => {
       await container.stop();
   });
 
-  const createUser = async () => {
+  const createUser = async (options?: { phoneNumber?: string; fullname?: string }) => {
     const id = uuidv7();
     await client.user.create({
       data: {
         id,
-        fullname: "Rental User",
+        fullname: options?.fullname ?? "Rental User",
         email: `user-${id}@example.com`,
+        phoneNumber: options?.phoneNumber,
         passwordHash: "hash",
         role: "USER",
         verify: "VERIFIED",
@@ -351,6 +352,68 @@ describe("rentalRepository Integration", () => {
     expect(detailOpt.value.user.email).toContain("@example.com");
     expect(detailOpt.value.bike?.id).toBe(bikeId);
     expect(detailOpt.value.startStation.id).toBe(stationId);
+  });
+
+  it("listActiveRentalsByPhone returns active rentals for user phone", async () => {
+    const phoneNumber = "0901234567";
+    const { id: userId } = await createUser({ phoneNumber, fullname: "Phone User" });
+    const { id: otherUserId } = await createUser({ phoneNumber: "0909999999" });
+    const { id: stationId } = await createStation();
+    const { id: bikeId } = await createBike(stationId);
+    const { id: bikeIdTwo } = await createBike(stationId);
+    const { id: otherBikeId } = await createBike(stationId);
+
+    const rentalToComplete = await Effect.runPromise(
+      repo.createRental({
+        userId,
+        bikeId,
+        startStationId: stationId,
+        startTime: new Date(),
+      }),
+    );
+
+    await Effect.runPromise(
+      repo.updateRentalOnEnd({
+        rentalId: rentalToComplete.id,
+        endStationId: stationId,
+        endTime: new Date(),
+        durationMinutes: 10,
+        totalPrice: 500,
+        newStatus: "COMPLETED",
+      }),
+    );
+
+    const rental = await Effect.runPromise(
+      repo.createRental({
+        userId,
+        bikeId: bikeIdTwo,
+        startStationId: stationId,
+        startTime: new Date(),
+      }),
+    );
+
+    await Effect.runPromise(
+      repo.createRental({
+        userId: otherUserId,
+        bikeId: otherBikeId,
+        startStationId: stationId,
+        startTime: new Date(),
+      }),
+    );
+
+    const page = await Effect.runPromise(
+      repo.listActiveRentalsByPhone(phoneNumber, {
+        page: 1,
+        pageSize: 10,
+        sortBy: "startTime",
+        sortDir: "desc",
+      }),
+    );
+
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0].id).toBe(rental.id);
+    expect(page.items[0].user.id).toBe(userId);
+    expect(page.items[0].status).toBe("RENTED");
   });
 
   it("createRental rejects active rental duplicates", async () => {

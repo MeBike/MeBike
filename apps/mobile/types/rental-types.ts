@@ -6,8 +6,9 @@ export type RentalWithPrice = ServerContracts.RentalsContracts.RentalWithPrice;
 export type RentalDetail = ServerContracts.RentalsContracts.RentalDetail;
 export type RentalWithPricing = ServerContracts.RentalsContracts.RentalWithPricing;
 export type RentalCounts = ServerContracts.RentalsContracts.RentalStatusCounts;
-
-export type RentalListResponse = {
+export type RentalListItem = ServerContracts.RentalsContracts.RentalListItem;
+export type RentalListResponse = ServerContracts.RentalsContracts.RentalListResponse;
+export type MyRentalListResponse = {
   data: Rental[];
   pagination: {
     page: number;

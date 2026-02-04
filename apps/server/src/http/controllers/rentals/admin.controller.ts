@@ -3,6 +3,8 @@ import type { RentalsContracts } from "@mebike/shared";
 
 import { Effect, Match } from "effect";
 
+import type { AuthEnv } from "@/http/middlewares/auth";
+
 import {
   adminGetRentalDetailUseCase,
   endRentalByAdminUseCase,
@@ -12,6 +14,7 @@ import { withLoggedCause } from "@/domain/shared";
 import {
   toContractAdminRentalDetail,
   toContractAdminRentalListItem,
+  toContractRentalListItem,
 } from "@/http/presenters/rentals.presenter";
 import { toContractPage } from "@/http/shared/pagination";
 import { notifyBikeStatusUpdate } from "@/realtime/bike-status-events";
@@ -99,6 +102,35 @@ const adminGetRental: RouteHandler<RentalsRoutes["adminGetRental"]> = async (c) 
   );
 };
 
+const getActiveRentalsByPhone: RouteHandler<
+  RentalsRoutes["getActiveRentalsByPhone"],
+  AuthEnv
+> = async (c) => {
+  const { number } = c.req.valid("param");
+  const query = c.req.valid("query");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const repo = yield* RentalRepository;
+      return yield* repo.listActiveRentalsByPhone(number, {
+        page: Number(query.page ?? 1),
+        pageSize: Number(query.pageSize ?? 50),
+        sortBy: "startTime",
+        sortDir: "desc",
+      });
+    }),
+    "GET /v1/rentals/by-phone/{number}/active",
+  );
+
+  const value = await c.var.runPromise(eff);
+  const response: RentalsContracts.RentalListResponse = {
+    data: value.items.map(toContractRentalListItem),
+    pagination: toContractPage(value),
+  };
+
+  return c.json<RentalsContracts.RentalListResponse, 200>(response, 200);
+};
+
 const endRentalByAdmin: RouteHandler<RentalsRoutes["endRentalByAdmin"]> = async (c) => {
   const { rentalId } = c.req.valid("param");
   const body = c.req.valid("json");
@@ -131,7 +163,7 @@ const endRentalByAdmin: RouteHandler<RentalsRoutes["endRentalByAdmin"]> = async 
         "GET /v1/admin/rentals/{rentalId}",
       );
 
-      return c.var.runPromise(detailEff).then((detail) =>
+      return c.var.runPromise(detailEff).then(detail =>
         c.json(
           {
             message: "Rental ended successfully",
@@ -204,4 +236,5 @@ export const RentalAdminController = {
   adminListRentals,
   adminGetRental,
   endRentalByAdmin,
+  getActiveRentalsByPhone,
 } as const;
