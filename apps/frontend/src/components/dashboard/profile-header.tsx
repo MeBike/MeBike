@@ -1,12 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Me } from "@/types/GraphQL";
-import { formatDateOnlyVN } from "@/utils/dateFormat";
+import { DetailUser } from "@/services/auth.service";
 import { Mail, MapPin, Phone, User, Calendar } from "lucide-react";
 
 interface ProfileHeaderProps {
-  user: Me;
+  user: DetailUser;
   avatarPreview?: string;
 }
 
@@ -44,17 +43,19 @@ export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
       <div className="flex flex-col md:flex-row gap-6">
         <Avatar className="w-24 h-24 border-4 border-primary/20">
           <AvatarImage
-            src={avatarPreview || user.avatarUrl || "/placeholder.svg"}
-            alt={user.name}
+            src={avatarPreview || user.avatar || "/placeholder.svg"}
+            alt={user.fullname}
           />
           <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
-            {getInitials(user.name)}
+            {getInitials(user.fullname)}
           </AvatarFallback>
         </Avatar>
 
         <div className="flex-1 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center gap-3">
-            <h2 className="text-2xl font-bold text-foreground">{user.name}</h2>
+            <h2 className="text-2xl font-bold text-foreground">
+              {user.fullname}
+            </h2>
             <Badge variant={getRoleBadgeVariant(user.role)} className="w-fit">
               {user.role.toUpperCase()}
             </Badge>
@@ -81,17 +82,17 @@ export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
 
             <div className="flex items-center gap-2 text-muted-foreground">
               <Phone className="w-4 h-4" />
-              <span>{user.phone}</span>
+              <span>{user.phone_number}</span>
             </div>
 
             <div className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="w-4 h-4" />
-              <span>{user.address}</span>
+              <span>{user.location}</span>
             </div>
 
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="w-4 h-4" />
-              <span>Tham gia: {user.createdAt ? formatDateOnlyVN(user.createdAt) : ""}</span>
+              <span>Tham gia: {formatDate(user.created_at)}</span>
             </div>
           </div>
         </div>

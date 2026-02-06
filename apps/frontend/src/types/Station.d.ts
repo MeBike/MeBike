@@ -6,18 +6,33 @@ export interface LocationGeo {
 }
 
 export interface Station {
-  id: string;
+  _id: string;
   name: string;
-  longitude: string;
-  latitude: string;
   address: string;
-  capacity: number;
-  distance: number | null;
-  createdAt: string;
-  updatedAt: string;
-  status : "Active" | "Inactive"
-};
-interface StationBikeRevenue {
+  latitude: string;
+  longitude: string;
+  capacity: string;
+  created_at: string;
+  updated_at: string;
+  location_geo: LocationGeo;
+  description?: string;
+  type?: string;
+  stationNumber?: string;
+  average_rating?: number;
+  total_ratings?: number;
+  bikeStation?: {
+    id: string;
+    stationId: number;
+    totalBikes: number;
+    availableBikes: number;
+    location: {
+      lat: number;
+      lng: number;
+    };
+    distance: number;
+  };
+}
+export interface StationBikeRevenue {
   period: {
     from: string;
     to: string;

@@ -4,8 +4,6 @@ import fetchHttpClient from "@lib/httpClient";
 
 import type {
   CreateSubscriptionPayload,
-  PackageListParams,
-  PackageListQueryResult,
   SubscriptionDetail,
   SubscriptionListParams,
   SubscriptionListResponse,
@@ -25,33 +23,6 @@ type MessageResponse<T = undefined> = {
   message: string;
   result?: T;
 };
-
-const PACKAGES_QUERY = `
-  query Packages($params: GetPackageListInput) {
-    Packages(params: $params) {
-      success
-      message
-      data {
-        id
-        name
-        price
-        maxUsages
-        usageType
-        status
-        createdAt
-        updatedAt
-      }
-      errors
-      statusCode
-      pagination {
-        total
-        page
-        limit
-        totalPages
-      }
-    }
-  }
-`;
 
 export const subscriptionService = {
   subscribe: async (
@@ -84,11 +55,5 @@ export const subscriptionService = {
     return fetchHttpClient.get<MessageResponse<SubscriptionDetail>>(
       SUBSCRIPTION_ENDPOINTS.DETAIL(id),
     );
-  },
-
-  getPackages: async (
-    params: PackageListParams = {},
-  ): Promise<AxiosResponse<PackageListQueryResult>> => {
-    return fetchHttpClient.query(PACKAGES_QUERY, { params: params ?? {} });
   },
 };

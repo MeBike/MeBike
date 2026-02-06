@@ -1,12 +1,8 @@
-import type {
-  DecreaseSchemaFormData,
-  TopUpSchemaFormData,
-} from "@schemas/walletSchema";
+import type { DecreaseSchemaFormData, TopUpSchemaFormData } from "@schemas/walletSchema";
 import type { AxiosResponse } from "axios";
-import { GET_MY_WALLET, CREATE_PAYMENT } from "@/graphql/wallet";
-import { GetMyWalletResponse, CreatePaymentResponse } from "@/types";
+
 import fetchHttpClient from "@lib/httpClient";
-import { print } from "graphql";
+
 export type MyWallet = {
   _id: string;
   user_id: string;
@@ -45,60 +41,41 @@ type ApiResponse<T> = {
 };
 
 export const walletService = {
-  getMyWallet: async (): Promise<AxiosResponse<GetMyWalletResponse>> => {
-    return await fetchHttpClient.query<GetMyWalletResponse>(
-      print(GET_MY_WALLET)
-    );
-  },
-  createPayment: async ({accountId , amount} : {accountId : string , amount : number}): Promise<AxiosResponse<CreatePaymentResponse>> => {
-    return await fetchHttpClient.mutation<CreatePaymentResponse>(
-      print(CREATE_PAYMENT) ,
-      {
-        body : {
-          accountId : accountId,
-          amount : amount
-        }
-      }
+  getMyWallet: async (): Promise<AxiosResponse<ApiResponse<MyWallet>>> => {
+    return await fetchHttpClient.get<ApiResponse<MyWallet>>(
+      WALLET_ENDPOINTS.MY_WALLET,
     );
   },
   topUpWallet: async (
-    data: TopUpSchemaFormData
+    data: TopUpSchemaFormData,
   ): Promise<AxiosResponse<ApiResponse<MyWallet>>> => {
     const response = await fetchHttpClient.put<ApiResponse<MyWallet>>(
       WALLET_ENDPOINTS.TOP_UP,
-      data
+      data,
     );
     return response;
   },
   debitWallet: async (
-    data: DecreaseSchemaFormData
+    data: DecreaseSchemaFormData,
   ): Promise<AxiosResponse<MyWallet>> => {
     const response = await fetchHttpClient.put<MyWallet>(
       WALLET_ENDPOINTS.DEBIT,
-      data
+      data,
     );
     return response;
   },
-  transactions: async ({
-    page,
-    limit,
-  }: {
-    page: number;
-    limit: number;
-  }): Promise<AxiosResponse<ApiResponse<Transaction[]>>> => {
+  transactions: async ({ page, limit }: { page: number; limit: number }): Promise<AxiosResponse<ApiResponse<Transaction[]>>> => {
     return await fetchHttpClient.get<ApiResponse<Transaction[]>>(
       WALLET_ENDPOINTS.TRANSACTIONS,
       {
         page,
         limit,
-      }
+      },
     );
   },
-  getTransactionDetail: async (
-    transactionId: string
-  ): Promise<AxiosResponse<ApiResponse<Transaction>>> => {
+  getTransactionDetail: async (transactionId: string): Promise<AxiosResponse<ApiResponse<Transaction>>> => {
     return await fetchHttpClient.get<ApiResponse<Transaction>>(
-      WALLET_ENDPOINTS.TRANSACTION_DETAIL(transactionId)
+      WALLET_ENDPOINTS.TRANSACTION_DETAIL(transactionId),
     );
   },
 };

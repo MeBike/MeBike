@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useResolveReportMutation } from "./mutations/Report/useResolveReportMutation";
 import { useGetReportByIdQuery } from "./query/Report/useGetReportByIDQuery";
 import type { ReportStatus } from "@/types";
-import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index";
+import { QUERY_KEYS } from "@/constants/queryKey";
 interface ErrorWithMessage {
   message: string;
 }
@@ -38,6 +38,7 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
     }
     if (message) return message;
     if (errorField) return errorField;
+    // If data is a string, return it
     if (typeof data === "string") return data;
   }
   const simpleError = error as ErrorWithMessage;
@@ -90,7 +91,7 @@ export const useUserReport = ({
             status: number;
             data?: { message?: string };
           }) => {
-            if (result?.status === HTTP_STATUS.OK) {
+            if (result?.status === 200) {
               const message = result?.data?.message;
               if (
                 message &&
@@ -98,29 +99,29 @@ export const useUserReport = ({
               ) {
                 toast.error(message);
               } else {
-                toast.success(MESSAGE.UPDATE_REPORT_SUCCESS);
-                queryClient.invalidateQueries({
-                  queryKey: QUERY_KEYS.REPORT.ALL_REPORTS(),
-                });
+                toast.success("Cập nhật báo cáo thành công");
+                queryClient.invalidateQueries({ queryKey: QUERY_KEYS.REPORT.ALL_REPORTS(
+                  page, limit, status
+                )});
                 refetchReports();
               }
             } else {
               const errorMessage =
-                result?.data?.message || MESSAGE.UPDATE_REPORT_FAILED;
+                result?.data?.message || "Lỗi khi cập nhật báo cáo";
               toast.error(errorMessage);
             }
           },
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(
               error,
-              MESSAGE.UPDATE_REPORT_FAILED
+              "Lỗi khi cập nhật báo cáo"
             );
             toast.error(errorMessage);
           },
         }
       );
     },
-    [hasToken, router, queryClient, refetchReports, useUpdateReport]
+    [hasToken, router, queryClient, refetchReports, useUpdateReport, page, limit, status]
   );
   const {
     data: reportInProgress,
@@ -145,7 +146,7 @@ export const useUserReport = ({
             status: number;
             data?: { message?: string };
           }) => {
-            if (result?.status === HTTP_STATUS.OK) {
+            if (result?.status === 200) {
               const message = result?.data?.message;
               if (
                 message &&
@@ -153,8 +154,9 @@ export const useUserReport = ({
               ) {
                 toast.error(message);
               } else {
-                toast.success(MESSAGE.RESOLVE_REPORT_SUCCESS);
+                toast.success("Cập nhật báo cáo thành công!");
                 queryClient.invalidateQueries({ queryKey: QUERY_KEYS.REPORT.ALL_REPORTS(
+                  page, limit, status
                 )});
                 refetchReports();
               }
@@ -163,7 +165,7 @@ export const useUserReport = ({
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(
               error,
-              MESSAGE.RESOLVE_REPORT_FAILED
+              "Lỗi khi cập nhật báo cáo"
             );
             toast.error(errorMessage);
           },
@@ -176,6 +178,8 @@ export const useUserReport = ({
       queryClient,
       useResolveReport,
       refetchReports,
+      page
+      , limit, status
     ]
   );
   const {data : reportById , refetch: refetchReportById , isLoading: isLoadingReportById} = useGetReportByIdQuery({id : id ?? ""}); 

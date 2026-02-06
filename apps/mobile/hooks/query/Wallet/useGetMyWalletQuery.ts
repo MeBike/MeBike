@@ -1,12 +1,13 @@
-import { walletService } from "@services/wallet.service";
 import { useQuery } from "@tanstack/react-query";
 
-import type { Wallet } from "@/types";
+import type { MyWallet } from "@services/wallet.service";
 
-export async function fetchMyWallet(): Promise<Wallet> {
+import { walletService } from "@services/wallet.service";
+
+export async function fetchMyWallet(): Promise<MyWallet> {
   const response = await walletService.getMyWallet();
   if (response.status === 200) {
-    return response.data.data?.GetWallet.data as Wallet;
+    return response.data.result as MyWallet;
   }
   throw new Error("Failed to fetch user profile");
 }

@@ -12,6 +12,14 @@ export const bikeSchema = z.object({
     .refine(isValidObjectId, {
       message: "Mã trạm phải là một ObjectId hợp lệ",
     }),
+  status: z.enum([
+    "CÓ SẴN",
+    "ĐANG ĐƯỢC THUÊ",
+    "BỊ HỎNG",
+    "ĐANG BẢO TRÌ",
+    "ĐÃ ĐẶT TRƯỚC",
+    "KHÔNG CÓ SẴN",
+  ] as BikeStatus[]),
   supplier_id: z
     .string()
     .min(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
@@ -20,7 +28,7 @@ export const bikeSchema = z.object({
       message: "Mã nhà cung cấp phải là một ObjectId hợp lệ",
     })
     .optional(),
-  chip_id: z.string().max(100, "Mã chip phải có độ dài tối đa là 100 ký tự"),
+  chip_id: z.string(),
 });
 export const updateBikeSchema = z.object({
   station_id: z
@@ -30,7 +38,7 @@ export const updateBikeSchema = z.object({
     .refine(isValidObjectId, {
       message: "Mã trạm phải là một ObjectId hợp lệ",
     }),
-  status: z.enum(["Available", "Booked", "Broken", "Maintained" , "Reserved" , "Unavailable"] as BikeStatus[]),
+  status: z.enum(["CÓ SẴN", "ĐANG ĐƯỢC THUÊ", "BỊ HỎNG", "ĐANG BẢO TRÌ" , "ĐÃ ĐẶT TRƯỚC" , "KHÔNG CÓ SẴN"] as BikeStatus[]),
   supplier_id: z
     .string()
     .min(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")

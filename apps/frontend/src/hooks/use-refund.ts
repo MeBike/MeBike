@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useUpdateRefundRequestMutation } from "./mutations/Refund/useUpdateRefundRequestMutation";
 import { toast } from "sonner";
 import { useGetRefundOverview } from "./query/Refund/useGetRefundOverview";
-import { QUERY_KEYS , HTTP_STATUS , MESSAGE } from "@constants/index";
+import { QUERY_KEYS } from "@/constants/queryKey";
 export const useRefundAction = ({
   page,
   limit,
@@ -54,7 +54,7 @@ export const useRefundAction = ({
       }
       await useUpdateRefundRequest.mutateAsync(data, {
         onSuccess: () => {
-          toast.success(MESSAGE.UPDATE_REFUND_REQUEST_SUCCESS);
+          toast.success("Cập nhật yêu cầu hoàn tiền thành công");
           queryClient.invalidateQueries({
             queryKey: QUERY_KEYS.REFUND.ALL_REFUND_REQUESTS(),
           });
@@ -65,7 +65,7 @@ export const useRefundAction = ({
           refetchDetail();
         },
         onError: (error) => {
-          console.log(error + MESSAGE.UPDATE_REFUND_REQUEST_FAILED);
+          console.log(error);
         },
       });
     },

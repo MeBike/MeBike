@@ -4,25 +4,28 @@ type FormatOptions = {
 
 export function formatVietnamDateTime(
   dateString: string,
-  options: FormatOptions = {},
+  options: FormatOptions = {}
 ): string {
+  if (!dateString) return "--";
+
+  const [datePart, rawTimePart] = dateString.split("T");
+  if (!datePart || !rawTimePart) return dateString;
+
+  const [year, month, day] = datePart.split("-");
+  const normalizedDate =
+    day && month && year ? `${day}/${month}/${year}` : datePart;
+  const timeWithoutZone = rawTimePart
+    .replace(/Z$/i, "")
+    .replace(/[+-]\d{2}:?\d{2}$/i, "");
+  const [timeWithoutMs] = timeWithoutZone.split(".");
+
+  if (!timeWithoutMs) return normalizedDate;
+
+  const [hour = "00", minute = "00", second = "00"] = timeWithoutMs.split(":");
   const includeSeconds = options.includeSeconds ?? false;
-  if (!dateString)
-    return "--";
+  const formattedTime = includeSeconds
+    ? `${hour}:${minute}:${second}`
+    : `${hour}:${minute}`;
 
-  const parsed = new Date(dateString);
-  if (Number.isNaN(parsed.getTime()))
-    return dateString;
-
-  const formatter = new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    ...(includeSeconds ? { second: "2-digit" } : {}),
-    hour12: false,
-  });
-
-  return formatter.format(parsed);
+  return `${normalizedDate} ${formattedTime}`;
 }

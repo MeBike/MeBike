@@ -1,8 +1,8 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import type { UserRole } from "@/types";
-import { Me } from "@/types/GraphQL";
-import { formatToVNTime } from "@/lib/formateVNDate";
+import type { DetailUser as ServiceDetailUser } from "@/services/auth.service";
+import { formatDateUTC } from "@/utils/formatDateTime";
 export const getVerifyStatusColor = (status: string) => {
   switch (status) {
     case "VERIFIED":
@@ -37,34 +37,34 @@ export const shortenId = (id: string, start: number = 6, end: number = 4) => {
 export const userColumns = ({
   onView,
 }: {
-  onView?: ({ accountId }: { accountId: string }) => void;
-}): ColumnDef<Me>[] => [
+  onView?: ({ id }: { id: string }) => void;
+}): ColumnDef<ServiceDetailUser>[] => [
   {
-    accessorKey: "accountId",
-    header: "ID người dùng",
+    accessorKey: "_id",
+    header: "Mã người dùng",
     cell: ({ row }) => {
-      return shortenId(row.original.accountId) || "Không có";
+      return shortenId(row.original._id) || "Không có";
     },
   },
   {
-    accessorKey: "name",
+    accessorKey: "fullname",
     header: "Họ tên",
     cell: ({ row }) => {
-      return row.original.name || "Không có";
+      return row.original.fullname || "Không có";
     },
   },
   {
     accessorKey: "email",
     header: "Email",
     cell: ({ row }) => {
-      return row.original.userAccount.email || "Không có";
+      return row.original.email || "Không có";
     },
   },
   {
-    accessorKey: "phone",
-    header: "SĐT",
+    accessorKey: "phone_number",
+    header: "Số điện thoại",
     cell: ({ row }) => {
-      return row.original.phone || "Không có";
+      return row.original.phone_number || "Không có";
     },
   },
   {
@@ -82,10 +82,10 @@ export const userColumns = ({
   },
   {
     accessorKey: "verify",
-    header: "Trạng thái",
+    header: "Trạng thái xác thực",
     cell: ({ row }) => (
       <span
-        className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getVerifyStatusColor(
+        className={`px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
           row.original.verify
         )}`}
       >
@@ -94,49 +94,31 @@ export const userColumns = ({
     ),
   },
   {
-    accessorKey: "createdAt",
+    accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return (
-        <span className={`whitespace-nowrap`}>
-          {row.original.createdAt
-            ? formatToVNTime(row.original.createdAt)
-            : "Chưa có"}
-        </span>
-      );
+      return formatDateUTC(row.original.created_at);
     },
   },
   {
-    accessorKey: "updatedAt",
+    accessorKey: "updated_at",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return (
-        <span className={`whitespace-nowrap`}>
-          {row.original.updatedAt
-            ? formatToVNTime(row.original.updatedAt)
-            : "Chưa có"}
-        </span>
-      );
+      return formatDateUTC(row.original.updated_at);
     },
   },
   {
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
-      <div className="flex items-center gap-2 relative z-10">
+      <div className="flex items-center gap-2">
         <button
-          type="button"
-          className="p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer relative z-10"
+          className="p-2 hover:bg-muted rounded-lg transition-colors"
           title="Xem chi tiết"
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
+          onClick={() => {
             if (onView) {
-              onView({accountId:row.original.accountId});
+              onView({ id: row.original._id });
             }
-          }}
-          onMouseDown={(e) => {
-            e.stopPropagation();
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />

@@ -10,33 +10,6 @@ export type SubscriptionPackage = "basic" | "premium" | "unlimited";
 
 export type MongoDecimal = number | string | { $numberDecimal?: string };
 
-export type PackageUsageType = "Finite" | "Infinite";
-export type PackageStatus = "Active" | "Inactive";
-
-export type PackageListItem = {
-  id: string;
-  name: string;
-  price: string;
-  maxUsages?: number | null;
-  usageType: PackageUsageType;
-  status: PackageStatus;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PackageListParams = {
-  page?: number;
-  limit?: number;
-  search?: string;
-};
-
-export type PackageListPagination = {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-};
-
 export type SubscriptionRecord = {
   _id: string;
   user_id: string;
@@ -79,24 +52,6 @@ export type SubscriptionDetail = {
 export type SubscriptionListResponse = {
   data: SubscriptionListItem[];
   pagination: Pagination;
-};
-
-export type PackageListResponse = {
-  data: PackageListItem[];
-  pagination?: PackageListPagination;
-};
-
-export type PackageListQueryResult = {
-  data: {
-    Packages: {
-      success: boolean;
-      message: string;
-      data: PackageListItem[];
-      errors?: (string | { message: string })[] | null;
-      statusCode: number;
-      pagination?: PackageListPagination;
-    };
-  } | null;
 };
 
 export type CreateSubscriptionPayload = {

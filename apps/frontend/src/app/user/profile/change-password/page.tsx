@@ -42,7 +42,7 @@ export default function ChangePasswordPage() {
 
   const onSubmit = async (data: ChangePasswordSchemaFormData) => {
     try {
-      changePassword(data.oldPassword, data.newPassword, data.confirmPassword);
+      changePassword(data.old_password, data.password, data.confirm_password);
       reset();
     } catch (error) {
       console.error("Error changing password:", error);
@@ -84,7 +84,7 @@ export default function ChangePasswordPage() {
               </p>
             </div>
           </div>
-
+          
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
@@ -93,18 +93,14 @@ export default function ChangePasswordPage() {
                   <Shield className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    Trạng thái bảo mật
-                  </p>
+                  <p className="text-sm text-muted-foreground">Trạng thái bảo mật</p>
                   <p className="font-semibold text-foreground">
-                    {user.verify === "VERIFIED"
-                      ? "Đã xác thực"
-                      : "Cần xác thực"}
+                    {user.verify === "VERIFIED" ? "Đã xác thực" : "Cần xác thực"}
                   </p>
                 </div>
               </div>
             </div>
-
+            
             <div className="bg-card border border-border rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
@@ -116,7 +112,7 @@ export default function ChangePasswordPage() {
                 </div>
               </div>
             </div>
-
+            
             <div className="bg-card border border-border rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
@@ -125,8 +121,7 @@ export default function ChangePasswordPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Lần cuối đổi</p>
                   <p className="font-semibold text-foreground">
-                    {/* {new Date(user.updated_at).toLocaleDateString("vi-VN") || Chưa có} */}
-                    {`Little boy chưa trả`}
+                    {new Date(user.updated_at).toLocaleDateString("vi-VN")}
                   </p>
                 </div>
               </div>
@@ -144,147 +139,144 @@ export default function ChangePasswordPage() {
                   Cập nhật mật khẩu
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Vui lòng nhập mật khẩu hiện tại và mật khẩu mới để cập nhật
-                  bảo mật tài khoản
+                  Vui lòng nhập mật khẩu hiện tại và mật khẩu mới để cập nhật bảo mật tài khoản
                 </p>
               </div>
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="oldPassword"
-                    className="text-sm font-medium text-foreground"
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="old_password"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Mật khẩu hiện tại
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="old_password"
+                    type={showPasswords.oldPassword ? "text" : "password"}
+                    {...register("old_password")}
+                    placeholder="Nhập mật khẩu hiện tại"
+                    className={cn(
+                      "bg-background border-border pr-10",
+                      errors.old_password && "border-destructive"
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("oldPassword")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    Mật khẩu hiện tại
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="oldPassword"
-                      type={showPasswords.oldPassword ? "text" : "password"}
-                      {...register("oldPassword")}
-                      placeholder="Nhập mật khẩu hiện tại"
-                      className={cn(
-                        "bg-background border-border pr-10",
-                        errors.oldPassword && "border-destructive"
-                      )}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility("oldPassword")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPasswords.oldPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.oldPassword && (
-                    <p className="text-sm text-destructive">
-                      {errors.oldPassword.message}
-                    </p>
-                  )}
+                    {showPasswords.oldPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
+                {errors.old_password && (
+                  <p className="text-sm text-destructive">
+                    {errors.old_password.message}
+                  </p>
+                )}
+              </div>
 
-                {/* New Password */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="newPassword"
-                    className="text-sm font-medium text-foreground"
+              {/* New Password */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Mật khẩu mới
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPasswords.newPassword ? "text" : "password"}
+                    {...register("password")}
+                    placeholder="Nhập mật khẩu mới"
+                    className={cn(
+                      "bg-background border-border pr-10",
+                      errors.password && "border-destructive"
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("newPassword")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    Mật khẩu mới
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPasswords.newPassword ? "text" : "password"}
-                      {...register("newPassword")}
-                      placeholder="Nhập mật khẩu mới"
-                      className={cn(
-                        "bg-background border-border pr-10",
-                        errors.newPassword && "border-destructive"
-                      )}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility("newPassword")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPasswords.newPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.newPassword && (
-                    <p className="text-sm text-destructive">
-                      {errors.newPassword.message}
-                    </p>
-                  )}
+                    {showPasswords.newPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
 
-                {/* Confirm Password */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="confirmPassword"
-                    className="text-sm font-medium text-foreground"
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="confirm_password"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Xác nhận mật khẩu mới
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="confirm_password"
+                    type={showPasswords.confirmPassword ? "text" : "password"}
+                    {...register("confirm_password")}
+                    placeholder="Nhập lại mật khẩu mới"
+                    className={cn(
+                      "bg-background border-border pr-10",
+                      errors.confirm_password && "border-destructive"
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility("confirmPassword")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    Xác nhận mật khẩu mới
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showPasswords.confirmPassword ? "text" : "password"}
-                      {...register("confirmPassword")}
-                      placeholder="Nhập lại mật khẩu mới"
-                      className={cn(
-                        "bg-background border-border pr-10",
-                        errors.confirmPassword && "border-destructive"
-                      )}
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        togglePasswordVisibility("confirmPassword")
-                      }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPasswords.confirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="text-sm text-destructive">
-                      {errors.confirmPassword.message}
-                    </p>
-                  )}
+                    {showPasswords.confirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
+                {errors.confirm_password && (
+                  <p className="text-sm text-destructive">
+                    {errors.confirm_password.message}
+                  </p>
+                )}
+              </div>
 
-                <div className="flex gap-3 pt-6 border-t border-border">
-                  <Link href="/user/profile">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="bg-transparent"
-                    >
-                      Hủy
-                    </Button>
-                  </Link>
+              <div className="flex gap-3 pt-6 border-t border-border">
+                <Link href="/user/profile">
                   <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="bg-primary hover:bg-primary/90 gap-2"
+                    type="button"
+                    variant="outline"
+                    className="bg-transparent"
                   >
-                    <Lock className="w-4 h-4" />
-                    {isSubmitting ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+                    Hủy
                   </Button>
-                </div>
-              </form>
-            </div>
+                </Link>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="bg-primary hover:bg-primary/90 gap-2"
+                >
+                  <Lock className="w-4 h-4" />
+                  {isSubmitting ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+                </Button>
+              </div>
+            </form>
+          </div>
           </div>
 
           {/* Security Section */}
@@ -296,35 +288,30 @@ export default function ChangePasswordPage() {
                   <Lock className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">
-                    Bảo mật tài khoản
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{user.name}</p>
+                  <h3 className="font-semibold text-foreground">Bảo mật tài khoản</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {user.email}
+                  </p>
                 </div>
               </div>
-
+              
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Vai trò:</span>
-                  <span className="font-medium text-foreground">Nhân viên</span>
+                  <span className="font-medium text-foreground">
+                    Nhân viên
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Trạng thái:</span>
-                  <span
-                    className={`font-medium ${user.verify === "VERIFIED" ? "text-green-600" : "text-amber-600"}`}
-                  >
-                    {user.verify === "VERIFIED"
-                      ? "Đã xác thực"
-                      : "Chưa xác thực"}
+                  <span className={`font-medium ${user.verify === "VERIFIED" ? "text-green-600" : "text-amber-600"}`}>
+                    {user.verify === "VERIFIED" ? "Đã xác thực" : "Chưa xác thực"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    Lần cuối cập nhật:
-                  </span>
+                  <span className="text-muted-foreground">Lần cuối cập nhật:</span>
                   <span className="font-medium text-foreground">
-                    {/* {new Date(user.updated_at).toLocaleDateString("vi-VN")} */}
-                    {`Little boy chưa trả`}
+                    {new Date(user.updated_at).toLocaleDateString("vi-VN")}
                   </span>
                 </div>
               </div>
@@ -336,11 +323,9 @@ export default function ChangePasswordPage() {
                 <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
                   <span className="text-lg">💡</span>
                 </div>
-                <h4 className="font-semibold text-foreground">
-                  Lời khuyên bảo mật
-                </h4>
+                <h4 className="font-semibold text-foreground">Lời khuyên bảo mật</h4>
               </div>
-
+              
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1">•</span>
@@ -371,7 +356,7 @@ export default function ChangePasswordPage() {
                 <span className="text-lg">🔐</span>
                 Mức độ bảo mật
               </h4>
-
+              
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
@@ -379,20 +364,17 @@ export default function ChangePasswordPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">
-                    Trung bình
-                  </span>
+                  <span className="text-sm text-muted-foreground">Trung bình</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="text-sm text-muted-foreground">Mạnh</span>
                 </div>
               </div>
-
+              
               <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <p className="text-xs text-blue-600 dark:text-blue-400">
-                  Mật khẩu mạnh giúp bảo vệ tài khoản khỏi các cuộc tấn công
-                  mạng
+                  Mật khẩu mạnh giúp bảo vệ tài khoản khỏi các cuộc tấn công mạng
                 </p>
               </div>
             </div>

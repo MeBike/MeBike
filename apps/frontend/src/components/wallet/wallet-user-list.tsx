@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { WalletTransactionModal } from "./wallet-transaction-modal";
-import { UserWallet } from "@/types/wallet";
+import { UserWallet } from "@/types/Wallet";
 interface WalletUserListProps {
   users: UserWallet[];
   onDeposit: (

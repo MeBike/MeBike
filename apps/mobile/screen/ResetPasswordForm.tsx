@@ -14,13 +14,13 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useVerifyOTPMutation } from "@/hooks/mutations/Auth/Password/useVerifyOTPMutation";
+
 import type { RouteProp } from "@react-navigation/native";
 import type { RootStackParamList } from "../types/navigation";
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
 import { useAuth } from "@providers/auth-providers";
-import { getResetToken } from "@/utils/tokenManager";
+
 type ResetPasswordFormRouteProp = RouteProp<
   RootStackParamList,
   "ResetPasswordForm"
@@ -121,7 +121,7 @@ export default function ResetPasswordFormScreen() {
   const navigation = useNavigation<ResetPasswordFormNavigationProp>();
   const route = useRoute<ResetPasswordFormRouteProp>();
   const { email, otp } = route.params;
-  const { resetPassword, isReseting  , verifyOTP} = useAuth();
+  const { resetPassword, isReseting } = useAuth();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -134,29 +134,23 @@ export default function ResetPasswordFormScreen() {
       Alert.alert("Lỗi", "Vui lòng kiểm tra mật khẩu");
       return;
     }
+
     try {
-      await verifyOTP({email,otp});
-      // Đợi một chút để đảm bảo token đã được lưu vào AsyncStorage
-      await new Promise(resolve => setTimeout(resolve, 100));
-      const reset_token = await getResetToken();
-      console.log("reset token after verifyOTP:", reset_token);
-      console.log("reset token type:", typeof reset_token);
-      console.log("reset token truthy?", !!reset_token);
-      if(!reset_token){
-        Alert.alert("Lỗi", "Không tìm thấy reset_token. Vui lòng thử lại.");
-        return;
-      }
       await resetPassword({
         password: newPassword,
-        confirmPassword: confirmPassword,
-        resetToken: reset_token,
+        confirm_password: confirmPassword,
+        forgot_password_token: otp,
+        email,
+        otp,
       });
+      // resetPassword already navigates to Login on success
     } catch (error) {
       console.log("Reset password error:", error);
-      Alert.alert("Lỗi", "Đã xảy ra lỗi, vui lòng thử lại");
     }
   };
+
   const insets = useSafeAreaInsets();
+
   return (
     <KeyboardAvoidingView
       style={styles.container}

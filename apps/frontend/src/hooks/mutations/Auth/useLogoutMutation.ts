@@ -2,6 +2,6 @@ import { authService } from "@/services/auth.service";
 import { useMutation } from "@tanstack/react-query";
 export const useLogoutMutation = () => {
     return useMutation({
-        mutationFn: () => authService.logout(),
+        mutationFn: (refresh_token:string) => authService.logout(refresh_token),
     })
 }
