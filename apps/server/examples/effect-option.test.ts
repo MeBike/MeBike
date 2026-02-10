@@ -1,8 +1,9 @@
 import { Cause, Effect, Exit } from "effect";
-
 import { describe, expect, it } from "vitest";
 
-import { UserNotFound, getUserOrFail } from "./effect-option";
+import type { UserNotFound } from "./effect-option";
+
+import { getUserOrFail } from "./effect-option";
 
 describe("examples/effect-option", () => {
   it("returns user when Option is Some", async () => {

@@ -1,7 +1,7 @@
-import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { Context, Data, Effect, Layer, Match, Option } from "effect";
+import { resolve } from "node:path";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 type User = {
   id: string;
@@ -21,8 +21,8 @@ export const UserRepoLive = Layer.succeed(
   UserRepoTag.of({
     findById: (id) => {
       const data: Record<string, User> = {
-        "u1": { id: "u1", name: "An" },
-        "u2": { id: "u2", name: "Binh" },
+        u1: { id: "u1", name: "An" },
+        u2: { id: "u2", name: "Binh" },
       };
       return Effect.succeed(Option.fromNullable(data[id] ?? null));
     },
@@ -47,7 +47,7 @@ async function main() {
   const result = await Effect.runPromise(
     getUserOrFail(userId).pipe(
       Effect.match({
-        onSuccess: (u) => `Tìm thấy user: ${u.id} (${u.name})`,
+        onSuccess: u => `Tìm thấy user: ${u.id} (${u.name})`,
         onFailure: (e) => {
           if (e._tag === "UserNotFound") {
             return `Không tìm thấy user: ${e.userId}`;
@@ -58,7 +58,7 @@ async function main() {
     ),
   );
 
-  console.log(result);
+  process.stdout.write(`${result}\n`);
 }
 
 const isMain = fileURLToPath(import.meta.url) === resolve(process.argv[1] ?? "");

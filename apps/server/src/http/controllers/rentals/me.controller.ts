@@ -280,26 +280,25 @@ const endMyRental: RouteHandler<RentalsRoutes["endMyRental"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   return Match.value(result).pipe(
-    Match.tag("Right", ({ right }) =>
-      {
-        if (right.bikeId) {
-          void notifyBikeStatusUpdate({
-            userId,
-            bikeId: right.bikeId,
-            status: "AVAILABLE",
-            rentalId: right.id,
-            at: new Date().toISOString(),
-          });
-        }
+    Match.tag("Right", ({ right }) => {
+      if (right.bikeId) {
+        void notifyBikeStatusUpdate({
+          userId,
+          bikeId: right.bikeId,
+          status: "AVAILABLE",
+          rentalId: right.id,
+          at: new Date().toISOString(),
+        });
+      }
 
-        return c.json(
-          {
-            message: "Rental ended successfully",
-            result: toContractRental(right),
-          },
-          200,
-        );
-      }),
+      return c.json(
+        {
+          message: "Rental ended successfully",
+          result: toContractRental(right),
+        },
+        200,
+      );
+    }),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("RentalNotFound", () =>

@@ -37,7 +37,7 @@ const suppliers = [
     createdAt: "2025-10-05T19:12:21.230Z",
     updatedAt: "2025-11-20T12:44:38.818Z",
   },
-].map((supplier) => ({
+].map(supplier => ({
   ...supplier,
   newId: uuidv7(),
 }));

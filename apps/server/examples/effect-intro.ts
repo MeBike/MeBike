@@ -1,7 +1,7 @@
-import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { Cause, Context, Data, Effect, Exit, Layer, Match } from "effect";
+import { resolve } from "node:path";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 export class NameRequired extends Data.TaggedError("NameRequired")<{
   field: string;
@@ -37,7 +37,7 @@ async function main() {
   const exit = await Effect.runPromiseExit(greetProgram(name));
 
   if (Exit.isSuccess(exit)) {
-    console.log(exit.value);
+    process.stdout.write(`${exit.value}\n`);
     return;
   }
 
@@ -46,16 +46,16 @@ async function main() {
   if (Cause.isFailType(cause)) {
     const err = cause.error as NameRequired;
     const message = Match.value(err).pipe(
-      Match.tag("NameRequired", (e) => `Thiếu trường bắt buộc: ${e.field}`),
+      Match.tag("NameRequired", e => `Thiếu trường bắt buộc: ${e.field}`),
       Match.orElse(() => "Lỗi không xác định"),
     );
-    console.error(message);
+    process.stderr.write(`${message}\n`);
     process.exitCode = 1;
     return;
   }
 
   // Defect / interrupt
-  console.error(Cause.pretty(cause));
+  process.stderr.write(`${Cause.pretty(cause)}\n`);
   process.exitCode = 1;
 }
 

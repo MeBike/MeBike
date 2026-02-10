@@ -14,7 +14,6 @@ const unauthorizedBody = {
   details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
 } as const;
 
-
 function parseBearerToken(header: string | null | undefined): string | null {
   if (!header)
     return null;
