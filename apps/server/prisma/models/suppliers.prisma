@@ -1,0 +1,20 @@
+// Enums specific to suppliers
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+}
+
+// Suppliers table
+
+model Supplier {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  name        String
+  address     String?
+  phoneNumber String?        @map("phone_number")
+  contractFee Decimal?       @map("contract_fee") @db.Decimal(10, 2)
+  status      SupplierStatus
+  updatedAt   DateTime       @map("updated_at") @db.Timestamptz
+
+  bikes Bike[]
+}

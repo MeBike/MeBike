@@ -1,57 +1,91 @@
-import type { AxiosResponse } from "axios";
+import type { ServerContracts } from "@mebike/shared";
+import type { z } from "zod";
 
-import fetchHttpClient from "@lib/httpClient";
+import { kyClient } from "@lib/ky-client";
+import { routePath, ServerRoutes } from "@lib/server-routes";
 
-import type { Station, StationType } from "../types/StationType";
+import type { StationType } from "../types/StationType";
 
-const STATION_BASE = "/stations";
-const STATION_ENDPOINTS = {
-   BASE: STATION_BASE,
-   ALL: `${STATION_BASE}?limit=30`,
-   DETAIL: (id: string) => `${STATION_BASE}/${id}`,
-   NEAR_ME: (lat: number, lng: number) =>
-     `${STATION_BASE}/nearby?limit=30`,
- } as const;
-type ApiResponse<T> = {
-  data: T;
-  pagination?: {
-    limit: number;
-    currentPage: number;
-    totalPages: number;
-    totalRecords: number;
+type StationSummary = ServerContracts.StationsContracts.StationSummary;
+type StationListResponse = ServerContracts.StationsContracts.StationListResponse;
+
+type StationListQuery = z.infer<
+  typeof ServerRoutes.stations.listStations.request.query
+>;
+type NearbyStationsQuery = z.infer<
+  typeof ServerRoutes.stations.getNearbyStations.request.query
+>;
+type NearbyStationsOptions = Omit<NearbyStationsQuery, "latitude" | "longitude">;
+
+function toSearchParams(
+  params: Record<string, unknown> | undefined,
+): Record<string, string> | undefined {
+  if (!params) {
+    return undefined;
+  }
+  const entries = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => [key, String(value)]);
+
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+}
+
+function toStationType(summary: StationSummary): StationType {
+  return {
+    _id: summary.id,
+    name: summary.name,
+    address: summary.address,
+    latitude: String(summary.latitude),
+    longitude: String(summary.longitude),
+    capacity: String(summary.capacity),
+    created_at: "",
+    updated_at: "",
+    totalBikes: summary.totalBikes,
+    availableBikes: summary.availableBikes,
+    bookedBikes: summary.bookedBikes,
+    brokenBikes: summary.brokenBikes,
+    reservedBikes: summary.reservedBikes,
+    maintainedBikes: summary.maintainedBikes,
+    emptySlots: summary.emptySlots,
+    average_rating: undefined,
+    total_ratings: undefined,
   };
-};
-type ApiDetailResponse<T> = {
-  result: T;
-  message: string;
-};
+}
 
 export const stationService = {
-  getAllStations: async (): Promise<AxiosResponse<ApiResponse<StationType[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<StationType[]>>(
-      STATION_ENDPOINTS.ALL,
-    );
-    return response;
+  getAllStations: async (params?: StationListQuery): Promise<StationType[]> => {
+    const response = await kyClient
+      .get(routePath(ServerRoutes.stations.listStations), {
+        searchParams: toSearchParams(params),
+      })
+      .json<StationListResponse>();
+
+    return response.data.map(toStationType);
   },
-  getStationById: async (
-    stationId: string,
-  ): Promise<AxiosResponse<ApiDetailResponse<StationType>>> => {
-    const response = await fetchHttpClient.get<ApiDetailResponse<StationType>>(
-      STATION_ENDPOINTS.DETAIL(stationId),
-    );
-    return response;
+  getStationById: async (stationId: string): Promise<StationType> => {
+    const path = routePath(ServerRoutes.stations.getStation)
+      .replace(":stationId", stationId);
+    const response = await kyClient
+      .get(path)
+      .json<StationSummary>();
+
+    return toStationType(response);
   },
   getNearMe: async (
     latitude: number,
     longitude: number,
-  ): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
-      STATION_ENDPOINTS.NEAR_ME(latitude, longitude),
-      {
-        latitude,
-        longitude,
-      },
-    );
-    return response;
+    options?: NearbyStationsOptions,
+  ): Promise<StationType[]> => {
+    const response = await kyClient
+      .get(routePath(ServerRoutes.stations.getNearbyStations), {
+        searchParams: toSearchParams({
+          latitude,
+          longitude,
+          ...options,
+        }),
+      })
+      .json<StationListResponse>();
+
+    return response.data.map(toStationType);
   },
 };

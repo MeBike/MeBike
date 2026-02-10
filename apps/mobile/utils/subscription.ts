@@ -1,14 +1,29 @@
-import type { MongoDecimal, SubscriptionRecord, SubscriptionStatus } from "@/types/subscription-types";
+import type { Subscription, SubscriptionStatus } from "@/types/subscription-types";
 
 const STATUS_COLORS: Record<SubscriptionStatus, { text: string; background: string }> = {
-  "ĐANG CHỜ XỬ LÍ": { text: "#B45309", background: "#FEF3C7" },
-  "ĐANG HOẠT ĐỘNG": { text: "#15803D", background: "#DCFCE7" },
-  "ĐÃ HẾT HẠN": { text: "#555" , background: "#E5E7EB" },
-  "ĐÃ HUỶ": { text: "#9B1C1C", background: "#FEE2E2" },
+  PENDING: { text: "#B45309", background: "#FEF3C7" },
+  ACTIVE: { text: "#15803D", background: "#DCFCE7" },
+  EXPIRED: { text: "#555", background: "#E5E7EB" },
+  CANCELLED: { text: "#9B1C1C", background: "#FEE2E2" },
 };
 
-export function formatCurrency(amount: number): string {
-  return `${amount.toLocaleString("vi-VN")} đ`;
+export function toSubscriptionStatusLabel(status: SubscriptionStatus): string {
+  switch (status) {
+    case "PENDING":
+      return "ĐANG CHỜ XỬ LÍ";
+    case "ACTIVE":
+      return "ĐANG HOẠT ĐỘNG";
+    case "EXPIRED":
+      return "ĐÃ HẾT HẠN";
+    case "CANCELLED":
+      return "ĐÃ HUỶ";
+  }
+}
+
+export function formatCurrency(amount: string | number): string {
+  const value = typeof amount === "number" ? amount : Number(amount);
+  const safe = Number.isFinite(value) ? value : 0;
+  return `${safe.toLocaleString("vi-VN")} đ`;
 }
 
 export function formatDate(date?: string | null): string {
@@ -23,29 +38,16 @@ export function formatDate(date?: string | null): string {
   return `${day}/${month}/${year}`;
 }
 
-export function parseDecimal(value: MongoDecimal): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "string") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  if (value && "$numberDecimal" in value) {
-    const parsed = Number(value.$numberDecimal);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-  return 0;
-}
-
 export function getStatusStyle(status: SubscriptionStatus) {
   return STATUS_COLORS[status];
 }
 
-export function extractLatestSubscription(subscriptions: SubscriptionRecord[]): SubscriptionRecord | null {
+export function extractLatestSubscription(subscriptions: Subscription[]): Subscription | null {
   if (!subscriptions.length) return null;
   return subscriptions.reduce((latest, current) => {
     if (!latest) return current;
-    const latestTime = new Date(latest.created_at ?? 0).getTime();
-    const currentTime = new Date(current.created_at ?? 0).getTime();
+    const latestTime = new Date(latest.updatedAt).getTime();
+    const currentTime = new Date(current.updatedAt).getTime();
     return currentTime > latestTime ? current : latest;
   }, subscriptions[0]);
 }

@@ -2,13 +2,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import type { SubscriptionListItem } from "@/types/subscription-types";
+import type { Subscription } from "@/types/subscription-types";
 
-import { formatCurrency, formatDate, getStatusStyle } from "@utils/subscription";
+import { formatCurrency, formatDate, getStatusStyle, toSubscriptionStatusLabel } from "@utils/subscription";
 
 type Props = {
-  activeSubscription?: SubscriptionListItem | null;
-  pendingSubscription?: SubscriptionListItem | null;
+  activeSubscription?: Subscription | null;
+  pendingSubscription?: Subscription | null;
   onActivatePending?: () => void;
   activating?: boolean;
 };
@@ -30,17 +30,17 @@ export function SubscriptionSummary({
 
   const description = (() => {
     if (hasActive && activeSubscription) {
-      const limit = activeSubscription.max_usages;
-      const used = activeSubscription.usage_count;
+      const limit = activeSubscription.maxUsages;
+      const used = activeSubscription.usageCount;
       const remaining =
         typeof limit === "number" ? Math.max(0, limit - used) : null;
       const quota = typeof limit === "number"
         ? `Còn ${remaining}/${limit} lượt`
         : `${used} lượt đã dùng`;
-      return `Hạn: ${formatDate(activeSubscription.expires_at)} • ${quota}`;
+      return `Hạn: ${formatDate(activeSubscription.expiresAt)} • ${quota}`;
     }
     if (hasPending && pendingSubscription) {
-      return `Đăng ký ngày ${formatDate(pendingSubscription.created_at)} - kích hoạt để sử dụng ngay.`;
+      return `Cập nhật ngày ${formatDate(pendingSubscription.updatedAt)} - kích hoạt để sử dụng ngay.`;
     }
     return "Chọn gói phù hợp để nhận thêm lượt đặt xe và ưu đãi.";
   })();
@@ -54,7 +54,7 @@ export function SubscriptionSummary({
     ? activeSubscription!.price
     : hasPending
       ? pendingSubscription!.price
-      : 0;
+      : "0";
 
   const statusStyle = status ? getStatusStyle(status) : undefined;
 
@@ -72,7 +72,7 @@ export function SubscriptionSummary({
         </View>
         {status && statusStyle && (
           <View style={[styles.statusBadge, { backgroundColor: statusStyle.background }]}>
-            <Text style={[styles.statusText, { color: statusStyle.text }]}>{status}</Text>
+            <Text style={[styles.statusText, { color: statusStyle.text }]}>{toSubscriptionStatusLabel(status)}</Text>
           </View>
         )}
       </View>

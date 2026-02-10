@@ -1,23 +1,20 @@
+import { walletErrorMessage, walletServiceV1 } from "@services/wallets/wallet.service";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
-import type { Transaction } from "@services/wallet.service";
-
-import { walletService } from "@services/wallet.service";
-
-export async function fetchMyTransactions(page: number = 1, limit: number = 5): Promise<{ data: Transaction[]; pagination: { totalPages: number; currentPage: number; limit: number; totalRecords: number } }> {
-  const response = await walletService.transactions({ page, limit });
-  if (response.status === 200) {
-    return response.data as unknown as { data: Transaction[]; pagination: { totalPages: number; currentPage: number; limit: number; totalRecords: number } };
+export async function fetchMyTransactions(page: number = 1, limit: number = 5) {
+  const result = await walletServiceV1.listMyWalletTransactions({ page, pageSize: limit });
+  if (result.ok) {
+    return result.value;
   }
-  throw new Error("Failed to fetch transactions");
+  throw new Error(walletErrorMessage(result.error));
 }
 export function useGetMyTransactionsQuery(limit: number = 5) {
   return useInfiniteQuery({
     queryKey: ["myTransactions"],
     queryFn: ({ pageParam = 1 }) => fetchMyTransactions(pageParam, limit),
     getNextPageParam: (lastPage) => {
-      if (lastPage.pagination.currentPage < lastPage.pagination.totalPages) {
-        return lastPage.pagination.currentPage + 1;
+      if (lastPage.pagination.page < lastPage.pagination.totalPages) {
+        return lastPage.pagination.page + 1;
       }
       return undefined;
     },

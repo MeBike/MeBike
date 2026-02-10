@@ -8,7 +8,7 @@ import { styles } from "./styles";
 
 type WalletActionsProps = {
   onTopUp: () => void;
-  onWithdraw: () => void;
+  onWithdraw?: () => void;
   // onRefund?: () => void;
 };
 
@@ -25,15 +25,19 @@ export function WalletActions({ onTopUp, onWithdraw }: WalletActionsProps) {
         </LinearGradient>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={onWithdraw}>
-        <LinearGradient
-          colors={WALLET_CONSTANTS.GRADIENT_COLORS.WITHDRAW}
-          style={styles.gradient}
-        >
-          <Ionicons name="arrow-up" size={24} color="#fff" />
-          <Text style={styles.buttonText}>Rút tiền</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+      {onWithdraw
+        ? (
+            <TouchableOpacity style={styles.button} onPress={onWithdraw}>
+              <LinearGradient
+                colors={WALLET_CONSTANTS.GRADIENT_COLORS.WITHDRAW}
+                style={styles.gradient}
+              >
+                <Ionicons name="arrow-up" size={24} color="#fff" />
+                <Text style={styles.buttonText}>Rút tiền</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )
+        : null}
 
       {/* <TouchableOpacity style={styles.button} onPress={onRefund}>
         <LinearGradient

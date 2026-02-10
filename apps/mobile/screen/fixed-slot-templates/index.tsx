@@ -1,6 +1,6 @@
 import { BikeColors } from "@constants/BikeColors";
 import { useCancelFixedSlotTemplateMutation } from "@hooks/mutations/FixedSlots/useCancelFixedSlotTemplateMutation";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
 import { getApiErrorMessage } from "@utils/error";
@@ -41,8 +41,8 @@ export default function FixedSlotTemplatesScreen() {
   const { stationId, stationName } = route.params ?? {};
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const { isAuthenticated } = useAuthNext();
+  const hasToken = isAuthenticated;
 
   const [statusFilter, setStatusFilter] = useState<FixedSlotStatus | undefined>();
   const pageLimit = 5;

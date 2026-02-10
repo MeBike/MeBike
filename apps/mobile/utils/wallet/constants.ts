@@ -1,8 +1,8 @@
 export const WALLET_CONSTANTS = {
   DEFAULT_LIMIT: 5,
   STATUS: {
-    ACTIVE: "ĐANG HOẠT ĐỘNG",
-    INACTIVE: "KHÔNG HOẠT ĐỘNG",
+    ACTIVE: "ACTIVE",
+    INACTIVE: "FROZEN",
   },
   COLORS: {
     PRIMARY: "#0066FF",

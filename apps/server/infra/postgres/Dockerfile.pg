@@ -1,0 +1,22 @@
+
+
+FROM pgvector/pgvector:0.8.1-pg18-trixie
+
+LABEL org.opencontainers.image.description="PostgreSQL 18 with pgvector 0.8.1 and PostGIS 3 on trixie"
+
+ENV POSTGIS_MAJOR=3
+ENV POSTGIS_VERSION=3.6.1+dfsg-1.pgdg13+1
+
+RUN set -eux; \
+  apt-get update; \
+  apt-cache showpkg postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR; \
+  apt-get install -y --no-install-recommends \
+    ca-certificates \
+    postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR=$POSTGIS_VERSION \
+    postgresql-$PG_MAJOR-postgis-$POSTGIS_MAJOR-scripts \
+  ; \
+  rm -rf /var/lib/apt/lists/*
+
+#   CREATE EXTENSION IF NOT EXISTS postgis;
+#   CREATE EXTENSION IF NOT EXISTS vector;
+

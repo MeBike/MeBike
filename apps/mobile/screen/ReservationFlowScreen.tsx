@@ -23,15 +23,15 @@ import {
   ReservationModeToggle,
 } from "../components/reservation-flow/ReservationModeToggle";
 import { BikeColors } from "@constants/BikeColors";
-import { useGetSubscriptionsQuery } from "@hooks/query/Subscription/useGetSubscriptionsQuery";
+import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
 import { useReservationActions } from "@hooks/useReservationActions";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 import type {
   ReservationFlowNavigationProp,
   ReservationFlowRouteProp,
 } from "@/types/navigation";
-import type { SubscriptionListItem } from "@/types/subscription-types";
+import type { Subscription } from "@/types/subscription-types";
 
 const STORAGE_KEY = "reservationFlow:lastMode";
 const MODE_OPTIONS: Array<{
@@ -60,8 +60,8 @@ export default function ReservationFlowScreen() {
   const navigation = useNavigation<ReservationFlowNavigationProp>();
   const route = useRoute<ReservationFlowRouteProp>();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const { isAuthenticated } = useAuthNext();
+  const hasToken = isAuthenticated;
   const {
     stationId,
     stationName,
@@ -91,12 +91,12 @@ export default function ReservationFlowScreen() {
     data: subscriptionResponse,
     refetch: refetchSubscriptions,
   } = useGetSubscriptionsQuery(
-    { status: "ĐANG HOẠT ĐỘNG", limit: 10 },
+    { status: "ACTIVE", pageSize: 10 },
     hasToken,
   );
 
   const activeSubscriptions = useMemo(
-    () => subscriptionResponse?.data.filter((item) => item.status === "ĐANG HOẠT ĐỘNG") ?? [],
+    () => subscriptionResponse?.data ?? [],
     [subscriptionResponse],
   );
 
@@ -126,16 +126,16 @@ export default function ReservationFlowScreen() {
     if (mode !== "GÓI THÁNG")
       return;
     if (selectedSubscriptionId) {
-      const stillExists = activeSubscriptions.some((item) => item._id === selectedSubscriptionId);
+      const stillExists = activeSubscriptions.some((item) => item.id === selectedSubscriptionId);
       if (stillExists)
         return;
     }
-    if (initialSubscriptionId && activeSubscriptions.some((item) => item._id === initialSubscriptionId)) {
+    if (initialSubscriptionId && activeSubscriptions.some((item) => item.id === initialSubscriptionId)) {
       setSelectedSubscriptionId(initialSubscriptionId);
       return;
     }
     if (activeSubscriptions.length > 0) {
-      setSelectedSubscriptionId(activeSubscriptions[0]._id);
+      setSelectedSubscriptionId(activeSubscriptions[0].id);
     }
   }, [activeSubscriptions, initialSubscriptionId, mode, selectedSubscriptionId]);
 
@@ -209,8 +209,8 @@ export default function ReservationFlowScreen() {
     setIosPickerVisible(false);
   }, [iosPickerValue]);
 
-  const selectedSubscription: SubscriptionListItem | undefined = useMemo(
-    () => activeSubscriptions.find((item) => item._id === selectedSubscriptionId),
+  const selectedSubscription: Subscription | undefined = useMemo(
+    () => activeSubscriptions.find((item) => item.id === selectedSubscriptionId),
     [activeSubscriptions, selectedSubscriptionId],
   );
 
@@ -226,7 +226,7 @@ export default function ReservationFlowScreen() {
       return;
     }
 
-    if (mode === "GÓI THÁNG" && !selectedSubscription?._id) {
+    if (mode === "GÓI THÁNG" && !selectedSubscription?.id) {
       Alert.alert("Thiếu gói tháng", "Vui lòng chọn một gói tháng đang hoạt động.");
       return;
     }
@@ -234,7 +234,7 @@ export default function ReservationFlowScreen() {
     setIsSubmitting(true);
     createReservation(bikeId, scheduledAt.toISOString(), {
       reservationOption: mode,
-      subscriptionId: mode === "GÓI THÁNG" ? selectedSubscription?._id : undefined,
+      subscriptionId: mode === "GÓI THÁNG" ? selectedSubscription?.id : undefined,
       callbacks: {
         onSuccess: () => {
           setIsSubmitting(false);
@@ -333,32 +333,32 @@ export default function ReservationFlowScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Gói tháng</Text>
             {activeSubscriptions.map((subscription) => {
-              const remaining = subscription.max_usages != null
-                ? Math.max(0, subscription.max_usages - subscription.usage_count)
+              const remaining = subscription.maxUsages != null
+                ? Math.max(0, subscription.maxUsages - subscription.usageCount)
                 : null;
               return (
                 <TouchableOpacity
-                  key={subscription._id}
+                  key={subscription.id}
                   style={[
                     styles.subscriptionCard,
-                    subscription._id === selectedSubscriptionId && styles.subscriptionCardActive,
+                    subscription.id === selectedSubscriptionId && styles.subscriptionCardActive,
                     lockPaymentSelection && styles.subscriptionCardLocked,
                   ]}
                   onPress={
                     lockPaymentSelection
                       ? undefined
-                      : () => setSelectedSubscriptionId(subscription._id)
+                      : () => setSelectedSubscriptionId(subscription.id)
                   }
                   disabled={lockPaymentSelection}
                 >
                   <View>
                     <Text style={styles.subscriptionName}>
-                      {subscription.package_name.toUpperCase()}
+                      {subscription.packageName.toUpperCase()}
                     </Text>
                     {remaining != null
                       ? (
                           <Text style={styles.subscriptionMeta}>
-                            {remaining} / {subscription.max_usages} lượt còn lại
+                            {remaining} / {subscription.maxUsages} lượt còn lại
                           </Text>
                         )
                       : (
@@ -368,7 +368,7 @@ export default function ReservationFlowScreen() {
                         )}
                   </View>
                   <Ionicons
-                    name={subscription._id === selectedSubscriptionId
+                    name={subscription.id === selectedSubscriptionId
                       ? "checkmark-circle"
                       : "ellipse-outline"}
                     size={22}

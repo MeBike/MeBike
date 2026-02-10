@@ -1,6 +1,6 @@
 import { useGetStationLookupQuery } from "@hooks/query/Reservation/useGetStationLookupQuery";
 import { useReservationActions } from "@hooks/useReservationActions";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo } from "react";
@@ -48,9 +48,9 @@ function ReservationDetailScreen() {
   const navigation = useNavigation<ReservationDetailNavigationProp>();
   const route = useRoute<ReservationDetailRouteProp>();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { isAuthenticated } = useAuthNext();
 
-  const hasToken = Boolean(user?._id);
+  const hasToken = isAuthenticated;
 
   const { reservationId, reservation: initialReservation } = route.params;
 

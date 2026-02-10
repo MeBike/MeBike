@@ -12,13 +12,13 @@ import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 
 import type { StationType } from "../../../types/StationType";
-import type { RentalDetail } from "../../../types/RentalTypes";
+import type { RentalDetail } from "@/types/rental-types";
 
 type Props = {
   booking: RentalDetail;
   stations: StationType[];
   isSubmitting: boolean;
-  onSubmit: (payload: { end_station: string; reason: string }) => void;
+  onSubmit: (payload: { endStation: string; reason: string }) => void;
 };
 
 const DEFAULT_REASON = "Kết thúc phiên thuê bởi nhân viên";
@@ -30,7 +30,7 @@ function StaffEndRentalCard({ booking, stations, isSubmitting, onSubmit }: Props
   useEffect(() => {
     if (!selectedStation) {
       const fallbackStation =
-        booking.end_station?._id || booking.start_station?._id || stations[0]?._id || "";
+        booking.endStation?.id || booking.startStation.id || stations[0]?._id || "";
       setSelectedStation(fallbackStation);
     }
   }, [booking, stations, selectedStation]);
@@ -50,7 +50,7 @@ function StaffEndRentalCard({ booking, stations, isSubmitting, onSubmit }: Props
       return;
     }
     onSubmit({
-      end_station: selectedStation,
+      endStation: selectedStation,
       reason: reason.trim() ? reason.trim() : DEFAULT_REASON,
     });
   };

@@ -1,12 +1,12 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import type { SubscriptionListItem } from "@/types/subscription-types";
+import type { Subscription } from "@/types/subscription-types";
 
 import { SubscriptionHistoryItem } from "@components/subscription/subscription-history-item";
 
 type Props = {
-  subscriptions: SubscriptionListItem[];
+  subscriptions: Subscription[];
   isLoading: boolean;
   onSelect: (id: string) => void;
 };
@@ -29,9 +29,9 @@ export function SubscriptionHistorySection({ subscriptions, isLoading, onSelect 
 
       {subscriptions.map((subscription) => (
         <SubscriptionHistoryItem
-          key={subscription._id}
+          key={subscription.id}
           subscription={subscription}
-          onPress={(item) => onSelect(item._id)}
+          onPress={(item) => onSelect(item.id)}
         />
       ))}
     </>

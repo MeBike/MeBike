@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -45,7 +45,8 @@
         {
           "cameraPermission": "Cho phép MeBike truy cập máy ảnh của bạn để quét mã QR."
         }
-      ]
+      ],
+      "@rnmapbox/maps"
     ],
     "extra": {
       "eas": {

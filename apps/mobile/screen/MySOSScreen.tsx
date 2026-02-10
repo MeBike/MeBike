@@ -15,14 +15,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSOS } from "@hooks/use-sos";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import type { SOS } from "@/types/SOS";
 import { formatVietnamDateTime } from "@/utils/date";
 const MySOSScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const { isAuthenticated } = useAuthNext();
+  const hasToken = isAuthenticated;
   const [page, setPage] = useState(1);
   const [limit] = useState(5);
   const [allSOSData, setAllSOSData] = useState<SOS[]>([]);

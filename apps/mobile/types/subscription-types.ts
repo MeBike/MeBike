@@ -1,69 +1,38 @@
-import type { Pagination } from "./Pagination";
-
-export type SubscriptionStatus =
-  | "ĐANG CHỜ XỬ LÍ"
-  | "ĐANG HOẠT ĐỘNG"
-  | "ĐÃ HẾT HẠN"
-  | "ĐÃ HUỶ";
+export type SubscriptionStatus = "PENDING" | "ACTIVE" | "EXPIRED" | "CANCELLED";
 
 export type SubscriptionPackage = "basic" | "premium" | "unlimited";
 
-export type MongoDecimal = number | string | { $numberDecimal?: string };
-
-export type SubscriptionRecord = {
-  _id: string;
-  user_id: string;
-  package_name: SubscriptionPackage;
-  activated_at?: string | null;
-  expires_at?: string | null;
-  max_usages?: number | null;
-  usage_count: number;
-  price: MongoDecimal;
+export type Subscription = {
+  id: string;
+  userId: string;
+  packageName: SubscriptionPackage;
+  maxUsages: number | null;
+  usageCount: number;
   status: SubscriptionStatus;
-  created_at?: string;
-  updated_at?: string;
+  activatedAt: string | null;
+  expiresAt: string | null;
+  price: string; // minor unit string from server
+  updatedAt: string;
 };
 
-export type SubscriptionListItem = {
-  _id: string;
-  user: {
-    _id: string;
-    fullname: string;
-  };
-  package_name: SubscriptionPackage;
-  activated_at?: string | null;
-  expires_at?: string | null;
-  max_usages?: number | null;
-  usage_count: number;
-  price: number;
-  status: SubscriptionStatus;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type SubscriptionDetail = {
-  subscription: Omit<SubscriptionRecord, "price"> & { price: number };
-  user: {
-    fullname: string;
-    email: string;
-  };
+export type SubscriptionPagination = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 };
 
 export type SubscriptionListResponse = {
-  data: SubscriptionListItem[];
-  pagination: Pagination;
+  data: Subscription[];
+  pagination: SubscriptionPagination;
 };
 
 export type CreateSubscriptionPayload = {
-  package_name: SubscriptionPackage;
+  packageName: SubscriptionPackage;
 };
 
 export type SubscriptionListParams = {
   page?: number;
-  limit?: number;
+  pageSize?: number;
   status?: SubscriptionStatus;
-  user_id?: string;
-  package_name?: SubscriptionPackage;
-  start_date?: string;
-  end_date?: string;
 };

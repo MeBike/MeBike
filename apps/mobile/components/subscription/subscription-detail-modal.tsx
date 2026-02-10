@@ -1,9 +1,9 @@
 import React from "react";
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { useGetSubscriptionDetailQuery } from "@hooks/query/Subscription/useGetSubscriptionDetailQuery";
+import { useGetSubscriptionDetailQuery } from "@hooks/query/subscription/use-get-subscription-detail-query";
 
-import { formatCurrency, formatDate, getStatusStyle } from "@utils/subscription";
+import { formatCurrency, formatDate, getStatusStyle, toSubscriptionStatusLabel } from "@utils/subscription";
 
 type Props = {
   visible: boolean;
@@ -13,7 +13,7 @@ type Props = {
 
 export function SubscriptionDetailModal({ visible, subscriptionId, onClose }: Props) {
   const { data, isLoading } = useGetSubscriptionDetailQuery(subscriptionId ?? "", visible);
-  const statusStyles = data ? getStatusStyle(data.subscription.status) : undefined;
+  const statusStyles = data ? getStatusStyle(data.status) : undefined;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -28,28 +28,23 @@ export function SubscriptionDetailModal({ visible, subscriptionId, onClose }: Pr
           {!isLoading && data && (
             <>
               <View style={styles.header}>
-                <Text style={styles.title}>{data.subscription.package_name.toUpperCase()}</Text>
+                <Text style={styles.title}>{data.packageName.toUpperCase()}</Text>
                 {statusStyles && (
                   <View style={[styles.statusBadge, { backgroundColor: statusStyles.background }]}> 
-                    <Text style={[styles.statusText, { color: statusStyles.text }]}>{data.subscription.status}</Text>
+                    <Text style={[styles.statusText, { color: statusStyles.text }]}>{toSubscriptionStatusLabel(data.status)}</Text>
                   </View>
                 )}
               </View>
-              <Text style={styles.price}>{formatCurrency(data.subscription.price)}</Text>
+              <Text style={styles.price}>{formatCurrency(data.price)}</Text>
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Thông tin gói</Text>
-                <InfoRow label="Ngày đăng ký" value={formatDate(data.subscription.created_at)} />
-                <InfoRow label="Ngày kích hoạt" value={formatDate(data.subscription.activated_at)} />
-                <InfoRow label="Ngày hết hạn" value={formatDate(data.subscription.expires_at)} />
+                <InfoRow label="Cập nhật" value={formatDate(data.updatedAt)} />
+                <InfoRow label="Ngày kích hoạt" value={formatDate(data.activatedAt)} />
+                <InfoRow label="Ngày hết hạn" value={formatDate(data.expiresAt)} />
                 <InfoRow
                   label="Lượt đã dùng"
-                  value={`${data.subscription.usage_count}/${data.subscription.max_usages ?? "∞"}`}
+                  value={`${data.usageCount}/${data.maxUsages ?? "∞"}`}
                 />
-              </View>
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Người dùng</Text>
-                <InfoRow label="Họ tên" value={data.user.fullname} />
-                <InfoRow label="Email" value={data.user.email} />
               </View>
             </>
           )}

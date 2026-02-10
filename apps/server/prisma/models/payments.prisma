@@ -1,0 +1,42 @@
+enum PaymentProvider {
+  STRIPE
+}
+
+enum PaymentKind {
+  TOPUP
+  WITHDRAW
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+model PaymentAttempt {
+  id            String          @id @default(uuid(7)) @db.Uuid
+  userId        String          @map("user_id") @db.Uuid
+  walletId      String          @map("wallet_id") @db.Uuid
+  provider      PaymentProvider
+  providerRef   String?         @map("provider_ref") @db.Text
+  kind          PaymentKind
+  status        PaymentStatus   @default(PENDING)
+  amountMinor   BigInt          @map("amount_minor") @db.BigInt
+  feeMinor      BigInt          @default(0) @map("fee_minor") @db.BigInt
+  currency      String          @db.VarChar(8)
+  failureReason String?         @map("failure_reason") @db.Text
+  metadata      Json?           @db.JsonB
+  createdAt     DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+
+  user   User   @relation(fields: [userId], references: [id])
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@unique([provider, providerRef], name: "uq_payment_attempt_provider_ref", map: "uq_payment_attempt_provider_ref")
+  @@index([userId], name: "idx_payment_attempts_user")
+  @@index([walletId], name: "idx_payment_attempts_wallet")
+  @@index([status, createdAt], name: "idx_payment_attempts_status_created_at")
+  @@index([kind, status], name: "idx_payment_attempts_kind_status")
+  @@map("payment_attempts")
+}

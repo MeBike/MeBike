@@ -1,0 +1,13 @@
+{
+  "extends": "@mebike/tsconfig/base.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "rootDir": "./",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["vitest", "node"],
+    "outDir": "./dist"
+  },
+  "include": ["src", "generated"]
+}

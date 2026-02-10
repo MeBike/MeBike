@@ -15,7 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSOS } from "@/hooks/use-sos";
-import { useAuth } from "@/providers/auth-providers";
+import { useAuthNext } from "@/providers/auth-provider-next";
 import type { SOSDetail } from "@/types/SOS";
 import { formatVietnamDateTime } from "@/utils/date";
 import { resolveSOSSchema, type ResolveSOSSchema } from "@/schema/sosSchema";
@@ -29,7 +29,7 @@ export default function SOSAgentDetailScreen() {
   const route = useRoute();
   const insets = useSafeAreaInsets();
   const { sosId } = route.params as RouteParams;
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthNext();
   const [refreshing, setRefreshing] = useState(false);
 
   const {

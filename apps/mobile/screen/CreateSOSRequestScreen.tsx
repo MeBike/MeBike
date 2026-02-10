@@ -18,7 +18,7 @@ import * as Location from "expo-location";
 import { createSOSSchema } from "@/schema/sosSchema";
 import type { CreateSOSSchema } from "@/schema/sosSchema";
 import { useSOS } from "@hooks/use-sos";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 type RouteParams = {
   rentalId: string;
@@ -28,8 +28,8 @@ const CreateSOSRequestScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { rentalId } = route.params as RouteParams;
-  const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const { isAuthenticated } = useAuthNext();
+  const hasToken = isAuthenticated;
   const { createSOSRequest } = useSOS({ hasToken, page: 1, limit: 10 });
 
   const [issue, setIssue] = useState("");

@@ -1,4 +1,5 @@
 node_modules
+AGENTS.md
 .turbo
 .alchemy
 .env
@@ -9,3 +10,15 @@ dist
 .apps/iot-service/*.md
 apps/iot-service/folder.md
 /hono
+
+# Android / Gradle (ignore generated native artifacts anywhere in the monorepo)
+**/android/.gradle/
+**/android/**/build/
+**/android/**/.cxx/
+**/android/**/.kotlin/
+**/android/**/.externalNativeBuild/
+**/android/**/local.properties
+**/*.apk
+**/*.aab
+**/*.aar
+**/*.keystore

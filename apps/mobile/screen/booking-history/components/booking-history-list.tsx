@@ -7,12 +7,12 @@ import {
   View,
 } from "react-native";
 
-import type { RentingHistory } from "../../../types/RentalTypes";
+import type { Rental } from "@/types/rental-types";
 import BookingCard from "./booking-card";
 import EmptyBookingState from "./empty-booking-state";
 
 type BookingHistoryListProps = {
-  bookings: RentingHistory[];
+  bookings: Rental[];
   refreshing: boolean;
   onRefresh: () => void;
   onLoadMore: () => void;
@@ -61,7 +61,7 @@ function BookingHistoryList({
       renderItem={({ item }) => (
         <BookingCard booking={item} onPress={onSelectBooking} />
       )}
-      keyExtractor={(item) => item._id}
+      keyExtractor={(item) => item.id}
       contentContainerStyle={[
         styles.listContent,
         bookings.length === 0 && styles.emptyContent,

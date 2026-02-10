@@ -1,0 +1,87 @@
+enum WalletStatus {
+  ACTIVE
+  FROZEN
+}
+
+enum WalletTransactionType {
+  DEPOSIT
+  DEBIT
+  REFUND
+  ADJUSTMENT
+}
+
+enum WalletTransactionStatus {
+  SUCCESS
+  PENDING
+  FAILED
+}
+
+enum WalletWithdrawalStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+model Wallet {
+  id        String       @id @default(uuid(7)) @db.Uuid
+  userId    String       @unique @map("user_id") @db.Uuid
+  balance   BigInt       @default(0) @db.BigInt
+  reservedBalance BigInt @default(0) @map("reserved_balance") @db.BigInt
+  status    WalletStatus @default(ACTIVE)
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  user            User                @relation(fields: [userId], references: [id])
+  transactions    WalletTransaction[]
+  paymentAttempts PaymentAttempt[]
+  withdrawals     WalletWithdrawal[]
+  walletHolds     WalletHold[]
+
+  @@index([status], name: "idx_wallets_status")
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id          String                  @id @default(uuid(7)) @db.Uuid
+  walletId    String                  @map("wallet_id") @db.Uuid
+  amount      BigInt                  @db.BigInt
+  fee         BigInt                  @default(0) @db.BigInt
+  description String?                 @db.Text
+  hash        String?                 @db.Text
+  type        WalletTransactionType
+  status      WalletTransactionStatus @default(SUCCESS)
+  createdAt   DateTime                @default(now()) @map("created_at") @db.Timestamptz
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@unique([hash], name: "uq_wallet_tx_hash", map: "uq_wallet_tx_hash")
+  @@index([walletId], name: "idx_wallet_tx_wallet")
+  @@index([type], name: "idx_wallet_tx_type")
+  @@map("wallet_transactions")
+}
+
+model WalletWithdrawal {
+  id               String                 @id @default(uuid(7)) @db.Uuid
+  userId           String                 @map("user_id") @db.Uuid
+  walletId         String                 @map("wallet_id") @db.Uuid
+  amount           BigInt                 @db.BigInt
+  currency         String                 @db.VarChar(8)
+  status           WalletWithdrawalStatus @default(PENDING)
+  idempotencyKey   String                 @map("idempotency_key") @db.Text
+  stripeTransferId String?                @map("stripe_transfer_id") @db.Text
+  stripePayoutId   String?                @map("stripe_payout_id") @db.Text
+  failureReason    String?                @map("failure_reason") @db.Text
+  createdAt        DateTime               @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime               @updatedAt @map("updated_at") @db.Timestamptz
+
+  user       User        @relation(fields: [userId], references: [id])
+  wallet     Wallet      @relation(fields: [walletId], references: [id])
+  walletHold WalletHold?
+
+  @@unique([idempotencyKey], name: "uq_wallet_withdrawals_idempotency_key", map: "uq_wallet_withdrawals_idempotency_key")
+  @@index([userId], name: "idx_wallet_withdrawals_user")
+  @@index([walletId], name: "idx_wallet_withdrawals_wallet")
+  @@index([status, createdAt], name: "idx_wallet_withdrawals_status_created_at")
+  @@map("wallet_withdrawals")
+}

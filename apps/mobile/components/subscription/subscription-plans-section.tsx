@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text } from "react-native";
 
 import type {
-  SubscriptionListItem,
+  Subscription,
   SubscriptionPackage,
 } from "@/types/subscription-types";
 
@@ -11,8 +11,8 @@ import { SubscriptionPackageCard } from "@components/subscription/subscription-p
 
 type Props = {
   packages: SubscriptionPackageInfo[];
-  activeSubscription: SubscriptionListItem | null;
-  pendingSubscription: SubscriptionListItem | null;
+  activeSubscription: Subscription | null;
+  pendingSubscription: Subscription | null;
   canSubscribe: boolean;
   isLoading: (pkg: SubscriptionPackage) => boolean;
   onSubscribe: (pkg: SubscriptionPackage) => void;
@@ -34,7 +34,7 @@ export function SubscriptionPlansSection({
           key={pkg.id}
           info={pkg}
           disabled={!canSubscribe}
-          isCurrent={pkg.id === activeSubscription?.package_name || pkg.id === pendingSubscription?.package_name}
+          isCurrent={pkg.id === activeSubscription?.packageName || pkg.id === pendingSubscription?.packageName}
           loading={isLoading(pkg.id)}
           onSubscribe={() => onSubscribe(pkg.id)}
         />

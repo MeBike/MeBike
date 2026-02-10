@@ -1,6 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { reservationService } from "@services/reservation.service";
+import { useQuery } from "@tanstack/react-query";
 
 export function useGetReservationDetailQuery(id: string, enabled = false) {
   return useQuery({

@@ -1,0 +1,50 @@
+// Enums specific to ratings
+enum RatingReasonType {
+  ISSUE
+  COMPLIMENT
+}
+
+enum AppliesToEnum {
+  bike
+  station
+  app
+}
+
+// Ratings and reasons
+
+model RatingReason {
+  id        String             @id @default(uuid(7)) @db.Uuid
+  type      RatingReasonType
+  appliesTo AppliesToEnum      @map("applies_to")
+  messages  String
+  links     RatingReasonLink[]
+}
+
+model Rating {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  rentalId  String   @unique @map("rental_id") @db.Uuid
+  rating    Int
+  comment   String?
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  user    User               @relation(fields: [userId], references: [id])
+  rental  Rental             @relation(fields: [rentalId], references: [id])
+  reasons RatingReasonLink[]
+
+  @@index([userId], name: "idx_ratings_user")
+  @@index([rentalId], name: "idx_ratings_rental")
+  @@index([rating], name: "idx_ratings_rating")
+}
+
+model RatingReasonLink {
+  ratingId String @map("rating_id") @db.Uuid
+  reasonId String @map("reason_id") @db.Uuid
+
+  rating Rating       @relation(fields: [ratingId], references: [id], onDelete: Cascade)
+  reason RatingReason @relation(fields: [reasonId], references: [id], onDelete: Cascade)
+
+  @@id([ratingId, reasonId])
+  @@index([ratingId], name: "idx_rating_reason_links_rating")
+  @@index([reasonId], name: "idx_rating_reason_links_reason")
+}

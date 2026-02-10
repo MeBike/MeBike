@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client"
+  // provider = "prisma-kysely"
+
+  output = "../generated/prisma"
+}
+
+generator kysely {
+  provider = "prisma-kysely"
+  output   = "../generated/kysely"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// model Station {
+//   id        String                              @id @default(uuid(7)) @db.Uuid
+//   name      String                              @unique
+//   address   String
+//   capacity  Int
+//   latitude  Float
+//   longitude Float
+//   position  Unsupported("geography(Point, 4326)")
+//   updatedAt DateTime                            @updatedAt @map("updated_at") @db.Timestamptz
+
+//   @@map("stations")
+// }

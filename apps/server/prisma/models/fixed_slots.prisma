@@ -1,0 +1,34 @@
+enum FixedSlotStatus {
+  ACTIVE
+  CANCELLED
+}
+
+model FixedSlotTemplate {
+  id        String          @id @default(uuid(7)) @db.Uuid
+  userId    String          @map("user_id") @db.Uuid
+  stationId String          @map("station_id") @db.Uuid
+  slotStart DateTime        @map("slot_start") @db.Time
+  status    FixedSlotStatus @default(ACTIVE)
+  updatedAt DateTime        @default(now()) @map("updated_at") @db.Timestamptz
+
+  user         User            @relation(fields: [userId], references: [id])
+  station      Station         @relation(fields: [stationId], references: [id])
+  dates        FixedSlotDate[]
+  reservations Reservation[]
+
+  @@index([userId], name: "idx_fixed_slot_user")
+  @@index([stationId], name: "idx_fixed_slot_station")
+  @@index([status], name: "idx_fixed_slot_status")
+}
+
+model FixedSlotDate {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  templateId String   @map("template_id") @db.Uuid
+  slotDate   DateTime @map("slot_date") @db.Date
+
+  template FixedSlotTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, slotDate], name: "uq_fixed_slot_date")
+  @@index([templateId], name: "idx_fixed_slot_dates_template")
+  @@index([slotDate], name: "idx_fixed_slot_dates_date")
+}

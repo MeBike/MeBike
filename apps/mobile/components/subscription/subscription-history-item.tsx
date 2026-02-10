@@ -1,13 +1,13 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import type { SubscriptionListItem } from "@/types/subscription-types";
+import type { Subscription } from "@/types/subscription-types";
 
-import { formatCurrency, formatDate, getStatusStyle } from "@utils/subscription";
+import { formatCurrency, formatDate, getStatusStyle, toSubscriptionStatusLabel } from "@utils/subscription";
 
 type Props = {
-  subscription: SubscriptionListItem;
-  onPress?: (subscription: SubscriptionListItem) => void;
+  subscription: Subscription;
+  onPress?: (subscription: Subscription) => void;
 };
 
 export function SubscriptionHistoryItem({ subscription, onPress }: Props) {
@@ -15,14 +15,14 @@ export function SubscriptionHistoryItem({ subscription, onPress }: Props) {
   return (
     <TouchableOpacity style={styles.container} onPress={() => onPress?.(subscription)} activeOpacity={0.9}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.title}>{subscription.package_name.toUpperCase()}</Text>
-        <Text style={styles.subtitle}>Đăng ký: {formatDate(subscription.created_at)}</Text>
-        <Text style={styles.subtitle}>Hết hạn: {formatDate(subscription.expires_at)}</Text>
+        <Text style={styles.title}>{subscription.packageName.toUpperCase()}</Text>
+        <Text style={styles.subtitle}>Cập nhật: {formatDate(subscription.updatedAt)}</Text>
+        <Text style={styles.subtitle}>Hết hạn: {formatDate(subscription.expiresAt)}</Text>
       </View>
       <View style={styles.meta}>
         <Text style={styles.amount}>{formatCurrency(subscription.price)}</Text>
         <View style={[styles.statusBadge, { backgroundColor: status.background }]}>
-          <Text style={[styles.statusText, { color: status.text }]}>{subscription.status}</Text>
+          <Text style={[styles.statusText, { color: status.text }]}>{toSubscriptionStatusLabel(subscription.status)}</Text>
         </View>
       </View>
     </TouchableOpacity>

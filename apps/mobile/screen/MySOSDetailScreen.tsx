@@ -17,7 +17,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSOS } from "@hooks/use-sos";
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import type { SOSDetail } from "@/types/SOS";
 import { formatVietnamDateTime } from "@/utils/date";
 type RouteParams = {
@@ -29,8 +29,8 @@ const MySOSDetailScreen = () => {
   const route = useRoute();
   const insets = useSafeAreaInsets();
   const { sosId } = route.params as RouteParams;
-  const { user } = useAuth();
-  const hasToken = Boolean(user?._id);
+  const { isAuthenticated } = useAuthNext();
+  const hasToken = isAuthenticated;
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);

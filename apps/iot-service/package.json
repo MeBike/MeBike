@@ -28,7 +28,7 @@
     "hono": "^4.9.4",
     "mqtt": "^5.14.1",
     "pino": "^8.20.0",
-    "zod": "^4.1.11"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@mebike/eslint-config": "workspace:*",

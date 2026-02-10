@@ -1,48 +1,39 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
-import { FlatList, StatusBar, Text, View, RefreshControl } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { MyWalletNavigationProp } from "../types/navigation";
-import { LoadingScreen } from "../components/LoadingScreen";
+import { FlatList, RefreshControl, StatusBar, Text, View } from "react-native";
+
+import type { TabType } from "../utils/wallet/constants";
+
 import { LoadingSpinner } from "../components/wallet/loading-spinner";
 import { QRModal } from "../components/wallet/qr-modal";
-import { RefundDetailModal } from "../components/wallet/refund-detail-modal";
 import { TransactionDetailModal } from "../components/wallet/transaction-detail-modal";
 import { TransactionItem } from "../components/wallet/transaction-item";
 import { WalletActions } from "../components/wallet/wallet-actions";
 import { WalletBalance } from "../components/wallet/wallet-balance";
-import { WalletHeader, WalletSettings } from "../components/wallet/wallet-header";
+import { WalletHeader } from "../components/wallet/wallet-header";
 import { WalletTabs } from "../components/wallet/wallet-tabs";
-import { WithdrawDetailModal } from "../components/wallet/withdraw-detail-modal";
 import { useWallet } from "../hooks/wallet/use-wallet";
 import { myWalletScreenStyles as styles } from "../styles/wallet/my-wallet-screen";
 import { TAB_TYPES } from "../utils/wallet/constants";
 
 function MyWalletScreen() {
-  const navigation = useNavigation<MyWalletNavigationProp>();
   const [showQR, setShowQR] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"transactions" | "withdrawals" | "refunds">("transactions");
+  const [activeTab, setActiveTab] = useState<TabType>(TAB_TYPES.TRANSACTIONS);
   const [showTransactionDetail, setShowTransactionDetail] = useState(false);
-  const [showWithdrawDetail, setShowWithdrawDetail] = useState(false);
-  const [showRefundDetail, setShowRefundDetail] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
-  const [selectedWithdraw, setSelectedWithdraw] = useState<any>(null);
-  const [selectedRefund, setSelectedRefund] = useState<any>(null);
 
   const wallet = useWallet();
 
   useEffect(() => {
     wallet.getMyWallet();
     wallet.getMyTransaction();
-    wallet.getMyWithdrawals();
   }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await wallet.getMyWallet();
     await wallet.getMyTransaction();
-    await wallet.getMyWithdrawals();
     setRefreshing(false);
   };
 
@@ -50,16 +41,17 @@ function MyWalletScreen() {
     setShowQR(true);
   };
 
-  const handleWithdraw = () => {
-    navigation.navigate("Withdraw");
-  };
-
   if (wallet.isLoadingWallet || wallet.isLoadingTransactions) {
     return <LoadingSpinner message={wallet.isLoadingWallet ? "Đang tải ví..." : "Đang tải giao dịch..."} />;
   }
 
   if (!wallet.myWallet) {
-    return <LoadingSpinner message="Chưa có ví nào" />;
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#0066FF" />
+        <Text style={styles.emptyStateText}>Chưa có ví nào</Text>
+      </View>
+    );
   }
 
   const renderListHeader = () => (
@@ -72,14 +64,13 @@ function MyWalletScreen() {
       >
         <WalletHeader />
         <WalletBalance
-          balance={wallet.myWallet?.balance?.$numberDecimal || "0"}
+          balance={wallet.myWallet?.balance || "0"}
           status={wallet.myWallet?.status || ""}
         />
       </LinearGradient>
 
       <WalletActions
         onTopUp={handleTopUp}
-        onWithdraw={handleWithdraw}
       />
 
       <View style={styles.content}>
@@ -92,93 +83,32 @@ function MyWalletScreen() {
   );
 
   const getCurrentData = () => {
-    switch (activeTab) {
-      case TAB_TYPES.TRANSACTIONS:
-        return wallet.transactions || [];
-      case TAB_TYPES.WITHDRAWALS:
-        console.log(wallet.withdrawalRequests);
-        return wallet.withdrawalRequests || [];
-      // case TAB_TYPES.REFUNDS:
-      //   return wallet.refundRequests || [];
-      default:
-        return [];
-    }
+    return wallet.transactions || [];
   };
 
   const getCurrentTabTitle = () => {
-    switch (activeTab) {
-      case TAB_TYPES.TRANSACTIONS:
-        return "giao dịch";
-      case TAB_TYPES.WITHDRAWALS:
-        return "yêu cầu rút tiền";
-      // case TAB_TYPES.REFUNDS:
-      //   return "yêu cầu hoàn tiền";
-      default:
-        return "";
-    }
+    return "giao dịch";
   };
 
   const getCurrentLoadMore = () => {
-    switch (activeTab) {
-      case TAB_TYPES.TRANSACTIONS:
-        return wallet.loadMoreTransactions;
-      case TAB_TYPES.WITHDRAWALS:
-        return wallet.loadMoreWithdrawals;
-      // case TAB_TYPES.REFUNDS:
-      //   return wallet.loadMoreRefunds;
-      default:
-        return () => {};
-    }
+    return wallet.loadMoreTransactions;
   };
 
   const getCurrentHasNextPage = () => {
-    switch (activeTab) {
-      case TAB_TYPES.TRANSACTIONS:
-        return wallet.hasNextPageTransactions;
-      case TAB_TYPES.WITHDRAWALS:
-        return wallet.hasNextPageWithdrawals;
-      // case TAB_TYPES.REFUNDS:
-      //   return wallet.hasNextPageRefunds;
-      default:
-        return false;
-    }
+    return wallet.hasNextPageTransactions;
   };
 
   const getCurrentIsFetching = () => {
-    switch (activeTab) {
-      case TAB_TYPES.TRANSACTIONS:
-        return wallet.isFetchingNextPageTransactions;
-      case TAB_TYPES.WITHDRAWALS:
-        return wallet.isFetchingNextPageWithdrawals;
-      // case TAB_TYPES.REFUNDS:
-      //   return wallet.isFetchingNextPageRefunds;
-      default:
-        return false;
-    }
+    return wallet.isFetchingNextPageTransactions;
   };
 
   const handleItemPress = (item: any) => {
-    if (activeTab === TAB_TYPES.TRANSACTIONS) {
-      setSelectedTransaction(item);
-      setShowTransactionDetail(true);
-    }
-    else if (activeTab === TAB_TYPES.WITHDRAWALS) {
-      setSelectedWithdraw(item);
-      setShowWithdrawDetail(true);
-    }
-    // else if (activeTab === TAB_TYPES.REFUNDS) {
-    //   setSelectedRefund(item);
-    //   setShowRefundDetail(true);
-    // }
+    setSelectedTransaction(item);
+    setShowTransactionDetail(true);
   };
 
   const renderItem = ({ item }: { item: any }) => {
-    let type: "transaction" | "withdrawal" | "refund";
-    if (activeTab === TAB_TYPES.WITHDRAWALS)
-      type = "withdrawal";
-    // else if (activeTab === TAB_TYPES.REFUNDS)
-    //   type = "refund";
-    else type = "transaction";
+    const type: "transaction" = "transaction";
 
     return (
       <TransactionItem
@@ -225,23 +155,13 @@ function MyWalletScreen() {
         <QRModal
           visible={showQR}
           onClose={() => setShowQR(false)}
-          userId={wallet.myWallet?.user_id || ""}
+          userId={wallet.myWallet?.userId || ""}
         />
         <TransactionDetailModal
           visible={showTransactionDetail}
           onClose={() => setShowTransactionDetail(false)}
           transaction={selectedTransaction}
         />
-        <WithdrawDetailModal
-          visible={showWithdrawDetail}
-          onClose={() => setShowWithdrawDetail(false)}
-          withdrawal={selectedWithdraw}
-        />
-        {/* <RefundDetailModal
-          visible={showRefundDetail}
-          onClose={() => setShowRefundDetail(false)}
-          refund={selectedRefund}
-        /> */}
       </View>
     );
   }
@@ -251,7 +171,7 @@ function MyWalletScreen() {
       <FlatList
         data={currentData}
         renderItem={renderItem}
-        keyExtractor={item => item._id}
+        keyExtractor={item => item.id}
         ListHeaderComponent={renderListHeader}
         ListFooterComponent={renderFooter}
         showsVerticalScrollIndicator={false}
@@ -262,35 +182,25 @@ function MyWalletScreen() {
           }
         }}
         onEndReachedThreshold={0.3}
-        refreshControl={
+        refreshControl={(
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={["#0066FF"]}
             tintColor="#0066FF"
           />
-        }
+        )}
       />
       <QRModal
         visible={showQR}
         onClose={() => setShowQR(false)}
-        userId={wallet.myWallet?.user_id || ""}
+        userId={wallet.myWallet?.userId || ""}
       />
       <TransactionDetailModal
         visible={showTransactionDetail}
         onClose={() => setShowTransactionDetail(false)}
         transaction={selectedTransaction}
       />
-      <WithdrawDetailModal
-        visible={showWithdrawDetail}
-        onClose={() => setShowWithdrawDetail(false)}
-        withdrawal={selectedWithdraw}
-      />
-      {/* <RefundDetailModal
-        visible={showRefundDetail}
-        onClose={() => setShowRefundDetail(false)}
-        refund={selectedRefund}
-      /> */}
     </View>
   );
 }

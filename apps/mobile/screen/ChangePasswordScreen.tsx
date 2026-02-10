@@ -16,7 +16,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useAuth } from "@providers/auth-providers";
+import fetchHttpClient from "@lib/httpClient";
+import { useAuthNext } from "@providers/auth-provider-next";
 
 import type { ChangePasswordNavigationProp } from "../types/navigation";
 
@@ -29,11 +30,16 @@ function ChangePasswordScreen() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { changePassword, isChangingPassword } = useAuth();
+  const { isAuthenticated } = useAuthNext();
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const handleChangePassword = async () => {
+    if (!isAuthenticated) {
+      navigation.navigate("Login");
+      return;
+    }
     if (!oldPassword || !newPassword || !confirmPassword) {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin");
       return;
@@ -43,13 +49,31 @@ function ChangePasswordScreen() {
       return;
     }
     try {
-      await changePassword(oldPassword, newPassword, confirmPassword);
+      setIsChangingPassword(true);
+      const response = await fetchHttpClient.put<{ message?: string }>(
+        "/users/change-password",
+        {
+          old_password: oldPassword,
+          password: newPassword,
+          confirm_password: confirmPassword,
+        },
+      );
+
+      if (response.status === 200) {
+        Alert.alert("Thành công", response.data?.message ?? "Đổi mật khẩu thành công");
+      } else {
+        Alert.alert("Lỗi", response.data?.message ?? "Đổi mật khẩu thất bại");
+        return;
+      }
       // Chỉ quay lại khi changePassword thành công
       navigation.goBack();
     }
     catch (error) {
-      // Error đã được handle trong changePassword, không cần làm gì thêm
-      console.log("Change password failed:", error);
+      const message = error instanceof Error ? error.message : "Đổi mật khẩu thất bại";
+      Alert.alert("Lỗi", message);
+    }
+    finally {
+      setIsChangingPassword(false);
     }
   };
 

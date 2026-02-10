@@ -1,9 +1,11 @@
+import { useAuthNext } from "@providers/auth-provider-next";
+import { useQueryClient } from "@tanstack/react-query";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Platform, ToastAndroid } from "react-native";
-import { useQueryClient } from "@tanstack/react-query";
 
-import { useBikeStatusStream, type BikeStatusUpdate } from "@hooks/useBikeStatusStream";
-import { useAuth } from "@providers/auth-providers";
+import type { BikeStatusUpdate } from "@/hooks/use-bike-status-stream";
+
+import { useBikeStatusStream } from "@/hooks/use-bike-status-stream";
 
 type Subscriber = (payload: BikeStatusUpdate) => void;
 
@@ -16,7 +18,7 @@ type BikeStatusStreamContextValue = {
 const BikeStatusStreamContext = createContext<BikeStatusStreamContextValue | undefined>(undefined);
 
 export function BikeStatusStreamProvider({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthNext();
   const queryClient = useQueryClient();
   const subscribersRef = useRef<Set<Subscriber>>(new Set());
   const [lastUpdate, setLastUpdate] = useState<BikeStatusUpdate | null>(null);
@@ -25,7 +27,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
     subscribersRef.current.forEach((listener) => {
       try {
         listener(payload);
-      } catch (error) {
+      }
+      catch (error) {
         console.warn("[BikeStatusStream] subscriber error", error);
       }
     });
@@ -37,6 +40,10 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
       queryClient.invalidateQueries({ queryKey: ["rentals"] });
       queryClient.invalidateQueries({ queryKey: ["rentals", "all"] });
       queryClient.invalidateQueries({ queryKey: ["rentalsHistory"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "me"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "history"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "current"] });
+      queryClient.invalidateQueries({ queryKey: ["rentals", "me", "counts"] });
       queryClient.invalidateQueries({ queryKey: ["bikes", "all"] });
       queryClient.invalidateQueries({ queryKey: ["all-stations"] });
       queryClient.invalidateQueries({ queryKey: ["station"] });
@@ -47,7 +54,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
 
         if (status.includes("ĐANG ĐƯỢC THUÊ")) {
           message = "Thuê xe thành công";
-        } else if (status.includes("CÓ SẴN")) {
+        }
+        else if (status.includes("CÓ SẴN")) {
           message = "Kết thúc phiên thuê xe thành công";
         }
 
@@ -56,7 +64,7 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
 
       notifySubscribers(payload);
     },
-    [notifySubscribers, queryClient]
+    [notifySubscribers, queryClient],
   );
 
   const handleError = useCallback((error: Error) => {
@@ -72,7 +80,8 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
   useEffect(() => {
     if (!isAuthenticated) {
       disconnect();
-    } else {
+    }
+    else {
       connect();
     }
   }, [connect, disconnect, isAuthenticated]);
@@ -90,7 +99,7 @@ export function BikeStatusStreamProvider({ children }: { children: React.ReactNo
       lastUpdate,
       subscribe,
     }),
-    [isConnected, lastUpdate, subscribe]
+    [isConnected, lastUpdate, subscribe],
   );
 
   return <BikeStatusStreamContext.Provider value={value}>{children}</BikeStatusStreamContext.Provider>;

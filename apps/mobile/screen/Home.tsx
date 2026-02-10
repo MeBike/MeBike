@@ -1,4 +1,4 @@
-import { useAuth } from "@providers/auth-providers";
+import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import { User } from "lucide-react-native";
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuthNext();
   const { stats, isLoading } = useDashboardStats();
 
   const formatNumber = (num: number) => {

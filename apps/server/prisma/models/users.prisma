@@ -1,0 +1,47 @@
+// Enums specific to users
+enum UserRole {
+  USER
+  STAFF
+  ADMIN
+  SOS
+}
+
+enum UserVerifyStatus {
+  UNVERIFIED
+  VERIFIED
+  BANNED
+}
+
+// Users table
+
+model User {
+  id                       String           @id @default(uuid(7)) @db.Uuid
+  fullname                 String
+  email                    String           @unique
+  phoneNumber              String?          @unique @map("phone_number")
+  username                 String?
+  passwordHash             String           @map("password_hash")
+  avatar                   String?
+  location                 String?
+  nfcCardUid               String?          @map("nfc_card_uid")
+  role                     UserRole         @default(USER)
+  verify                   UserVerifyStatus @default(UNVERIFIED)
+  stripeConnectedAccountId String?          @unique @map("stripe_connected_account_id") @db.Text
+  stripePayoutsEnabled     Boolean?         @map("stripe_payouts_enabled")
+  createdAt                DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  authEvents      AuthEvent[]
+  subscriptions   Subscription[]
+  fixedSlots      FixedSlotTemplate[]
+  reservations    Reservation[]
+  rentals         Rental[]
+  ratings         Rating[]
+  wallet          Wallet?
+  paymentAttempts PaymentAttempt[]
+  withdrawals     WalletWithdrawal[]
+
+  @@index([email], name: "idx_users_email")
+  @@index([phoneNumber], name: "idx_users_phone")
+  @@index([nfcCardUid], name: "idx_users_nfc", type: Brin) // partial index not expressible; BRIN as placeholder
+}
