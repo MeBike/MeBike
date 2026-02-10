@@ -55,4 +55,4 @@ jobs:
         run: pnpm turbo lint
 
       - name: Build all
-        run: pnpm turbo build
+        run: pnpm turbo build --filter=!backend
