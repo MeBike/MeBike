@@ -13,6 +13,7 @@ import { useResolveSOSRequestMutation } from "./mutations/SOS/useResolveSOSReque
 import { useCreateRentalSOSRequestMutation } from "./mutations/SOS/useCreateRentalBySOSMutation";
 import { useCancelSOSRequestMutation } from "./mutations/SOS/useCancelSOSRequestMutation";
 import { QUERY_KEYS } from "@/constants/queryKey";
+import getErrorMessage from "@/utils/error-message";
 interface UseSOSProps {
   hasToken: boolean;
   page?: number;
@@ -27,33 +28,6 @@ interface UseSOSProps {
     | "ĐÃ TỪ CHỐI"
     | "ĐÃ HUỶ";
 }
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
-interface ErrorWithMessage {
-  message: string;
-}
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-  return defaultMessage;
-};
 export function useSOS({ hasToken, page, limit, id , status}: UseSOSProps) {
   const queryClient = useQueryClient();
   const {

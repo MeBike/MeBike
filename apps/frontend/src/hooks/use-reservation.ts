@@ -5,33 +5,6 @@ import { useGetAllReservationQuery } from "./query/Reservation/useGetAllReservat
 import { useGetReservationStatsQuery } from "./query/Reservation/useGetReservationStatsQuery";
 import { useGetDetailReservationQuery } from "./query/Reservation/useGetDetailReservationQuery";
 import { QUERY_KEYS } from "@/constants/queryKey";
-// interface ErrorResponse {
-//   response?: {
-//     data?: {
-//       errors?: Record<string, { msg?: string }>;
-//       message?: string;
-//     };
-//   };
-// }
-// interface ErrorWithMessage {
-//   message: string;
-// }
-// const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-//   const axiosError = error as ErrorResponse;
-//   if (axiosError?.response?.data) {
-//     const { errors, message } = axiosError.response.data;
-//     if (errors) {
-//       const firstError = Object.values(errors)[0];
-//       if (firstError?.msg) return firstError.msg;
-//     }
-//     if (message) return message;
-//   }
-//   const simpleError = error as ErrorWithMessage;
-//   if (simpleError?.message) {
-//     return simpleError.message;
-//   }
-//   return defaultMessage;
-// };
 interface ActionProps {
   hasToken: boolean;
   page?: number;

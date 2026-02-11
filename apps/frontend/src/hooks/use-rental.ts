@@ -11,37 +11,8 @@ import { useGetDashboardSummaryQuery } from "./query/Rent/useGetDashboardSummary
 import useEndCurrentRental from "./mutations/Rentals/useEndCurrentRentalMutation";
 import { useGetSummaryRentalQuery } from "./query/Rent/useGetSummaryRental";
 import { QUERY_KEYS } from "@/constants/queryKey";
-type ErrorResponse = {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-};
-type ErrorWithMessage = {
-  message: string;
-};
-export type EndRentalVariables = {
-  id: string;
-};
-function getErrorMessage(error: unknown, defaultMessage: string): string {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
+import getErrorMessage from "@/utils/error-message";
 
-  return defaultMessage;
-}
 interface UseRentalsActionsProps {
   hasToken: boolean;
   bike_id?: string;

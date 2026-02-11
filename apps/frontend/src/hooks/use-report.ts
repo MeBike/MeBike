@@ -14,39 +14,7 @@ import { useResolveReportMutation } from "./mutations/Report/useResolveReportMut
 import { useGetReportByIdQuery } from "./query/Report/useGetReportByIDQuery";
 import type { ReportStatus } from "@/types";
 import { QUERY_KEYS } from "@/constants/queryKey";
-interface ErrorWithMessage {
-  message: string;
-}
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-      error?: string;
-    };
-  };
-}
-
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const data = axiosError.response.data;
-    const { errors, message, error: errorField } = data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-    if (errorField) return errorField;
-    // If data is a string, return it
-    if (typeof data === "string") return data;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-  return defaultMessage;
-};
+import getErrorMessage from "@/utils/error-message";
 export const useUserReport = ({
   hasToken,
   page,
