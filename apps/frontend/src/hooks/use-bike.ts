@@ -18,33 +18,7 @@ import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivitySta
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
 import { QUERY_KEYS } from "@/constants/queryKey";
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
-interface ErrorWithMessage {
-  message: string;
-}
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-  return defaultMessage;
-};
+import getErrorMessage from "@/utils/error-message";
 export const useBikeActions = (
   hasToken: boolean,
   bike_detail_id?: string,

@@ -10,36 +10,7 @@ import { useGetBikeStatsSupplierQuery } from "./query/Supplier/useGetBikeStatsSu
 import { useChangeStatusSupplierMutation } from "./mutations/Supplier/useChangeStatusSupplierMutation";
 import { useUpdateSupplierMutation } from "./mutations/Supplier/useUpdateSupplierMutation";
 import { useGetSupplierByIDQuery } from "./query/Supplier/useGetSupplierByIDQuery";
-interface ErrorResponse {
-  response?: {
-    data?: {
-      errors?: Record<string, { msg?: string }>;
-      message?: string;
-    };
-  };
-}
-
-interface ErrorWithMessage {
-  message: string;
-}
-
-const getErrorMessage = (error: unknown, defaultMessage: string): string => {
-  const axiosError = error as ErrorResponse;
-  if (axiosError?.response?.data) {
-    const { errors, message } = axiosError.response.data;
-    if (errors) {
-      const firstError = Object.values(errors)[0];
-      if (firstError?.msg) return firstError.msg;
-    }
-    if (message) return message;
-  }
-  const simpleError = error as ErrorWithMessage;
-  if (simpleError?.message) {
-    return simpleError.message;
-  }
-
-  return defaultMessage;
-};
+import getErrorMessage from "@/utils/error-message";
 export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) => {
   const router = useRouter();
   const queryClient = useQueryClient();
