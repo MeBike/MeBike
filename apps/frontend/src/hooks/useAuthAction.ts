@@ -13,6 +13,7 @@ import {
   LoginSchemaFormData,
   RegisterSchemaFormData,
   UpdateProfileSchemaFormData,
+  VerifyEmailSchemaFormData,
 } from "@/schemas/authSchema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
@@ -142,9 +143,9 @@ export const useAuthActions = () => {
     [useLogout, queryClient, router]
   );
   const verifyEmail = useCallback(
-    ({email , otp} : {email: string; otp: string}): Promise<void> => {
+    (data : VerifyEmailSchemaFormData): Promise<void> => {
       return new Promise((resolve, reject) => {
-        useVerifyEmail.mutate({ email, otp }, {
+        useVerifyEmail.mutate(data, {
           onSuccess: (result) => {
             console.log("verifyEmail onSuccess:", result.status);
             if (result.status === 200) {

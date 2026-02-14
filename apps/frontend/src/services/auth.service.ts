@@ -7,6 +7,7 @@ import type {
   RegisterSchemaFormData,
   ResetPasswordSchemaFormData,
   ConfirmResetPasswordSchemaFormData,
+  VerifyEmailSchemaFormData
 } from "@schemas/authSchema";
 import type { AxiosResponse } from "axios";
 import { ProfileUserResponse , AuthResponse , MessageResponse} from "@/types";
@@ -59,16 +60,10 @@ export const authService = {
     );
     return response;
   },
-  verifyEmail: async ({
-    email,
-    otp,
-  }: {
-    email: string;
-    otp: string;
-  }): Promise<AxiosResponse<MessageResponse>> => {
+  verifyEmail: async (data:VerifyEmailSchemaFormData): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
       "/auth/verify-email/otp",
-      { email, otp }
+      data
     );
     return response;
   },

@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { isValidUUID } from "@/utils/validatorObjectId";
 const vietnamesePhoneNumberRegex = /^(0[3|5|7|8|9])+([0-9]{8})\b/;
 export const loginSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
@@ -101,3 +102,8 @@ export const confirmResetPasswordSchema = z.object({
     .max(30, { message: "Mật khẩu không được vượt quá 32 ký tự" }),
 })
 export type ConfirmResetPasswordSchemaFormData = z.infer<typeof confirmResetPasswordSchema>;
+export const verifyEmailSchema = z.object({
+  userId: z.string().refine(isValidUUID, { message: "User ID không hợp lệ" }),
+  otp: z.string().min(1, { message: "Mã OTP không được để trống" }),
+});
+export type VerifyEmailSchemaFormData = z.infer<typeof verifyEmailSchema>;

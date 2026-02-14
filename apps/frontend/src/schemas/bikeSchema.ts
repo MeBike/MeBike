@@ -1,6 +1,5 @@
 import * as z from "zod";
 import { BikeStatus } from "@/types";
-// Helper function to validate MongoDB ObjectId
 const isValidObjectId = (id: string): boolean => {
   return /^[0-9a-fA-F]{24}$/.test(id);
 };
