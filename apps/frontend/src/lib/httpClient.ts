@@ -25,7 +25,7 @@ export class FetchHttpClient {
       headers: {
         "Content-Type": "application/json;charset=UTF-8",
       },
-       timeout: 30000, // Tăng lên 30 giây để đủ thời gian cho email service
+       timeout: 30000, 
     });
     this.axiosInstance.interceptors.request.use((config) => {
       const access_token = getAccessToken();
@@ -34,7 +34,6 @@ export class FetchHttpClient {
       }
       return config;
     });
-
     this.axiosInstance.interceptors.response.use(
       (response) => {
         console.log('API Response:', response.status, response.config.url);
@@ -135,7 +134,6 @@ export class FetchHttpClient {
     setTokens(data.result.access_token, data.result.refresh_token);
     return data.result.access_token;
   }
-
   private processQueue(error: unknown, token: string | null) {
     this.failedQueue.forEach(({ resolve, reject }) => {
       if (error) {
@@ -146,13 +144,11 @@ export class FetchHttpClient {
     });
     this.failedQueue = [];
   }
- 
-   async get<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
+    async get<T>(url: string, params?: AxiosRequestConfig["params"]): Promise<AxiosResponse<T>> {
      return this.axiosInstance.get(url, {
        params: params ? { ...params } : {},
      });
    }
-
    async post<T>(
     url: string,
     data?: AxiosRequestConfig["data"],

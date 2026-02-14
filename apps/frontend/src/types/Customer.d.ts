@@ -37,3 +37,7 @@ export interface Customer extends DetailUser {
   registered_date?: string;
   last_rental_date?: string;
 }
+export interface ProfileUserResponse {
+  message: string;
+  data: DetailUser;
+}

@@ -98,3 +98,12 @@ export const resetPasswordSchema = z.object({
   email: z.string().optional(),
   otp: z.string().optional(),
 });
+export const confirmResetPasswordSchema = z.object({
+  email: z.email({ message: "Email không hợp lệ" }),
+  otp: z.string().min(1, { message: "Mã OTP không được để trống" }),
+  newPassword: z
+    .string()
+    .min(8, { message: "Mật khẩu mới phải có ít nhất 8 ký tự" })
+    .max(30, { message: "Mật khẩu không được vượt quá 32 ký tự" }),
+})
+export type ConfirmResetPasswordSchemaFormData = z.infer<typeof confirmResetPasswordSchema>;
