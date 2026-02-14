@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuthActions } from "@hooks/useAuthAction";
 import { getAccessToken , clearTokens} from "@/utils/tokenManager";
-import { DetailUser } from "@/services/auth.service";
+import { DetailUser } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserProfileQuery } from "@hooks/query/useUserProfileQuery";
 interface AuthError {

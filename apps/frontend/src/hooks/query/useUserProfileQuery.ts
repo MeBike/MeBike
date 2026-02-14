@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { authService } from "@/services/auth.service";
-import type { DetailUser } from "@/services/auth.service";
+import type { DetailUser } from "@/types";
 import { AxiosError } from "axios";
 import { QUERY_KEYS } from "@/constants/queryKey";
 
@@ -8,7 +8,7 @@ import { QUERY_KEYS } from "@/constants/queryKey";
 export const fetchUserProfile = async (): Promise<DetailUser> => {
   const response = await authService.getMe();
   if(response.status === 200){
-    return response.data.result;
+    return response.data.data;
   }
   throw new Error("Failed to fetch user profile");
 }

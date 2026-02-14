@@ -8,16 +8,16 @@ import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import {
+  ConfirmResetPasswordSchemaFormData,
   ForgotPasswordSchemaFormData,
   LoginSchemaFormData,
   RegisterSchemaFormData,
-  ResetPasswordSchemaFormData,
   UpdateProfileSchemaFormData,
 } from "@/schemas/authSchema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
-import { useResetPasswordMutation } from "./mutations/Auth/Password/useResetPasswordMutation";
+import { useConfirmResetPasswordMutation } from "./mutations/Auth/Password/useConfirmResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import getErrorMessage from "@/utils/error-message";
 export const useAuthActions = () => {
@@ -30,7 +30,7 @@ export const useAuthActions = () => {
   const useVerifyEmail = useVerifyEmailMutation();
   const useUpdateProfile = useUpdateProfileMutation();
   const useForgotPassword = useForgotPasswordMutation();
-  const useResetPassword = useResetPasswordMutation();
+  const useConfirmResetPassword = useConfirmResetPasswordMutation();
   const useResendVerifyEmail = useResendVerifyEmailMutation();
   const changePassword = useCallback(
     (old_password: string, password: string, confirm_password: string) => {
@@ -61,8 +61,8 @@ export const useAuthActions = () => {
       return new Promise<void>((resolve, reject) => {
         useLogin.mutate(data, {
           onSuccess: async (result) => {
-            const { access_token, refresh_token } = result.data.result;
-            setTokens(access_token, refresh_token);
+            const { accessToken, refreshToken } = result.data.data;
+            setTokens(accessToken, refreshToken);
             window.dispatchEvent(new Event("token:changed"));
             window.dispatchEvent(
               new StorageEvent("storage", { key: "auth_tokens" })
@@ -89,8 +89,8 @@ export const useAuthActions = () => {
         useRegister.mutate(data, {
           onSuccess: async (result) => {
             if (result.status === 200) {
-              const { access_token, refresh_token } = result.data.result;
-              setTokens(access_token, refresh_token);
+              const { accessToken, refreshToken } = result.data.data;
+              setTokens(accessToken, refreshToken);
               // Dispatch token change event
               window.dispatchEvent(new Event("token:changed"));
               // Wait for token to be set
@@ -150,8 +150,8 @@ export const useAuthActions = () => {
           onSuccess: (result) => {
             console.log("verifyEmail onSuccess:", result.status);
             if (result.status === 200) {
-              const accessToken = result.data.result?.access_token;
-              const refreshToken = result.data.result?.refresh_token;
+              const accessToken = result.data.data?.accessToken;
+              const refreshToken = result.data.data?.refreshToken;
               if (!accessToken || !refreshToken) {
                 const errMsg = "Thiếu access hoặc refresh token";
                 toast.error(errMsg);
@@ -233,9 +233,9 @@ export const useAuthActions = () => {
     [useForgotPassword]
   );
   const resetPassword = useCallback(
-    (data: ResetPasswordSchemaFormData): Promise<void> => {
+    (data: ConfirmResetPasswordSchemaFormData): Promise<void> => {
       return new Promise((resolve, reject) => {
-        useResetPassword.mutate(data, {
+        useConfirmResetPassword.mutate(data, {
           onSuccess: (result) => {
             if (result.status === 200) {
               toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
@@ -258,7 +258,7 @@ export const useAuthActions = () => {
         });
       });
     },
-    [useResetPassword]
+    [useConfirmResetPassword]
   );
   const updateProfile = useCallback(
     (data: Partial<UpdateProfileSchemaFormData>) => {
@@ -294,7 +294,7 @@ export const useAuthActions = () => {
     isUpdatingProfile: useUpdateProfile.isPending,
     isChangingPassword: useChangePassword.isPending,
     isRegistering: useRegister.isPending,
-    isReseting: useResetPassword.isPending,
+    isConfirmingResetPassword: useConfirmResetPassword.isPending,
     isLoadingForgottingPassword: useForgotPassword.isPending,
     isLoggingIn: useLogin.isPending,
     isLoggingOut: useLogout.isPending,  
