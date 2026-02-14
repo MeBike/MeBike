@@ -21,20 +21,14 @@ export const registerSchema = z
     password: z
       .string()
       .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
-    phone_number: z
+    phoneNumber: z
       .string()
       .regex(vietnamesePhoneNumberRegex, {
         message: "Số điện thoại không hợp lệ",
       })
       .optional(),
-    confirm_password: z
-      .string()
-      .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
   })
-  .refine((data) => data.password === data.confirm_password, {
-    message: "Mật khẩu xác nhận không khớp",
-    path: ["confirm_password"],
-  });
+;
 export const forgotPasswordSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
 });

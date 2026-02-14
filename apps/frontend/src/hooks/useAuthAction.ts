@@ -20,6 +20,7 @@ import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPa
 import { useConfirmResetPasswordMutation } from "./mutations/Auth/Password/useConfirmResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import getErrorMessage from "@/utils/error-message";
+import { AxiosError } from "axios";
 export const useAuthActions = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -88,7 +89,7 @@ export const useAuthActions = () => {
       return new Promise<void>((resolve, reject) => {
         useRegister.mutate(data, {
           onSuccess: async (result) => {
-            if (result.status === 200) {
+            if (result.status === 201) {
               const { accessToken, refreshToken } = result.data.data;
               setTokens(accessToken, refreshToken);
               // Dispatch token change event
@@ -101,14 +102,11 @@ export const useAuthActions = () => {
               });
               resolve();
               // router.push("/user/profile");
-            } else {
-              const errorMessage = result.data?.message || "Error registering";
-              toast.error(errorMessage);
-              reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, "Error registering");
+            const errorMessage = error instanceof AxiosError ? error.response?.data?.error || error.message : "Error registering";
+            console.log("Registration error:", error);
             toast.error(errorMessage);
             reject(error);
           },
