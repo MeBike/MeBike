@@ -1,6 +1,7 @@
 export const USERS_MESSAGES = {
   // đăng ký messages
   VALIDATION_ERROR: 'Lỗi xác thực',
+  INVALID_CREDENTIALS : 'Đăng nhập thất bại! Email hoặc mật khẩu không chính xác',
   FULL_NAME_IS_REQUIRED: 'Họ và tên là bắt buộc',
   FULL_NAME_MUST_BE_A_STRING: 'Họ và tên phải là chuỗi',
   FULL_NAME_LENGTH_MUST_BE_FROM_1_TO_50: 'Họ và tên phải có độ dài từ 1 đến 50 ký tự',
@@ -23,6 +24,7 @@ export const USERS_MESSAGES = {
   // đăng nhập messages
   EMAIL_OR_PASSWORD_IS_INCORRECT: 'Email hoặc mật khẩu không chính xác',
   LOGIN_SUCCESS: 'Đăng nhập thành công',
+  LOGIN_FAILED: 'Đăng nhập thất bại',
   // logout messages
   ACCESS_TOKEN_IS_REQUIRED: 'Access token là bắt buộc',
   USED_REFRESH_TOKEN_OR_NOT_EXIST: 'Refresh token đã được sử dụng hoặc không tồn tại',
@@ -33,6 +35,7 @@ export const USERS_MESSAGES = {
   CHECK_EMAIL_TO_RESET_PASSWORD: 'Vui lòng kiểm tra email để đặt lại mật khẩu',
   // verify forgot password token messages
   FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token là bắt buộc',
+  FORGOT_PASSWORD_REQUEST_IS_CREATED: 'Yêu cầu đặt lại mật khẩu đã được tạo',
   FORGOT_PASSWORD_TOKEN_IS_INCORRECT: 'Forgot password token không chính xác',
   VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS: 'Xác thực forgot password token thành công',
   // reset password messages
@@ -51,6 +54,7 @@ export const USERS_MESSAGES = {
   OLD_PASSWORD_NOT_MATCH: 'Mật khẩu cũ không khớp',
   NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_OLD_PASSWORD: 'Mật khẩu mới phải khác với mật khẩu cũ',
   CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công',
+  CHANGE_PASSWORD_FAILED: 'Đổi mật khẩu thất bại',
   // get me messages
   GET_ME_SUCCESS: 'Lấy thông tin người dùng thành công',
   UPDATE_ME_ERROR: 'Cập nhật thông tin người dùng thất bại',

@@ -9,6 +9,7 @@ import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
 import { useLogoutMutation } from "./mutations/Auth/useLogoutMutation";
 import {
   ConfirmResetPasswordSchemaFormData,
+  ChangePasswordSchemaFormData,
   ForgotPasswordSchemaFormData,
   LoginSchemaFormData,
   RegisterSchemaFormData,
@@ -22,6 +23,9 @@ import { useConfirmResetPasswordMutation } from "./mutations/Auth/Password/useCo
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import getErrorMessage from "@/utils/error-message";
 import { AxiosError } from "axios";
+import getAxiosErrorCodeMessage from "@/utils/error-util";
+import { USERS_MESSAGES } from "@/constants/messages";
+import {getErrorMessageUserFromCode} from "@/utils/map-message";
 export const useAuthActions = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -35,28 +39,31 @@ export const useAuthActions = () => {
   const useConfirmResetPassword = useConfirmResetPasswordMutation();
   const useResendVerifyEmail = useResendVerifyEmailMutation();
   const changePassword = useCallback(
-    (old_password: string, password: string, confirm_password: string) => {
-      useChangePassword.mutate(
-        { old_password, password, confirm_password },
-        {
-          onSuccess: (result) => {
-            if (result.status === 200) {
-              toast.success(result.data?.message || "Mật khẩu đã được thay đổi thành công");
-            } else {
-              toast.error(result.data?.message || "Lỗi khi thay đổi mật khẩu");
+    (data: ChangePasswordSchemaFormData) => {
+      return new Promise<void>((resolve, reject) => {
+        useChangePassword.mutate(data, {
+          onSuccess: async (result) => {
+            if (result.status === 204) {
+              toast.success(
+                USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS ||
+                  "Mật khẩu đã được thay đổi thành công",
+              );
+              resolve();
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(
-              error,
-              "Error changing password"
-            );
+            const errorMessage =
+              error instanceof AxiosError
+                ? error.response?.data?.error || error.message
+                : "Error changing password";
+            console.log("Change password error:", error);
             toast.error(errorMessage);
+            reject(error);
           },
-        }
-      );
+        });
+      });
     },
-    [useChangePassword]
+    [useChangePassword],
   );
   const logIn = useCallback(
     (data: LoginSchemaFormData) => {
@@ -67,24 +74,29 @@ export const useAuthActions = () => {
             setTokens(accessToken, refreshToken);
             window.dispatchEvent(new Event("token:changed"));
             window.dispatchEvent(
-              new StorageEvent("storage", { key: "auth_tokens" })
+              new StorageEvent("storage", { key: "auth_tokens" }),
             );
             await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-            toast.success(result.data?.message || "Đăng nhập thành công", {
-              description: "Chào mừng bạn trở lại!",
-            });
+            toast.success(
+              USERS_MESSAGES.LOGIN_SUCCESS || "Đăng nhập thành công",
+              {
+                description: "Chào mừng bạn trở lại!",
+              },
+            );
             resolve();
           },
           onError: (error: unknown) => {
-            const errorMessage = error instanceof AxiosError ? error.response?.data?.error || error.message : "Error registering";
-            console.log("Login error:", error);
-            toast.error(errorMessage);
+            // const errorMessage = error instanceof AxiosError ? error.response?.data?.error || error.message : "Error registering";
+            // console.log("Login error:", error);
+            // toast.error(errorMessage);
+            const code_error = getAxiosErrorCodeMessage(error);
+            toast.error(getErrorMessageUserFromCode(code_error));
             reject(error);
           },
         });
       });
     },
-    [useLogin, queryClient]
+    [useLogin, queryClient],
   );
   const register = useCallback(
     (data: RegisterSchemaFormData) => {
@@ -97,25 +109,27 @@ export const useAuthActions = () => {
               // Dispatch token change event
               window.dispatchEvent(new Event("token:changed"));
               // Wait for token to be set
-              await new Promise(resolve => setTimeout(resolve, 100));
+              await new Promise((resolve) => setTimeout(resolve, 100));
               await queryClient.invalidateQueries({ queryKey: ["user", "me"] });
-              toast.success(result.data?.message || "Đăng ký thành công", {
-                description: "Tài khoản của bạn đã được tạo.",
-              });
+              toast.success(
+                USERS_MESSAGES.REGISTER_SUCCESS || "Đăng ký thành công",
+                {
+                  description: "Tài khoản của bạn đã được tạo.",
+                },
+              );
               resolve();
               // router.push("/user/profile");
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = error instanceof AxiosError ? error.response?.data?.error || error.message : "Error registering";
-            console.log("Registration error:", error);
-            toast.error(errorMessage);
+            const code_error = getAxiosErrorCodeMessage(error);
+            toast.error(getErrorMessageUserFromCode(code_error));
             reject(error);
           },
         });
       });
     },
-    [useRegister, queryClient]
+    [useRegister, queryClient],
   );
   const logOut = useCallback(
     (refresh_token: string) => {
@@ -124,11 +138,13 @@ export const useAuthActions = () => {
           if (result.status === 200) {
             clearTokens();
             window.dispatchEvent(
-              new StorageEvent("storage", { key: "auth_tokens" })
+              new StorageEvent("storage", { key: "auth_tokens" }),
             );
             queryClient.removeQueries({ queryKey: ["user", "me"] });
             queryClient.clear();
-            toast.success(result.data?.message || "Đăng xuất thành công");
+            toast.success(
+              USERS_MESSAGES.LOGOUT_SUCCESS || "Đăng xuất thành công",
+            );
             router.push("/auth/login");
           } else {
             const errorMessage = result.data?.message || "Lỗi khi đăng xuất";
@@ -141,10 +157,10 @@ export const useAuthActions = () => {
         },
       });
     },
-    [useLogout, queryClient, router]
+    [useLogout, queryClient, router],
   );
   const verifyEmail = useCallback(
-    (data : VerifyEmailSchemaFormData): Promise<void> => {
+    (data: VerifyEmailSchemaFormData): Promise<void> => {
       return new Promise((resolve, reject) => {
         useVerifyEmail.mutate(data, {
           onSuccess: (result) => {
@@ -160,36 +176,33 @@ export const useAuthActions = () => {
               // }
               // setTokens(accessToken, refreshToken);
               // window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
-              // toast.success(result.data?.message || "Email đã được xác minh thành công");
+              toast.success(
+                USERS_MESSAGES.VERIFY_EMAIL_SUCCESS ||
+                  "Email đã được xác minh thành công",
+              );
               queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               resolve();
-            } else {
-              const errorMessage =
-                result.data?.message || "Lỗi khi xác minh email";
-              toast.error(errorMessage);
-              reject(new Error(errorMessage));
             }
           },
           onError: (error: unknown) => {
-            console.log("verifyEmail onError:", error);
-            const errorMessage = getErrorMessage(
-              error,
-              "OTP không hợp lệ hoặc đã hết hạn"
-            );
-            toast.error(errorMessage);
+            const code_error = getAxiosErrorCodeMessage(error);
+            toast.error(getErrorMessageUserFromCode(code_error));
             reject(error);
           },
         });
       });
     },
-    [useVerifyEmail, queryClient]
+    [useVerifyEmail, queryClient],
   );
   const resendVerifyEmail = useCallback(() => {
     return new Promise<void>((resolve, reject) => {
       useResendVerifyEmail.mutate(undefined, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success(result.data?.message || "Email xác minh đã được gửi lại thành công");
+            toast.success(
+              USERS_MESSAGES.RESEND_EMAIL_VERIFY_SUCCESS ||
+                "Email xác minh đã được gửi lại thành công",
+            );
             resolve();
           } else {
             const errorMessage =
@@ -201,7 +214,7 @@ export const useAuthActions = () => {
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error resending verification email"
+            "Error resending verification email",
           );
           toast.error(errorMessage);
           reject(error);
@@ -214,7 +227,10 @@ export const useAuthActions = () => {
       useForgotPassword.mutate(data, {
         onSuccess: (result) => {
           if (result.status === 200) {
-            toast.success(result.data?.message || "Email đặt lại mật khẩu đã được gửi thành công");
+            toast.success(
+              USERS_MESSAGES.FORGOT_PASSWORD_REQUEST_IS_CREATED ||
+                "Email đặt lại mật khẩu đã được gửi thành công",
+            );
           } else {
             const errorMessage =
               result.data?.message || "Lỗi khi gửi email đặt lại mật khẩu";
@@ -224,13 +240,13 @@ export const useAuthActions = () => {
         onError: (error: unknown) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error sending password reset email"
+            "Error sending password reset email",
           );
           toast.error(errorMessage);
         },
       });
     },
-    [useForgotPassword]
+    [useForgotPassword],
   );
   const resetPassword = useCallback(
     (data: ConfirmResetPasswordSchemaFormData): Promise<void> => {
@@ -238,7 +254,9 @@ export const useAuthActions = () => {
         useConfirmResetPassword.mutate(data, {
           onSuccess: (result) => {
             if (result.status === 200) {
-              toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
+              toast.success(
+                result.data?.message || "Đặt lại mật khẩu thành công",
+              );
               resolve();
             } else {
               const errorMessage =
@@ -250,7 +268,7 @@ export const useAuthActions = () => {
           onError: (error: unknown) => {
             const errorMessage = getErrorMessage(
               error,
-              "OTP không hợp lệ hoặc đã hết hạn"
+              "OTP không hợp lệ hoặc đã hết hạn",
             );
             toast.error(errorMessage);
             reject(error);
@@ -258,7 +276,7 @@ export const useAuthActions = () => {
         });
       });
     },
-    [useConfirmResetPassword]
+    [useConfirmResetPassword],
   );
   const updateProfile = useCallback(
     (data: Partial<UpdateProfileSchemaFormData>) => {
@@ -279,7 +297,7 @@ export const useAuthActions = () => {
         },
       });
     },
-    [useUpdateProfile, queryClient]
+    [useUpdateProfile, queryClient],
   );
   return {
     changePassword,
@@ -297,6 +315,6 @@ export const useAuthActions = () => {
     isConfirmingResetPassword: useConfirmResetPassword.isPending,
     isLoadingForgottingPassword: useForgotPassword.isPending,
     isLoggingIn: useLogin.isPending,
-    isLoggingOut: useLogout.isPending,  
+    isLoggingOut: useLogout.isPending,
   };
 };
