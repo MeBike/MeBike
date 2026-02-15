@@ -3,6 +3,7 @@ import { Effect, Layer, Option } from "effect";
 import jwt from "jsonwebtoken";
 import { uuidv7 } from "uuidv7";
 
+import { env } from "@/config/env";
 import type { UserRow } from "@/domain/users";
 import type { UserRepo } from "@/domain/users/repository/user.repository";
 import type { PrismaClient } from "generated/prisma/client";
@@ -37,6 +38,11 @@ import {
 import { generateOtp, isOtpExpired } from "../otp";
 import { AuthEventRepository } from "../repository/auth-event.repository";
 import { AuthRepository } from "../repository/auth.repository";
+
+const INVALID_PASSWORD_DUMMY_HASH = bcrypt.hashSync(
+  "mebike.invalid.password",
+  env.BCRYPT_SALT_ROUNDS,
+);
 
 export type AuthService = {
   loginWithPassword: (args: {
@@ -78,7 +84,7 @@ function recordSessionIssued(
 }
 
 export function hashPassword(password: string): Effect.Effect<string> {
-  return Effect.promise(() => bcrypt.hash(password, 10));
+  return Effect.promise(() => bcrypt.hash(password, env.BCRYPT_SALT_ROUNDS));
 }
 
 export function createSessionForUser(
@@ -171,7 +177,7 @@ export function makeAuthService({
       );
       if (Option.isNone(userOpt)) {
         yield* Effect.promise(() =>
-          bcrypt.compare(password, "$2b$10$C/.BkQrbVHwLsNweXs55we5OK4N9AYaqCrxrDG3lqF7DRgt21FiSG"),
+          bcrypt.compare(password, INVALID_PASSWORD_DUMMY_HASH),
         ).pipe(Effect.ignore);
         return yield* Effect.fail(new InvalidCredentials({}));
       }
@@ -356,7 +362,7 @@ export function makeAuthService({
         return yield* Effect.fail(new InvalidOtp({}));
       }
 
-      const hash = yield* Effect.promise(() => bcrypt.hash(newPassword, 10));
+      const hash = yield* Effect.promise(() => bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS));
       const updated = yield* userRepo.updatePassword(user.id, hash).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );

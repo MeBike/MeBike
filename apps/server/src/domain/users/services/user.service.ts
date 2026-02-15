@@ -1,11 +1,12 @@
-import type { Option } from "effect";
+import bcrypt from "bcrypt";
+import { Effect, Layer, Option } from "effect";
 
-import { Effect, Layer } from "effect";
-
+import { env } from "@/config/env";
 import type { PageRequest, PageResult } from "../../shared/pagination";
 import type {
   DuplicateUserEmail,
   DuplicateUserPhoneNumber,
+  InvalidCurrentPassword,
   UserRepositoryError,
 } from "../domain-errors";
 import type {
@@ -16,6 +17,7 @@ import type {
 } from "../models";
 import type { UserRepo } from "../repository/user.repository";
 
+import { InvalidCurrentPassword as InvalidCurrentPasswordError } from "../domain-errors";
 import { UserRepository } from "../repository/user.repository";
 
 export type UserService = {
@@ -47,6 +49,14 @@ export type UserService = {
     id: string,
     passwordHash: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
+  changePassword: (args: {
+    id: string;
+    currentPassword: string;
+    newPassword: string;
+  }) => Effect.Effect<
+    Option.Option<UserRow>,
+    UserRepositoryError | InvalidCurrentPassword
+  >;
   markVerified: (
     id: string,
   ) => Effect.Effect<Option.Option<UserRow>, UserRepositoryError>;
@@ -97,6 +107,28 @@ function makeUserService(repo: UserRepo): UserService {
 
     updatePassword: (id, passwordHash) =>
       repo.updatePassword(id, passwordHash),
+
+    changePassword: ({ id, currentPassword, newPassword }) =>
+      Effect.gen(function* () {
+        const userOpt = yield* repo.findById(id);
+        if (Option.isNone(userOpt)) {
+          return userOpt;
+        }
+
+        const user = userOpt.value;
+        const isPasswordValid = yield* Effect.promise(() =>
+          bcrypt.compare(currentPassword, user.passwordHash),
+        );
+
+        if (!isPasswordValid) {
+          return yield* Effect.fail(new InvalidCurrentPasswordError({ userId: id }));
+        }
+
+        const nextPasswordHash = yield* Effect.promise(() =>
+          bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS),
+        );
+        return yield* repo.updatePassword(id, nextPasswordHash);
+      }),
 
     markVerified: id =>
       repo.markVerified(id),

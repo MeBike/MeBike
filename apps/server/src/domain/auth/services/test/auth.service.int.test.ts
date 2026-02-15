@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { uuidv7 } from "uuidv7";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
+import { env } from "@/config/env";
 import { makeUserRepository } from "@/domain/users/repository/user.repository";
 import { startRedis } from "@/test/db/redis";
 import { getTestDatabase } from "@/test/db/test-database";
@@ -87,7 +88,7 @@ describe("authService Integration", () => {
 
   const createUser = async (args: { email: string; password: string; verify?: "UNVERIFIED" | "VERIFIED" }) => {
     const id = uuidv7();
-    const passwordHash = await bcrypt.hash(args.password, 10);
+    const passwordHash = await bcrypt.hash(args.password, env.BCRYPT_SALT_ROUNDS);
 
     await client.user.create({
       data: {

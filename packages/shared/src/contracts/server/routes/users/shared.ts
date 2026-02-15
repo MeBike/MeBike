@@ -38,6 +38,11 @@ export const UpdateMeRequestSchema = z.object({
 
 export const UpdateMeResponseSchema = MeResponseSchema;
 
+export const ChangePasswordRequestSchema = z.object({
+  currentPassword: z.string().min(8),
+  newPassword: z.string().min(8),
+}).openapi("ChangePasswordRequest");
+
 export const AdminUserListResponseSchema = z.object({
   data: z.array(UserDetailSchema),
   pagination: PaginationSchema,
@@ -114,6 +119,7 @@ export const StatsPaginationQuerySchema = z.object({
 
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 export type UpdateMeResponse = z.infer<typeof UpdateMeResponseSchema>;
+export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
 export type AdminUserListResponse = z.infer<typeof AdminUserListResponseSchema>;
 export type AdminUserSearchResponse = z.infer<typeof AdminUserSearchResponseSchema>;
 export type AdminUserDetailResponse = z.infer<typeof AdminUserDetailResponseSchema>;

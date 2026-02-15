@@ -12,12 +12,14 @@ export const UserErrorCodeSchema = z.enum([
   "USER_NOT_FOUND",
   "DUPLICATE_EMAIL",
   "DUPLICATE_PHONE_NUMBER",
+  "INVALID_CURRENT_PASSWORD",
 ]).openapi("UserErrorCode");
 
 export const userErrorMessages = {
   USER_NOT_FOUND: "User not found",
   DUPLICATE_EMAIL: "Email already in use",
   DUPLICATE_PHONE_NUMBER: "Phone number already in use",
+  INVALID_CURRENT_PASSWORD: "Current password is incorrect",
 } as const;
 
 export const UserStatsErrorCodeSchema = z.enum([

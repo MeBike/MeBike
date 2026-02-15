@@ -14,6 +14,7 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
+  BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(4).default(10),
   LOG_LEVEL: z.string().default("info"),
   MIN_WITHDRAWAL_AMOUNT: z.coerce.number().default(5),
   WITHDRAWAL_PROCESSING_TTL_MINUTES: z.coerce.number().default(10),
