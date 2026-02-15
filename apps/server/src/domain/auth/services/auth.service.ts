@@ -3,11 +3,11 @@ import { Effect, Layer, Option } from "effect";
 import jwt from "jsonwebtoken";
 import { uuidv7 } from "uuidv7";
 
-import { env } from "@/config/env";
 import type { UserRow } from "@/domain/users";
 import type { UserRepo } from "@/domain/users/repository/user.repository";
 import type { PrismaClient } from "generated/prisma/client";
 
+import { env } from "@/config/env";
 import { UserRepository } from "@/domain/users/repository/user.repository";
 import { JobTypes } from "@/infrastructure/jobs/job-types";
 import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
