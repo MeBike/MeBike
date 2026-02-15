@@ -11,6 +11,7 @@ import {
 } from "../../users/schemas";
 import {
   AdminCreateUserRequestSchema,
+  ChangePasswordRequestSchema,
   AdminResetPasswordRequestSchema,
   AdminUpdateUserRequestSchema,
   AdminUserDetailResponseSchema,
@@ -18,6 +19,73 @@ import {
   UpdateMeResponseSchema,
   UserErrorResponseSchema,
 } from "./shared";
+
+export const changePasswordRoute = createRoute({
+  method: "put",
+  path: "/v1/users/change-password",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: ChangePasswordRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    204: { description: "Password changed" },
+    400: {
+      description: "Current password is invalid",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            InvalidCurrentPassword: {
+              value: {
+                error: userErrorMessages.INVALID_CURRENT_PASSWORD,
+                details: { code: UserErrorCodeSchema.enum.INVALID_CURRENT_PASSWORD },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+    404: {
+      description: "User not found",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            NotFound: {
+              value: {
+                error: userErrorMessages.USER_NOT_FOUND,
+                details: { code: UserErrorCodeSchema.enum.USER_NOT_FOUND },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
 
 export const updateMeRoute = createRoute({
   method: "patch",

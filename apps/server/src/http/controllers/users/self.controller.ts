@@ -115,7 +115,65 @@ const updateMe: RouteHandler<UsersRoutes["updateMe"]> = async (c) => {
   );
 };
 
+const changePassword: RouteHandler<UsersRoutes["changePassword"]> = async (c) => {
+  const userId = c.var.currentUser?.userId;
+  if (!userId) {
+    return c.json(
+      {
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      },
+      401,
+    );
+  }
+
+  const body = c.req.valid("json");
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* UserServiceTag;
+      return yield* service.changePassword({
+        id: userId,
+        currentPassword: body.currentPassword,
+        newPassword: body.newPassword,
+      });
+    }),
+    routeContext(users.changePassword),
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) => {
+      if (right._tag === "Some") {
+        return c.body(null, 204);
+      }
+      return c.json<UsersContracts.UserErrorResponse, 404>(
+        {
+          error: UsersContracts.userErrorMessages.USER_NOT_FOUND,
+          details: { code: UsersContracts.UserErrorCodeSchema.enum.USER_NOT_FOUND },
+        },
+        404,
+      );
+    }),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("InvalidCurrentPassword", () =>
+          c.json<UsersContracts.UserErrorResponse, 400>(
+            {
+              error: UsersContracts.userErrorMessages.INVALID_CURRENT_PASSWORD,
+              details: { code: UsersContracts.UserErrorCodeSchema.enum.INVALID_CURRENT_PASSWORD },
+            },
+            400,
+          )),
+        Match.orElse((err) => {
+          throw err;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const UsersController = {
   me,
   updateMe,
+  changePassword,
 } as const;
