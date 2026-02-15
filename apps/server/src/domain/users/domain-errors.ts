@@ -16,6 +16,10 @@ export class DuplicateUserPhoneNumber extends Data.TaggedError(
     readonly phoneNumber: string;
   }> {}
 
+export class InvalidCurrentPassword extends Data.TaggedError("InvalidCurrentPassword")<{
+  readonly userId: string;
+}> {}
+
 export class UserStatsServiceError extends Data.TaggedError("UserStatsServiceError")<{
   readonly message: string;
   readonly cause?: unknown;

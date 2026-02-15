@@ -1,5 +1,6 @@
 import {
   adminCreateUserRoute,
+  changePasswordRoute,
   adminResetPasswordRoute,
   adminUpdateUserRoute,
   updateMeRoute,
@@ -23,6 +24,7 @@ export * from "./shared";
 
 export const usersRoutes = {
   me: meRoute,
+  changePassword: changePasswordRoute,
   updateMe: updateMeRoute,
   adminList: adminListUsersRoute,
   adminSearch: adminSearchUsersRoute,
