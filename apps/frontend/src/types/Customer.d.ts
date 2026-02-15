@@ -2,20 +2,20 @@ export type UserRole = "ADMIN" | "STAFF" | "USER" | "SOS";
 export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
 
 export interface DetailUser {
-  _id: string;
+  id: string;
   fullname: string;
   email: string;
   verify: VerifyStatus;
   location: string;
   username: string;
-  phone_number: string;
+  phoneNumber: string;
   avatar: string;
   role: UserRole;
-  nfc_card_uid: string;
+  nfcCardUid: string;
   email_verify_otp_expires: string;
   forgot_password_otp_expires: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Keep Customer type for backward compatibility

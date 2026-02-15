@@ -4,7 +4,7 @@ import type React from "react";
 
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
-import type { DetailUser } from "@/services/auth.service";
+import type { DetailUser } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -190,10 +190,10 @@ export default function ProfilePage() {
     setIsVerifyEmailModalOpen(true);
   };
 
-  const handleVerifyEmailSubmit = async (email: string, otp: string) => {
+  const handleVerifyEmailSubmit = async (otp: string) => {
     setIsVerifyingEmail(true);
     try {
-      await verifyEmail({email, otp});
+      await verifyEmail({userId : user.id , otp : otp });
       setIsVerifyEmailModalOpen(false);
     } finally {
       setIsVerifyingEmail(false);
@@ -334,7 +334,7 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="username"
-                    value={formData?.username || ""}
+                    value={formData?.username || "Chưa có tên đăng nhập"}
                     onChange={(e) =>
                       handleInputChange("username", e.target.value)
                     }
@@ -375,9 +375,9 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="phone"
-                    value={formData?.phone_number || ""}
+                    value={formData?.phoneNumber || ""}
                     onChange={(e) =>
-                      handleInputChange("phone_number", e.target.value)
+                      handleInputChange("phoneNumber", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(
@@ -395,7 +395,7 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="location"
-                    value={formData?.location || ""}
+                    value={formData?.location || "Chưa có địa chỉ"}
                     onChange={(e) =>
                       handleInputChange("location", e.target.value)
                     }
@@ -431,8 +431,8 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">Ngày tạo tài khoản</p>
                     <p className="font-medium text-foreground mt-1">
-                      {formData?.created_at
-                        ? new Date(formData.created_at).toLocaleDateString(
+                      {formData?.createdAt
+                        ? new Date(formData.createdAt).toLocaleDateString(
                             "vi-VN"
                           )
                         : "Chưa có thông tin"}
@@ -441,8 +441,8 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">Cập nhật lần cuối</p>
                     <p className="font-medium text-foreground mt-1">
-                      {formData?.updated_at
-                        ? new Date(formData.updated_at).toLocaleDateString(
+                      {formData?.updatedAt
+                        ? new Date(formData.updatedAt).toLocaleDateString(
                             "vi-VN"
                           )
                         : "Chưa có thông tin"}
@@ -451,7 +451,7 @@ export default function ProfilePage() {
                   <div>
                     <p className="text-muted-foreground">ID tài khoản</p>
                     <p className="font-medium text-foreground mt-1 font-mono text-xs">
-                      {formData?._id || "Chưa có ID"}
+                      {formData?.id || "Chưa có ID"}
                     </p>
                   </div>
                 </div>

@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 
 interface EmailVerificationFormProps {
   email: string;
-  onSubmit: (email: string, otp: string) => Promise<void>;
+  onSubmit: (otp: string) => Promise<void>;
   onSkip: () => void;
   isLoading?: boolean;
 }
@@ -96,7 +96,7 @@ export function EmailVerificationForm({
     setIsSubmitting(true);
     try {
       console.log("📤 Submitting OTP to parent...");
-      await onSubmit(email, otpString);
+      await onSubmit(otpString);
       console.log("✅ onSubmit resolved, setting showLoading = true");
       router.push("/user/profile");
       setShowLoading(true);

@@ -149,17 +149,17 @@ export const useAuthActions = () => {
           onSuccess: (result) => {
             console.log("verifyEmail onSuccess:", result.status);
             if (result.status === 200) {
-              const accessToken = result.data.data?.accessToken;
-              const refreshToken = result.data.data?.refreshToken;
-              if (!accessToken || !refreshToken) {
-                const errMsg = "Thiếu access hoặc refresh token";
-                toast.error(errMsg);
-                reject(new Error(errMsg));
-                return;
-              }
-              setTokens(accessToken, refreshToken);
-              window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
-              toast.success(result.data?.message || "Email đã được xác minh thành công");
+              // const accessToken = result.data.data?.accessToken;
+              // const refreshToken = result.data.data?.refreshToken;
+              // if (!accessToken || !refreshToken) {
+              //   const errMsg = "Thiếu access hoặc refresh token";
+              //   toast.error(errMsg);
+              //   reject(new Error(errMsg));
+              //   return;
+              // }
+              // setTokens(accessToken, refreshToken);
+              // window.dispatchEvent(new StorageEvent("storage", { key: "auth_tokens" }));
+              // toast.success(result.data?.message || "Email đã được xác minh thành công");
               queryClient.invalidateQueries({ queryKey: ["user", "me"] });
               resolve();
             } else {

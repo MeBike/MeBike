@@ -19,7 +19,7 @@ const page = () => {
           ? localStorage.getItem("access_token")
           : null;
       console.log("Token exists:", !!token);
-      await verifyEmail({userId: userProfile?._id || "", otp : otp});
+      await verifyEmail({userId: userProfile?.id || "", otp : otp});
       console.log("OTP verified successfully!");
     } catch (err) {
       console.log("Verification error (caught):", err);
