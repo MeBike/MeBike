@@ -71,14 +71,14 @@ export const profileUpdateSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
-  phone_number: z
+  phoneNumber: z
     .string()
     .regex(vietnamesePhoneNumberRegex, {  
       message: "Số điện thoại không hợp lệ",
     })
     .optional()
     .or(z.literal("")),
-  avatar : z.string().url({ message: "Avatar phải là một URL hợp lệ" }).optional(),  
+  avatar : z.url({ message: "Avatar phải là một URL hợp lệ" }).optional(),  
 });
 export const resetPasswordSchema = z.object({
   password: z

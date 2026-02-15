@@ -124,7 +124,7 @@ export default function ProfilePage() {
     const textFields: (keyof UpdateProfileSchemaFormData)[] = [
       "fullname",
       "username",
-      "phone_number",
+      "phoneNumber",
       "location",
     ];
 
@@ -288,7 +288,7 @@ export default function ProfilePage() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">
-                  {formData?.fullname || "Chưa có tên"}
+                  {formData?.fullname || ""}
                 </p>
                 <p
                   className={cn(
@@ -314,6 +314,7 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="fullname"
+                    placeholder="Chưa có họ và tên"
                     value={formData?.fullname || ""}
                     onChange={(e) =>
                       handleInputChange("fullname", e.target.value)
@@ -334,7 +335,8 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="username"
-                    value={formData?.username || "Chưa có tên đăng nhập"}
+                    placeholder="Chưa có tên đăng nhập"
+                    value={formData?.username || ""}
                     onChange={(e) =>
                       handleInputChange("username", e.target.value)
                     }
@@ -395,7 +397,8 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="location"
-                    value={formData?.location || "Chưa có địa chỉ"}
+                    value={formData?.location || "" }
+                    placeholder="Chưa có địa chỉ"
                     onChange={(e) =>
                       handleInputChange("location", e.target.value)
                     }
