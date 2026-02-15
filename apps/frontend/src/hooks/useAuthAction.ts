@@ -76,7 +76,8 @@ export const useAuthActions = () => {
             resolve();
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(error, "Error logging in");
+            const errorMessage = error instanceof AxiosError ? error.response?.data?.error || error.message : "Error registering";
+            console.log("Login error:", error);
             toast.error(errorMessage);
             reject(error);
           },

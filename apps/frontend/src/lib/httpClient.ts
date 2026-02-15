@@ -45,6 +45,7 @@ export class FetchHttpClient {
         
         // Các endpoint không cần retry token refresh
         const noAuthRetryEndpoints = [
+          '/auth/login',
           '/users/verify-email',
           '/users/verify-forgot-password',
           '/users/reset-password',
