@@ -376,7 +376,7 @@ describe("authService Integration", () => {
     expect(updated.value.verify).toBe("VERIFIED");
   });
 
-  it("verifyResetPasswordOtp + resetPassword rotates sessions and updates password", async () => {
+  it("verifyResetPasswordOtp + resetPassword invalidates sessions and updates password", async () => {
     const { id: userId, email } = await createUser({
       email: "reset@example.com",
       password: "Password123!",
@@ -413,7 +413,7 @@ describe("authService Integration", () => {
       }),
     );
 
-    const resetTokens = await runWithService(
+    await runWithService(
       Effect.gen(function* () {
         const service = yield* AuthServiceTag;
         return yield* service.resetPassword({
@@ -423,11 +423,8 @@ describe("authService Integration", () => {
       }),
     );
 
-    const afterResetSessionId = decodeSessionId(resetTokens.refreshToken);
     const oldSession = await Effect.runPromise(authRepo.getSession(beforeResetSessionId));
-    const newSession = await Effect.runPromise(authRepo.getSession(afterResetSessionId));
     expect(Option.isNone(oldSession)).toBe(true);
-    expect(Option.isSome(newSession)).toBe(true);
 
     const updated = await Effect.runPromise(userRepo.findById(userId));
     if (Option.isNone(updated)) {

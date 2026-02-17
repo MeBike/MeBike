@@ -73,7 +73,7 @@ export type AuthService = {
   resetPassword: (args: {
     resetToken: string;
     newPassword: string;
-  }) => Effect.Effect<Tokens, InvalidResetToken>;
+  }) => Effect.Effect<void, InvalidResetToken>;
 };
 
 function recordSessionIssued(
@@ -411,8 +411,6 @@ export function makeAuthService({
       yield* authRepo.deleteAllSessionsForUser(tokenRecord.userId).pipe(
         Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
       );
-
-      return yield* createSessionForUser(authRepo, authEventRepo, updated.value);
     });
 
   return {
