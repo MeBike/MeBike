@@ -146,7 +146,7 @@ export default function CustomersPage() {
     updateProfileUser({
       fullname: data.fullname,
       email: detailUserData?.data?.result?.email || "",
-      phone_number: data.phone_number || "",
+      phone_number: data.phoneNumber || "",
       password: "",
       role: detailUserData?.data?.result?.role || "USER",
       location: data.location || "",
@@ -578,7 +578,7 @@ export default function CustomersPage() {
                         setValueUpdateProfile("fullname", detailUserData.data.result.fullname || "");
                         setValueUpdateProfile("location", detailUserData.data.result.location || "");
                         setValueUpdateProfile("username", detailUserData.data.result.username || "");
-                        setValueUpdateProfile("phone_number", detailUserData.data.result.phone_number || "");
+                        setValueUpdateProfile("phoneNumber", detailUserData.data.result.phone_number || "");
                       }
                       setIsEditProfileModalOpen(true);
                     }}
@@ -805,13 +805,13 @@ export default function CustomersPage() {
                     </label>
                     <input
                       type="tel"
-                      {...registerUpdateProfile("phone_number")}
+                      {...registerUpdateProfile("phoneNumber")}
                       placeholder="Nhập số điện thoại"
                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                     />
-                    {errorsUpdateProfile.phone_number && (
+                    {errorsUpdateProfile.phoneNumber && (
                       <p className="text-red-500 text-sm mt-1">
-                        {errorsUpdateProfile.phone_number.message}
+                        {errorsUpdateProfile.phoneNumber.message}
                       </p>
                     )}
                   </div>
