@@ -376,11 +376,22 @@ describe("authService Integration", () => {
     expect(updated.value.verify).toBe("VERIFIED");
   });
 
-  it("verifyResetPasswordOtp + resetPassword updates password when otp is valid", async () => {
+  it("verifyResetPasswordOtp + resetPassword rotates sessions and updates password", async () => {
     const { id: userId, email } = await createUser({
       email: "reset@example.com",
       password: "Password123!",
     });
+
+    const beforeResetTokens = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.loginWithPassword({
+          email,
+          password: "Password123!",
+        });
+      }),
+    );
+    const beforeResetSessionId = decodeSessionId(beforeResetTokens.refreshToken);
 
     await Effect.runPromise(
       authRepo.saveEmailOtp({
@@ -402,7 +413,7 @@ describe("authService Integration", () => {
       }),
     );
 
-    await runWithService(
+    const resetTokens = await runWithService(
       Effect.gen(function* () {
         const service = yield* AuthServiceTag;
         return yield* service.resetPassword({
@@ -411,6 +422,12 @@ describe("authService Integration", () => {
         });
       }),
     );
+
+    const afterResetSessionId = decodeSessionId(resetTokens.refreshToken);
+    const oldSession = await Effect.runPromise(authRepo.getSession(beforeResetSessionId));
+    const newSession = await Effect.runPromise(authRepo.getSession(afterResetSessionId));
+    expect(Option.isNone(oldSession)).toBe(true);
+    expect(Option.isSome(newSession)).toBe(true);
 
     const updated = await Effect.runPromise(userRepo.findById(userId));
     if (Option.isNone(updated)) {
@@ -611,5 +628,27 @@ describe("authService Integration", () => {
     );
 
     expectInvalidResetToken(secondUse);
+  });
+
+  it("resetPassword returns InvalidResetToken when token user does not exist", async () => {
+    const resetToken = "token-missing-user";
+    await Effect.runPromise(authRepo.saveResetPasswordToken({
+      token: resetToken,
+      userId: uuidv7(),
+      email: "missing-user@example.com",
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    }));
+
+    const result = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.resetPassword({
+          resetToken,
+          newPassword: "NewPassword123!",
+        }).pipe(Effect.either);
+      }),
+    );
+
+    expectInvalidResetToken(result);
   });
 });

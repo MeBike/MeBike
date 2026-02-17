@@ -287,7 +287,12 @@ export const resetPasswordRoute = createRoute({
     },
   },
   responses: {
-    200: { description: "Password reset" },
+    200: {
+      description: "Password reset",
+      content: {
+        "application/json": { schema: TokensEnvelopeSchema },
+      },
+    },
     400: {
       description: "Invalid or expired reset token",
       content: {

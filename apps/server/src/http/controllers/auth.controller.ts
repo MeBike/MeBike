@@ -333,7 +333,10 @@ const resetPassword: RouteHandler<AuthRoutes["resetPassword"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
-    return c.json<undefined, 200>(undefined, 200);
+    return c.json<{ data: AuthContracts.Tokens }, 200>(
+      { data: result.right },
+      200,
+    );
   }
 
   return Match.value(result.left).pipe(
