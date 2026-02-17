@@ -30,3 +30,10 @@ export type EmailOtpRecord = {
   expiresAt: Date;
   attemptsRemaining?: number;
 };
+
+export type ResetPasswordTokenRecord = {
+  token: string;
+  userId: string;
+  email: string;
+  expiresAt: Date;
+};

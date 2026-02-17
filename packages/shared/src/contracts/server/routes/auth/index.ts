@@ -9,6 +9,7 @@ import {
   sendResetPasswordRoute,
   sendVerifyEmailRoute,
   verifyEmailOtpRoute,
+  verifyResetPasswordOtpRoute,
 } from "./mutations";
 
 export * from "../../auth/schemas";
@@ -24,5 +25,6 @@ export const authRoutes = {
   resendVerifyEmail: resendVerifyEmailRoute,
   verifyEmailOtp: verifyEmailOtpRoute,
   sendResetPassword: sendResetPasswordRoute,
+  verifyResetPasswordOtp: verifyResetPasswordOtpRoute,
   resetPassword: resetPasswordRoute,
 } as const;

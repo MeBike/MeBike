@@ -9,6 +9,7 @@ import type {
   SendVerifyEmailRequest,
   Tokens,
   VerifyEmailOtpRequest,
+  VerifyResetPasswordOtpRequest,
 } from "./models";
 
 import { OptionalTrimmedNullableStringSchema } from "../schemas";
@@ -54,15 +55,26 @@ export const SendResetPasswordRequestSchema = z.object({
 }).openapi("SendResetPasswordRequest") satisfies z.ZodType<SendResetPasswordRequest>;
 
 export const ResetPasswordRequestSchema = z.object({
-  email: z.string().email(),
-  otp: z.string().min(1),
+  resetToken: z.string().min(1),
   newPassword: z.string().min(1),
 }).openapi("ResetPasswordRequest") satisfies z.ZodType<ResetPasswordRequest>;
+
+export const VerifyResetPasswordOtpRequestSchema = z.object({
+  email: z.string().email(),
+  otp: z.string().min(1),
+}).openapi("VerifyResetPasswordOtpRequest") satisfies z.ZodType<VerifyResetPasswordOtpRequest>;
+
+export const ResetPasswordTokenEnvelopeSchema = z.object({
+  data: z.object({
+    resetToken: z.string(),
+  }),
+}).openapi("ResetPasswordTokenEnvelope");
 
 export const AuthErrorCodeSchema = z.enum([
   "INVALID_CREDENTIALS",
   "INVALID_REFRESH_TOKEN",
   "INVALID_OTP",
+  "INVALID_RESET_TOKEN",
   "DUPLICATE_EMAIL",
   "DUPLICATE_PHONE_NUMBER",
 ]).openapi("AuthErrorCode");
@@ -71,6 +83,7 @@ export const AuthErrorResponseSchema = z.object({
   error: z.string(),
   details: z.object({
     code: AuthErrorCodeSchema,
+    retriable: z.boolean().optional(),
     issues: z.array(z.any()).optional(),
   }),
 }).openapi("AuthErrorResponse");
@@ -79,6 +92,7 @@ export const authErrorMessages = {
   INVALID_CREDENTIALS: "Invalid credentials",
   INVALID_REFRESH_TOKEN: "Invalid refresh token",
   INVALID_OTP: "Invalid or expired OTP",
+  INVALID_RESET_TOKEN: "Invalid or expired reset token",
   DUPLICATE_EMAIL: "Email already in use",
   DUPLICATE_PHONE_NUMBER: "Phone number already in use",
 } as const;

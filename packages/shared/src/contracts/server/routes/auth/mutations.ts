@@ -8,10 +8,12 @@ import {
   RefreshRequestSchema,
   RegisterRequestSchema,
   ResetPasswordRequestSchema,
+  ResetPasswordTokenEnvelopeSchema,
   SendResetPasswordRequestSchema,
   SendVerifyEmailRequestSchema,
   TokensEnvelopeSchema,
   VerifyEmailOtpRequestSchema,
+  VerifyResetPasswordOtpRequestSchema,
 } from "../../auth/schemas";
 
 export const registerRoute = createRoute({
@@ -240,7 +242,10 @@ export const verifyEmailOtpRoute = createRoute({
             InvalidOtp: {
               value: {
                 error: "Invalid or expired OTP",
-                details: { code: AuthErrorCodeSchema.enum.INVALID_OTP },
+                details: {
+                  code: AuthErrorCodeSchema.enum.INVALID_OTP,
+                  retriable: true,
+                },
               },
             },
           },
@@ -284,6 +289,45 @@ export const resetPasswordRoute = createRoute({
   responses: {
     200: { description: "Password reset" },
     400: {
+      description: "Invalid or expired reset token",
+      content: {
+        "application/json": {
+          schema: AuthErrorResponseSchema,
+          examples: {
+            InvalidResetToken: {
+              value: {
+                error: authErrorMessages.INVALID_RESET_TOKEN,
+                details: { code: AuthErrorCodeSchema.enum.INVALID_RESET_TOKEN },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const verifyResetPasswordOtpRoute = createRoute({
+  method: "post",
+  path: "/v1/auth/password/reset/verify-otp",
+  tags: ["Auth"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: VerifyResetPasswordOtpRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "OTP verified for password reset",
+      content: {
+        "application/json": { schema: ResetPasswordTokenEnvelopeSchema },
+      },
+    },
+    400: {
       description: "Invalid or expired OTP",
       content: {
         "application/json": {
@@ -292,7 +336,10 @@ export const resetPasswordRoute = createRoute({
             InvalidOtp: {
               value: {
                 error: "Invalid or expired OTP",
-                details: { code: AuthErrorCodeSchema.enum.INVALID_OTP },
+                details: {
+                  code: AuthErrorCodeSchema.enum.INVALID_OTP,
+                  retriable: false,
+                },
               },
             },
           },
