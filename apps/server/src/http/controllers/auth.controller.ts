@@ -12,7 +12,7 @@ import { AuthServiceTag } from "@/domain/auth";
 import { registerUseCase } from "@/domain/auth/services/register.service";
 import { withLoggedCause } from "@/domain/shared";
 
-type AuthRoutes = typeof import("@mebike/shared")["serverRoutes"]["auth"];
+type AuthRoutes = (typeof import("@mebike/shared"))["serverRoutes"]["auth"];
 
 const register: RouteHandler<AuthRoutes["register"]> = async (c) => {
   const body = c.req.valid("json");
@@ -21,20 +21,33 @@ const register: RouteHandler<AuthRoutes["register"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
-    return c.json<{ data: AuthContracts.Tokens }, 201>({ data: result.right }, 201);
+    return c.json<{ data: AuthContracts.Tokens }, 201>(
+      { data: result.right },
+      201,
+    );
   }
 
   return Match.value(result.left).pipe(
     Match.tag("DuplicateUserEmail", () =>
-      c.json<AuthContracts.AuthErrorResponse, 409>({
-        error: AuthContracts.authErrorMessages.DUPLICATE_EMAIL,
-        details: { code: AuthContracts.AuthErrorCodeSchema.enum.DUPLICATE_EMAIL },
-      }, 409)),
+      c.json<AuthContracts.AuthErrorResponse, 409>(
+        {
+          error: AuthContracts.authErrorMessages.DUPLICATE_EMAIL,
+          details: {
+            code: AuthContracts.AuthErrorCodeSchema.enum.DUPLICATE_EMAIL,
+          },
+        },
+        409,
+      )),
     Match.tag("DuplicateUserPhoneNumber", () =>
-      c.json<AuthContracts.AuthErrorResponse, 409>({
-        error: AuthContracts.authErrorMessages.DUPLICATE_PHONE_NUMBER,
-        details: { code: AuthContracts.AuthErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
-      }, 409)),
+      c.json<AuthContracts.AuthErrorResponse, 409>(
+        {
+          error: AuthContracts.authErrorMessages.DUPLICATE_PHONE_NUMBER,
+          details: {
+            code: AuthContracts.AuthErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER,
+          },
+        },
+        409,
+      )),
     Match.orElse((left) => {
       throw left;
     }),
@@ -54,20 +67,34 @@ const login: RouteHandler<AuthRoutes["login"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
-    return c.json<{ data: AuthContracts.Tokens }, 200>({ data: result.right }, 200);
+    return c.json<{ data: AuthContracts.Tokens }, 200>(
+      { data: result.right },
+      200,
+    );
   }
 
   return Match.value(result.left).pipe(
     Match.tag("InvalidCredentials", () =>
-      c.json<AuthContracts.AuthErrorResponse, 401>({
-        error: AuthContracts.authErrorMessages.INVALID_CREDENTIALS,
-        details: { code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_CREDENTIALS },
-      }, 401)),
+      c.json<AuthContracts.AuthErrorResponse, 401>(
+        {
+          error: AuthContracts.authErrorMessages.INVALID_CREDENTIALS,
+          details: {
+            code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_CREDENTIALS,
+          },
+        },
+        401,
+      )),
     Match.orElse(() =>
-      c.json<AuthContracts.AuthErrorResponse, 401>({
-        error: AuthContracts.authErrorMessages.INVALID_CREDENTIALS,
-        details: { code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_CREDENTIALS },
-      }, 401)),
+      c.json<AuthContracts.AuthErrorResponse, 401>(
+        {
+          error: AuthContracts.authErrorMessages.INVALID_CREDENTIALS,
+          details: {
+            code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_CREDENTIALS,
+          },
+        },
+        401,
+      ),
+    ),
   );
 };
 
@@ -84,20 +111,34 @@ const refresh: RouteHandler<AuthRoutes["refresh"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
-    return c.json<{ data: AuthContracts.Tokens }, 200>({ data: result.right }, 200);
+    return c.json<{ data: AuthContracts.Tokens }, 200>(
+      { data: result.right },
+      200,
+    );
   }
 
   return Match.value(result.left).pipe(
     Match.tag("InvalidRefreshToken", () =>
-      c.json<AuthContracts.AuthErrorResponse, 401>({
-        error: AuthContracts.authErrorMessages.INVALID_REFRESH_TOKEN,
-        details: { code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_REFRESH_TOKEN },
-      }, 401)),
+      c.json<AuthContracts.AuthErrorResponse, 401>(
+        {
+          error: AuthContracts.authErrorMessages.INVALID_REFRESH_TOKEN,
+          details: {
+            code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_REFRESH_TOKEN,
+          },
+        },
+        401,
+      )),
     Match.orElse(() =>
-      c.json<AuthContracts.AuthErrorResponse, 401>({
-        error: AuthContracts.authErrorMessages.INVALID_REFRESH_TOKEN,
-        details: { code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_REFRESH_TOKEN },
-      }, 401)),
+      c.json<AuthContracts.AuthErrorResponse, 401>(
+        {
+          error: AuthContracts.authErrorMessages.INVALID_REFRESH_TOKEN,
+          details: {
+            code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_REFRESH_TOKEN,
+          },
+        },
+        401,
+      ),
+    ),
   );
 };
 
@@ -115,16 +156,23 @@ const logout: RouteHandler<AuthRoutes["logout"]> = async (c) => {
 
   return Match.value(result).pipe(
     Match.tag("Right", () => c.json<undefined, 200>(undefined, 200)),
-    Match.tag("Left", ({ left }) => Match.value(left).pipe(
-      Match.tag("InvalidRefreshToken", () =>
-        c.json<AuthContracts.AuthErrorResponse, 401>({
-          error: AuthContracts.authErrorMessages.INVALID_REFRESH_TOKEN,
-          details: { code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_REFRESH_TOKEN },
-        }, 401)),
-      Match.orElse((err) => {
-        throw err;
-      }),
-    )),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("InvalidRefreshToken", () =>
+          c.json<AuthContracts.AuthErrorResponse, 401>(
+            {
+              error: AuthContracts.authErrorMessages.INVALID_REFRESH_TOKEN,
+              details: {
+                code: AuthContracts.AuthErrorCodeSchema.enum
+                  .INVALID_REFRESH_TOKEN,
+              },
+            },
+            401,
+          )),
+        Match.orElse((err) => {
+          throw err;
+        }),
+      )),
     Match.exhaustive,
   );
 };
@@ -132,10 +180,13 @@ const logout: RouteHandler<AuthRoutes["logout"]> = async (c) => {
 const logoutAll: RouteHandler<AuthRoutes["logoutAll"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
   if (!userId) {
-    return c.json<UnauthorizedErrorResponse, 401>({
-      error: unauthorizedErrorMessages.UNAUTHORIZED,
-      details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
-    }, 401);
+    return c.json<UnauthorizedErrorResponse, 401>(
+      {
+        error: unauthorizedErrorMessages.UNAUTHORIZED,
+        details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+      },
+      401,
+    );
   }
 
   const eff = withLoggedCause(
@@ -149,7 +200,9 @@ const logoutAll: RouteHandler<AuthRoutes["logoutAll"]> = async (c) => {
   return c.json<undefined, 200>(undefined, 200);
 };
 
-const sendVerifyEmail: RouteHandler<AuthRoutes["sendVerifyEmail"]> = async (c) => {
+const sendVerifyEmail: RouteHandler<AuthRoutes["sendVerifyEmail"]> = async (
+  c,
+) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -162,7 +215,9 @@ const sendVerifyEmail: RouteHandler<AuthRoutes["sendVerifyEmail"]> = async (c) =
   return c.json<undefined, 200>(undefined, 200);
 };
 
-const resendVerifyEmail: RouteHandler<AuthRoutes["resendVerifyEmail"]> = async (c) => {
+const resendVerifyEmail: RouteHandler<AuthRoutes["resendVerifyEmail"]> = async (
+  c,
+) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -175,7 +230,9 @@ const resendVerifyEmail: RouteHandler<AuthRoutes["resendVerifyEmail"]> = async (
   return c.json<undefined, 200>(undefined, 200);
 };
 
-const verifyEmailOtp: RouteHandler<AuthRoutes["verifyEmailOtp"]> = async (c) => {
+const verifyEmailOtp: RouteHandler<AuthRoutes["verifyEmailOtp"]> = async (
+  c,
+) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -191,13 +248,27 @@ const verifyEmailOtp: RouteHandler<AuthRoutes["verifyEmailOtp"]> = async (c) => 
     return c.json<undefined, 200>(undefined, 200);
   }
 
-  return c.json<AuthContracts.AuthErrorResponse, 400>({
-    error: AuthContracts.authErrorMessages.INVALID_OTP,
-    details: { code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_OTP },
-  }, 400);
+  return Match.value(result.left).pipe(
+    Match.tag("InvalidOtp", err =>
+      c.json<AuthContracts.AuthErrorResponse, 400>(
+        {
+          error: AuthContracts.authErrorMessages.INVALID_OTP,
+          details: {
+            code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_OTP,
+            retriable: err.retriable,
+          },
+        },
+        400,
+      )),
+    Match.orElse((err) => {
+      throw err;
+    }),
+  );
 };
 
-const sendResetPassword: RouteHandler<AuthRoutes["sendResetPassword"]> = async (c) => {
+const sendResetPassword: RouteHandler<AuthRoutes["sendResetPassword"]> = async (
+  c,
+) => {
   const body = c.req.valid("json");
   const eff = withLoggedCause(
     Effect.gen(function* () {
@@ -208,6 +279,45 @@ const sendResetPassword: RouteHandler<AuthRoutes["sendResetPassword"]> = async (
   ).pipe(Effect.orDie);
   await c.var.runPromise(eff);
   return c.json<undefined, 200>(undefined, 200);
+};
+
+const verifyResetPasswordOtp: RouteHandler<AuthRoutes["verifyResetPasswordOtp"]> = async (
+  c,
+) => {
+  const body = c.req.valid("json");
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const service = yield* AuthServiceTag;
+      return yield* service.verifyResetPasswordOtp(body);
+    }),
+    "POST /v1/auth/password/reset/verify-otp",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  if (result._tag === "Right") {
+    return c.json<{ data: { resetToken: string } }, 200>(
+      { data: result.right },
+      200,
+    );
+  }
+
+  return Match.value(result.left).pipe(
+    Match.tag("InvalidOtp", err =>
+      c.json<AuthContracts.AuthErrorResponse, 400>(
+        {
+          error: AuthContracts.authErrorMessages.INVALID_OTP,
+          details: {
+            code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_OTP,
+            retriable: err.retriable,
+          },
+        },
+        400,
+      )),
+    Match.orElse((err) => {
+      throw err;
+    }),
+  );
 };
 
 const resetPassword: RouteHandler<AuthRoutes["resetPassword"]> = async (c) => {
@@ -223,13 +333,27 @@ const resetPassword: RouteHandler<AuthRoutes["resetPassword"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
 
   if (result._tag === "Right") {
-    return c.json<undefined, 200>(undefined, 200);
+    return c.json<{ data: AuthContracts.Tokens }, 200>(
+      { data: result.right },
+      200,
+    );
   }
 
-  return c.json<AuthContracts.AuthErrorResponse, 400>({
-    error: AuthContracts.authErrorMessages.INVALID_OTP,
-    details: { code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_OTP },
-  }, 400);
+  return Match.value(result.left).pipe(
+    Match.tag("InvalidResetToken", () =>
+      c.json<AuthContracts.AuthErrorResponse, 400>(
+        {
+          error: AuthContracts.authErrorMessages.INVALID_RESET_TOKEN,
+          details: {
+            code: AuthContracts.AuthErrorCodeSchema.enum.INVALID_RESET_TOKEN,
+          },
+        },
+        400,
+      )),
+    Match.orElse((err) => {
+      throw err;
+    }),
+  );
 };
 
 export const AuthController = {
@@ -242,5 +366,6 @@ export const AuthController = {
   resendVerifyEmail,
   verifyEmailOtp,
   sendResetPassword,
+  verifyResetPasswordOtp,
   resetPassword,
 } as const;

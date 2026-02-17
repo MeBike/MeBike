@@ -23,5 +23,7 @@ export function registerAuthRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   app.openapi(auth.sendResetPassword, AuthController.sendResetPassword);
 
+  app.openapi(auth.verifyResetPasswordOtp, AuthController.verifyResetPasswordOtp);
+
   app.openapi(auth.resetPassword, AuthController.resetPassword);
 }

@@ -24,6 +24,21 @@ function expectLeftTag<E extends { _tag: string }>(result: Either.Either<unknown
   expect(result.left._tag).toBe(tag);
 }
 
+function expectInvalidOtp(result: Either.Either<unknown, { _tag: string; retriable?: boolean }>) {
+  if (Either.isRight(result)) {
+    throw new Error("Expected Left InvalidOtp, got Right");
+  }
+  expect(result.left._tag).toBe("InvalidOtp");
+  return result.left as { _tag: "InvalidOtp"; retriable: boolean };
+}
+
+function expectInvalidResetToken(result: Either.Either<unknown, { _tag: string }>) {
+  if (Either.isRight(result)) {
+    throw new Error("Expected Left InvalidResetToken, got Right");
+  }
+  expect(result.left._tag).toBe("InvalidResetToken");
+}
+
 function decodeSessionId(refreshToken: string) {
   const payload = jwt.decode(refreshToken) as jwt.JwtPayload | null;
   const sessionId = payload?.jti;
@@ -317,7 +332,8 @@ describe("authService Integration", () => {
       }),
     );
 
-    expectLeftTag(result, "InvalidOtp");
+    const err = expectInvalidOtp(result);
+    expect(err.retriable).toBe(true);
   });
 
   it("verifyEmailOtp keeps otp after invalid attempt", async () => {
@@ -343,7 +359,8 @@ describe("authService Integration", () => {
         return yield* service.verifyEmailOtp({ userId, otp: "000000" }).pipe(Effect.either);
       }),
     );
-    expectLeftTag(firstResult, "InvalidOtp");
+    const firstErr = expectInvalidOtp(firstResult);
+    expect(firstErr.retriable).toBe(true);
 
     await runWithService(
       Effect.gen(function* () {
@@ -359,11 +376,22 @@ describe("authService Integration", () => {
     expect(updated.value.verify).toBe("VERIFIED");
   });
 
-  it("resetPassword updates password when otp is valid", async () => {
+  it("verifyResetPasswordOtp + resetPassword rotates sessions and updates password", async () => {
     const { id: userId, email } = await createUser({
       email: "reset@example.com",
       password: "Password123!",
     });
+
+    const beforeResetTokens = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.loginWithPassword({
+          email,
+          password: "Password123!",
+        });
+      }),
+    );
+    const beforeResetSessionId = decodeSessionId(beforeResetTokens.refreshToken);
 
     await Effect.runPromise(
       authRepo.saveEmailOtp({
@@ -375,16 +403,31 @@ describe("authService Integration", () => {
       }),
     );
 
-    await runWithService(
+    const verified = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.verifyResetPasswordOtp({
+          email,
+          otp: "654321",
+        });
+      }),
+    );
+
+    const resetTokens = await runWithService(
       Effect.gen(function* () {
         const service = yield* AuthServiceTag;
         return yield* service.resetPassword({
-          email,
-          otp: "654321",
+          resetToken: verified.resetToken,
           newPassword: "NewPassword123!",
         });
       }),
     );
+
+    const afterResetSessionId = decodeSessionId(resetTokens.refreshToken);
+    const oldSession = await Effect.runPromise(authRepo.getSession(beforeResetSessionId));
+    const newSession = await Effect.runPromise(authRepo.getSession(afterResetSessionId));
+    expect(Option.isNone(oldSession)).toBe(true);
+    expect(Option.isSome(newSession)).toBe(true);
 
     const updated = await Effect.runPromise(userRepo.findById(userId));
     if (Option.isNone(updated)) {
@@ -394,7 +437,7 @@ describe("authService Integration", () => {
     expect(matches).toBe(true);
   });
 
-  it("resetPassword rejects invalid otp", async () => {
+  it("verifyResetPasswordOtp rejects invalid otp", async () => {
     const { id: userId, email } = await createUser({
       email: "reset-invalid@example.com",
       password: "Password123!",
@@ -413,18 +456,18 @@ describe("authService Integration", () => {
     const result = await runWithService(
       Effect.gen(function* () {
         const service = yield* AuthServiceTag;
-        return yield* service.resetPassword({
+        return yield* service.verifyResetPasswordOtp({
           email,
           otp: "000000",
-          newPassword: "NewPassword123!",
         }).pipe(Effect.either);
       }),
     );
 
-    expectLeftTag(result, "InvalidOtp");
+    const err = expectInvalidOtp(result);
+    expect(err.retriable).toBe(true);
   });
 
-  it("resetPassword keeps otp after invalid attempt", async () => {
+  it("verifyResetPasswordOtp keeps otp after invalid attempt", async () => {
     const { id: userId, email } = await createUser({
       email: "reset-retry@example.com",
       password: "Password123!",
@@ -443,21 +486,30 @@ describe("authService Integration", () => {
     const firstResult = await runWithService(
       Effect.gen(function* () {
         const service = yield* AuthServiceTag;
-        return yield* service.resetPassword({
+        return yield* service.verifyResetPasswordOtp({
           email,
           otp: "000000",
-          newPassword: "NewPassword123!",
         }).pipe(Effect.either);
       }),
     );
-    expectLeftTag(firstResult, "InvalidOtp");
+    const firstErr = expectInvalidOtp(firstResult);
+    expect(firstErr.retriable).toBe(true);
+
+    const verified = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.verifyResetPasswordOtp({
+          email,
+          otp: "111111",
+        });
+      }),
+    );
 
     await runWithService(
       Effect.gen(function* () {
         const service = yield* AuthServiceTag;
         return yield* service.resetPassword({
-          email,
-          otp: "111111",
+          resetToken: verified.resetToken,
           newPassword: "NewPassword123!",
         });
       }),
@@ -471,7 +523,7 @@ describe("authService Integration", () => {
     expect(matches).toBe(true);
   });
 
-  it("resetPassword invalidates otp after max failed attempts", async () => {
+  it("verifyResetPasswordOtp invalidates otp after max failed attempts", async () => {
     const { id: userId, email } = await createUser({
       email: "reset-attempt-limit@example.com",
       password: "Password123!",
@@ -491,27 +543,112 @@ describe("authService Integration", () => {
       const result = await runWithService(
         Effect.gen(function* () {
           const service = yield* AuthServiceTag;
-          return yield* service.resetPassword({
+          return yield* service.verifyResetPasswordOtp({
             email,
             otp: "000000",
-            newPassword: "NewPassword123!",
           }).pipe(Effect.either);
         }),
       );
 
-      expectLeftTag(result, "InvalidOtp");
+      const err = expectInvalidOtp(result);
+      expect(err.retriable).toBe(i < OTP_MAX_ATTEMPTS - 1);
     }
 
     const finalResult = await runWithService(
       Effect.gen(function* () {
         const service = yield* AuthServiceTag;
-        return yield* service.resetPassword({
+        return yield* service.verifyResetPasswordOtp({
           email,
           otp: "111111",
+        }).pipe(Effect.either);
+      }),
+    );
+    const finalErr = expectInvalidOtp(finalResult);
+    expect(finalErr.retriable).toBe(false);
+  });
+
+  it("resetPassword rejects invalid reset token", async () => {
+    const result = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.resetPassword({
+          resetToken: "invalid-token",
           newPassword: "NewPassword123!",
         }).pipe(Effect.either);
       }),
     );
-    expectLeftTag(finalResult, "InvalidOtp");
+
+    expectInvalidResetToken(result);
+  });
+
+  it("resetPassword reset token is one-time use", async () => {
+    const { id: userId, email } = await createUser({
+      email: "reset-one-time@example.com",
+      password: "Password123!",
+    });
+
+    await Effect.runPromise(
+      authRepo.saveEmailOtp({
+        userId,
+        email,
+        kind: "reset-password",
+        otp: "654321",
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      }),
+    );
+
+    const verified = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.verifyResetPasswordOtp({
+          email,
+          otp: "654321",
+        });
+      }),
+    );
+
+    await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.resetPassword({
+          resetToken: verified.resetToken,
+          newPassword: "NewPassword123!",
+        });
+      }),
+    );
+
+    const secondUse = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.resetPassword({
+          resetToken: verified.resetToken,
+          newPassword: "AnotherPassword123!",
+        }).pipe(Effect.either);
+      }),
+    );
+
+    expectInvalidResetToken(secondUse);
+  });
+
+  it("resetPassword returns InvalidResetToken when token user does not exist", async () => {
+    const resetToken = "token-missing-user";
+    await Effect.runPromise(authRepo.saveResetPasswordToken({
+      token: resetToken,
+      userId: uuidv7(),
+      email: "missing-user@example.com",
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    }));
+
+    const result = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.resetPassword({
+          resetToken,
+          newPassword: "NewPassword123!",
+        }).pipe(Effect.either);
+      }),
+    );
+
+    expectInvalidResetToken(result);
   });
 });
