@@ -4,16 +4,16 @@ import { EmailVerificationForm } from "@/components/auth/EmailVerificationForm";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { useRouter } from "next/navigation";
 import { useUserProfileQuery } from "@/hooks/query/useUserProfileQuery";
-const page = () => {
-  const [registeredEmail, setRegisteredEmail] = useState("");
-  const { data: userProfile } = useUserProfileQuery(true)
+const Page = () => {
+  const { data: userProfile } = useUserProfileQuery(true);
+  const email = userProfile?.email ?? "";
   const router = useRouter();
   const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
   const { verifyEmail } = useAuthActions();
   const handleVerifyEmailSubmit = async (otp: string) => {
+    setIsVerifyingEmail(true);
     try {
       console.log("Verifying OTP:", otp);
-      console.log("Registered email:", registeredEmail);
       const token =
         typeof window !== "undefined"
           ? localStorage.getItem("access_token")
@@ -24,6 +24,8 @@ const page = () => {
     } catch (err) {
       console.log("Verification error (caught):", err);
       throw err;
+    } finally {
+      setIsVerifyingEmail(false);
     }
   };
   const handleSkipVerification = () => {
@@ -32,7 +34,7 @@ const page = () => {
   return (
     <>
       <EmailVerificationForm
-        email={registeredEmail}
+        email={email}
         onSubmit={handleVerifyEmailSubmit}
         onSkip={handleSkipVerification}
         isLoading={isVerifyingEmail}
@@ -40,4 +42,4 @@ const page = () => {
     </>
   );
 };
-export default page;
+export default Page;
