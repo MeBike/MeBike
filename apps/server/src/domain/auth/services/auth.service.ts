@@ -24,7 +24,7 @@ import type { EmailOtpRecord, RefreshTokenPayload } from "../models";
 import type { AuthEventRepo } from "../repository/auth-event.repository";
 import type { AuthRepo } from "../repository/auth.repository";
 
-import { RESET_OTP_TTL_MS, VERIFY_OTP_TTL_MS } from "../config";
+import { OTP_MAX_ATTEMPTS, RESET_OTP_TTL_MS, VERIFY_OTP_TTL_MS } from "../config";
 import {
   InvalidCredentials,
   InvalidOtp,
@@ -35,7 +35,7 @@ import {
   makeTokensForUser,
   requireJwtSecret,
 } from "../jwt";
-import { generateOtp, isOtpExpired } from "../otp";
+import { generateOtp } from "../otp";
 import { AuthEventRepository } from "../repository/auth-event.repository";
 import { AuthRepository } from "../repository/auth.repository";
 
@@ -148,6 +148,7 @@ export function makeAuthService({
         kind: "verify-email",
         otp,
         expiresAt,
+        attemptsRemaining: OTP_MAX_ATTEMPTS,
       };
 
       yield* authRepo.saveEmailOtp(record).pipe(
@@ -275,17 +276,13 @@ export function makeAuthService({
 
   const verifyEmailOtp: AuthService["verifyEmailOtp"] = ({ userId, otp }) =>
     Effect.gen(function* () {
-      const recordOpt = yield* authRepo.consumeEmailOtp({
+      const verification = yield* authRepo.verifyEmailOtpAttempt({
         userId,
         kind: "verify-email",
+        otp,
       }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
 
-      if (Option.isNone(recordOpt)) {
-        return yield* Effect.fail(new InvalidOtp({}));
-      }
-      const record = recordOpt.value;
-
-      if (record.otp !== otp || isOtpExpired(record.expiresAt)) {
+      if (verification !== "valid") {
         return yield* Effect.fail(new InvalidOtp({}));
       }
 
@@ -315,6 +312,7 @@ export function makeAuthService({
         kind: "reset-password",
         otp,
         expiresAt,
+        attemptsRemaining: OTP_MAX_ATTEMPTS,
       };
 
       yield* authRepo.saveEmailOtp(record).pipe(
@@ -348,17 +346,14 @@ export function makeAuthService({
       }
       const user = userOpt.value;
 
-      const recordOpt = yield* authRepo.consumeEmailOtp({
+      const verification = yield* authRepo.verifyEmailOtpAttempt({
         userId: user.id,
         kind: "reset-password",
+        otp,
+        email: addr,
       }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
 
-      if (Option.isNone(recordOpt)) {
-        return yield* Effect.fail(new InvalidOtp({}));
-      }
-
-      const record = recordOpt.value;
-      if (record.email !== addr || record.otp !== otp || isOtpExpired(record.expiresAt)) {
+      if (verification !== "valid") {
         return yield* Effect.fail(new InvalidOtp({}));
       }
 

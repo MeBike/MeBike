@@ -12,6 +12,7 @@ import { startRedis } from "@/test/db/redis";
 import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
+import { OTP_MAX_ATTEMPTS } from "../../config";
 import { makeAuthEventRepository } from "../../repository/auth-event.repository";
 import { authRepositoryFactory } from "../../repository/auth.repository";
 import { AuthServiceTag, makeAuthService } from "../auth.service";
@@ -319,6 +320,45 @@ describe("authService Integration", () => {
     expectLeftTag(result, "InvalidOtp");
   });
 
+  it("verifyEmailOtp keeps otp after invalid attempt", async () => {
+    const { id: userId } = await createUser({
+      email: "verify-retry@example.com",
+      password: "Password123!",
+      verify: "UNVERIFIED",
+    });
+
+    await Effect.runPromise(
+      authRepo.saveEmailOtp({
+        userId,
+        email: "verify-retry@example.com",
+        kind: "verify-email",
+        otp: "123456",
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      }),
+    );
+
+    const firstResult = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.verifyEmailOtp({ userId, otp: "000000" }).pipe(Effect.either);
+      }),
+    );
+    expectLeftTag(firstResult, "InvalidOtp");
+
+    await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.verifyEmailOtp({ userId, otp: "123456" });
+      }),
+    );
+
+    const updated = await Effect.runPromise(userRepo.findById(userId));
+    if (Option.isNone(updated)) {
+      throw new Error("Expected user to exist");
+    }
+    expect(updated.value.verify).toBe("VERIFIED");
+  });
+
   it("resetPassword updates password when otp is valid", async () => {
     const { id: userId, email } = await createUser({
       email: "reset@example.com",
@@ -382,5 +422,96 @@ describe("authService Integration", () => {
     );
 
     expectLeftTag(result, "InvalidOtp");
+  });
+
+  it("resetPassword keeps otp after invalid attempt", async () => {
+    const { id: userId, email } = await createUser({
+      email: "reset-retry@example.com",
+      password: "Password123!",
+    });
+
+    await Effect.runPromise(
+      authRepo.saveEmailOtp({
+        userId,
+        email,
+        kind: "reset-password",
+        otp: "111111",
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      }),
+    );
+
+    const firstResult = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.resetPassword({
+          email,
+          otp: "000000",
+          newPassword: "NewPassword123!",
+        }).pipe(Effect.either);
+      }),
+    );
+    expectLeftTag(firstResult, "InvalidOtp");
+
+    await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.resetPassword({
+          email,
+          otp: "111111",
+          newPassword: "NewPassword123!",
+        });
+      }),
+    );
+
+    const updated = await Effect.runPromise(userRepo.findById(userId));
+    if (Option.isNone(updated)) {
+      throw new Error("Expected user to exist");
+    }
+    const matches = await bcrypt.compare("NewPassword123!", updated.value.passwordHash);
+    expect(matches).toBe(true);
+  });
+
+  it("resetPassword invalidates otp after max failed attempts", async () => {
+    const { id: userId, email } = await createUser({
+      email: "reset-attempt-limit@example.com",
+      password: "Password123!",
+    });
+
+    await Effect.runPromise(
+      authRepo.saveEmailOtp({
+        userId,
+        email,
+        kind: "reset-password",
+        otp: "111111",
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      }),
+    );
+
+    for (let i = 0; i < OTP_MAX_ATTEMPTS; i += 1) {
+      const result = await runWithService(
+        Effect.gen(function* () {
+          const service = yield* AuthServiceTag;
+          return yield* service.resetPassword({
+            email,
+            otp: "000000",
+            newPassword: "NewPassword123!",
+          }).pipe(Effect.either);
+        }),
+      );
+
+      expectLeftTag(result, "InvalidOtp");
+    }
+
+    const finalResult = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.resetPassword({
+          email,
+          otp: "111111",
+          newPassword: "NewPassword123!",
+        }).pipe(Effect.either);
+      }),
+    );
+    expectLeftTag(finalResult, "InvalidOtp");
   });
 });
