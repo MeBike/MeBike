@@ -17,7 +17,7 @@ import {
 } from "@/schemas/reportSchema";
 import type { Report } from "@custom-types";
 import type { ReportStatus } from "@/types";
-import { DetailUser } from "@/services/auth.service";
+import type { DetailUser } from "@custom-types";
 import { formatDateUTC } from "@/utils/formatDateTime";
 import Image from "next/image";
 export default function ReportsPage() {
@@ -276,7 +276,7 @@ export default function ReportsPage() {
                     {isLoadingStaff ? "Đang tải..." : "Chọn nhân viên"}
                   </option>
                   {staffList.map((staff) => (
-                    <option key={staff._id} value={staff._id}>
+                    <option key={staff.id} value={staff.id}>
                       {staff.fullname} ({staff.email})
                     </option>
                   ))}

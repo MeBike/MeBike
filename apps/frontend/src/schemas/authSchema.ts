@@ -43,8 +43,23 @@ export const changePasswordSchema = z
       .string()
       .min(8, { message: "Mật khẩu mới phải có ít nhất 8 ký tự" })
       .max(30, { message: "Mật khẩu không được vượt quá 32 ký tự" }),
-  })
-
+});
+export const changePasswordForAdminSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(8, { message: "Mật khẩu cũ phải có ít nhất 8 ký tự" })
+      .max(30, { message: "Mật khẩu cũ không được vượt quá 32 ký tự" }),
+    password: z
+      .string()
+      .min(8, { message: "Mật khẩu mới phải có ít nhất 8 ký tự" })
+      .max(30, { message: "Mật khẩu không được vượt quá 32 ký tự" }),
+    confirm_password: z
+      .string()
+      .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" })
+      .max(30, { message: "Mật khẩu không được vượt quá 30 ký tự" }),
+})
+export type ChangePasswordForAdminSchemaFormData = z.infer<typeof changePasswordForAdminSchema>;
 export const profileUpdateSchema = z.object({
   fullname: z
     .string()

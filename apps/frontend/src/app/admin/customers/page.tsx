@@ -367,7 +367,7 @@ export default function CustomersPage() {
                         <div>
                           <p className="text-sm text-muted-foreground">ID</p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?._id}
+                            {detailUserData?.data?.result?.id}
                           </p>
                         </div>
 
@@ -392,7 +392,7 @@ export default function CustomersPage() {
                             Số điện thoại
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.phone_number}
+                            {detailUserData?.data?.result?.phoneNumber}
                           </p>
                         </div>
 
@@ -458,7 +458,7 @@ export default function CustomersPage() {
                             NFC Card UID
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.nfc_card_uid ||
+                            {detailUserData?.data?.result?.nfcCardUid ||
                               "Chưa có"}
                           </p>
                         </div>
@@ -468,7 +468,7 @@ export default function CustomersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {formatDateUTC(detailUserData?.data?.result?.created_at) || "-"}
+                            {formatDateUTC(detailUserData?.data?.result?.createdAt) || "-"}
                           </p>
                         </div>
 
@@ -477,7 +477,7 @@ export default function CustomersPage() {
                             Lần cập nhật cuối
                           </p>
                           <p className="text-foreground font-medium">
-                            {formatDateUTC(detailUserData?.data?.result?.updated_at) || "-"}
+                            {formatDateUTC(detailUserData?.data?.result?.updatedAt) || "-"}
                           </p>
                         </div>
                       </div>
@@ -504,7 +504,7 @@ export default function CustomersPage() {
                                 ID Người dùng
                               </p>
                               <p className="text-2xl font-bold text-primary">
-                                {detailUserData?.data?.result?._id.slice(0, 8)}
+                                {detailUserData?.data?.result?.id.slice(0, 8)}
                               </p>
                             </div>
 
@@ -578,7 +578,7 @@ export default function CustomersPage() {
                         setValueUpdateProfile("fullname", detailUserData.data.result.fullname || "");
                         setValueUpdateProfile("location", detailUserData.data.result.location || "");
                         setValueUpdateProfile("username", detailUserData.data.result.username || "");
-                        setValueUpdateProfile("phoneNumber", detailUserData.data.result.phone_number || "");
+                        setValueUpdateProfile("phoneNumber", detailUserData.data.result.phoneNumber || "");
                       }
                       setIsEditProfileModalOpen(true);
                     }}
@@ -754,7 +754,7 @@ export default function CustomersPage() {
                     <div className="space-y-1 text-xs">
                       <p><strong>Họ tên:</strong> {detailUserData.data.result.fullname}</p>
                       <p><strong>Username:</strong> {detailUserData.data.result.username || "Chưa có"}</p>
-                      <p><strong>SĐT:</strong> {detailUserData.data.result.phone_number || "Chưa có"}</p>
+                      <p><strong>SĐT:</strong> {detailUserData.data.result.phoneNumber || "Chưa có"}</p>
                       <p><strong>Địa chỉ:</strong> {detailUserData.data.result.location || "Chưa có"}</p>
                     </div>
                   </div>

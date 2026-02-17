@@ -1,7 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { DetailUser } from "@/services/auth.service";
+import type { DetailUser } from "@/types";
 import { Mail, MapPin, Phone, User, Calendar } from "lucide-react";
 
 interface ProfileHeaderProps {
@@ -82,7 +82,7 @@ export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
 
             <div className="flex items-center gap-2 text-muted-foreground">
               <Phone className="w-4 h-4" />
-              <span>{user.phone_number}</span>
+              <span>{user.phoneNumber}</span>
             </div>
 
             <div className="flex items-center gap-2 text-muted-foreground">
@@ -92,7 +92,7 @@ export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
 
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="w-4 h-4" />
-              <span>Tham gia: {formatDate(user.created_at)}</span>
+              <span>Tham gia: {formatDate(user.createdAt)}</span>
             </div>
           </div>
         </div>

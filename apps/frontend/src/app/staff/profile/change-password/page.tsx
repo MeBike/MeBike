@@ -18,9 +18,8 @@ export default function ChangePasswordPage() {
   const { user } = useAuth();
   const { changePassword } = useAuthActions();
   const [showPasswords, setShowPasswords] = useState({
-    oldPassword: false,
+    currentPassword: false,
     newPassword: false,
-    confirmPassword: false,
   });
 
   const {
@@ -41,7 +40,7 @@ export default function ChangePasswordPage() {
 
   const onSubmit = async (data: ChangePasswordSchemaFormData) => {
     try {
-      changePassword(data.old_password, data.password, data.confirm_password);
+      changePassword({currentPassword: data.currentPassword, newPassword: data.newPassword});
       reset();
     } catch (error) {
       console.error("Error changing password:", error);
@@ -109,7 +108,7 @@ export default function ChangePasswordPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Lần cuối đổi</p>
                   <p className="font-semibold text-foreground">
-                    {new Date(user.updated_at).toLocaleDateString("vi-VN")}
+                    {new Date(user.updatedAt).toLocaleDateString("vi-VN")}
                   </p>
                 </div>
               </div>
@@ -131,58 +130,58 @@ export default function ChangePasswordPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="space-y-2">
                 <Label
-                  htmlFor="old_password"
+                  htmlFor="currentPassword"
                   className="text-sm font-medium text-foreground"
                 >
                   Mật khẩu hiện tại
                 </Label>
                 <div className="relative">
                   <Input
-                    id="old_password"
-                    type={showPasswords.oldPassword ? "text" : "password"}
-                    {...register("old_password")}
+                    id="currentPassword"
+                    type={showPasswords.currentPassword ? "text" : "password"}
+                    {...register("currentPassword")}
                     placeholder="Nhập mật khẩu hiện tại"
                     className={cn(
                       "bg-background border-border pr-10",
-                      errors.old_password && "border-destructive"
+                      errors.currentPassword && "border-destructive"
                     )}
                   />
                   <button
                     type="button"
-                    onClick={() => togglePasswordVisibility("oldPassword")}
+                    onClick={() => togglePasswordVisibility("currentPassword")}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   >
-                    {showPasswords.oldPassword ? (
+                    {showPasswords.currentPassword ? (
                       <EyeOff className="w-4 h-4" />
                     ) : (
                       <Eye className="w-4 h-4" />
                     )}
                   </button>
                 </div>
-                {errors.old_password && (
+                {errors.currentPassword && (
                   <p className="text-sm text-destructive">
-                    {errors.old_password.message}
+                    {errors.currentPassword.message}
                   </p>
                 )}
               </div>
 
-              {/* New Password */}
+              
               <div className="space-y-2">
                 <Label
-                  htmlFor="password"
+                  htmlFor="newPassword"
                   className="text-sm font-medium text-foreground"
                 >
                   Mật khẩu mới
                 </Label>
                 <div className="relative">
                   <Input
-                    id="password"
+                    id="newPassword"
                     type={showPasswords.newPassword ? "text" : "password"}
-                    {...register("password")}
+                    {...register("newPassword")}
                     placeholder="Nhập mật khẩu mới"
                     className={cn(
                       "bg-background border-border pr-10",
-                      errors.password && "border-destructive"
+                      errors.newPassword && "border-destructive"
                     )}
                   />
                   <button
@@ -197,15 +196,15 @@ export default function ChangePasswordPage() {
                     )}
                   </button>
                 </div>
-                {errors.password && (
+                {errors.newPassword && (
                   <p className="text-sm text-destructive">
-                    {errors.password.message}
+                    {errors.newPassword.message}
                   </p>
                 )}
               </div>
 
-              {/* Confirm Password */}
-              <div className="space-y-2">
+              
+              {/* <div className="space-y-2">
                 <Label
                   htmlFor="confirm_password"
                   className="text-sm font-medium text-foreground"
@@ -240,7 +239,7 @@ export default function ChangePasswordPage() {
                     {errors.confirm_password.message}
                   </p>
                 )}
-              </div>
+              </div> */}
 
               {/* Submit Button */}
               <div className="flex gap-3 pt-6 border-t border-border">
@@ -296,7 +295,7 @@ export default function ChangePasswordPage() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Lần cuối cập nhật:</span>
                   <span className="font-medium text-foreground">
-                    {new Date(user.updated_at).toLocaleDateString("vi-VN")}
+                    {new Date(user.updatedAt).toLocaleDateString("vi-VN")}
                   </span>
                 </div>
               </div>
