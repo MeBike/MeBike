@@ -12,6 +12,7 @@ import { startRedis } from "@/test/db/redis";
 import { getTestDatabase } from "@/test/db/test-database";
 import { PrismaClient } from "generated/prisma/client";
 
+import { OTP_MAX_ATTEMPTS } from "../../config";
 import { makeAuthEventRepository } from "../../repository/auth-event.repository";
 import { authRepositoryFactory } from "../../repository/auth.repository";
 import { AuthServiceTag, makeAuthService } from "../auth.service";
@@ -468,5 +469,49 @@ describe("authService Integration", () => {
     }
     const matches = await bcrypt.compare("NewPassword123!", updated.value.passwordHash);
     expect(matches).toBe(true);
+  });
+
+  it("resetPassword invalidates otp after max failed attempts", async () => {
+    const { id: userId, email } = await createUser({
+      email: "reset-attempt-limit@example.com",
+      password: "Password123!",
+    });
+
+    await Effect.runPromise(
+      authRepo.saveEmailOtp({
+        userId,
+        email,
+        kind: "reset-password",
+        otp: "111111",
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      }),
+    );
+
+    for (let i = 0; i < OTP_MAX_ATTEMPTS; i += 1) {
+      const result = await runWithService(
+        Effect.gen(function* () {
+          const service = yield* AuthServiceTag;
+          return yield* service.resetPassword({
+            email,
+            otp: "000000",
+            newPassword: "NewPassword123!",
+          }).pipe(Effect.either);
+        }),
+      );
+
+      expectLeftTag(result, "InvalidOtp");
+    }
+
+    const finalResult = await runWithService(
+      Effect.gen(function* () {
+        const service = yield* AuthServiceTag;
+        return yield* service.resetPassword({
+          email,
+          otp: "111111",
+          newPassword: "NewPassword123!",
+        }).pipe(Effect.either);
+      }),
+    );
+    expectLeftTag(finalResult, "InvalidOtp");
   });
 });

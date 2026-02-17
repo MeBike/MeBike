@@ -6,6 +6,7 @@ import { startRedis } from "@/test/db/redis";
 
 import type { EmailOtpRecord, RefreshSession } from "../../models";
 
+import { OTP_MAX_ATTEMPTS } from "../../config";
 import { authRepositoryFactory } from "../auth.repository";
 
 describe("authRepository Integration", () => {
@@ -245,6 +246,72 @@ describe("authRepository Integration", () => {
         throw new Error("Expected reset OTP");
       }
       expect(resetResult.value.otp).toBe("333333");
+    });
+
+    it("verifyEmailOtpAttempt: decrements attempts and keeps otp until limit", async () => {
+      const userId = "user-attempts";
+      const testOtp: EmailOtpRecord = {
+        userId,
+        email: "attempts@example.com",
+        kind: "reset-password",
+        otp: "123456",
+        expiresAt: new Date(Date.now() + 300000),
+      };
+
+      await Effect.runPromise(repo.saveEmailOtp(testOtp));
+
+      for (let i = 0; i < OTP_MAX_ATTEMPTS - 1; i += 1) {
+        const status = await Effect.runPromise(
+          repo.verifyEmailOtpAttempt({
+            userId,
+            kind: "reset-password",
+            otp: "000000",
+            email: "attempts@example.com",
+          }),
+        );
+        expect(status).toBe("invalid");
+      }
+
+      const stillPresent = await Effect.runPromise(repo.getEmailOtp({ userId, kind: "reset-password" }));
+      expect(Option.isSome(stillPresent)).toBe(true);
+
+      const finalStatus = await Effect.runPromise(
+        repo.verifyEmailOtpAttempt({
+          userId,
+          kind: "reset-password",
+          otp: "000000",
+          email: "attempts@example.com",
+        }),
+      );
+      expect(finalStatus).toBe("invalid");
+
+      const removed = await Effect.runPromise(repo.getEmailOtp({ userId, kind: "reset-password" }));
+      expect(Option.isNone(removed)).toBe(true);
+    });
+
+    it("verifyEmailOtpAttempt: consumes otp on valid attempt", async () => {
+      const userId = "user-valid-attempt";
+      const testOtp: EmailOtpRecord = {
+        userId,
+        email: "valid-attempt@example.com",
+        kind: "verify-email",
+        otp: "654321",
+        expiresAt: new Date(Date.now() + 300000),
+      };
+
+      await Effect.runPromise(repo.saveEmailOtp(testOtp));
+
+      const status = await Effect.runPromise(
+        repo.verifyEmailOtpAttempt({
+          userId,
+          kind: "verify-email",
+          otp: "654321",
+        }),
+      );
+
+      expect(status).toBe("valid");
+      const removed = await Effect.runPromise(repo.getEmailOtp({ userId, kind: "verify-email" }));
+      expect(Option.isNone(removed)).toBe(true);
     });
   });
 
