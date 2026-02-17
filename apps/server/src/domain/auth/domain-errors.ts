@@ -27,9 +27,16 @@ export class InvalidRefreshToken extends Data.TaggedError("InvalidRefreshToken")
   Record<string, never>
 > {}
 
-export class InvalidOtp extends Data.TaggedError("InvalidOtp")<Record<string, never>> {}
+export class InvalidOtp extends Data.TaggedError("InvalidOtp")<{
+  readonly retriable: boolean;
+}> {}
+
+export class InvalidResetToken extends Data.TaggedError("InvalidResetToken")<
+  Record<string, never>
+> {}
 
 export type AuthFailure
   = | InvalidCredentials
     | InvalidRefreshToken
-    | InvalidOtp;
+    | InvalidOtp
+    | InvalidResetToken;

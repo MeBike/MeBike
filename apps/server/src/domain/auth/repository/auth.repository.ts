@@ -2,7 +2,12 @@ import { Effect, Layer, Option } from "effect";
 
 import { Redis } from "@/infrastructure/redis";
 
-import type { EmailOtpKind, EmailOtpRecord, RefreshSession } from "../models";
+import type {
+  EmailOtpKind,
+  EmailOtpRecord,
+  RefreshSession,
+  ResetPasswordTokenRecord,
+} from "../models";
 
 import { OTP_MAX_ATTEMPTS } from "../config";
 import { AuthRepositoryError } from "../domain-errors";
@@ -37,7 +42,13 @@ export type AuthRepo = {
     kind: EmailOtpKind;
     otp: string;
     email?: string;
-  }) => Effect.Effect<"valid" | "invalid", AuthRepositoryError>;
+  }) => Effect.Effect<"valid" | "invalidRetryable" | "invalidTerminal", AuthRepositoryError>;
+  readonly saveResetPasswordToken: (
+    record: ResetPasswordTokenRecord,
+  ) => Effect.Effect<void, AuthRepositoryError>;
+  readonly consumeResetPasswordToken: (
+    token: string,
+  ) => Effect.Effect<Option.Option<ResetPasswordTokenRecord>, AuthRepositoryError>;
 };
 
 const makeAuthRepositoryEffect = Effect.gen(function* () {
@@ -72,6 +83,14 @@ function parseEmailOtpRecord(json: string): EmailOtpRecord {
   };
 }
 
+function parseResetPasswordTokenRecord(json: string): ResetPasswordTokenRecord {
+  const raw = JSON.parse(json) as ResetPasswordTokenRecord & { expiresAt: string };
+  return {
+    ...raw,
+    expiresAt: new Date(raw.expiresAt),
+  };
+}
+
 function ttlFromDate(date: Date): number {
   const ttlMs = date.getTime() - Date.now();
   return Math.max(1, Math.floor(ttlMs / 1000));
@@ -87,6 +106,7 @@ function withDefaultAttempts(record: EmailOtpRecord): EmailOtpRecord & { attempt
 const sessionKey = (sid: string) => `auth:session:${sid}`;
 const userSessionsKey = (uid: string) => `auth:user-sessions:${uid}`;
 const otpKey = (kind: EmailOtpKind, uid: string) => `auth:otp:${kind}:${uid}`;
+const resetPasswordTokenKey = (token: string) => `auth:reset-token:${token}`;
 const OTP_ATTEMPT_TX_MAX_RETRIES = 5;
 
 function makeAuthRepository(client: import("ioredis").default): AuthRepo {
@@ -231,7 +251,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
 
             if (json == null) {
               await client.unwatch();
-              return "invalid";
+              return "invalidTerminal";
             }
 
             const record = withDefaultAttempts(parseEmailOtpRecord(json));
@@ -252,7 +272,7 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
               if (result == null) {
                 continue;
               }
-              return "invalid";
+              return nextAttempts > 0 ? "invalidRetryable" : "invalidTerminal";
             }
 
             if (record.otp === otp) {
@@ -281,15 +301,46 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
             if (result == null) {
               continue;
             }
-            return "invalid";
+            return nextAttempts > 0 ? "invalidRetryable" : "invalidTerminal";
           }
 
           await client.unwatch();
-          return "invalid";
+          return "invalidTerminal";
         },
         catch: cause =>
           new AuthRepositoryError({
             operation: "verifyEmailOtpAttempt",
+            cause,
+          }),
+      }),
+
+    saveResetPasswordToken: record =>
+      Effect.tryPromise({
+        try: async () => {
+          const redisKey = resetPasswordTokenKey(record.token);
+          const ttl = ttlFromDate(record.expiresAt);
+          await client.setex(redisKey, ttl, JSON.stringify(record));
+        },
+        catch: cause =>
+          new AuthRepositoryError({
+            operation: "saveResetPasswordToken",
+            cause,
+          }),
+      }),
+
+    consumeResetPasswordToken: token =>
+      Effect.tryPromise({
+        try: async () => {
+          const redisKey = resetPasswordTokenKey(token);
+          const json = await client.getdel(redisKey);
+          if (json == null) {
+            return Option.none();
+          }
+          return Option.some(parseResetPasswordTokenRecord(json));
+        },
+        catch: cause =>
+          new AuthRepositoryError({
+            operation: "consumeResetPasswordToken",
             cause,
           }),
       }),

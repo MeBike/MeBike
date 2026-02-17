@@ -4,7 +4,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { startRedis } from "@/test/db/redis";
 
-import type { EmailOtpRecord, RefreshSession } from "../../models";
+import type {
+  EmailOtpRecord,
+  RefreshSession,
+  ResetPasswordTokenRecord,
+} from "../../models";
 
 import { OTP_MAX_ATTEMPTS } from "../../config";
 import { authRepositoryFactory } from "../auth.repository";
@@ -269,7 +273,7 @@ describe("authRepository Integration", () => {
             email: "attempts@example.com",
           }),
         );
-        expect(status).toBe("invalid");
+        expect(status).toBe("invalidRetryable");
       }
 
       const stillPresent = await Effect.runPromise(repo.getEmailOtp({ userId, kind: "reset-password" }));
@@ -283,7 +287,7 @@ describe("authRepository Integration", () => {
           email: "attempts@example.com",
         }),
       );
-      expect(finalStatus).toBe("invalid");
+      expect(finalStatus).toBe("invalidTerminal");
 
       const removed = await Effect.runPromise(repo.getEmailOtp({ userId, kind: "reset-password" }));
       expect(Option.isNone(removed)).toBe(true);
@@ -312,6 +316,27 @@ describe("authRepository Integration", () => {
       expect(status).toBe("valid");
       const removed = await Effect.runPromise(repo.getEmailOtp({ userId, kind: "verify-email" }));
       expect(Option.isNone(removed)).toBe(true);
+    });
+
+    it("saveResetPasswordToken + consumeResetPasswordToken: consumes token once", async () => {
+      const tokenRecord: ResetPasswordTokenRecord = {
+        token: "reset-token-123",
+        userId: "user-reset-token",
+        email: "reset-token@example.com",
+        expiresAt: new Date(Date.now() + 300000),
+      };
+
+      await Effect.runPromise(repo.saveResetPasswordToken(tokenRecord));
+
+      const first = await Effect.runPromise(repo.consumeResetPasswordToken(tokenRecord.token));
+      expect(Option.isSome(first)).toBe(true);
+      if (Option.isSome(first)) {
+        expect(first.value.userId).toBe(tokenRecord.userId);
+        expect(first.value.email).toBe(tokenRecord.email);
+      }
+
+      const second = await Effect.runPromise(repo.consumeResetPasswordToken(tokenRecord.token));
+      expect(Option.isNone(second)).toBe(true);
     });
   });
 

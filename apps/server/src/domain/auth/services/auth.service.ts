@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import { Effect, Layer, Option } from "effect";
 import jwt from "jsonwebtoken";
+import crypto from "node:crypto";
 import { uuidv7 } from "uuidv7";
 
 import type { UserRow } from "@/domain/users";
@@ -24,11 +25,17 @@ import type { EmailOtpRecord, RefreshTokenPayload } from "../models";
 import type { AuthEventRepo } from "../repository/auth-event.repository";
 import type { AuthRepo } from "../repository/auth.repository";
 
-import { OTP_MAX_ATTEMPTS, RESET_OTP_TTL_MS, VERIFY_OTP_TTL_MS } from "../config";
+import {
+  OTP_MAX_ATTEMPTS,
+  RESET_OTP_TTL_MS,
+  RESET_PASSWORD_TOKEN_TTL_MS,
+  VERIFY_OTP_TTL_MS,
+} from "../config";
 import {
   InvalidCredentials,
   InvalidOtp,
   InvalidRefreshToken,
+  InvalidResetToken,
 } from "../domain-errors";
 import {
   makeSessionFromRefreshToken,
@@ -59,11 +66,14 @@ export type AuthService = {
   }) => Effect.Effect<void>;
   verifyEmailOtp: (args: { userId: string; otp: string }) => Effect.Effect<void, InvalidOtp>;
   sendResetPassword: (args: { email: string }) => Effect.Effect<void>;
-  resetPassword: (args: {
+  verifyResetPasswordOtp: (args: {
     email: string;
     otp: string;
+  }) => Effect.Effect<{ resetToken: string }, InvalidOtp>;
+  resetPassword: (args: {
+    resetToken: string;
     newPassword: string;
-  }) => Effect.Effect<void, InvalidOtp>;
+  }) => Effect.Effect<void, InvalidResetToken>;
 };
 
 function recordSessionIssued(
@@ -283,14 +293,14 @@ export function makeAuthService({
       }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
 
       if (verification !== "valid") {
-        return yield* Effect.fail(new InvalidOtp({}));
+        return yield* Effect.fail(new InvalidOtp({ retriable: verification === "invalidRetryable" }));
       }
 
       const updated = yield* userRepo.markVerified(userId).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(updated)) {
-        return yield* Effect.fail(new InvalidOtp({}));
+        return yield* Effect.fail(new InvalidOtp({ retriable: false }));
       }
     });
 
@@ -336,13 +346,13 @@ export function makeAuthService({
       });
     });
 
-  const resetPassword: AuthService["resetPassword"] = ({ email: addr, otp, newPassword }) =>
+  const verifyResetPasswordOtp: AuthService["verifyResetPasswordOtp"] = ({ email: addr, otp }) =>
     Effect.gen(function* () {
       const userOpt = yield* userRepo.findByEmail(addr).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(userOpt)) {
-        return yield* Effect.fail(new InvalidOtp({}));
+        return yield* Effect.fail(new InvalidOtp({ retriable: false }));
       }
       const user = userOpt.value;
 
@@ -354,16 +364,53 @@ export function makeAuthService({
       }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
 
       if (verification !== "valid") {
-        return yield* Effect.fail(new InvalidOtp({}));
+        return yield* Effect.fail(new InvalidOtp({ retriable: verification === "invalidRetryable" }));
+      }
+
+      const resetToken = crypto.randomBytes(32).toString("base64url");
+      const expiresAt = new Date(Date.now() + RESET_PASSWORD_TOKEN_TTL_MS);
+      yield* authRepo.saveResetPasswordToken({
+        token: resetToken,
+        userId: user.id,
+        email: addr,
+        expiresAt,
+      }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
+
+      return { resetToken };
+    });
+
+  const resetPassword: AuthService["resetPassword"] = ({ resetToken, newPassword }) =>
+    Effect.gen(function* () {
+      const tokenOpt = yield* authRepo.consumeResetPasswordToken(resetToken).pipe(
+        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+      );
+      if (Option.isNone(tokenOpt)) {
+        return yield* Effect.fail(new InvalidResetToken({}));
+      }
+      const tokenRecord = tokenOpt.value;
+
+      if (tokenRecord.expiresAt.getTime() <= Date.now()) {
+        return yield* Effect.fail(new InvalidResetToken({}));
+      }
+
+      const userOpt = yield* userRepo.findById(tokenRecord.userId).pipe(
+        Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
+      );
+      if (Option.isNone(userOpt) || userOpt.value.email !== tokenRecord.email) {
+        return yield* Effect.fail(new InvalidResetToken({}));
       }
 
       const hash = yield* Effect.promise(() => bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS));
-      const updated = yield* userRepo.updatePassword(user.id, hash).pipe(
+      const updated = yield* userRepo.updatePassword(tokenRecord.userId, hash).pipe(
         Effect.catchTag("UserRepositoryError", err => Effect.die(err)),
       );
       if (Option.isNone(updated)) {
-        return yield* Effect.fail(new InvalidOtp({}));
+        return yield* Effect.fail(new InvalidResetToken({}));
       }
+
+      yield* authRepo.deleteAllSessionsForUser(tokenRecord.userId).pipe(
+        Effect.catchTag("AuthRepositoryError", err => Effect.die(err)),
+      );
     });
 
   return {
@@ -374,6 +421,7 @@ export function makeAuthService({
     sendVerifyEmail,
     verifyEmailOtp,
     sendResetPassword,
+    verifyResetPasswordOtp,
     resetPassword,
   };
 }

@@ -38,8 +38,12 @@ export type SendResetPasswordRequest = {
   email: string;
 };
 
-export type ResetPasswordRequest = {
+export type VerifyResetPasswordOtpRequest = {
   email: string;
   otp: string;
+};
+
+export type ResetPasswordRequest = {
+  resetToken: string;
   newPassword: string;
 };

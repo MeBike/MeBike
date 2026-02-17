@@ -5,3 +5,4 @@ export const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 export const VERIFY_OTP_TTL_MS = 10 * 60 * 1000;
 export const RESET_OTP_TTL_MS = 5 * 60 * 1000;
 export const OTP_MAX_ATTEMPTS = 5;
+export const RESET_PASSWORD_TOKEN_TTL_MS = 10 * 60 * 1000;
