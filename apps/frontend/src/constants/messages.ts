@@ -1,5 +1,6 @@
 export const USERS_MESSAGES = {
   // đăng ký messages
+  INVALID_OTP: "OTP không hợp lệ hoặc đã hết hạn",
   VALIDATION_ERROR: 'Lỗi xác thực',
   INVALID_CREDENTIALS : 'Đăng nhập thất bại! Email hoặc mật khẩu không chính xác',
   FULL_NAME_IS_REQUIRED: 'Họ và tên là bắt buộc',

@@ -23,7 +23,7 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [timeLeft, setTimeLeft] = useState(300); // Move timer state to parent
-  const { forgotPassword, isLoadingForgottingPassword, resetPassword, isReseting } = useAuthActions();
+  const { forgotPassword, isLoadingForgottingPassword, resetPassword, isResetingPassword } = useAuthActions();
   const router = useRouter();
 
   const handleSendEmail = async (e: React.FormEvent) => {
@@ -40,10 +40,6 @@ const ForgotPassword = () => {
   const handleVerifyOtp = async (emailParam: string, otpParam: string) => {
     try {
       console.log("📤 Verifying OTP with backend...");
-      // Call resetPassword mutation but only for OTP verification (without password)
-      // Actually, we need to just verify OTP - but backend resetPassword requires password
-      // So we just store the OTP and move forward
-      // The real verification happens when user submits password
       setOtp(otpParam);
       setStep("password");
     } catch (error) {
@@ -52,18 +48,16 @@ const ForgotPassword = () => {
     }
   };
 
-  const handleResetPassword = async (emailParam: string, otpParam: string, newPassword: string, confirmPassword: string) => {
+  const handleResetPassword = async (emailParam: string, otpParam: string, newPassword: string) => {
     try {
       console.log("🔄 Resetting password...");
-      await resetPassword({ email: emailParam, otp: otpParam, password: newPassword, confirm_password: confirmPassword });
+      await resetPassword({ email: emailParam, otp: otpParam, newPassword });
       console.log("✅ Password reset successful");
-      // Only navigate if resetPassword resolved successfully (no error thrown)
       setTimeout(() => {
         router.push("/auth/login");
       }, 2000);
     } catch (error) {
       console.error('Reset password error:', error);
-      // Re-throw so ResetPasswordNewForm can catch and display error
       throw error;
     }
   };
@@ -91,15 +85,14 @@ const ForgotPassword = () => {
       throw error;
     }
   };
-
-  // Step 2: OTP verification
+  
   if (step === "otp") {
     return (
       <ResetPasswordOtpForm
         email={email}
         onSubmit={handleVerifyOtp}
         onBack={handleBackFromOtp}
-        isLoading={isReseting}
+        isLoading={isResetingPassword}
         timeLeft={timeLeft}
         onTimeLeftChange={setTimeLeft}
         onResendOtp={handleResendOtp}
@@ -107,7 +100,7 @@ const ForgotPassword = () => {
     );
   }
 
-  // Step 3: Password reset
+
   if (step === "password") {
     return (
       <ResetPasswordNewForm
@@ -115,12 +108,11 @@ const ForgotPassword = () => {
         otp={otp}
         onSubmit={handleResetPassword}
         onBack={handleBackFromPassword}
-        isLoading={isReseting}
+        isLoading={isResetingPassword}
       />
     );
   }
 
-  // Step 1: Email submission (initial)
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 

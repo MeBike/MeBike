@@ -113,7 +113,7 @@ export const authService = {
   ): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
       "/auth/password/reset/confirm",
-      {data}
+      data
     );
     return response;
   },

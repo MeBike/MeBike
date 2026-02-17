@@ -25,7 +25,7 @@ import getErrorMessage from "@/utils/error-message";
 import { AxiosError } from "axios";
 import getAxiosErrorCodeMessage from "@/utils/error-util";
 import { USERS_MESSAGES } from "@/constants/messages";
-import {getErrorMessageUserFromCode} from "@/utils/map-message";
+import { getErrorMessageUserFromCode } from "@/utils/map-message";
 export const useAuthActions = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -133,31 +133,35 @@ export const useAuthActions = () => {
   );
   const logOut = useCallback(
     (refresh_token: string) => {
-      useLogout.mutate(refresh_token, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            clearTokens();
-            window.dispatchEvent(
-              new StorageEvent("storage", { key: "auth_tokens" }),
-            );
-            queryClient.removeQueries({ queryKey: ["user", "me"] });
-            queryClient.clear();
-            toast.success(
-              USERS_MESSAGES.LOGOUT_SUCCESS || "Đăng xuất thành công",
-            );
-            router.push("/auth/login");
-          } else {
-            const errorMessage = result.data?.message || "Lỗi khi đăng xuất";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi đăng xuất");
-          toast.error(errorMessage);
-        },
+      return new Promise<void>((resolve, reject) => {
+        useLogout.mutate(refresh_token, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              clearTokens();
+              window.dispatchEvent(
+                new StorageEvent("storage", { key: "auth_tokens" }),
+              );
+              queryClient.removeQueries({ queryKey: ["user", "me"] });
+              queryClient.clear();
+              toast.success(
+                USERS_MESSAGES.LOGOUT_SUCCESS || "Đăng xuất thành công",
+              );
+              resolve();
+              router.push("/auth/login");
+            } else {
+              const errorMessage = result.data?.message || "Lỗi khi đăng xuất";
+              toast.error(errorMessage);
+              reject();
+            }
+          },
+          onError: (error: unknown) => {
+            const code_error = getAxiosErrorCodeMessage(error);
+            toast.error(getErrorMessageUserFromCode(code_error));
+          },
+        });
       });
     },
-    [useLogout, queryClient, router],
+    [useLogout, queryClient],
   );
   const verifyEmail = useCallback(
     (data: VerifyEmailSchemaFormData): Promise<void> => {
@@ -212,11 +216,8 @@ export const useAuthActions = () => {
           }
         },
         onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(
-            error,
-            "Error resending verification email",
-          );
-          toast.error(errorMessage);
+          const code_error = getAxiosErrorCodeMessage(error);
+          toast.error(getErrorMessageUserFromCode(code_error));
           reject(error);
         },
       });
@@ -224,26 +225,23 @@ export const useAuthActions = () => {
   }, [useResendVerifyEmail]);
   const forgotPassword = useCallback(
     (data: ForgotPasswordSchemaFormData) => {
-      useForgotPassword.mutate(data, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(
-              USERS_MESSAGES.FORGOT_PASSWORD_REQUEST_IS_CREATED ||
-                "Email đặt lại mật khẩu đã được gửi thành công",
-            );
-          } else {
-            const errorMessage =
-              result.data?.message || "Lỗi khi gửi email đặt lại mật khẩu";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(
-            error,
-            "Error sending password reset email",
-          );
-          toast.error(errorMessage);
-        },
+      return new Promise<void>((resolve, reject) => {
+        useForgotPassword.mutate(data, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              toast.success(
+                USERS_MESSAGES.FORGOT_PASSWORD_REQUEST_IS_CREATED ||
+                  "Email đặt lại mật khẩu đã được gửi thành công",
+              );
+            }
+            resolve();
+          },
+          onError: (error: unknown) => {
+            const code_error = getAxiosErrorCodeMessage(error);
+            toast.error(getErrorMessageUserFromCode(code_error));
+            reject(error);
+          },
+        });
       });
     },
     [useForgotPassword],
@@ -266,11 +264,8 @@ export const useAuthActions = () => {
             }
           },
           onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(
-              error,
-              "OTP không hợp lệ hoặc đã hết hạn",
-            );
-            toast.error(errorMessage);
+            const code_error = getAxiosErrorCodeMessage(error);
+            toast.error(getErrorMessageUserFromCode(code_error));
             reject(error);
           },
         });
@@ -316,5 +311,6 @@ export const useAuthActions = () => {
     isLoadingForgottingPassword: useForgotPassword.isPending,
     isLoggingIn: useLogin.isPending,
     isLoggingOut: useLogout.isPending,
+    isResetingPassword: useConfirmResetPassword.isPending,
   };
 };
