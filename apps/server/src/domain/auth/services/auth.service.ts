@@ -275,7 +275,7 @@ export function makeAuthService({
 
   const verifyEmailOtp: AuthService["verifyEmailOtp"] = ({ userId, otp }) =>
     Effect.gen(function* () {
-      const recordOpt = yield* authRepo.consumeEmailOtp({
+      const recordOpt = yield* authRepo.getEmailOtp({
         userId,
         kind: "verify-email",
       }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
@@ -286,6 +286,14 @@ export function makeAuthService({
       const record = recordOpt.value;
 
       if (record.otp !== otp || isOtpExpired(record.expiresAt)) {
+        return yield* Effect.fail(new InvalidOtp({}));
+      }
+
+      const consumed = yield* authRepo.consumeEmailOtp({
+        userId,
+        kind: "verify-email",
+      }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
+      if (Option.isNone(consumed)) {
         return yield* Effect.fail(new InvalidOtp({}));
       }
 
@@ -348,7 +356,7 @@ export function makeAuthService({
       }
       const user = userOpt.value;
 
-      const recordOpt = yield* authRepo.consumeEmailOtp({
+      const recordOpt = yield* authRepo.getEmailOtp({
         userId: user.id,
         kind: "reset-password",
       }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
@@ -359,6 +367,14 @@ export function makeAuthService({
 
       const record = recordOpt.value;
       if (record.email !== addr || record.otp !== otp || isOtpExpired(record.expiresAt)) {
+        return yield* Effect.fail(new InvalidOtp({}));
+      }
+
+      const consumed = yield* authRepo.consumeEmailOtp({
+        userId: user.id,
+        kind: "reset-password",
+      }).pipe(Effect.catchTag("AuthRepositoryError", err => Effect.die(err)));
+      if (Option.isNone(consumed)) {
         return yield* Effect.fail(new InvalidOtp({}));
       }
 

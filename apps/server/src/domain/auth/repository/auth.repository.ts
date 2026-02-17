@@ -23,6 +23,10 @@ export type AuthRepo = {
   readonly saveEmailOtp: (
     record: EmailOtpRecord,
   ) => Effect.Effect<void, AuthRepositoryError>;
+  readonly getEmailOtp: (params: {
+    userId: string;
+    kind: EmailOtpKind;
+  }) => Effect.Effect<Option.Option<EmailOtpRecord>, AuthRepositoryError>;
   readonly consumeEmailOtp: (params: {
     userId: string;
     kind: EmailOtpKind;
@@ -158,6 +162,20 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
         catch: cause =>
           new AuthRepositoryError({
             operation: "saveEmailOtp",
+            cause,
+          }),
+      }),
+
+    getEmailOtp: ({ userId, kind }) =>
+      Effect.tryPromise({
+        try: async () => {
+          const redisKey = otpKey(kind, userId);
+          const json = await client.get(redisKey);
+          return json == null ? Option.none() : Option.some(parseEmailOtpRecord(json));
+        },
+        catch: cause =>
+          new AuthRepositoryError({
+            operation: "getEmailOtp",
             cause,
           }),
       }),
