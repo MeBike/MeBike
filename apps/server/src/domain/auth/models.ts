@@ -28,4 +28,5 @@ export type EmailOtpRecord = {
   kind: EmailOtpKind;
   otp: string;
   expiresAt: Date;
+  attemptsRemaining?: number;
 };
