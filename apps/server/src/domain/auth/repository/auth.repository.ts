@@ -332,11 +332,10 @@ function makeAuthRepository(client: import("ioredis").default): AuthRepo {
       Effect.tryPromise({
         try: async () => {
           const redisKey = resetPasswordTokenKey(token);
-          const json = await client.get(redisKey);
+          const json = await client.getdel(redisKey);
           if (json == null) {
             return Option.none();
           }
-          await client.del(redisKey);
           return Option.some(parseResetPasswordTokenRecord(json));
         },
         catch: cause =>
