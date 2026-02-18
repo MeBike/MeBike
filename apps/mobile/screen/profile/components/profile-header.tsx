@@ -1,5 +1,4 @@
 import type { UserDetail } from "@services/users/user-service";
-
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";

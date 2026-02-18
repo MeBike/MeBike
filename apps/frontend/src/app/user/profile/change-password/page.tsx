@@ -11,7 +11,10 @@ import { Eye, EyeOff, Lock, ArrowLeft, Shield, User, Key } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-providers";
 import { useAuthActions } from "@/hooks/useAuthAction";
-import { changePasswordSchema, ChangePasswordSchemaFormData } from "@/schemas/authSchema";
+import {
+  changePasswordSchema,
+  ChangePasswordSchemaFormData,
+} from "@/schemas/authSchema";
 import Link from "next/link";
 import { Progress } from "@radix-ui/react-progress";
 
@@ -19,9 +22,8 @@ export default function ChangePasswordPage() {
   const { user } = useAuth();
   const { changePassword } = useAuthActions();
   const [showPasswords, setShowPasswords] = useState({
-    oldPassword: false,
+    currentPassword: false,
     newPassword: false,
-    confirmPassword: false,
   });
 
   const {
@@ -42,7 +44,10 @@ export default function ChangePasswordPage() {
 
   const onSubmit = async (data: ChangePasswordSchemaFormData) => {
     try {
-      changePassword(data.old_password, data.password, data.confirm_password);
+      changePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
       reset();
     } catch (error) {
       console.error("Error changing password:", error);
@@ -51,9 +56,12 @@ export default function ChangePasswordPage() {
 
   // Check role permission
 
-
   if (!user) {
-    return <div className="flex items-center justify-center h-screen"><Progress /></div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Progress />
+      </div>
+    );
   }
 
   return (
@@ -84,7 +92,7 @@ export default function ChangePasswordPage() {
               </p>
             </div>
           </div>
-          
+
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-card border border-border rounded-lg p-4">
@@ -93,14 +101,18 @@ export default function ChangePasswordPage() {
                   <Shield className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Trạng thái bảo mật</p>
+                  <p className="text-sm text-muted-foreground">
+                    Trạng thái bảo mật
+                  </p>
                   <p className="font-semibold text-foreground">
-                    {user.verify === "VERIFIED" ? "Đã xác thực" : "Cần xác thực"}
+                    {user.verify === "VERIFIED"
+                      ? "Đã xác thực"
+                      : "Cần xác thực"}
                   </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-card border border-border rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
@@ -112,7 +124,7 @@ export default function ChangePasswordPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-card border border-border rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
@@ -121,7 +133,7 @@ export default function ChangePasswordPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Lần cuối đổi</p>
                   <p className="font-semibold text-foreground">
-                    {new Date(user.updated_at).toLocaleDateString("vi-VN")}
+                    {new Date(user.updatedAt).toLocaleDateString("vi-VN")}
                   </p>
                 </div>
               </div>
@@ -129,9 +141,7 @@ export default function ChangePasswordPage() {
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Form Section */}
           <div className="lg:col-span-2">
             <div className="bg-card border border-border rounded-xl p-8">
               <div className="mb-6">
@@ -139,87 +149,88 @@ export default function ChangePasswordPage() {
                   Cập nhật mật khẩu
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Vui lòng nhập mật khẩu hiện tại và mật khẩu mới để cập nhật bảo mật tài khoản
+                  Vui lòng nhập mật khẩu hiện tại và mật khẩu mới để cập nhật
+                  bảo mật tài khoản
                 </p>
               </div>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-2">
-                <Label
-                  htmlFor="old_password"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Mật khẩu hiện tại
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="old_password"
-                    type={showPasswords.oldPassword ? "text" : "password"}
-                    {...register("old_password")}
-                    placeholder="Nhập mật khẩu hiện tại"
-                    className={cn(
-                      "bg-background border-border pr-10",
-                      errors.old_password && "border-destructive"
-                    )}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => togglePasswordVisibility("oldPassword")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="currentPassword"
+                    className="text-sm font-medium text-foreground"
                   >
-                    {showPasswords.oldPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
+                    Mật khẩu hiện tại
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="currentPassword"
+                      type={showPasswords.currentPassword ? "text" : "password"}
+                      {...register("currentPassword")}
+                      placeholder="Nhập mật khẩu hiện tại"
+                      className={cn(
+                        "bg-background border-border pr-10",
+                        errors.currentPassword && "border-destructive",
+                      )}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        togglePasswordVisibility("currentPassword")
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPasswords.currentPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.currentPassword && (
+                    <p className="text-sm text-destructive">
+                      {errors.currentPassword.message}
+                    </p>
+                  )}
                 </div>
-                {errors.old_password && (
-                  <p className="text-sm text-destructive">
-                    {errors.old_password.message}
-                  </p>
-                )}
-              </div>
 
-              {/* New Password */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="password"
-                  className="text-sm font-medium text-foreground"
-                >
-                  Mật khẩu mới
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPasswords.newPassword ? "text" : "password"}
-                    {...register("password")}
-                    placeholder="Nhập mật khẩu mới"
-                    className={cn(
-                      "bg-background border-border pr-10",
-                      errors.password && "border-destructive"
-                    )}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => togglePasswordVisibility("newPassword")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="newPassword"
+                    className="text-sm font-medium text-foreground"
                   >
-                    {showPasswords.newPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
+                    Mật khẩu mới
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="newPassword"
+                      type={showPasswords.newPassword ? "text" : "password"}
+                      {...register("newPassword")}
+                      placeholder="Nhập mật khẩu mới"
+                      className={cn(
+                        "bg-background border-border pr-10",
+                        errors.newPassword && "border-destructive",
+                      )}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility("newPassword")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPasswords.newPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  {errors.newPassword && (
+                    <p className="text-sm text-destructive">
+                      {errors.newPassword.message}
+                    </p>
+                  )}
                 </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
 
-              {/* Confirm Password */}
-              <div className="space-y-2">
+                {/* <div className="space-y-2">
                 <Label
                   htmlFor="confirm_password"
                   className="text-sm font-medium text-foreground"
@@ -254,29 +265,29 @@ export default function ChangePasswordPage() {
                     {errors.confirm_password.message}
                   </p>
                 )}
-              </div>
+              </div> */}
 
-              <div className="flex gap-3 pt-6 border-t border-border">
-                <Link href="/user/profile">
+                <div className="flex gap-3 pt-6 border-t border-border">
+                  <Link href="/user/profile">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="bg-transparent"
+                    >
+                      Hủy
+                    </Button>
+                  </Link>
                   <Button
-                    type="button"
-                    variant="outline"
-                    className="bg-transparent"
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-primary hover:bg-primary/90 gap-2"
                   >
-                    Hủy
+                    <Lock className="w-4 h-4" />
+                    {isSubmitting ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
                   </Button>
-                </Link>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="bg-primary hover:bg-primary/90 gap-2"
-                >
-                  <Lock className="w-4 h-4" />
-                  {isSubmitting ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
-                </Button>
-              </div>
-            </form>
-          </div>
+                </div>
+              </form>
+            </div>
           </div>
 
           {/* Security Section */}
@@ -288,30 +299,34 @@ export default function ChangePasswordPage() {
                   <Lock className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-foreground">Bảo mật tài khoản</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {user.email}
-                  </p>
+                  <h3 className="font-semibold text-foreground">
+                    Bảo mật tài khoản
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
                 </div>
               </div>
-              
+
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Vai trò:</span>
-                  <span className="font-medium text-foreground">
-                    Nhân viên
-                  </span>
+                  <span className="font-medium text-foreground">Nhân viên</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Trạng thái:</span>
-                  <span className={`font-medium ${user.verify === "VERIFIED" ? "text-green-600" : "text-amber-600"}`}>
-                    {user.verify === "VERIFIED" ? "Đã xác thực" : "Chưa xác thực"}
+                  <span
+                    className={`font-medium ${user.verify === "VERIFIED" ? "text-green-600" : "text-amber-600"}`}
+                  >
+                    {user.verify === "VERIFIED"
+                      ? "Đã xác thực"
+                      : "Chưa xác thực"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Lần cuối cập nhật:</span>
+                  <span className="text-muted-foreground">
+                    Lần cuối cập nhật:
+                  </span>
                   <span className="font-medium text-foreground">
-                    {new Date(user.updated_at).toLocaleDateString("vi-VN")}
+                    {new Date(user.updatedAt).toLocaleDateString("vi-VN")}
                   </span>
                 </div>
               </div>
@@ -323,9 +338,11 @@ export default function ChangePasswordPage() {
                 <div className="w-8 h-8 bg-amber-100 dark:bg-amber-900/20 rounded-full flex items-center justify-center">
                   <span className="text-lg">💡</span>
                 </div>
-                <h4 className="font-semibold text-foreground">Lời khuyên bảo mật</h4>
+                <h4 className="font-semibold text-foreground">
+                  Lời khuyên bảo mật
+                </h4>
               </div>
-              
+
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-1">•</span>
@@ -356,7 +373,7 @@ export default function ChangePasswordPage() {
                 <span className="text-lg">🔐</span>
                 Mức độ bảo mật
               </h4>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-red-500 rounded-full"></div>
@@ -364,17 +381,20 @@ export default function ChangePasswordPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">Trung bình</span>
+                  <span className="text-sm text-muted-foreground">
+                    Trung bình
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="text-sm text-muted-foreground">Mạnh</span>
                 </div>
               </div>
-              
+
               <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <p className="text-xs text-blue-600 dark:text-blue-400">
-                  Mật khẩu mạnh giúp bảo vệ tài khoản khỏi các cuộc tấn công mạng
+                  Mật khẩu mạnh giúp bảo vệ tài khoản khỏi các cuộc tấn công
+                  mạng
                 </p>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import { DetailUser } from "./auth.service";
+import type { DetailUser } from "@/types";
 import { UserProfile } from "@/schemas/userSchema";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
 interface ApiReponse<T> {

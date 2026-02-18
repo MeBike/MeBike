@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import type { UserRole } from "@/types";
-import type { DetailUser as ServiceDetailUser } from "@/services/auth.service";
+import type { DetailUser } from "@/types";
 import { formatDateUTC } from "@/utils/formatDateTime";
 export const getVerifyStatusColor = (status: string) => {
   switch (status) {
@@ -38,12 +38,12 @@ export const userColumns = ({
   onView,
 }: {
   onView?: ({ id }: { id: string }) => void;
-}): ColumnDef<ServiceDetailUser>[] => [
+}): ColumnDef<DetailUser>[] => [
   {
-    accessorKey: "_id",
+    accessorKey: "id",
     header: "Mã người dùng",
     cell: ({ row }) => {
-      return shortenId(row.original._id) || "Không có";
+      return shortenId(row.original.id) || "Không có";
     },
   },
   {
@@ -61,10 +61,10 @@ export const userColumns = ({
     },
   },
   {
-    accessorKey: "phone_number",
+    accessorKey: "phoneNumber",
     header: "Số điện thoại",
     cell: ({ row }) => {
-      return row.original.phone_number || "Không có";
+      return row.original.phoneNumber || "Không có";
     },
   },
   {
@@ -97,14 +97,14 @@ export const userColumns = ({
     accessorKey: "created_at",
     header: "Ngày tạo",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.created_at);
+      return formatDateUTC(row.original.createdAt);
     },
   },
   {
     accessorKey: "updated_at",
     header: "Ngày cập nhật",
     cell: ({ row }) => {
-      return formatDateUTC(row.original.updated_at);
+      return formatDateUTC(row.original.updatedAt);
     },
   },
   {
@@ -117,7 +117,7 @@ export const userColumns = ({
           title="Xem chi tiết"
           onClick={() => {
             if (onView) {
-              onView({ id: row.original._id });
+              onView({ id: row.original.id });
             }
           }}
         >

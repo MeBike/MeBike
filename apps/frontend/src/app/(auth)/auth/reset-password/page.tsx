@@ -25,7 +25,8 @@ function ResetPasswordContent() {
   const { resetPassword } = useAuthActions();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const email = searchParams.get("email");
+  const otp = searchParams.get("otp");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,17 +35,22 @@ function ResetPasswordContent() {
       return;
     }
 
-    if (!token) {
+    if (!email || !otp) {
       return;
     }
 
     setIsLoading(true);
     resetPassword({
-      password,
-      confirm_password: confirmPassword,
-      forgot_password_token: token,
-    });
-    setIsLoading(false);
+      email,
+      otp,
+      newPassword: password,
+    })
+      .then(() => {
+        router.push("/auth/login");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const handleBackToLogin = () => {
@@ -53,12 +59,12 @@ function ResetPasswordContent() {
 
   // If no token, redirect to forgot password
   React.useEffect(() => {
-    if (!token) {
+    if (!email || !otp) {
       router.push("/auth/forgot-password");
     }
-  }, [token, router]);
+  }, [email, otp, router]);
 
-  if (!token) {
+  if (!email || !otp) {
     return (
       <div
         className="min-h-screen bg-gradient-to-br from-metro-primary via-metro-secondary to-metro-accent flex items-center justify-center p-4 

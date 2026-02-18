@@ -11,3 +11,4 @@ export * from "./Response";
 export * from "./Report";
 export * from "./SOS";
 export * from "./Rating";
+export * from "./Auth.type"

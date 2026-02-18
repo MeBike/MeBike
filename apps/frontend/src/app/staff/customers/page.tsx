@@ -261,7 +261,7 @@ export default function CustomersPage() {
                         <div>
                           <p className="text-sm text-muted-foreground">ID</p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?._id}
+                            {detailUserData?.data?.result?.id}
                           </p>
                         </div>
 
@@ -286,7 +286,7 @@ export default function CustomersPage() {
                             Số điện thoại
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.phone_number}
+                            {detailUserData?.data?.result?.phoneNumber}
                           </p>
                         </div>
 
@@ -350,7 +350,7 @@ export default function CustomersPage() {
                             NFC Card UID
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.nfc_card_uid ||
+                            {detailUserData?.data?.result?.nfcCardUid ||
                               "Chưa có"}
                           </p>
                         </div>
@@ -360,9 +360,9 @@ export default function CustomersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.created_at
+                            {detailUserData?.data?.result?.createdAt
                               ? new Date(
-                                  detailUserData?.data?.result?.created_at
+                                  detailUserData?.data?.result?.createdAt
                                 ).toLocaleString("vi-VN")
                               : "-"}
                           </p>
@@ -373,9 +373,9 @@ export default function CustomersPage() {
                             Lần cập nhật cuối
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.updated_at
+                            {detailUserData?.data?.result?.updatedAt
                               ? new Date(
-                                  detailUserData?.data?.result?.updated_at
+                                  detailUserData?.data?.result?.updatedAt
                                 ).toLocaleString("vi-VN")
                               : "-"}
                           </p>
@@ -400,7 +400,7 @@ export default function CustomersPage() {
                                 ID Người dùng
                               </p>
                               <p className="text-2xl font-bold text-primary">
-                                {detailUserData?.data?.result?._id.slice(0, 8)}
+                                {detailUserData?.data?.result?.id.slice(0, 8)}
                               </p>
                             </div>
 

@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { isValidUUID } from "@/utils/validatorObjectId";
 const vietnamesePhoneNumberRegex = /^(0[3|5|7|8|9])+([0-9]{8})\b/;
 export const loginSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
@@ -21,26 +22,31 @@ export const registerSchema = z
     password: z
       .string()
       .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
-    phone_number: z
+    phoneNumber: z
       .string()
       .regex(vietnamesePhoneNumberRegex, {
         message: "Số điện thoại không hợp lệ",
       })
       .optional(),
-    confirm_password: z
-      .string()
-      .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" }),
   })
-  .refine((data) => data.password === data.confirm_password, {
-    message: "Mật khẩu xác nhận không khớp",
-    path: ["confirm_password"],
-  });
+;
 export const forgotPasswordSchema = z.object({
   email: z.email({ message: "Email không hợp lệ" }),
 });
 export const changePasswordSchema = z
   .object({
-    old_password: z
+    currentPassword: z
+      .string()
+      .min(8, { message: "Mật khẩu cũ phải có ít nhất 8 ký tự" })
+      .max(30, { message: "Mật khẩu cũ không được vượt quá 32 ký tự" }),
+    newPassword: z
+      .string()
+      .min(8, { message: "Mật khẩu mới phải có ít nhất 8 ký tự" })
+      .max(30, { message: "Mật khẩu không được vượt quá 32 ký tự" }),
+});
+export const changePasswordForAdminSchema = z
+  .object({
+    currentPassword: z
       .string()
       .min(8, { message: "Mật khẩu cũ phải có ít nhất 8 ký tự" })
       .max(30, { message: "Mật khẩu cũ không được vượt quá 32 ký tự" }),
@@ -52,11 +58,8 @@ export const changePasswordSchema = z
       .string()
       .min(8, { message: "Mật khẩu phải có ít nhất 8 ký tự" })
       .max(30, { message: "Mật khẩu không được vượt quá 30 ký tự" }),
-  })
-  .refine((data) => data.password === data.confirm_password, {
-    message: "Mật khẩu xác nhận không khớp",
-    path: ["confirm_password"],
-  });
+})
+export type ChangePasswordForAdminSchemaFormData = z.infer<typeof changePasswordForAdminSchema>;
 export const profileUpdateSchema = z.object({
   fullname: z
     .string()
@@ -76,14 +79,14 @@ export const profileUpdateSchema = z.object({
     )
     .optional()
     .or(z.literal("")),
-  phone_number: z
+  phoneNumber: z
     .string()
     .regex(vietnamesePhoneNumberRegex, {  
       message: "Số điện thoại không hợp lệ",
     })
     .optional()
     .or(z.literal("")),
-  avatar : z.string().url({ message: "Avatar phải là một URL hợp lệ" }).optional(),  
+  avatar : z.url({ message: "Avatar phải là một URL hợp lệ" }).optional(),  
 });
 export const resetPasswordSchema = z.object({
   password: z
@@ -98,3 +101,17 @@ export const resetPasswordSchema = z.object({
   email: z.string().optional(),
   otp: z.string().optional(),
 });
+export const confirmResetPasswordSchema = z.object({
+  email: z.email({ message: "Email không hợp lệ" }),
+  otp: z.string().min(1, { message: "Mã OTP không được để trống" }),
+  newPassword: z
+    .string()
+    .min(8, { message: "Mật khẩu mới phải có ít nhất 8 ký tự" })
+    .max(30, { message: "Mật khẩu không được vượt quá 32 ký tự" }),
+})
+export type ConfirmResetPasswordSchemaFormData = z.infer<typeof confirmResetPasswordSchema>;
+export const verifyEmailSchema = z.object({
+  userId: z.string().refine(isValidUUID, { message: "User ID không hợp lệ" }),
+  otp: z.string().min(1, { message: "Mã OTP không được để trống" }),
+});
+export type VerifyEmailSchemaFormData = z.infer<typeof verifyEmailSchema>;

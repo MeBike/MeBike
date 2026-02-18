@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Edit, Eye } from "lucide-react";
 import type { Report } from "@custom-types";
 import { formatDateUTC } from "@/utils/formatDateTime";
-import type { DetailUser } from "@/services/auth.service";
+import type { DetailUser } from "@custom-types";
 
 interface ReportColumnsProps {
   onView: (report: Report) => void;
@@ -70,7 +70,7 @@ export const reportColumns = ({
     cell: ({ row }) => {
       const assigneeId = row.getValue("assignee_id") as string;
       if (!assigneeId) return <div>Chưa có</div>;
-      const staff = staffList.find(s => s._id === assigneeId);
+      const staff = staffList.find(s => s.id === assigneeId);
       return <div>{staff ? `${staff.fullname} (${staff.email})` : assigneeId}</div>;
     },
   },

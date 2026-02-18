@@ -103,7 +103,7 @@ export function CustomerCard({
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Phone className="w-4 h-4 flex-shrink-0" />
-            <span>{customer.phone_number}</span>
+            <span>{customer.phoneNumber}</span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <MapPin className="w-4 h-4 flex-shrink-0" />
@@ -116,13 +116,13 @@ export function CustomerCard({
           <div>
             <p className="text-xs text-muted-foreground">NFC Card UID</p>
             <p className="text-sm font-mono text-foreground">
-              {customer.nfc_card_uid || "N/A"}
+              {customer.nfcCardUid || "N/A"}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Ngày tạo</p>
             <p className="text-sm font-bold text-foreground">
-              {format(new Date(customer.created_at), "dd/MM/yyyy", {
+              {format(new Date(customer.createdAt), "dd/MM/yyyy", {
                 locale: vi,
               })}
             </p>
