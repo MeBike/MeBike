@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 
 interface ResetPasswordOtpFormProps {
   email: string;
+  count: number;
+  setCount: React.Dispatch<React.SetStateAction<number>>;
   onSubmit: (email: string, otp: string) => Promise<void>;
   onBack: () => void;
   isLoading?: boolean;
@@ -25,10 +27,12 @@ interface ResetPasswordOtpFormProps {
 
 export function ResetPasswordOtpForm({
   email,
+  count,
   onSubmit,
   onBack,
   isLoading = false,
   timeLeft,
+  setCount,
   onTimeLeftChange,
   onResendOtp,
 }: ResetPasswordOtpFormProps) {
@@ -39,13 +43,11 @@ export function ResetPasswordOtpForm({
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Countdown timer - using parent state
+  
   useEffect(() => {
     timerRef.current = setInterval(() => {
       if (timeLeft <= 1) {
         if (timerRef.current) clearInterval(timerRef.current);
-        // Don't auto-back, just let timer reach 0
-        // User can click "Gửi lại OTP" to resend
         onTimeLeftChange(0);
       } else {
         onTimeLeftChange(timeLeft - 1);
@@ -57,12 +59,18 @@ export function ResetPasswordOtpForm({
     };
   }, [onTimeLeftChange, timeLeft]);
 
+  useEffect(() => {
+    if (count >= 4 && timeLeft > 0) {
+      onTimeLeftChange(0);
+    }
+  }, [count, onTimeLeftChange, timeLeft]);
+
   const handleResendOtp = async () => {
     if (!onResendOtp) return;
     setIsResending(true);
     try {
       await onResendOtp();
-      // Reset OTP inputs
+      setCount(0); // Reset attempt count on resend
       setOtp(["", "", "", "", "", ""]);
       setError("");
       // Reset timer to 5 minutes
@@ -84,7 +92,7 @@ export function ResetPasswordOtpForm({
 
   const handleInputChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
-    
+
     const newOtp = [...otp];
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
@@ -95,7 +103,10 @@ export function ResetPasswordOtpForm({
     }
   };
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -148,13 +159,16 @@ export function ResetPasswordOtpForm({
               Xác thực OTP
             </CardTitle>
             <CardDescription className="text-muted-foreground">
-              Nhập mã OTP được gửi đến <span className="font-medium text-foreground">{email}</span>
+              Nhập mã OTP được gửi đến{" "}
+              <span className="font-medium text-foreground">{email}</span>
             </CardDescription>
             <div className="pt-2 text-sm">
-              <span className={cn(
-                "font-semibold",
-                timeLeft <= 60 ? "text-destructive" : "text-amber-600"
-              )}>
+              <span
+                className={cn(
+                  "font-semibold",
+                  timeLeft <= 60 ? "text-destructive" : "text-amber-600",
+                )}
+              >
                 ⏱️ Thời gian còn lại: {formatTime(timeLeft)}
               </span>
             </div>
@@ -204,7 +218,8 @@ export function ResetPasswordOtpForm({
                           ? "border-primary bg-primary/5"
                           : "border-gray-300 bg-white hover:border-gray-400",
                         error && "border-destructive",
-                        (isSubmitting || isLoading) && "opacity-50 cursor-not-allowed"
+                        (isSubmitting || isLoading) &&
+                          "opacity-50 cursor-not-allowed",
                       )}
                     />
                   ))}
@@ -222,25 +237,31 @@ export function ResetPasswordOtpForm({
               {/* Info Text */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-xs text-blue-700">
-                  💡 Kiểm tra thư mục spam nếu không thấy email. Mã OTP có hiệu lực trong 5 phút.
+                  💡 Kiểm tra thư mục spam nếu không thấy email. Mã OTP có hiệu
+                  lực trong 5 phút.
                 </p>
               </div>
 
-              {/* Buttons */}
               <div className="flex gap-3 pt-4">
                 <Button
                   type="submit"
-                  className="flex-1 h-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold
-                  bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white gap-2 cursor-pointer"
-                  disabled={isSubmitting || isLoading || otp.join("").length !== 6}
+                  className="flex-1 h-12 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 text-primary-foreground font-semibold bg-[hsl(214,100%,40%)] p-3 shadow-[var(--shadow-metro)] text-white gap-2 cursor-pointer"
+                  disabled={
+                    isSubmitting ||
+                    isLoading ||
+                    otp.join("").length !== 6 ||
+                    count >= 4
+                  }
                 >
                   {isSubmitting || isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Đang xác thực...
                     </>
+                  ) : count >= 4 ? (
+                    "Đã vượt quá số lần thử"
                   ) : (
-                    "Tiếp tục"
+                    `Tiếp tục (${count}/4)`
                   )}
                 </Button>
 
@@ -256,18 +277,31 @@ export function ResetPasswordOtpForm({
                 </Button>
               </div>
 
-              {/* Resend OTP Button - Below main buttons */}
               <Button
                 type="button"
                 variant="ghost"
                 onClick={handleResendOtp}
-                disabled={isResending || isSubmitting || isLoading || timeLeft > 0}
+                disabled={
+                  isResending ||
+                  isSubmitting ||
+                  isLoading ||
+                  // only disable while the countdown is active; after timer hits 0 the user should
+                  // always be allowed to request a new OTP, even if they have reached the
+                  // maximum number of verification attempts. the attempt counter is reset in
+                  // handleResendOtp anyway.
+                  timeLeft > 0
+                }
                 className="w-full h-10 text-primary hover:text-primary/80 gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isResending ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Đang gửi...
+                  </>
+                ) : count >= 4 ? (
+                  <>
+                    <RotateCcw className="w-4 h-4" />
+                    Gửi lại OTP (đã vượt số lần thử)
                   </>
                 ) : timeLeft > 0 ? (
                   <>

@@ -22,8 +22,10 @@ const ForgotPassword = () => {
   const [step, setStep] = useState<"email" | "otp" | "password">("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [timeLeft, setTimeLeft] = useState(300); // Move timer state to parent
-  const { forgotPassword, isLoadingForgottingPassword, resetPassword, isResetingPassword } = useAuthActions();
+  const [timeLeft, setTimeLeft] = useState(300); 
+  const { forgotPassword, isLoadingForgottingPassword, resetPassword, isResetingPassword , verifyOTPResetPassword } = useAuthActions();
+  const [resetToken , setResetToken ] = useState<string>("");
+  const [count , setCount] = useState<number>(0);
   const router = useRouter();
 
   const handleSendEmail = async (e: React.FormEvent) => {
@@ -37,10 +39,12 @@ const ForgotPassword = () => {
     }
   };
 
-  const handleVerifyOtp = async (emailParam: string, otpParam: string) => {
+  const handleVerifyOtp = async (email : string , otpParam: string) => {
     try {
-      console.log("📤 Verifying OTP with backend...");
+      setCount(prev => prev + 1);
       setOtp(otpParam);
+      const a = await verifyOTPResetPassword({email:email , otp : otpParam });
+      setResetToken(a.data.resetToken);
       setStep("password");
     } catch (error) {
       console.error('OTP verification error:', error);
@@ -48,10 +52,10 @@ const ForgotPassword = () => {
     }
   };
 
-  const handleResetPassword = async (emailParam: string, otpParam: string, newPassword: string) => {
+  const handleResetPassword = async (newPassword: string) => {
     try {
       console.log("🔄 Resetting password...");
-      await resetPassword({ email: emailParam, otp: otpParam, newPassword });
+      await resetPassword({ resetToken : resetToken , newPassword : newPassword });
       console.log("✅ Password reset successful");
       setTimeout(() => {
         router.push("/auth/login");
@@ -90,6 +94,8 @@ const ForgotPassword = () => {
     return (
       <ResetPasswordOtpForm
         email={email}
+        count={count}
+        setCount={setCount}
         onSubmit={handleVerifyOtp}
         onBack={handleBackFromOtp}
         isLoading={isResetingPassword}

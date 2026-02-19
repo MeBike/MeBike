@@ -15,6 +15,7 @@ import {
   RegisterSchemaFormData,
   UpdateProfileSchemaFormData,
   VerifyEmailSchemaFormData,
+  VerifyOTPForForgotPasswordSchemaFormData,
 } from "@/schemas/authSchema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
@@ -26,6 +27,8 @@ import { AxiosError } from "axios";
 import getAxiosErrorCodeMessage from "@/utils/error-util";
 import { USERS_MESSAGES } from "@/constants/messages";
 import { getErrorMessageUserFromCode } from "@/utils/map-message";
+import { useVerifyOTPResetPasswordMutation } from "./mutations/Auth/Password/useVerifyOTPResetPasswordMutation";
+import { ResetTokenResponse } from "@/types/Auth.type";
 export const useAuthActions = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -38,6 +41,7 @@ export const useAuthActions = () => {
   const useForgotPassword = useForgotPasswordMutation();
   const useConfirmResetPassword = useConfirmResetPasswordMutation();
   const useResendVerifyEmail = useResendVerifyEmailMutation();
+  const useVerifyOTPResetPassword = useVerifyOTPResetPasswordMutation();
   const changePassword = useCallback(
     (data: ChangePasswordSchemaFormData) => {
       return new Promise<void>((resolve, reject) => {
@@ -294,6 +298,25 @@ export const useAuthActions = () => {
     },
     [useUpdateProfile, queryClient],
   );
+  const verifyOTPResetPassword = useCallback(
+    (data: VerifyOTPForForgotPasswordSchemaFormData) => {
+      return new Promise<ResetTokenResponse>((resolve, reject) => {
+        useVerifyOTPResetPassword.mutate(data, {
+          onSuccess: (result) => {
+            if (result.status === 200) {
+              resolve(result.data as ResetTokenResponse);
+            }
+          },
+          onError: (error: unknown) => {
+            const code_error = getAxiosErrorCodeMessage(error);
+            toast.error(getErrorMessageUserFromCode(code_error));
+            reject(error);
+          },
+        });
+      });
+    },
+    [queryClient, useVerifyOTPResetPassword],
+  );
   return {
     changePassword,
     logIn,
@@ -312,5 +335,7 @@ export const useAuthActions = () => {
     isLoggingIn: useLogin.isPending,
     isLoggingOut: useLogout.isPending,
     isResetingPassword: useConfirmResetPassword.isPending,
+    verifyOTPResetPassword,
+    isVerifyResetingPassword: useVerifyOTPResetPassword.isPending,
   };
 };

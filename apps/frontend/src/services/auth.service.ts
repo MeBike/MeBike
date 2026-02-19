@@ -7,10 +7,11 @@ import type {
   RegisterSchemaFormData,
   ResetPasswordSchemaFormData,
   ConfirmResetPasswordSchemaFormData,
-  VerifyEmailSchemaFormData
+  VerifyEmailSchemaFormData,
+  VerifyOTPForForgotPasswordSchemaFormData
 } from "@schemas/authSchema";
 import type { AxiosResponse } from "axios";
-import { ProfileUserResponse , AuthResponse , MessageResponse} from "@/types";
+import { ProfileUserResponse , AuthResponse , MessageResponse , ResetTokenResponse} from "@/types";
 export const authService = {
   login: async (
     data: LoginSchemaFormData
@@ -95,6 +96,15 @@ export const authService = {
   ): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.put<MessageResponse>(
       "/users/change-password",
+      data
+    );
+    return response;
+  },
+  verifyOTP: async (
+    data : VerifyOTPForForgotPasswordSchemaFormData
+  ): Promise<AxiosResponse<ResetTokenResponse>> => {
+    const response = await fetchHttpClient.post<ResetTokenResponse>(
+      "/auth/password/reset/verify-otp",
       data
     );
     return response;

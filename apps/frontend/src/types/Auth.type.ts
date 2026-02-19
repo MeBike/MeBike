@@ -16,4 +16,9 @@ interface MessageResponse {
   };
   message: string;
 }
-export type { AuthResponse, MessageResponse };
+interface ResetTokenResponse {
+  data : {
+    resetToken : string;
+  }
+}
+export type { AuthResponse, MessageResponse, ResetTokenResponse };
