@@ -17,7 +17,6 @@ import React from "react";
 import { useAuthActions } from "@hooks/useAuthAction";
 import { ResetPasswordOtpForm } from "@/components/auth/ResetPasswordOtpForm";
 import { ResetPasswordNewForm } from "@/components/auth/ResetPasswordNewForm";
-import { setTokens } from "@/utils/tokenManager";
 
 const ForgotPassword = () => {
   const [step, setStep] = useState<"email" | "otp" | "password">("email");
@@ -26,6 +25,7 @@ const ForgotPassword = () => {
   const [timeLeft, setTimeLeft] = useState(300); 
   const { forgotPassword, isLoadingForgottingPassword, resetPassword, isResetingPassword , verifyOTPResetPassword } = useAuthActions();
   const [resetToken , setResetToken ] = useState<string>("");
+  const [count , setCount] = useState<number>(0);
   const router = useRouter();
 
   const handleSendEmail = async (e: React.FormEvent) => {
@@ -39,8 +39,9 @@ const ForgotPassword = () => {
     }
   };
 
-  const handleVerifyOtp = async (emailParam: string, otpParam: string) => {
+  const handleVerifyOtp = async (email : string , otpParam: string) => {
     try {
+      setCount(prev => prev + 1);
       setOtp(otpParam);
       const a = await verifyOTPResetPassword({email:email , otp : otpParam });
       setResetToken(a.data.resetToken);
@@ -93,6 +94,8 @@ const ForgotPassword = () => {
     return (
       <ResetPasswordOtpForm
         email={email}
+        count={count}
+        setCount={setCount}
         onSubmit={handleVerifyOtp}
         onBack={handleBackFromOtp}
         isLoading={isResetingPassword}
