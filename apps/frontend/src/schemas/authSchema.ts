@@ -102,8 +102,7 @@ export const resetPasswordSchema = z.object({
   otp: z.string().optional(),
 });
 export const confirmResetPasswordSchema = z.object({
-  email: z.email({ message: "Email không hợp lệ" }),
-  otp: z.string().min(1, { message: "Mã OTP không được để trống" }),
+  resetToken: z.string().min(1, { message: "Reset token không được để trống" }),
   newPassword: z
     .string()
     .min(8, { message: "Mật khẩu mới phải có ít nhất 8 ký tự" })
@@ -114,4 +113,9 @@ export const verifyEmailSchema = z.object({
   userId: z.string().refine(isValidUUID, { message: "User ID không hợp lệ" }),
   otp: z.string().min(1, { message: "Mã OTP không được để trống" }),
 });
+export const verifyOTPForForgotPasswordSchema = z.object({
+  email: z.email({ message: "Email không hợp lệ" }),
+  otp: z.string().min(1, { message: "Mã OTP không được để trống" }),
+});
+export type VerifyOTPForForgotPasswordSchemaFormData = z.infer<typeof verifyOTPForForgotPasswordSchema>;
 export type VerifyEmailSchemaFormData = z.infer<typeof verifyEmailSchema>;
