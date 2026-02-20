@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { Prisma as PrismaTypes } from "generated/prisma/client";
-
 import { isPrismaRawUniqueViolation } from "@/infrastructure/prisma-errors";
+import { Prisma as PrismaTypes } from "generated/prisma/client";
 
 function makeKnownRequestError(args: {
   code: string;
