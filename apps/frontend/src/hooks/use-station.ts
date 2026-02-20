@@ -14,6 +14,7 @@ import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
 import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
 import { QUERY_KEYS } from "@constants/queryKey";
 import getErrorMessage from "@/utils/error-message";
+import { getErrorMessageFromStationCode } from "@/utils/map-message";
 interface StationActionProps {
   hasToken?: boolean;
   stationId?: string;
