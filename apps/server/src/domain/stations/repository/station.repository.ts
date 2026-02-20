@@ -1,4 +1,5 @@
 import { Effect, Layer, Option } from "effect";
+import { uuidv7 } from "uuidv7";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 import type {
@@ -8,8 +9,13 @@ import type {
 
 import { makePageResult, normalizedPage } from "@/domain/shared/pagination";
 import { Prisma } from "@/infrastructure/prisma";
+import {
+  isPrismaRawUniqueViolation,
+  isPrismaUniqueViolation,
+} from "@/infrastructure/prisma-errors";
 
 import type {
+  CreateStationInput,
   NearestSearchArgs,
   NearestStationRow,
   StationFilter,
@@ -18,7 +24,7 @@ import type {
 } from "../models";
 import type { NearestStationRowDb } from "./station.repository.helpers";
 
-import { StationRepositoryError } from "../errors";
+import { StationNameAlreadyExists, StationRepositoryError } from "../errors";
 import {
   applyCounts,
   getBikeCounts,
@@ -28,6 +34,9 @@ import {
 
 // TODO: If create/update name is added, handle Station_name_key unique violation → DuplicateStationName
 export type StationRepo = {
+  create: (
+    input: CreateStationInput,
+  ) => Effect.Effect<StationRow, StationRepositoryError | StationNameAlreadyExists>;
   listWithOffset: (
     filter: StationFilter,
     pageReq: PageRequest<StationSortField>,
@@ -72,6 +81,63 @@ export function makeStationRepository(
   client: PrismaClient | PrismaTypes.TransactionClient,
 ): StationRepo {
   return {
+    create(input: CreateStationInput) {
+      return Effect.gen(function* () {
+        const stationId = uuidv7();
+        const rows = yield* Effect.tryPromise({
+          try: () =>
+            client.$queryRaw<{
+              id: string;
+              name: string;
+              address: string;
+              capacity: number;
+              latitude: number;
+              longitude: number;
+            }[]>`
+              INSERT INTO "Station" (
+                "id",
+                "name",
+                "address",
+                "capacity",
+                "latitude",
+                "longitude",
+                "position",
+                "updated_at"
+              ) VALUES (
+                ${stationId},
+                ${input.name},
+                ${input.address},
+                ${input.capacity},
+                ${input.latitude},
+                ${input.longitude},
+                ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography,
+                now()
+              )
+              RETURNING "id", "name", "address", "capacity", "latitude", "longitude"
+            `,
+          catch: e =>
+            isPrismaUniqueViolation(e) || isPrismaRawUniqueViolation(e)
+              ? new StationNameAlreadyExists({ name: input.name })
+              : new StationRepositoryError({
+                  operation: "create",
+                  cause: e,
+                }),
+        });
+
+        const created = rows[0];
+        if (!created) {
+          return yield* Effect.fail(
+            new StationRepositoryError({
+              operation: "create.returning",
+              cause: new Error("Station insert returned no rows"),
+            }),
+          );
+        }
+
+        return applyCounts(created, undefined);
+      });
+    },
+
     listWithOffset(
       filter: StationFilter,
       pageReq: PageRequest<StationSortField>,

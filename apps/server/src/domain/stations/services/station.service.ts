@@ -2,7 +2,9 @@ import { Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
 
+import type { StationNameAlreadyExists } from "../errors";
 import type {
+  CreateStationInput,
   NearestSearchArgs,
   NearestStationRow,
   StationFilter,
@@ -15,6 +17,9 @@ import { StationNotFound } from "../errors";
 import { StationRepository } from "../repository/station.repository";
 
 export type StationService = {
+  createStation: (
+    input: CreateStationInput,
+  ) => Effect.Effect<StationRow, StationNameAlreadyExists>;
   listStations: (
     filter: StationFilter,
     pageReq: PageRequest<StationSortField>,
@@ -29,6 +34,10 @@ export type StationService = {
 
 function makeStationService(repo: StationRepo): StationService {
   return {
+    createStation: input =>
+      repo.create(input).pipe(
+        Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+      ),
     listStations: (filter, page) =>
       repo.listWithOffset(filter, page).pipe(
         Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
