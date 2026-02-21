@@ -5,19 +5,19 @@ import type {
   ForgotPasswordSchemaFormData,
   LoginSchemaFormData,
   RegisterSchemaFormData,
-  ResetPasswordSchemaFormData,
   ConfirmResetPasswordSchemaFormData,
   VerifyEmailSchemaFormData,
   VerifyOTPForForgotPasswordSchemaFormData
 } from "@schemas/authSchema";
 import type { AxiosResponse } from "axios";
 import { ProfileUserResponse , AuthResponse , MessageResponse , ResetTokenResponse} from "@/types";
+import { AUTH_ENDPOINT } from "@/constants/end-point";
 export const authService = {
   login: async (
     data: LoginSchemaFormData
   ): Promise<AxiosResponse<AuthResponse>> => {
     const response = await fetchHttpClient.post<AuthResponse>(
-      "/auth/login",
+      AUTH_ENDPOINT.AUTH.LOGIN,
       data
     );
     return response;
@@ -26,7 +26,7 @@ export const authService = {
     data: RegisterSchemaFormData
   ): Promise<AxiosResponse<AuthResponse>> => {
     const response = await fetchHttpClient.post<AuthResponse>(
-      "/auth/register",
+      AUTH_ENDPOINT.AUTH.REGISTER,
       data
     );
     return response;
@@ -35,7 +35,7 @@ export const authService = {
     refreshToken: string
   ): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
-      "/auth/logout",
+      AUTH_ENDPOINT.AUTH.LOGOUT,
       { refreshToken }
     );
     return response;
@@ -44,40 +44,40 @@ export const authService = {
     refreshToken : string
   ): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
-      "/auth/logout-all",
+      AUTH_ENDPOINT.AUTH.LOGOUT_ALL,
       { refreshToken }
     );
     return response;
   },
   resendVerifyEmail: async (): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
-      "/auth/verify-email/resend"
+      AUTH_ENDPOINT.AUTH.RESEND_VERIFY_EMAIL
     );
     return response;
   },
   sendVerifyEmail: async (): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
-      "/auth/verify-email/send"
+      AUTH_ENDPOINT.AUTH.SEND_VERIFY_EMAIL
     );
     return response;
   },
   verifyEmail: async (data:VerifyEmailSchemaFormData): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
-      "/auth/verify-email/otp",
+      AUTH_ENDPOINT.AUTH.VERIFY_EMAIL,
       data
     );
     return response;
   },
   getMe: async (): Promise<AxiosResponse<ProfileUserResponse>> => {
     const response =
-      await fetchHttpClient.get<ProfileUserResponse>("/users/me");
+      await fetchHttpClient.get<ProfileUserResponse>(AUTH_ENDPOINT.AUTH.GET_ME);
     return response;
   },
   refreshToken: async (
     refreshToken: string
   ): Promise<AxiosResponse<AuthResponse>> => {
     const response = await fetchHttpClient.post<AuthResponse>(
-      "/auth/refresh",
+      AUTH_ENDPOINT.AUTH.REFRESH_TOKEN,
       { refreshToken }
     );
     return response;
@@ -86,7 +86,7 @@ export const authService = {
     data: Partial<UpdateProfileSchemaFormData>
   ): Promise<AxiosResponse<ProfileUserResponse>> => {
     const response = await fetchHttpClient.patch<ProfileUserResponse>(
-      "/users/me",
+      AUTH_ENDPOINT.AUTH.GET_ME,
       data
     );
     return response;
@@ -95,7 +95,7 @@ export const authService = {
     data: ChangePasswordSchemaFormData
   ): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.put<MessageResponse>(
-      "/users/change-password",
+      AUTH_ENDPOINT.AUTH.CHANGE_PASSWORD,
       data
     );
     return response;
@@ -104,7 +104,7 @@ export const authService = {
     data : VerifyOTPForForgotPasswordSchemaFormData
   ): Promise<AxiosResponse<ResetTokenResponse>> => {
     const response = await fetchHttpClient.post<ResetTokenResponse>(
-      "/auth/password/reset/verify-otp",
+      AUTH_ENDPOINT.AUTH.VERIFY_FORGOT_PASSWORD,
       data
     );
     return response;
@@ -113,7 +113,7 @@ export const authService = {
     data: ForgotPasswordSchemaFormData
   ): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
-      "/auth/password/reset/send",
+      AUTH_ENDPOINT.AUTH.FORGOT_PASSWORD,
       data
     );
     return response;
@@ -122,7 +122,7 @@ export const authService = {
     data : ConfirmResetPasswordSchemaFormData
   ): Promise<AxiosResponse<MessageResponse>> => {
     const response = await fetchHttpClient.post<MessageResponse>(
-      "/auth/password/reset/confirm",
+      AUTH_ENDPOINT.AUTH.RESET_PASSWORD,
       data
     );
     return response;
