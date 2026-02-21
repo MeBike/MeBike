@@ -122,7 +122,7 @@ export class FetchHttpClient {
       throw new Error("No refresh token available");
     }
     const response = await axios.post(
-      `${this.baseURL}/users/refresh-token`,
+      `${this.baseURL}/auth/refresh`,
       { refresh_token: refreshToken },
       { headers: { "Content-Type": "application/json" } }
     );
