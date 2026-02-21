@@ -8,7 +8,7 @@ export const AUTH_ENDPOINT = {
         SEND_VERIFY_EMAIL: "/auth/verify-email/send",
         VERIFY_EMAIL: "/auth/verify-email/otp",
         GET_ME: "/users/me",
-        REFRESH_TOKEN: "/users/refresh-token",
+        REFRESH_TOKEN: "/auth/refresh",
         CHANGE_PASSWORD: "/users/change-password",
         FORGOT_PASSWORD: "/auth/password/reset/send",
         VERIFY_FORGOT_PASSWORD: "/users/verify-forgot-password",
