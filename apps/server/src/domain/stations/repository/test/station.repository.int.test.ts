@@ -76,6 +76,56 @@ describe("stationRepository Integration", () => {
     expect(result.total).toBe(2);
   });
 
+  it("create inserts station with coordinates", async () => {
+    const created = await Effect.runPromise(
+      repo.create({
+        name: "Create Station",
+        address: "456 Create St",
+        capacity: 24,
+        latitude: 10.776,
+        longitude: 106.701,
+      }),
+    );
+
+    expect(created.id).toBeTruthy();
+    expect(created.name).toBe("Create Station");
+    expect(created.address).toBe("456 Create St");
+    expect(created.capacity).toBe(24);
+    expect(created.latitude).toBe(10.776);
+    expect(created.longitude).toBe(106.701);
+    expect(created.totalBikes).toBe(0);
+    expect(created.emptySlots).toBe(24);
+  });
+
+  it("create maps duplicate station name to StationNameAlreadyExists", async () => {
+    const name = `Dup Station ${Date.now()}`;
+    await Effect.runPromise(
+      repo.create({
+        name,
+        address: "123 Dup St",
+        capacity: 10,
+        latitude: 10.0,
+        longitude: 20.0,
+      }),
+    );
+
+    const result = await Effect.runPromise(
+      repo.create({
+        name,
+        address: "123 Dup St",
+        capacity: 10,
+        latitude: 10.0,
+        longitude: 20.0,
+      }).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected duplicate-name failure but got success");
+    }
+
+    expect(result.left._tag).toBe("StationNameAlreadyExists");
+  });
+
   it("getById returns Option.none for missing station", async () => {
     const result = await Effect.runPromise(repo.getById(uuidv7()));
     expect(Option.isNone(result)).toBe(true);

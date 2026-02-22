@@ -49,3 +49,23 @@ export function isPrismaRecordNotFound(
     && error.code === "P2025"
   );
 }
+
+/**
+ * EN: Detects a raw-query unique violation wrapped by Prisma as P2010 with PostgreSQL code 23505.
+ * VI: Nhận diện lỗi unique từ raw query, được Prisma bọc thành P2010 với mã PostgreSQL 23505.
+ */
+export function isPrismaRawUniqueViolation(error: unknown): boolean {
+  if (!(error instanceof PrismaTypes.PrismaClientKnownRequestError)) {
+    return false;
+  }
+  if (error.code !== "P2010") {
+    return false;
+  }
+  const originalCode = (
+    error.meta as { driverAdapterError?: { cause?: { originalCode?: unknown } } } | undefined
+  )
+    ?.driverAdapterError
+    ?.cause
+    ?.originalCode;
+  return originalCode === "23505";
+}
