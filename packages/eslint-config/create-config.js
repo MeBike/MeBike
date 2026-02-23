@@ -13,6 +13,7 @@ export default function createConfig(options, ...userConfigs) {
         "**/*.md",
         "**/node_modules/**",
         "**/apps/backend/**",
+        "**/apps/server/prisma/seed/vn.json",
       ],
       stylistic: {
         indent: 2,

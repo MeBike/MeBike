@@ -9,6 +9,16 @@ import { PrismaClient } from "generated/prisma/client";
 
 import { makeStationRepository } from "../station.repository";
 
+const vietnamCoords = {
+  latitude: 21.37481197044971,
+  longitude: 104.84103211277719,
+};
+
+const australiaCoords = {
+  latitude: -19.88806511187122,
+  longitude: 120.81014790361665,
+};
+
 describe("stationRepository Integration", () => {
   let container: { stop: () => Promise<void>; url: string };
   let client: PrismaClient;
@@ -97,8 +107,8 @@ describe("stationRepository Integration", () => {
         name: "Create Station",
         address: "456 Create St",
         capacity: 24,
-        latitude: 10.776,
-        longitude: 106.701,
+        latitude: vietnamCoords.latitude,
+        longitude: vietnamCoords.longitude,
       }),
     );
 
@@ -106,8 +116,8 @@ describe("stationRepository Integration", () => {
     expect(created.name).toBe("Create Station");
     expect(created.address).toBe("456 Create St");
     expect(created.capacity).toBe(24);
-    expect(created.latitude).toBe(10.776);
-    expect(created.longitude).toBe(106.701);
+    expect(created.latitude).toBeCloseTo(vietnamCoords.latitude, 10);
+    expect(created.longitude).toBeCloseTo(vietnamCoords.longitude, 10);
     expect(created.totalBikes).toBe(0);
     expect(created.emptySlots).toBe(24);
   });
@@ -195,8 +205,8 @@ describe("stationRepository Integration", () => {
         name: `Outside Area ${Date.now()}`,
         address: "Outside",
         capacity: 10,
-        latitude: 13.7563,
-        longitude: 100.5018,
+        latitude: australiaCoords.latitude,
+        longitude: australiaCoords.longitude,
       }).pipe(Effect.either),
     );
 
