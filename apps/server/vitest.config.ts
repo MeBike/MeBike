@@ -12,12 +12,11 @@ export default defineConfig({
       "tests/**/*.{test,spec,int.test}.ts",
       "examples/**/*.{test,spec}.ts",
       "src/**/test/**/*.{test,spec}.ts",
-      "src/**/test/**/*.int.test.ts",
     ],
     coverage: {
       reporter: ["text", "html"],
     },
-    globalSetup: ["./src/test/db/global-setup.ts"],
+    exclude: ["**/*.int.test.ts"],
   },
   resolve: {
     alias: {

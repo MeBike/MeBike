@@ -87,9 +87,7 @@ export const CreateReservationRequestSchema = z.object({
   startTime: z.string().datetime({ offset: true }).optional(),
 }).openapi("CreateReservationRequest");
 
-export const ReservationDetailResponseSchema = z.object({
-  data: ReservationDetailSchema,
-}).openapi("ReservationDetailResponse");
+export const ReservationDetailResponseSchema = ReservationDetailSchema.openapi("ReservationDetailResponse");
 
 export const ListMyReservationsQuerySchema = z.object({
   ...paginationQueryFields,

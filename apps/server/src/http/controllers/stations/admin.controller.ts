@@ -59,6 +59,57 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
   );
 };
 
+const updateStation: RouteHandler<StationsRoutes["updateStation"]> = async (c) => {
+  const params = c.req.valid("param");
+  const body = c.req.valid("json");
+
+  const eff = Effect.flatMap(StationServiceTag, service =>
+    service.updateStation(params.stationId, body));
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) => c.json<StationSummary, 200>(right, 200)),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("StationNotFound", ({ id }) =>
+          c.json<StationErrorResponse, 404>({
+            error: stationErrorMessages.STATION_NOT_FOUND,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_NOT_FOUND,
+              stationId: id,
+            },
+          }, 404)),
+        Match.tag("StationNameAlreadyExists", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.STATION_NAME_ALREADY_EXISTS,
+            details: {
+              code: StationErrorCodeSchema.enum.STATION_NAME_ALREADY_EXISTS,
+            },
+          }, 400)),
+        Match.tag("StationCapacityLimitExceeded", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.CAPACITY_LIMIT_EXCEEDED,
+            details: {
+              code: StationErrorCodeSchema.enum.CAPACITY_LIMIT_EXCEEDED,
+            },
+          }, 400)),
+        Match.tag("StationOutsideSupportedArea", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.OUTSIDE_SUPPORTED_AREA,
+            details: {
+              code: StationErrorCodeSchema.enum.OUTSIDE_SUPPORTED_AREA,
+            },
+          }, 400)),
+        Match.orElse(() => {
+          throw left;
+        }),
+      )),
+    Match.exhaustive,
+  );
+};
+
 export const StationAdminController = {
   createStation,
+  updateStation,
 } as const;

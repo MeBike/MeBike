@@ -16,6 +16,7 @@ import type {
   StationFilter,
   StationRow,
   StationSortField,
+  UpdateStationInput,
 } from "../models";
 import type { StationRepo } from "../repository/station.repository";
 
@@ -28,6 +29,16 @@ export type StationService = {
   ) => Effect.Effect<
     StationRow,
     StationNameAlreadyExists | StationOutsideSupportedArea | StationCapacityLimitExceeded
+  >;
+  updateStation: (
+    id: string,
+    input: UpdateStationInput,
+  ) => Effect.Effect<
+    StationRow,
+    | StationNotFound
+    | StationNameAlreadyExists
+    | StationOutsideSupportedArea
+    | StationCapacityLimitExceeded
   >;
   listStations: (
     filter: StationFilter,
@@ -54,6 +65,25 @@ function makeStationService(repo: StationRepo): StationService {
         return yield* repo.create(input).pipe(
           Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
         );
+      }),
+    updateStation: (id, input) =>
+      Effect.gen(function* () {
+        if (
+          input.capacity != null
+          && input.capacity > env.STATION_CAPACITY_LIMIT
+        ) {
+          return yield* Effect.fail(new StationCapacityLimitExceededError({
+            capacity: input.capacity,
+            maxCapacity: env.STATION_CAPACITY_LIMIT,
+          }));
+        }
+        const updatedOpt = yield* repo.update(id, input).pipe(
+          Effect.catchTag("StationRepositoryError", err => Effect.die(err)),
+        );
+        if (Option.isNone(updatedOpt)) {
+          return yield* Effect.fail(new StationNotFound({ id }));
+        }
+        return updatedOpt.value;
       }),
     listStations: (filter, page) =>
       repo.listWithOffset(filter, page).pipe(

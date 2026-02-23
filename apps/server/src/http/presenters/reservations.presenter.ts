@@ -2,7 +2,7 @@ import type { ReservationsContracts } from "@mebike/shared";
 
 import type { ReservationRow } from "@/domain/reservations";
 
-type ReservationResponseItem = ReservationsContracts.ReservationDetailResponse["data"];
+type ReservationResponseItem = ReservationsContracts.ReservationDetail;
 
 export function toContractReservation(row: ReservationRow): ReservationResponseItem {
   return {

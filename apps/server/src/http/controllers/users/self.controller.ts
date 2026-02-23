@@ -39,7 +39,7 @@ const me: RouteHandler<UsersRoutes["me"]> = async (c) => {
   const result = await c.var.runPromise(eff);
 
   if (result._tag === "Some") {
-    return c.json<UsersContracts.MeResponse, 200>({ data: mapUserDetail(result.value) }, 200);
+    return c.json<UsersContracts.MeResponse, 200>(mapUserDetail(result.value), 200);
   }
 
   return c.json<UsersContracts.UserErrorResponse, 404>(
@@ -77,7 +77,7 @@ const updateMe: RouteHandler<UsersRoutes["updateMe"]> = async (c) => {
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) => {
       if (right._tag === "Some") {
-        return c.json<UsersContracts.UpdateMeResponse, 200>({ data: mapUserDetail(right.value) }, 200);
+        return c.json<UsersContracts.UpdateMeResponse, 200>(mapUserDetail(right.value), 200);
       }
       return c.json<UsersContracts.UserErrorResponse, 404>(
         {

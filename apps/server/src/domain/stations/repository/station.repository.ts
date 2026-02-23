@@ -21,6 +21,7 @@ import type {
   StationFilter,
   StationRow,
   StationSortField,
+  UpdateStationInput,
 } from "../models";
 import type { NearestStationRowDb } from "./station.repository.helpers";
 
@@ -42,6 +43,13 @@ export type StationRepo = {
     input: CreateStationInput,
   ) => Effect.Effect<
     StationRow,
+    StationRepositoryError | StationNameAlreadyExists | StationOutsideSupportedArea
+  >;
+  update: (
+    id: string,
+    input: UpdateStationInput,
+  ) => Effect.Effect<
+    Option.Option<StationRow>,
     StationRepositoryError | StationNameAlreadyExists | StationOutsideSupportedArea
   >;
   listWithOffset: (
@@ -178,6 +186,143 @@ export function makeStationRepository(
         }
 
         return applyCounts(created, undefined);
+      });
+    },
+
+    update(id: string, input: UpdateStationInput) {
+      return Effect.gen(function* () {
+        const rows = yield* Effect.tryPromise({
+          try: () =>
+            client.$queryRaw<{
+              id: string;
+              name: string;
+              address: string;
+              capacity: number;
+              latitude: number;
+              longitude: number;
+            }[]>`
+              WITH boundary AS (
+                SELECT "geom"
+                FROM "GeoBoundary"
+                WHERE "code" = 'VN'
+                LIMIT 1
+              )
+              UPDATE "Station"
+              SET
+                "name" = COALESCE(${input.name}, "Station"."name"),
+                "address" = COALESCE(${input.address}, "Station"."address"),
+                "capacity" = COALESCE(${input.capacity}, "Station"."capacity"),
+                "latitude" = COALESCE(${input.latitude}, "Station"."latitude"),
+                "longitude" = COALESCE(${input.longitude}, "Station"."longitude"),
+                "position" = ST_SetSRID(
+                  ST_MakePoint(
+                    COALESCE(${input.longitude}, "Station"."longitude"),
+                    COALESCE(${input.latitude}, "Station"."latitude")
+                  ),
+                  4326
+                )::geography,
+                "updated_at" = now()
+              FROM boundary
+              WHERE "Station"."id" = ${id}
+                AND ST_Covers(
+                  boundary."geom",
+                  ST_SetSRID(
+                    ST_MakePoint(
+                      COALESCE(${input.longitude}, "Station"."longitude"),
+                      COALESCE(${input.latitude}, "Station"."latitude")
+                    ),
+                    4326
+                  )::geometry
+                )
+              RETURNING "id", "name", "address", "capacity", "latitude", "longitude"
+            `,
+          catch: e =>
+            isPrismaUniqueViolation(e) || isPrismaRawUniqueViolation(e)
+              ? new StationNameAlreadyExists({ name: input.name ?? "unknown" })
+              : new StationRepositoryError({
+                  operation: "update",
+                  cause: e,
+                }),
+        });
+
+        const updated = rows[0];
+        if (updated) {
+          const countsMap = yield* getBikeCounts(client, [updated.id]);
+          return Option.some(applyCounts(updated, countsMap.get(updated.id)));
+        }
+
+        const probeRows = yield* Effect.tryPromise({
+          try: () =>
+            client.$queryRaw<{
+              exists: boolean;
+              hasBoundary: boolean;
+              inside: boolean;
+              latitude: number | null;
+              longitude: number | null;
+            }[]>`
+              WITH target AS (
+                SELECT "latitude", "longitude"
+                FROM "Station"
+                WHERE "id" = ${id}
+                LIMIT 1
+              ),
+              boundary AS (
+                SELECT "geom"
+                FROM "GeoBoundary"
+                WHERE "code" = 'VN'
+                LIMIT 1
+              )
+              SELECT
+                EXISTS(SELECT 1 FROM target) AS "exists",
+                EXISTS(SELECT 1 FROM boundary) AS "hasBoundary",
+                COALESCE((
+                  SELECT ST_Covers(
+                    b."geom",
+                    ST_SetSRID(
+                      ST_MakePoint(
+                        COALESCE(${input.longitude}, t."longitude"),
+                        COALESCE(${input.latitude}, t."latitude")
+                      ),
+                      4326
+                    )::geometry
+                  )
+                  FROM target t
+                  CROSS JOIN boundary b
+                ), false) AS "inside",
+                (SELECT COALESCE(${input.latitude}, t."latitude") FROM target t LIMIT 1) AS "latitude",
+                (SELECT COALESCE(${input.longitude}, t."longitude") FROM target t LIMIT 1) AS "longitude"
+            `,
+          catch: e =>
+            new StationRepositoryError({
+              operation: "update.probe",
+              cause: e,
+            }),
+        });
+
+        const probe = probeRows[0];
+        if (!probe) {
+          return Option.none();
+        }
+        if (!probe.hasBoundary) {
+          return yield* Effect.fail(
+            new StationRepositoryError({
+              operation: "update.probe.missingBoundary",
+              cause: new Error("Missing GeoBoundary row for code VN"),
+            }),
+          );
+        }
+        if (!probe.exists) {
+          return Option.none();
+        }
+        if (!probe.inside) {
+          return yield* Effect.fail(
+            new StationOutsideSupportedArea({
+              latitude: probe.latitude ?? input.latitude ?? 0,
+              longitude: probe.longitude ?? input.longitude ?? 0,
+            }),
+          );
+        }
+        return Option.none();
       });
     },
 

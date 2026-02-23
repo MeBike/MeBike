@@ -60,7 +60,7 @@ export const userService = {
           const data = await readJson(response);
           const okSchema = ServerRoutes.users.me.responses[200].content["application/json"].schema;
           const parsed = decodeWithSchema(okSchema, data);
-          return parsed.ok ? ok(parsed.value.data) : err({ _tag: "DecodeError" });
+          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
         }
         case HTTP_STATUS.UNAUTHORIZED:
         case HTTP_STATUS.NOT_FOUND: {
@@ -94,7 +94,7 @@ export const userService = {
           const data = await readJson(response);
           const okSchema = ServerRoutes.users.updateMe.responses[200].content["application/json"].schema;
           const parsed = decodeWithSchema(okSchema, data);
-          return parsed.ok ? ok(parsed.value.data) : err({ _tag: "DecodeError" });
+          return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
         }
         case HTTP_STATUS.UNAUTHORIZED:
         case HTTP_STATUS.NOT_FOUND:

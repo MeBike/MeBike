@@ -23,7 +23,7 @@ const adminStats: RouteHandler<UsersRoutes["adminStats"]> = async (c) => {
   );
 
   const data = await c.var.runPromise(eff);
-  return c.json<UsersContracts.AdminUserStatsResponse, 200>({ data }, 200);
+  return c.json<UsersContracts.AdminUserStatsResponse, 200>(data, 200);
 };
 
 const adminActiveUsers: RouteHandler<UsersRoutes["adminActiveUsers"]> = async (c) => {
@@ -116,7 +116,7 @@ const adminNewUsers: RouteHandler<UsersRoutes["adminNewUsers"]> = async (c) => {
   );
 
   const data = await c.var.runPromise(eff);
-  return c.json<UsersContracts.NewUsersStatsResponse, 200>({ data }, 200);
+  return c.json<UsersContracts.NewUsersStatsResponse, 200>(data, 200);
 };
 
 const adminDashboardStats: RouteHandler<UsersRoutes["adminDashboardStats"]> = async (c) => {
@@ -129,7 +129,7 @@ const adminDashboardStats: RouteHandler<UsersRoutes["adminDashboardStats"]> = as
   );
 
   const data = await c.var.runPromise(eff);
-  return c.json<UsersContracts.DashboardStatsResponse, 200>({ data }, 200);
+  return c.json<UsersContracts.DashboardStatsResponse, 200>(data, 200);
 };
 
 export const AdminUserStatsController = {
