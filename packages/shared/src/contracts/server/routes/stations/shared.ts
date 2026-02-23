@@ -28,6 +28,16 @@ export {
 
 export const StationSortFieldSchema = z.enum(["name", "capacity", "updatedAt"]);
 
+const LatitudeSchema = z.number()
+  .refine(Number.isFinite, { message: "latitude must be a number" })
+  .min(-90, { message: "latitude must be greater than or equal to -90" })
+  .max(90, { message: "latitude must be less than or equal to 90" });
+
+const LongitudeSchema = z.number()
+  .refine(Number.isFinite, { message: "longitude must be a number" })
+  .min(-180, { message: "longitude must be greater than or equal to -180" })
+  .max(180, { message: "longitude must be less than or equal to 180" });
+
 function requiredNumberQuery(field: string, example?: number) {
   return z.preprocess(
     value => (typeof value === "string" ? Number(value) : value),
@@ -49,6 +59,50 @@ function optionalNumberQuery(field: string, example?: number) {
       z
         .number()
         .refine(Number.isFinite, { message: `${field} must be a number` }),
+    )
+    .optional()
+    .openapi({ example });
+}
+
+function requiredLatitudeQuery(example?: number) {
+  return z.preprocess(
+    value => (typeof value === "string" ? Number(value) : value),
+    LatitudeSchema,
+  ).openapi({ example });
+}
+
+function requiredLongitudeQuery(example?: number) {
+  return z.preprocess(
+    value => (typeof value === "string" ? Number(value) : value),
+    LongitudeSchema,
+  ).openapi({ example });
+}
+
+function optionalLatitudeQuery(example?: number) {
+  return z
+    .preprocess(
+      value =>
+        value === undefined || value === null
+          ? undefined
+          : typeof value === "string"
+            ? Number(value)
+            : value,
+      LatitudeSchema,
+    )
+    .optional()
+    .openapi({ example });
+}
+
+function optionalLongitudeQuery(example?: number) {
+  return z
+    .preprocess(
+      value =>
+        value === undefined || value === null
+          ? undefined
+          : typeof value === "string"
+            ? Number(value)
+            : value,
+      LongitudeSchema,
     )
     .optional()
     .openapi({ example });
@@ -78,8 +132,8 @@ export const StationListQuerySchema = z
   .object({
     name: z.string().optional(),
     address: z.string().optional(),
-    latitude: optionalNumberQuery("latitude"),
-    longitude: optionalNumberQuery("longitude"),
+    latitude: optionalLatitudeQuery(),
+    longitude: optionalLongitudeQuery(),
     capacity: optionalNumberQuery("capacity", 20),
     ...paginationQueryFields,
     sortBy: StationSortFieldSchema.optional().openapi({
@@ -98,35 +152,36 @@ export const StationListQuerySchema = z
 export const CreateStationBodySchema = z.object({
   name: z.string().min(1),
   address: z.string().min(1),
-  capacity: z.number().refine(Number.isFinite, {
-    message: "capacity must be a number",
-  }),
-  latitude: z.number().refine(Number.isFinite, {
-    message: "latitude must be a number",
-  }),
-  longitude: z.number().refine(Number.isFinite, {
-    message: "longitude must be a number",
-  }),
+  capacity: z.number()
+    .int({
+      message: "capacity must be an integer",
+    })
+    .min(1, {
+      message: "capacity must be greater than or equal to 1",
+    }),
+  latitude: LatitudeSchema,
+  longitude: LongitudeSchema,
 }).openapi("CreateStationBody");
 
 export const UpdateStationBodySchema = z.object({
   name: z.string().min(1).optional(),
   address: z.string().min(1).optional(),
-  capacity: z.number().refine(Number.isFinite, {
-    message: "capacity must be a number",
-  }).optional(),
-  latitude: z.number().refine(Number.isFinite, {
-    message: "latitude must be a number",
-  }).optional(),
-  longitude: z.number().refine(Number.isFinite, {
-    message: "longitude must be a number",
-  }).optional(),
+  capacity: z.number()
+    .int({
+      message: "capacity must be an integer",
+    })
+    .min(1, {
+      message: "capacity must be greater than or equal to 1",
+    })
+    .optional(),
+  latitude: LatitudeSchema.optional(),
+  longitude: LongitudeSchema.optional(),
 }).openapi("UpdateStationBody");
 
 export const NearbyStationsQuerySchema = z
   .object({
-    latitude: requiredNumberQuery("latitude", 10.762622),
-    longitude: requiredNumberQuery("longitude", 106.660172),
+    latitude: requiredLatitudeQuery(10.762622),
+    longitude: requiredLongitudeQuery(106.660172),
     maxDistance: optionalNumberQuery("maxDistance", 20000).openapi({
       description: "Max distance in meters",
       example: 20000,

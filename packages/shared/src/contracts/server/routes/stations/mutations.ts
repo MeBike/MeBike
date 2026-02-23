@@ -42,6 +42,22 @@ export const createStation = createRoute({
                 },
               },
             },
+            CapacityLimitExceeded: {
+              value: {
+                error: "Station capacity exceeds configured limit",
+                details: {
+                  code: StationErrorCodeSchema.enum.CAPACITY_LIMIT_EXCEEDED,
+                },
+              },
+            },
+            OutsideSupportedArea: {
+              value: {
+                error: "Coordinates are outside supported service area",
+                details: {
+                  code: StationErrorCodeSchema.enum.OUTSIDE_SUPPORTED_AREA,
+                },
+              },
+            },
           },
         },
       },

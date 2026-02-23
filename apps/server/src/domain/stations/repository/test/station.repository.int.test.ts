@@ -9,6 +9,16 @@ import { PrismaClient } from "generated/prisma/client";
 
 import { makeStationRepository } from "../station.repository";
 
+const vietnamCoords = {
+  latitude: 21.37481197044971,
+  longitude: 104.84103211277719,
+};
+
+const australiaCoords = {
+  latitude: -19.88806511187122,
+  longitude: 120.81014790361665,
+};
+
 describe("stationRepository Integration", () => {
   let container: { stop: () => Promise<void>; url: string };
   let client: PrismaClient;
@@ -20,6 +30,21 @@ describe("stationRepository Integration", () => {
     const adapter = new PrismaPg({ connectionString: container.url });
     client = new PrismaClient({ adapter });
     repo = makeStationRepository(client);
+
+    await client.$executeRaw`
+      INSERT INTO "GeoBoundary" ("code", "geom")
+      VALUES (
+        'VN',
+        ST_Multi(
+          ST_GeomFromText(
+            'POLYGON((102 8, 110.5 8, 110.5 23.5, 102 23.5, 102 8))',
+            4326
+          )
+        )::geometry(MultiPolygon, 4326)
+      )
+      ON CONFLICT ("code") DO UPDATE
+        SET "geom" = EXCLUDED."geom"
+    `;
   }, 60000);
 
   afterEach(async () => {
@@ -65,8 +90,8 @@ describe("stationRepository Integration", () => {
   };
 
   it("listWithOffset returns stations", async () => {
-    await createStation({ name: "Station A", latitude: 10.0, longitude: 20.0 });
-    await createStation({ name: "Station B", latitude: 11.0, longitude: 21.0 });
+    await createStation({ name: "Station A", latitude: 10.0, longitude: 106.0 });
+    await createStation({ name: "Station B", latitude: 11.0, longitude: 107.0 });
 
     const result = await Effect.runPromise(
       repo.listWithOffset({}, { page: 1, pageSize: 10 }),
@@ -82,8 +107,8 @@ describe("stationRepository Integration", () => {
         name: "Create Station",
         address: "456 Create St",
         capacity: 24,
-        latitude: 10.776,
-        longitude: 106.701,
+        latitude: vietnamCoords.latitude,
+        longitude: vietnamCoords.longitude,
       }),
     );
 
@@ -91,8 +116,8 @@ describe("stationRepository Integration", () => {
     expect(created.name).toBe("Create Station");
     expect(created.address).toBe("456 Create St");
     expect(created.capacity).toBe(24);
-    expect(created.latitude).toBe(10.776);
-    expect(created.longitude).toBe(106.701);
+    expect(created.latitude).toBeCloseTo(vietnamCoords.latitude, 10);
+    expect(created.longitude).toBeCloseTo(vietnamCoords.longitude, 10);
     expect(created.totalBikes).toBe(0);
     expect(created.emptySlots).toBe(24);
   });
@@ -105,7 +130,7 @@ describe("stationRepository Integration", () => {
         address: "123 Dup St",
         capacity: 10,
         latitude: 10.0,
-        longitude: 20.0,
+        longitude: 106.0,
       }),
     );
 
@@ -115,7 +140,7 @@ describe("stationRepository Integration", () => {
         address: "123 Dup St",
         capacity: 10,
         latitude: 10.0,
-        longitude: 20.0,
+        longitude: 106.0,
       }).pipe(Effect.either),
     );
 
@@ -135,18 +160,18 @@ describe("stationRepository Integration", () => {
     const { id: nearId } = await createStation({
       name: "Near Station",
       latitude: 10.0,
-      longitude: 20.0,
+      longitude: 106.0,
     });
     const { id: farId } = await createStation({
       name: "Far Station",
       latitude: 10.001,
-      longitude: 20.001,
+      longitude: 106.001,
     });
 
     const result = await Effect.runPromise(
       repo.listNearest({
         latitude: 10.0,
-        longitude: 20.0,
+        longitude: 106.0,
         maxDistanceMeters: 500,
         page: 1,
         pageSize: 10,
@@ -172,5 +197,22 @@ describe("stationRepository Integration", () => {
     expect(result.left._tag).toBe("StationRepositoryError");
 
     await broken.stop();
+  });
+
+  it("create returns StationOutsideSupportedArea for coordinates outside VN boundary", async () => {
+    const result = await Effect.runPromise(
+      repo.create({
+        name: `Outside Area ${Date.now()}`,
+        address: "Outside",
+        capacity: 10,
+        latitude: australiaCoords.latitude,
+        longitude: australiaCoords.longitude,
+      }).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected outside-area failure but got success");
+    }
+    expect(result.left._tag).toBe("StationOutsideSupportedArea");
   });
 });
