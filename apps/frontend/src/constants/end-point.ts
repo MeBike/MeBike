@@ -13,5 +13,10 @@ export const ENDPOINT = {
         FORGOT_PASSWORD: "/auth/password/reset/send",
         VERIFY_FORGOT_PASSWORD: "/users/verify-forgot-password",
         RESET_PASSWORD: "/users/reset-password",
+    },
+    STATION : {
+        BASE : "/stations",
+        DETAIL : (stationId: string) => `/stations/${stationId}`,
+        NEAR_BY : "/stations/nearby",
     }
 } as const;
