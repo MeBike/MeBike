@@ -80,7 +80,7 @@ export const walletServiceV1 = {
         const okSchema = ServerRoutes.wallets.getMyWallet.responses[200].content["application/json"].schema;
         const data = await readJson(response);
         const parsed = decodeWithSchema(okSchema, data);
-        return parsed.ok ? ok(parsed.value.data) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(parsed.value) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseWalletError(response));

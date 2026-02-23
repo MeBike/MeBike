@@ -36,9 +36,7 @@ const create: RouteHandler<RatingsRoutes["create"]> = async (c) => {
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<RatingsContracts.CreateRatingResponse, 201>({
-        data: toRatingDetail(right),
-      }, 201)),
+      c.json<RatingsContracts.CreateRatingResponse, 201>(toRatingDetail(right), 201)),
     Match.tag("Left", ({ left }) => Match.value(left).pipe(
       Match.tag("CannotRateUncompletedRental", () =>
         c.json<RatingsContracts.RatingErrorResponse, 400>({
@@ -102,9 +100,7 @@ const getByRental: RouteHandler<RatingsRoutes["getByRental"]> = async (c) => {
     }, 404);
   }
 
-  return c.json<RatingsContracts.RatingResponse, 200>({
-    data: toRatingDetail(result.value),
-  }, 200);
+  return c.json<RatingsContracts.RatingResponse, 200>(toRatingDetail(result.value), 200);
 };
 
 export const RatingMeController = {

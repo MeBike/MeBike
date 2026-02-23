@@ -32,9 +32,7 @@ const getMyWallet: RouteHandler<WalletsRoutes["getMyWallet"]> = async (c) => {
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<WalletsContracts.GetMyWalletResponse, 200>({
-        data: toWalletDetail(right),
-      }, 200)),
+      c.json<WalletsContracts.GetMyWalletResponse, 200>(toWalletDetail(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("WalletNotFound", () =>
@@ -124,9 +122,7 @@ const creditMyWallet: RouteHandler<WalletsRoutes["creditMyWallet"]> = async (c) 
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<WalletsContracts.WalletMutationResponse, 200>({
-        data: toWalletDetail(right),
-      }, 200)),
+      c.json<WalletsContracts.WalletMutationResponse, 200>(toWalletDetail(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("WalletNotFound", () =>
@@ -168,9 +164,7 @@ const debitMyWallet: RouteHandler<WalletsRoutes["debitMyWallet"]> = async (c) =>
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<WalletsContracts.WalletMutationResponse, 200>({
-        data: toWalletDetail(right),
-      }, 200)),
+      c.json<WalletsContracts.WalletMutationResponse, 200>(toWalletDetail(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("InsufficientWalletBalance", () =>
@@ -321,9 +315,7 @@ const createWalletWithdrawal: RouteHandler<WalletsRoutes["createWalletWithdrawal
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<WalletsContracts.WalletWithdrawalResponse, 200>({
-        data: toWalletWithdrawalDetail(right),
-      }, 200)),
+      c.json<WalletsContracts.WalletWithdrawalResponse, 200>(toWalletWithdrawalDetail(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("InvalidWithdrawalRequest", () =>

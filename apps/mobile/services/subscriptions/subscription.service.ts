@@ -62,7 +62,7 @@ export const subscriptionService = {
       if (response.status === StatusCodes.CREATED) {
         const data = await readJson(response);
         const parsed = decodeWithSchema(ServerContracts.SubscriptionsContracts.CreateSubscriptionResponseSchema, data);
-        return parsed.ok ? ok(mapSubscription(parsed.value.data)) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(mapSubscription(parsed.value)) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseSubscriptionError(response));
@@ -83,7 +83,7 @@ export const subscriptionService = {
       if (response.status === StatusCodes.OK) {
         const data = await readJson(response);
         const parsed = decodeWithSchema(ServerContracts.SubscriptionsContracts.ActivateSubscriptionResponseSchema, data);
-        return parsed.ok ? ok(mapSubscription(parsed.value.data)) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(mapSubscription(parsed.value)) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseSubscriptionError(response));
@@ -140,7 +140,7 @@ export const subscriptionService = {
       if (response.status === StatusCodes.OK) {
         const data = await readJson(response);
         const parsed = decodeWithSchema(ServerContracts.SubscriptionsContracts.SubscriptionDetailResponseSchema, data);
-        return parsed.ok ? ok(mapSubscription(parsed.value.data)) : err({ _tag: "DecodeError" });
+        return parsed.ok ? ok(mapSubscription(parsed.value)) : err({ _tag: "DecodeError" });
       }
 
       return err(await parseSubscriptionError(response));

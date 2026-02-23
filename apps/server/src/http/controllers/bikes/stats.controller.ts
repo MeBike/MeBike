@@ -32,7 +32,7 @@ const getBikeStats: RouteHandler<BikesRoutes["getBikeStats"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<BikeRentalStatsResponse, 200>({ data: toBikeRentalStats(right) }, 200)),
+      c.json<BikeRentalStatsResponse, 200>(toBikeRentalStats(right), 200)),
     Match.tag("Left", ({ left }) => {
       throw left;
     }),
@@ -52,9 +52,7 @@ const getHighestRevenueBike: RouteHandler<BikesRoutes["getHighestRevenueBike"]> 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<HighestRevenueBikeResponse, 200>({
-        data: right ? toHighestRevenueBike(right) : null,
-      }, 200)),
+      c.json<HighestRevenueBikeResponse, 200>(right ? toHighestRevenueBike(right) : null, 200)),
     Match.tag("Left", ({ left }) => {
       throw left;
     }),
@@ -76,9 +74,7 @@ const getBikeActivityStats: RouteHandler<BikesRoutes["getBikeActivityStats"]> = 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<BikeActivityStatsResponse, 200>({
-        data: toBikeActivityStats(right),
-      }, 200)),
+      c.json<BikeActivityStatsResponse, 200>(toBikeActivityStats(right), 200)),
     Match.tag("Left", ({ left }) => Match.value(left).pipe(
       Match.tag("BikeNotFound", () =>
         c.json<BikeNotFoundResponse, 404>({
