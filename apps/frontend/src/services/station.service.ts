@@ -45,8 +45,8 @@ export const stationService = {
   },
   getStationById: async (
     stationId: string
-  ): Promise<AxiosResponse<DetailApiResponse<Station>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Station>>(
+  ): Promise<AxiosResponse<Station>> => {
+    const response = await fetchHttpClient.get<Station>(
       ENDPOINT.STATION.DETAIL(stationId)
     );
     return response;
@@ -107,10 +107,10 @@ export const stationService = {
     latitude: number;
     longitude: number;
     maxDistance?: number;
-  }): Promise<AxiosResponse<ApiDetailResponse<NearestStationResponse>>> => {
+  }): Promise<AxiosResponse<DetailApiResponse<NearestStationResponse>>> => {
     const response = await fetchHttpClient.get<
-      ApiDetailResponse<NearestStationResponse>
-    >(STATION_ENDPOINTS.STATION_NEAREST_AVAILABLE_BIKE(), {
+      DetailApiResponse<NearestStationResponse>
+    >(ENDPOINT.STATION.STATION_NEAREST_AVAILABLE_BIKE(), {
       latitude: latitude,
       longitude: longitude,
       maxDistance: maxDistance,

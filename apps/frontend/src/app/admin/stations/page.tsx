@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { useStationActions } from "@/hooks/use-station";
@@ -17,9 +18,8 @@ import { formatDateUTC } from "@/utils/formatDateTime";
 import type { StationStatistic } from "@/types/Station";
 
 export default function StationsPage() {
+  const router = useRouter();
   // STATES
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<tt.Map | null>(null);
   const editMapRef = useRef<HTMLDivElement>(null);
   const editMapInstanceRef = useRef<tt.Map | null>(null);
   const [page, setPage] = useState<number>(1);
@@ -31,13 +31,11 @@ export default function StationsPage() {
     getAllStations,
     stations,
     paginationStations,
-    createStation,
     deleteStation,
     getStationByID,
     responseStationDetail,
     isLoadingGetStationByID,
     updateStation,
-    getReservationStats,
     responseStationReservationStats,
     getStationRevenue,
     responseStationRevenue
@@ -48,26 +46,9 @@ export default function StationsPage() {
     stationId: stationID,
     name: searchQuery,
   });
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showRevenueReport, setShowRevenueReport] = useState(false);
-  const {
-    register: createRegister,
-    handleSubmit: handleCreateSubmit,
-    setValue: setCreateValue,
-    reset: resetCreate,
-    formState: { errors: createErrors },
-  } = useForm<StationSchemaFormData>({
-    resolver: zodResolver(stationSchema),
-    defaultValues: {
-      name: "",
-      address: "",
-      latitude: "",
-      longitude: "",
-      capacity: "",
-    },
-  });
   const {
     register: editRegister,
     handleSubmit: handleEditSubmit,
@@ -79,9 +60,9 @@ export default function StationsPage() {
     defaultValues: {
       name: "",
       address: "",
-      latitude: "",
-      longitude: "",
-      capacity: "",
+      latitude: 0,
+      longitude: 0,
+      capacity: 0,
     },
   });
 
@@ -90,11 +71,10 @@ export default function StationsPage() {
   }, [page, searchQuery, getAllStations]);
 
   useEffect(() => {
-    if (stationID) {
+    if (stationID && isEditModalOpen) {
       getStationByID();
-      getReservationStats();
     }
-  }, [stationID, getStationByID, getReservationStats]);
+  }, [stationID, isEditModalOpen, getStationByID]);
 
   useEffect(() => {
     if (isEditModalOpen && responseStationDetail) {
@@ -112,54 +92,8 @@ export default function StationsPage() {
     getStationRevenue();
   }, [getStationRevenue]);
   useEffect(() => {
-    setAllStation(paginationStations?.totalRecords || 0);
+    setAllStation(paginationStations?.pageSize || 0);
   }, [paginationStations]);
-
-  // MAP FOR CREATE MODAL
-  useEffect(() => {
-    if (!isModalOpen || !mapRef.current || mapInstanceRef.current) return;
-
-    const timer = setTimeout(() => {
-      const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
-      if (!apiKey) return;
-
-      mapInstanceRef.current = tt.map({
-        key: apiKey,
-        container: mapRef.current as HTMLElement,
-        center: [106.70098, 10.77689],
-        zoom: 14,
-        style: "https://api.tomtom.com/style/1/style/20.3.2-*?map=hybrid_main",
-      });
-
-      setTimeout(() => {
-        mapInstanceRef.current?.resize();
-      }, 300);
-
-      const markerRef = { current: null as tt.Marker | null };
-
-      mapInstanceRef.current.on("click", function (e) {
-        const { lat, lng } = e.lngLat;
-        setCreateValue("latitude", lat.toString());
-        setCreateValue("longitude", lng.toString());
-
-        if (markerRef.current) {
-          markerRef.current.setLngLat([lng, lat]);
-        } else {
-          markerRef.current = new tt.Marker({ draggable: false })
-            .setLngLat([lng, lat])
-            .addTo(mapInstanceRef.current!);
-        }
-      });
-    }, 400);
-
-    return () => {
-      clearTimeout(timer);
-      if (!isModalOpen && mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [isModalOpen, setCreateValue]);
 
   // MAP FOR EDIT MODAL
   useEffect(() => {
@@ -169,8 +103,8 @@ export default function StationsPage() {
       const apiKey = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
       if (!apiKey) return;
 
-      const lat = parseFloat(responseStationDetail.latitude);
-      const lng = parseFloat(responseStationDetail.longitude);
+      const lat = responseStationDetail.latitude;
+      const lng = responseStationDetail.longitude;
 
       editMapInstanceRef.current = tt.map({
         key: apiKey,
@@ -194,9 +128,8 @@ export default function StationsPage() {
       // Update position on click
       editMapInstanceRef.current.on("click", function (e) {
         const { lat, lng } = e.lngLat;
-        setEditValue("latitude", lat.toString());
-        setEditValue("longitude", lng.toString());
-
+        setEditValue("latitude", lat);
+        setEditValue("longitude", lng);
         if (editMarkerRef.current) {
           editMarkerRef.current.setLngLat([lng, lat]);
         } else {
@@ -215,13 +148,6 @@ export default function StationsPage() {
       }
     };
   }, [isEditModalOpen, responseStationDetail, setEditValue]);
-
-  // ADD STATION
-  const handleAddStation = (data: StationSchemaFormData) => {
-    createStation(data);
-    resetCreate();
-    setIsModalOpen(false);
-  };
 
   // EDIT STATION
   const handleEditStation = (data: StationSchemaFormData) => {
@@ -244,7 +170,7 @@ export default function StationsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button onClick={() => setIsModalOpen(true)}>
+            <Button onClick={() => router.push("/admin/stations/create")}>
               <Plus className="w-4 h-4 mr-2" /> Thêm trạm mới
             </Button>
             <Button
@@ -509,10 +435,6 @@ export default function StationsPage() {
                   setStationID(id);
                   setIsEditModalOpen(true);
                 },
-                onView: ({ id }) => {
-                  setStationID(id);
-                  setIsDetailModalOpen(true);
-                },
               })}
               data={stations ?? []}
             />
@@ -520,113 +442,16 @@ export default function StationsPage() {
           <div>
             <PaginationDemo
               totalPages={paginationStations?.totalPages ?? 1}
-              currentPage={paginationStations?.currentPage ?? 1}
+              currentPage={paginationStations?.page ?? 1}
               onPageChange={setPage}
             />
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Hiển thị {paginationStations?.totalRecords} /{" "}
-          {paginationStations?.totalRecords} trạm
+          Hiển thị {paginationStations?.pageSize} /{" "}
+          {paginationStations?.total} trạm
         </p>
       </div>
-
-      {/* ADD MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">
-                Thêm trạm mới
-              </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 hover:bg-muted rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-            <form
-              className="space-y-4"
-              onSubmit={handleCreateSubmit(handleAddStation)}
-            >
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Tên trạm
-              </label>
-              <Input
-                type="text"
-                {...createRegister("name")}
-                placeholder="Nhập tên trạm"
-              />
-              {createErrors.name && (
-                <p className="text-sm text-red-500 mt-1">
-                  {createErrors.name.message}
-                </p>
-              )}
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Địa chỉ
-              </label>
-              <Input
-                type="text"
-                {...createRegister("address")}
-                placeholder="Nhập địa chỉ trạm"
-              />
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Chọn vị trí trên bản đồ
-              </label>
-              <div
-                ref={mapRef}
-                id="map"
-                style={{
-                  width: "100%",
-                  height: "300px",
-                  backgroundColor: "#e5e7eb",
-                }}
-              ></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    Latitude
-                  </label>
-                  <Input type="text" {...createRegister("latitude")} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    Longitude
-                  </label>
-                  <Input type="text" {...createRegister("longitude")} />
-                </div>
-              </div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Sức chứa (số xe)
-              </label>
-              <Input
-                type="text"
-                {...createRegister("capacity")}
-                placeholder="Nhập sức chứa"
-              />
-              {createErrors.capacity && (
-                <p className="text-sm text-red-500 mt-1">
-                  {createErrors.capacity.message}
-                </p>
-              )}
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1"
-                >
-                  Hủy
-                </Button>
-                <Button type="submit" className="flex-1">
-                  Thêm trạm
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* EDIT MODAL */}
       {isEditModalOpen && stationID && (
@@ -706,7 +531,7 @@ export default function StationsPage() {
                   Sức chứa (số xe)
                 </label>
                 <Input
-                  type="text"
+                  type="number"
                   {...editRegister("capacity")}
                   placeholder="Nhập sức chứa"
                 />

@@ -6,12 +6,12 @@ export interface LocationGeo {
 }
 
 export interface Station {
-  _id: string;
+  id: string;
   name: string;
   address: string;
-  latitude: string;
-  longitude: string;
-  capacity: string;
+  latitude: number;
+  longitude: number;
+  capacity: number;
   created_at: string;
   updated_at: string;
   location_geo: LocationGeo;
