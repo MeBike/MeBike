@@ -41,16 +41,6 @@ export const stationColumns = ({
     cell: ({ row }) => row.original.address,
   },
   {
-    accessorKey: "latitude",
-    header: "Vĩ độ",
-    cell: ({ row }) => row.original.latitude,
-  },
-  {
-    accessorKey: "longitude",
-    header: "Kinh độ",
-    cell: ({ row }) => row.original.longitude,
-  },
-  {
     accessorKey: "capacity",
     header: "Sức chứa",
     cell: ({ row }) => row.original.capacity,
@@ -58,12 +48,12 @@ export const stationColumns = ({
   {
     accessorKey: "created_at",
     header: "Ngày tạo",
-    cell: ({ row }) => formatDateVN(row.original.created_at),
+    cell: ({ row }) => formatDateVN(row.original.createdAt),
   },
   {
     accessorKey: "updated_at",
     header: "Ngày cập nhật",
-    cell: ({ row }) => formatDateVN(row.original.updated_at),
+    cell: ({ row }) => formatDateVN(row.original.updatedAt),
   },
   {
     id: "actions",

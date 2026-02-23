@@ -101,7 +101,7 @@ export default function CreateStationPage() {
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-lg p-6 max-w-2xl">
+      <div className="bg-card border border-border rounded-lg p-6 w-full">
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">

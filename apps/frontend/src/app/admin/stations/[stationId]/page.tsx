@@ -64,7 +64,7 @@ export default function StationDetailPage() {
           <span className="text-lg text-foreground">Đang tải dữ liệu...</span>
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-lg p-6 max-w-2xl">
+        <div className="bg-card border border-border rounded-lg p-6 w-full">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-muted-foreground mb-1">
@@ -108,9 +108,9 @@ export default function StationDetailPage() {
                   Ngày tạo
                 </label>
                 <p className="text-foreground text-sm">
-                  {new Date(station?.created_at || "").toLocaleDateString(
-                    "vi-VN",
-                  )}
+                  {station?.createdAt
+                    ? new Date(station.createdAt).toLocaleDateString("vi-VN")
+                    : "-"}
                 </p>
               </div>
               <div>
@@ -118,101 +118,84 @@ export default function StationDetailPage() {
                   Cập nhật lần cuối
                 </label>
                 <p className="text-foreground text-sm">
-                  {new Date(station?.updated_at || "").toLocaleDateString(
-                    "vi-VN",
-                  )}
+                  {station?.updatedAt
+                    ? new Date(station.updatedAt).toLocaleDateString("vi-VN")
+                    : "-"}
                 </p>
               </div>
             </div>
 
-            {responseStationReservationStats?.result && (
-              <div className="space-y-4 pt-4 border-t border-border">
-                <h3 className="text-lg font-semibold text-foreground">
-                  Thống kê đặt chỗ
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Tổng đặt chỗ
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {responseStationReservationStats.result.total_count || "0"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Đang chờ xử lý
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {responseStationReservationStats.result.status_counts
-                        .Pending || "0"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Đã hủy
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {responseStationReservationStats.result.status_counts
-                        .Cancelled || "0"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Đã hết hạn
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {responseStationReservationStats.result.status_counts
-                        .Expired || "0"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-1">
-                      Xe đang đặt trước
-                    </label>
-                    <p className="text-foreground font-medium">
-                      {responseStationReservationStats.result.reserving_bikes
-                        .length || 0}
-                    </p>
-                  </div>
+            <div className="space-y-4 pt-4 border-t border-border">
+              <h3 className="text-lg font-semibold text-foreground">
+                Tình trạng xe tại trạm
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Tổng số xe
+                  </label>
+                  <p className="text-foreground font-medium">
+                    {station?.totalBikes ?? 0}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Đang sẵn sàng
+                  </label>
+                  <p className="text-foreground font-medium">
+                    {station?.availableBikes ?? 0}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Đang được thuê / đặt
+                  </label>
+                  <p className="text-foreground font-medium">
+                    {station?.bookedBikes ?? 0}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Đang bảo trì
+                  </label>
+                  <p className="text-foreground font-medium">
+                    {station?.maintainedBikes ?? 0}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Xe hỏng
+                  </label>
+                  <p className="text-foreground font-medium">
+                    {station?.brokenBikes ?? 0}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Đã đặt trước
+                  </label>
+                  <p className="text-foreground font-medium">
+                    {station?.reservedBikes ?? 0}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Không khả dụng
+                  </label>
+                  <p className="text-foreground font-medium">
+                    {station?.unavailableBikes ?? 0}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-1">
+                    Chỗ trống còn lại
+                  </label>
+                  <p className="text-foreground font-medium">
+                    {station?.emptySlots ?? 0}
+                  </p>
                 </div>
               </div>
-            )}
-
-            {(station?.average_rating !== undefined ||
-              station?.total_ratings !== undefined) && (
-              <div className="space-y-4 pt-4 border-t border-border">
-                <h3 className="text-lg font-semibold text-foreground">
-                  Đánh giá trạm
-                </h3>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg
-                        key={star}
-                        className={`w-6 h-6 ${
-                          star <= (station?.average_rating || 0)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                        }`}
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                    <span className="text-xl font-bold text-foreground ml-2">
-                      {station?.total_ratings && station.total_ratings > 0
-                        ? (station.average_rating || 0).toFixed(1)
-                        : "0"}
-                    </span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    ({station?.total_ratings || 0} đánh giá)
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       )}
