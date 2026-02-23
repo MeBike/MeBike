@@ -18,5 +18,9 @@ export const ENDPOINT = {
         BASE : "/stations",
         DETAIL : (stationId: string) => `/stations/${stationId}`,
         NEAR_BY : "/stations/nearby",
+        STATION_BIKE_REVENUE: () => "/stations/bike-revenue",
+        STATION_REVENUE: () => "/stations/revenue",
+        STATION_NEAREST_AVAILABLE_BIKE: () =>
+            "/stations/nearest-available-bike",
     }
 } as const;

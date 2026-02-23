@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { stationService } from "@/services/station.service";
 import { StationSchemaFormData } from "@/schemas/stationSchema";
-export const useCreateSupplierMutation = () => {
+export const useCreateStationMutation = () => {
   return useMutation({
-    mutationKey: ["create-supplier"],
+    mutationKey: ["create-station"],
     mutationFn: async (data: StationSchemaFormData) => {
       const response = await stationService.createStation(data);
       return response;
