@@ -24,9 +24,7 @@ export const UserErrorResponseSchema = z.object({
   }),
 }).openapi("UserErrorResponse");
 
-export const MeResponseSchema = z.object({
-  data: UserDetailSchema,
-}).openapi("MeResponse");
+export const MeResponseSchema = UserDetailSchema.openapi("MeResponse");
 
 export const UpdateMeRequestSchema = z.object({
   fullname: z.string().min(1).optional(),
@@ -52,9 +50,7 @@ export const AdminUserSearchResponseSchema = z.object({
   data: z.array(UserDetailSchema),
 }).openapi("AdminUserSearchResponse");
 
-export const AdminUserDetailResponseSchema = z.object({
-  data: UserDetailSchema,
-}).openapi("AdminUserDetailResponse");
+export const AdminUserDetailResponseSchema = UserDetailSchema.openapi("AdminUserDetailResponse");
 
 export const AdminCreateUserRequestSchema = z.object({
   fullname: z.string().min(1),

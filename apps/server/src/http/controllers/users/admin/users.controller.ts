@@ -79,7 +79,7 @@ const adminDetail: RouteHandler<UsersRoutes["adminDetail"]> = async (c) => {
 
   const result = await c.var.runPromise(eff);
   if (result._tag === "Some") {
-    return c.json<UsersContracts.AdminUserDetailResponse, 200>({ data: mapUserDetail(result.value) }, 200);
+    return c.json<UsersContracts.AdminUserDetailResponse, 200>(mapUserDetail(result.value), 200);
   }
 
   return c.json<UsersContracts.UserErrorResponse, 404>(
@@ -107,7 +107,7 @@ const adminUpdate: RouteHandler<UsersRoutes["adminUpdate"]> = async (c) => {
     Match.tag("Right", ({ right }) => {
       if (right._tag === "Some") {
         return c.json<UsersContracts.AdminUserDetailResponse, 200>(
-          { data: mapUserDetail(right.value) },
+          mapUserDetail(right.value),
           200,
         );
       }
@@ -154,7 +154,7 @@ const adminCreate: RouteHandler<UsersRoutes["adminCreate"]> = async (c) => {
   const result = await c.var.runPromise(eff.pipe(Effect.either));
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<UsersContracts.AdminUserDetailResponse, 201>({ data: mapUserDetail(right) }, 201)),
+      c.json<UsersContracts.AdminUserDetailResponse, 201>(mapUserDetail(right), 201)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("DuplicateUserEmail", () =>
