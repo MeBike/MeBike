@@ -4,6 +4,7 @@ import process from "node:process";
 import { uuidv7 } from "uuidv7";
 
 import { PrismaClient } from "../generated/prisma/client";
+import { upsertVietnamBoundary } from "./seed-geo-boundary";
 import { STATION_IDS } from "./seed/station-ids";
 import { stations } from "./seed/stations.data";
 
@@ -19,6 +20,8 @@ async function main() {
   const connectionString = getConnectionString();
   const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
+
+  await upsertVietnamBoundary(prisma);
 
   // Use the actual table name as it exists in the DB ("Station")
   await prisma.$executeRaw`TRUNCATE TABLE "Station" RESTART IDENTITY CASCADE`;

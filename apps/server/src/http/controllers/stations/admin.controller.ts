@@ -37,6 +37,20 @@ const createStation: RouteHandler<StationsRoutes["createStation"]> = async (c) =
               code: StationErrorCodeSchema.enum.STATION_NAME_ALREADY_EXISTS,
             },
           }, 400)),
+        Match.tag("StationCapacityLimitExceeded", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.CAPACITY_LIMIT_EXCEEDED,
+            details: {
+              code: StationErrorCodeSchema.enum.CAPACITY_LIMIT_EXCEEDED,
+            },
+          }, 400)),
+        Match.tag("StationOutsideSupportedArea", () =>
+          c.json<StationErrorResponse, 400>({
+            error: stationErrorMessages.OUTSIDE_SUPPORTED_AREA,
+            details: {
+              code: StationErrorCodeSchema.enum.OUTSIDE_SUPPORTED_AREA,
+            },
+          }, 400)),
         Match.orElse(() => {
           throw left;
         }),
