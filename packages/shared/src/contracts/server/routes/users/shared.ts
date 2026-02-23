@@ -24,9 +24,7 @@ export const UserErrorResponseSchema = z.object({
   }),
 }).openapi("UserErrorResponse");
 
-export const MeResponseSchema = z.object({
-  data: UserDetailSchema,
-}).openapi("MeResponse");
+export const MeResponseSchema = UserDetailSchema.openapi("MeResponse");
 
 export const UpdateMeRequestSchema = z.object({
   fullname: z.string().min(1).optional(),
@@ -52,9 +50,7 @@ export const AdminUserSearchResponseSchema = z.object({
   data: z.array(UserDetailSchema),
 }).openapi("AdminUserSearchResponse");
 
-export const AdminUserDetailResponseSchema = z.object({
-  data: UserDetailSchema,
-}).openapi("AdminUserDetailResponse");
+export const AdminUserDetailResponseSchema = UserDetailSchema.openapi("AdminUserDetailResponse");
 
 export const AdminCreateUserRequestSchema = z.object({
   fullname: z.string().min(1),
@@ -86,9 +82,7 @@ export const AdminResetPasswordRequestSchema = z.object({
   confirmNewPassword: z.string().min(8),
 }).openapi("AdminResetPasswordRequest");
 
-export const AdminUserStatsResponseSchema = z.object({
-  data: UserStatsOverviewSchema,
-}).openapi("AdminUserStatsResponse");
+export const AdminUserStatsResponseSchema = UserStatsOverviewSchema.openapi("AdminUserStatsResponse");
 
 export const ActiveUsersSeriesResponseSchema = z.object({
   data: z.array(ActiveUsersSeriesRowSchema),
@@ -99,13 +93,9 @@ export const TopRentersResponseSchema = z.object({
   pagination: PaginationSchema,
 }).openapi("TopRentersResponse");
 
-export const NewUsersStatsResponseSchema = z.object({
-  data: NewUsersStatsSchema,
-}).openapi("NewUsersStatsResponse");
+export const NewUsersStatsResponseSchema = NewUsersStatsSchema.openapi("NewUsersStatsResponse");
 
-export const DashboardStatsResponseSchema = z.object({
-  data: DashboardStatsSchema,
-}).openapi("DashboardStatsResponse");
+export const DashboardStatsResponseSchema = DashboardStatsSchema.openapi("DashboardStatsResponse");
 
 export const ActiveUsersQuerySchema = z.object({
   groupBy: z.enum(["day", "month"]),

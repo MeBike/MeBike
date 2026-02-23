@@ -48,17 +48,11 @@ export const CreateSubscriptionRequestSchema = z.object({
   packageName: SubscriptionPackageSchema,
 }).openapi("CreateSubscriptionRequest");
 
-export const CreateSubscriptionResponseSchema = z.object({
-  data: SubscriptionDetailSchema,
-}).openapi("CreateSubscriptionResponse");
+export const CreateSubscriptionResponseSchema = SubscriptionDetailSchema.openapi("CreateSubscriptionResponse");
 
-export const ActivateSubscriptionResponseSchema = z.object({
-  data: SubscriptionDetailSchema,
-}).openapi("ActivateSubscriptionResponse");
+export const ActivateSubscriptionResponseSchema = SubscriptionDetailSchema.openapi("ActivateSubscriptionResponse");
 
-export const SubscriptionDetailResponseSchema = z.object({
-  data: SubscriptionDetailSchema,
-}).openapi("SubscriptionDetailResponse");
+export const SubscriptionDetailResponseSchema = SubscriptionDetailSchema.openapi("SubscriptionDetailResponse");
 
 export const ListSubscriptionsQuerySchema = z.object({
   ...paginationQueryFields,

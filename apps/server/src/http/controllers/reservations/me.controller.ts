@@ -42,9 +42,7 @@ const reserveBike: RouteHandler<ReservationsRoutes["reserveBike"]> = async (c) =
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<ReservationDetailResponse, 200>({
-        data: toContractReservation(right),
-      }, 200)),
+      c.json<ReservationDetailResponse, 200>(toContractReservation(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("ActiveReservationExists", ({ userId: ownerId }) =>
@@ -176,9 +174,7 @@ const confirmReservation: RouteHandler<ReservationsRoutes["confirmReservation"]>
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<ReservationDetailResponse, 200>({
-        data: toContractReservation(right),
-      }, 200)),
+      c.json<ReservationDetailResponse, 200>(toContractReservation(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("ReservationNotFound", ({ reservationId: missingId }) =>
@@ -267,9 +263,7 @@ const cancelReservation: RouteHandler<ReservationsRoutes["cancelReservation"]> =
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<ReservationDetailResponse, 200>({
-        data: toContractReservation(right),
-      }, 200)),
+      c.json<ReservationDetailResponse, 200>(toContractReservation(right), 200)),
     Match.tag("Left", ({ left }) =>
       Match.value(left).pipe(
         Match.tag("ReservationNotFound", ({ reservationId: missingId }) =>
@@ -393,9 +387,7 @@ const getMyReservation: RouteHandler<ReservationsRoutes["getMyReservation"]> = a
     }, 400);
   }
 
-  return c.json<ReservationDetailResponse, 200>({
-    data: toContractReservation(reservationOpt.value),
-  }, 200);
+  return c.json<ReservationDetailResponse, 200>(toContractReservation(reservationOpt.value), 200);
 };
 
 export const ReservationMeController = {

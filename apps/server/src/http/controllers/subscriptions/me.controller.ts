@@ -44,9 +44,10 @@ const getSubscription: RouteHandler<SubscriptionsRoutes["getSubscription"]> = as
           details: { code: SubscriptionErrorCodeSchema.enum.SUBSCRIPTION_NOT_FOUND },
         }, 404);
       }
-      return c.json<SubscriptionsContracts.SubscriptionDetailResponse, 200>({
-        data: toSubscriptionDetail(right.value),
-      }, 200);
+      return c.json<SubscriptionsContracts.SubscriptionDetailResponse, 200>(
+        toSubscriptionDetail(right.value),
+        200,
+      );
     }),
     Match.tag("Left", () =>
       c.json<SubscriptionsContracts.SubscriptionErrorResponse, 404>({
@@ -123,9 +124,7 @@ const createSubscription: RouteHandler<SubscriptionsRoutes["createSubscription"]
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<SubscriptionsContracts.CreateSubscriptionResponse, 201>({
-        data: toSubscriptionDetail(right),
-      }, 201)),
+      c.json<SubscriptionsContracts.CreateSubscriptionResponse, 201>(toSubscriptionDetail(right), 201)),
     Match.tag("Left", ({ left }) => Match.value(left).pipe(
       Match.tag("SubscriptionPendingOrActiveExists", () =>
         c.json<SubscriptionsContracts.SubscriptionErrorResponse, 409>({
@@ -175,9 +174,7 @@ const activateSubscription: RouteHandler<SubscriptionsRoutes["activateSubscripti
 
   return Match.value(result).pipe(
     Match.tag("Right", ({ right }) =>
-      c.json<SubscriptionsContracts.ActivateSubscriptionResponse, 200>({
-        data: toSubscriptionDetail(right),
-      }, 200)),
+      c.json<SubscriptionsContracts.ActivateSubscriptionResponse, 200>(toSubscriptionDetail(right), 200)),
     Match.tag("Left", ({ left }) => Match.value(left).pipe(
       Match.tag("SubscriptionNotFound", () =>
         c.json<SubscriptionsContracts.SubscriptionErrorResponse, 404>({

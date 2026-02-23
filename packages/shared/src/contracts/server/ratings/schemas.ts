@@ -25,9 +25,7 @@ export const CreateRatingRequestSchema = z.object({
   comment: z.string().max(500).optional().nullable(),
 }).openapi("CreateRatingRequest");
 
-export const CreateRatingResponseSchema = z.object({
-  data: RatingDetailSchema,
-}).openapi("CreateRatingResponse");
+export const CreateRatingResponseSchema = RatingDetailSchema.openapi("CreateRatingResponse");
 
 export const RatingResponseSchema = CreateRatingResponseSchema;
 

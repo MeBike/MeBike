@@ -48,13 +48,9 @@ export const WalletErrorResponseSchema = z.object({
   description: "Wallet specific error response",
 });
 
-export const GetMyWalletResponseSchema = z.object({
-  data: WalletDetailSchema,
-}).openapi("GetMyWalletResponse");
+export const GetMyWalletResponseSchema = WalletDetailSchema.openapi("GetMyWalletResponse");
 
-export const WalletMutationResponseSchema = z.object({
-  data: WalletDetailSchema,
-}).openapi("WalletMutationResponse");
+export const WalletMutationResponseSchema = WalletDetailSchema.openapi("WalletMutationResponse");
 
 const minorUnitString = z.string().regex(/^\d+(?:\.0+)?$/);
 
@@ -93,9 +89,7 @@ export const WalletWithdrawalRequestSchema = z.object({
   idempotencyKey: z.string().optional(),
 }).openapi("WalletWithdrawalRequest");
 
-export const WalletWithdrawalResponseSchema = z.object({
-  data: WalletWithdrawalDetailSchema,
-}).openapi("WalletWithdrawalResponse");
+export const WalletWithdrawalResponseSchema = WalletWithdrawalDetailSchema.openapi("WalletWithdrawalResponse");
 
 export const ListMyWalletTransactionsQuerySchema = z.object({
   ...paginationQueryFields,
