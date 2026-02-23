@@ -4,6 +4,20 @@ import { z } from "zod";
 
 dotenv.config();
 
+const booleanEnv = (defaultValue: boolean) =>
+  z.preprocess((value) => {
+    if (typeof value === "boolean")
+      return value;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "on")
+        return true;
+      if (normalized === "false" || normalized === "0" || normalized === "no" || normalized === "off")
+        return false;
+    }
+    return value;
+  }, z.boolean()).default(defaultValue);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().default(4000),
@@ -34,6 +48,7 @@ const envSchema = z.object({
   RENTAL_PENALTY_AMOUNT: z.coerce.number().default(50000),
   EXPIRE_AFTER_DAYS: z.coerce.number().default(30),
   AUTO_ACTIVATE_IN_DAYS: z.coerce.number().default(10),
+  ENABLE_DEV_WALLET_MUTATIONS: booleanEnv(false),
 });
 
 export type Env = z.infer<typeof envSchema>;
