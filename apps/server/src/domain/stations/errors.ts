@@ -14,6 +14,16 @@ export class StationNameAlreadyExists extends Data.TaggedError("StationNameAlrea
   readonly name: string;
 }> {}
 
+export class StationOutsideSupportedArea extends Data.TaggedError("StationOutsideSupportedArea")<{
+  readonly latitude: number;
+  readonly longitude: number;
+}> {}
+
+export class StationCapacityLimitExceeded extends Data.TaggedError("StationCapacityLimitExceeded")<{
+  readonly capacity: number;
+  readonly maxCapacity: number;
+}> {}
+
 export class StationHasBikes extends Data.TaggedError("StationHasBikes")<{
   readonly stationId: string;
 }> {}

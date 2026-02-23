@@ -24,7 +24,11 @@ import type {
 } from "../models";
 import type { NearestStationRowDb } from "./station.repository.helpers";
 
-import { StationNameAlreadyExists, StationRepositoryError } from "../errors";
+import {
+  StationNameAlreadyExists,
+  StationOutsideSupportedArea,
+  StationRepositoryError,
+} from "../errors";
 import {
   applyCounts,
   getBikeCounts,
@@ -36,7 +40,10 @@ import {
 export type StationRepo = {
   create: (
     input: CreateStationInput,
-  ) => Effect.Effect<StationRow, StationRepositoryError | StationNameAlreadyExists>;
+  ) => Effect.Effect<
+    StationRow,
+    StationRepositoryError | StationNameAlreadyExists | StationOutsideSupportedArea
+  >;
   listWithOffset: (
     filter: StationFilter,
     pageReq: PageRequest<StationSortField>,
@@ -83,6 +90,42 @@ export function makeStationRepository(
   return {
     create(input: CreateStationInput) {
       return Effect.gen(function* () {
+        const supportedAreaRows = yield* Effect.tryPromise({
+          try: () =>
+            client.$queryRaw<{ inside: boolean }[]>`
+              SELECT ST_Covers(
+                "geom",
+                ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geometry
+              ) AS "inside"
+              FROM "GeoBoundary"
+              WHERE "code" = 'VN'
+              LIMIT 1
+            `,
+          catch: e =>
+            new StationRepositoryError({
+              operation: "create.checkSupportedArea",
+              cause: e,
+            }),
+        });
+
+        const supportedArea = supportedAreaRows[0];
+        if (!supportedArea) {
+          return yield* Effect.fail(
+            new StationRepositoryError({
+              operation: "create.checkSupportedArea.missingBoundary",
+              cause: new Error("Missing GeoBoundary row for code VN"),
+            }),
+          );
+        }
+        if (!supportedArea.inside) {
+          return yield* Effect.fail(
+            new StationOutsideSupportedArea({
+              latitude: input.latitude,
+              longitude: input.longitude,
+            }),
+          );
+        }
+
         const stationId = uuidv7();
         const rows = yield* Effect.tryPromise({
           try: () =>

@@ -21,6 +21,7 @@ const envSchema = z.object({
   WITHDRAWAL_SLA_MINUTES: z.coerce.number().default(5),
   WITHDRAWAL_SWEEP_CRON: z.string().default("*/5 * * * *"),
   MIN_WALLET_BALANCE_TO_RENT: z.coerce.number().default(2000),
+  STATION_CAPACITY_LIMIT: z.coerce.number().int().min(1).default(20),
   RESERVATION_HOLD_MINUTES: z.coerce.number().default(30),
   RESERVATION_PREPAID_AMOUNT: z.coerce.number().default(2000),
   EXPIRY_NOTIFY_MINUTES: z.coerce.number().default(15),
