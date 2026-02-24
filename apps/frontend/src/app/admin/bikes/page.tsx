@@ -781,7 +781,7 @@ export default function BikesPage() {
                   >
                     <option value="">Chọn trạm xe</option>
                     {stations.map((station) => (
-                      <option key={station._id} value={station._id}>
+                      <option key={station.id} value={station.id}>
                         {station.name}
                       </option>
                     ))}
@@ -1221,7 +1221,7 @@ export default function BikesPage() {
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
                     {stations.map((station) => (
-                      <option key={station._id} value={station._id}>
+                      <option key={station.id} value={station.id}>
                         {station.name}
                       </option>
                     ))}

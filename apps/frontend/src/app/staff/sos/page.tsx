@@ -912,7 +912,7 @@ export default function SOSPage() {
                         >
                           <option value="">Chọn trạm trả xe</option>
                           {stations?.map((station: Station) => (
-                            <option key={station._id} value={station._id}>
+                            <option key={station.id} value={station.id}>
                               {station.name}
                             </option>
                           ))}

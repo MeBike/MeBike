@@ -77,14 +77,14 @@ export default function StationsPage() {
           <div>
             <PaginationDemo
               totalPages={paginationStations?.totalPages ?? 1}
-              currentPage={paginationStations?.currentPage ?? 1}
+              currentPage={paginationStations?.page ?? 1}
               onPageChange={setPage}
             />
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Hiển thị {paginationStations?.totalRecords} /{" "}
-          {paginationStations?.totalRecords} trạm
+          Hiển thị {paginationStations?.pageSize} /{" "}
+          {paginationStations?.total} trạm
         </p>
       </div>
     </div>
