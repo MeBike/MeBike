@@ -110,17 +110,12 @@ export const useStationActions = ({
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
             });
-          } else {
-            const errorMessage = result.data?.message || "Lỗi khi xóa trạm";
-            toast.error(errorMessage);
           }
         },
         onError: (error) => {
-          const errorMessage = getErrorMessage(
-            error,
-            "Error deleting stations",
-          );
-          toast.error(errorMessage);
+          const code_error = getAxiosErrorCodeMessage(error);
+          toast.error(getErrorMessageFromStationCode(code_error));
+          throw error; 
         },
       });
     },

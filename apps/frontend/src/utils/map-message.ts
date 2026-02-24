@@ -1,4 +1,4 @@
-import { USERS_MESSAGES , AUTH_MESSAGE , STATIONS_MESSAGE} from "@/constants/messages";
+import { USERS_MESSAGES , AUTH_MESSAGE , STATIONS_MESSAGE , SUPPLIER_MESSAGE} from "@/constants/messages";
 const mapErrorMessage = (errorCode: string): string => {
   const errorMap: Record<string, string> = {
     USER_NOT_FOUND: "User does not exist",
@@ -22,4 +22,8 @@ const getErrorMessageFromStationCode = (code?: string) => {
   return STATIONS_MESSAGE[code as keyof typeof STATIONS_MESSAGE] 
     || "Something went wrong";
 }
-export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, mapErrorMessage, getErrorMessageFromStationCode };
+const getErrorMessageFromSupplierCode = (code?:string) => {
+  if(!code) return "Something went wrong";
+  return SUPPLIER_MESSAGE[code as keyof typeof SUPPLIER_MESSAGE] || "Something went wrong";
+}
+export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, mapErrorMessage, getErrorMessageFromStationCode , getErrorMessageFromSupplierCode};

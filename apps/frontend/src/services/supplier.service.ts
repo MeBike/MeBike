@@ -12,9 +12,9 @@ export const supplierService = {
   }: {
     page?: number;
     limit?: number;
-    status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | "";
-  }): Promise<AxiosResponse<ApiResponse<Supplier>>> => {
-    const response = await fetchHttpClient.get<ApiResponse<Supplier>>(
+    status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | "";
+  }): Promise<AxiosResponse<ApiResponse<Supplier[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<Supplier[]>>(
       ENDPOINT.SUPPLIER.BASE,
       {
         page: page,
@@ -39,16 +39,6 @@ export const supplierService = {
     );
     return response;
   },
-  // changeSupplierStatus: async (
-  //   id: string,
-  //   status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘ"
-  // ): Promise<ApiResponse<Supplier>> => {
-  //   const response = await fetchHttpClient.patch<ApiResponse<Supplier>>(
-  //     SUPPLIER_ENDPOINTS.WITH_ID(id),
-  //     { status }
-  //   );
-  //   return response.data;
-  // },
   updateSupplier: async (
     {id,data} : {id: string, data: Partial<CreateSupplierSchema>}
   ): Promise<AxiosResponse> => {
@@ -60,7 +50,7 @@ export const supplierService = {
   },
   statsSupplierBike: async (
     id: string
-  ): Promise<AxiosResponse<StatsSupplierBike> => {
+  ): Promise<AxiosResponse<StatsSupplierBike>> => {
     const response = await fetchHttpClient.get
       <StatsSupplierBike>
     (ENDPOINT.SUPPLIER.STATS_BIKE(id));
@@ -77,7 +67,7 @@ export const supplierService = {
   changeStatusSupplier: async (
     id: string,
     newStatus: "ACTIVE" | "INACTIVE" | "TERMINATED"
-  ): Promise<AxiosResponse<Supplier> => {
+  ): Promise<AxiosResponse<Supplier>> => {
     const response = await fetchHttpClient.patch<Supplier>(
       ENDPOINT.SUPPLIER.DETAIL(id),
       { newStatus }

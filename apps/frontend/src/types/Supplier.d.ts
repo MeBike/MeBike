@@ -4,7 +4,7 @@ export interface Supplier {
   address: string;
   phoneNumber: string;
   contractFee: number;
-  status: "ACTIVE" | "INACTIVE" | "TERMINATED";
+  status: "ACTIVE" | "INACTIVE" | "TERMINATED" | "";
   updatedAt: string;
 }
 export interface StatsSupplierBike {

@@ -1,41 +1,43 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Edit2,  Recycle } from "lucide-react";
+import { Eye, Recycle } from "lucide-react";
 import type { Supplier } from "@/types";
-const getStatusColor = (status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
-  return status === "HOẠT ĐỘNG"
-    ? "bg-green-100 text-green-800"
-    : "bg-red-100 text-red-800";
+const getStatusColor = (status: "ACTIVE" | "INACTIVE" | "TERMINATED" | "") => {
+  switch (status) {
+    case "ACTIVE":
+      return "bg-green-100 text-green-800";
+    case "INACTIVE":
+      return "bg-red-100 text-red-800";
+    case "TERMINATED":
+      return "bg-gray-100 text-gray-800";
+    default:
+      return "bg-muted text-muted-foreground";
+  }
 };
 
 export const columns = ({
   onView,
-  setIsDetailModalOpen,
-  onEdit,
   onChangeStatus,
 }: {
   onView?: (supplier: Supplier) => void;
-  setIsDetailModalOpen?: (isOpen: boolean) => void;
-  onEdit?: (data: Supplier) => void;
-  onChangeStatus?: (id: string, newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => void;
+  onChangeStatus?: (id: string, newStatus: "ACTIVE" | "INACTIVE" | "TERMINATED") => void;
 }): ColumnDef<Supplier>[] => [
   {
     accessorKey: "name",
     header: "Tên nhà cung cấp",
   },
   {
-    accessorKey: "contact_info.address",
+    accessorKey: "address",
     header: "Địa chỉ",
-    cell: ({ row }) => row.original.contact_info.address,
   },
   {
-    accessorKey: "contact_info.phone_number",
+    accessorKey: "phoneNumber",
     header: "Số điện thoại",
-    cell: ({ row }) => row.original.contact_info.phone_number,
+    cell: ({ row }) => row.original.phoneNumber,
   },
   {
-    accessorKey: "contract_fee",
+    accessorKey: "contractFee",
     header: "Phí hợp đồng",
-    cell: ({ row }) => `${row.original.contract_fee}`,
+    cell: ({ row }) => `${row.original.contractFee}`,
   },
   {
     accessorKey: "status",
@@ -60,30 +62,21 @@ export const columns = ({
             if (onView) {
               onView(row.original);
             }
-            if (setIsDetailModalOpen) {
-              setIsDetailModalOpen(true);
-            }
           }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
         </button>
         <button
           className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title="Chỉnh sửa"
-          onClick={() => {
-            if (onEdit) {
-              onEdit(row.original);
-            }
-          }}
-        >
-          <Edit2 className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-          title={row.original.status === "HOẠT ĐỘNG" ? "Ngưng hoạt động" : "Kích hoạt"}
+          title={
+            row.original.status === "ACTIVE" ? "Ngưng hoạt động" : "Kích hoạt"
+          }
           onClick={() => {
             if (onChangeStatus) {
-              onChangeStatus(row.original._id, row.original.status === "HOẠT ĐỘNG" ? "NGƯNG HOẠT ĐỘNG" : "HOẠT ĐỘNG");
+              onChangeStatus(
+                row.original.id,
+                row.original.status === "ACTIVE" ? "INACTIVE" : "ACTIVE"
+              );
             }
           }}
         >

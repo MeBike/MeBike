@@ -4,9 +4,10 @@ import { supplierService } from "@/services/supplier.service";
 const fetchAllSuppliers = async (
   page?: number,
   limit?: number,
-  status?: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | ""
+  status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | ""
 ) => {
   try {
+
     const response = await supplierService.getAllSuppliers({
       page: page ?? 1,
       limit: limit ?? 10,
@@ -20,7 +21,7 @@ const fetchAllSuppliers = async (
     throw new Error("Failed to fetch suppliers");
   }
 };
-export const useGetAllSupplierQuery = (page ?: number , limit ?:number , status?: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | "") => {
+export const useGetAllSupplierQuery = (page ?: number , limit ?:number , status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | "") => {
   return useQuery({
     queryKey: ["suppliers", "all" , page , limit , status],
     queryFn: () => fetchAllSuppliers(page, limit, status),

@@ -11,6 +11,9 @@ import { useChangeStatusSupplierMutation } from "./mutations/Supplier/useChangeS
 import { useUpdateSupplierMutation } from "./mutations/Supplier/useUpdateSupplierMutation";
 import { useGetSupplierByIDQuery } from "./query/Supplier/useGetSupplierByIDQuery";
 import getErrorMessage from "@/utils/error-message";
+import { SUPPLIER_MESSAGE } from "@/constants/messages";
+import getAxiosErrorCodeMessage from "@/utils/error-util";
+import { getErrorMessageFromSupplierCode } from "@/utils/map-message";
 export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -46,30 +49,23 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
         router.push("/login");
         return;
       }
-      useCreateSupplier.mutate(supplierData, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Nhà cung cấp được tạo thành công");
-            queryClient.invalidateQueries({
-              queryKey: ["suppliers", "all", 1, 10],
-            });
-            queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
-          } else {
-            const errorMessage =
-              result.data?.message || "Lỗi khi tạo nhà cung cấp";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi tạo nhà cung cấp");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await useCreateSupplier.mutateAsync(supplierData);
+        if(result.status === 200){
+          toast.success(SUPPLIER_MESSAGE.CREATE_SUCCESS);
+          queryClient.invalidateQueries({ queryKey : ["suppliers", "all"]})
+        }
+        return result;
+      } catch (error) {
+        const code_error = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromSupplierCode(code_error));
+        throw error; 
+      }
     },
     [hasToken, router, queryClient, useCreateSupplier]
   );
   const changeStatusSupplier = useCallback(
-    async (id: string, newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG") => {
+    async (id: string, newStatus: "ACTIVE" | "INACTIVE" | "TERMINATED") => {
       if (!hasToken) {
         router.push("/login");
         return;
@@ -79,15 +75,11 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
         {
           onSuccess: (result) => {
             if (result.status === 200) {
-              toast.success(result.data?.message || "Trạng thái nhà cung cấp đã được thay đổi thành công");
+              toast.success(SUPPLIER_MESSAGE.UPDATE_SUCCESS|| "Trạng thái nhà cung cấp đã được thay đổi thành công");
               queryClient.invalidateQueries({
                 queryKey: ["suppliers", "all", 1, 10],
               });
               queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
-            } else {
-              const errorMessage =
-                result.data?.message || "Lỗi khi thay đổi trạng thái nhà cung cấp";
-              toast.error(errorMessage);
             }
           },
           onError: (error) => {
@@ -153,7 +145,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     changeStatusSupplier,
     getUpdateSupplier,
     fetchDetailSupplier,
-    detailSupplier : detailSupplier?.result,
+    detailSupplier : detailSupplier,
     isLoadingDetailSupplier,
   };
 };
