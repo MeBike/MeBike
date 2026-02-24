@@ -1,28 +1,9 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
-import type { Supplier } from "@/types/Supplier";
 import { CreateSupplierSchema } from "@/schemas/supplier.schema";
-import type { StatsSupplierBike } from "@custom-types";
-interface ApiResponse<T> {
-  data: T[];
-  pagination: {
-    totalPages: number;
-    currentPage: number;
-    limit: number;
-    totalRecords: number;
-  };
-}
-interface DetailApiResponse<T> {
-  result: T;
-  message: string;
-}
-const SUPPLIER_BASE = "/suppliers";
-const SUPPLIER_ENDPOINTS = {
-  BASE: SUPPLIER_BASE,
-  STATS: `${SUPPLIER_BASE}/stats`,
-  WITH_ID: (id: string) => `${SUPPLIER_BASE}/${id}`,
-  WITH_STATS_BIKE: (id: string) => `${SUPPLIER_BASE}/${id}/stats`,
-} as const;
+import type { StatsSupplierBike , Supplier} from "@custom-types";
+import { ApiResponse  } from "@custom-types";
+import { ENDPOINT } from "@/constants/end-point";
 export const supplierService = {
   getAllSuppliers: async ({
     page,
@@ -34,7 +15,7 @@ export const supplierService = {
     status: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG" | "";
   }): Promise<AxiosResponse<ApiResponse<Supplier>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.BASE,
+      ENDPOINT.SUPPLIER.BASE,
       {
         page: page,
         limit: limit,
@@ -43,17 +24,17 @@ export const supplierService = {
     );
     return response;
   },
-  getSupplierById: async (id: string): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
-    const response = await fetchHttpClient.get<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.WITH_ID(id)
+  getSupplierById: async (id: string): Promise<AxiosResponse<Supplier>> => {
+    const response = await fetchHttpClient.get<Supplier>(
+      ENDPOINT.SUPPLIER.DETAIL(id)
     );
     return response;
   },
   createSupplier: async (
     supplierData: CreateSupplierSchema
-  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
-    const response = await fetchHttpClient.post<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.BASE,
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.post(
+      ENDPOINT.SUPPLIER.BASE,
       supplierData
     );
     return response;
@@ -70,35 +51,35 @@ export const supplierService = {
   // },
   updateSupplier: async (
     {id,data} : {id: string, data: Partial<CreateSupplierSchema>}
-  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
-    const response = await fetchHttpClient.put<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.WITH_ID(id),
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.put(
+      ENDPOINT.SUPPLIER.DETAIL(id),
       data
     );
     return response;
   },
   statsSupplierBike: async (
     id: string
-  ): Promise<AxiosResponse<DetailApiResponse<StatsSupplierBike[]>>> => {
-    const response = await fetchHttpClient.get<
-      DetailApiResponse<StatsSupplierBike[]>
-    >(SUPPLIER_ENDPOINTS.WITH_STATS_BIKE(id));
+  ): Promise<AxiosResponse<StatsSupplierBike> => {
+    const response = await fetchHttpClient.get
+      <StatsSupplierBike>
+    (ENDPOINT.SUPPLIER.STATS_BIKE(id));
     return response;
   },
   statsSupplier: async (): Promise<
-    AxiosResponse<DetailApiResponse<StatsSupplierBike[]>>
+    AxiosResponse<StatsSupplierBike>
   > => {
-    const response = await fetchHttpClient.get<
-      DetailApiResponse<StatsSupplierBike[]>
-    >(SUPPLIER_ENDPOINTS.STATS);
+    const response = await fetchHttpClient.get
+      <StatsSupplierBike>
+    (ENDPOINT.SUPPLIER.STATS);
     return response;
   },
   changeStatusSupplier: async (
     id: string,
-    newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG"
-  ): Promise<AxiosResponse<DetailApiResponse<Supplier>>> => {
-    const response = await fetchHttpClient.patch<DetailApiResponse<Supplier>>(
-      SUPPLIER_ENDPOINTS.WITH_ID(id),
+    newStatus: "ACTIVE" | "INACTIVE" | "TERMINATED"
+  ): Promise<AxiosResponse<Supplier> => {
+    const response = await fetchHttpClient.patch<Supplier>(
+      ENDPOINT.SUPPLIER.DETAIL(id),
       { newStatus }
     );
     return response;

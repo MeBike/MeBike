@@ -22,5 +22,12 @@ export const ENDPOINT = {
         STATION_REVENUE: () => "/stations/revenue",
         STATION_NEAREST_AVAILABLE_BIKE: () =>
             "/stations/nearest-available-bike",
+    },
+    SUPPLIER : {
+        BASE : "/suppliers",
+        DETAIL : (id : string) => `/suppliers/${id}`,
+        STATS : "/suppliers/stats",
+        STATS_BIKE : (id : string) => `/suppliers/${id}/stats`,
+
     }
 } as const;
