@@ -14,7 +14,7 @@ import type { StationStatistic } from "@/types/Station";
 export default function StationsPage() {
   const router = useRouter();
   const [page, setPage] = useState<number>(1);
-  const [limit] = useState<number>(5);
+  const [limit] = useState<number>(7);
   const [stationID, setStationID] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const {
