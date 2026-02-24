@@ -620,7 +620,7 @@ export default function RentalsPage() {
                     >
                       <option value="">Chọn trạm</option>
                       {stations.map((station) => (
-                        <option key={station._id} value={station._id}>
+                      <option key={station.id} value={station.id}>
                           {station.name} - {station.address}
                         </option>
                       ))}

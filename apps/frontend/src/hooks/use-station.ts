@@ -5,7 +5,7 @@ import { useGetStationByIDQuery } from "./query/Station/useGetStationByIDQuery";
 import { StationSchemaFormData } from "@/schemas/stationSchema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useCreateSupplierMutation } from "./mutations/Station/useCreateStationQuery";
+import { useCreateStationMutation } from "./mutations/Station/useCreateStationQuery";
 import { useSoftDeleteStationMutation } from "./mutations/Station/useSoftDeleteStationMutation";
 import { useUpdateStationMutation } from "./mutations/Station/useUpdateStationQuery";
 import { useGetStationStatsReservationQuery } from "./query/Station/useGetStationStatsReservation";
@@ -14,6 +14,11 @@ import { useGetStationRevenue } from "./query/Station/useGetStationRevenue";
 import { useGetNearestAvailableBike } from "./query/Station/useGetNearestAvailableBike";
 import { QUERY_KEYS } from "@constants/queryKey";
 import getErrorMessage from "@/utils/error-message";
+import getAxiosErrorCodeMessage from "@/utils/error-util";
+import {
+  getErrorMessageFromStationCode,
+  getErrorMessageUserFromCode,
+} from "@/utils/map-message";
 interface StationActionProps {
   hasToken?: boolean;
   stationId?: string;
@@ -30,22 +35,25 @@ export const useStationActions = ({
   limit,
   latitude,
   longitude,
-  name
+  name,
 }: StationActionProps) => {
   const queryClient = useQueryClient();
-  const { data: responseStationReservationStats , refetch : refetchStationReservationStats } = useGetStationStatsReservationQuery(stationId || "");
+  const {
+    data: responseStationReservationStats,
+    refetch: refetchStationReservationStats,
+  } = useGetStationStatsReservationQuery(stationId || "");
   const router = useRouter();
   const {
     refetch,
     data: response,
     isLoading,
-  } = useGetAllStation({ page: page, limit: limit , name: name });
+  } = useGetAllStation({ page: page, limit: limit, name: name });
   const {
     refetch: fetchingStationID,
     data: responseStationDetail,
     isLoading: isLoadingStationID,
   } = useGetStationByIDQuery(stationId || "");
-  const useCreateStation = useCreateSupplierMutation();
+  const useCreateStation = useCreateStationMutation();
   const useSoftDeleteStation = useSoftDeleteStationMutation();
   const useUpdateStation = useUpdateStationMutation(stationId || "");
   const getReservationStats = useCallback(() => {
@@ -72,26 +80,22 @@ export const useStationActions = ({
         router.push("/auth/login");
         return;
       }
-      useCreateStation.mutate(data, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Đã tạo trạm thành công");
-            queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
-            });
-          } else {
-            const errorMessage =
-              result.data?.message || "Error creating stations";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error creating bikes");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await useCreateStation.mutateAsync(data);
+        if (result.status === 200) {
+          toast.success(result.data?.message || "Đã tạo trạm thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["stations", "all"],
+          });
+        }
+        return result;
+      } catch (error) {
+        const code_error = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromStationCode(code_error));
+        throw error; 
+      }
     },
-    [hasToken, router, queryClient, useCreateStation , page, limit, name]
+    [hasToken, router, queryClient, useCreateStation, page, limit, name],
   );
   const deleteStation = useCallback(
     async (stationId: string) => {
@@ -107,21 +111,20 @@ export const useStationActions = ({
               queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
             });
           } else {
-            const errorMessage =
-              result.data?.message || "Lỗi khi xóa trạm";
+            const errorMessage = result.data?.message || "Lỗi khi xóa trạm";
             toast.error(errorMessage);
           }
         },
         onError: (error) => {
           const errorMessage = getErrorMessage(
             error,
-            "Error deleting stations"
+            "Error deleting stations",
           );
           toast.error(errorMessage);
         },
       });
     },
-    [hasToken, router, queryClient, useSoftDeleteStation , page, limit, name]
+    [hasToken, router, queryClient, useSoftDeleteStation, page, limit, name],
   );
   const updateStation = useCallback(
     async (data: StationSchemaFormData) => {
@@ -129,42 +132,46 @@ export const useStationActions = ({
         router.push("/auth/login");
         return;
       }
-      useUpdateStation.mutate(data, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Đã cập nhật trạm thành công");
-            queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
-            });
-          } else {
-            const errorMessage =
-              result.data?.message || "Lỗi khi cập nhật trạm";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật trạm");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await useUpdateStation.mutateAsync(data);
+        if (result.status === 200) {
+          toast.success(result.data?.message || "Đã cập nhật trạm thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["stations", "all"],
+          });
+        }
+        return result;
+      } catch (error) {
+        const code_error = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromStationCode(code_error));
+        throw error; 
+        
+      }
     },
-    [hasToken, router, queryClient, useUpdateStation , page, limit, name]
+    [hasToken, router, queryClient, useUpdateStation, page, limit, name],
   );
-  const { data: responseStationBikeRevenue, refetch: refetchStationBikeRevenue } = useGetStationBikeRevenue();
+  const {
+    data: responseStationBikeRevenue,
+    refetch: refetchStationBikeRevenue,
+  } = useGetStationBikeRevenue();
   const getStationBikeRevenue = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchStationBikeRevenue();
   }, [refetchStationBikeRevenue, hasToken]);
-  const {data : responseStationRevenue , refetch : refetchStationRevenue } = useGetStationRevenue();
+  const { data: responseStationRevenue, refetch: refetchStationRevenue } =
+    useGetStationRevenue();
   const getStationRevenue = useCallback(() => {
     if (!hasToken) {
       return;
     }
     refetchStationRevenue();
   }, [refetchStationRevenue, hasToken]);
-  const { data : responseNearestAvailableBike , refetch : refetchNearestAvailableBike} = useGetNearestAvailableBike({
+  const {
+    data: responseNearestAvailableBike,
+    refetch: refetchNearestAvailableBike,
+  } = useGetNearestAvailableBike({
     latitude: latitude ?? 0,
     longitude: longitude ?? 0,
   });

@@ -6,74 +6,56 @@ import type {
   StationBikeRevenue,
   StationStatisticsResponse,
 } from "@/types/Station";
-const STATION_BASE = "/stations";
-const STATION_ENDPOINTS = {
-  BASE: STATION_BASE,
-  ALL: `${STATION_BASE}`,
-  DETAIL: (id: string) => `${STATION_BASE}/${id}`,
-  ID: (id: string) => `${STATION_BASE}/${id}`,
-  STATION_BIKE_REVENUE: () => `${STATION_BASE}/bike-revenue`,
-  STATION_REVENUE: () => `${STATION_BASE}/revenue`,
-  STATION_NEAREST_AVAILABLE_BIKE: () =>
-    `${STATION_BASE}/nearest-available-bike`,
-  //   CREATE: `${STATION_BASE}`,
-  //   STATS: `${STATION_BASE}/stats`,
-  //   BY_ID: (id: string) => `${BIKE_BASE}/${id}/rentals`,
-  //   BY_ID_ADMIN_STATS: (id: string) => `${BIKE_BASE}/${id}/stats`,
-  //   BY_ID_FOR_ALL: (id: string) => `${BIKE_BASE}/${id}`,
-  //   REPORT_BROKEN: (id: string) => `${BIKE_BASE}/report-broken/${id}`,
-  //   DELETE: (id: string) => `${BIKE_BASE}/${id}`,
-  //   UPDATE: (id: string) => `${BIKE_BASE}/admin-update/${id}`,
-} as const;
-interface ApiResponse<T> {
-  data: T;
-  pagination?: {
-    limit: number;
-    currentPage: number;
-    totalPages: number;
-    totalRecords: number;
-  };
-}
-interface ApiDetailResponse<T> {
-  result?: T;
-  message?: string;
-}
-interface DeleteResponse {
-  message: string;
-}
+import { ENDPOINT } from "@/constants/end-point";
+import { ApiResponse , DetailApiResponse } from "@/types";
 export const stationService = {
   getAllStations: async ({
     page,
-    limit,
-    name
+    pageSize,
+    name,
+    address,
+    latitude,
+    longitude,
+    sortBy,
+    sortDir,   
   }: {
     page?: number;
-    limit?: number;
+    pageSize?: number;
     name?: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+    sortBy?: "name" | "capacity" | "updatedAt";
+    sortDir?: "asc" | "desc";
   }): Promise<AxiosResponse<ApiResponse<Station[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<Station[]>>(
-      STATION_ENDPOINTS.ALL,
+      ENDPOINT.STATION.BASE,
       {
         page,
-        limit,
-        name
+        pageSize,
+        name,
+        address,
+        latitude,
+        longitude,
+        sortBy,
+        sortDir,
       }
     );
     return response;
   },
   getStationById: async (
     stationId: string
-  ): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
-    const response = await fetchHttpClient.get<ApiDetailResponse<Station>>(
-      STATION_ENDPOINTS.DETAIL(stationId)
+  ): Promise<AxiosResponse<Station>> => {
+    const response = await fetchHttpClient.get<Station>(
+      ENDPOINT.STATION.DETAIL(stationId)
     );
     return response;
   },
   createStation: async (
     stationData: StationSchemaFormData
-  ): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
-    const response = await fetchHttpClient.post<ApiDetailResponse<Station>>(
-      STATION_ENDPOINTS.BASE,
+  ): Promise<AxiosResponse<DetailApiResponse<Station>>> => {
+    const response = await fetchHttpClient.post<DetailApiResponse<Station>>(
+      ENDPOINT.STATION.BASE,
       stationData
     );
     return response;
@@ -82,9 +64,9 @@ export const stationService = {
     stationID,
   }: {
     stationID: string;
-  }): Promise<AxiosResponse<DeleteResponse>> => {
-    const response = await fetchHttpClient.delete<DeleteResponse>(
-      STATION_ENDPOINTS.ID(stationID)
+  }): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.delete(
+      ENDPOINT.STATION.DETAIL(stationID)
     );
     return response;
   },
@@ -94,27 +76,27 @@ export const stationService = {
   }: {
     stationID: string;
     stationData: StationSchemaFormData;
-  }): Promise<AxiosResponse<ApiDetailResponse<Station>>> => {
-    const response = await fetchHttpClient.put<ApiDetailResponse<Station>>(
-      STATION_ENDPOINTS.ID(stationID),
+  }): Promise<AxiosResponse<DetailApiResponse<Station>>> => {
+    const response = await fetchHttpClient.patch<DetailApiResponse<Station>>(
+      ENDPOINT.STATION.DETAIL(stationID),
       stationData
     );
     return response;
   },
   getStationBikeRevenue: async (): Promise<
-    AxiosResponse<ApiDetailResponse<StationBikeRevenue>>
+    AxiosResponse<DetailApiResponse<StationBikeRevenue>>
   > => {
     const response = await fetchHttpClient.get<
-      ApiDetailResponse<StationBikeRevenue>
-    >(STATION_ENDPOINTS.STATION_BIKE_REVENUE());
+      DetailApiResponse<StationBikeRevenue>
+    >(ENDPOINT.STATION.STATION_BIKE_REVENUE());
     return response;
   },
   getStationRevenue: async (): Promise<
-    AxiosResponse<ApiDetailResponse<StationStatisticsResponse>>
+    AxiosResponse<DetailApiResponse<StationStatisticsResponse>>
   > => {
     const response = await fetchHttpClient.get<
-      ApiDetailResponse<StationStatisticsResponse>
-    >(STATION_ENDPOINTS.STATION_REVENUE());
+      DetailApiResponse<StationStatisticsResponse>
+    >(ENDPOINT.STATION.STATION_REVENUE());
     return response;
   },
   getStationNearestAvailableBike: async ({
@@ -125,10 +107,10 @@ export const stationService = {
     latitude: number;
     longitude: number;
     maxDistance?: number;
-  }): Promise<AxiosResponse<ApiDetailResponse<NearestStationResponse>>> => {
+  }): Promise<AxiosResponse<DetailApiResponse<NearestStationResponse>>> => {
     const response = await fetchHttpClient.get<
-      ApiDetailResponse<NearestStationResponse>
-    >(STATION_ENDPOINTS.STATION_NEAREST_AVAILABLE_BIKE(), {
+      DetailApiResponse<NearestStationResponse>
+    >(ENDPOINT.STATION.STATION_NEAREST_AVAILABLE_BIKE(), {
       latitude: latitude,
       longitude: longitude,
       maxDistance: maxDistance,

@@ -9,7 +9,7 @@ export interface ApiResponse<T> {
   message: string;
 }
 export interface DetailApiResponse<T> {
-  result: T;
+  data: T;
   message: string;
 }
 export interface DetailApiResponseCuaNguyen<T> {

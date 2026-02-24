@@ -10,7 +10,7 @@ import type {
   VerifyOTPForForgotPasswordSchemaFormData
 } from "@schemas/authSchema";
 import type { AxiosResponse } from "axios";
-import { ProfileUserResponse , AuthResponse , MessageResponse , ResetTokenResponse} from "@/types";
+import { ProfileUserResponse , AuthResponse , MessageResponse , ResetTokenResponse, DetailUser} from "@/types";
 import { ENDPOINT } from "@/constants/end-point";
 export const authService = {
   login: async (
@@ -68,9 +68,9 @@ export const authService = {
     );
     return response;
   },
-  getMe: async (): Promise<AxiosResponse<ProfileUserResponse>> => {
+  getMe: async (): Promise<AxiosResponse<DetailUser>> => {
     const response =
-      await fetchHttpClient.get<ProfileUserResponse>(ENDPOINT.AUTH.GET_ME);
+      await fetchHttpClient.get<DetailUser>(ENDPOINT.AUTH.GET_ME);
     return response;
   },
   refreshToken: async (

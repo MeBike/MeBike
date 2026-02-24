@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Edit2, Trash2 } from "lucide-react";
 import type { Station } from "@custom-types";
+import Link from "next/link";
 import {
   Dialog,
   DialogTrigger,
@@ -23,13 +24,9 @@ export function formatDateVN(dateString: string) {
   });
 }
 export const stationColumns = ({
-  onView,
-  setIsDetailModalOpen,
   onEdit,
   onDelete,
 }: {
-  onView?: ({ id }: { id: string }) => void;
-  setIsDetailModalOpen?: (isOpen: boolean) => void;
   onEdit?: ({ id }: { id: string }) => void;
   onDelete?: ({ id }: { id: string }) => void;
 }): ColumnDef<Station>[] => [
@@ -44,16 +41,6 @@ export const stationColumns = ({
     cell: ({ row }) => row.original.address,
   },
   {
-    accessorKey: "latitude",
-    header: "Vĩ độ",
-    cell: ({ row }) => row.original.latitude,
-  },
-  {
-    accessorKey: "longitude",
-    header: "Kinh độ",
-    cell: ({ row }) => row.original.longitude,
-  },
-  {
     accessorKey: "capacity",
     header: "Sức chứa",
     cell: ({ row }) => row.original.capacity,
@@ -61,38 +48,31 @@ export const stationColumns = ({
   {
     accessorKey: "created_at",
     header: "Ngày tạo",
-    cell: ({ row }) => formatDateVN(row.original.created_at),
+    cell: ({ row }) => formatDateVN(row.original.createdAt),
   },
   {
     accessorKey: "updated_at",
     header: "Ngày cập nhật",
-    cell: ({ row }) => formatDateVN(row.original.updated_at),
+    cell: ({ row }) => formatDateVN(row.original.updatedAt),
   },
   {
     id: "actions",
     header: "Hành động",
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
-        <button
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
+        <Link
+          href={`/admin/stations/${row.original.id}`}
+          className="p-2 hover:bg-muted rounded-lg transition-colors inline-flex"
           title="Xem chi tiết"
-          onClick={() => {
-            if (onView) {
-              onView({ id: row.original._id });
-            }
-            if (setIsDetailModalOpen) {
-              setIsDetailModalOpen(true);
-            }
-          }}
         >
           <Eye className="w-4 h-4 text-muted-foreground" />
-        </button>
+        </Link>
         <button
           className="p-2 hover:bg-muted rounded-lg transition-colors"
           title="Chỉnh sửa"
           onClick={() => {
             if (onEdit) {
-              onEdit({ id: row.original._id });
+              onEdit({ id: row.original.id });
             }
           }}
         >
@@ -126,7 +106,7 @@ export const stationColumns = ({
                   className="px-4 py-2 bg-red-600 text-white rounded"
                   type="button"
                   onClick={() => {
-                    if (onDelete) onDelete({ id: row.original._id });
+                    if (onDelete) onDelete({ id: row.original.id });
                   }}
                 >
                   Xóa

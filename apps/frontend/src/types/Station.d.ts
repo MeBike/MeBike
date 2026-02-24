@@ -6,31 +6,22 @@ export interface LocationGeo {
 }
 
 export interface Station {
-  _id: string;
+  id: string;
   name: string;
   address: string;
-  latitude: string;
-  longitude: string;
-  capacity: string;
-  created_at: string;
-  updated_at: string;
-  location_geo: LocationGeo;
-  description?: string;
-  type?: string;
-  stationNumber?: string;
-  average_rating?: number;
-  total_ratings?: number;
-  bikeStation?: {
-    id: string;
-    stationId: number;
-    totalBikes: number;
-    availableBikes: number;
-    location: {
-      lat: number;
-      lng: number;
-    };
-    distance: number;
-  };
+  latitude: number;
+  longitude: number;
+  capacity: number;
+  createdAt: string;
+  updatedAt: string;
+  totalBikes: number;
+  availableBikes: number;
+  bookedBikes: number;
+  brokenBikes: number;
+  reservedBikes: number;
+  maintainedBikes: number;
+  unavailableBikes: number;
+  emptySlots: number;
 }
 export interface StationBikeRevenue {
   period: {

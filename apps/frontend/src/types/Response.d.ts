@@ -1,12 +1,11 @@
 export interface ApiResponse<T> {
   data: T;
   pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
     totalPages: number;
-    currentPage: number;
-    limit: number;
-    totalRecords: number;
   };
-  message: string;
 }
 export interface DetailApiResponse<T> {
   result: T;
@@ -17,4 +16,7 @@ export interface DetailApiResponseCuaNguyen<T> {
     data: T;
   };
   message: string;
+}
+export interface DeleteResponse {
+  message?: string;
 }

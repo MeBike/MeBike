@@ -55,7 +55,7 @@ export const bikeColumn = (
     accessorKey: "station_id",
     header: "Tên trạm",
     cell: ({ row }) => {
-      const station = stations.find((s) => s._id === row.original.station_id);
+      const station = stations.find((s) => s.id === row.original.station_id);
       return station ? station.name : "Không có";
     },
   },
