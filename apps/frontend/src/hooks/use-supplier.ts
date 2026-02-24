@@ -94,30 +94,24 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     },
     [hasToken, router, queryClient, useChangeStatusSupplier]
   );
-  const getUpdateSupplier = useCallback(({ data, id }: { data: Partial<CreateSupplierSchema>; id: string }) => {
+  const getUpdateSupplier = useCallback(async ({ data, id }: { data: Partial<CreateSupplierSchema>; id: string }) => {
     if (!hasToken) {
       router.push("/login");
       return;
     }
-    useUpdateSupplier.mutate({ id: id, data }, {
-      onSuccess: (result) => {
-        if (result.status === 200) {
-          toast.success(result.data?.message || "Cập nhật nhà cung cấp thành công");
-          queryClient.invalidateQueries({
-            queryKey: ["suppliers", "all", 1, 10],
-          });
-          queryClient.invalidateQueries({ queryKey: ["supplier-stats"] });
-        } else {
-          const errorMessage =
-            result.data?.message || "Lỗi khi cập nhật nhà cung cấp";
-          toast.error(errorMessage);
-        }
-      },
-      onError: (error) => {
-        const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật nhà cung cấp");
-        toast.error(errorMessage);
-      },
-    });
+    try {
+      const result = await useUpdateSupplier.mutateAsync({id, data});
+      if(result.status === 200){
+        toast.success(SUPPLIER_MESSAGE.UPDATE_SUCCESS);
+        queryClient.invalidateQueries({ queryKey : ["suppliers", "all"]})
+        queryClient.invalidateQueries({ queryKey: ["supplier", id] });
+      }
+      return result;
+    } catch (error) {
+      const code_error = getAxiosErrorCodeMessage(error);
+      toast.error(getErrorMessageFromSupplierCode(code_error));
+      throw error;
+    }
   }, [hasToken, router, queryClient, useUpdateSupplier]);
   const getBikeStatsSupplier = useCallback(async () => {
     if (!hasToken) {
