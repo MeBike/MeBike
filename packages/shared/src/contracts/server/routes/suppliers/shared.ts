@@ -52,7 +52,15 @@ export const SupplierCreateBodySchema = z
       .string()
       .regex(/^\d{10}$/, { message: "phoneNumber must be 10 digits" })
       .optional(),
-    contractFee: z.number().optional(),
+    contractFee: z
+      .number()
+      .min(0, { message: "contractFee must be greater than or equal to 0" })
+      .max(100, { message: "contractFee must be less than or equal to 100" })
+      .optional()
+      .openapi({
+        description: "Supplier contract fee percentage",
+        example: 10,
+      }),
     status: SupplierStatusSchema.optional(),
   })
   .openapi("SupplierCreateBody", {
