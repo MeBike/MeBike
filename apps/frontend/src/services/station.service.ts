@@ -77,7 +77,7 @@ export const stationService = {
     stationID: string;
     stationData: StationSchemaFormData;
   }): Promise<AxiosResponse<DetailApiResponse<Station>>> => {
-    const response = await fetchHttpClient.put<DetailApiResponse<Station>>(
+    const response = await fetchHttpClient.patch<DetailApiResponse<Station>>(
       ENDPOINT.STATION.DETAIL(stationID),
       stationData
     );

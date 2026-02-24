@@ -3,7 +3,7 @@ import { stationService } from "@/services/station.service";
 import { QUERY_KEYS } from "@/constants/queryKey";
 const fetchAllStations = async ({page,limit,name} : {page ?: number , limit ?: number, name ?: string}) => {
   try {
-    const response = await stationService.getAllStations({page,limit,name});
+    const response = await stationService.getAllStations({page,pageSize:limit,name});
     if (response.status === 200) {
       return response.data; 
     }

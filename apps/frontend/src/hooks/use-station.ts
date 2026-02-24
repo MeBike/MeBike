@@ -132,26 +132,21 @@ export const useStationActions = ({
         router.push("/auth/login");
         return;
       }
-      useUpdateStation.mutate(data, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(
-              result.data?.message || "Đã cập nhật trạm thành công",
-            );
-            queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
-            });
-          } else {
-            const errorMessage =
-              result.data?.message || "Lỗi khi cập nhật trạm";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật trạm");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await useUpdateStation.mutateAsync(data);
+        if (result.status === 200) {
+          toast.success(result.data?.message || "Đã cập nhật trạm thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["stations", "all"],
+          });
+        }
+        return result;
+      } catch (error) {
+        const code_error = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromStationCode(code_error));
+        throw error; 
+        
+      }
     },
     [hasToken, router, queryClient, useUpdateStation, page, limit, name],
   );
