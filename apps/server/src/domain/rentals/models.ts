@@ -48,6 +48,7 @@ export type AdminRentalListItem = {
   status: RentalStatus;
   startStationId: string;
   endStationId: string | null;
+  createdAt: Date;
   startTime: Date;
   endTime: Date | null;
   durationMinutes: number | null;

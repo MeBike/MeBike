@@ -17,6 +17,8 @@ model RatingReason {
   type      RatingReasonType
   appliesTo AppliesToEnum      @map("applies_to")
   messages  String
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime           @default(now()) @map("updated_at") @db.Timestamptz
   links     RatingReasonLink[]
 }
 
@@ -26,6 +28,7 @@ model Rating {
   rentalId  String   @unique @map("rental_id") @db.Uuid
   rating    Int
   comment   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz
 
   user    User               @relation(fields: [userId], references: [id])

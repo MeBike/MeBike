@@ -91,6 +91,7 @@ export function makeSupplierRepository(client: PrismaClient): SupplierRepo {
     phoneNumber: true,
     contractFee: true,
     status: true,
+    createdAt: true,
     updatedAt: true,
   } as const;
 

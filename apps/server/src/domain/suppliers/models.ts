@@ -11,6 +11,7 @@ export type SupplierRow = {
   phoneNumber: string | null;
   contractFee: SupplierDecimal | null;
   status: SupplierStatus;
+  createdAt: Date;
   updatedAt: Date;
 };
 

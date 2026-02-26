@@ -17,7 +17,8 @@ export const UserDetailSchema = z.object({
   avatar: z.string().nullable(),
   role: UserRoleSchema,
   nfcCardUid: z.string().nullable(),
-  updatedAt: z.string(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 });
 
 export type UserSummary = z.infer<typeof UserSummarySchema>;
