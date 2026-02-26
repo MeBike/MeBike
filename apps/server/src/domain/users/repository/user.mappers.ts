@@ -16,6 +16,7 @@ export const selectUserRow = {
   nfcCardUid: true,
   stripeConnectedAccountId: true,
   stripePayoutsEnabled: true,
+  createdAt: true,
   updatedAt: true,
 } as const satisfies PrismaTypes.UserSelect;
 
@@ -34,6 +35,7 @@ export function toUserRow(row: PrismaTypes.UserGetPayload<{ select: typeof selec
     nfcCardUid: row.nfcCardUid,
     stripeConnectedAccountId: row.stripeConnectedAccountId,
     stripePayoutsEnabled: row.stripePayoutsEnabled,
+    createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
 }

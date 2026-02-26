@@ -8,6 +8,7 @@ export const SupplierSummarySchema = z.object({
   phoneNumber: z.string().nullable(),
   contractFee: z.number().nullable(),
   status: SupplierStatusSchema,
+  createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
 

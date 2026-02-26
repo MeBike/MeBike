@@ -155,6 +155,7 @@ export type Bike = {
     stationId: string | null;
     supplierId: string | null;
     status: BikeStatus;
+    created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
 export type FixedSlotDate = {
@@ -207,6 +208,7 @@ export type Rating = {
     rental_id: string;
     rating: number;
     comment: string | null;
+    created_at: Generated<Timestamp>;
     updated_at: Generated<Timestamp>;
 };
 export type RatingReason = {
@@ -214,6 +216,8 @@ export type RatingReason = {
     type: RatingReasonType;
     applies_to: AppliesToEnum;
     messages: string;
+    created_at: Generated<Timestamp>;
+    updated_at: Generated<Timestamp>;
 };
 export type RatingReasonLink = {
     rating_id: string;
@@ -225,6 +229,7 @@ export type Rental = {
     bike_id: string | null;
     start_station: string;
     end_station: string | null;
+    created_at: Generated<Timestamp>;
     start_time: Generated<Timestamp>;
     end_time: Timestamp | null;
     duration: number | null;
@@ -255,6 +260,7 @@ export type Station = {
     capacity: number;
     latitude: number;
     longitude: number;
+    created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
 export type Subscription = {
@@ -267,6 +273,7 @@ export type Subscription = {
     activated_at: Timestamp | null;
     expires_at: Timestamp | null;
     price: string;
+    created_at: Generated<Timestamp>;
     updated_at: Generated<Timestamp>;
 };
 export type Supplier = {
@@ -276,6 +283,7 @@ export type Supplier = {
     phone_number: string | null;
     contract_fee: string | null;
     status: SupplierStatus;
+    created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
 export type User = {

@@ -18,6 +18,7 @@ export function mapUserDetail(
     avatar: row.avatar,
     role: row.role,
     nfcCardUid: row.nfcCardUid,
+    createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
 }
