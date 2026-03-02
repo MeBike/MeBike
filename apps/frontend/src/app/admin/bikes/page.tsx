@@ -800,7 +800,7 @@ export default function BikesPage() {
                   >
                     <option value="">Chọn nhà cung cấp</option>
                     {allSupplier?.data.map((supplier) => (
-                      <option key={supplier._id} value={supplier._id}>
+                      <option key={supplier.id} value={supplier.id}>
                         {supplier.name}
                       </option>
                     ))}
@@ -1245,7 +1245,7 @@ export default function BikesPage() {
                   >
                     <option value="">Không có</option>
                     {allSupplier?.data.map((supplier) => (
-                      <option key={supplier._id} value={supplier._id}>
+                      <option key={supplier.id} value={supplier.id}>
                         {supplier.name}
                       </option>
                     ))}
