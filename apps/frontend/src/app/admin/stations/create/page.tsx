@@ -7,6 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { stationSchema, StationSchemaFormData } from "@/schemas/stationSchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft } from "lucide-react";
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
 import * as tt from "@tomtom-international/web-sdk-maps";
 import { useStationActions } from "@/hooks/use-station";
@@ -86,109 +88,164 @@ export default function CreateStationPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Thêm trạm mới</h1>
-          <p className="text-muted-foreground mt-1">
-            Tạo mới trạm xe đạp trong hệ thống
+    <div className="min-h-screen bg-linear-to-b from-background to-background/95 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          className="mb-8 -ml-3 text-muted-foreground hover:text-foreground"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-5 w-5" />
+          Quay lại danh sách trạm
+        </Button>
+
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Tạo trạm xe mới</h1>
+          <p className="mt-2 text-base text-muted-foreground">
+            Thêm một trạm xe đạp mới vào hệ thống quản lý
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" type="button" onClick={() => router.back()}>
-            Quay lại
-          </Button>
-        </div>
-      </div>
 
-      <div className="bg-card border border-border rounded-lg p-6 w-full">
-        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Tên trạm
-            </label>
-            <Input type="text" {...register("name")} placeholder="Nhập tên trạm" />
-            {errors.name && (
-              <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
-            )}
-          </div>
+        {/* Main Content */}
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-8 lg:grid-cols-3">
+          {/* Form Section */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="rounded-lg border border-border bg-card shadow-sm">
+              <div className="border-b border-border bg-muted/30 px-6 py-5">
+                <h2 className="text-lg font-semibold text-foreground">Thông tin trạm</h2>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Địa chỉ
-            </label>
-            <Input
-              type="text"
-              {...register("address")}
-              placeholder="Nhập địa chỉ trạm"
-            />
-            {errors.address && (
-              <p className="text-sm text-red-500 mt-1">
-                {errors.address.message}
-              </p>
-            )}
-          </div>
+              <div className="px-6 py-6 space-y-5">
+                {/* Tên trạm */}
+                <FormField label="Tên trạm" required>
+                  <Input 
+                    type="text" 
+                    {...register("name")} 
+                    placeholder="Nhập tên trạm"
+                    className={`h-11 text-base ${errors.name ? "border-red-500 bg-red-50/30" : ""}`}
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-red-500 mt-2">{errors.name.message}</p>
+                  )}
+                </FormField>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Chọn vị trí trên bản đồ
-            </label>
-            <div
-              ref={mapRef}
-              style={{
-                width: "100%",
-                height: "300px",
-                backgroundColor: "#e5e7eb",
-              }}
-            />
-          </div>
+                {/* Địa chỉ */}
+                <FormField label="Địa chỉ" required>
+                  <Input
+                    type="text"
+                    {...register("address")}
+                    placeholder="Nhập địa chỉ trạm"
+                    className={`h-11 text-base ${errors.address ? "border-red-500 bg-red-50/30" : ""}`}
+                  />
+                  {errors.address && (
+                    <p className="text-sm text-red-500 mt-2">{errors.address.message}</p>
+                  )}
+                </FormField>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Latitude
-              </label>
-              <Input type="text" {...register("latitude")} />
+                {/* Sức chứa */}
+                <FormField label="Sức chứa (số xe)" required>
+                  <Input
+                    type="number"
+                    {...register("capacity", { valueAsNumber: true })}
+                    placeholder="Nhập sức chứa"
+                    className={`h-11 text-base ${errors.capacity ? "border-red-500 bg-red-50/30" : ""}`}
+                  />
+                  {errors.capacity && (
+                    <p className="text-sm text-red-500 mt-2">{errors.capacity.message}</p>
+                  )}
+                </FormField>
+
+                {/* Tọa độ */}
+                <div className="border-t border-border pt-5">
+                  <p className="text-sm font-semibold text-foreground mb-4">Tọa độ vị trí</p>
+                  
+                  <div className="space-y-4">
+                    <FormField label="Latitude">
+                      <Input 
+                        type="text" 
+                        {...register("latitude")} 
+                        readOnly
+                        className="h-11 text-base bg-muted/50 cursor-not-allowed"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">Nhấp trên bản đồ để chọn vị trí</p>
+                    </FormField>
+
+                    <FormField label="Longitude">
+                      <Input 
+                        type="text" 
+                        {...register("longitude")} 
+                        readOnly
+                        className="h-11 text-base bg-muted/50 cursor-not-allowed"
+                      />
+                    </FormField>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-6 border-t border-border">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/admin/stations")}
+                    className="h-11 flex-1"
+                  >
+                    Hủy
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="h-11 flex-1"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Đang lưu..." : "Tạo trạm"}
+                  </Button>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Longitude
-              </label>
-              <Input type="text" {...register("longitude")} />
+          </div>
+
+          {/* Map Section */}
+          <div className="lg:col-span-2">
+            <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden h-full">
+              <div className="border-b border-border bg-muted/30 px-6 py-5">
+                <h2 className="text-lg font-semibold text-foreground">Chọn vị trí trên bản đồ</h2>
+                <p className="text-sm text-muted-foreground mt-1">Nhấp trên bản đồ để xác định tọa độ của trạm</p>
+              </div>
+
+              <div
+                ref={mapRef}
+                className="w-full"
+                style={{
+                  height: "500px",
+                  backgroundColor: "#e5e7eb",
+                }}
+              />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Sức chứa (số xe)
-            </label>
-            <Input
-  type="number"
-  {...register("capacity", { valueAsNumber: true })}
-  placeholder="Nhập sức chứa"
-/>
-            {errors.capacity && (
-              <p className="text-sm text-red-500 mt-1">
-                {errors.capacity.message}
-              </p>
-            )}
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/admin/stations")}
-              className="flex-1"
-            >
-              Hủy
-            </Button>
-            <Button type="submit" className="flex-1" disabled={isSubmitting}>
-              Thêm trạm
-            </Button>
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+// Form Field Component
+function FormField({
+  label,
+  required = false,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <Label className="text-sm font-semibold text-foreground mb-2 block">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </Label>
+      {children}
     </div>
   );
 }

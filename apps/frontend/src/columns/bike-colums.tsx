@@ -64,7 +64,7 @@ export const bikeColumn = (
     header: "Tên nhà cung cấp",
     cell: ({ row }) => {
       const supplier = suppliers.find(
-        (s) => s._id === row.original.supplier_id
+        (s) => s.id === row.original.supplier_id
       );
       return supplier ? supplier.name : "Không có";
     },

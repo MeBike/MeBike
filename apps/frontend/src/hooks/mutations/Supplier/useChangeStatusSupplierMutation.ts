@@ -8,7 +8,7 @@ export const useChangeStatusSupplierMutation = () => {
         newStatus,
       }: {
         id: string;
-        newStatus: "HOẠT ĐỘNG" | "NGƯNG HOẠT ĐỘNG";
+        newStatus: "ACTIVE" | "INACTIVE" | "TERMINATED";
       }) => supplierService.changeStatusSupplier(id, newStatus),
     });
 }
