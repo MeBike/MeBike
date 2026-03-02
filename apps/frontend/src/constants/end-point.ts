@@ -28,6 +28,6 @@ export const ENDPOINT = {
         DETAIL : (id : string) => `/suppliers/${id}`,
         STATS : "/suppliers/stats",
         STATS_BIKE : (id : string) => `/suppliers/${id}/stats`,
+    },
 
-    }
 } as const;

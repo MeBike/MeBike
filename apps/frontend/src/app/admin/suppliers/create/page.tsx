@@ -12,6 +12,7 @@ import {
   createSupplierSchema,
 } from "@/schemas/supplier.schema";
 import { useSupplierActions } from "@/hooks/use-supplier";
+import { toast } from "sonner";
 
 export default function CreateSupplierPage() {
   const router = useRouter();
@@ -38,14 +39,14 @@ export default function CreateSupplierPage() {
         router.push("/admin/suppliers");
       }
     } catch (err) {
-      // Lỗi đã được xử lý trong hook (toast...)
+      console.error("Failed to create supplier:", err);
+      toast.error("Đã có lỗi xảy ra khi tạo nhà cung cấp. Vui lòng thử lại.");
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-        {/* Nút quay lại */}
         <Button
           variant="ghost"
           className="mb-6 -ml-2 text-muted-foreground"
@@ -55,7 +56,6 @@ export default function CreateSupplierPage() {
           Quay lại danh sách
         </Button>
 
-        {/* Tiêu đề trang */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Thêm nhà cung cấp mới
@@ -65,12 +65,10 @@ export default function CreateSupplierPage() {
           </p>
         </div>
 
-        {/* Form chính */}
-        <form 
-          onSubmit={handleSubmit(onSubmit)} 
+        <form
+          onSubmit={handleSubmit(onSubmit)}
           className="space-y-6 rounded-lg border bg-card p-6 shadow-sm"
         >
-          {/* Tên nhà cung cấp */}
           <div className="space-y-2">
             <Label htmlFor="name">Tên nhà cung cấp *</Label>
             <Input
@@ -80,11 +78,12 @@ export default function CreateSupplierPage() {
               className={errors.name ? "border-red-500" : ""}
             />
             {errors.name && (
-              <p className="text-sm font-medium text-red-500">{errors.name.message}</p>
+              <p className="text-sm font-medium text-red-500">
+                {errors.name.message}
+              </p>
             )}
           </div>
 
-          {/* Địa chỉ */}
           <div className="space-y-2">
             <Label htmlFor="address">Địa chỉ *</Label>
             <Input
@@ -94,11 +93,12 @@ export default function CreateSupplierPage() {
               className={errors.address ? "border-red-500" : ""}
             />
             {errors.address && (
-              <p className="text-sm font-medium text-red-500">{errors.address.message}</p>
+              <p className="text-sm font-medium text-red-500">
+                {errors.address.message}
+              </p>
             )}
           </div>
 
-          {/* Số điện thoại */}
           <div className="space-y-2">
             <Label htmlFor="phone_number">Số điện thoại *</Label>
             <Input
@@ -108,13 +108,13 @@ export default function CreateSupplierPage() {
               className={errors.phoneNumber ? "border-red-500" : ""}
             />
             {errors.phoneNumber && (
-              <p className="text-sm font-medium text-red-500">{errors.phoneNumber.message}</p>
+              <p className="text-sm font-medium text-red-500">
+                {errors.phoneNumber.message}
+              </p>
             )}
           </div>
-
-          {/* Phí hợp đồng */}
           <div className="space-y-2">
-            <Label htmlFor="contract_fee">Phí hợp đồng (0-1)</Label>
+            <Label htmlFor="contract_fee">Phí hợp đồng (%)</Label>
             <Input
               id="contract_fee"
               type="number"
@@ -126,22 +126,19 @@ export default function CreateSupplierPage() {
               className={errors.contractFee ? "border-red-500" : ""}
             />
             {errors.contractFee && (
-              <p className="text-sm font-medium text-red-500">{errors.contractFee.message}</p>
+              <p className="text-sm font-medium text-red-500">
+                {errors.contractFee.message}
+              </p>
             )}
           </div>
 
-          {/* Nhóm nút bấm */}
           <div className="flex gap-3 pt-4">
-            <Button 
-              type="submit" 
-              className="flex-1" 
-              disabled={isSubmitting}
-            >
+            <Button type="submit" className="flex-1" disabled={isSubmitting}>
               {isSubmitting ? "Đang xử lý..." : "Tạo nhà cung cấp"}
             </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => router.back()}
             >
               Hủy

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Pencil, Save, X } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Bike, CheckCircle2, AlertCircle, Clock, Zap, Wrench, Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -23,23 +23,20 @@ import {
   createSupplierSchema,
 } from "@/schemas/supplier.schema";
 import type { Supplier } from "@/types";
-
 export default function SupplierDetailPage() {
   const router = useRouter();
   const params = useParams<{ supplierId: string }>();
   const supplierId = params?.supplierId ?? "";
   const [isEditing, setIsEditing] = useState(false);
   const [editStatus, setEditStatus] = useState("");
-
   const {
     detailSupplier,
     isLoadingDetailSupplier,
     fetchDetailSupplier,
     getUpdateSupplier,
+    bikeStats,
   } = useSupplierActions(true, supplierId);
-
   const supplier = detailSupplier as unknown as Supplier | undefined;
-
   const {
     register,
     handleSubmit,
@@ -48,12 +45,10 @@ export default function SupplierDetailPage() {
   } = useForm<CreateSupplierSchema>({
     resolver: zodResolver(createSupplierSchema),
   });
-
   useEffect(() => {
     if (!supplierId) return;
     fetchDetailSupplier();
   }, [supplierId, fetchDetailSupplier]);
-
   const openEditForm = () => {
     if (!supplier) return;
     reset({
@@ -75,15 +70,77 @@ export default function SupplierDetailPage() {
   };
 
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
+    new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(value);
+
+  // Bike Stats Config
+  const statsConfig: Array<{
+    label: string;
+    key: keyof typeof bikeStats | "totalBikes" | "available" | "booked" | "broken" | "reserved" | "maintained" | "unavailable";
+    icon: typeof Bike;
+    color: string;
+    bgColor: string;
+  }> = [
+    {
+      label: "Tổng xe",
+      key: "totalBikes",
+      icon: Bike,
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "bg-blue-50",
+    },
+    {
+      label: "Sẵn sàng",
+      key: "available",
+      icon: CheckCircle2,
+      color: "from-green-500 to-emerald-500",
+      bgColor: "bg-green-50",
+    },
+    {
+      label: "Đã đặt",
+      key: "booked",
+      icon: Zap,
+      color: "from-amber-500 to-orange-500",
+      bgColor: "bg-amber-50",
+    },
+    {
+      label: "Bị hỏng",
+      key: "broken",
+      icon: AlertCircle,
+      color: "from-red-500 to-rose-500",
+      bgColor: "bg-red-50",
+    },
+    {
+      label: "Đã đặt trước",
+      key: "reserved",
+      icon: Clock,
+      color: "from-purple-500 to-violet-500",
+      bgColor: "bg-purple-50",
+    },
+    {
+      label: "Bảo trì",
+      key: "maintained",
+      icon: Wrench,
+      color: "from-gray-500 to-slate-500",
+      bgColor: "bg-gray-50",
+    },
+    {
+      label: "Không khả dụng",
+      key: "unavailable",
+      icon: Lock,
+      color: "from-slate-500 to-zinc-500",
+      bgColor: "bg-slate-50",
+    },
+  ];
 
   if (!supplierId || (!isLoadingDetailSupplier && !supplier)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <h2 className="text-xl font-semibold">Không tìm thấy nhà cung cấp</h2>
-          <Button 
-            className="mt-6" 
+          <Button
+            className="mt-6"
             onClick={() => router.push("/admin/suppliers")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Quay lại danh sách
@@ -96,7 +153,6 @@ export default function SupplierDetailPage() {
   return (
     <div className="min-h-screen bg-linear-to-b from-background to-background/95 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
-        {/* Back Button */}
         <Button
           variant="ghost"
           className="mb-8 -ml-3 text-muted-foreground hover:text-foreground"
@@ -106,7 +162,6 @@ export default function SupplierDetailPage() {
           Quay lại danh sách nhà cung cấp
         </Button>
 
-        {/* Header Section */}
         <div className="mb-8 space-y-6">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex-1">
@@ -116,17 +171,18 @@ export default function SupplierDetailPage() {
                     {supplier?.name}
                   </h1>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    ID: <span className="font-mono font-medium">{supplierId}</span>
+                    ID:{" "}
+                    <span className="font-mono font-medium">{supplierId}</span>
                   </p>
                 </div>
               </div>
             </div>
 
             {!isEditing ? (
-              <Button 
-                size="lg" 
-                variant="default" 
-                onClick={openEditForm} 
+              <Button
+                size="lg"
+                variant="default"
+                onClick={openEditForm}
                 disabled={isLoadingDetailSupplier}
               >
                 <Pencil className="mr-2 h-4 w-4" />
@@ -134,18 +190,18 @@ export default function SupplierDetailPage() {
               </Button>
             ) : (
               <div className="flex gap-3">
-                <Button 
+                <Button
                   size="lg"
                   variant="default"
-                  onClick={handleSubmit(onSave)} 
+                  onClick={handleSubmit(onSave)}
                   disabled={isSubmitting}
                 >
                   <Save className="mr-2 h-4 w-4" />
                   Lưu thay đổi
                 </Button>
-                <Button 
+                <Button
                   size="lg"
-                  variant="outline" 
+                  variant="outline"
                   onClick={() => setIsEditing(false)}
                 >
                   <X className="mr-2 h-4 w-4" />
@@ -155,10 +211,11 @@ export default function SupplierDetailPage() {
             )}
           </div>
 
-          {/* Status Badge */}
           {!isEditing && (
             <div className="flex items-center gap-3 border-l-4 border-primary bg-primary/5 p-4 rounded-lg">
-              <span className="text-sm font-medium text-muted-foreground">Trạng thái:</span>
+              <span className="text-sm font-medium text-muted-foreground">
+                Trạng thái:
+              </span>
               <SupplierStatusBadge status={supplier?.status || "INACTIVE"} />
             </div>
           )}
@@ -167,29 +224,111 @@ export default function SupplierDetailPage() {
         {isLoadingDetailSupplier ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-card/50 py-24">
             <div className="animate-spin rounded-full h-10 w-10 border-4 border-muted border-t-primary mb-4" />
-            <p className="text-sm text-muted-foreground">Đang tải thông tin nhà cung cấp...</p>
+            <p className="text-sm text-muted-foreground">
+              Đang tải thông tin nhà cung cấp...
+            </p>
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Main Information Card */}
+            {/* Bike Stats Section */}
+            {bikeStats && (
+              <div className="rounded-lg border border-border bg-card shadow-sm">
+                <div className="border-b border-border bg-muted/30 px-8 py-6">
+                  <h2 className="text-lg font-semibold text-foreground">Thống kê xe đạp</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Trạng thái xe đạp từ nhà cung cấp này</p>
+                </div>
+
+                <div className="px-8 py-8">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {statsConfig.map((stat) => {
+                      const Icon = stat.icon as React.ElementType;
+                      const value = (bikeStats[stat.key as keyof typeof bikeStats] as number) || 0;
+                      const totalBikes = (bikeStats.totalBikes as number) || 0;
+                      const percentage = totalBikes > 0 
+                        ? ((value / totalBikes) * 100).toFixed(1)
+                        : 0;
+
+                      return (
+                        <div
+                          key={stat.key}
+                          className={`${stat.bgColor} rounded-lg p-5 border border-border/50 transition-all hover:shadow-md`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-muted-foreground mb-1">
+                                {stat.label}
+                              </p>
+                              <p className="text-2xl font-bold text-foreground">
+                                {value}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {percentage}%
+                              </p>
+                            </div>
+                            <div className={`rounded-lg p-3 bg-linear-to-br ${stat.color} shadow-sm`}>
+                              <Icon className="h-5 w-5 text-white" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Summary Info */}
+                  <div className="mt-8 border-t border-border pt-6">
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="bg-linear-to-br from-primary/10 to-primary/5 rounded-lg p-4 border border-primary/20">
+                        <p className="text-sm text-muted-foreground mb-1">Xe sẵn sàng sử dụng</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {bikeStats.available}
+                          <span className="text-sm text-muted-foreground ml-2 font-normal">
+                            ({((bikeStats.available / bikeStats.totalBikes) * 100).toFixed(1)}%)
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className="bg-linear-to-br from-amber/10 to-amber/5 rounded-lg p-4 border border-amber/20">
+                        <p className="text-sm text-muted-foreground mb-1">Xe không khả dụng</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {bikeStats.broken + bikeStats.maintained + bikeStats.unavailable}
+                          <span className="text-sm text-muted-foreground ml-2 font-normal">
+                            ({(((bikeStats.broken + bikeStats.maintained + bikeStats.unavailable) / bikeStats.totalBikes) * 100).toFixed(1)}%)
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className="bg-linear-to-br from-green/10 to-green/5 rounded-lg p-4 border border-green/20">
+                        <p className="text-sm text-muted-foreground mb-1">Tổng xe đạp</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {bikeStats.totalBikes}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="rounded-lg border border-border bg-card shadow-sm">
               <div className="border-b border-border bg-muted/30 px-8 py-6">
-                <h2 className="text-lg font-semibold text-foreground">Thông tin chung</h2>
+                <h2 className="text-lg font-semibold text-foreground">
+                  Thông tin chung
+                </h2>
               </div>
 
               <div className="px-8 py-8">
                 <div className="grid gap-8 sm:grid-cols-2">
-                  {/* Tên nhà cung cấp */}
                   <FormField label="Tên nhà cung cấp" required>
                     {isEditing ? (
                       <div>
-                        <Input 
-                          {...register("name")} 
+                        <Input
+                          {...register("name")}
                           placeholder="Nhập tên nhà cung cấp"
-                          className={`text-base h-11 ${errors.name ? "border-red-500 bg-red-50/30" : ""}`} 
+                          className={`text-base h-11 ${errors.name ? "border-red-500 bg-red-50/30" : ""}`}
                         />
                         {errors.name && (
-                          <p className="text-sm text-red-500 mt-2">{errors.name.message}</p>
+                          <p className="text-sm text-red-500 mt-2">
+                            {errors.name.message}
+                          </p>
                         )}
                       </div>
                     ) : (
@@ -199,17 +338,18 @@ export default function SupplierDetailPage() {
                     )}
                   </FormField>
 
-                  {/* Số điện thoại */}
                   <FormField label="Số điện thoại" required>
                     {isEditing ? (
                       <div>
-                        <Input 
-                          {...register("phoneNumber")} 
+                        <Input
+                          {...register("phoneNumber")}
                           placeholder="Nhập số điện thoại"
-                          className={`text-base h-11 ${errors.phoneNumber ? "border-red-500 bg-red-50/30" : ""}`} 
+                          className={`text-base h-11 ${errors.phoneNumber ? "border-red-500 bg-red-50/30" : ""}`}
                         />
                         {errors.phoneNumber && (
-                          <p className="text-sm text-red-500 mt-2">{errors.phoneNumber.message}</p>
+                          <p className="text-sm text-red-500 mt-2">
+                            {errors.phoneNumber.message}
+                          </p>
                         )}
                       </div>
                     ) : (
@@ -219,17 +359,18 @@ export default function SupplierDetailPage() {
                     )}
                   </FormField>
 
-                  {/* Địa chỉ */}
                   <FormField label="Địa chỉ" required className="sm:col-span-2">
                     {isEditing ? (
                       <div>
-                        <Input 
-                          {...register("address")} 
+                        <Input
+                          {...register("address")}
                           placeholder="Nhập địa chỉ"
-                          className={`text-base h-11 ${errors.address ? "border-red-500 bg-red-50/30" : ""}`} 
+                          className={`text-base h-11 ${errors.address ? "border-red-500 bg-red-50/30" : ""}`}
                         />
                         {errors.address && (
-                          <p className="text-sm text-red-500 mt-2">{errors.address.message}</p>
+                          <p className="text-sm text-red-500 mt-2">
+                            {errors.address.message}
+                          </p>
                         )}
                       </div>
                     ) : (
@@ -239,29 +380,31 @@ export default function SupplierDetailPage() {
                     )}
                   </FormField>
 
-                  {/* Phí hợp đồng */}
-                  <FormField label="Phí hợp đồng (VND)">
+                  <FormField label="Phí hợp đồng (%)" required>
                     {isEditing ? (
                       <div>
-                        <Input 
-                          type="number" 
-                          step="1" 
-                           {...register("contractFee", { valueAsNumber: true })}
+                        <Input
+                          type="number"
+                          step="1"
+                          {...register("contractFee", { valueAsNumber: true })}
                           placeholder="0"
-                          className={`text-base h-11 ${errors.contractFee ? "border-red-500 bg-red-50/30" : ""}`} 
+                          className={`text-base h-11 ${errors.contractFee ? "border-red-500 bg-red-50/30" : ""}`}
                         />
                         {errors.contractFee && (
-                          <p className="text-sm text-red-500 mt-2">{errors.contractFee.message}</p>
+                          <p className="text-sm text-red-500 mt-2">
+                            {errors.contractFee.message}
+                          </p>
                         )}
                       </div>
                     ) : (
                       <div className="text-base font-medium text-foreground bg-muted/20 rounded-lg px-4 py-3">
-                        {supplier?.contractFee ? formatCurrency(supplier.contractFee) : "Chưa xác định"}
+                        {supplier?.contractFee
+                          ? formatCurrency(supplier.contractFee)
+                          : "Chưa xác định"}
                       </div>
                     )}
                   </FormField>
 
-                  {/* Trạng thái (Edit Mode) */}
                   {isEditing && (
                     <FormField label="Trạng thái">
                       <Select value={editStatus} onValueChange={setEditStatus}>
@@ -270,8 +413,12 @@ export default function SupplierDetailPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="ACTIVE">Đang hoạt động</SelectItem>
-                          <SelectItem value="INACTIVE">Không hoạt động</SelectItem>
-                          <SelectItem value="TERMINATED">Đã kết thúc</SelectItem>
+                          <SelectItem value="INACTIVE">
+                            Không hoạt động
+                          </SelectItem>
+                          <SelectItem value="TERMINATED">
+                            Đã kết thúc
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </FormField>
@@ -286,7 +433,6 @@ export default function SupplierDetailPage() {
   );
 }
 
-// Form Field Component
 function FormField({
   label,
   required = false,

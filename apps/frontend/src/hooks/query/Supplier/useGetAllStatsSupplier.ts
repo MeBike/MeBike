@@ -17,7 +17,7 @@ export const useGetAllStatsSupplierQuery = () => {
   return useQuery({
     queryKey: ["supplier-stats"],
     queryFn: fetchSupplierStats,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1, // Retry once on failure
+    staleTime: 5 * 60 * 1000, 
+    retry: 1,
   });
 };

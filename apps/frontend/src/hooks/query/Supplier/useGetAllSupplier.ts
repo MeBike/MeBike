@@ -7,7 +7,6 @@ const fetchAllSuppliers = async (
   status?: "ACTIVE" | "INACTIVE" | "TERMINATED" | ""
 ) => {
   try {
-
     const response = await supplierService.getAllSuppliers({
       page: page ?? 1,
       limit: limit ?? 10,

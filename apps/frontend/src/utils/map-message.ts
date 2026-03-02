@@ -1,12 +1,4 @@
 import { USERS_MESSAGES , AUTH_MESSAGE , STATIONS_MESSAGE , SUPPLIER_MESSAGE} from "@/constants/messages";
-const mapErrorMessage = (errorCode: string): string => {
-  const errorMap: Record<string, string> = {
-    USER_NOT_FOUND: "User does not exist",
-    INVALID_CREDENTIALS: "Đăng nhập thất bại! Email hoặc mật khẩu không chính xác",
-  };
-
-  return errorMap[errorCode] || "An unknown error occurred";
-}
 const getErrorMessageUserFromCode = (code?: string) => {
   if (!code) return "Something went wrong";
   return USERS_MESSAGES[code as keyof typeof USERS_MESSAGES] 
@@ -26,4 +18,4 @@ const getErrorMessageFromSupplierCode = (code?:string) => {
   if(!code) return "Something went wrong";
   return SUPPLIER_MESSAGE[code as keyof typeof SUPPLIER_MESSAGE] || "Something went wrong";
 }
-export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, mapErrorMessage, getErrorMessageFromStationCode , getErrorMessageFromSupplierCode};
+export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, getErrorMessageFromStationCode , getErrorMessageFromSupplierCode};
