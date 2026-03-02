@@ -234,6 +234,7 @@ export const AdminRentalListItemSchema = z.object({
   status: RentalStatusSchema,
   startStation: z.uuidv7(),
   endStation: z.uuidv7().optional(),
+  createdAt: z.iso.datetime(),
   startTime: z.iso.datetime(),
   endTime: z.iso.datetime().optional(),
   duration: z.number(),

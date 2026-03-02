@@ -54,6 +54,7 @@ export function toContractAdminRentalListItem(
     status: item.status,
     startStation: item.startStationId,
     endStation: item.endStationId ?? undefined,
+    createdAt: item.createdAt.toISOString(),
     startTime: item.startTime.toISOString(),
     endTime: item.endTime ? item.endTime.toISOString() : undefined,
     duration: item.durationMinutes ?? 0,

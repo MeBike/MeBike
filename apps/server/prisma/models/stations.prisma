@@ -7,6 +7,7 @@ model Station {
   capacity  Int
   latitude  Float
   longitude Float
+  createdAt DateTime                              @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime                              @map("updated_at") @db.Timestamptz
   position  Unsupported("geography(Point, 4326)")
 

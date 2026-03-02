@@ -14,6 +14,7 @@ model Supplier {
   phoneNumber String?        @map("phone_number")
   contractFee Decimal?       @map("contract_fee") @db.Decimal(10, 2)
   status      SupplierStatus
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime       @map("updated_at") @db.Timestamptz
 
   bikes Bike[]

@@ -14,6 +14,7 @@ export type UserRow = {
   readonly nfcCardUid: string | null;
   readonly stripeConnectedAccountId: string | null;
   readonly stripePayoutsEnabled: boolean | null;
+  readonly createdAt: Date;
   readonly updatedAt: Date;
 };
 

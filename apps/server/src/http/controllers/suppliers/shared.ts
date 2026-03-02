@@ -18,6 +18,7 @@ export function toSupplierSummary(row: SupplierRow): SupplierSummary {
     phoneNumber: row.phoneNumber,
     contractFee: row.contractFee ? Number(row.contractFee) : null,
     status: row.status,
+    createdAt: row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt),
     updatedAt: row.updatedAt instanceof Date ? row.updatedAt.toISOString() : String(row.updatedAt),
   };
 }
