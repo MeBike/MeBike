@@ -16,6 +16,8 @@ export const stationSelect = {
   capacity: true,
   latitude: true,
   longitude: true,
+  createdAt: true,
+  updatedAt: true,
 } as const;
 
 export type StationBaseRow = PrismaTypes.StationGetPayload<{
@@ -56,9 +58,21 @@ export function applyCounts(
   counts: BikeCounts | undefined,
 ): StationRow {
   const resolved = counts ?? baseCounts();
+
+  const createdAt
+    = station.createdAt instanceof Date
+      ? station.createdAt.toISOString()
+      : new Date(station.createdAt).toISOString();
+  const updatedAt
+    = station.updatedAt instanceof Date
+      ? station.updatedAt.toISOString()
+      : new Date(station.updatedAt).toISOString();
+
   return {
     ...station,
     ...resolved,
+    createdAt,
+    updatedAt,
     emptySlots: Math.max(0, station.capacity - resolved.totalBikes),
   };
 }

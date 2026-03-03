@@ -25,7 +25,7 @@ export function mapTopRenterRows(
     totalRentals: Number(row.total_rentals),
     user: {
       id: row.user_id,
-      fullname: row.fullname,
+      fullName: row.fullname,
       email: row.email,
       avatar: row.avatar,
       phoneNumber: row.phone_number,
@@ -42,7 +42,7 @@ export function selectVipCustomer(
   return rows.length > 0
     ? {
         userId: rows[0].user_id,
-        fullname: rows[0].fullname,
+        fullName: rows[0].fullname,
         totalDuration: Number(rows[0].total_duration),
       }
     : null;
