@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft, Edit, Save, X, Bike, Info, MapPin, Calendar } from "lucide-react";
 import { Station } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { UseFormRegisterReturn } from "react-hook-form";
 export default function StationDetailPage() {
   const router = useRouter();
   const { stationId } = useParams() as { stationId: string };
@@ -119,8 +119,8 @@ export default function StationDetailPage() {
                   <div className="md:col-span-2">
                     <FormInput label="Địa chỉ" register={register("address")} error={errors.address?.message} />
                   </div>
-                  <FormInput label="Vĩ độ (Lat)" type="number" register={register("latitude", { valueAsNumber: true })} step="any" />
-                  <FormInput label="Kinh độ (Long)" type="number" register={register("longitude", { valueAsNumber: true })} step="any" />
+                  <FormInput label="Vĩ độ (Lat)" type="number" register={register("latitude", { valueAsNumber: true })}/>
+                  <FormInput label="Kinh độ (Long)" type="number" register={register("longitude", { valueAsNumber: true })} />
                 </div>
                 <Button type="submit" className="w-full mt-6 py-6 text-base" disabled={isSubmitting}>
                   <Save className="w-5 h-5 mr-2" /> {isSubmitting ? "Đang lưu..." : "Xác nhận thay đổi"}
@@ -160,8 +160,12 @@ export default function StationDetailPage() {
   );
 }
 
-
-function FormInput({ label, error, register, ...props }: any) {
+interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  error?: string;
+  register: UseFormRegisterReturn;
+}
+function FormInput({ label, error, register, ...props }: FormInputProps) {
   return (
     <div className="space-y-1.5">
       <label className="text-sm font-semibold text-foreground/80">{label}</label>
@@ -170,8 +174,13 @@ function FormInput({ label, error, register, ...props }: any) {
     </div>
   );
 }
-
-function DetailItem({ label, value, isFullWidth, icon }: any) {
+interface DetailItemProps {
+  label: string;
+  value: string | number | null | undefined;
+  icon: React.ReactNode;
+  isFullWidth?: boolean;
+}
+function DetailItem({ label, value, isFullWidth, icon }: DetailItemProps) {
   return (
     <div className={isFullWidth ? "md:col-span-2" : ""}>
       <div className="flex items-center gap-2 mb-1.5">
@@ -183,7 +192,13 @@ function DetailItem({ label, value, isFullWidth, icon }: any) {
   );
 }
 
-function StatusRow({ label, value, highlightColor = "", isBold = false }: any) {
+interface StatusRowProps {
+  label: string;
+  value: number | null | undefined;
+  highlightColor?: string;
+  isBold?: boolean;
+}
+function StatusRow({ label, value, highlightColor = "", isBold = false }: StatusRowProps) {
   return (
     <div className="flex justify-between items-center py-0.5">
       <span className="text-sm font-medium text-muted-foreground">{label}</span>
