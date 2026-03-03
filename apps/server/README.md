@@ -21,59 +21,30 @@ Chay Postgres + Redis, set env, migrate + seed, sau do chay server.
 
 ### 1) Chay Postgres + Redis (dev)
 
-#### Cach 1: Docker (khuyen dung)
+#### Cach 1: Docker Compose (khuyen dung)
 
-Tao 1 docker network rieng (de pgAdmin connect de dang):
-
-```bash
-docker network create mebike-dev || true
-```
-
-Chay Redis:
+Repo da co file `apps/server/compose.dev.yml` (Postgres + Redis + pgAdmin).
+Chay tu `apps/server`:
 
 ```bash
-docker run --rm --name mebike-redis --network mebike-dev -p 6379:6379 redis:8.2.2-alpine
+docker compose -f compose.dev.yml up -d
 ```
 
-Chay Postgres (image nay co PostGIS + pgvector; dung chung voi integration tests):
+Dung stack:
+
+- Postgres: `localhost:5432` (`mebike/mebike`, db: `mebike_dev`)
+- Redis: `localhost:6379`
+- pgAdmin: `http://localhost:5050` (email: `admin@example.com`, pass: `adminadmin`)
+
+Dung xong thi tat:
 
 ```bash
-# from apps/server
-docker build -t mebike-postgres -f infra/postgres/Dockerfile.pg .
-docker run --rm --name mebike-postgres --network mebike-dev -p 5432:5432 \
-  -e POSTGRES_USER=mebike \
-  -e POSTGRES_PASSWORD=mebike \
-  -e POSTGRES_DB=mebike \
-  mebike-postgres
+docker compose -f compose.dev.yml down
 ```
-
-Neu muon xem DB bang pgAdmin (optional):
-
-```bash
-docker run --rm --name mebike-pgadmin --network mebike-dev -p 5050:80 \
-  -e PGADMIN_DEFAULT_EMAIL=admin@mebike.dev \
-  -e PGADMIN_DEFAULT_PASSWORD=admin \
-  dpage/pgadmin4:8
-```
-
-Truy cap:
-
-- pgAdmin: `http://localhost:5050`
-- Login:
-  - Email: `admin@mebike.dev`
-  - Password: `admin`
-- Add server (trong pgAdmin):
-  - Host: `mebike-postgres`
-  - Port: `5432`
-  - Maintenance DB: `mebike`
-  - Username: `mebike`
-  - Password: `mebike`
-
-Ghi chu:
-
-- Repo khong commit san `docker-compose.yml` cho Postgres/pgAdmin. Neu ban muon dung `docker compose up`, hay tao 1 file compose local (gitignored) theo cac thong so tren.
 
 #### Cach 2: Docker run (toi gian)
+
+Neu khong dung compose, co the chay tay nhu sau.
 
 Redis (default trong code la `redis://localhost:6379`):
 
@@ -90,13 +61,33 @@ docker build -t mebike-postgres -f infra/postgres/Dockerfile.pg .
 docker run --rm -p 5432:5432 --name mebike-postgres \
   -e POSTGRES_USER=mebike \
   -e POSTGRES_PASSWORD=mebike \
-  -e POSTGRES_DB=mebike \
+  -e POSTGRES_DB=mebike_dev \
   mebike-postgres
 ```
 
-Sau do set:
+Neu muon xem DB bang pgAdmin (optional):
 
-`DATABASE_URL=postgresql://mebike:mebike@localhost:5432/mebike`
+```bash
+docker run --rm --name mebike-pgadmin -p 5050:80 \
+  -e PGADMIN_DEFAULT_EMAIL=admin@example.com \
+  -e PGADMIN_DEFAULT_PASSWORD=adminadmin \
+  dpage/pgadmin4:latest
+```
+
+Truy cap:
+
+- pgAdmin: `http://localhost:5050`
+- Login:
+  - Email: `admin@example.com`
+  - Password: `adminadmin`
+- Add server (trong pgAdmin):
+  - Host: `localhost`
+  - Port: `5432`
+  - Maintenance DB: `mebike_dev`
+  - Username: `mebike`
+  - Password: `mebike`
+
+`DATABASE_URL=postgresql://mebike:mebike@localhost:5432/mebike_dev`
 
 ### 2) Cau hinh environment
 
@@ -118,10 +109,11 @@ Optional (chi can neu dung Stripe):
 
 ### 3) Chay migrations
 
-From `apps/server`:
+From `apps/server` (quan trong):
 
 ```bash
-pnpm prisma migrate dev
+pnpm prisma migrate deploy
+pnpm prisma generate
 ```
 
 Quy uoc (Prisma) — doc ky:
@@ -137,7 +129,7 @@ Tao migration moi (dev):
 pnpm prisma migrate dev --name <ten_ngan_gon>
 ```
 
-Ap migration (prod/CI/test):
+Ap migration co san (team mate/CI/prod):
 
 ```bash
 pnpm prisma migrate deploy
@@ -148,6 +140,11 @@ Generate Prisma client (types) sau khi doi schema/migration:
 ```bash
 pnpm prisma generate
 ```
+
+TL;DR:
+
+- **`migrate dev`**: chi dung khi ban dang tao migration moi.
+- **`migrate deploy`**: dung khi chi can ap cac migration da commit san (pull branch, CI, prod).
 
 Ghi chu:
 
