@@ -49,28 +49,6 @@ export interface DashboardUserStats {
   totalRevenue: number;
   averageSpending: number;
 }
-const USER_BASE = "/users/manage-users";
-const USER_ENDPOINTS = {
-  BASE: USER_BASE,
-  MANAGE_USER: `${USER_BASE}/get-all`,
-  SEARCH_USER: `${USER_BASE}/search`,
-  BY_ID: (id: string) => `${USER_BASE}/${id}`,
-  UPDATE: (id: string) => `${USER_BASE}/${id}`,
-  RESET_USER_PASSWORD: (id: string) =>
-    `${USER_BASE}/admin-reset-password/${id}`,
-  STATISTICS: `${USER_BASE}/stats`,
-  ACTIVE_USERS: `${USER_BASE}/active-users`,
-  TOP_RENTERS: `${USER_BASE}/top-renters`,
-  CREATE_USER: `${USER_BASE}/create`,
-  GET_NEW_REGISRATION_STATS: `${USER_BASE}/stats/new-users`,
-  GET_TOP_RENTER: `${USER_BASE}/stats/top-renters`,
-  GET_ACTIVE_USERS: `${USER_BASE}/stats/active-users`,
-  GET_USER_STATS: `${USER_BASE}/stats`,
-  GET_ACTIVE_USER: `${USER_BASE}/stats`,
-  DASHBOARD_USER_STATS: `${USER_BASE}/dashboard-stats`,
-  RESET_PASSWORD: (id: string) => `${USER_BASE}/admin-reset-password/${id}`,
-  UPDATE_PROFILE_ADMIN: (id: string) => `${USER_BASE}/${id}`,
-} as const;
 export const userService = {
   getAllUsers: async ({
     page,
@@ -107,7 +85,7 @@ export const userService = {
     id: string
   ): Promise<AxiosResponse<DetailUser>> => {
     const response = await fetchHttpClient.get<DetailUser>(
-      USER_ENDPOINTS.BY_ID(id)
+      ENDPOINT.USER.DETAIL(id)
     );
     return response;
   },
@@ -115,7 +93,7 @@ export const userService = {
     query: string
   ): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
     const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
-      USER_ENDPOINTS.SEARCH_USER,
+      ENDPOINT.USER.SEARCH_USER,
       {
         q: query,
       }
@@ -128,7 +106,7 @@ export const userService = {
   ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
     const response = await fetchHttpClient.patch<
       DetailUserResponse<DetailUser>
-    >(USER_ENDPOINTS.UPDATE(id), data);
+    >(ENDPOINT.USER.UPDATE(id), data);
     return response;
   },
   userStatistics: async (): Promise<
@@ -136,7 +114,7 @@ export const userService = {
   > => {
     const response = await fetchHttpClient.get<
       DetailUserResponse<UserStatistics>
-    >(USER_ENDPOINTS.STATISTICS);
+    >(ENDPOINT.USER.STATS_USER);
     return response;
   },
   resetUserPassword: async (
@@ -144,7 +122,7 @@ export const userService = {
   ): Promise<AxiosResponse<DetailUserResponse<ResetPasswordResponse>>> => {
     const response = await fetchHttpClient.post<
       DetailUserResponse<ResetPasswordResponse>
-    >(USER_ENDPOINTS.RESET_USER_PASSWORD(id));
+    >(ENDPOINT.USER.RESET_PASSWORD(id));
     return response;
   },
   // getActiveUserStats: async (): Promise<
@@ -156,18 +134,18 @@ export const userService = {
   //   return response;
   // },
   getTopRenter: async (): Promise<
-    AxiosResponse<DetailUserResponse<ApiReponse<TopRenterUser[]>>>
+    AxiosResponse<DetailUserResponse<ApiResponse<TopRenterUser[]>>>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<ApiReponse<TopRenterUser[]>>
-    >(USER_ENDPOINTS.GET_TOP_RENTER);
+      DetailUserResponse<ApiResponse<TopRenterUser[]>>
+    >(ENDPOINT.USER.STATS_TOP_RENTER);
     return response;
   },
   createUser: async (
     data: UserProfile
   ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
     const response = await fetchHttpClient.post<DetailUserResponse<DetailUser>>(
-      USER_ENDPOINTS.CREATE_USER,
+      ENDPOINT.USER.CREATE_USER,
       data
     );
     return response;
@@ -177,7 +155,7 @@ export const userService = {
   > => {
     const response = await fetchHttpClient.get<
       DetailUserResponse<GetNewRegistrationStats>
-    >(USER_ENDPOINTS.GET_NEW_REGISRATION_STATS);
+    >(ENDPOINT.USER.NEW_USER);
     return response;
   },
   getActiveUser: async (): Promise<
@@ -185,7 +163,7 @@ export const userService = {
   > => {
     const response = await fetchHttpClient.get<
       DetailUserResponse<GetActiveStatisticsUser[]>
-    >(USER_ENDPOINTS.GET_ACTIVE_USER);
+    >(ENDPOINT.USER.STATS_ACTIVE_USER);
     return response;
   },
   getDashboardUserStats: async (): Promise<
@@ -193,7 +171,7 @@ export const userService = {
   > => {
     const response = await fetchHttpClient.get<
       DetailUserResponse<DashboardUserStats>
-    >(USER_ENDPOINTS.DASHBOARD_USER_STATS);
+    >(ENDPOINT.USER.DASHBOARD_USER_STATS);
     return response;
   },
   postResetPassword: async (
@@ -202,7 +180,7 @@ export const userService = {
   ): Promise<AxiosResponse<DetailUserResponse<ResetPasswordResponse>>> => {
     const response = await fetchHttpClient.post<
       DetailUserResponse<ResetPasswordResponse>
-    >(USER_ENDPOINTS.RESET_PASSWORD(id), data);
+    >(ENDPOINT.USER.RESET_PASSWORD(id), data);
     return response;
   },
   updateProfileAdmin: async (
@@ -211,7 +189,7 @@ export const userService = {
   ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
     const response = await fetchHttpClient.patch<
       DetailUserResponse<DetailUser>
-    >(USER_ENDPOINTS.UPDATE_PROFILE_ADMIN(id), data);
+    >(ENDPOINT.USER.UPDATE(id), data);
     return response;
   }
 };

@@ -31,10 +31,18 @@ export const ENDPOINT = {
     },
     USER : {
         BASE : "/users/manage-users/get-all",
-        DETAIL : (id : string) => `/users/${id}`,
+        DETAIL : (id : string) => `/users/manage-users/${id}`,
         MANAGE_USER : "/users/manage",
         SEARCH_USER : "/users/search",
-        UPDATE : (id: string) => `/users/${id}`,
+        UPDATE : (id: string) => `/users/manage-users/${id}`, 
+        STATS_ACTIVE_USER : "/users/manage-users/stats/active-users",
+        STATS_TOP_RENTER : "/users/manage-users/stats/top-renters",
+        DASHBOARD_USER_STATS : "/users/manage-users/dashboard-stats",
+        STATS_USER : "/users/manage-users/stats",
+        NEW_USER : "/users/manage-users/stats/new-users",
+        RESET_PASSWORD : (id: string) => `/users/manage-users/admin-reset-password/${id}`,
+        CREATE_USER : "/users/manage-users/create",
+
     },
 
 } as const;
