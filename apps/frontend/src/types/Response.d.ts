@@ -7,6 +7,8 @@ export interface Pagination {
   limit: number;
   totalRecords: number;
   totalPages: number;
+  pageSize: number;
+  page : number;
 }
 export interface DetailApiResponse<T> {
   result: T;
