@@ -27,23 +27,21 @@ import "nprogress/nprogress.css";
 // Define menu items (giữ nguyên hàm này theo code bạn)
 const getMenuItems = (userRole: "STAFF" | "ADMIN" | "USER" | "SOS") => {
   const baseUrl =
-    userRole === "ADMIN"
-      ? "/admin"
-      : userRole === "STAFF"
-        ? "/staff"
-        : "/user";
+    userRole === "ADMIN" ? "/admin" : userRole === "STAFF" ? "/staff" : "/user";
   return [
     {
       title: "Hồ sơ cá nhân",
       icon: User2,
       href: "/staff/profile",
       roles: ["STAFF"],
+    
     },
     {
       title: "Tổng quan",
       icon: LayoutDashboard,
       href: baseUrl,
       roles: ["ADMIN"],
+      exact : true,
     },
     {
       title: "Quản lý người dùng",
@@ -186,7 +184,7 @@ export function Sidebar() {
 
   const menuItems = getMenuItems(user?.role as "STAFF" | "ADMIN" | "USER");
   const filteredMenuItems = menuItems.filter((item) =>
-    item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER")
+    item.roles.includes(user?.role as "STAFF" | "ADMIN" | "USER"),
   );
 
   // Navigation handler with progress
@@ -207,11 +205,7 @@ export function Sidebar() {
         className="fixed top-4 left-4 z-50 md:hidden p-2 bg-sidebar border border-sidebar-border rounded-lg text-sidebar-foreground hover:bg-sidebar-accent"
         onClick={() => setMobileOpen(!mobileOpen)}
       >
-        {mobileOpen ? (
-          <X className="w-5 h-5" />
-        ) : (
-          <Menu className="w-5 h-5" />
-        )}
+        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
       {/* Mobile Overlay */}
@@ -227,66 +221,76 @@ export function Sidebar() {
         className={cn(
           "fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300",
           "w-64 md:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
         style={{ opacity: isPending ? 0.65 : 1, transition: "opacity .2s" }}
       >
-      <div className="flex h-full flex-col">
-        {/* Logo Section */}
-        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-          {!collapsed && (
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-sidebar-primary rounded-lg">
-                <Bike className="w-5 h-5 text-sidebar-primary-foreground" />
+        <div className="flex h-full flex-col">
+          {/* Logo Section */}
+          <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+            {!collapsed && (
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-sidebar-primary rounded-lg">
+                  <Bike className="w-5 h-5 text-sidebar-primary-foreground" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-sidebar-foreground">
+                    MeBike
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Quản lý cho thuê
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-sm font-bold text-sidebar-foreground">
-                  MeBike
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Quản lý cho thuê
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-        <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-2">
-            {filteredMenuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <li key={item.href}>
-                  <button
-                    type="button"
-                    onClick={() => handleNav(item.href)}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 w-full rounded-lg transition-colors group",
-                      isActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                    )}
-                    disabled={isPending || isActive}
-                    style={{ cursor: isPending ? "wait" : "pointer" }}
-                  >
-                    <Icon
-                      className={cn(
-                        "w-5 h-5 flex-shrink-0",
-                        isActive && "text-sidebar-primary-foreground"
-                      )}
-                    />
-                    {!collapsed && (
-                      <span className="text-sm font-medium">{item.title}</span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+            )}
+          </div>
+          <nav className="flex-1 overflow-y-auto py-4">
+            <ul className="space-y-1 px-2">
+              {filteredMenuItems.map((item) => {
+                const Icon = item.icon;
+                const isRouteActive = (href: string, exact?: boolean) => {
+                  if (exact) return pathname === href;
 
-        <div className="border-t border-sidebar-border p-2">
-          {/* <button
+                  if (pathname === href) return true;
+
+                  const hrefWithSlash = href.endsWith("/") ? href : href + "/";
+                  return pathname.startsWith(hrefWithSlash);
+                };
+                const isActive = isRouteActive(item.href, item.exact);
+                return (
+                  <li key={item.href}>
+                    <button
+                      type="button"
+                      onClick={() => handleNav(item.href)}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 w-full rounded-lg transition-colors group",
+                        isActive
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                      )}
+                      disabled={isPending || isActive}
+                      style={{ cursor: isPending ? "wait" : "pointer" }}
+                    >
+                      <Icon
+                        className={cn(
+                          "w-5 h-5 flex-shrink-0",
+                          isActive && "text-sidebar-primary-foreground",
+                        )}
+                      />
+                      {!collapsed && (
+                        <span className="text-sm font-medium">
+                          {item.title}
+                        </span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+
+          <div className="border-t border-sidebar-border p-2">
+            {/* <button
             type="button"
             onClick={() =>
               handleNav(
@@ -299,18 +303,18 @@ export function Sidebar() {
             <User className="w-5 h-5 flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">Hồ sơ</span>}
           </button> */}
-          <button
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-red-600 hover:text-white transition-colors cursor-pointer hover:opacity-90"
-            onClick={() => handleLogout()}
-            disabled={isPending}
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && (
-              <span className="text-sm font-medium">Đăng xuất</span>
-            )}
-          </button>
+            <button
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-red-600 hover:text-white transition-colors cursor-pointer hover:opacity-90"
+              onClick={() => handleLogout()}
+              disabled={isPending}
+            >
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              {!collapsed && (
+                <span className="text-sm font-medium">Đăng xuất</span>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
       </aside>
     </>
   );

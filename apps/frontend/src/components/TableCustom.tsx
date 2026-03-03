@@ -11,6 +11,7 @@ import { Search } from "lucide-react";
 import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TableSkeleton } from "./table-skeleton";
 
 export interface FilterOptionsProps {
   value: string;
@@ -39,7 +40,7 @@ export interface FilterOptionsProps {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-
+  isLoading?: boolean;
   isHaveFilter?: boolean;
   filterOptions?: FilterOptionsProps[];
   callBackFunction?: (status?: FilterOptionsProps["status"]) => void;
@@ -58,6 +59,7 @@ export function DataTable<TData, TValue>({
   searchValue,
   onSearchChange,
   title,
+  isLoading = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState({});
@@ -100,7 +102,9 @@ export function DataTable<TData, TValue>({
   //       return "outline";
   //   }
   // };
-
+  if (isLoading) {
+    return <TableSkeleton rowCount={7} />;
+  }
   return (
     <Card>
       {title && (
