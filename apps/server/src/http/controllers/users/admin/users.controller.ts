@@ -25,7 +25,7 @@ const adminList: RouteHandler<UsersRoutes["adminList"]> = async (c) => {
     Effect.gen(function* () {
       const service = yield* UserServiceTag;
       return yield* service.listWithOffset({
-        fullname: query.fullname,
+        fullname: query.fullName,
         role: query.role,
         verify: query.verify,
       }, {
