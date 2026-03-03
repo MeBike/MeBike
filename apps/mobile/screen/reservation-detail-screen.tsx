@@ -1,5 +1,5 @@
-import { useGetStationLookupQuery } from "@hooks/query/Reservation/useGetStationLookupQuery";
-import { useReservationActions } from "@hooks/useReservationActions";
+import { useGetStationLookupQuery } from "@hooks/query/reservation/use-get-station-lookup-query";
+import { useReservationActions } from "@hooks/use-reservation-actions";
 import { useAuthNext } from "@providers/auth-provider-next";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -69,7 +69,7 @@ function ReservationDetailScreen() {
   });
 
   const stationIdForLookup
-    = reservationDetail?.station_id ?? initialReservation?.station_id;
+    = reservationDetail?.stationId ?? initialReservation?.stationId;
 
   const { data: stationLookup } = useGetStationLookupQuery(
     stationIdForLookup,
@@ -89,7 +89,7 @@ function ReservationDetailScreen() {
     }
     if (stationLookup) {
       return {
-        _id: stationLookup._id,
+        id: stationLookup._id,
         name: stationLookup.name,
         address: stationLookup.address,
       };
@@ -179,8 +179,8 @@ function ReservationDetailScreen() {
         <View style={styles.card}>
           <ReservationSummary
             status={reservation.status}
-            bikeId={reservation.bike_id}
-            reservationId={reservation._id}
+            bikeId={reservation.bikeId}
+            reservationId={reservation.id}
           />
 
           <ReservationInfo

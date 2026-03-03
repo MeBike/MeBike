@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Reservation } from "../../../types/reservation-types";
 
-import { useReservationActions } from "../../../hooks/useReservationActions";
+import { useReservationActions } from "../../../hooks/use-reservation-actions";
 import { useStationActions } from "../../../hooks/useStationAction";
 
 export type ReservationFilter = "pending" | "history";
@@ -76,8 +76,8 @@ export function useReservations(hasToken: boolean) {
         return prev;
       }
 
-      const seen = new Set(prev.map((reservation) => reservation._id));
-      const appended = nextHistory.filter((reservation) => !seen.has(reservation._id));
+      const seen = new Set(prev.map(reservation => reservation.id));
+      const appended = nextHistory.filter(reservation => !seen.has(reservation.id));
       if (appended.length === 0) {
         return prev;
       }
@@ -96,7 +96,7 @@ export function useReservations(hasToken: boolean) {
 
   const resetHistory = useCallback((clear: boolean = false) => {
     setHistoryPage(1);
-    setHistoryVersion((version) => version + 1);
+    setHistoryVersion(version => version + 1);
     if (clear) {
       setHistoryReservations([]);
     }
@@ -144,14 +144,14 @@ export function useReservations(hasToken: boolean) {
     if (!reservationHistoryPagination) {
       return false;
     }
-    return reservationHistoryPagination.currentPage < reservationHistoryPagination.totalPages;
+    return reservationHistoryPagination.page < reservationHistoryPagination.totalPages;
   }, [reservationHistoryPagination]);
 
   const loadMoreHistory = useCallback(() => {
     if (!hasToken || activeFilter !== "history" || !hasMoreHistory || isReservationHistoryFetching) {
       return;
     }
-    setHistoryPage((page) => page + 1);
+    setHistoryPage(page => page + 1);
   }, [activeFilter, hasMoreHistory, hasToken, isReservationHistoryFetching]);
 
   const historyLoadingMore = historyPage > 1 && isReservationHistoryFetching;

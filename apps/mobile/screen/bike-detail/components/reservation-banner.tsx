@@ -20,13 +20,13 @@ export function ReservationBanner({
       <Text style={styles.helperText}>
         Bắt đầu lúc
         {" "}
-        {formatVietnamDateTime(reservation.start_time)}
+        {formatVietnamDateTime(reservation.startTime)}
       </Text>
       <TouchableOpacity
         style={[styles.secondaryButton, { marginTop: 12 }]}
         onPress={() =>
           navigation.navigate("ReservationDetail", {
-            reservationId: reservation._id,
+            reservationId: reservation.id,
             reservation,
           })}
       >

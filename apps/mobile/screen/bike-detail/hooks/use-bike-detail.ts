@@ -3,7 +3,7 @@ import type { ReservationMode } from "@components/reservation-flow/ReservationMo
 import { useCreateRentalMutation } from "@hooks/mutations/rentals/use-create-rental-mutation";
 import { useGetBikeByIDAllQuery } from "@hooks/query/Bike/use-get-bike-by-id-query";
 import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
-import { useReservationActions } from "@hooks/useReservationActions";
+import { useReservationActions } from "@hooks/use-reservation-actions";
 import { useWalletActions } from "@hooks/useWalletAction";
 import { useFocusEffect } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,8 @@ import { Alert } from "react-native";
 import type { Bike } from "@/types/BikeTypes";
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Reservation } from "@/types/reservation-types";
+
+import { parseDecimal } from "@/utils/money";
 
 import type { BikeDetailRouteParams, PaymentMode } from "../types";
 
@@ -81,11 +83,11 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
   }, [activeSubscriptions, canUseSubscription, paymentMode, selectedSubscriptionId]);
 
   const walletBalance = myWallet
-    ? Number(myWallet.balance.$numberDecimal || 0)
+    ? parseDecimal(myWallet.balance)
     : null;
 
   const currentReservation: Reservation | undefined = useMemo(
-    () => pendingReservations.find(r => r.bike_id === currentBike._id),
+    () => pendingReservations.find(r => r.bikeId === currentBike._id),
     [pendingReservations, currentBike._id],
   );
 
@@ -127,7 +129,8 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
       Alert.alert("Xe không khả dụng", "Vui lòng chọn một xe khác.");
       return;
     }
-    if (!ensureAuthenticated()) return;
+    if (!ensureAuthenticated())
+      return;
 
     const bikeLabel = currentBike.chip_id
       ? `Chip #${currentBike.chip_id}`
@@ -163,7 +166,8 @@ export function useBikeDetail({ routeParams, hasToken, verifyStatus, navigation 
       Alert.alert("Xe không khả dụng", "Vui lòng chọn xe khác.");
       return;
     }
-    if (!ensureAuthenticated()) return;
+    if (!ensureAuthenticated())
+      return;
 
     if (paymentMode === "subscription" && activeSubscriptions.length === 0) {
       Alert.alert(

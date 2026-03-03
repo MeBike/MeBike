@@ -50,15 +50,15 @@ export function ReservationsList({
   return (
     <FlatList
       data={reservations}
-      keyExtractor={(item) => item._id}
+      keyExtractor={item => item.id}
       renderItem={({ item }) => {
-        const stationInfo = stationMap.get(item.station_id);
+        const stationInfo = stationMap.get(item.stationId);
         return (
           <View style={styles.cardWrapper}>
             <ReservationCard
               reservation={item}
               stationName={stationInfo?.name}
-              stationId={item.station_id}
+              stationId={item.stationId}
               onPress={() => onReservationPress(item)}
             />
           </View>
@@ -74,11 +74,11 @@ export function ReservationsList({
             )
           : null
       }
-      ListEmptyComponent={
+      ListEmptyComponent={(
         <View style={styles.emptyContainer}>
           <ReservationEmptyState message={emptyMessage} />
         </View>
-      }
+      )}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#0066FF"]} />}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}

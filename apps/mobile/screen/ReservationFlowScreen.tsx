@@ -1,5 +1,10 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BikeColors } from "@constants/BikeColors";
 import { Ionicons } from "@expo/vector-icons";
+import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
+import { useReservationActions } from "@hooks/use-reservation-actions";
+import { useAuthNext } from "@providers/auth-provider-next";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,24 +19,22 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import DateTimePicker, { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-import { ReservationInfoCard } from "../components/reservation-flow/ReservationInfoCard";
-import {
-  ReservationMode,
-  ReservationModeToggle,
-} from "../components/reservation-flow/ReservationModeToggle";
-import { BikeColors } from "@constants/BikeColors";
-import { useGetSubscriptionsQuery } from "@hooks/query/subscription/use-get-subscriptions-query";
-import { useReservationActions } from "@hooks/useReservationActions";
-import { useAuthNext } from "@providers/auth-provider-next";
 
 import type {
   ReservationFlowNavigationProp,
   ReservationFlowRouteProp,
 } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
+
+import type {
+  ReservationMode,
+} from "../components/reservation-flow/ReservationModeToggle";
+
+import { ReservationInfoCard } from "../components/reservation-flow/ReservationInfoCard";
+import {
+  ReservationModeToggle,
+} from "../components/reservation-flow/ReservationModeToggle";
 
 const STORAGE_KEY = "reservationFlow:lastMode";
 const MODE_OPTIONS: Array<{
@@ -105,7 +108,7 @@ export default function ReservationFlowScreen() {
       return;
     AsyncStorage.getItem(STORAGE_KEY)
       .then((value) => {
-        if (value && (MODE_OPTIONS.some((option) => option.key === value))) {
+        if (value && (MODE_OPTIONS.some(option => option.key === value))) {
           setMode(value as ReservationMode);
         }
       })
@@ -126,11 +129,11 @@ export default function ReservationFlowScreen() {
     if (mode !== "GÓI THÁNG")
       return;
     if (selectedSubscriptionId) {
-      const stillExists = activeSubscriptions.some((item) => item.id === selectedSubscriptionId);
+      const stillExists = activeSubscriptions.some(item => item.id === selectedSubscriptionId);
       if (stillExists)
         return;
     }
-    if (initialSubscriptionId && activeSubscriptions.some((item) => item.id === initialSubscriptionId)) {
+    if (initialSubscriptionId && activeSubscriptions.some(item => item.id === initialSubscriptionId)) {
       setSelectedSubscriptionId(initialSubscriptionId);
       return;
     }
@@ -160,7 +163,7 @@ export default function ReservationFlowScreen() {
 
   const modeOptions = useMemo(
     () =>
-      MODE_OPTIONS.map((option) => ({
+      MODE_OPTIONS.map(option => ({
         ...option,
         disabled:
           lockPaymentSelection
@@ -210,7 +213,7 @@ export default function ReservationFlowScreen() {
   }, [iosPickerValue]);
 
   const selectedSubscription: Subscription | undefined = useMemo(
-    () => activeSubscriptions.find((item) => item.id === selectedSubscriptionId),
+    () => activeSubscriptions.find(item => item.id === selectedSubscriptionId),
     [activeSubscriptions, selectedSubscriptionId],
   );
 
@@ -232,7 +235,7 @@ export default function ReservationFlowScreen() {
     }
 
     setIsSubmitting(true);
-    createReservation(bikeId, scheduledAt.toISOString(), {
+    createReservation(bikeId, stationId, scheduledAt.toISOString(), {
       reservationOption: mode,
       subscriptionId: mode === "GÓI THÁNG" ? selectedSubscription?.id : undefined,
       callbacks: {
@@ -247,6 +250,7 @@ export default function ReservationFlowScreen() {
     bikeId,
     createReservation,
     mode,
+    stationId,
     scheduledAt,
     selectedSubscription,
     navigation,
@@ -302,7 +306,8 @@ export default function ReservationFlowScreen() {
           )}
           {mode === "GÓI THÁNG" && activeSubscriptions.length === 0 && (
             <Text style={styles.helperText}>
-              Bạn chưa có gói tháng hoạt động.{" "}
+              Bạn chưa có gói tháng hoạt động.
+              {" "}
               <Text
                 style={styles.linkText}
                 onPress={() => navigation.navigate("Subscriptions")}
@@ -358,7 +363,12 @@ export default function ReservationFlowScreen() {
                     {remaining != null
                       ? (
                           <Text style={styles.subscriptionMeta}>
-                            {remaining} / {subscription.maxUsages} lượt còn lại
+                            {remaining}
+                            {" "}
+                            /
+                            {subscription.maxUsages}
+                            {" "}
+                            lượt còn lại
                           </Text>
                         )
                       : (
@@ -389,13 +399,15 @@ export default function ReservationFlowScreen() {
           disabled={isSubmitting}
           activeOpacity={0.9}
         >
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.primaryButtonText}>
-              {mode === "GÓI THÁNG" ? "Dùng gói tháng" : "Đặt 1 lần"}
-            </Text>
-          )}
+          {isSubmitting
+            ? (
+                <ActivityIndicator color="#fff" />
+              )
+            : (
+                <Text style={styles.primaryButtonText}>
+                  {mode === "GÓI THÁNG" ? "Dùng gói tháng" : "Đặt 1 lần"}
+                </Text>
+              )}
         </TouchableOpacity>
       </View>
 
