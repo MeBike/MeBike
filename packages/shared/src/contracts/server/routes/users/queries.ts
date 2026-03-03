@@ -87,7 +87,7 @@ export const adminListUsersRoute = createRoute({
   request: {
     query: z.object({
       ...StatsPaginationQuerySchema.shape,
-      fullname: z.string().optional(),
+      fullName: z.string().optional(),
       role: UserRoleSchema.optional(),
       verify: VerifyStatusSchema.optional(),
       sortBy: z.enum(["fullname", "email", "role", "verify", "updatedAt"]).optional(),
