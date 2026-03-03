@@ -57,7 +57,7 @@ export function StationTableSection({
       </div>
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-2">
         <p className="text-sm text-muted-foreground order-2 md:order-1">
-          Hiển thị <b>{pagination?.total ?? 0}</b> trạm (Trang {pagination?.page}/{pagination?.totalPages})
+          Hiển thị <b>{stations?.length ?? 0}</b> trạm (Trang {pagination?.page}/{pagination?.totalPages})
         </p>
         <div className="order-1 md:order-2">
             <PaginationDemo
