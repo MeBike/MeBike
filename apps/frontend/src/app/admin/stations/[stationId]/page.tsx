@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useStationActions } from "@/hooks/use-station";
-import type { Station } from "@custom-types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { stationSchema, StationSchemaFormData } from "@/schemas/stationSchema";
 import { Input } from "@/components/ui/input";
+import { ChevronLeft, Edit, Save, X, Bike, Info } from "lucide-react";
+import { Station } from "@/types";
 
 export default function StationDetailPage() {
   const router = useRouter();
-  const params = useParams<{ stationId: string }>();
-  const stationId = params?.stationId ?? "";
+  const { stationId } = useParams() as { stationId: string };
   const [isEditing, setIsEditing] = useState(false);
 
   const {
@@ -26,308 +26,171 @@ export default function StationDetailPage() {
     hasToken: true,
     stationId,
   });
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<StationSchemaFormData>({
+
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<StationSchemaFormData>({
     resolver: zodResolver(stationSchema),
-    defaultValues: {
-      name: "",
-      address: "",
-      latitude: 0,
-      longitude: 0,
-      capacity: 0,
-    },
   });
+
   useEffect(() => {
-    if (!stationId) return;
-    getStationByID();
-    getReservationStats();
+    if (stationId) {
+      getStationByID();
+      getReservationStats();
+    }
   }, [stationId, getStationByID, getReservationStats]);
 
-  const station = responseStationDetail as unknown as Station | undefined;
+  // Xử lý logic 404
+  if (!isLoadingGetStationByID && !responseStationDetail) {
+    notFound();
+  }
 
-  const openEditForm = () => {
-    if (!station) return;
+  const station = responseStationDetail as Station;
+
+  const handleEdit = () => {
     reset({
-      name: station.name ?? "",
-      address: station.address ?? "",
-      latitude: station.latitude ?? 0,
-      longitude: station.longitude ?? 0,
-      capacity: station.capacity ?? 0,
+      name: station?.name || "",
+      address: station?.address || "",
+      latitude: station?.latitude || 0,
+      longitude: station?.longitude || 0,
+      capacity: station?.capacity || 0,
     });
     setIsEditing(true);
   };
 
   const onSave = async (data: StationSchemaFormData) => {
-    await updateStation(data);
-    setIsEditing(false);
-    getStationByID();
+    const success = await updateStation(data);
+    if (success) {
+      setIsEditing(false);
+      getStationByID();
+    }
   };
-
-  const onCancel = () => {
-    setIsEditing(false);
-  };
-
-  if (!stationId) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-bold text-foreground">Chi tiết trạm</h1>
-        <p className="text-muted-foreground">Không tìm thấy mã trạm.</p>
-        <Button variant="outline" onClick={() => router.push("/admin/stations")}>
-          Quay lại danh sách
-        </Button>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Chi tiết trạm xe</h1>
-          <p className="text-muted-foreground mt-1">
-            Thông tin trạm và thống kê liên quan
-          </p>
+    <div className="max-w-6xl mx-auto space-y-6 p-4">
+      {/* HEADER BREADCRUMB-LIKE */}
+      <div className="flex items-center justify-between border-b pb-6">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="icon" onClick={() => router.push("/admin/stations")}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">{isEditing ? "Chỉnh sửa trạm" : "Chi tiết trạm"}</h1>
+            <p className="text-muted-foreground">{station?.name || "Đang tải..."}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {!isEditing && (
-            <Button variant="default" onClick={openEditForm} disabled={!station}>
-              Cập nhật
+        
+        <div className="flex gap-2">
+          {!isEditing ? (
+            <Button onClick={handleEdit}>
+              <Edit className="w-4 h-4 mr-2" /> Cập nhật
+            </Button>
+          ) : (
+            <Button variant="ghost" onClick={() => setIsEditing(false)}>
+              <X className="w-4 h-4 mr-2" /> Hủy
             </Button>
           )}
-          <Button variant="outline" onClick={() => router.push("/admin/stations")}>
-            Quay lại danh sách
-          </Button>
         </div>
       </div>
 
-      {isLoadingGetStationByID ? (
-        <div className="flex flex-col items-center justify-center py-16">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary mb-4" />
-          <span className="text-lg text-foreground">Đang tải dữ liệu...</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* THÔNG TIN CHÍNH */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-card border rounded-xl p-6 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Info className="w-5 h-5 text-primary" /> Thông tin cơ bản
+            </h3>
+            
+            {isEditing ? (
+              <form onSubmit={handleSubmit(onSave)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-sm font-medium">Tên trạm</label>
+                    <Input {...register("name")} />
+                    {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-sm font-medium">Địa chỉ</label>
+                    <Input {...register("address")} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Vĩ độ (Lat)</label>
+                    <Input type="number"  {...register("latitude", { valueAsNumber: true })} />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-medium">Kinh độ (Long)</label>
+                    <Input type="number" {...register("longitude", { valueAsNumber: true })} />
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <label className="text-sm font-medium">Sức chứa</label>
+                    <Input type="number" {...register("capacity", { valueAsNumber: true })} />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  <Save className="w-4 h-4 mr-2" /> Lưu thay đổi
+                </Button>
+              </form>
+            ) : (
+              <div className="grid grid-cols-2 gap-y-6">
+                <DetailItem label="Tên trạm" value={station?.name} />
+                <DetailItem label="Sức chứa" value={`${station?.capacity} xe`} />
+                <DetailItem label="Địa chỉ" value={station?.address} isFullWidth />
+                <DetailItem label="Tọa độ" value={`${station?.latitude}, ${station?.longitude}`} />
+                <DetailItem label="Ngày tạo" value={station?.createdAt && new Date(station.createdAt).toLocaleDateString("vi-VN")} />
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
-        <div className="bg-card border border-border rounded-lg p-6 w-full">
-          {isEditing ? (
-            <form className="space-y-4" onSubmit={handleSubmit(onSave)}>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Tên trạm
-                </label>
-                <Input type="text" {...register("name")} placeholder="Nhập tên trạm" />
-                {errors.name && (
-                  <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
-                )}
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Địa chỉ
-                </label>
-                <Input
-                  type="text"
-                  {...register("address")}
-                  placeholder="Nhập địa chỉ trạm"
-                />
-                {errors.address && (
-                  <p className="text-sm text-red-500 mt-1">{errors.address.message}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    Latitude
-                  </label>
-                  <Input
-                    type="number"
-                    step="any"
-                    {...register("latitude", { valueAsNumber: true })}
-                  />
-                  {errors.latitude && (
-                    <p className="text-sm text-red-500 mt-1">{errors.latitude.message}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    Longitude
-                  </label>
-                  <Input
-                    type="number"
-                    step="any"
-                    {...register("longitude", { valueAsNumber: true })}
-                  />
-                  {errors.longitude && (
-                    <p className="text-sm text-red-500 mt-1">{errors.longitude.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Sức chứa (số xe)
-                </label>
-                <Input
-                  type="number"
-                  {...register("capacity", { valueAsNumber: true })}
-                  placeholder="Nhập sức chứa"
-                />
-                {errors.capacity && (
-                  <p className="text-sm text-red-500 mt-1">{errors.capacity.message}</p>
-                )}
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                  Hủy
-                </Button>
-                <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                  Lưu
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Tên trạm
-                </label>
-                <p className="text-foreground font-medium">{station?.name}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Địa chỉ
-                </label>
-                <p className="text-foreground">{station?.address}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Latitude
-                  </label>
-                  <p className="text-foreground">{station?.latitude}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Longitude
-                  </label>
-                  <p className="text-foreground">{station?.longitude}</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Sức chứa
-                </label>
-                <p className="text-foreground">{station?.capacity} xe</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Ngày tạo
-                  </label>
-                  <p className="text-foreground text-sm">
-                    {station?.createdAt
-                      ? new Date(station.createdAt).toLocaleDateString("vi-VN")
-                      : "-"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Cập nhật lần cuối
-                  </label>
-                  <p className="text-foreground text-sm">
-                    {station?.updatedAt
-                      ? new Date(station.updatedAt).toLocaleDateString("vi-VN")
-                      : "-"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {!isEditing && (
-            <div className="space-y-4 pt-4 border-t border-border">
-              <h3 className="text-lg font-semibold text-foreground">
-                Tình trạng xe tại trạm
+        {/* THỐNG KÊ NHANH (BIKES STATUS) */}
+        {!isEditing && (
+          <div className="space-y-6">
+            <div className="bg-primary/5 border border-primary/10 rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Bike className="w-5 h-5 text-primary" /> Trạng thái xe
               </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Tổng số xe
-                  </label>
-                  <p className="text-foreground font-medium">
-                    {station?.totalBikes ?? 0}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Đang sẵn sàng
-                  </label>
-                  <p className="text-foreground font-medium">
-                    {station?.availableBikes ?? 0}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Đang được thuê / đặt
-                  </label>
-                  <p className="text-foreground font-medium">
-                    {station?.bookedBikes ?? 0}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Đang bảo trì
-                  </label>
-                  <p className="text-foreground font-medium">
-                    {station?.maintainedBikes ?? 0}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Xe hỏng
-                  </label>
-                  <p className="text-foreground font-medium">
-                    {station?.brokenBikes ?? 0}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Đã đặt trước
-                  </label>
-                  <p className="text-foreground font-medium">
-                    {station?.reservedBikes ?? 0}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Không khả dụng
-                  </label>
-                  <p className="text-foreground font-medium">
-                    {station?.unavailableBikes ?? 0}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-1">
-                    Chỗ trống còn lại
-                  </label>
-                  <p className="text-foreground font-medium">
-                    {station?.emptySlots ?? 0}
-                  </p>
+              <div className="space-y-3">
+                <StatusRow label="Tổng số xe" value={station?.totalBikes} />
+                <StatusRow label="Sẵn sàng" value={station?.availableBikes} highlightColor="text-green-600" />
+                <StatusRow label="Đang thuê" value={station?.bookedBikes} highlightColor="text-blue-600" />
+                <StatusRow label="Bảo trì" value={station?.maintainedBikes} highlightColor="text-orange-500" />
+                <div className="pt-3 border-t">
+                    <StatusRow label="Chỗ trống còn lại" value={station?.emptySlots} isBold />
                 </div>
               </div>
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
+// Sub-components nội bộ
+interface DetailItemProps {
+  label: string;
+  value: string | number | null | undefined;
+  isFullWidth?: boolean;
+}
+function DetailItem({ label, value, isFullWidth }: DetailItemProps) {
+  return (
+    <div className={isFullWidth ? "col-span-2" : ""}>
+      <p className="text-xs text-muted-foreground uppercase font-semibold">{label}</p>
+      <p className="text-foreground mt-1 font-medium">{value || "---"}</p>
+    </div>
+  );
+}
+interface StatusRowProps {
+  label: string;
+  value: string | number | null | undefined;
+  highlightColor?: string;
+  isBold?: boolean;
+}
+function StatusRow({ label, value, highlightColor = "", isBold = false }: StatusRowProps) {
+  return (
+    <div className="flex justify-between items-center text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`${isBold ? "font-bold text-base" : "font-semibold"} ${highlightColor}`}>
+        {value ?? 0}
+      </span>
+    </div>
+  );
+}

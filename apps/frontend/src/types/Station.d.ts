@@ -33,6 +33,7 @@ export interface StationBikeRevenue {
     totalRevenue: number;
     totalRevenueFormatted: string;
     totalRentals: number;
+     avgRevenuePerStationFormatted: string;
   };
   stations: StationWithBikes[];
 }

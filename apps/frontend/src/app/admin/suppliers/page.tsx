@@ -71,7 +71,7 @@ export default function SuppliersPage() {
             <div className="bg-card border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Tổng nhà cung cấp</p>
               <p className="text-2xl font-bold text-foreground mt-1">
-                {supplierData?.pagination.total || 0}
+                {supplierData?.pagination.totalRecords || 0}
               </p>
             </div>
             <div className="bg-card border border-border rounded-lg p-4">
@@ -130,7 +130,7 @@ export default function SuppliersPage() {
             />
             <PaginationDemo
               totalPages={supplierData?.pagination?.totalPages ?? 1}
-              currentPage={supplierData?.pagination?.page ?? 1}
+              currentPage={supplierData?.pagination?.currentPage ?? 1}
               onPageChange={setPage}
             />
           </div>
