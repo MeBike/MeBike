@@ -3,15 +3,8 @@ import type { AxiosResponse } from "axios";
 import type { DetailUser } from "@/types";
 import { UserProfile } from "@/schemas/userSchema";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
-interface ApiReponse<T> {
-  data: T;
-  pagination?: {
-    totalPages: number;
-    totalRecords: number;
-    limit: number;
-    currentPage: number;
-  };
-}
+import { ApiResponse } from "@/types";
+import {ENDPOINT} from "@/constants/end-point";
 interface DetailUserResponse<T> {
   message: string;
   result: T;
@@ -81,38 +74,47 @@ const USER_ENDPOINTS = {
 export const userService = {
   getAllUsers: async ({
     page,
-    limit,
+    pageSize,
     verify,
     role,
+    fullname,
+    sortBy,
+    sortDir,
   }: {
     page?: number;
-    limit?: number;
+    pageSize?: number;
     verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
-    role?: "ADMIN" | "USER" | "STAFF" | "";
-  }): Promise<AxiosResponse<ApiReponse<DetailUser[]>>> => {
-    const response = await fetchHttpClient.get<ApiReponse<DetailUser[]>>(
-      USER_ENDPOINTS.MANAGE_USER,
+    role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+    fullname?: string;
+    sortBy?: "fullname" | "email" | "role" | "verify" | "updatedAt";
+    sortDir?: "asc" | "desc";
+  }): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
+      ENDPOINT.USER.BASE,
       {
         page: page,
-        limit: limit,
+        pageSize: pageSize,
         verify: verify,
+        fullname: fullname,
         role: role,
+        sortBy: sortBy,
+        sortDir: sortDir,
       }
     );
     return response;
   },
   getDetailUser: async (
     id: string
-  ): Promise<ApiReponse<DetailUserResponse<DetailUser>>> => {
-    const response = await fetchHttpClient.get<DetailUserResponse<DetailUser>>(
+  ): Promise<AxiosResponse<DetailUser>> => {
+    const response = await fetchHttpClient.get<DetailUser>(
       USER_ENDPOINTS.BY_ID(id)
     );
     return response;
   },
   getSearchUser: async (
     query: string
-  ): Promise<AxiosResponse<ApiReponse<DetailUser[]>>> => {
-    const response = await fetchHttpClient.get<ApiReponse<DetailUser[]>>(
+  ): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
       USER_ENDPOINTS.SEARCH_USER,
       {
         q: query,

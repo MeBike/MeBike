@@ -3,17 +3,15 @@ export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
 
 export interface DetailUser {
   id: string;
-  fullname: string;
+  fullName: string;
   email: string;
   verify: VerifyStatus;
-  location: string;
-  username: string;
+  location: string | null;
+  username: string | null;
   phoneNumber: string;
-  avatar: string;
+  avatar: string | null;
   role: UserRole;
   nfcCardUid: string;
-  email_verify_otp_expires: string;
-  forgot_password_otp_expires: string;
   createdAt: string;
   updatedAt: string;
 }

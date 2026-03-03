@@ -29,5 +29,12 @@ export const ENDPOINT = {
         STATS : "/suppliers/stats",
         STATS_BIKE : (id : string) => `/suppliers/${id}/stats`,
     },
+    USER : {
+        BASE : "/users/manage-users/get-all",
+        DETAIL : (id : string) => `/users/${id}`,
+        MANAGE_USER : "/users/manage",
+        SEARCH_USER : "/users/search",
+        UPDATE : (id: string) => `/users/${id}`,
+    },
 
 } as const;
