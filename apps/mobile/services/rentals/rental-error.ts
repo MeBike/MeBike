@@ -1,9 +1,13 @@
 import type { Result } from "@lib/result";
 
-import { decodeWithSchema, readJson } from "@lib/api-decode";
-import { err } from "@lib/result";
+import { readJson } from "@lib/api-decode";
 import { ServerContracts } from "@mebike/shared";
-import { StatusCodes } from "http-status-codes";
+import {
+  asNetworkError as asSharedNetworkError,
+  isUnauthorizedStatus,
+  parseErrorFromSchema,
+  parseUnauthorizedError,
+} from "@services/shared/service-error";
 
 export type RentalErrorCode = string;
 
@@ -27,26 +31,26 @@ export async function parseRentalError(response: Response): Promise<RentalError>
   try {
     const data = await readJson(response);
 
-    if (response.status === StatusCodes.UNAUTHORIZED || response.status === StatusCodes.FORBIDDEN) {
-      const parsed = decodeWithSchema(ServerContracts.UnauthorizedErrorResponseSchema, data);
-      if (parsed.ok) {
+    if (isUnauthorizedStatus(response.status, true)) {
+      const unauthorized = parseUnauthorizedError(data);
+      if (unauthorized) {
         return {
           _tag: "ApiError",
-          code: "UNAUTHORIZED",
-          message: parsed.value.error,
-          details: parsed.value.details as unknown as Record<string, unknown>,
+          code: unauthorized.code,
+          message: unauthorized.message,
+          details: unauthorized.details,
         };
       }
       return { _tag: "DecodeError" };
     }
 
-    const parsed = decodeWithSchema(ServerContracts.RentalsContracts.RentalErrorResponseSchema, data);
-    if (parsed.ok) {
+    const parsed = parseErrorFromSchema(ServerContracts.RentalsContracts.RentalErrorResponseSchema, data);
+    if (parsed) {
       return {
         _tag: "ApiError",
-        code: parsed.value.details?.code ?? "UNKNOWN",
-        message: parsed.value.error,
-        details: parsed.value.details as unknown as Record<string, unknown> | undefined,
+        code: parsed.code,
+        message: parsed.message,
+        details: parsed.details,
       };
     }
 
@@ -58,8 +62,5 @@ export async function parseRentalError(response: Response): Promise<RentalError>
 }
 
 export function asNetworkError(error: unknown): Result<never, RentalError> {
-  return err({
-    _tag: "NetworkError",
-    message: error instanceof Error ? error.message : undefined,
-  });
+  return asSharedNetworkError<Extract<RentalError, { _tag: "NetworkError" }>>(error);
 }
