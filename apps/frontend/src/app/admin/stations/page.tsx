@@ -63,7 +63,10 @@ export default function StationsPage() {
         (!responseStationRevenue) ? (
           <ReportSkeleton />
         ) : (
-          <RevenueReport data={responseStationRevenue} />
+          // <RevenueReport data={responseStationRevenue} />
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Báo cáo doanh thu theo trạm</h2>
+          </div>
         )
       )}
       

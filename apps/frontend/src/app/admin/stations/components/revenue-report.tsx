@@ -2,15 +2,13 @@
 
 import { formatDateUTC } from "@/utils/formatDateTime";
 import type { StationStatistic } from "@/types/Station";
-
+import type { StationBikeRevenue } from "@/types/Station";
 interface RevenueReportProps {
-  data: any; // Hãy thay bằng type chuẩn: { result: { stations: StationStatistic[], summary: any, period: any } }
+  data: StationBikeRevenue; 
 }
 
 export function RevenueReport({ data }: RevenueReportProps) {
-  if (!data?.result) return null;
-  const { result } = data;
-
+  const result = data ;
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
       <div className="bg-gradient-to-br from-card via-card to-muted/20 border border-border rounded-2xl p-8 shadow-lg">
@@ -40,22 +38,27 @@ export function RevenueReport({ data }: RevenueReportProps) {
         </div>
 
         {/* List Details */}
-        <div className="space-y-4">
+        {/* <div className="space-y-4">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <span className="h-1 w-8 bg-primary rounded-full" /> Chi tiết theo trạm
           </h3>
           {result.stations.map((station: StationStatistic, idx: number) => (
             <StationDetailCard key={station._id} station={station} index={idx} />
           ))}
-        </div>
+        </div> */}
       </div>
     </div>
   );
 }
-
+interface SummaryCardProps {
+  title: string;
+  value: string | number;
+  color: string;
+  isGradient?: boolean;
+}
 // Sub-components nhỏ để tái sử dụng trong file này
-function SummaryCard({ title, value, color, isGradient }: any) {
-    const colors: any = {
+function SummaryCard({ title, value, color, isGradient }: SummaryCardProps) {
+    const colors: Record<string, string> = {
         blue: "from-blue-500/10 border-blue-500/20 text-blue-600",
         green: "from-green-500/10 border-green-500/20 text-green-600",
         purple: "from-purple-500/10 border-purple-500/20 text-purple-600",

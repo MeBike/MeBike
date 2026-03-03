@@ -1,11 +1,12 @@
 export interface ApiResponse<T> {
   data: T;
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
+  pagination : Pagination
+}
+export interface Pagination {
+  currentPage: number;
+  limit: number;
+  totalRecords: number;
+  totalPages: number;
 }
 export interface DetailApiResponse<T> {
   result: T;

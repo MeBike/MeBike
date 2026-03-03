@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { stationSchema, StationSchemaFormData } from "@/schemas/stationSchema";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, Edit, Save, X, Bike, Info } from "lucide-react";
+import { Station } from "@/types";
 
 export default function StationDetailPage() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function StationDetailPage() {
     notFound();
   }
 
-  const station = responseStationDetail as any;
+  const station = responseStationDetail as Station;
 
   const handleEdit = () => {
     reset({
@@ -112,11 +113,11 @@ export default function StationDetailPage() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Vĩ độ (Lat)</label>
-                    <Input type="number" step="any" {...register("latitude", { valueAsNumber: true })} />
+                    <Input type="number"  {...register("latitude", { valueAsNumber: true })} />
                   </div>
                   <div className="space-y-1">
                     <label className="text-sm font-medium">Kinh độ (Long)</label>
-                    <Input type="number" step="any" {...register("longitude", { valueAsNumber: true })} />
+                    <Input type="number" {...register("longitude", { valueAsNumber: true })} />
                   </div>
                   <div className="col-span-2 space-y-1">
                     <label className="text-sm font-medium">Sức chứa</label>
@@ -164,7 +165,12 @@ export default function StationDetailPage() {
 }
 
 // Sub-components nội bộ
-function DetailItem({ label, value, isFullWidth }: any) {
+interface DetailItemProps {
+  label: string;
+  value: string | number | null | undefined;
+  isFullWidth?: boolean;
+}
+function DetailItem({ label, value, isFullWidth }: DetailItemProps) {
   return (
     <div className={isFullWidth ? "col-span-2" : ""}>
       <p className="text-xs text-muted-foreground uppercase font-semibold">{label}</p>
@@ -172,8 +178,13 @@ function DetailItem({ label, value, isFullWidth }: any) {
     </div>
   );
 }
-
-function StatusRow({ label, value, highlightColor = "", isBold = false }: any) {
+interface StatusRowProps {
+  label: string;
+  value: string | number | null | undefined;
+  highlightColor?: string;
+  isBold?: boolean;
+}
+function StatusRow({ label, value, highlightColor = "", isBold = false }: StatusRowProps) {
   return (
     <div className="flex justify-between items-center text-sm">
       <span className="text-muted-foreground">{label}</span>

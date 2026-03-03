@@ -56,8 +56,13 @@ export function StationInfoForm({ form, onSubmit, onCancel }: StationInfoFormPro
     </div>
   );
 }
-
-function FormField({ label, error, required, children }: any) {
+interface FormFieldProps {
+  label: string;
+  error?: string;
+  required?: boolean;
+  children: React.ReactNode;
+}
+function FormField({ label, error, required, children }: FormFieldProps) {
   return (
     <div className="space-y-2">
       <Label className="text-sm font-semibold">

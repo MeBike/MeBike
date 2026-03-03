@@ -4,10 +4,11 @@ import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { stationColumns } from "@/columns/station-column";
 import { Button } from "@/components/ui/button";
+import { Pagination, Station } from "@/types";
 
 interface StationTableSectionProps {
-  stations: any[];
-  pagination: any;
+  stations: Station[];
+  pagination?: Pagination;
   searchQuery: string;
   setSearchQuery: (val: string) => void;
   setPage: (page: number) => void;
@@ -57,12 +58,12 @@ export function StationTableSection({
       </div>
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-2">
         <p className="text-sm text-muted-foreground order-2 md:order-1">
-          Hiển thị <b>{stations?.length ?? 0}</b> trạm (Trang {pagination?.page}/{pagination?.totalPages})
+          Hiển thị <b>{stations?.length ?? 0}</b> trạm (Trang {pagination?.currentPage}/{pagination?.totalPages})
         </p>
         <div className="order-1 md:order-2">
             <PaginationDemo
               totalPages={pagination?.totalPages ?? 1}
-              currentPage={pagination?.page ?? 1}
+              currentPage={pagination?.currentPage ?? 1}
               onPageChange={setPage}
             />
         </div>
