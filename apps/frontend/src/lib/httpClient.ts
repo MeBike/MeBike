@@ -123,7 +123,7 @@ export class FetchHttpClient {
     }
     const response = await axios.post(
       `${this.baseURL}/auth/refresh`,
-      { refresh_token: refreshToken },
+      { refreshToken: refreshToken },
       { headers: { "Content-Type": "application/json" } }
     );
     console.log('Refresh token response:', response.status, response.data);
@@ -132,8 +132,8 @@ export class FetchHttpClient {
       throw new Error("Refresh token expired");
     }
     const data = response.data;
-    setTokens(data.result.access_token, data.result.refresh_token);
-    return data.result.access_token;
+    setTokens(data.data.accessToken, data.data.refreshToken);
+    return data.data.accessToken;
   }
   private processQueue(error: unknown, token: string | null) {
     this.failedQueue.forEach(({ resolve, reject }) => {
