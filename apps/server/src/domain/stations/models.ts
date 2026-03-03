@@ -9,6 +9,8 @@ export type StationRow = {
   capacity: number;
   latitude: number;
   longitude: number;
+  createdAt: string;
+  updatedAt: string;
   totalBikes: number;
   availableBikes: number;
   bookedBikes: number;

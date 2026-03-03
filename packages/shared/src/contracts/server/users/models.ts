@@ -3,12 +3,12 @@ import { UserRoleSchema, VerifyStatusSchema } from "./schemas";
 
 export const UserSummarySchema = z.object({
   id: z.uuidv7(),
-  fullname: z.string(),
+  fullName: z.string(),
 });
 
 export const UserDetailSchema = z.object({
   id: z.uuidv7(),
-  fullname: z.string(),
+  fullName: z.string(),
   email: z.string(),
   verify: VerifyStatusSchema,
   location: z.string().nullable(),
@@ -38,7 +38,7 @@ export const ActiveUsersSeriesRowSchema = z.object({
 
 export const TopRenterUserSchema = z.object({
   id: z.uuidv7(),
-  fullname: z.string(),
+  fullName: z.string(),
   email: z.string(),
   avatar: z.string().nullable(),
   phoneNumber: z.string().nullable(),
@@ -58,7 +58,7 @@ export const NewUsersStatsSchema = z.object({
 
 export const VipCustomerSchema = z.object({
   userId: z.uuidv7(),
-  fullname: z.string(),
+  fullName: z.string(),
   totalDuration: z.number(),
 }).nullable();
 

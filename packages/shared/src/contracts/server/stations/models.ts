@@ -7,6 +7,8 @@ export const StationSummarySchema = z.object({
   capacity: z.number(),
   latitude: z.number(),
   longitude: z.number(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
   totalBikes: z.number(),
   availableBikes: z.number(),
   bookedBikes: z.number(),

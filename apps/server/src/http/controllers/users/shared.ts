@@ -9,7 +9,7 @@ export function mapUserDetail(
 ): import("@mebike/shared").UsersContracts.UserDetail {
   return {
     id: row.id,
-    fullname: row.fullname,
+    fullName: row.fullname,
     email: row.email,
     verify: row.verify,
     location: row.location,

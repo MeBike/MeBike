@@ -222,6 +222,8 @@ export const StationListResponseSchema = z
           capacity: 20,
           latitude: 10.762622,
           longitude: 106.660172,
+          createdAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-02T00:00:00.000Z",
           totalBikes: 18,
           availableBikes: 10,
           bookedBikes: 3,

@@ -127,7 +127,7 @@ describe("userStatsRepository Integration", () => {
 
     // VIP Customer (Max Duration)
     expect(result.vipCustomer).not.toBeNull();
-    expect(result.vipCustomer?.fullname).toBe("Verified User");
+    expect(result.vipCustomer?.fullName).toBe("Verified User");
     expect(result.vipCustomer?.totalDuration).toBe(180); // 60 + 120
   });
 

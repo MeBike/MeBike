@@ -79,7 +79,7 @@ export type ActiveUsersSeriesRow = {
 
 export type TopRenterUser = {
   id: string;
-  fullname: string;
+  fullName: string;
   email: string;
   avatar: string | null;
   phoneNumber: string | null;
@@ -104,7 +104,7 @@ export type NewUsersStats = {
 
 export type VipCustomer = {
   userId: string;
-  fullname: string;
+  fullName: string;
   totalDuration: number;
 } | null;
 

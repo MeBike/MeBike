@@ -144,6 +144,8 @@ export function makeStationRepository(
               capacity: number;
               latitude: number;
               longitude: number;
+              createdAt: Date;
+              updatedAt: Date;
             }[]>`
               INSERT INTO "Station" (
                 "id",
@@ -164,7 +166,15 @@ export function makeStationRepository(
                 ST_SetSRID(ST_MakePoint(${input.longitude}, ${input.latitude}), 4326)::geography,
                 now()
               )
-              RETURNING "id", "name", "address", "capacity", "latitude", "longitude"
+              RETURNING
+                "id",
+                "name",
+                "address",
+                "capacity",
+                "latitude",
+                "longitude",
+                "created_at" AS "createdAt",
+                "updated_at" AS "updatedAt"
             `,
           catch: e =>
             isPrismaUniqueViolation(e) || isPrismaRawUniqueViolation(e)
@@ -200,6 +210,8 @@ export function makeStationRepository(
               capacity: number;
               latitude: number;
               longitude: number;
+              createdAt: Date;
+              updatedAt: Date;
             }[]>`
               WITH boundary AS (
                 SELECT "geom"
@@ -234,7 +246,15 @@ export function makeStationRepository(
                     4326
                   )::geometry
                 )
-              RETURNING "id", "name", "address", "capacity", "latitude", "longitude"
+              RETURNING
+                "id",
+                "name",
+                "address",
+                "capacity",
+                "latitude",
+                "longitude",
+                "created_at" AS "createdAt",
+                "updated_at" AS "updatedAt"
             `,
           catch: e =>
             isPrismaUniqueViolation(e) || isPrismaRawUniqueViolation(e)
@@ -432,6 +452,8 @@ export function makeStationRepository(
                     capacity,
                     latitude,
                     longitude,
+                    "created_at" AS "createdAt",
+                    "updated_at" AS "updatedAt",
                     ST_Distance(
                       position,
                       ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
@@ -464,6 +486,8 @@ export function makeStationRepository(
                     capacity,
                     latitude,
                     longitude,
+                    "created_at" AS "createdAt",
+                    "updated_at" AS "updatedAt",
                     ST_Distance(
                       position,
                       ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography
