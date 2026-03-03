@@ -18,5 +18,6 @@ export const useGetStationByIDQuery = (stationId: string) => {
     queryKey: QUERY_KEYS.STATION.DETAIL(stationId),
     queryFn: () => fetchStationByID(stationId),
     enabled: !!stationId,
+    retry: 1,
   });
 };
