@@ -2,7 +2,7 @@ import type { MapboxRouteLine } from "@lib/mapbox-directions";
 
 import { initMapbox } from "@lib/mapbox";
 import Mapbox from "@rnmapbox/maps";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import type { StationType } from "../types/StationType";
@@ -12,7 +12,9 @@ import { StationMapMarker } from "./station-map-marker";
 type StationMapProps = {
   stations: StationType[];
   onStationPress?: (station: StationType) => void;
+  onMapPress?: () => void;
   route?: MapboxRouteLine | null;
+  selectedStationId?: string | null;
   userLocation?: {
     latitude: number;
     longitude: number;
@@ -34,15 +36,40 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
+  userLocationMarker: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#2563EB",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
 });
 
 export default function StationMap({
   stations,
   onStationPress,
+  onMapPress,
   route,
+  selectedStationId,
   userLocation,
 }: StationMapProps) {
   initMapbox();
+  const ignoreNextMapPressRef = useRef(false);
+  const ignoreResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (ignoreResetTimerRef.current) {
+        clearTimeout(ignoreResetTimerRef.current);
+      }
+    };
+  }, []);
 
   const centerCoordinate = useMemo<[number, number]>(() => {
     if (userLocation)
@@ -55,15 +82,23 @@ export default function StationMap({
 
   return (
     <View style={styles.container}>
-      <Mapbox.MapView style={styles.map} styleURL={Mapbox.StyleURL.Street}>
+      <Mapbox.MapView
+        style={styles.map}
+        styleURL={Mapbox.StyleURL.Street}
+        onPress={() => {
+          if (ignoreNextMapPressRef.current) {
+            ignoreNextMapPressRef.current = false;
+            return;
+          }
+          onMapPress?.();
+        }}
+      >
         <Mapbox.Camera
           defaultSettings={{
             centerCoordinate,
             zoomLevel: 14,
           }}
         />
-
-        <Mapbox.UserLocation visible={true} />
 
         {route
           ? (
@@ -82,11 +117,35 @@ export default function StationMap({
               Number.parseFloat(station.latitude),
             ]}
           >
-            <Pressable onPress={() => onStationPress?.(station)}>
-              <StationMapMarker count={station.availableBikes} />
+            <Pressable
+              onPress={() => {
+                ignoreNextMapPressRef.current = true;
+                if (ignoreResetTimerRef.current) {
+                  clearTimeout(ignoreResetTimerRef.current);
+                }
+                ignoreResetTimerRef.current = setTimeout(() => {
+                  ignoreNextMapPressRef.current = false;
+                  ignoreResetTimerRef.current = null;
+                }, 250);
+                onStationPress?.(station);
+              }}
+            >
+              <StationMapMarker count={station.availableBikes} isSelected={station._id === selectedStationId} />
             </Pressable>
           </Mapbox.MarkerView>
         ))}
+
+        {userLocation
+          ? (
+              <Mapbox.MarkerView
+                id="user-location-marker"
+                coordinate={[userLocation.longitude, userLocation.latitude]}
+                allowOverlap={true}
+              >
+                <View style={styles.userLocationMarker} />
+              </Mapbox.MarkerView>
+            )
+          : null}
       </Mapbox.MapView>
     </View>
   );

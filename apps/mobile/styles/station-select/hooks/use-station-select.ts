@@ -88,7 +88,7 @@ export function useStationSelect() {
     enabled: routeRequested,
   });
 
-  const route = routeQuery.data ?? null;
+  const route = routeRequested ? (routeQuery.data ?? null) : null;
   const isRouting = routeQuery.isFetching;
 
   const handleSelectStationForRoute = async (stationId: string) => {
@@ -102,6 +102,11 @@ export function useStationSelect() {
     if (!currentLocation) {
       await refreshLocation();
     }
+  };
+
+  const deselectStation = () => {
+    setSelectedStationId(null);
+    setRouteRequested(false);
   };
 
   const clearRoute = () => {
@@ -146,6 +151,7 @@ export function useStationSelect() {
     clearRoute,
     setRouteProfile,
     openSelectedStationDetail,
+    deselectStation,
     insets,
     currentLocation,
   };

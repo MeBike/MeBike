@@ -20,7 +20,7 @@ export const dashboardService = {
     const response = await http.get<{
       message: string;
       result: DashboardStats;
-    }>("/dashboard/stats");
+    }>("/v1/users/manage-users/dashboard-stats");
     return response.data;
   },
 };
