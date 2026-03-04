@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 
 import {
+  OptionalPhoneNumberNullableSchema,
   OptionalTrimmedNullableStringSchema,
   paginationQueryFields,
   PaginationSchema,
@@ -56,7 +57,7 @@ export const AdminCreateUserRequestSchema = z.object({
   fullname: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(8),
-  phoneNumber: OptionalTrimmedNullableStringSchema,
+  phoneNumber: OptionalPhoneNumberNullableSchema,
   username: z.string().optional().nullable(),
   avatar: z.string().url().optional().nullable(),
   location: z.string().optional().nullable(),
@@ -67,8 +68,8 @@ export const AdminCreateUserRequestSchema = z.object({
 
 export const AdminUpdateUserRequestSchema = z.object({
   fullname: z.string().min(1).optional(),
-  email: z.email().optional(),
-  phoneNumber: OptionalTrimmedNullableStringSchema,
+  email: z.string().email().optional(),
+  phoneNumber: OptionalPhoneNumberNullableSchema,
   username: z.string().optional().nullable(),
   avatar: z.url().optional().nullable(),
   location: z.string().optional().nullable(),
