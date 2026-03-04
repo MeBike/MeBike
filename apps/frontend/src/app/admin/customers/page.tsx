@@ -144,11 +144,11 @@ export default function CustomersPage() {
 
   const handleUpdateProfile = handleSubmitUpdateProfile((data) => {
     updateProfileUser({
-      fullname: data.fullname,
-      email: detailUserData?.data?.result?.email || "",
+      fullname: data.fullName,
+      email: detailUserData?.data?.email || "",
       phone_number: data.phoneNumber || "",
       password: "",
-      role: detailUserData?.data?.result?.role || "USER",
+      role: detailUserData?.data?.role || "USER",
       location: data.location || "",
       username: data.username || "",
     } as UserProfile);
@@ -181,7 +181,7 @@ export default function CustomersPage() {
         </div>
 
         {dashboardStatsData && (
-          <CustomerStats stats={dashboardStatsData.result} />
+          <CustomerStats stats={dashboardStatsData} />
         )}
 
         {/* Filters */}
@@ -367,7 +367,7 @@ export default function CustomersPage() {
                         <div>
                           <p className="text-sm text-muted-foreground">ID</p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.id}
+                            {detailUserData?.data?.id}
                           </p>
                         </div>
 
@@ -376,14 +376,14 @@ export default function CustomersPage() {
                             Họ tên
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.fullname}
+                            {detailUserData?.data?.fullName}
                           </p>
                         </div>
 
                         <div>
                           <p className="text-sm text-muted-foreground">Email</p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.email}
+                            {detailUserData?.data?.email}
                           </p>
                         </div>
 
@@ -392,7 +392,7 @@ export default function CustomersPage() {
                             Số điện thoại
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.phoneNumber}
+                            {detailUserData?.data?.phoneNumber}
                           </p>
                         </div>
 
@@ -401,7 +401,7 @@ export default function CustomersPage() {
                             Username
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.username}
+                            {detailUserData?.data?.username}
                           </p>
                         </div>
 
@@ -411,16 +411,16 @@ export default function CustomersPage() {
                           </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData?.data?.result?.role === "ADMIN"
+                              detailUserData?.data?.role === "ADMIN"
                                 ? "bg-red-100 text-red-800"
-                                : detailUserData?.data?.result?.role === "STAFF"
+                                : detailUserData?.data?.role === "STAFF"
                                   ? "bg-blue-100 text-blue-800"
-                                  : detailUserData?.data?.result?.role === "SOS"
+                                  : detailUserData?.data?.role === "SOS"
                                     ? "bg-orange-100 text-orange-800"
                                     : "bg-green-100 text-green-800"
                             }`}
                           >
-                            {detailUserData?.data?.result?.role}
+                            {detailUserData?.data?.role}
                           </span>
                         </div>
 
@@ -430,16 +430,16 @@ export default function CustomersPage() {
                           </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData?.data?.result?.verify ===
+                              detailUserData?.data?.verify ===
                               "VERIFIED"
                                 ? "bg-green-100 text-green-800"
-                                : detailUserData?.data?.result?.verify ===
+                                : detailUserData?.data?.verify ===
                                     "UNVERIFIED"
                                   ? "bg-yellow-100 text-yellow-800"
                                   : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {detailUserData?.data?.result?.verify}
+                            {detailUserData?.data?.verify}
                           </span>
                         </div>
 
@@ -448,7 +448,7 @@ export default function CustomersPage() {
                             Địa chỉ
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.location ||
+                            {detailUserData?.data?.location ||
                               "Chưa có"}
                           </p>
                         </div>
@@ -458,7 +458,7 @@ export default function CustomersPage() {
                             NFC Card UID
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.nfcCardUid ||
+                            {detailUserData?.data?.nfcCardUid ||
                               "Chưa có"}
                           </p>
                         </div>
@@ -468,7 +468,7 @@ export default function CustomersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {formatDateUTC(detailUserData?.data?.result?.createdAt) || "-"}
+                            {formatDateUTC(detailUserData?.data?.createdAt) || "-"}
                           </p>
                         </div>
 
@@ -477,7 +477,7 @@ export default function CustomersPage() {
                             Lần cập nhật cuối
                           </p>
                           <p className="text-foreground font-medium">
-                            {formatDateUTC(detailUserData?.data?.result?.updatedAt) || "-"}
+                            {formatDateUTC(detailUserData?.data?.updatedAt) || "-"}
                           </p>
                         </div>
                       </div>
@@ -504,45 +504,45 @@ export default function CustomersPage() {
                                 ID Người dùng
                               </p>
                               <p className="text-2xl font-bold text-primary">
-                                {detailUserData?.data?.result?.id.slice(0, 8)}
+                                {detailUserData?.data?.id.slice(0, 8)}
                               </p>
                             </div>
 
                             <div className="bg-blue-100 border border-blue-300 rounded p-3">
                               <p className="text-xs text-blue-600">Email</p>
                               <p className="text-sm font-bold text-blue-800">
-                                {detailUserData?.data?.result?.email}
+                                {detailUserData?.data?.email}
                               </p>
                             </div>
 
                             <div className={`border rounded p-3 ${
-                              detailUserData?.data?.result?.role === "ADMIN"
+                              detailUserData?.data?.role === "ADMIN"
                                 ? "bg-red-100 border-red-300"
-                                : detailUserData?.data?.result?.role === "STAFF"
+                                : detailUserData?.data?.role === "STAFF"
                                   ? "bg-blue-100 border-blue-300"
-                                  : detailUserData?.data?.result?.role === "SOS"
+                                  : detailUserData?.data?.role === "SOS"
                                     ? "bg-orange-100 border-orange-300"
                                     : "bg-green-100 border-green-300"
                             }`}>
                               <p className={`text-xs ${
-                                detailUserData?.data?.result?.role === "ADMIN"
+                                detailUserData?.data?.role === "ADMIN"
                                   ? "text-red-600"
-                                  : detailUserData?.data?.result?.role === "STAFF"
+                                  : detailUserData?.data?.role === "STAFF"
                                     ? "text-blue-600"
-                                    : detailUserData?.data?.result?.role === "SOS"
+                                    : detailUserData?.data?.role === "SOS"
                                       ? "text-orange-600"
                                       : "text-green-600"
                               }`}>Vai trò</p>
                               <p className={`text-lg font-bold ${
-                                detailUserData?.data?.result?.role === "ADMIN"
+                                detailUserData?.data?.role === "ADMIN"
                                   ? "text-red-800"
-                                  : detailUserData?.data?.result?.role === "STAFF"
+                                  : detailUserData?.data?.role === "STAFF"
                                     ? "text-blue-800"
-                                    : detailUserData?.data?.result?.role === "SOS"
+                                    : detailUserData?.data?.role === "SOS"
                                       ? "text-orange-800"
                                       : "text-green-800"
                               }`}>
-                                {detailUserData?.data?.result?.role}
+                                {detailUserData?.data?.role}
                               </p>
                             </div>
 
@@ -551,7 +551,7 @@ export default function CustomersPage() {
                                 Trạng thái
                               </p>
                               <p className="text-lg font-bold text-yellow-800">
-                                {detailUserData?.data?.result?.verify}
+                                {detailUserData?.data?.verify}
                               </p>
                             </div>
                           </div>
@@ -574,12 +574,12 @@ export default function CustomersPage() {
                   </Button>
                   <Button
                     onClick={() => {
-                      if (detailUserData?.data?.result) {
-                        setValueUpdateProfile("fullname", detailUserData.data.result.fullname || "");
-                        setValueUpdateProfile("location", detailUserData.data.result.location || "");
-                        setValueUpdateProfile("username", detailUserData.data.result.username || "");
-                        setValueUpdateProfile("phoneNumber", detailUserData.data.result.phoneNumber || "");
-                      }
+                        if (detailUserData?.data) {
+                          setValueUpdateProfile("fullName", detailUserData.data.fullName || "");
+                          setValueUpdateProfile("location", detailUserData.data.location || "");
+                          setValueUpdateProfile("username", detailUserData.data.username || "");
+                          setValueUpdateProfile("phoneNumber", detailUserData.data.phoneNumber || "");
+                        }
                       setIsEditProfileModalOpen(true);
                     }}
                     variant="outline"
@@ -748,14 +748,14 @@ export default function CustomersPage() {
                   Chỉnh sửa thông tin người dùng
                 </h2>
 
-                {detailUserData?.data?.result && (
+                {detailUserData?.data && (
                   <div className="mb-4 p-3 bg-muted rounded-lg text-sm">
                     <p className="text-muted-foreground mb-2"><strong>Thông tin hiện tại:</strong></p>
                     <div className="space-y-1 text-xs">
-                      <p><strong>Họ tên:</strong> {detailUserData.data.result.fullname}</p>
-                      <p><strong>Username:</strong> {detailUserData.data.result.username || "Chưa có"}</p>
-                      <p><strong>SĐT:</strong> {detailUserData.data.result.phoneNumber || "Chưa có"}</p>
-                      <p><strong>Địa chỉ:</strong> {detailUserData.data.result.location || "Chưa có"}</p>
+                      <p><strong>Họ tên:</strong> {detailUserData.data.fullName}</p>
+                      <p><strong>Username:</strong> {detailUserData.data.username || "Chưa có"}</p>
+                      <p><strong>SĐT:</strong> {detailUserData.data.phoneNumber || "Chưa có"}</p>
+                      <p><strong>Địa chỉ:</strong> {detailUserData.data.location || "Chưa có"}</p>
                     </div>
                   </div>
                 )}
@@ -771,13 +771,13 @@ export default function CustomersPage() {
                     </label>
                     <input
                       type="text"
-                      {...registerUpdateProfile("fullname")}
+                      {...registerUpdateProfile("fullName")}
                       placeholder="Nhập họ tên"
                       className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                     />
-                    {errorsUpdateProfile.fullname && (
+                    {errorsUpdateProfile.fullName && (
                       <p className="text-red-500 text-sm mt-1">
-                        {errorsUpdateProfile.fullname.message}
+                        {errorsUpdateProfile.fullName.message}
                       </p>
                     )}
                   </div>
