@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { formatVietnamDateTime } from "@utils/date";
+import { formatDurationMinutes } from "@utils/duration";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -72,23 +73,6 @@ function statusIcon(status: RentalStatus) {
   }
 }
 
-function formatDuration(durationMinutes?: number) {
-  if (!durationMinutes || durationMinutes <= 0) {
-    return "--";
-  }
-
-  const totalMinutes = Math.floor(durationMinutes);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours > 0 && minutes > 0) {
-    return `${hours} giờ ${minutes} phút`;
-  }
-  if (hours > 0) {
-    return `${hours} giờ`;
-  }
-  return `${minutes} phút`;
-}
-
 export function RentalStatusCard({ status, startTime, duration, totalPrice }: RentalStatusCardProps) {
   const color = statusColor(status);
 
@@ -109,7 +93,7 @@ export function RentalStatusCard({ status, startTime, duration, totalPrice }: Re
       <View style={styles.metricsRow}>
         <View style={styles.metricItem}>
           <Text style={styles.metricLabel}>Thời lượng</Text>
-          <Text style={styles.metricValue}>{formatDuration(duration)}</Text>
+          <Text style={styles.metricValue}>{formatDurationMinutes(duration)}</Text>
         </View>
         <View style={styles.metricDivider} />
         <View style={styles.metricItem}>

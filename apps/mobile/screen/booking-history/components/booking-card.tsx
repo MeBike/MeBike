@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { formatVietnamDateTime } from "@utils/date";
+import { formatDurationMinutes } from "@utils/duration";
 import { formatSupportCode } from "@utils/id";
 import { memo, useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -168,7 +169,9 @@ const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProp
         </View>
         <View style={styles.metaItem}>
           <Ionicons name="time-outline" size={16} color="#9CA3AF" />
-          <Text style={styles.metaText}>{formatDuration(booking.duration, Boolean(booking.endTime))}</Text>
+          <Text style={styles.metaText}>
+            {formatDurationMinutes(booking.duration, { hasEnded: Boolean(booking.endTime) })}
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -208,24 +211,6 @@ function getStatusStyle(status: RentalStatus) {
         textColor: "#4B5563",
       };
   }
-}
-
-function formatDuration(duration: number, hasEnded: boolean) {
-  if (!duration || duration <= 0) {
-    return hasEnded ? "0 phút" : "Chưa kết thúc";
-  }
-
-  const totalMinutes = Math.floor(duration);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  if (hours > 0 && minutes > 0) {
-    return `${hours} giờ ${minutes} phút`;
-  }
-  if (hours > 0) {
-    return `${hours} giờ`;
-  }
-  return `${minutes} phút`;
 }
 
 export default BookingCard;

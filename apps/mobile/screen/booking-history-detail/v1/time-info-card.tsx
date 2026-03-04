@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { formatVietnamDateTime } from "@utils/date";
+import { formatDurationMinutes } from "@utils/duration";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -29,22 +30,6 @@ function formatTime(dateString: string) {
   const full = formatVietnamDateTime(dateString, { includeSeconds: true });
   const parts = full.split(" ");
   return parts.length > 1 ? parts.slice(1).join(" ") : full;
-}
-
-function formatDuration(durationMinutes: number, hasEnded: boolean) {
-  if (!durationMinutes || durationMinutes <= 0) {
-    return hasEnded ? "0 phút" : "Chưa kết thúc";
-  }
-  const totalMinutes = Math.floor(durationMinutes);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours > 0 && minutes > 0) {
-    return `${hours} giờ ${minutes} phút`;
-  }
-  if (hours > 0) {
-    return `${hours} giờ`;
-  }
-  return `${minutes} phút`;
 }
 
 function TimelineItem({
@@ -117,7 +102,7 @@ export function RentalTimeInfoCard({ rental }: { rental: RentalTimeInfo }) {
         <Text style={styles.durationText}>
           Tổng thời gian:
           {" "}
-          {formatDuration(rental.duration, Boolean(rental.endTime))}
+          {formatDurationMinutes(rental.duration, { hasEnded: Boolean(rental.endTime) })}
         </Text>
       </View>
     </InfoCard>

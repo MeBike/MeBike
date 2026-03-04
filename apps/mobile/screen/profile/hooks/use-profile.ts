@@ -17,7 +17,7 @@ export function useProfile() {
   const hasToken = Boolean(user?.id);
   const [profile, setProfile] = useState<UserDetail>(() => ({
     id: user?.id ?? "",
-    fullname: user?.fullname ?? "",
+    fullName: user?.fullName ?? "",
     email: user?.email ?? "",
     verify: user?.verify ?? "UNVERIFIED",
     location: user?.location ?? null,
@@ -64,7 +64,7 @@ export function useProfile() {
     if (user) {
       setProfile({
         id: user.id ?? "",
-        fullname: user.fullname ?? "",
+        fullName: user.fullName ?? "",
         email: user.email ?? "",
         verify: user.verify ?? "UNVERIFIED",
         location: user.location ?? null,
@@ -138,11 +138,11 @@ export function useProfile() {
     }
 
     try {
-      const result = await resendOtpMutation.mutateAsync({
-        userId: profile.id,
-        email: profile.email,
-        fullName: profile.fullname,
-      });
+        const result = await resendOtpMutation.mutateAsync({
+          userId: profile.id,
+          email: profile.email,
+          fullName: profile.fullName,
+        });
       if (!result.ok) {
         Alert.alert("Lỗi", authErrorMessage(result.error));
         return;

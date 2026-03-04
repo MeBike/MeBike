@@ -19,7 +19,7 @@ export function RentalUserInfoCard({
 
   return (
     <InfoCard title="Thông tin người dùng" icon="person">
-      <InfoRow label="Họ tên:" value={currentUser?.fullname ?? ""} />
+      <InfoRow label="Họ tên:" value={currentUser?.fullName ?? ""} />
       <InfoRow label="Email:" value={currentUser?.email ?? ""} />
       <InfoRow label="Số điện thoại:" value={currentUser?.phoneNumber ?? ""} />
       <InfoRow label="Mã người dùng:" value={userCode} />

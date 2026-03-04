@@ -28,7 +28,7 @@ function buildUpdatePatch(params: {
   const { user, form, avatar } = params;
   const patch: Partial<UpdateMeRequest> = {};
 
-  if (form.fullname !== (user.fullname ?? "")) {
+  if (form.fullname !== (user.fullName ?? "")) {
     patch.fullname = form.fullname;
   }
 
@@ -77,11 +77,11 @@ export function useUpdateProfile() {
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const defaultValues = useMemo<UpdateProfileFormValues>(() => ({
-    fullname: user?.fullname ?? "",
+    fullname: user?.fullName ?? "",
     username: user?.username ?? "",
     phoneNumber: user?.phoneNumber ?? "",
     location: user?.location ?? "",
-  }), [user?.fullname, user?.location, user?.phoneNumber, user?.username]);
+  }), [user?.fullName, user?.location, user?.phoneNumber, user?.username]);
 
   const {
     control,
