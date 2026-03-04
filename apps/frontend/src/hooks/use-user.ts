@@ -19,7 +19,6 @@ import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileU
 import { QUERY_KEYS } from "@/constants/queryKey";
 import getAxiosErrorCodeMessage from "@/utils/error-util";
 import { getErrorMessageFromCustomerCode } from "@/utils/map-message";
-import getErrorMessage from "@/utils/error-message";
 export const useUserActions = ({
   hasToken,
   verify,
@@ -46,8 +45,8 @@ export const useUserActions = ({
     isLoading: isLoadingDetailUser,
   } = useGetDetailUserQuery(id || "");
   const { data, refetch, isLoading, isFetching } = useGetAllUserQuery({
-    page,
-    limit,
+    page: page,
+    pageSize: limit,
     role: role || "",
     verify: verify || "",
   });
@@ -187,7 +186,10 @@ export const useUserActions = ({
         return;
       }
       try {
-        const result = await useResetPassword.mutateAsync({id: id || "", data: userData});
+        const result = await useResetPassword.mutateAsync({
+          id: id || "",
+          data: userData,
+        });
         if (result.status === 200) {
           toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
         }
@@ -201,7 +203,7 @@ export const useUserActions = ({
         throw error;
       }
     },
-    [hasToken, router,useResetPassword,id],
+    [hasToken, router, useResetPassword, id],
   );
   const updateProfileUser = useCallback(
     async (userData: UserProfile) => {
@@ -210,9 +212,14 @@ export const useUserActions = ({
         return;
       }
       try {
-        const result = await useUpdateProfile.mutateAsync({id: id || "", data: userData});
+        const result = await useUpdateProfile.mutateAsync({
+          id: id || "",
+          data: userData,
+        });
         if (result.status === 200) {
-          toast.success(result.data?.message || "Cập nhật thông tin thành công");
+          toast.success(
+            result.data?.message || "Cập nhật thông tin thành công",
+          );
         }
         queryClient.invalidateQueries({
           queryKey: ["user", "all"],

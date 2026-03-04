@@ -48,7 +48,7 @@ export default function CustomersPage() {
   const [verifyFilter, setVerifyFilter] = useState<VerifyStatus | "all">("all");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit,] = useState<number>(10);
+  const [limit,] = useState<number>(5);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
