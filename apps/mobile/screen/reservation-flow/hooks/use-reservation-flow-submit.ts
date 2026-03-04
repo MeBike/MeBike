@@ -6,6 +6,12 @@ import { Alert } from "react-native";
 import type { ReservationFlowNavigationProp } from "@/types/navigation";
 import type { Subscription } from "@/types/subscription-types";
 
+function getMinimumReservationDate() {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  return now;
+}
+
 type UseReservationFlowSubmitParams = {
   bikeId?: string;
   stationId: string;
@@ -62,6 +68,12 @@ export function useReservationFlowSubmit({
 
     if (mode === "GÓI THÁNG" && !selectedSubscription?.id) {
       Alert.alert("Thiếu gói tháng", "Vui lòng chọn một gói tháng đang hoạt động.");
+      return;
+    }
+
+    const minimumDate = getMinimumReservationDate();
+    if (scheduledAt.getTime() < minimumDate.getTime()) {
+      Alert.alert("Thời gian không hợp lệ", "Vui lòng chọn thời gian hiện tại hoặc trong tương lai.");
       return;
     }
 

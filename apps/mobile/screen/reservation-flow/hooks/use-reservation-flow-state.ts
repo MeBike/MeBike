@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 
 import type { Subscription } from "@/types/subscription-types";
 import type { ReservationMode } from "@components/reservation-flow/ReservationModeToggle";
@@ -28,6 +28,12 @@ function formatVietnamTime(date: Date) {
   catch {
     return date.toISOString();
   }
+}
+
+function getMinimumReservationDate() {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  return now;
 }
 
 type UseReservationFlowStateParams = {
@@ -114,17 +120,20 @@ export function useReservationFlowState({
   );
 
   const handleOpenTimePicker = useCallback(() => {
+    const minimumDate = getMinimumReservationDate();
+    const pickerValue = scheduledAt.getTime() < minimumDate.getTime() ? minimumDate : scheduledAt;
+
     if (Platform.OS === "android") {
       DateTimePickerAndroid.open({
         mode: "date",
-        value: scheduledAt,
-        minimumDate: new Date(),
+        value: pickerValue,
+        minimumDate,
         onChange: (event, date) => {
           if (event.type !== "set" || !date)
             return;
           DateTimePickerAndroid.open({
             mode: "time",
-            value: scheduledAt,
+            value: pickerValue,
             is24Hour: true,
             onChange: (timeEvent, timeValue) => {
               if (timeEvent.type !== "set" || !timeValue)
@@ -136,6 +145,13 @@ export function useReservationFlowState({
                 timeValue.getHours(),
                 timeValue.getMinutes(),
               );
+
+              if (finalDate.getTime() < minimumDate.getTime()) {
+                Alert.alert("Thời gian không hợp lệ", "Vui lòng chọn thời gian hiện tại hoặc trong tương lai.");
+                setScheduledAt(minimumDate);
+                return;
+              }
+
               setScheduledAt(finalDate);
             },
           });
@@ -144,11 +160,20 @@ export function useReservationFlowState({
       return;
     }
 
-    setIosPickerValue(scheduledAt);
+    setIosPickerValue(pickerValue);
     setIosPickerVisible(true);
   }, [scheduledAt]);
 
   const handleConfirmIOSPicker = useCallback(() => {
+    const minimumDate = getMinimumReservationDate();
+    if (iosPickerValue.getTime() < minimumDate.getTime()) {
+      Alert.alert("Thời gian không hợp lệ", "Vui lòng chọn thời gian hiện tại hoặc trong tương lai.");
+      setScheduledAt(minimumDate);
+      setIosPickerValue(minimumDate);
+      setIosPickerVisible(false);
+      return;
+    }
+
     setScheduledAt(iosPickerValue);
     setIosPickerVisible(false);
   }, [iosPickerValue]);
@@ -162,6 +187,7 @@ export function useReservationFlowState({
     selectedSubscriptionId,
     setSelectedSubscriptionId,
     scheduledAt,
+    minimumScheduledAt: getMinimumReservationDate(),
     formatVietnamTime,
     handleOpenTimePicker,
     iosPickerVisible,

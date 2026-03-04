@@ -40,6 +40,7 @@ export function useReservationFlow() {
     selectedSubscriptionId: state.selectedSubscriptionId,
     setSelectedSubscriptionId: state.setSelectedSubscriptionId,
     scheduledAt: state.scheduledAt,
+    minimumScheduledAt: state.minimumScheduledAt,
     formatVietnamTime: state.formatVietnamTime,
     handleOpenTimePicker: state.handleOpenTimePicker,
     iosPickerVisible: state.iosPickerVisible,

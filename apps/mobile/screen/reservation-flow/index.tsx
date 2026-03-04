@@ -58,6 +58,7 @@ export default function ReservationFlowScreen() {
     selectedSubscriptionId,
     setSelectedSubscriptionId,
     scheduledAt,
+    minimumScheduledAt,
     formatVietnamTime,
     handleOpenTimePicker,
     iosPickerVisible,
@@ -140,7 +141,7 @@ export default function ReservationFlowScreen() {
         <IosDateTimeModal
           visible={iosPickerVisible}
           value={iosPickerValue}
-          minimumDate={new Date()}
+          minimumDate={minimumScheduledAt}
           onClose={() => setIosPickerVisible(false)}
           onChange={setIosPickerValue}
           onConfirm={handleConfirmIOSPicker}

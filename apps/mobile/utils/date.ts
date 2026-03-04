@@ -2,6 +2,8 @@ type FormatOptions = {
   includeSeconds?: boolean;
 };
 
+const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
+
 export function formatVietnamDateTime(
   dateString: string,
   options: FormatOptions = {},
@@ -9,26 +11,34 @@ export function formatVietnamDateTime(
   if (!dateString)
     return "--";
 
-  const [datePart, rawTimePart] = dateString.split("T");
-  if (!datePart || !rawTimePart)
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime()))
     return dateString;
 
-  const [year, month, day] = datePart.split("-");
-  const normalizedDate
-    = day && month && year ? `${day}/${month}/${year}` : datePart;
-  const timeWithoutZone = rawTimePart
-    .replace(/Z$/i, "")
-    .replace(/[+-]\d{2}:?\d{2}$/, "");
-  const [timeWithoutMs] = timeWithoutZone.split(".");
-
-  if (!timeWithoutMs)
-    return normalizedDate;
-
-  const [hour = "00", minute = "00", second = "00"] = timeWithoutMs.split(":");
   const includeSeconds = options.includeSeconds ?? false;
-  const formattedTime = includeSeconds
-    ? `${hour}:${minute}:${second}`
-    : `${hour}:${minute}`;
 
-  return `${normalizedDate} ${formattedTime}`;
+  const formatter = new Intl.DateTimeFormat("vi-VN", {
+    timeZone: VIETNAM_TIME_ZONE,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: includeSeconds ? "2-digit" : undefined,
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(date);
+  const day = parts.find(part => part.type === "day")?.value ?? "--";
+  const month = parts.find(part => part.type === "month")?.value ?? "--";
+  const year = parts.find(part => part.type === "year")?.value ?? "----";
+  const hour = parts.find(part => part.type === "hour")?.value ?? "00";
+  const minute = parts.find(part => part.type === "minute")?.value ?? "00";
+  const second = includeSeconds
+    ? (parts.find(part => part.type === "second")?.value ?? "00")
+    : undefined;
+
+  const formattedTime = second ? `${hour}:${minute}:${second}` : `${hour}:${minute}`;
+
+  return `${day}/${month}/${year} ${formattedTime}`;
 }

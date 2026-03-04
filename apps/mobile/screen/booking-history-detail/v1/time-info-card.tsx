@@ -12,7 +12,23 @@ type RentalTimeInfo = {
 };
 
 function formatDate(dateString: string) {
-  return formatVietnamDateTime(dateString, { includeSeconds: true });
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) {
+    return "--";
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatTime(dateString: string) {
+  const full = formatVietnamDateTime(dateString, { includeSeconds: true });
+  const parts = full.split(" ");
+  return parts.length > 1 ? parts.slice(1).join(" ") : full;
 }
 
 function formatDuration(durationMinutes: number, hasEnded: boolean) {
@@ -42,7 +58,7 @@ export function RentalTimeInfoCard({ rental }: { rental: RentalTimeInfo }) {
           <View style={styles.timeInfo}>
             <Text style={styles.timeLabel}>Bắt đầu</Text>
             <Text style={styles.timeDate}>{formatDate(rental.startTime)}</Text>
-            <Text style={styles.timeValue}>{formatDate(rental.startTime)}</Text>
+            <Text style={styles.timeValue}>{formatTime(rental.startTime)}</Text>
           </View>
         </View>
 
@@ -54,7 +70,7 @@ export function RentalTimeInfoCard({ rental }: { rental: RentalTimeInfo }) {
             <View style={styles.timeInfo}>
               <Text style={styles.timeLabel}>Kết thúc</Text>
               <Text style={styles.timeDate}>{formatDate(rental.endTime)}</Text>
-              <Text style={styles.timeValue}>{formatDate(rental.endTime)}</Text>
+              <Text style={styles.timeValue}>{formatTime(rental.endTime)}</Text>
             </View>
           </View>
         )}
