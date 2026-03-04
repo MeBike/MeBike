@@ -5,49 +5,13 @@ import { UserProfile } from "@/schemas/userSchema";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
 import { ApiResponse } from "@/types";
 import {ENDPOINT} from "@/constants/end-point";
+import { GetActiveUserStatisticsResponse , GetNewRegistrationStats , GetUserStatisticsResponse  , GetUserDashboardStatsResponse , GetTopRentersResponse} from "@/types";
 interface DetailUserResponse<T> {
   message: string;
   result: T;
 }
-export interface UserStatistics {
-  total_users: number;
-  total_verified: number;
-  total_unverified: number;
-  total_banned: number;
-}
 export interface ResetPasswordResponse {
   message: string;
-}
-export interface GetActiveStatisticsUser {
-  active_users_count: number;
-  date: string;
-}
-export interface TopRenterUser {
-  total_rentals: number;
-  user: {
-    _id: string;
-    fullname: string;
-    email: string;
-    phone_number: string;
-    avatar: string;
-    location: string;
-  };
-}
-interface GetNewRegistrationStats {
-  newUsersThisMonth: number;
-  newUsersLastMonth: number;
-  percentageChange: number;
-}
-export interface DashboardUserStats {
-  totalCustomers: number;
-  activeCustomers: number;
-  newCustomersThisMonth: number;
-  vipCustomer: {
-    fullname: string;
-    totalDuration: number;
-  };
-  totalRevenue: number;
-  averageSpending: number;
 }
 export const userService = {
   getAllUsers: async ({
@@ -111,10 +75,10 @@ export const userService = {
     return response;
   },
   userStatistics: async (): Promise<
-    AxiosResponse<DetailUserResponse<UserStatistics>>
+    AxiosResponse<GetUserStatisticsResponse>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<UserStatistics>
+      GetUserStatisticsResponse
     >(ENDPOINT.USER.STATS_USER);
     return response;
   },
@@ -135,10 +99,10 @@ export const userService = {
   //   return response;
   // },
   getTopRenter: async (): Promise<
-    AxiosResponse<DetailUserResponse<ApiResponse<TopRenterUser[]>>>
+    AxiosResponse<GetTopRentersResponse>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<ApiResponse<TopRenterUser[]>>
+      GetTopRentersResponse
     >(ENDPOINT.USER.STATS_TOP_RENTER);
     return response;
   },
@@ -160,18 +124,18 @@ export const userService = {
     return response;
   },
   getActiveUser: async (): Promise<
-    AxiosResponse<DetailUserResponse<GetActiveStatisticsUser[]>>
+    AxiosResponse<DetailUserResponse<GetActiveUserStatisticsResponse[]>>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<GetActiveStatisticsUser[]>
+      DetailUserResponse<GetActiveUserStatisticsResponse[]>
     >(ENDPOINT.USER.STATS_ACTIVE_USER);
     return response;
   },
   getDashboardUserStats: async (): Promise<
-    AxiosResponse<DetailUserResponse<DashboardUserStats>>
+    AxiosResponse<GetUserDashboardStatsResponse>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<DashboardUserStats>
+      GetUserDashboardStatsResponse
     >(ENDPOINT.USER.DASHBOARD_USER_STATS);
     return response;
   },
