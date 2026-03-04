@@ -109,7 +109,7 @@ describe("manage-users route ordering e2e", () => {
     );
   }
 
-  it("GET /v1/users/manage-users/stats does not get swallowed by {userId}", async () => {
+  it("get /v1/users/manage-users/stats does not get swallowed by {userId}", async () => {
     const token = makeAccessToken(ADMIN_USER_ID);
 
     const response = await app.request("http://test/v1/users/manage-users/stats", {
@@ -125,7 +125,7 @@ describe("manage-users route ordering e2e", () => {
     expect(body.error).toBeUndefined();
   });
 
-  it("GET /v1/users/manage-users/dashboard-stats does not get swallowed by {userId}", async () => {
+  it("get /v1/users/manage-users/dashboard-stats does not get swallowed by {userId}", async () => {
     const token = makeAccessToken(ADMIN_USER_ID);
 
     const response = await app.request("http://test/v1/users/manage-users/dashboard-stats", {
@@ -142,7 +142,7 @@ describe("manage-users route ordering e2e", () => {
     expect(body.error).toBeUndefined();
   });
 
-  it("GET /v1/users/manage-users/{userId} still resolves detail route", async () => {
+  it("get /v1/users/manage-users/{userId} still resolves detail route", async () => {
     const token = makeAccessToken(ADMIN_USER_ID);
 
     const response = await app.request(`http://test/v1/users/manage-users/${ADMIN_USER_ID}`, {
