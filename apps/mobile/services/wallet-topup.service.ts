@@ -5,13 +5,14 @@ import { kyClient } from "@lib/ky-client";
 import { err, ok } from "@lib/result";
 import { routePath, ServerRoutes } from "@lib/server-routes";
 import { ServerContracts } from "@mebike/shared";
+import { StatusCodes } from "http-status-codes";
+
 import {
   asNetworkError as asSharedNetworkError,
   isUnauthorizedStatus,
   parseErrorFromSchema,
   parseUnauthorizedError,
-} from "@services/shared/service-error";
-import { StatusCodes } from "http-status-codes";
+} from "./shared/service-error";
 
 export type WalletTopupErrorCode = string;
 

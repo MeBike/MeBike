@@ -26,6 +26,7 @@ export function useProfile() {
     avatar: user?.avatar ?? null,
     role: user?.role ?? "USER",
     nfcCardUid: user?.nfcCardUid ?? null,
+    createdAt: user?.createdAt ?? "",
     updatedAt: user?.updatedAt ?? "",
   }));
   const [isVerifyEmailModalOpen, setIsVerifyEmailModalOpen] = useState(false);
@@ -72,6 +73,7 @@ export function useProfile() {
         avatar: user.avatar ?? null,
         role: user.role ?? "USER",
         nfcCardUid: user.nfcCardUid ?? null,
+        createdAt: user.createdAt ?? "",
         updatedAt: user.updatedAt ?? "",
       });
     }

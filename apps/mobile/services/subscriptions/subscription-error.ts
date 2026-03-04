@@ -8,7 +8,7 @@ import {
   isUnauthorizedStatus,
   parseErrorFromSchema,
   parseUnauthorizedError,
-} from "@services/shared/service-error";
+} from "../shared/service-error";
 
 export type SubscriptionErrorCode = string;
 

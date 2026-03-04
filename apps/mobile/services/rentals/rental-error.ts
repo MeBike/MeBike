@@ -2,12 +2,13 @@ import type { Result } from "@lib/result";
 
 import { readJson } from "@lib/api-decode";
 import { ServerContracts } from "@mebike/shared";
+
 import {
   asNetworkError as asSharedNetworkError,
   isUnauthorizedStatus,
   parseErrorFromSchema,
   parseUnauthorizedError,
-} from "@services/shared/service-error";
+} from "../shared/service-error";
 
 export type RentalErrorCode = string;
 
