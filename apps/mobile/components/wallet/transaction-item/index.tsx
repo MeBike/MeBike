@@ -9,7 +9,6 @@ import {
   formatTransactionType,
   getTransactionColor,
   getTransactionIcon,
-  truncateId,
 } from "../../../utils/wallet/formatters";
 import { styles } from "./styles";
 
@@ -17,7 +16,7 @@ export type TransactionType = "transaction" | "withdrawal" | "refund";
 
 type BaseItem = {
   id: string;
-  amount: string;
+  amount: string | number;
   createdAt: string;
   status: string;
 };
@@ -32,6 +31,8 @@ type TransactionItemProps = {
 };
 
 export function TransactionItem({ type, item, onPress }: TransactionItemProps) {
+  const rawStatus = (item.status || "").toUpperCase();
+
   const getIcon = () => {
     if (type === "withdrawal")
       return "arrow-up-circle";
@@ -44,34 +45,24 @@ export function TransactionItem({ type, item, onPress }: TransactionItemProps) {
     if (type === "withdrawal")
       return "#F59E0B";
     if (type === "refund")
-      return "#8B5CF6";
+      return "#10B981";
     return getTransactionColor(item.type || "");
   };
 
   const getDescription = () => {
-    const description = (item as any).description;
-    if (description && typeof description === "string") {
-      //  1: "bike_id:" or "bike id:" or "bikeid:"
-      let bikeIdMatch = description.match(/bike[_\s]?id[:\s]*([a-f0-9]{24})/i);
-      if (bikeIdMatch) {
-        const bikeId = bikeIdMatch[1];
-        return description.replace(bikeId, truncateId(bikeId));
-      }
-
-      //  2: end of description (e.g., "cho xe 671f3c2e8a4b5c6d7e8f9a0b") // format kieu khac la bay tieu
-      bikeIdMatch = description.match(/([a-f0-9]{24})$/i);
-      if (bikeIdMatch) {
-        const bikeId = bikeIdMatch[1];
-        return description.replace(bikeId, truncateId(bikeId));
-      }
-
-      bikeIdMatch = description.match(/([a-f0-9]{24})/i);
-      if (bikeIdMatch) {
-        const bikeId = bikeIdMatch[1];
-        return description.replace(bikeId, truncateId(bikeId));
-      }
+    const txType = (item.type || "").toUpperCase();
+    switch (txType) {
+      case "DEPOSIT":
+        return "Nạp tiền";
+      case "DEBIT":
+        return "Thanh toán";
+      case "REFUND":
+        return "Hoàn tiền";
+      case "ADJUSTMENT":
+        return "Điều chỉnh";
+      default:
+        return formatTransactionType(item.type || "") || "Giao dịch ví";
     }
-    return description;
   };
 
   const getAmount = () => {
@@ -91,14 +82,29 @@ export function TransactionItem({ type, item, onPress }: TransactionItemProps) {
       <View style={styles.left}>
         {IconComponent}
         <View style={styles.info}>
-          <Text style={styles.description}>{getDescription()}</Text>
-          <Text style={styles.date}>
-            {formatDate(item.createdAt)}
-            {" "}
-            •
-            {" "}
-            <Text style={{ fontWeight: "bold" }}>{formatTransactionStatus(item.status)}</Text>
+          <Text style={styles.description} numberOfLines={1} ellipsizeMode="tail">
+            {getDescription()}
           </Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
+            {rawStatus !== "SUCCESS" && (
+              <>
+                <Text style={styles.metaDivider}>•</Text>
+                <Text
+                  style={[
+                    styles.statusText,
+                    rawStatus === "FAILED"
+                      ? styles.statusTextFailed
+                      : rawStatus === "PENDING"
+                        ? styles.statusTextPending
+                        : null,
+                  ]}
+                >
+                  {formatTransactionStatus(item.status)}
+                </Text>
+              </>
+            )}
+          </View>
         </View>
       </View>
       <View style={styles.right}>

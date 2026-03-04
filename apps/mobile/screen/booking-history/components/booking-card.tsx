@@ -180,7 +180,7 @@ function getStatusColor(status: RentalStatus) {
     case "CANCELLED":
       return "#F44336";
     case "RESERVED":
-      return "#7C3AED";
+      return "#FFB020";
     default:
       return "#999";
   }
