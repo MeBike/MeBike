@@ -2,9 +2,8 @@
 
 import { Card } from "@/components/ui/card";
 import { Users, UserCheck, TrendingUp, DollarSign, Award } from "lucide-react";
-import { DashboardUserStats } from "@/services/user.service";
-
-export function CustomerStats({ stats }: { stats: DashboardUserStats })  {
+import type { GetUserDashboardStatsResponse } from "@/types";
+export function CustomerStats({ stats }: { stats: GetUserDashboardStatsResponse })  {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
@@ -54,7 +53,7 @@ export function CustomerStats({ stats }: { stats: DashboardUserStats })  {
           <div>
             <p className="text-sm text-muted-foreground">Khách VIP</p>
             <p className="text-3xl font-bold text-yellow-500 mt-1">
-              {stats.vipCustomer ? stats.vipCustomer.fullname : "N/A"}
+              {stats.vipCustomer ? stats.vipCustomer.fullname : "Chưa có"}
             </p>
           </div>
           <div className="p-3 bg-yellow-500/10 rounded-lg">

@@ -63,6 +63,7 @@ export interface GetUserDashboardStatsResponse {
     fullname: string;
     totalDuration: number;
   };
+  averageSpending : number;
   totalRevenue: number;
 }
 export interface GetTopRentersResponse {

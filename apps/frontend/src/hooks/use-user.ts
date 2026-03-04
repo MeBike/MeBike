@@ -147,7 +147,10 @@ export const useUserActions = ({
             queryKey: ["user", "all"],
           });
           queryClient.invalidateQueries({
-            queryKey: QUERY_KEYS.USER.STATISTICS,
+            queryKey: ["user", "statistics"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["user", "dashboard-stats"],
           });
           toast.success("Tạo người dùng thành công");
         }

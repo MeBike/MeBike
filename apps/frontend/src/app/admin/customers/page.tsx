@@ -136,7 +136,7 @@ export default function CustomersPage() {
   });
 
   const handleResetPassword = handleSubmitResetPassword((data) => {
-    resetPassword({new_password: data.password, confirm_new_password: data.confirm_password});
+    resetPassword({newPassword: data.password, confirmNewPassword: data.confirm_password});
     console.log("[v0] Reset password:", data);
     setIsResetPasswordModalOpen(false);
     resetResetPassword();
