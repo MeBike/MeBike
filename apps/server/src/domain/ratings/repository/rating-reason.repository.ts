@@ -9,6 +9,10 @@ import type { RatingReasonRow } from "../models";
 import { RatingRepositoryError } from "../domain-errors";
 
 export type RatingReasonRepo = {
+  readonly findMany: (filters?: {
+    readonly type?: RatingReasonRow["type"];
+    readonly appliesTo?: RatingReasonRow["appliesTo"];
+  }) => Effect.Effect<readonly RatingReasonRow[], RatingRepositoryError>;
   readonly findManyByIds: (
     ids: readonly string[],
   ) => Effect.Effect<readonly RatingReasonRow[], RatingRepositoryError>;
@@ -21,6 +25,30 @@ export class RatingReasonRepository extends Context.Tag("RatingReasonRepository"
 
 export function makeRatingReasonRepository(client: PrismaClient): RatingReasonRepo {
   return {
+    findMany: filters =>
+      Effect.tryPromise({
+        try: () =>
+          client.ratingReason.findMany({
+            where: {
+              ...(filters?.type ? { type: filters.type } : {}),
+              ...(filters?.appliesTo ? { appliesTo: filters.appliesTo } : {}),
+            },
+            orderBy: {
+              messages: "asc",
+            },
+            select: {
+              id: true,
+              type: true,
+              appliesTo: true,
+              messages: true,
+            },
+          }),
+        catch: err =>
+          new RatingRepositoryError({
+            operation: "ratingReason.findMany",
+            cause: err,
+          }),
+      }),
     findManyByIds: ids =>
       Effect.tryPromise({
         try: () =>

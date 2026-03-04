@@ -252,8 +252,7 @@ const RatingReposLive = Layer.mergeAll(
 );
 
 const RatingServiceLayer = RatingServiceLive.pipe(
-  Layer.provide(RatingRepositoryLive),
-  Layer.provide(PrismaLive),
+  Layer.provide(RatingReposLive),
 );
 
 export const RatingDepsLive = Layer.mergeAll(

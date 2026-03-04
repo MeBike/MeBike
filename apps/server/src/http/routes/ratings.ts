@@ -6,5 +6,6 @@ export function registerRatingRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   const ratings = serverRoutes.ratings;
 
   app.openapi(ratings.create, RatingMeController.create);
+  app.openapi(ratings.getReasons, RatingMeController.getReasons);
   app.openapi(ratings.getByRental, RatingMeController.getByRental);
 }

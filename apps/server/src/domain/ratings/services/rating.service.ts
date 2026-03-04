@@ -3,8 +3,9 @@ import type { Option } from "effect";
 import { Context, Effect, Layer } from "effect";
 
 import type { RatingAlreadyExists, RatingRepositoryError } from "../domain-errors";
-import type { CreateRatingInput, RatingRow } from "../models";
+import type { CreateRatingInput, RatingReasonRow, RatingRow } from "../models";
 
+import { RatingReasonRepository } from "../repository/rating-reason.repository";
 import { RatingRepository } from "../repository/rating.repository";
 
 export type RatingService = {
@@ -20,6 +21,12 @@ export type RatingService = {
     Option.Option<RatingRow>,
     RatingRepositoryError
   >;
+  getReasons: (
+    filters?: {
+      readonly type?: RatingReasonRow["type"];
+      readonly appliesTo?: RatingReasonRow["appliesTo"];
+    },
+  ) => Effect.Effect<readonly RatingReasonRow[]>;
 };
 
 export class RatingServiceTag extends Context.Tag("RatingService")<
@@ -31,6 +38,7 @@ export const RatingServiceLive = Layer.effect(
   RatingServiceTag,
   Effect.gen(function* () {
     const repo = yield* RatingRepository;
+    const reasonRepo = yield* RatingReasonRepository;
 
     const service: RatingService = {
       create: input =>
@@ -38,6 +46,9 @@ export const RatingServiceLive = Layer.effect(
 
       getByRentalId: rentalId =>
         repo.findByRentalId(rentalId),
+
+      getReasons: filters =>
+        reasonRepo.findMany(filters).pipe(Effect.orDie),
     };
 
     return service;

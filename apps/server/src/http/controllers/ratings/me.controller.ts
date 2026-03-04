@@ -103,7 +103,27 @@ const getByRental: RouteHandler<RatingsRoutes["getByRental"]> = async (c) => {
   return c.json<RatingsContracts.RatingResponse, 200>(toRatingDetail(result.value), 200);
 };
 
+const getReasons: RouteHandler<RatingsRoutes["getReasons"]> = async (c) => {
+  const query = c.req.valid("query");
+
+  const eff = withLoggedCause(
+    Effect.flatMap(RatingServiceTag, svc => svc.getReasons({
+      type: query.type,
+      appliesTo: query.appliesTo,
+    })),
+    "GET /v1/ratings/reasons",
+  );
+
+  const reasons = await c.var.runPromise(eff);
+
+  return c.json<RatingsContracts.RatingReasonsResponse, 200>(
+    reasons.map(reason => ({ ...reason })),
+    200,
+  );
+};
+
 export const RatingMeController = {
   create,
+  getReasons,
   getByRental,
 } as const;
