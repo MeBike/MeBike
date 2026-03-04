@@ -100,6 +100,20 @@ export const OptionalTrimmedNullableStringSchema = z.preprocess(
   z.string().optional().nullable(),
 );
 
+export const PhoneNumberSchema = z
+  .string()
+  .regex(/^\d{10}$/, { message: "phoneNumber must be 10 digits" });
+
+export const OptionalPhoneNumberNullableSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string")
+      return value;
+    const trimmed = value.trim();
+    return trimmed === "" ? null : trimmed;
+  },
+  PhoneNumberSchema.optional().nullable(),
+);
+
 export const PaginationSchema = z
   .object({
     page: z.number().int().positive().openapi({
