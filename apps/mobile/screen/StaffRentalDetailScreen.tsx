@@ -154,7 +154,12 @@ function StaffRentalDetailScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <RentalStatusCard status={booking.status} />
+          <RentalStatusCard
+            status={booking.status}
+            startTime={booking.startTime}
+            duration={booking.duration}
+            totalPrice={booking.totalPrice}
+          />
           <AdminBikeInfoCard booking={booking} />
           <RentalTimeInfoCard rental={booking} />
           <RentalPaymentInfoCard rental={booking} />

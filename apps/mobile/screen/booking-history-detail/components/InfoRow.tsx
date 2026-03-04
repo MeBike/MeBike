@@ -19,22 +19,24 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
+    alignItems: "flex-start",
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: "#EDEFF3",
   },
   infoLabel: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "500",
   },
   infoValue: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "500",
-    color: "#333",
+    color: "#1F2937",
     textAlign: "right",
     flex: 1,
     marginLeft: 16,
+    lineHeight: 20,
   },
 });
 

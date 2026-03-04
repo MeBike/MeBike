@@ -26,7 +26,6 @@ import { RentalBookingIdCard } from "./v1/booking-id-card";
 import { RentalPaymentInfoCard } from "./v1/payment-info-card";
 import { RentalStatusCard } from "./v1/status-card";
 import { RentalTimeInfoCard } from "./v1/time-info-card";
-import { RentalUserInfoCard } from "./v1/user-info-card";
 
 type RouteParams = {
   bookingId: string;
@@ -35,11 +34,12 @@ type RouteParams = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F3F5F9",
   },
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 14,
   },
 });
 
@@ -47,7 +47,7 @@ function BookingHistoryDetail() {
   const navigation = useNavigation();
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
-  const { isAuthenticated, user } = useAuthNext();
+  const { isAuthenticated } = useAuthNext();
   const hasToken = isAuthenticated;
 
   const {
@@ -128,12 +128,16 @@ function BookingHistoryDetail() {
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
-        <RentalStatusCard status={resolvedBooking.status} />
-        <RentalBikeInfoCard rental={resolvedBooking} stationsById={stationsById} bike={bike} />
+        <RentalStatusCard
+          status={resolvedBooking.status}
+          startTime={resolvedBooking.startTime}
+          duration={resolvedBooking.duration}
+          totalPrice={resolvedBooking.totalPrice}
+        />
         <RentalTimeInfoCard rental={resolvedBooking} />
+        <RentalBikeInfoCard rental={resolvedBooking} stationsById={stationsById} bike={bike} />
         <RentalPaymentInfoCard rental={resolvedBooking} />
         <RentalBookingIdCard rentalId={resolvedBooking.id} />
-        <RentalUserInfoCard rental={resolvedBooking} currentUser={user ?? undefined} />
         <RatingSection
           booking={resolvedBooking}
           hasRated={ratingState.hasRated}

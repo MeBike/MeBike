@@ -47,91 +47,159 @@ function formatDuration(durationMinutes: number, hasEnded: boolean) {
   return `${minutes} phút`;
 }
 
+function TimelineItem({
+  isFirst,
+  isLast,
+  label,
+  date,
+  time,
+  icon,
+  iconColor,
+}: {
+  isFirst: boolean;
+  isLast: boolean;
+  label: string;
+  date: string;
+  time: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
+}) {
+  return (
+    <View style={[styles.timelineItem, isLast && styles.timelineItemLast]}>
+      <View style={styles.timelineAxis}>
+        {!isFirst ? <View style={styles.timelineLineTop} /> : <View style={styles.timelineLinePlaceholder} />}
+        <View style={[styles.timelineNode, { borderColor: iconColor }]}>
+          <Ionicons name={icon} size={14} color={iconColor} />
+        </View>
+        {!isLast ? <View style={styles.timelineLineBottom} /> : <View style={styles.timelineLinePlaceholder} />}
+      </View>
+
+      <View style={styles.timelineContent}>
+        <Text style={styles.timelineLabel}>{label}</Text>
+        <Text style={styles.timelineDate}>{date}</Text>
+        <Text style={styles.timelineTime}>{time}</Text>
+      </View>
+    </View>
+  );
+}
+
 export function RentalTimeInfoCard({ rental }: { rental: RentalTimeInfo }) {
   return (
-    <InfoCard title="Thời gian" icon="time">
-      <View style={styles.timeSection}>
-        <View style={styles.timeRow}>
-          <View style={styles.timeIcon}>
-            <Ionicons name="play-circle" size={20} color="#4CAF50" />
-          </View>
-          <View style={styles.timeInfo}>
-            <Text style={styles.timeLabel}>Bắt đầu</Text>
-            <Text style={styles.timeDate}>{formatDate(rental.startTime)}</Text>
-            <Text style={styles.timeValue}>{formatTime(rental.startTime)}</Text>
-          </View>
-        </View>
+    <InfoCard title="Hành trình" icon="git-network-outline">
+      <View style={styles.timelineWrap}>
+        <TimelineItem
+          isFirst
+          isLast={!rental.endTime}
+          label="Bắt đầu"
+          date={formatDate(rental.startTime)}
+          time={formatTime(rental.startTime)}
+          icon="play"
+          iconColor="#16A34A"
+        />
 
-        {rental.endTime && (
-          <View style={styles.timeRow}>
-            <View style={styles.timeIcon}>
-              <Ionicons name="stop-circle" size={20} color="#F44336" />
-            </View>
-            <View style={styles.timeInfo}>
-              <Text style={styles.timeLabel}>Kết thúc</Text>
-              <Text style={styles.timeDate}>{formatDate(rental.endTime)}</Text>
-              <Text style={styles.timeValue}>{formatTime(rental.endTime)}</Text>
-            </View>
-          </View>
-        )}
+        {rental.endTime
+          ? (
+              <TimelineItem
+                isFirst={false}
+                isLast
+                label="Kết thúc"
+                date={formatDate(rental.endTime)}
+                time={formatTime(rental.endTime)}
+                icon="stop"
+                iconColor="#DC2626"
+              />
+            )
+          : null}
+      </View>
 
-        <View style={styles.durationContainer}>
-          <Ionicons name="hourglass" size={16} color="#666" />
-          <Text style={styles.durationText}>
-            Thời gian thuê:
-            {" "}
-            {formatDuration(rental.duration, Boolean(rental.endTime))}
-          </Text>
-        </View>
+      <View style={styles.durationContainer}>
+        <Ionicons name="hourglass-outline" size={16} color="#64748B" />
+        <Text style={styles.durationText}>
+          Tổng thời gian:
+          {" "}
+          {formatDuration(rental.duration, Boolean(rental.endTime))}
+        </Text>
       </View>
     </InfoCard>
   );
 }
 
 const styles = StyleSheet.create({
-  timeSection: {
-    marginTop: 8,
-  },
-  timeRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 20,
-  },
-  timeIcon: {
-    marginRight: 12,
+  timelineWrap: {
     marginTop: 2,
+    marginBottom: 8,
   },
-  timeInfo: {
+  timelineItem: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    minHeight: 76,
+  },
+  timelineItemLast: {
+    minHeight: 64,
+  },
+  timelineAxis: {
+    width: 28,
+    alignItems: "center",
+  },
+  timelineLineTop: {
+    width: 1,
     flex: 1,
+    backgroundColor: "#DDE3EC",
   },
-  timeLabel: {
+  timelineLineBottom: {
+    width: 1,
+    flex: 1,
+    backgroundColor: "#DDE3EC",
+  },
+  timelineLinePlaceholder: {
+    width: 1,
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  timelineNode: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  timelineContent: {
+    flex: 1,
+    paddingLeft: 10,
+    paddingBottom: 10,
+  },
+  timelineLabel: {
     fontSize: 12,
-    color: "#666",
-    marginBottom: 4,
-  },
-  timeDate: {
-    fontSize: 14,
+    color: "#6B7280",
     fontWeight: "500",
-    color: "#333",
     marginBottom: 2,
   },
-  timeValue: {
-    fontSize: 12,
+  timelineDate: {
+    fontSize: 16,
+    color: "#1F2937",
+    fontWeight: "700",
+    marginBottom: 1,
+  },
+  timelineTime: {
+    fontSize: 14,
+    color: "#2563EB",
     fontWeight: "600",
-    color: "#0066FF",
   },
   durationContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
+    backgroundColor: "#F8FAFC",
     padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E6EAF2",
   },
   durationText: {
     fontSize: 14,
-    color: "#666",
+    color: "#475569",
     marginLeft: 8,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 });

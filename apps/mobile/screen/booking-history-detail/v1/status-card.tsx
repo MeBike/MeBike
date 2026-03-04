@@ -1,23 +1,46 @@
 import { Ionicons } from "@expo/vector-icons";
+import { formatVietnamDateTime } from "@utils/date";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import type { RentalStatus } from "@/types/rental-types";
 
+type RentalStatusCardProps = {
+  status: RentalStatus;
+  startTime?: string;
+  duration?: number;
+  totalPrice?: number;
+};
+
 function statusColor(status: RentalStatus) {
   switch (status) {
     case "COMPLETED":
-      return "#4CAF50";
+      return "#16A34A";
     case "RENTED":
-      return "#FF9800";
+      return "#B45309";
     case "CANCELLED":
-      return "#F44336";
+      return "#DC2626";
     case "RESERVED":
       return "#FFB020";
     default:
-      return "#999";
+      return "#6B7280";
   }
 }
+
+function statusSoftBackground(status: RentalStatus) {
+  switch (status) {
+    case "COMPLETED":
+      return "#ECFDF3";
+    case "RENTED":
+      return "#FFF7ED";
+    case "CANCELLED":
+      return "#FEF2F2";
+    case "RESERVED":
+      return "#EEF2FF";
+    default:
+      return "#F3F4F6";
+  }
+} 
 
 function statusText(status: RentalStatus) {
   switch (status) {
@@ -49,19 +72,52 @@ function statusIcon(status: RentalStatus) {
   }
 }
 
-export function RentalStatusCard({ status }: { status: RentalStatus }) {
+function formatDuration(durationMinutes?: number) {
+  if (!durationMinutes || durationMinutes <= 0) {
+    return "--";
+  }
+
+  const totalMinutes = Math.floor(durationMinutes);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0 && minutes > 0) {
+    return `${hours} giờ ${minutes} phút`;
+  }
+  if (hours > 0) {
+    return `${hours} giờ`;
+  }
+  return `${minutes} phút`;
+}
+
+export function RentalStatusCard({ status, startTime, duration, totalPrice }: RentalStatusCardProps) {
+  const color = statusColor(status);
+
   return (
     <View style={styles.statusCard}>
-      <View style={styles.statusHeader}>
-        <Ionicons
-          name={statusIcon(status) as any}
-          size={32}
-          color={statusColor(status)}
-        />
-        <View style={styles.statusInfo}>
-          <Text style={styles.statusTitle}>Trạng thái</Text>
-          <Text style={[styles.statusText, { color: statusColor(status) }]}>
-            {statusText(status)}
+      <View style={styles.topRow}>
+        <View style={[styles.statusPill, { backgroundColor: statusSoftBackground(status) }]}>
+          <Ionicons
+            name={statusIcon(status) as never}
+            size={18}
+            color={color}
+          />
+          <Text style={[styles.statusText, { color }]}>{statusText(status)}</Text>
+        </View>
+        <Text style={styles.dateText}>{startTime ? formatVietnamDateTime(startTime) : "--"}</Text>
+      </View>
+
+      <View style={styles.metricsRow}>
+        <View style={styles.metricItem}>
+          <Text style={styles.metricLabel}>Thời lượng</Text>
+          <Text style={styles.metricValue}>{formatDuration(duration)}</Text>
+        </View>
+        <View style={styles.metricDivider} />
+        <View style={styles.metricItem}>
+          <Text style={styles.metricLabel}>Tổng tiền</Text>
+          <Text style={styles.metricValuePrimary}>
+            {(totalPrice ?? 0).toLocaleString("vi-VN")}
+            {" "}
+            đ
           </Text>
         </View>
       </View>
@@ -71,31 +127,71 @@ export function RentalStatusCard({ status }: { status: RentalStatus }) {
 
 const styles = StyleSheet.create({
   statusCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: "#000",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#E3E8F2",
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.045,
+    shadowRadius: 6,
+    elevation: 1,
   },
-  statusHeader: {
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 14,
   },
-  statusInfo: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  statusTitle: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 4,
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
   },
   statusText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  dateText: {
+    fontSize: 12,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  metricsRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    borderTopWidth: 1,
+    borderTopColor: "#EEF2F7",
+    paddingTop: 12,
+  },
+  metricItem: {
+    flex: 1,
+    gap: 4,
+  },
+  metricDivider: {
+    width: 1,
+    backgroundColor: "#EEF2F7",
+    marginHorizontal: 12,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  metricValue: {
+    fontSize: 16,
+    color: "#1F2937",
+    fontWeight: "700",
+  },
+  metricValuePrimary: {
     fontSize: 18,
-    fontWeight: "bold",
+    color: "#1D4ED8",
+    fontWeight: "700",
   },
 });

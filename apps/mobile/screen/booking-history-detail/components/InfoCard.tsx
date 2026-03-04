@@ -1,6 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 
 type Props = {
   title: string;
@@ -8,7 +8,7 @@ type Props = {
   children: React.ReactNode;
 };
 
-const InfoCard = ({ title, icon, children }: Props) => {
+function InfoCard({ title, icon, children }: Props) {
   return (
     <View style={styles.infoCard}>
       <View style={styles.cardHeader}>
@@ -18,29 +18,31 @@ const InfoCard = ({ title, icon, children }: Props) => {
       {children}
     </View>
   );
-};
+}
 
 export const styles = StyleSheet.create({
   infoCard: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E3E8F2",
+    shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.045,
+    shadowRadius: 6,
+    elevation: 1,
   },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 12,
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1F2937",
     marginLeft: 8,
   },
 });

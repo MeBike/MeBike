@@ -7,18 +7,18 @@ type BookingHistoryHeaderProps = {
 
 const styles = StyleSheet.create({
   header: {
-    paddingVertical: 24,
+    paddingVertical: 14,
     paddingHorizontal: 16,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: 30,
+    fontWeight: "700",
     color: "#fff",
-    marginBottom: 4,
+    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 14,
-    color: "rgba(255, 255, 255, 0.9)",
+    fontSize: 16,
+    color: "rgba(255, 255, 255, 0.88)",
   },
 });
 
@@ -28,10 +28,10 @@ function BookingHistoryHeader({ topInset }: BookingHistoryHeaderProps) {
       colors={["#0066FF", "#00B4D8"]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={[styles.header, { paddingTop: topInset + 16 }]}
+      style={[styles.header, { paddingTop: topInset + 10 }]}
     >
-      <Text style={styles.title}>Lịch sử thuê xe</Text>
-      <Text style={styles.subtitle}>Xem tất cả các lần thuê xe của bạn</Text>
+      <Text style={styles.title}>Lịch sử chuyến đi</Text>
+      <Text style={styles.subtitle}>Xem lại các lần thuê gần đây của bạn</Text>
     </LinearGradient>
   );
 }

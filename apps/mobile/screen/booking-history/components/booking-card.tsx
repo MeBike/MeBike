@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { formatVietnamDateTime } from "@utils/date";
+import { formatSupportCode } from "@utils/id";
 import { memo, useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -7,197 +8,205 @@ import type { Rental, RentalStatus } from "@/types/rental-types";
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
     padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#E3E8F2",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
-  cardHeader: {
+  topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 12,
+    marginBottom: 10,
+    gap: 10,
   },
-  bikeInfo: {
+  leftWrap: {
     flexDirection: "row",
+    alignItems: "flex-start",
+    flex: 1,
+    gap: 10,
+  },
+  bikeIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#EDF4FF",
     alignItems: "center",
-    flex: 1,
-    marginRight: 12,
+    justifyContent: "center",
+    marginTop: 1,
   },
-  bikeDetails: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  bikeType: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
+  bikeName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1F2937",
     marginBottom: 2,
   },
-  location: {
-    fontSize: 13,
-    color: "#666",
+  bookingCode: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  rightWrap: {
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  priceText: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1D4ED8",
   },
   statusBadge: {
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
   statusText: {
-    color: "#fff",
     fontSize: 12,
     fontWeight: "600",
   },
-  cardDivider: {
-    height: 1,
-    backgroundColor: "#e0e0e0",
-    marginVertical: 12,
-  },
-  cardDetails: {
-    marginBottom: 12,
-  },
-  detailRow: {
+  routeRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 10,
+    gap: 8,
   },
-  detailText: {
-    marginLeft: 8,
+  routeText: {
+    flex: 1,
     fontSize: 13,
-    color: "#666",
+    color: "#374151",
+    fontWeight: "500",
   },
-  priceText: {
-    fontWeight: "600",
-    color: "#0066FF",
-    fontSize: 14,
+  divider: {
+    height: 1,
+    backgroundColor: "#EEF2F7",
+    marginBottom: 10,
   },
-  detailButton: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
+    justifyContent: "space-between",
+    gap: 10,
   },
-  detailButtonText: {
-    color: "#0066FF",
-    fontSize: 14,
-    fontWeight: "600",
-    marginRight: 4,
+  metaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+  },
+  metaText: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "500",
   },
 });
 
 type BookingCardProps = {
   booking: Rental;
+  stationNameById: Map<string, string>;
   onPress: (bookingId: string) => void;
 };
 
-const BookingCard = memo(({ booking, onPress }: BookingCardProps) => {
+const BookingCard = memo(({ booking, stationNameById, onPress }: BookingCardProps) => {
   const priceText = useMemo(() => {
     const total = booking.totalPrice ?? 0;
     return `${total.toLocaleString("vi-VN")} đ`;
   }, [booking.totalPrice]);
 
+  const routeText = useMemo(() => {
+    const startLabel = stationNameById.get(booking.startStation)
+      ?? formatSupportCode(booking.startStation);
+    const endLabel = booking.endStation
+      ? (stationNameById.get(booking.endStation) ?? formatSupportCode(booking.endStation))
+      : "Đang thuê";
+    return `${startLabel} → ${endLabel}`;
+  }, [booking.endStation, booking.startStation, stationNameById]);
+
+  const status = getStatusStyle(booking.status);
+
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.bikeInfo}>
-          <Ionicons name="bicycle" size={24} color="#0066FF" />
-          <View style={styles.bikeDetails}>
-            <Text style={styles.bikeType}>Xe đạp</Text>
-            <Text style={styles.location}>
-              {`ID: ${booking.startStation}`}
-            </Text>
+    <TouchableOpacity
+      activeOpacity={0.9}
+      style={styles.card}
+      onPress={() => onPress(booking.id)}
+    >
+      <View style={styles.topRow}>
+        <View style={styles.leftWrap}>
+          <View style={styles.bikeIconWrap}>
+            <Ionicons name="bicycle" size={20} color="#2563EB" />
+          </View>
+          <View>
+            <Text style={styles.bikeName}>Xe đạp</Text>
+            <Text style={styles.bookingCode}>{formatSupportCode(booking.id)}</Text>
           </View>
         </View>
-        <View
-          style={[
-            styles.statusBadge,
-            { backgroundColor: getStatusColor(booking.status) },
-          ]}
-        >
-          <Text style={styles.statusText}>{getStatusText(booking.status)}</Text>
+
+        <View style={styles.rightWrap}>
+          <Text style={styles.priceText}>{priceText}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: status.backgroundColor }]}>
+            <Text style={[styles.statusText, { color: status.textColor }]}>{status.text}</Text>
+          </View>
         </View>
       </View>
 
-      <View style={styles.cardDivider} />
-
-      <View style={styles.cardDetails}>
-        <DetailRow
-          icon="calendar"
-          text={formatVietnamDateTime(booking.startTime)}
-        />
-        <DetailRow
-          icon="time"
-          text={formatDuration(booking.duration, Boolean(booking.endTime))}
-        />
-        <DetailRow icon="pricetag" text={priceText} isPrice />
+      <View style={styles.routeRow}>
+        <Ionicons name="git-network-outline" size={16} color="#64748B" />
+        <Text style={styles.routeText} numberOfLines={1}>{routeText}</Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.detailButton}
-        onPress={() => onPress(booking.id)}
-      >
-        <Text style={styles.detailButtonText}>Xem chi tiết</Text>
-        <Ionicons name="chevron-forward" size={16} color="#0066FF" />
-      </TouchableOpacity>
-    </View>
+      <View style={styles.divider} />
+
+      <View style={styles.metaRow}>
+        <View style={styles.metaItem}>
+          <Ionicons name="calendar-outline" size={16} color="#9CA3AF" />
+          <Text style={styles.metaText}>{formatVietnamDateTime(booking.startTime)}</Text>
+        </View>
+        <View style={styles.metaItem}>
+          <Ionicons name="time-outline" size={16} color="#9CA3AF" />
+          <Text style={styles.metaText}>{formatDuration(booking.duration, Boolean(booking.endTime))}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 });
 
-type DetailRowProps = {
-  icon: keyof typeof Ionicons.glyphMap;
-  text: string;
-  isPrice?: boolean;
-};
-
-function DetailRow({ icon, text, isPrice = false }: DetailRowProps) {
-  return (
-    <View style={styles.detailRow}>
-      <Ionicons
-        name={icon}
-        size={16}
-        color={isPrice ? "#0066FF" : "#666"}
-      />
-      <Text style={[styles.detailText, isPrice && styles.priceText]}>
-        {text}
-      </Text>
-    </View>
-  );
-}
-
-function getStatusColor(status: RentalStatus) {
+function getStatusStyle(status: RentalStatus) {
   switch (status) {
     case "COMPLETED":
-      return "#4CAF50";
+      return {
+        text: "Hoàn thành",
+        backgroundColor: "#E8F5E9",
+        textColor: "#2E7D32",
+      };
     case "RENTED":
-      return "#FF9800";
+      return {
+        text: "Đang thuê",
+        backgroundColor: "#FFF4E5",
+        textColor: "#B45309",
+      };
     case "CANCELLED":
-      return "#F44336";
+      return {
+        text: "Đã hủy",
+        backgroundColor: "#FDECEC",
+        textColor: "#B91C1C",
+      };
     case "RESERVED":
-      return "#FFB020";
+      return {
+        text: "Đã đặt",
+        backgroundColor: "#EEF2FF",
+        textColor: "#3730A3",
+      };
     default:
-      return "#999";
-  }
-}
-
-function getStatusText(status: RentalStatus) {
-  switch (status) {
-    case "COMPLETED":
-      return "Hoàn thành";
-    case "RENTED":
-      return "Đang thuê";
-    case "CANCELLED":
-      return "Đã hủy";
-    case "RESERVED":
-      return "Đã đặt trước";
-    default:
-      return status;
+      return {
+        text: status,
+        backgroundColor: "#F3F4F6",
+        textColor: "#4B5563",
+      };
   }
 }
 
@@ -205,9 +214,11 @@ function formatDuration(duration: number, hasEnded: boolean) {
   if (!duration || duration <= 0) {
     return hasEnded ? "0 phút" : "Chưa kết thúc";
   }
+
   const totalMinutes = Math.floor(duration);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
+
   if (hours > 0 && minutes > 0) {
     return `${hours} giờ ${minutes} phút`;
   }
