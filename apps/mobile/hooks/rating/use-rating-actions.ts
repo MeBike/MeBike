@@ -1,11 +1,12 @@
+import type { CreateRatingPayload, RatingReason, RatingReasonFilters } from "@services/ratings";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { Alert } from "react-native";
 
-import type { CreateRatingPayload, RatingReason } from "../types/RatingTypes";
-
-import { useCreateRatingMutation } from "./mutations/Rating/useCreateRatingMutation";
-import { useGetRatingReasonsQuery } from "./query/Rating/useGetRatingReasonsQuery";
+import { useCreateRatingMutation } from "../mutations/rating/use-create-rating-mutation";
+import { useGetRatingReasonsQuery } from "../query/rating/use-get-rating-reasons-query";
+import { getRatingErrorCode, getRatingErrorMessage } from "./use-rating-errors";
 
 type MutationCallbacks = {
   onSuccess?: () => void;
@@ -13,24 +14,12 @@ type MutationCallbacks = {
   onError?: (message: string) => void;
 };
 
-function extractErrorMessage(error: unknown): string {
-  if (
-    typeof error === "object"
-    && error !== null
-    && "response" in error
-    && typeof (error as any).response?.data?.message === "string"
-  ) {
-    return (error as any).response.data.message;
-  }
-  return "Không thể gửi đánh giá. Vui lòng thử lại.";
-}
-
 export function useRatingActions({
   enabled,
   reasonFilters,
 }: {
   enabled: boolean;
-  reasonFilters?: Partial<{ type: string; applies_to: string }>;
+  reasonFilters?: RatingReasonFilters;
 }) {
   const queryClient = useQueryClient();
   const ratingReasonsQuery = useGetRatingReasonsQuery(enabled, reasonFilters);
@@ -43,17 +32,24 @@ export function useRatingActions({
         {
           onSuccess: () => {
             Alert.alert("Cảm ơn bạn!", "Đánh giá của bạn đã được ghi nhận.");
-            queryClient.invalidateQueries({ queryKey: ["rating", "reasons"] });
             queryClient.invalidateQueries({ queryKey: ["rating", "detail", rentalId] });
+            queryClient.invalidateQueries({ queryKey: ["rating", "reasons"] });
             callbacks?.onSuccess?.();
           },
           onError: (error) => {
-            const message = extractErrorMessage(error);
-            if (message.includes("đã tồn tại")) {
+            const code = getRatingErrorCode(error);
+
+            if (code === "RATING_ALREADY_EXISTS") {
               callbacks?.onAlreadyRated?.();
               Alert.alert("Thông báo", "Bạn đã đánh giá phiên thuê này trước đó.");
               return;
             }
+
+            const message = getRatingErrorMessage(
+              error,
+              "Không thể gửi đánh giá. Vui lòng thử lại.",
+            );
+
             callbacks?.onError?.(message);
             Alert.alert("Không thể gửi đánh giá", message);
           },
