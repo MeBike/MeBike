@@ -17,6 +17,8 @@ import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordM
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
 import { QUERY_KEYS } from "@/constants/queryKey";
+import getAxiosErrorCodeMessage from "@/utils/error-util";
+import { getErrorMessageFromCustomerCode } from "@/utils/map-message";
 import getErrorMessage from "@/utils/error-message";
 export const useUserActions = ({
   hasToken,
@@ -156,7 +158,8 @@ export const useUserActions = ({
         }
         return result;
       } catch (error) {
-        const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
+        const error_code = getAxiosErrorCodeMessage(error);
+        const errorMessage = getErrorMessageFromCustomerCode(error_code);
         toast.error(errorMessage);
         throw error;
       }
@@ -192,7 +195,8 @@ export const useUserActions = ({
           queryKey: ["user", "all"],
         });
       } catch (error) {
-        const errorMessage = getErrorMessage(error, "Lỗi khi đặt lại mật khẩu");
+        const error_code = getAxiosErrorCodeMessage(error);
+        const errorMessage = getErrorMessageFromCustomerCode(error_code);
         toast.error(errorMessage);
         throw error;
       }
@@ -220,7 +224,8 @@ export const useUserActions = ({
         refetch();
         return result;
       } catch (error) {
-        const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật thông tin người dùng");
+        const error_code = getAxiosErrorCodeMessage(error);
+        const errorMessage = getErrorMessageFromCustomerCode(error_code);
         toast.error(errorMessage);
         throw error;
       }

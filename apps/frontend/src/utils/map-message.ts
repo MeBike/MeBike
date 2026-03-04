@@ -18,4 +18,11 @@ const getErrorMessageFromSupplierCode = (code?:string) => {
   if(!code) return "Something went wrong";
   return SUPPLIER_MESSAGE[code as keyof typeof SUPPLIER_MESSAGE] || "Something went wrong";
 }
-export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, getErrorMessageFromStationCode , getErrorMessageFromSupplierCode};
+const getErrorMessageFromCustomerCode = (code?: string) => {
+  if (!code) return "Something went wrong";
+  return USERS_MESSAGES[code as keyof typeof USERS_MESSAGES] 
+    || "Something went wrong";
+}
+export { getErrorMessageUserFromCode, getErrorMessageAuthFromCode, getErrorMessageFromStationCode , getErrorMessageFromSupplierCode, 
+  getErrorMessageFromCustomerCode
+ };
