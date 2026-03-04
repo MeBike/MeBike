@@ -1,9 +1,10 @@
-import { formatVietnamDateTime } from "@utils/date";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Reservation } from "@/types/reservation-types";
+
+import { formatVietnamDateTime } from "@utils/date";
 
 import { styles } from "../styles";
 
