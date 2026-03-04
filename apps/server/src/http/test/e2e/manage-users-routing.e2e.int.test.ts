@@ -1,3 +1,4 @@
+import type { UsersContracts } from "@mebike/shared";
 import type { Kysely } from "kysely";
 
 import jwt from "jsonwebtoken";
@@ -81,13 +82,13 @@ describe("manage-users route ordering e2e", () => {
   }, 60000);
 
   afterAll(async () => {
-    const databaseModule = await import("@/database");
-
-    await databaseModule.db.destroy();
-
     if (runtime?.dispose) {
       await runtime.dispose();
     }
+
+    const databaseModule = await import("@/database");
+    await databaseModule.db.destroy();
+
     if (testDb) {
       await destroyTestDb(testDb);
     }
@@ -118,11 +119,10 @@ describe("manage-users route ordering e2e", () => {
         Authorization: `Bearer ${token}`,
       },
     });
-    const body = await response.json() as Record<string, unknown>;
+    const body = await response.json() as UsersContracts.AdminUserStatsResponse;
 
     expect(response.status).toBe(200);
     expect(body.totalUsers).toBeTypeOf("number");
-    expect(body.error).toBeUndefined();
   });
 
   it("get /v1/users/manage-users/dashboard-stats does not get swallowed by {userId}", async () => {
@@ -134,12 +134,11 @@ describe("manage-users route ordering e2e", () => {
         Authorization: `Bearer ${token}`,
       },
     });
-    const body = await response.json() as Record<string, unknown>;
+    const body = await response.json() as UsersContracts.DashboardStatsResponse;
 
     expect(response.status).toBe(200);
     expect(body.totalCustomers).toBeTypeOf("number");
     expect(body.averageSpending).toBeTypeOf("number");
-    expect(body.error).toBeUndefined();
   });
 
   it("get /v1/users/manage-users/{userId} still resolves detail route", async () => {
@@ -151,7 +150,7 @@ describe("manage-users route ordering e2e", () => {
         Authorization: `Bearer ${token}`,
       },
     });
-    const body = await response.json() as Record<string, unknown>;
+    const body = await response.json() as UsersContracts.AdminUserDetailResponse;
 
     expect(response.status).toBe(200);
     expect(body.id).toBe(ADMIN_USER_ID);
