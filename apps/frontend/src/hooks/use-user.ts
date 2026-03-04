@@ -116,7 +116,8 @@ export const useUserActions = ({
     }
     refetchTopRenter();
   }, [hasToken, router, refetchTopRenter]);
-  const { data: dashboardStatsData , refetch : refetchDashboardStats } = useGetDashboardStatsQuery();
+  const { data: dashboardStatsData, refetch: refetchDashboardStats } =
+    useGetDashboardStatsQuery();
   const getRefetchDashboardStats = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -139,33 +140,23 @@ export const useUserActions = ({
         router.push("/login");
         return;
       }
-      useCreateUser.mutate(userData, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result?.status === 201) {
-            toast.success("Tạo người dùng thành công");
-            queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.USER.ALL(),
-            });
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
-            if (searchQuery && searchQuery.length > 0) {
-              refetchSearch();
-            } else {  
-              refetch();
-            }
-          } else {
-            const errorMessage =
-              result?.data?.message || "Lỗi khi tạo người dùng";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await useCreateUser.mutateAsync(userData);
+        if (result?.status === 201) {
+          queryClient.invalidateQueries({
+            queryKey: ["users", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: QUERY_KEYS.USER.STATISTICS,
+          });
+          toast.success("Tạo người dùng thành công");
+        }
+        return result;
+      } catch (error) {
+        const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
+        toast.error(errorMessage);
+        throw error;
+      }
     },
     [
       hasToken,
@@ -179,7 +170,7 @@ export const useUserActions = ({
       page,
       role,
       verify,
-    ]
+    ],
   );
   const useResetPassword = useResetPasswordUserMutation();
   const useUpdateProfile = useUpdateProfileUserMutation();
@@ -189,27 +180,21 @@ export const useUserActions = ({
         router.push("/login");
         return;
       }
-      useResetPassword.mutate({id: id || "", data: userData}, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result?.status === 200) {
-            toast.success("Đặt lại mật khẩu thành công");
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await useResetPassword.mutateAsync({id: id || "", data: userData});
+        if (result.status === 200) {
+          toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
+        }
+        queryClient.invalidateQueries({
+          queryKey: ["users", "all"],
+        });
+      } catch (error) {
+        const errorMessage = getErrorMessage(error, "Lỗi khi đặt lại mật khẩu");
+        toast.error(errorMessage);
+        throw error;
+      }
     },
-    [
-      hasToken,
-      router,
-      id,
-      useResetPassword,
-    ]
+    [hasToken, router,useResetPassword,id],
   );
   const updateProfileUser = useCallback(
     async (userData: UserProfile) => {
@@ -217,37 +202,25 @@ export const useUserActions = ({
         router.push("/login");
         return;
       }
-      useUpdateProfile.mutate(
-        { id: id || "", data: userData },
-        {
-          onSuccess: (result: {
-            status: number;
-            data?: { message?: string };
-          }) => {
-            if (result?.status === 200) {
-              queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.USER.ALL(
-                  page,
-                  limit,
-                  verify || "all",
-                  role || "all"
-                ),
-              });
-              queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
-              refetchDetailUser();
-              refetch();
-              toast.success("Cập nhật thông tin người dùng thành công");
-            }
-          },
-          onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(
-              error,
-              "Lỗi khi cập nhật người dùng"
-            );
-            toast.error(errorMessage);
-          },
+      try {
+        const result = await useUpdateProfile.mutateAsync({id: id || "", data: userData});
+        if (result.status === 200) {
+          toast.success(result.data?.message || "Cập nhật thông tin thành công");
         }
-      );
+        queryClient.invalidateQueries({
+          queryKey: ["users", "all"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["users", "detail", id],
+        });
+        refetchDetailUser();
+        refetch();
+        return result;
+      } catch (error) {
+        const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật thông tin người dùng");
+        toast.error(errorMessage);
+        throw error;
+      }
     },
     [
       hasToken,
@@ -261,7 +234,7 @@ export const useUserActions = ({
       limit,
       verify,
       role,
-    ]
+    ],
   );
   return {
     users: users,
