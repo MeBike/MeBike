@@ -108,8 +108,8 @@ export const userService = {
   },
   createUser: async (
     data: UserProfile
-  ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
-    const response = await fetchHttpClient.post<DetailUserResponse<DetailUser>>(
+  ): Promise<AxiosResponse<DetailUser>> => {
+    const response = await fetchHttpClient.post<DetailUser>(
       ENDPOINT.USER.CREATE_USER,
       data
     );
@@ -142,10 +142,8 @@ export const userService = {
   postResetPassword: async (
     id: string,
     data: ResetPasswordRequest
-  ): Promise<AxiosResponse<DetailUserResponse<ResetPasswordResponse>>> => {
-    const response = await fetchHttpClient.post<
-      DetailUserResponse<ResetPasswordResponse>
-    >(ENDPOINT.USER.RESET_PASSWORD(id), data);
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.post(ENDPOINT.USER.RESET_PASSWORD(id), data);
     return response;
   },
   updateProfileAdmin: async (

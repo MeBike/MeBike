@@ -6,10 +6,10 @@ export interface DetailUser {
   fullName: string;
   email: string;
   verify: VerifyStatus;
-  location: string | null;
-  username: string | null;
+  location: string;
+  username: string;
   phoneNumber: string;
-  avatar: string | null;
+  avatar: string;
   role: UserRole;
   nfcCardUid: string;
   createdAt: string;
