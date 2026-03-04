@@ -42,6 +42,8 @@ export default function StationSelectScreen() {
     deselectStation,
     currentLocation,
     selectedStationId,
+    isRoutingMode,
+    enterRoutingMode,
   } = useStationSelect();
 
   const selectedStation = React.useMemo(
@@ -90,12 +92,15 @@ export default function StationSelectScreen() {
         routeDurationSeconds={route?.properties.durationSeconds ?? null}
         isRouting={isRouting}
         hasDestination={Boolean(selectedStationId)}
+        isRoutingMode={isRoutingMode}
         hasRoute={Boolean(route)}
         onToggleNearby={handleFindNearbyStations}
         onOpenList={() => setIsListOpen(true)}
+        onEnterRoutingMode={enterRoutingMode}
         onBuildRoute={buildRouteToSelectedStation}
         onChangeRouteProfile={setRouteProfile}
         onOpenStationDetail={openSelectedStationDetail}
+        onResetSelection={deselectStation}
         onClearRoute={clearRoute}
       />
       {isListOpen

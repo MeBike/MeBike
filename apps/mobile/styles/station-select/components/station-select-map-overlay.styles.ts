@@ -126,6 +126,12 @@ export const styles = StyleSheet.create({
     gap: 8,
     marginTop: 4,
   },
+  previewActionsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 10,
+    alignItems: "center",
+  },
   modeRow: {
     flexDirection: "row",
     gap: 8,
@@ -223,6 +229,17 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#1E40AF",
+  },
+  routeActionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    marginTop: 8,
+  },
+  routeTextAction: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#64748B",
   },
   stationCard: {
     marginTop: 10,

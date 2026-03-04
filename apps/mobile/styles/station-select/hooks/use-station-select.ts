@@ -19,6 +19,7 @@ export function useStationSelect() {
   const [selectedStationId, setSelectedStationId] = React.useState<string | null>(null);
   const [routeProfile, setRouteProfile] = React.useState<MapboxDirectionsProfile>("walking");
   const [routeRequested, setRouteRequested] = React.useState(false);
+  const [isRoutingMode, setIsRoutingMode] = React.useState(false);
   const { location: currentLocation, refresh: refreshLocation } = useCurrentLocation();
 
   const {
@@ -98,6 +99,7 @@ export function useStationSelect() {
 
     setSelectedStationId(stationId);
     setRouteRequested(false);
+    setIsRoutingMode(false);
 
     if (!currentLocation) {
       await refreshLocation();
@@ -107,10 +109,18 @@ export function useStationSelect() {
   const deselectStation = () => {
     setSelectedStationId(null);
     setRouteRequested(false);
+    setIsRoutingMode(false);
   };
 
   const clearRoute = () => {
     setRouteRequested(false);
+  };
+
+  const enterRoutingMode = () => {
+    if (!selectedStationId) {
+      return;
+    }
+    setIsRoutingMode(true);
   };
 
   const buildRouteToSelectedStation = React.useCallback(async () => {
@@ -125,6 +135,7 @@ export function useStationSelect() {
       return;
     }
 
+    setIsRoutingMode(true);
     setRouteRequested(true);
   }, [currentLocation, refreshLocation, selectedStation, selectedStationId]);
 
@@ -139,6 +150,7 @@ export function useStationSelect() {
     refreshing,
     showingNearby,
     selectedStationId,
+    isRoutingMode,
     route,
     isRouting,
     routeProfile,
@@ -148,6 +160,7 @@ export function useStationSelect() {
     handleFindNearbyStations,
     handleRefresh,
     buildRouteToSelectedStation,
+    enterRoutingMode,
     clearRoute,
     setRouteProfile,
     openSelectedStationDetail,

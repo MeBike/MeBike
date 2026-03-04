@@ -26,12 +26,15 @@ type StationSelectMapOverlayProps = {
   routeDurationSeconds?: number | null;
   isRouting: boolean;
   hasDestination: boolean;
+  isRoutingMode: boolean;
   hasRoute: boolean;
   onToggleNearby: () => void;
   onOpenList: () => void;
+  onEnterRoutingMode: () => void;
   onBuildRoute: () => void;
   onChangeRouteProfile: (profile: MapboxDirectionsProfile) => void;
   onOpenStationDetail: () => void;
+  onResetSelection: () => void;
   onClearRoute: () => void;
 };
 
@@ -47,18 +50,26 @@ export function StationSelectMapOverlay({
   routeDurationSeconds,
   isRouting,
   hasDestination,
+  isRoutingMode,
   hasRoute,
   onToggleNearby,
   onOpenList,
+  onEnterRoutingMode,
   onBuildRoute,
   onChangeRouteProfile,
   onOpenStationDetail,
+  onResetSelection,
   onClearRoute,
 }: StationSelectMapOverlayProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const expandProgress = useSharedValue(0);
   const dragStartProgressRef = React.useRef(0);
   const draggedRef = React.useRef(false);
+
+  const showDiscoveryActions = !hasDestination;
+  const showStationPreview = hasDestination && !isRoutingMode;
+  const showRouting = hasDestination && isRoutingMode;
+
   const routeSummary = hasRoute && routeDistanceMeters && routeDurationSeconds
     ? `${formatDistance(routeDistanceMeters)} • ${formatDuration(routeDurationSeconds)}`
     : null;
@@ -82,11 +93,15 @@ export function StationSelectMapOverlay({
   }, [animateTo, isExpanded]);
 
   React.useEffect(() => {
-    if (hasDestination) {
+    if (showRouting) {
       setIsExpanded(true);
       animateTo(1);
+      return;
     }
-  }, [animateTo, hasDestination]);
+
+    setIsExpanded(false);
+    animateTo(0);
+  }, [animateTo, showRouting]);
 
   const chevronAnimatedStyle = useAnimatedStyle(() => {
     const rotation = interpolate(expandProgress.value, [0, 1], [0, 180]);
@@ -109,7 +124,7 @@ export function StationSelectMapOverlay({
 
   const handlePanResponder = React.useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => false,
-    onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dy) > 2,
+    onMoveShouldSetPanResponder: (_, gestureState) => showRouting && Math.abs(gestureState.dy) > 2,
     onPanResponderGrant: () => {
       dragStartProgressRef.current = expandProgress.value;
       draggedRef.current = false;
@@ -139,165 +154,153 @@ export function StationSelectMapOverlay({
         draggedRef.current = false;
       }, 0);
     },
-  }), [animateTo, expandProgress]);
+  }), [animateTo, expandProgress, showRouting]);
 
   return (
     <View style={[styles.container, { paddingBottom: Math.max(safeBottom, 8) }]}>
       <Animated.View style={styles.sheet}>
-        <View style={styles.handleWrap} {...handlePanResponder.panHandlers}>
-          <Pressable style={styles.handleTouchArea} onPress={toggleExpanded}>
+        <View style={styles.handleWrap} {...(showRouting ? handlePanResponder.panHandlers : undefined)}>
+          <Pressable style={styles.handleTouchArea} onPress={showRouting ? toggleExpanded : undefined}>
             <View style={styles.handle} />
           </Pressable>
         </View>
 
-        <Pressable onPress={toggleExpanded} {...handlePanResponder.panHandlers}>
+        <Pressable onPress={showRouting ? toggleExpanded : undefined} {...(showRouting ? handlePanResponder.panHandlers : undefined)}>
           <View style={styles.headerButton}>
             <View style={styles.titleGroup}>
               <Text style={styles.title}>
-                {hasDestination ? "Lộ trình đến trạm" : "Chọn trạm trên bản đồ"}
+                {showRouting
+                  ? "Lộ trình đến trạm"
+                  : hasDestination
+                    ? "Trạm đã chọn"
+                    : "Chọn trạm trên bản đồ"}
               </Text>
               <Text style={styles.subtitle} numberOfLines={1}>
                 {hasDestination ? destinationLabel : "Chạm vào pin trạm để bắt đầu"}
               </Text>
             </View>
-            <Animated.View style={chevronAnimatedStyle}>
-              <Ionicons name="chevron-up" size={20} color={BikeColors.textSecondary} />
-            </Animated.View>
+            {showRouting
+              ? (
+                  <Animated.View style={chevronAnimatedStyle}>
+                    <Ionicons name="chevron-up" size={20} color={BikeColors.textSecondary} />
+                  </Animated.View>
+                )
+              : null}
           </View>
         </Pressable>
 
-        <Animated.View style={[styles.compactActionsWrap, compactAnimatedStyle]}>
-          <View style={styles.compactActions}>
-            <Pressable style={styles.compactChip} onPress={onOpenList}>
-              <Ionicons name="list" size={16} color={BikeColors.textPrimary} />
-              <Text style={styles.compactChipText}>Danh sách</Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.compactChip, showingNearby && styles.compactChipActive]}
-              onPress={onToggleNearby}
-              disabled={isLoadingNearbyStations}
-            >
-              {isLoadingNearbyStations
-                ? <ActivityIndicator size="small" color={BikeColors.primary} />
-                : <Ionicons name="locate" size={16} color={BikeColors.primary} />}
-              <Text style={styles.compactChipText}>
-                {showingNearby ? "Tất cả" : "Gần tôi"}
-              </Text>
-            </Pressable>
-          </View>
-        </Animated.View>
-
-        <Animated.View style={[styles.expandedSection, expandedAnimatedStyle]}>
-          <View style={styles.row}>
-            <Ionicons name="navigate" size={16} color={BikeColors.primary} />
-            <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Đi từ</Text>
-              <Text style={styles.rowValue}>Vị trí hiện tại</Text>
-            </View>
-          </View>
-
-          <View style={styles.row}>
-            <Ionicons name="location" size={16} color={BikeColors.primary} />
-            <View style={styles.rowContent}>
-              <Text style={styles.rowLabel}>Đến</Text>
-              <Text style={styles.rowValue} numberOfLines={1}>
-                {destinationLabel}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.actionsRow}>
-            <Pressable style={styles.smallButton} onPress={onOpenList}>
-              <Ionicons name="list" size={16} color={BikeColors.textPrimary} />
-              <Text style={styles.smallButtonText}>Danh sách</Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.smallButton, showingNearby && styles.smallButtonActive]}
-              onPress={onToggleNearby}
-              disabled={isLoadingNearbyStations}
-            >
-              {isLoadingNearbyStations
-                ? <ActivityIndicator size="small" color={BikeColors.primary} />
-                : <Ionicons name="locate" size={16} color={BikeColors.primary} />}
-              <Text style={styles.smallButtonText}>
-                {showingNearby ? "Tất cả" : "Gần tôi"}
-              </Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.modeRow}>
-            <Pressable
-              style={[styles.modeButton, routeProfile === "walking" && styles.modeButtonActive]}
-              onPress={() => onChangeRouteProfile("walking")}
-              disabled={isRouting}
-            >
-              <Ionicons
-                name="walk"
-                size={16}
-                color={routeProfile === "walking" ? BikeColors.primary : BikeColors.textSecondary}
-              />
-              <Text style={styles.modeButtonText}>Đi bộ</Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.modeButton, routeProfile === "cycling" && styles.modeButtonActive]}
-              onPress={() => onChangeRouteProfile("cycling")}
-              disabled={isRouting}
-            >
-              <Ionicons
-                name="bicycle"
-                size={16}
-                color={routeProfile === "cycling" ? BikeColors.primary : BikeColors.textSecondary}
-              />
-              <Text style={styles.modeButtonText}>Xe đạp</Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.modeButton, routeProfile === "driving" && styles.modeButtonActive]}
-              onPress={() => onChangeRouteProfile("driving")}
-              disabled={isRouting}
-            >
-              <Ionicons
-                name="car"
-                size={16}
-                color={routeProfile === "driving" ? BikeColors.primary : BikeColors.textSecondary}
-              />
-              <Text style={styles.modeButtonText}>Ô tô</Text>
-            </Pressable>
-          </View>
-        </Animated.View>
-
-        <View style={styles.primaryRow}>
-          <Pressable
-            style={[styles.primaryButton, (!hasDestination || isRouting) && styles.primaryButtonDisabled]}
-            onPress={onBuildRoute}
-            disabled={!hasDestination || isRouting}
-          >
-            {isRouting
-              ? <ActivityIndicator size="small" color={BikeColors.onPrimary} />
-              : <Text style={styles.primaryButtonText}>Tìm đường</Text>}
-          </Pressable>
-
-          {hasRoute
-            ? (
-                <Pressable style={styles.secondaryButton} onPress={onClearRoute}>
-                  <Text style={styles.secondaryButtonText}>Xóa</Text>
-                </Pressable>
-              )
-            : null}
-        </View>
-
-        {routeSummary
+        {showDiscoveryActions
           ? (
-              <View style={styles.routeSummary}>
-                <Text style={styles.routeSummaryText}>{routeSummary}</Text>
+              <Animated.View style={[styles.compactActionsWrap, compactAnimatedStyle]}>
+                <View style={styles.compactActions}>
+                  <Pressable style={styles.compactChip} onPress={onOpenList}>
+                    <Ionicons name="list" size={16} color={BikeColors.textPrimary} />
+                    <Text style={styles.compactChipText}>Danh sách</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.compactChip, showingNearby && styles.compactChipActive]}
+                    onPress={onToggleNearby}
+                    disabled={isLoadingNearbyStations}
+                  >
+                    {isLoadingNearbyStations
+                      ? <ActivityIndicator size="small" color={BikeColors.primary} />
+                      : <Ionicons name="locate" size={16} color={BikeColors.primary} />}
+                    <Text style={styles.compactChipText}>
+                      {showingNearby ? "Tất cả" : "Gần tôi"}
+                    </Text>
+                  </Pressable>
+                </View>
+              </Animated.View>
+            )
+          : null}
+
+        {showRouting
+          ? (
+              <Animated.View style={[styles.expandedSection, expandedAnimatedStyle]}>
+                <View style={styles.row}>
+                  <Ionicons name="navigate" size={16} color={BikeColors.primary} />
+                  <View style={styles.rowContent}>
+                    <Text style={styles.rowLabel}>Đi từ</Text>
+                    <Text style={styles.rowValue}>Vị trí hiện tại</Text>
+                  </View>
+                </View>
+
+                <View style={styles.row}>
+                  <Ionicons name="location" size={16} color={BikeColors.primary} />
+                  <View style={styles.rowContent}>
+                    <Text style={styles.rowLabel}>Đến</Text>
+                    <Text style={styles.rowValue} numberOfLines={1}>
+                      {destinationLabel}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.modeRow}>
+                  <Pressable
+                    style={[styles.modeButton, routeProfile === "walking" && styles.modeButtonActive]}
+                    onPress={() => onChangeRouteProfile("walking")}
+                    disabled={isRouting}
+                  >
+                    <Ionicons
+                      name="walk"
+                      size={16}
+                      color={routeProfile === "walking" ? BikeColors.primary : BikeColors.textSecondary}
+                    />
+                    <Text style={styles.modeButtonText}>Đi bộ</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.modeButton, routeProfile === "cycling" && styles.modeButtonActive]}
+                    onPress={() => onChangeRouteProfile("cycling")}
+                    disabled={isRouting}
+                  >
+                    <Ionicons
+                      name="bicycle"
+                      size={16}
+                      color={routeProfile === "cycling" ? BikeColors.primary : BikeColors.textSecondary}
+                    />
+                    <Text style={styles.modeButtonText}>Xe đạp</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.modeButton, routeProfile === "driving" && styles.modeButtonActive]}
+                    onPress={() => onChangeRouteProfile("driving")}
+                    disabled={isRouting}
+                  >
+                    <Ionicons
+                      name="car"
+                      size={16}
+                      color={routeProfile === "driving" ? BikeColors.primary : BikeColors.textSecondary}
+                    />
+                    <Text style={styles.modeButtonText}>Ô tô</Text>
+                  </Pressable>
+                </View>
+              </Animated.View>
+            )
+          : null}
+
+        {showRouting
+          ? (
+              <View style={styles.primaryRow}>
+                <Pressable
+                  style={[styles.primaryButton, (!hasDestination || isRouting) && styles.primaryButtonDisabled]}
+                  onPress={onBuildRoute}
+                  disabled={!hasDestination || isRouting}
+                >
+                  {isRouting
+                    ? <ActivityIndicator size="small" color={BikeColors.onPrimary} />
+                    : <Text style={styles.primaryButtonText}>Tìm đường</Text>}
+                </Pressable>
+
+                <Pressable style={styles.secondaryButton} onPress={onResetSelection}>
+                  <Text style={styles.secondaryButtonText}>Đổi trạm</Text>
+                </Pressable>
               </View>
             )
           : null}
 
-        {hasDestination
+        {showStationPreview
           ? (
               <View style={styles.stationCard}>
                 <View style={styles.stationInfoRow}>
@@ -323,8 +326,31 @@ export function StationSelectMapOverlay({
                     )
                   : null}
 
-                <Pressable style={styles.detailButton} onPress={onOpenStationDetail}>
-                  <Text style={styles.detailButtonText}>Xem chi tiết trạm</Text>
+                <View style={styles.previewActionsRow}>
+                  <Pressable style={styles.primaryButton} onPress={onEnterRoutingMode}>
+                    <Text style={styles.primaryButtonText}>Chỉ đường</Text>
+                  </Pressable>
+                  <Pressable style={styles.secondaryButton} onPress={onOpenStationDetail}>
+                    <Text style={styles.secondaryButtonText}>Chi tiết</Text>
+                  </Pressable>
+                </View>
+              </View>
+            )
+          : null}
+
+        {showRouting && routeSummary
+          ? (
+              <View style={styles.routeSummary}>
+                <Text style={styles.routeSummaryText}>{routeSummary}</Text>
+              </View>
+            )
+          : null}
+
+        {showRouting && hasRoute
+          ? (
+              <View style={styles.routeActionsRow}>
+                <Pressable onPress={onClearRoute}>
+                  <Text style={styles.routeTextAction}>Xóa lộ trình</Text>
                 </Pressable>
               </View>
             )
