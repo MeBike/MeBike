@@ -14,9 +14,9 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
 
   app.openapi(rentals.getMyCurrentRentals, RentalMeController.getMyCurrentRentals);
 
-  app.openapi(rentals.getMyRental, RentalMeController.getMyRental);
-
   app.openapi(rentals.getMyRentalCounts, RentalMeController.getMyRentalCounts);
+
+  app.openapi(rentals.getMyRental, RentalMeController.getMyRental);
 
   app.openapi(rentals.endMyRental, RentalMeController.endMyRental);
 
