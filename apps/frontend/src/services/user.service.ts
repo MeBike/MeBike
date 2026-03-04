@@ -103,10 +103,11 @@ export const userService = {
   updateUser: async (
     id: string,
     data: Partial<UserProfile>
-  ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
-    const response = await fetchHttpClient.patch<
-      DetailUserResponse<DetailUser>
-    >(ENDPOINT.USER.UPDATE(id), data);
+  ): Promise<AxiosResponse<DetailUser>> => {
+    const response = await fetchHttpClient.patch<DetailUser>(
+      ENDPOINT.USER.UPDATE(id),
+      data
+    );
     return response;
   },
   userStatistics: async (): Promise<
