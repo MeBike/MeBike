@@ -6,6 +6,6 @@ import { registerUserSelfRoutes } from "./self";
 
 export function registerUserRoutes(app: OpenAPIHono) {
   registerUserSelfRoutes(app);
-  registerAdminUserRoutes(app);
   registerAdminUserStatsRoutes(app);
+  registerAdminUserRoutes(app);
 }
