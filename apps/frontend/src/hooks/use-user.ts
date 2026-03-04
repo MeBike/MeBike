@@ -144,7 +144,7 @@ export const useUserActions = ({
         const result = await useCreateUser.mutateAsync(userData);
         if (result?.status === 201) {
           queryClient.invalidateQueries({
-            queryKey: ["users", "all"],
+            queryKey: ["user", "all"],
           });
           queryClient.invalidateQueries({
             queryKey: QUERY_KEYS.USER.STATISTICS,
@@ -186,7 +186,7 @@ export const useUserActions = ({
           toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
         }
         queryClient.invalidateQueries({
-          queryKey: ["users", "all"],
+          queryKey: ["user", "all"],
         });
       } catch (error) {
         const errorMessage = getErrorMessage(error, "Lỗi khi đặt lại mật khẩu");
@@ -208,10 +208,10 @@ export const useUserActions = ({
           toast.success(result.data?.message || "Cập nhật thông tin thành công");
         }
         queryClient.invalidateQueries({
-          queryKey: ["users", "all"],
+          queryKey: ["user", "all"],
         });
         queryClient.invalidateQueries({
-          queryKey: ["users", "detail", id],
+          queryKey: ["user", "detail", id],
         });
         refetchDetailUser();
         refetch();
