@@ -30,7 +30,6 @@ const transactionDetailModalStyles = StyleSheet.create({
   },
   infoRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 12,
     paddingVertical: 4,
@@ -39,27 +38,42 @@ const transactionDetailModalStyles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     fontWeight: "500",
+    width: 108,
+  },
+  idValueContainer: {
     flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  copyButton: {
+    marginLeft: 8,
+    padding: 4,
   },
   value: {
     fontSize: 14,
     color: "#333",
     fontWeight: "400",
-    flex: 2,
+    flex: 1,
     textAlign: "right",
   },
   amount: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#0066FF",
-    flex: 2,
+    flex: 1,
     textAlign: "right",
+  },
+  amountOut: {
+    color: "#F59E0B",
+  },
+  amountIn: {
+    color: "#10B981",
   },
   status: {
     fontSize: 14,
     fontWeight: "600",
     color: "#10B981",
-    flex: 2,
+    flex: 1,
     textAlign: "right",
   },
   descriptionContainer: {
