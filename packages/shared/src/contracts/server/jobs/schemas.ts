@@ -38,6 +38,27 @@ const EmailSendPayloadV1Schema = z.discriminatedUnion("kind", [
   EmailSendResetOtpPayloadV1Schema,
 ]);
 
+const PushSendEventSchema = z.enum([
+  "reservations.nearExpiry",
+  "reservations.expired",
+]);
+
+const PushChannelIdSchema = z.enum([
+  "default",
+  "urgent",
+  "silent",
+]);
+
+const PushSendPayloadV1Schema = z.object({
+  version: z.literal(1),
+  userId: z.uuidv7(),
+  event: PushSendEventSchema,
+  title: z.string().min(1),
+  body: z.string().min(1),
+  channelId: PushChannelIdSchema,
+  data: z.record(z.string(), z.string()),
+});
+
 const SubscriptionAutoActivatePayloadV1Schema = z.object({
   version: z.literal(1),
   subscriptionId: z.uuidv7(),
@@ -85,6 +106,7 @@ const WalletWithdrawalSweepPayloadV1Schema = z.object({
 
 export const JobPayloadSchemas = {
   [JobTypes.EmailSend]: EmailSendPayloadV1Schema,
+  [JobTypes.PushSend]: PushSendPayloadV1Schema,
   [JobTypes.SubscriptionAutoActivate]: SubscriptionAutoActivatePayloadV1Schema,
   [JobTypes.SubscriptionExpireSweep]: SubscriptionExpireSweepPayloadV1Schema,
   [JobTypes.ReservationFixedSlotAssign]: ReservationFixedSlotAssignPayloadV1Schema,
