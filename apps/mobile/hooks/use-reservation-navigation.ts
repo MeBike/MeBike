@@ -11,17 +11,17 @@ export function useReservationNavigation(
 
   const handleNavigateToDetail = useCallback(
     (reservation: Reservation) => {
-      const stationEntry = stationMap.get(reservation.station_id);
+      const stationEntry = stationMap.get(reservation.stationId);
       const stationInfo = reservation.station ?? (stationEntry
         ? {
-            _id: reservation.station_id,
+            id: reservation.stationId,
             name: stationEntry.name,
             address: stationEntry.address ?? "",
           }
         : undefined);
 
       navigation.navigate("ReservationDetail", {
-        reservationId: reservation._id,
+        reservationId: reservation.id,
         reservation: {
           ...reservation,
           station: stationInfo,

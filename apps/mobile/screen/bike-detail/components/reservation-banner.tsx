@@ -1,9 +1,10 @@
-import { formatVietnamDateTime } from "@utils/date";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 import type { BikeDetailNavigationProp } from "@/types/navigation";
 import type { Reservation } from "@/types/reservation-types";
+
+import { formatVietnamDateTime } from "@utils/date";
 
 import { styles } from "../styles";
 
@@ -20,13 +21,13 @@ export function ReservationBanner({
       <Text style={styles.helperText}>
         Bắt đầu lúc
         {" "}
-        {formatVietnamDateTime(reservation.start_time)}
+        {formatVietnamDateTime(reservation.startTime)}
       </Text>
       <TouchableOpacity
         style={[styles.secondaryButton, { marginTop: 12 }]}
         onPress={() =>
           navigation.navigate("ReservationDetail", {
-            reservationId: reservation._id,
+            reservationId: reservation.id,
             reservation,
           })}
       >

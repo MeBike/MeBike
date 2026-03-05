@@ -47,7 +47,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     color: "#5C6E8C",
-    textTransform: "uppercase",
   },
   badgeTextActive: {
     color: "#FFFFFF",

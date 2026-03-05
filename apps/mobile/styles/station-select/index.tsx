@@ -39,9 +39,17 @@ export default function StationSelectScreen() {
     clearRoute,
     setRouteProfile,
     openSelectedStationDetail,
+    deselectStation,
     currentLocation,
     selectedStationId,
+    isRoutingMode,
+    enterRoutingMode,
   } = useStationSelect();
+
+  const selectedStation = React.useMemo(
+    () => stations.find(station => station._id === selectedStationId) ?? null,
+    [selectedStationId, stations],
+  );
 
   useFocusEffect(
     React.useCallback(() => {
@@ -61,31 +69,38 @@ export default function StationSelectScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <StationMap
         stations={stations}
         route={route}
         onStationPress={station => handleSelectStationForRoute(station._id)}
+        onMapPress={deselectStation}
         userLocation={currentLocation ?? undefined}
+        selectedStationId={selectedStationId}
       />
       <StationSelectMapOverlay
-        safeTop={insets.top}
+        safeBottom={insets.bottom}
         showingNearby={showingNearby}
         isLoadingNearbyStations={isLoadingNearbyStations}
-        destinationLabel={selectedStationId
-          ? stations.find(s => s._id === selectedStationId)?.name ?? "Trạm đã chọn"
+        destinationLabel={selectedStation
+          ? selectedStation.name
           : "Chọn một trạm trên bản đồ"}
+        selectedStationAddress={selectedStation?.address ?? null}
+        selectedStationAvailableBikes={selectedStation?.availableBikes ?? null}
         routeProfile={routeProfile}
         routeDistanceMeters={route?.properties.distanceMeters ?? null}
         routeDurationSeconds={route?.properties.durationSeconds ?? null}
         isRouting={isRouting}
         hasDestination={Boolean(selectedStationId)}
+        isRoutingMode={isRoutingMode}
         hasRoute={Boolean(route)}
         onToggleNearby={handleFindNearbyStations}
         onOpenList={() => setIsListOpen(true)}
+        onEnterRoutingMode={enterRoutingMode}
         onBuildRoute={buildRouteToSelectedStation}
         onChangeRouteProfile={setRouteProfile}
         onOpenStationDetail={openSelectedStationDetail}
+        onResetSelection={deselectStation}
         onClearRoute={clearRoute}
       />
       {isListOpen

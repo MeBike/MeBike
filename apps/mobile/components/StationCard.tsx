@@ -1,6 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View, TouchableOpacity } from "react-native";
-import { Linking } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { Station, StationType } from "../types/StationType";
 
@@ -16,13 +15,17 @@ export function StationCard({ station, onPress }: StationCardProps) {
   const capacity = parseInt(station.capacity) || 1;
   const availabilityPercentage = (station.availableBikes / capacity) * 100;
 
-  const getAvailabilityColor = (percentage: number) => {
+  const getAvailabilityColor = (availableBikes: number, percentage: number) => {
+    if (availableBikes <= 0)
+      return "#94A3B8";
+    if (availableBikes <= 3)
+      return "#F59E0B";
     if (percentage > 60)
       return BikeColors.success;
-    if (percentage > 30)
-      return BikeColors.warning;
-    return BikeColors.error;
+    return "#F59E0B";
   };
+
+  const availabilityColor = getAvailabilityColor(station.availableBikes, availabilityPercentage);
 
   return (
     <Pressable style={styles.container} onPress={onPress}>
@@ -34,7 +37,7 @@ export function StationCard({ station, onPress }: StationCardProps) {
           </Text>
         </View>
         <View style={styles.headerRight}>
-          <View style={[styles.statusIndicator, { backgroundColor: station.availableBikes > 0 ? BikeColors.success : BikeColors.error }]} />
+          <View style={[styles.statusIndicator, { backgroundColor: availabilityColor }]} />
           <IconSymbol name="chevron.right" size={16} color={BikeColors.onSurfaceVariant} />
         </View>
       </View>
@@ -62,7 +65,7 @@ export function StationCard({ station, onPress }: StationCardProps) {
         <View style={styles.availabilityContainer}>
           <View style={styles.availabilityInfo}>
             <Text style={styles.availabilityLabel}>Tổng xe có sẵn:</Text>
-            <Text style={[styles.availabilityCount, { color: getAvailabilityColor(availabilityPercentage) }]}>
+            <Text style={[styles.availabilityCount, { color: availabilityColor }]}> 
               {station.availableBikes}
               /
               {capacity}
@@ -75,17 +78,10 @@ export function StationCard({ station, onPress }: StationCardProps) {
                 styles.progressFill,
                 {
                   width: `${availabilityPercentage}%`,
-                  backgroundColor: getAvailabilityColor(availabilityPercentage),
+                  backgroundColor: availabilityColor,
                 },
               ]}
             />
-          </View>
-        </View>
-
-        <View style={styles.actionButtons}>
-          <View style={styles.actionHint}>
-            <IconSymbol name="map.fill" size={14} color={BikeColors.accent} />
-            <Text style={styles.actionHintText}>Nhấn để xem chi tiết</Text>
           </View>
         </View>
       </View>
@@ -197,41 +193,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: BikeColors.onSurfaceVariant,
     flex: 1,
-  },
-  actionHint: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: BikeColors.divider,
-  },
-  actionHintText: {
-    fontSize: 12,
-    color: BikeColors.accent,
-    fontStyle: "italic",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: 12,
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: BikeColors.divider,
-  },
-  directionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: BikeColors.primary,
-    borderRadius: 8,
-  },
-  directionButtonText: {
-    fontSize: 12,
-    color: "#fff",
-    fontWeight: "600",
   },
 });

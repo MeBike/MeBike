@@ -14,18 +14,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#FFF1F2",
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#0066FF",
+    borderColor: "#FECACA",
   },
   supportButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#0066FF",
+    color: "#DC2626",
     marginLeft: 8,
   },
   endRentalButton: {
@@ -151,7 +151,7 @@ export function RentalActionButtons({ rental }: Props) {
           });
         }}
       >
-        <Ionicons name="warning" size={20} color="#0066FF" />
+        <Ionicons name="warning" size={20} color="#DC2626" />
         <Text style={styles.supportButtonText}>Báo cáo sự cố</Text>
       </TouchableOpacity>
     </>

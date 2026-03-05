@@ -5,29 +5,29 @@ export type ReservationStatus
     | "ĐÃ HẾT HẠN";
 
 export type Reservation = {
-  _id: string;
-  user_id: string;
-  bike_id: string;
-  station_id: string;
+  id: string;
+  userId: string;
+  bikeId: string;
+  stationId: string;
   station?: {
-    _id: string;
+    id: string;
     name: string;
     address: string;
   };
-  start_time: string;
-  end_time?: string | null;
+  startTime: string;
+  endTime?: string | null;
   prepaid: number;
   status: ReservationStatus;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type PaginatedReservations = {
   data: Reservation[];
   pagination: {
-    limit: number;
-    currentPage: number;
+    pageSize: number;
+    page: number;
     totalPages: number;
-    totalRecords: number;
+    total: number;
   };
 };

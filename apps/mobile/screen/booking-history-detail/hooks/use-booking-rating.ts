@@ -1,17 +1,15 @@
+import { useGetRatingQuery } from "@hooks/query/rating/use-get-rating-query";
+import { useRatingActions } from "@hooks/rating/use-rating-actions";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useGetRatingQuery } from "@hooks/query/Rating/useGetRatingQuery";
-import { useRatingActions } from "@hooks/useRatingActions";
-
-import type { RentalDetail } from "@/types/RentalTypes";
+import type { Rental } from "@/types/rental-types";
 
 type RatingStateOptions = {
   bookingId: string;
-  booking?: RentalDetail;
+  booking?: Rental;
 };
 
 export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
-  const [showRatingModal, setShowRatingModal] = useState(false);
   const [showRatingForm, setShowRatingForm] = useState(false);
   const [ratingValue, setRatingValue] = useState<number>(0);
   const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
@@ -21,17 +19,20 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
   const [showAllReasons, setShowAllReasons] = useState(false);
 
   const endTimeDate = useMemo(() => {
-    if (!booking?.end_time) return null;
-    const parsed = new Date(booking.end_time);
+    if (!booking?.endTime)
+      return null;
+    const parsed = new Date(booking.endTime);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }, [booking?.end_time]);
+  }, [booking?.endTime]);
 
   const RATING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
   const ratingWindowExpired = useMemo(() => {
-    if (!endTimeDate) return false;
+    if (!endTimeDate)
+      return false;
     const nowTime = Date.now();
     const endTime = endTimeDate.getTime();
-    if (Number.isNaN(endTime)) return false;
+    if (Number.isNaN(endTime))
+      return false;
     return nowTime > endTime + RATING_WINDOW_MS;
   }, [endTimeDate]);
 
@@ -40,12 +41,12 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
     isFetched: isRatingFetched,
   } = useGetRatingQuery(bookingId, Boolean(booking));
 
-  const canOpenRatingForm =
-    Boolean(booking) &&
-    booking!.status === "HOÀN THÀNH" &&
-    isRatingFetched &&
-    !hasRated &&
-    !ratingWindowExpired;
+  const canOpenRatingForm
+    = Boolean(booking)
+      && booking!.status === "COMPLETED"
+      && isRatingFetched
+      && !hasRated
+      && !ratingWindowExpired;
 
   const {
     ratingReasons,
@@ -54,16 +55,18 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
     isSubmittingRating,
     refetchRatingReasons,
   } = useRatingActions({
-    enabled: showRatingForm && Boolean(booking),
+    enabled: Boolean(booking),
   });
 
   const filteredReasons = useMemo(() => {
-    if (!ratingReasons || ratingReasons.length === 0) return [];
-    if (!ratingValue) return ratingReasons;
+    if (!ratingReasons || ratingReasons.length === 0)
+      return [];
+    if (!ratingValue)
+      return ratingReasons;
     const positive = ratingValue >= 4;
-    const desiredType = positive ? "Khen ngợi" : "Vấn đề";
+    const desiredType = positive ? "COMPLIMENT" : "ISSUE";
     const matching = ratingReasons.filter(
-      (reason) => reason.type === desiredType
+      reason => reason.type === desiredType,
     );
     return matching.length > 0 ? matching : ratingReasons;
   }, [ratingReasons, ratingValue]);
@@ -73,7 +76,8 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
   }, [ratingValue]);
 
   const displayReasons = useMemo(() => {
-    if (showAllReasons) return filteredReasons;
+    if (showAllReasons)
+      return filteredReasons;
     return filteredReasons.slice(0, 6);
   }, [filteredReasons, showAllReasons]);
 
@@ -93,21 +97,23 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
   useEffect(() => {
     if (existingRating) {
       setHasRated(true);
-    } else if (isRatingFetched) {
+    }
+    else if (isRatingFetched) {
       setHasRated(false);
     }
   }, [existingRating, isRatingFetched]);
 
   const handleToggleReason = useCallback((reasonId: string) => {
-    setSelectedReasons((prev) =>
+    setSelectedReasons(prev =>
       prev.includes(reasonId)
-        ? prev.filter((id) => id !== reasonId)
-        : [...prev, reasonId]
+        ? prev.filter(id => id !== reasonId)
+        : [...prev, reasonId],
     );
   }, []);
 
   const handleOpenRatingForm = useCallback(() => {
-    if (!canOpenRatingForm) return;
+    if (!canOpenRatingForm)
+      return;
     setRatingError(null);
     setShowRatingForm(true);
     refetchRatingReasons();
@@ -119,7 +125,7 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
   }, [resetRatingState]);
 
   const handleSubmitRating = useCallback(() => {
-    if (!booking?._id) {
+    if (!booking?.id) {
       setRatingError("Không tìm thấy mã thuê xe để đánh giá.");
       return;
     }
@@ -127,11 +133,15 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
       setRatingError("Vui lòng chọn số sao.");
       return;
     }
+    if (selectedReasons.length === 0) {
+      setRatingError("Vui lòng chọn ít nhất một lý do.");
+      return;
+    }
     submitRating(
-      booking._id,
+      booking.id,
       {
         rating: ratingValue,
-        reason_ids: selectedReasons,
+        reasonIds: selectedReasons,
         comment: ratingComment.trim() ? ratingComment.trim() : undefined,
       },
       {
@@ -148,11 +158,11 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
         onError: (message) => {
           setRatingError(message);
         },
-      }
+      },
     );
   }, [
     submitRating,
-    booking?._id,
+    booking?.id,
     ratingValue,
     selectedReasons,
     ratingComment,
@@ -161,28 +171,18 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
 
   const getAppliesTo = (appliesTo: string) => {
     switch (appliesTo) {
-      case "App":
+      case "app":
         return "Ứng dụng";
-      case "Station":
+      case "station":
         return "Trạm xe";
-      case "Bike":
+      case "bike":
         return "Xe đạp";
       default:
         return appliesTo;
     }
   };
 
-  const openModal = useCallback(() => setShowRatingModal(true), []);
-  const closeModal = useCallback(() => setShowRatingModal(false), []);
-  const markRated = useCallback(() => setHasRated(true), []);
-
   return {
-    ratingModal: {
-      visible: showRatingModal,
-      open: openModal,
-      close: closeModal,
-      markRated,
-    },
     ratingState: {
       hasRated,
       existingRating,
@@ -209,5 +209,6 @@ export function useBookingRating({ bookingId, booking }: RatingStateOptions) {
       handleOpenRatingForm,
       getAppliesTo,
     },
+    isFetchingRating: !isRatingFetched,
   };
 }

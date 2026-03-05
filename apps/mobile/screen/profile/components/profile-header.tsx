@@ -113,7 +113,7 @@ function ProfileHeader({
         </View>
 
         <Text style={styles.headerTitle} numberOfLines={1}>
-          {profile.fullname}
+          {profile.fullName}
         </Text>
         <Text style={styles.headerSubtitle} numberOfLines={1}>
           Thành viên từ

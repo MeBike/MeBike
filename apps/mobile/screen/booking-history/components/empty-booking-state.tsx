@@ -11,14 +11,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#666",
+    color: "#475569",
     marginTop: 16,
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
     fontSize: 14,
-    color: "#999",
+    color: "#94A3B8",
     textAlign: "center",
   },
 });

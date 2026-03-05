@@ -1,58 +1,47 @@
 import { StyleSheet } from "react-native";
 
 const walletBalanceStyles = StyleSheet.create({
-  gradient: {
-    paddingTop: 32,
-    paddingBottom: 32,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    marginBottom: 8,
-    alignItems: "center",
-    elevation: 8,
-  },
-  header: {
+  container: {
     width: "100%",
-    alignItems: "flex-start",
-    marginTop: 14,
+    marginTop: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "700",
     color: "#fff",
-    marginBottom: 12,
-    letterSpacing: 0.2,
+    marginBottom: 10,
+    letterSpacing: 0.3,
   },
-  balanceCard: {
-    width: "115%",
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderRadius: 18,
-    padding: 22,
+  balanceRow: {
     flexDirection: "row",
     alignItems: "center",
-  },
-  balanceContent: {
-    flex: 1,
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
   balanceLabel: {
     fontSize: 14,
     color: "#e0eaff",
-    marginBottom: 10,
+    marginBottom: 8,
     fontWeight: "500",
   },
   balanceAmount: {
-    fontSize: 32,
+    fontSize: 44,
     fontWeight: "800",
     color: "#fff",
-    marginBottom: 12,
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 22,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
     alignSelf: "flex-start",
   },
   statusDot: {
@@ -67,7 +56,7 @@ const walletBalanceStyles = StyleSheet.create({
     fontWeight: "600",
   },
   walletIcon: {
-    marginLeft: 4,
+    marginLeft: 12,
   },
 });
 

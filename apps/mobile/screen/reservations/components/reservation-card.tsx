@@ -108,7 +108,7 @@ export function ReservationCard({
             <Ionicons name="bicycle" size={22} color="#0066FF" />
             <Text style={styles.cardTitle}>
               Xe #
-              {String(reservation.bike_id ?? "").slice(-4) || reservation.bike_id}
+              {String(reservation.bikeId ?? "").slice(-4) || reservation.bikeId}
             </Text>
           </View>
           <View
@@ -123,7 +123,7 @@ export function ReservationCard({
         <Text style={styles.cardSubtitle}>
           Bắt đầu:
           {" "}
-          {formatDateTime(reservation.start_time)}
+          {formatDateTime(reservation.startTime)}
         </Text>
       </View>
 
@@ -141,7 +141,7 @@ export function ReservationCard({
           <Text style={styles.detailText}>
             Giữ chỗ đến:
             {" "}
-            {formatDateTime(reservation.end_time)}
+            {formatDateTime(reservation.endTime)}
           </Text>
         </View>
         <View style={styles.detailRow}>

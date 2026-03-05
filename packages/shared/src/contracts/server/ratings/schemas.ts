@@ -1,5 +1,5 @@
 import { z } from "../../../zod";
-import { RatingDetailSchema } from "./models";
+import { RatingDetailSchema, RatingReasonSchema } from "./models";
 
 export const RatingErrorCodeSchema = z.enum([
   "RENTAL_NOT_FOUND",
@@ -29,13 +29,20 @@ export const CreateRatingResponseSchema = RatingDetailSchema.openapi("CreateRati
 
 export const RatingResponseSchema = CreateRatingResponseSchema;
 
+export const RatingReasonsResponseSchema = z.array(RatingReasonSchema).openapi("RatingReasonsResponse");
+
+export const RatingErrorResponseSchema = z.object({
+  error: z.string(),
+  details: z.object({
+    code: RatingErrorCodeSchema,
+  }).passthrough(),
+}).openapi("RatingErrorResponse");
+
 export { RatingDetailSchema } from "./models";
 
 export type CreateRatingResponse = z.infer<typeof CreateRatingResponseSchema>;
 export type RatingResponse = z.infer<typeof RatingResponseSchema>;
-export type RatingErrorResponse = {
-  error: string;
-  details: {
-    code: z.infer<typeof RatingErrorCodeSchema>;
-  };
-};
+export type RatingReasonsResponse = z.infer<typeof RatingReasonsResponseSchema>;
+export type RatingErrorCode = z.infer<typeof RatingErrorCodeSchema>;
+export type RatingErrorResponse = z.infer<typeof RatingErrorResponseSchema>;
+export type CreateRatingRequest = z.infer<typeof CreateRatingRequestSchema>;

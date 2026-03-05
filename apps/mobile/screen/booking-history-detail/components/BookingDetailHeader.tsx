@@ -35,17 +35,16 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
+    paddingVertical: 10,
     paddingHorizontal: 16,
-    paddingTop: 16,
   },
   backButton: {
-    marginRight: 16,
+    marginRight: 12,
     padding: 4,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "700",
     color: "#fff",
   },
 });

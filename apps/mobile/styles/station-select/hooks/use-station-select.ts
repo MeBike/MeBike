@@ -19,6 +19,7 @@ export function useStationSelect() {
   const [selectedStationId, setSelectedStationId] = React.useState<string | null>(null);
   const [routeProfile, setRouteProfile] = React.useState<MapboxDirectionsProfile>("walking");
   const [routeRequested, setRouteRequested] = React.useState(false);
+  const [isRoutingMode, setIsRoutingMode] = React.useState(false);
   const { location: currentLocation, refresh: refreshLocation } = useCurrentLocation();
 
   const {
@@ -88,7 +89,7 @@ export function useStationSelect() {
     enabled: routeRequested,
   });
 
-  const route = routeQuery.data ?? null;
+  const route = routeRequested ? (routeQuery.data ?? null) : null;
   const isRouting = routeQuery.isFetching;
 
   const handleSelectStationForRoute = async (stationId: string) => {
@@ -98,14 +99,28 @@ export function useStationSelect() {
 
     setSelectedStationId(stationId);
     setRouteRequested(false);
+    setIsRoutingMode(false);
 
     if (!currentLocation) {
       await refreshLocation();
     }
   };
 
+  const deselectStation = () => {
+    setSelectedStationId(null);
+    setRouteRequested(false);
+    setIsRoutingMode(false);
+  };
+
   const clearRoute = () => {
     setRouteRequested(false);
+  };
+
+  const enterRoutingMode = () => {
+    if (!selectedStationId) {
+      return;
+    }
+    setIsRoutingMode(true);
   };
 
   const buildRouteToSelectedStation = React.useCallback(async () => {
@@ -120,6 +135,7 @@ export function useStationSelect() {
       return;
     }
 
+    setIsRoutingMode(true);
     setRouteRequested(true);
   }, [currentLocation, refreshLocation, selectedStation, selectedStationId]);
 
@@ -134,6 +150,7 @@ export function useStationSelect() {
     refreshing,
     showingNearby,
     selectedStationId,
+    isRoutingMode,
     route,
     isRouting,
     routeProfile,
@@ -143,9 +160,11 @@ export function useStationSelect() {
     handleFindNearbyStations,
     handleRefresh,
     buildRouteToSelectedStation,
+    enterRoutingMode,
     clearRoute,
     setRouteProfile,
     openSelectedStationDetail,
+    deselectStation,
     insets,
     currentLocation,
   };

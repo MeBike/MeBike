@@ -95,7 +95,15 @@ const StationMap2D = ({ station, bikes, selectedBike, onBikePress }: {
           >
             <BikeIcon color="#fff" size={12} />
           </View>
-          <Text style={styles.legendText}>Slot trống / xe không khả dụng</Text>
+          <Text style={styles.legendText}>Xe không khả dụng</Text>
+        </View>
+        <View style={styles.legendRow}>
+          <View
+            style={[styles.legendItem, { backgroundColor: BikeColors.surfaceVariant }]}
+          >
+            <BikeIcon color={BikeColors.error} size={12} />
+          </View>
+          <Text style={styles.legendText}>Slot trống</Text>
         </View>
       </View>
     </View>

@@ -2,26 +2,28 @@ import { StyleSheet } from "react-native";
 
 const walletActionsStyles = StyleSheet.create({
   container: {
-    flexDirection: "row",
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingTop: 8,
+    paddingBottom: 6,
   },
   button: {
-    flex: 1,
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: "hidden",
-    marginHorizontal: 4,
   },
   gradient: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 16,
+    paddingVertical: 13,
+    borderRadius: 14,
+  },
+  icon: {
+    marginRight: 8,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-    marginTop: 4,
+    fontSize: 18,
+    fontWeight: "700",
   },
 });
 

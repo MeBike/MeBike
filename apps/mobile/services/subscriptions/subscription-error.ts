@@ -1,9 +1,14 @@
 import type { Result } from "@lib/result";
 
-import { decodeWithSchema, readJson } from "@lib/api-decode";
-import { err } from "@lib/result";
+import { readJson } from "@lib/api-decode";
 import { ServerContracts } from "@mebike/shared";
-import { StatusCodes } from "http-status-codes";
+
+import {
+  asNetworkError as asSharedNetworkError,
+  isUnauthorizedStatus,
+  parseErrorFromSchema,
+  parseUnauthorizedError,
+} from "../shared/service-error";
 
 export type SubscriptionErrorCode = string;
 
@@ -27,20 +32,23 @@ export async function parseSubscriptionError(response: Response): Promise<Subscr
   try {
     const data = await readJson(response);
 
-    if (response.status === StatusCodes.UNAUTHORIZED) {
-      const parsed = decodeWithSchema(ServerContracts.UnauthorizedErrorResponseSchema, data);
-      if (parsed.ok) {
-        return { _tag: "ApiError", code: "UNAUTHORIZED", message: parsed.value.error };
+    if (isUnauthorizedStatus(response.status)) {
+      const unauthorized = parseUnauthorizedError(data);
+      if (unauthorized) {
+        return { _tag: "ApiError", code: unauthorized.code, message: unauthorized.message };
       }
       return { _tag: "DecodeError" };
     }
 
-    const parsed = decodeWithSchema(ServerContracts.SubscriptionsContracts.SubscriptionErrorResponseSchema, data);
-    if (parsed.ok) {
+    const parsed = parseErrorFromSchema(
+      ServerContracts.SubscriptionsContracts.SubscriptionErrorResponseSchema,
+      data,
+    );
+    if (parsed) {
       return {
         _tag: "ApiError",
-        code: parsed.value.details.code,
-        message: parsed.value.error,
+        code: parsed.code,
+        message: parsed.message,
       };
     }
     return { _tag: "DecodeError" };
@@ -51,8 +59,5 @@ export async function parseSubscriptionError(response: Response): Promise<Subscr
 }
 
 export function asNetworkError(error: unknown): Result<never, SubscriptionError> {
-  return err({
-    _tag: "NetworkError",
-    message: error instanceof Error ? error.message : undefined,
-  });
+  return asSharedNetworkError<Extract<SubscriptionError, { _tag: "NetworkError" }>>(error);
 }

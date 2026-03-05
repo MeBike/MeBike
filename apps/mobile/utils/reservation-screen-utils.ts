@@ -7,8 +7,6 @@ export const statusColorMap: Record<Reservation["status"], string> = {
   "ĐÃ HẾT HẠN": "#9E9E9E",
 };
 
-export const SERVER_TIME_OFFSET_MS = 7 * 60 * 60 * 1000;
-
 export function formatDateTime(value?: string | null): string {
   if (!value) {
     return "Không có dữ liệu";
@@ -18,8 +16,6 @@ export function formatDateTime(value?: string | null): string {
     return "Không có dữ liệu";
   }
 
-  const compensatedDate = new Date(date.getTime() - SERVER_TIME_OFFSET_MS);
-
   return new Intl.DateTimeFormat("vi-VN", {
     timeZone: "Asia/Ho_Chi_Minh",
     day: "2-digit",
@@ -28,7 +24,7 @@ export function formatDateTime(value?: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-  }).format(compensatedDate);
+  }).format(date);
 }
 
 export function formatCurrency(

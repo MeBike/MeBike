@@ -67,12 +67,12 @@ export function ReservationInfo({
       <InfoRow
         icon="time"
         label="Thời gian giữ chỗ"
-        value={formatDateTime(reservation.start_time)}
+        value={formatDateTime(reservation.startTime)}
         secondaryValue={(
           <>
             Hiệu lực đến
             {" "}
-            {formatDateTime(reservation.end_time)}
+            {formatDateTime(reservation.endTime)}
           </>
         )}
       />
@@ -93,13 +93,13 @@ export function ReservationInfo({
       <InfoRow
         icon="document-text"
         label="Tạo lúc"
-        value={formatDateTime(reservation.created_at)}
+        value={formatDateTime(reservation.createdAt)}
         marginBottom={0}
         secondaryValue={(
           <>
             Cập nhật gần nhất
             {" "}
-            {formatDateTime(reservation.updated_at)}
+            {formatDateTime(reservation.updatedAt)}
           </>
         )}
       />

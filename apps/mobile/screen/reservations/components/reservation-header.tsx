@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Text, TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type ReservationHeaderProps = {
@@ -25,7 +25,7 @@ export function ReservationHeader({ canGoBack, onGoBack }: ReservationHeaderProp
         borderBottomRightRadius: 32,
       }}
     >
-      {canGoBack && (
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
         <TouchableOpacity
           style={{
             width: 36,
@@ -34,32 +34,24 @@ export function ReservationHeader({ canGoBack, onGoBack }: ReservationHeaderProp
             backgroundColor: "rgba(255,255,255,0.2)",
             justifyContent: "center",
             alignItems: "center",
-            marginBottom: 12,
+            opacity: canGoBack ? 1 : 0,
           }}
           onPress={onGoBack}
           activeOpacity={0.8}
+          disabled={!canGoBack}
         >
           <Ionicons name="chevron-back" size={22} color="#fff" />
         </TouchableOpacity>
-      )}
-      <Text
-        style={{
-          fontSize: 26,
-          fontWeight: "700",
-          color: "#fff",
-        }}
-      >
-        Đặt trước của tôi
-      </Text>
-      <Text
-        style={{
-          marginTop: 6,
-          fontSize: 14,
-          color: "rgba(255,255,255,0.85)",
-        }}
-      >
-        Quản lý các lượt đặt trước và bắt đầu chuyến đi nhanh chóng.
-      </Text>
+        <Text
+          style={{
+            fontSize: 26,
+            fontWeight: "700",
+            color: "#fff",
+          }}
+        >
+          Đặt trước của tôi
+        </Text>
+      </View>
     </LinearGradient>
   );
 }

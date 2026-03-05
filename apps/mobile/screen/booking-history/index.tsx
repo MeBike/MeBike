@@ -1,6 +1,7 @@
 import { LoadingScreen } from "@components/LoadingScreen";
+import { useStationActions } from "@hooks/useStationAction";
 import { useNavigation } from "@react-navigation/native";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { StatusBar, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -11,7 +12,7 @@ import { useBookingHistory } from "./hooks/use-booking-history";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F3F5F9",
   },
 });
 
@@ -27,6 +28,15 @@ function BookingHistoryScreen() {
     loadMore,
     isFetchingNextPage,
   } = useBookingHistory();
+  const { stations } = useStationActions(true);
+
+  const stationNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const station of stations) {
+      map.set(station._id, station.name);
+    }
+    return map;
+  }, [stations]);
 
   const handleOpenBooking = useCallback(
     (bookingId: string) => {
@@ -47,6 +57,7 @@ function BookingHistoryScreen() {
       <BookingHistoryHeader topInset={insets.top} />
       <BookingHistoryList
         bookings={bookings}
+        stationNameById={stationNameById}
         refreshing={refreshing}
         onRefresh={onRefresh}
         onLoadMore={loadMore}

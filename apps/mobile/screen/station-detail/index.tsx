@@ -1,5 +1,4 @@
 import { LoadingScreen } from "@components/LoadingScreen";
-import StationMap2D from "@components/StationMap2D";
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { BikeColors } from "../../constants/BikeColors";
@@ -32,12 +31,10 @@ export default function StationDetailScreen() {
     station,
     isLoading,
     loadedBikes,
-    allBikes,
     isFetchingAllBikes,
     hasMore,
     totalRecords,
     refreshing,
-    focusedBike,
     handleBikePress,
     handleRefresh,
     handleLoadMore,
@@ -84,12 +81,14 @@ export default function StationDetailScreen() {
           })}
         />
         <StationStats station={station} />
+        {/*
         <StationMap2D
           station={station}
           bikes={allBikes}
           selectedBike={focusedBike}
           onBikePress={handleBikePress}
         />
+        */}
         <BikeList
           bikes={loadedBikes}
           onBikePress={handleBikePress}

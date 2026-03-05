@@ -29,7 +29,15 @@ export function RefundsTab({
   onLoadMore,
 }: RefundsTabProps) {
   const renderRequest = ({ item }: { item: RefundRequest }) => (
-    <TransactionItem type="refund" item={item} />
+    <TransactionItem
+      type="refund"
+      item={{
+        id: item._id,
+        amount: item.amount,
+        createdAt: item.created_at,
+        status: item.status,
+      }}
+    />
   );
 
   const renderFooter = () => {
