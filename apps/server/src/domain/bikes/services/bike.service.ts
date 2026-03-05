@@ -1,6 +1,12 @@
 import { Effect, Layer, Option } from "effect";
 
 import type { PageRequest, PageResult } from "@/domain/shared/pagination";
+import { pickDefined } from "@/domain/shared/pick-defined";
+import {
+  isPrismaForeignKeyViolation,
+  isPrismaRecordNotFound,
+  isPrismaUniqueViolation,
+} from "@/infrastructure/prisma-errors";
 import type { BikeStatus } from "generated/prisma/client";
 
 import { Prisma } from "@/infrastructure/prisma";
@@ -22,6 +28,8 @@ import {
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
+  BikeRepositoryError as BikeRepositoryErrorClass,
+  DuplicateChipId as DuplicateChipIdError,
   BikeStationNotFound as BikeStationNotFoundError,
   BikeSupplierNotFound as BikeSupplierNotFoundError,
 } from "../domain-errors";
@@ -61,7 +69,13 @@ export type BikeService = {
     }>,
   ) => Effect.Effect<
     Option.Option<BikeRow>,
-    BikeCurrentlyRented | BikeCurrentlyReserved | BikeNotFound
+    | BikeCurrentlyRented
+    | BikeCurrentlyReserved
+    | BikeNotFound
+    | DuplicateChipId
+    | BikeStationNotFound
+    | BikeSupplierNotFound
+    | BikeRepositoryError
   >;
 };
 
@@ -150,28 +164,69 @@ function makeBikeService(
               new BikeCurrentlyReserved({ bikeId, action: "update_station" }),
             );
           }
+
+          const station = yield* Effect.promise(() =>
+            client.station.findUnique({
+              where: { id: patch.stationId },
+              select: { id: true },
+            }));
+          if (!station) {
+            return yield* Effect.fail(new BikeStationNotFoundError({ stationId: patch.stationId }));
+          }
         }
 
-        const updated = yield* Effect.promise(() =>
-          client.bike.update({
-            where: { id: bikeId },
-            data: {
-              ...(patch.chipId ? { chipId: patch.chipId } : {}),
-              ...(patch.stationId ? { stationId: patch.stationId } : {}),
-              ...(patch.status ? { status: patch.status } : {}),
-              ...(patch.supplierId !== undefined
-                ? { supplierId: patch.supplierId }
-                : {}),
-            },
-            select: {
-              id: true,
-              chipId: true,
-              stationId: true,
-              supplierId: true,
-              status: true,
-            },
-          }),
-        );
+        const nextSupplierId = patch.supplierId;
+        if (nextSupplierId != null && nextSupplierId !== current.value.supplierId) {
+          const supplier = yield* Effect.promise(() =>
+            client.supplier.findUnique({
+              where: { id: nextSupplierId },
+              select: { id: true },
+            }));
+          if (!supplier) {
+            return yield* Effect.fail(new BikeSupplierNotFoundError({ supplierId: nextSupplierId }));
+          }
+        }
+
+        const updated = yield* Effect.tryPromise({
+          try: () =>
+            client.bike.update({
+              where: { id: bikeId },
+              data: pickDefined({
+                chipId: patch.chipId,
+                stationId: patch.stationId,
+                status: patch.status,
+                supplierId: patch.supplierId,
+              }),
+              select: {
+                id: true,
+                chipId: true,
+                stationId: true,
+                supplierId: true,
+                status: true,
+              },
+            }),
+          catch: (err: unknown) => {
+            if (isPrismaUniqueViolation(err)) {
+              return new DuplicateChipIdError({ chipId: patch.chipId ?? current.value.chipId });
+            }
+            if (isPrismaRecordNotFound(err)) {
+              return new BikeNotFound({ id: bikeId });
+            }
+            if (isPrismaForeignKeyViolation(err)) {
+              if (patch.stationId) {
+                return new BikeStationNotFoundError({ stationId: patch.stationId });
+              }
+              if (patch.supplierId != null) {
+                return new BikeSupplierNotFoundError({ supplierId: patch.supplierId });
+              }
+            }
+            return new BikeRepositoryErrorClass({
+              operation: "adminUpdateBike.update",
+              cause: err,
+              message: "Failed to update bike",
+            });
+          },
+        });
 
         return Option.some(updated);
       }),

@@ -101,6 +101,27 @@ describe("bikeService Integration", () => {
     return { id };
   };
 
+  const createBike = async (
+    stationId: string,
+    supplierId: string,
+    chipId = `chip-${uuidv7()}`,
+  ) => {
+    const id = uuidv7();
+    await client.bike.create({
+      data: {
+        id,
+        chipId,
+        stationId,
+        supplierId,
+        status: "AVAILABLE",
+        updatedAt: new Date(),
+      },
+      select: { id: true, chipId: true },
+    });
+
+    return { id, chipId };
+  };
+
   const runWithService = <A, E>(
     eff: Effect.Effect<A, E, BikeServiceTag>,
   ) =>
@@ -164,5 +185,60 @@ describe("bikeService Integration", () => {
     expect(created.stationId).toBe(stationId);
     expect(created.supplierId).toBe(supplierId);
     expect(created.status).toBe("AVAILABLE");
+  });
+
+  it("update fails with BikeStationNotFound when station does not exist", async () => {
+    const { id: stationId } = await createStation();
+    const { id: supplierId } = await createSupplier();
+    const { id: bikeId } = await createBike(stationId, supplierId);
+
+    const result = await runWithService(
+      Effect.flatMap(BikeServiceTag, service =>
+        service.adminUpdateBike(bikeId, {
+          stationId: uuidv7(),
+        })).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected BikeStationNotFound failure");
+    }
+    expect(result.left._tag).toBe("BikeStationNotFound");
+  });
+
+  it("update fails with BikeSupplierNotFound when supplier does not exist", async () => {
+    const { id: stationId } = await createStation();
+    const { id: supplierId } = await createSupplier();
+    const { id: bikeId } = await createBike(stationId, supplierId);
+
+    const result = await runWithService(
+      Effect.flatMap(BikeServiceTag, service =>
+        service.adminUpdateBike(bikeId, {
+          supplierId: uuidv7(),
+        })).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected BikeSupplierNotFound failure");
+    }
+    expect(result.left._tag).toBe("BikeSupplierNotFound");
+  });
+
+  it("update fails with DuplicateChipId when chipId already exists", async () => {
+    const { id: stationId } = await createStation();
+    const { id: supplierId } = await createSupplier();
+    const primaryBike = await createBike(stationId, supplierId);
+    const existingBike = await createBike(stationId, supplierId);
+
+    const result = await runWithService(
+      Effect.flatMap(BikeServiceTag, service =>
+        service.adminUpdateBike(primaryBike.id, {
+          chipId: existingBike.chipId,
+        })).pipe(Effect.either),
+    );
+
+    if (Either.isRight(result)) {
+      throw new Error("Expected DuplicateChipId failure");
+    }
+    expect(result.left._tag).toBe("DuplicateChipId");
   });
 });
