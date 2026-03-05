@@ -29,10 +29,9 @@ interface CreateUserProps {
 export default function CreateUser({ onSubmit }: CreateUserProps) {
   const navigate = useRouter();
   const [formData, setFormData] = useState({
-    name : "",
-    phone : "",
+    fullName : "",
+    phoneNumber : "",
     email : "",
-    YOB : "",
     role : "USER",
   });
 
@@ -43,11 +42,10 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const data : CreateUserFormData = { 
-        name: formData.name,
+        fullName: formData.fullName,
         email: formData.email,
-        phone: formData.phone,
+        phoneNumber: formData.phoneNumber,
         role: formData.role.toUpperCase() as "USER" | "STAFF" | "ADMIN" | "SOS",
-        YOB: Number(formData.YOB),
     }
     onSubmit({data});
   };
@@ -72,8 +70,8 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
                   <Label htmlFor="name">Full Name *</Label>
                   <Input
                     id="name"
-                    value={formData.name}
-                    onChange={(e) => handleChange("name", e.target.value)}
+                    value={formData.fullName}
+                    onChange={(e) => handleChange("fullName", e.target.value)}
                     placeholder="Enter full name"
                   />
                 </div>
@@ -92,31 +90,15 @@ export default function CreateUser({ onSubmit }: CreateUserProps) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone *</Label>
+                  <Label htmlFor="phoneNumber">Phone *</Label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleChange("phone", e.target.value)}
+                      id="phoneNumber"
+                      value={formData.phoneNumber}
+                      onChange={(e) => handleChange("phoneNumber", e.target.value)}
                       placeholder="Enter phone number"
                       className="pl-10"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="yob">Year of Birth</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="yob"
-                      type="number"
-                      value={formData.YOB}
-                      onChange={(e) => handleChange("YOB", e.target.value)}
-                      placeholder="e.g., 1990"
-                      className="pl-10"
-                      min="1900"
-                      max={new Date().getFullYear()}
                     />
                   </div>
                 </div>

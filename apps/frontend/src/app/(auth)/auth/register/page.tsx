@@ -18,7 +18,6 @@ import {
 import { Bike, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import { toast } from "sonner";
-import { EmailVerificationForm } from "@/components/auth/EmailVerificationForm";
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -35,7 +34,7 @@ const RegisterPage = () => {
   } = useForm<RegisterSchemaFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      fullname: "",
+      fullName: "",
       email: "",
       password: "",
       phoneNumber: "",
@@ -95,21 +94,21 @@ const RegisterPage = () => {
                 className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="full_name" className="text-sm font-medium">
+                  <Label htmlFor="fullName" className="text-sm font-medium">
                     Họ và tên
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="full_name"
-                      {...register("fullname")}
+                      id="fullName"
+                      {...register("fullName")}
                       type="text"
                       placeholder="Nguyễn Văn A"
                       className="pl-10 h-12 w-full rounded-lg border border-gray-300 bg-white shadow-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                     />
-                    {errors.fullname && (
+                    {errors.fullName && (
                       <p className="text-sm text-red-500 mt-1">
-                        {errors.fullname.message}
+                        {errors.fullName.message}
                       </p>
                     )}
                   </div>

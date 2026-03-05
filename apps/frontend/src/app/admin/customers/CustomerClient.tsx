@@ -87,11 +87,10 @@ export default function CustomersClient() {
   }
   const handleCreateUser = handleSubmit((data) => {
     createUser({
-      name: data.name,
+      fullName: data.fullName,
       email: data.email,
-      phone: data.phone,
+      phoneNumber: data.phoneNumber,
       role: data.role,
-      YOB: data.YOB,
     });
     setIsCreateModalOpen(false);
     console.log("[v0] Create user:", data);
@@ -221,12 +220,12 @@ export default function CustomersClient() {
                   <Label htmlFor="name">Họ tên</Label>
                   <Input
                     id="name"
-                    {...register("name")}
+                    {...register("fullName")}
                     placeholder="Nhập họ tên"
                   />
-                  {errors.name && (
+                  {errors.fullName && (
                     <p className="text-destructive text-xs font-medium">
-                      {errors.name.message}
+                      {errors.fullName.message}
                     </p>
                   )}
                 </div>
@@ -249,31 +248,16 @@ export default function CustomersClient() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Số điện thoại</Label>
+                    <Label htmlFor="phoneNumber">Số điện thoại</Label>
                     <Input
-                      id="phone"
+                      id="phoneNumber"
                       type="tel"
-                      {...register("phone")}
+                      {...register("phoneNumber")}
                       placeholder="09xxx"
                     />
-                    {errors.phone && (
+                    {errors.phoneNumber && (
                       <p className="text-destructive text-xs font-medium">
-                        {errors.phone.message}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="yob">Năm sinh</Label>
-                    <Input
-                      id="yob"
-                      type="number"
-                      {...register("YOB", { valueAsNumber: true })}
-                      placeholder="1995"
-                    />
-                    {errors.YOB && (
-                      <p className="text-destructive text-xs font-medium">
-                        {errors.YOB.message}
+                        {errors.phoneNumber.message}
                       </p>
                     )}
                   </div>
