@@ -14,7 +14,7 @@ export type UpdateProfileSchemaFormData = z.infer<typeof profileUpdateSchema>;
 export type ResetPasswordSchemaFormData = z.infer<typeof resetPasswordSchema>;
 export const registerSchema = z
   .object({
-    fullname: z
+    fullName: z
       .string()
       .min(1, { message: "Họ không được để trống" })
       .max(30, { message: "Họ không được vượt quá 30 ký tự" }),
@@ -61,7 +61,7 @@ export const changePasswordForAdminSchema = z
 })
 export type ChangePasswordForAdminSchemaFormData = z.infer<typeof changePasswordForAdminSchema>;
 export const profileUpdateSchema = z.object({
-  fullname: z
+  fullName: z
     .string()
     .min(3, { message: "Họ và tên phải có ít nhất 3 ký tự" })
     .max(50, { message: "Họ và tên không được vượt quá 50 ký tự" }),

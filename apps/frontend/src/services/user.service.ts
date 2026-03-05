@@ -1,119 +1,63 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { DetailUser } from "@/types";
-import { UserProfile } from "@/schemas/userSchema";
+import { CreateUserFormData, UserProfile } from "@/schemas/userSchema";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
-interface ApiReponse<T> {
-  data: T;
-  pagination?: {
-    totalPages: number;
-    totalRecords: number;
-    limit: number;
-    currentPage: number;
-  };
-}
+import { ApiResponse } from "@/types";
+import {ENDPOINT} from "@/constants/end-point";
+import { GetActiveUserStatisticsResponse , GetNewRegistrationStats , GetUserStatisticsResponse  , GetUserDashboardStatsResponse , GetTopRentersResponse} from "@/types";
 interface DetailUserResponse<T> {
   message: string;
   result: T;
 }
-export interface UserStatistics {
-  total_users: number;
-  total_verified: number;
-  total_unverified: number;
-  total_banned: number;
-}
 export interface ResetPasswordResponse {
   message: string;
 }
-export interface GetActiveStatisticsUser {
-  active_users_count: number;
-  date: string;
-}
-export interface TopRenterUser {
-  total_rentals: number;
-  user: {
-    _id: string;
-    fullname: string;
-    email: string;
-    phone_number: string;
-    avatar: string;
-    location: string;
-  };
-}
-interface GetNewRegistrationStats {
-  newUsersThisMonth: number;
-  newUsersLastMonth: number;
-  percentageChange: number;
-}
-export interface DashboardUserStats {
-  totalCustomers: number;
-  activeCustomers: number;
-  newCustomersThisMonth: number;
-  vipCustomer: {
-    fullname: string;
-    totalDuration: number;
-  };
-  totalRevenue: number;
-  averageSpending: number;
-}
-const USER_BASE = "/users/manage-users";
-const USER_ENDPOINTS = {
-  BASE: USER_BASE,
-  MANAGE_USER: `${USER_BASE}/get-all`,
-  SEARCH_USER: `${USER_BASE}/search`,
-  BY_ID: (id: string) => `${USER_BASE}/${id}`,
-  UPDATE: (id: string) => `${USER_BASE}/${id}`,
-  RESET_USER_PASSWORD: (id: string) =>
-    `${USER_BASE}/admin-reset-password/${id}`,
-  STATISTICS: `${USER_BASE}/stats`,
-  ACTIVE_USERS: `${USER_BASE}/active-users`,
-  TOP_RENTERS: `${USER_BASE}/top-renters`,
-  CREATE_USER: `${USER_BASE}/create`,
-  GET_NEW_REGISRATION_STATS: `${USER_BASE}/stats/new-users`,
-  GET_TOP_RENTER: `${USER_BASE}/stats/top-renters`,
-  GET_ACTIVE_USERS: `${USER_BASE}/stats/active-users`,
-  GET_USER_STATS: `${USER_BASE}/stats`,
-  GET_ACTIVE_USER: `${USER_BASE}/stats`,
-  DASHBOARD_USER_STATS: `${USER_BASE}/dashboard-stats`,
-  RESET_PASSWORD: (id: string) => `${USER_BASE}/admin-reset-password/${id}`,
-  UPDATE_PROFILE_ADMIN: (id: string) => `${USER_BASE}/${id}`,
-} as const;
 export const userService = {
   getAllUsers: async ({
     page,
-    limit,
+    pageSize,
     verify,
     role,
+    fullName,
+    sortBy,
+    sortDir,
   }: {
     page?: number;
-    limit?: number;
+    pageSize?: number;
     verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
-    role?: "ADMIN" | "USER" | "STAFF" | "";
-  }): Promise<AxiosResponse<ApiReponse<DetailUser[]>>> => {
-    const response = await fetchHttpClient.get<ApiReponse<DetailUser[]>>(
-      USER_ENDPOINTS.MANAGE_USER,
+    role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+    fullName?: string;
+    sortBy?: "fullname" | "email" | "role" | "verify" | "updatedAt";
+    sortDir?: "asc" | "desc";
+  }): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
+      ENDPOINT.USER.BASE,
       {
         page: page,
-        limit: limit,
+        pageSize: pageSize,
         verify: verify,
+        fullName: fullName,
         role: role,
+        sortBy: sortBy,
+        sortDir: sortDir,
       }
     );
     return response;
   },
   getDetailUser: async (
     id: string
-  ): Promise<ApiReponse<DetailUserResponse<DetailUser>>> => {
-    const response = await fetchHttpClient.get<DetailUserResponse<DetailUser>>(
-      USER_ENDPOINTS.BY_ID(id)
+  ): Promise<AxiosResponse<DetailUser>> => {
+    const response = await fetchHttpClient.get<DetailUser>(
+      ENDPOINT.USER.DETAIL(id)
     );
     return response;
   },
   getSearchUser: async (
     query: string
-  ): Promise<AxiosResponse<ApiReponse<DetailUser[]>>> => {
-    const response = await fetchHttpClient.get<ApiReponse<DetailUser[]>>(
-      USER_ENDPOINTS.SEARCH_USER,
+  ): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
+    const response = await fetchHttpClient.get<ApiResponse<DetailUser[]>>(
+      ENDPOINT.USER.SEARCH_USER,
       {
         q: query,
       }
@@ -123,18 +67,19 @@ export const userService = {
   updateUser: async (
     id: string,
     data: Partial<UserProfile>
-  ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
-    const response = await fetchHttpClient.patch<
-      DetailUserResponse<DetailUser>
-    >(USER_ENDPOINTS.UPDATE(id), data);
+  ): Promise<AxiosResponse<DetailUser>> => {
+    const response = await fetchHttpClient.patch<DetailUser>(
+      ENDPOINT.USER.UPDATE(id),
+      data
+    );
     return response;
   },
   userStatistics: async (): Promise<
-    AxiosResponse<DetailUserResponse<UserStatistics>>
+    AxiosResponse<GetUserStatisticsResponse>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<UserStatistics>
-    >(USER_ENDPOINTS.STATISTICS);
+      GetUserStatisticsResponse
+    >(ENDPOINT.USER.STATS_USER);
     return response;
   },
   resetUserPassword: async (
@@ -142,7 +87,7 @@ export const userService = {
   ): Promise<AxiosResponse<DetailUserResponse<ResetPasswordResponse>>> => {
     const response = await fetchHttpClient.post<
       DetailUserResponse<ResetPasswordResponse>
-    >(USER_ENDPOINTS.RESET_USER_PASSWORD(id));
+    >(ENDPOINT.USER.RESET_PASSWORD(id));
     return response;
   },
   // getActiveUserStats: async (): Promise<
@@ -154,18 +99,18 @@ export const userService = {
   //   return response;
   // },
   getTopRenter: async (): Promise<
-    AxiosResponse<DetailUserResponse<ApiReponse<TopRenterUser[]>>>
+    AxiosResponse<GetTopRentersResponse[]>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<ApiReponse<TopRenterUser[]>>
-    >(USER_ENDPOINTS.GET_TOP_RENTER);
+      GetTopRentersResponse[]
+    >(ENDPOINT.USER.STATS_TOP_RENTER);
     return response;
   },
   createUser: async (
-    data: UserProfile
-  ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
-    const response = await fetchHttpClient.post<DetailUserResponse<DetailUser>>(
-      USER_ENDPOINTS.CREATE_USER,
+    data: CreateUserFormData
+  ): Promise<AxiosResponse<DetailUser>> => {
+    const response = await fetchHttpClient.post<DetailUser>(
+      ENDPOINT.USER.CREATE_USER,
       data
     );
     return response;
@@ -175,32 +120,30 @@ export const userService = {
   > => {
     const response = await fetchHttpClient.get<
       DetailUserResponse<GetNewRegistrationStats>
-    >(USER_ENDPOINTS.GET_NEW_REGISRATION_STATS);
+    >(ENDPOINT.USER.NEW_USER);
     return response;
   },
   getActiveUser: async (): Promise<
-    AxiosResponse<DetailUserResponse<GetActiveStatisticsUser[]>>
+    AxiosResponse<DetailUserResponse<GetActiveUserStatisticsResponse[]>>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<GetActiveStatisticsUser[]>
-    >(USER_ENDPOINTS.GET_ACTIVE_USER);
+      DetailUserResponse<GetActiveUserStatisticsResponse[]>
+    >(ENDPOINT.USER.STATS_ACTIVE_USER);
     return response;
   },
   getDashboardUserStats: async (): Promise<
-    AxiosResponse<DetailUserResponse<DashboardUserStats>>
+    AxiosResponse<GetUserDashboardStatsResponse>
   > => {
     const response = await fetchHttpClient.get<
-      DetailUserResponse<DashboardUserStats>
-    >(USER_ENDPOINTS.DASHBOARD_USER_STATS);
+      GetUserDashboardStatsResponse
+    >(ENDPOINT.USER.DASHBOARD_USER_STATS);
     return response;
   },
   postResetPassword: async (
     id: string,
     data: ResetPasswordRequest
-  ): Promise<AxiosResponse<DetailUserResponse<ResetPasswordResponse>>> => {
-    const response = await fetchHttpClient.post<
-      DetailUserResponse<ResetPasswordResponse>
-    >(USER_ENDPOINTS.RESET_PASSWORD(id), data);
+  ): Promise<AxiosResponse> => {
+    const response = await fetchHttpClient.post(ENDPOINT.USER.RESET_PASSWORD(id), data);
     return response;
   },
   updateProfileAdmin: async (
@@ -209,7 +152,7 @@ export const userService = {
   ): Promise<AxiosResponse<DetailUserResponse<DetailUser>>> => {
     const response = await fetchHttpClient.patch<
       DetailUserResponse<DetailUser>
-    >(USER_ENDPOINTS.UPDATE_PROFILE_ADMIN(id), data);
+    >(ENDPOINT.USER.UPDATE(id), data);
     return response;
   }
 };

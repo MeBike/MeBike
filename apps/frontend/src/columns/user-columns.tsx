@@ -40,17 +40,10 @@ export const userColumns = ({
   onView?: ({ id }: { id: string }) => void;
 }): ColumnDef<DetailUser>[] => [
   {
-    accessorKey: "id",
-    header: "Mã người dùng",
-    cell: ({ row }) => {
-      return shortenId(row.original.id) || "Không có";
-    },
-  },
-  {
-    accessorKey: "fullname",
+    accessorKey: "fullName",
     header: "Họ tên",
     cell: ({ row }) => {
-      return row.original.fullname || "Không có";
+      return row.original.fullName || "Không có";
     },
   },
   {
@@ -84,13 +77,15 @@ export const userColumns = ({
     accessorKey: "verify",
     header: "Trạng thái xác thực",
     cell: ({ row }) => (
-      <span
+      <div className="flex justify-center items-center">
+        <span
         className={`px-3 py-1 rounded-full text-xs font-medium ${getVerifyStatusColor(
           row.original.verify
         )}`}
       >
-        {row.original.verify === "VERIFIED" ? "Đã xác thực" : "Chưa xác thực"}
+        {row.original.verify === "VERIFIED" ? "VERIFIED" : "UNVERIFIED"}
       </span>
+      </div>
     ),
   },
   {

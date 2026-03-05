@@ -46,7 +46,7 @@ export function CustomerCard({
   onView,
   onEdit,
 }: CustomerCardProps) {
-  const initials = customer.fullname
+  const initials = customer.fullName
     .split(" ")
     .map((n) => n[0])
     .join("")
@@ -61,7 +61,7 @@ export function CustomerCard({
           <Avatar className="w-16 h-16 border-2 border-border">
             <AvatarImage
               src={customer.avatar || "/placeholder.svg"}
-              alt={customer.fullname}
+              alt={customer.fullName}
             />
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {initials}
@@ -71,7 +71,7 @@ export function CustomerCard({
             <div className="flex items-start justify-between gap-2">
               <div>
                 <h3 className="font-semibold text-lg text-foreground truncate">
-                  {customer.fullname}
+                  {customer.fullName}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   @{customer.username}

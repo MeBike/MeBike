@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 export function formatDateVN(dateString: string) {
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) return ""; // Nếu date không hợp lệ trả về rỗng
+  if (isNaN(date.getTime())) return ""; 
   return date.toLocaleString("vi-VN", {
     day: "2-digit",
     month: "2-digit",

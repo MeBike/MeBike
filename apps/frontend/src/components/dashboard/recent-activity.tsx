@@ -20,7 +20,7 @@ export function RecentActivity() {
         <div className="space-y-4">
           {topRenter?.slice(0, 5).map((renter, index) => (
             <div
-              key={renter.user._id}
+              key={renter.user.id}
               className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
             >
               <div className="p-2 bg-primary/10 rounded-lg">
@@ -37,7 +37,7 @@ export function RecentActivity() {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {renter.total_rentals} lượt thuê
+                  {renter.totalRentals} lượt thuê
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {renter.user.email}

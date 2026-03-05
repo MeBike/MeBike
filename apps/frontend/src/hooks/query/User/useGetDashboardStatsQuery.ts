@@ -15,6 +15,5 @@ export const useGetDashboardStatsQuery = () => {
   return useQuery({
     queryKey: ["user", "dashboard-stats"],
     queryFn: () => fetchDashboardUserStats(),
-    enabled: false,
   });
 };

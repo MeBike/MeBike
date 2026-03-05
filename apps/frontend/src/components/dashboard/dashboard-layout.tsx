@@ -33,7 +33,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               <div className="flex items-center gap-3 pl-4 border-l border-border">
                 <div className="text-right hidden md:block">
                   <p className="text-sm font-medium text-foreground">
-                    {user?.fullname || "Chưa có tên"}
+                    {user?.fullName || "Chưa có tên"}
                   </p>
                   <p className="text-xs text-muted-foreground capitalize">
                     {user?.role || "user"}
@@ -42,7 +42,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted">
                   <Image
                     src={user?.avatar || "/placeholder.svg"}
-                    alt={user?.fullname || "User"}
+                    alt={user?.fullName || "User"}
                     fill
                     className="object-cover"
                   />

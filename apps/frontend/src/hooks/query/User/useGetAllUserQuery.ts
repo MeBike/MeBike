@@ -4,23 +4,25 @@ import { VerifyStatus } from "@/types";
 import { QUERY_KEYS } from "@constants/queryKey";
 const fetchAllUserRequests = async ({
   page,
-  limit,
+  pageSize,
   verify,
   role,
+  fullName,
 }: {
   page?: number;
-  limit?: number;
+  pageSize?: number;
   verify?: VerifyStatus;
   role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+  fullName?: string;
 }) => {
   try {
     const query: Record<string, number | string> = {
       page: page ?? 1,
-      limit: limit ?? 10,
+      pageSize: pageSize ?? 5,
     };
     if (verify) query.verify = verify;
     if (role) query.role = role;
-
+    if (fullName) query.fullName = fullName;
     const response = await userService.getAllUsers(query);
     if (response.status === 200) {
       return response.data;
@@ -32,17 +34,19 @@ const fetchAllUserRequests = async ({
 };
 export const useGetAllUserQuery = ({
   page,
-  limit,
+  pageSize,
   verify,
   role,
+  fullName,
 }: {
   page?: number;
-  limit?: number;
+  pageSize?: number;
   verify?: VerifyStatus;
   role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+  fullName?: string;
 }) => {
   return useQuery({
-    queryKey: QUERY_KEYS.USER.ALL(page, limit, verify, role),
-    queryFn: () => fetchAllUserRequests({ page, limit, verify, role }),
+    queryKey: QUERY_KEYS.USER.ALL(page, pageSize, verify, role, fullName),
+    queryFn: () => fetchAllUserRequests({ page, pageSize, verify, role, fullName }),
   });
 };

@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { userService } from "@/services/user.service";
-import { UserProfile } from "@/schemas/userSchema";
+import { CreateUserFormData } from "@/schemas/userSchema";
 export const useCreateUserMutation = () => {
     return useMutation({
-      mutationFn: (data : UserProfile) =>
+      mutationFn: (data : CreateUserFormData) =>
         userService.createUser(data),
     });
 }

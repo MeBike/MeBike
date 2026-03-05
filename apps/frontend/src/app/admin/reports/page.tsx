@@ -74,7 +74,7 @@ export default function ReportsPage() {
   useEffect(() => {
     setIsLoadingStaff(true);
     userService
-      .getAllUsers({ role: "STAFF", limit: 100 })
+      .getAllUsers({ role: "STAFF", pageSize: 100 })
       .then((res) => {
         setStaffList(res.data.data || []);
       })
@@ -277,7 +277,7 @@ export default function ReportsPage() {
                   </option>
                   {staffList.map((staff) => (
                     <option key={staff.id} value={staff.id}>
-                      {staff.fullname} ({staff.email})
+                      {staff.fullName} ({staff.email})
                     </option>
                   ))}
                 </select>

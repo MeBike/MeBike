@@ -12,12 +12,13 @@ import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
 import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
 import { useGetDashboardStatsQuery } from "./query/User/useGetDashboardStatsQuery";
-import { ResetPasswordRequest } from "@/schemas/userSchema";
+import { CreateUserFormData, ResetPasswordRequest } from "@/schemas/userSchema";
 import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
 import { QUERY_KEYS } from "@/constants/queryKey";
-import getErrorMessage from "@/utils/error-message";
+import getAxiosErrorCodeMessage from "@/utils/error-util";
+import { getErrorMessageFromCustomerCode } from "@/utils/map-message";
 export const useUserActions = ({
   hasToken,
   verify,
@@ -25,6 +26,7 @@ export const useUserActions = ({
   limit,
   page,
   searchQuery,
+  fullName,
   id,
 }: {
   hasToken: boolean;
@@ -34,6 +36,7 @@ export const useUserActions = ({
   page?: number;
   searchQuery?: string;
   id?: string;
+  fullName?: string;
 }) => {
   const router = useRouter();
   const useCreateUser = useCreateUserMutation();
@@ -44,10 +47,11 @@ export const useUserActions = ({
     isLoading: isLoadingDetailUser,
   } = useGetDetailUserQuery(id || "");
   const { data, refetch, isLoading, isFetching } = useGetAllUserQuery({
-    page,
-    limit,
+    page: page,
+    pageSize: limit,
     role: role || "",
     verify: verify || "",
+    fullName: fullName || "",
   });
   const {
     data: statisticsData,
@@ -116,7 +120,8 @@ export const useUserActions = ({
     }
     refetchTopRenter();
   }, [hasToken, router, refetchTopRenter]);
-  const { data: dashboardStatsData , refetch : refetchDashboardStats } = useGetDashboardStatsQuery();
+  const { data: dashboardStatsData, refetch: refetchDashboardStats } =
+    useGetDashboardStatsQuery();
   const getRefetchDashboardStats = useCallback(() => {
     if (!hasToken) {
       router.push("/login");
@@ -134,38 +139,32 @@ export const useUserActions = ({
   const users =
     searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
   const createUser = useCallback(
-    async (userData: UserProfile) => {
+    async (userData: CreateUserFormData) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
-      useCreateUser.mutate(userData, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result?.status === 201) {
-            toast.success("Tạo người dùng thành công");
-            queryClient.invalidateQueries({
-              queryKey: QUERY_KEYS.USER.ALL(),
-            });
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
-            if (searchQuery && searchQuery.length > 0) {
-              refetchSearch();
-            } else {  
-              refetch();
-            }
-          } else {
-            const errorMessage =
-              result?.data?.message || "Lỗi khi tạo người dùng";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await useCreateUser.mutateAsync(userData);
+        if (result?.status === 201) {
+          queryClient.invalidateQueries({
+            queryKey: ["user", "all"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["user", "statistics"],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["user", "dashboard-stats"],
+          });
+          toast.success("Tạo người dùng thành công");
+        }
+        return result;
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        const errorMessage = getErrorMessageFromCustomerCode(error_code);
+        toast.error(errorMessage);
+        throw error;
+      }
     },
     [
       hasToken,
@@ -179,7 +178,7 @@ export const useUserActions = ({
       page,
       role,
       verify,
-    ]
+    ],
   );
   const useResetPassword = useResetPasswordUserMutation();
   const useUpdateProfile = useUpdateProfileUserMutation();
@@ -189,27 +188,25 @@ export const useUserActions = ({
         router.push("/login");
         return;
       }
-      useResetPassword.mutate({id: id || "", data: userData}, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result?.status === 200) {
-            toast.success("Đặt lại mật khẩu thành công");
-          }
-        },
-        onError: (error: unknown) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi tạo người dùng");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await useResetPassword.mutateAsync({
+          id: id || "",
+          data: userData,
+        });
+        if (result.status === 200) {
+          toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
+        }
+        queryClient.invalidateQueries({
+          queryKey: ["user", "all"],
+        });
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        const errorMessage = getErrorMessageFromCustomerCode(error_code);
+        toast.error(errorMessage);
+        throw error;
+      }
     },
-    [
-      hasToken,
-      router,
-      id,
-      useResetPassword,
-    ]
+    [hasToken, router, useResetPassword, id],
   );
   const updateProfileUser = useCallback(
     async (userData: UserProfile) => {
@@ -217,37 +214,31 @@ export const useUserActions = ({
         router.push("/login");
         return;
       }
-      useUpdateProfile.mutate(
-        { id: id || "", data: userData },
-        {
-          onSuccess: (result: {
-            status: number;
-            data?: { message?: string };
-          }) => {
-            if (result?.status === 200) {
-              queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.USER.ALL(
-                  page,
-                  limit,
-                  verify || "all",
-                  role || "all"
-                ),
-              });
-              queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USER.STATISTICS });
-              refetchDetailUser();
-              refetch();
-              toast.success("Cập nhật thông tin người dùng thành công");
-            }
-          },
-          onError: (error: unknown) => {
-            const errorMessage = getErrorMessage(
-              error,
-              "Lỗi khi cập nhật người dùng"
-            );
-            toast.error(errorMessage);
-          },
+      try {
+        const result = await useUpdateProfile.mutateAsync({
+          id: id || "",
+          data: userData,
+        });
+        if (result.status === 200) {
+          toast.success(
+            result.data?.message || "Cập nhật thông tin thành công",
+          );
         }
-      );
+        queryClient.invalidateQueries({
+          queryKey: ["user", "all"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["user", "detail", id],
+        });
+        refetchDetailUser();
+        refetch();
+        return result;
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        const errorMessage = getErrorMessageFromCustomerCode(error_code);
+        toast.error(errorMessage);
+        throw error;
+      }
     },
     [
       hasToken,
@@ -261,7 +252,7 @@ export const useUserActions = ({
       limit,
       verify,
       role,
-    ]
+    ],
   );
   return {
     users: users,
@@ -281,7 +272,7 @@ export const useUserActions = ({
     refetchNewRegistrationStats,
     getNewRegistrationStats,
     isLoadingNewRegistrationStats,
-    topRenter: topRenterData?.result.data,
+    topRenter: topRenterData,
     refetchTopRenter,
     getTopRenter,
     isLoadingTopRenter,

@@ -20,7 +20,6 @@ import { uploadImageToFirebase } from "@/lib/firebase";
 
 type FormDataWithAvatar = DetailUser & { avatarFile?: File };
 
-// Compress image function
 const compressImage = async (file: File): Promise<File> => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -32,11 +31,8 @@ const compressImage = async (file: File): Promise<File> => {
         const canvas = document.createElement("canvas");
         let width = imgElement.naturalWidth;
         let height = imgElement.naturalHeight;
-
-        // Max dimensions
         const maxWidth = 800;
         const maxHeight = 800;
-
         if (width > height) {
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
@@ -48,7 +44,6 @@ const compressImage = async (file: File): Promise<File> => {
             height = maxHeight;
           }
         }
-
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext("2d");
@@ -100,10 +95,7 @@ export default function ProfilePage() {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Lưu file để upload sau khi Save
       setFormData((prev) => ({ ...prev, avatarFile: file }));
-
-      // Tạo preview ngay lập tức
       const reader = new FileReader();
       reader.onload = () => {
         const base64 = reader.result as string;
@@ -118,7 +110,7 @@ export default function ProfilePage() {
     setIsSaving(true);
     
     const fields: (keyof UpdateProfileSchemaFormData)[] = [
-      "fullname",
+      "fullName",
       "username",
       "phoneNumber",
       "location",
@@ -283,7 +275,7 @@ export default function ProfilePage() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">
-                  {formData?.fullname || "Chưa có tên"}
+                  {formData?.fullName || "Chưa có tên"}
                 </p>
                 <p
                   className={cn(
@@ -309,9 +301,9 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="fullname"
-                    value={formData?.fullname || ""}
+                    value={formData?.fullName || ""}
                     onChange={(e) =>
-                      handleInputChange("fullname", e.target.value)
+                      handleInputChange("fullName", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(

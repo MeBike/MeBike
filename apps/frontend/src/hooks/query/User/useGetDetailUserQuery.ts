@@ -7,7 +7,7 @@ const fetchDetailUser = async (id: string) => {
 }
 export const useGetDetailUserQuery = (id: string) => {
   return useQuery({
-    queryKey: ["detail-user", id],
+    queryKey: ["user", "detail" , id],
     queryFn: () => fetchDetailUser(id),
     enabled: !!id,
   });

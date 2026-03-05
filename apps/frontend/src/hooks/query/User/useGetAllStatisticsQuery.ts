@@ -14,7 +14,7 @@ const fetchUserStatistics = async () => {
 };
 export const useGetAllStatisticsUserQuery = () => {
   return useQuery({
-    queryKey: QUERY_KEYS.USER.STATISTICS,
+    queryKey: ["user", "statistics"],
     queryFn: () => fetchUserStatistics(),
     enabled: false,
   });
