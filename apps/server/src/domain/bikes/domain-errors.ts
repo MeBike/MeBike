@@ -14,6 +14,14 @@ export class DuplicateChipId extends Data.TaggedError("DuplicateChipId")<{
   readonly chipId: string;
 }> {}
 
+export class BikeStationNotFound extends Data.TaggedError("BikeStationNotFound")<{
+  readonly stationId: string;
+}> {}
+
+export class BikeSupplierNotFound extends Data.TaggedError("BikeSupplierNotFound")<{
+  readonly supplierId: string;
+}> {}
+
 export class InvalidBikeStatus extends Data.TaggedError("InvalidBikeStatus")<{
   readonly status: string;
   readonly allowed: readonly string[];

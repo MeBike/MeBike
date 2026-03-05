@@ -51,6 +51,19 @@ export function isPrismaRecordNotFound(
 }
 
 /**
+ * EN: Detects a Prisma foreign key violation (P2003).
+ * VI: Nhận diện lỗi vi phạm khóa ngoại của Prisma (P2003).
+ */
+export function isPrismaForeignKeyViolation(
+  error: unknown,
+): error is PrismaTypes.PrismaClientKnownRequestError & { code: "P2003" } {
+  return (
+    error instanceof PrismaTypes.PrismaClientKnownRequestError
+    && error.code === "P2003"
+  );
+}
+
+/**
  * EN: Detects a raw-query unique violation wrapped by Prisma as P2010 with PostgreSQL code 23505.
  * VI: Nhận diện lỗi unique từ raw query, được Prisma bọc thành P2010 với mã PostgreSQL 23505.
  */
