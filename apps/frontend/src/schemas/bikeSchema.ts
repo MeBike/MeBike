@@ -1,51 +1,49 @@
 import * as z from "zod";
 import { BikeStatus } from "@/types";
-const isValidObjectId = (id: string): boolean => {
-  return /^[0-9a-fA-F]{24}$/.test(id);
-};
+import { isValidUUID } from "@/utils/is-valid-UUID";
 export const bikeSchema = z.object({
-  station_id: z
+  stationId: z
     .string()
     .min(24, "Mã trạm phải là một ObjectId hợp lệ")
     .max(24, "Mã trạm phải là một ObjectId hợp lệ")
-    .refine(isValidObjectId, {
+    .refine(isValidUUID, {
       message: "Mã trạm phải là một ObjectId hợp lệ",
     }),
   status: z.enum([
-    "CÓ SẴN",
-    "ĐANG ĐƯỢC THUÊ",
-    "BỊ HỎNG",
-    "ĐANG BẢO TRÌ",
-    "ĐÃ ĐẶT TRƯỚC",
-    "KHÔNG CÓ SẴN",
+    "AVAILABLE",
+    "RENTED",
+    "BROKEN",
+    "MAINTENANCE",
+    "BOOKED",
+    "UNAVAILABLE",
   ] as BikeStatus[]),
-  supplier_id: z
+  supplierId: z
     .string()
     .min(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
     .max(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
-    .refine(isValidObjectId, {
+    .refine(isValidUUID, {
       message: "Mã nhà cung cấp phải là một ObjectId hợp lệ",
     })
     .optional(),
-  chip_id: z.string(),
+  chipId: z.string(),
 });
 export const updateBikeSchema = z.object({
-  station_id: z
+  stationId: z
     .string()
     .min(24, "Mã trạm phải là một ObjectId hợp lệ")
     .max(24, "Mã trạm phải là một ObjectId hợp lệ")
-    .refine(isValidObjectId, {
+    .refine(isValidUUID, {
       message: "Mã trạm phải là một ObjectId hợp lệ",
     }),
-  status: z.enum(["CÓ SẴN", "ĐANG ĐƯỢC THUÊ", "BỊ HỎNG", "ĐANG BẢO TRÌ" , "ĐÃ ĐẶT TRƯỚC" , "KHÔNG CÓ SẴN"] as BikeStatus[]),
-  supplier_id: z
+  status: z.enum(["AVAILABLE", "RENTED", "BROKEN", "MAINTENANCE", "BOOKED", "UNAVAILABLE"] as BikeStatus[]),
+  supplierId: z
     .string()
     .min(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
     .max(24, "Mã nhà cung cấp phải là một ObjectId hợp lệ")
-    .refine(isValidObjectId, {
+    .refine(isValidUUID, {
       message: "Mã nhà cung cấp phải là một ObjectId hợp lệ",
     }),
-  chip_id: z.string(),
+  chipId: z.string(),
 });
 export type BikeSchemaFormData = z.infer<typeof bikeSchema>;
 export type UpdateBikeSchemaFormData = z.infer<typeof updateBikeSchema>;

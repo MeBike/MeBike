@@ -4,10 +4,7 @@ import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
 } from "@schemas/bikeSchema";
-import { Bike, BikeRentalHistory } from "@custom-types";
-import { BikeStatus } from "@custom-types";
-import { BikeActivityStats } from "@custom-types";
-import { BikeStats } from "@custom-types";
+import { BikeStats ,Bike , BikeRentalHistory , BikeStatus , BikeActivityStats } from "@custom-types";
 interface ApiResponse<T> {
   data: T;
   pagination: {
