@@ -7,6 +7,7 @@ import {
   softDeleteBikeUseCase,
 } from "@/domain/bikes";
 import { withLoggedCause } from "@/domain/shared";
+import { pickDefined } from "@/domain/shared/pick-defined";
 import { toBikeSummary } from "@/http/presenters/bikes.presenter";
 
 import type { BikeNotFoundResponse, BikesRoutes, BikeSummary, BikeUpdateConflictResponse } from "./shared";
@@ -43,6 +44,22 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
           error: bikeErrorMessages.DUPLICATE_CHIP_ID,
           details: { code: BikeErrorCodeSchema.enum.DUPLICATE_CHIP_ID },
         }, 400)),
+      Match.tag("BikeStationNotFound", ({ stationId }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_STATION_NOT_FOUND,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_STATION_NOT_FOUND,
+            stationId,
+          },
+        }, 400)),
+      Match.tag("BikeSupplierNotFound", ({ supplierId }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_SUPPLIER_NOT_FOUND,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_SUPPLIER_NOT_FOUND,
+            supplierId,
+          },
+        }, 400)),
       Match.orElse((err) => {
         throw err;
       }),
@@ -57,12 +74,7 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
 
   const eff = Effect.gen(function* () {
     const service = yield* BikeServiceTag;
-    return yield* service.adminUpdateBike(id, {
-      ...(body.chipId ? { chipId: body.chipId } : {}),
-      ...(body.stationId ? { stationId: body.stationId } : {}),
-      ...(body.status ? { status: body.status } : {}),
-      ...(body.supplierId !== undefined ? { supplierId: body.supplierId } : {}),
-    });
+    return yield* service.adminUpdateBike(id, pickDefined(body));
   });
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));
@@ -90,11 +102,30 @@ const updateBike: RouteHandler<BikesRoutes["updateBike"]> = async (c) => {
           error: bikeErrorMessages.BIKE_NOT_FOUND,
           details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
         }, 404)),
-      Match.orElse(() =>
-        c.json<BikeNotFoundResponse, 404>({
-          error: bikeErrorMessages.BIKE_NOT_FOUND,
-          details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
-        }, 404)),
+      Match.tag("DuplicateChipId", () =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.DUPLICATE_CHIP_ID,
+          details: { code: BikeErrorCodeSchema.enum.DUPLICATE_CHIP_ID },
+        }, 400)),
+      Match.tag("BikeStationNotFound", ({ stationId }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_STATION_NOT_FOUND,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_STATION_NOT_FOUND,
+            stationId,
+          },
+        }, 400)),
+      Match.tag("BikeSupplierNotFound", ({ supplierId }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_SUPPLIER_NOT_FOUND,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_SUPPLIER_NOT_FOUND,
+            supplierId,
+          },
+        }, 400)),
+      Match.orElse((err) => {
+        throw err;
+      }),
     )),
     Match.exhaustive,
   );
