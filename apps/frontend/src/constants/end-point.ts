@@ -42,7 +42,16 @@ export const ENDPOINT = {
         NEW_USER : "/users/manage-users/stats/new-users",
         RESET_PASSWORD : (id: string) => `/users/manage-users/admin-reset-password/${id}`,
         CREATE_USER : "/users/manage-users/create",
-
     },
+    BIKE : {
+        BASE : "/bikes",
+        STATS_SUMMARY : "/bikes/stats/summary",
+        STATS_BIKE : (id : string) => `/bikes/${id}/stats`,
+        STATS_HIGHEST_REVENUE : "/bikes/stats/highest-revenue",
+        ID : (id : string) => `/bikes/${id}`,
+        RENTAL_HISTORY : (id : string) => `/bikes/${id}/rental-history`,
+        ACTIVITY_STATS : (id : string) => `/bikes/${id}/activity-stats`,
+        REPORT_BROKEN : (id : string) => `/bikes/report-broken/${id}`,
+    }
 
 } as const;

@@ -68,3 +68,10 @@ export interface BikeHasHighestRevenue {
     name : string;
   }
 }
+export interface BikeStatistics {
+  "RESERVED": number;
+  "AVAILABLE": number;
+  "RENTED": number;
+  "UNAVAILABLE": number;
+  "BROKEN": number;
+}
