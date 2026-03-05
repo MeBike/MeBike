@@ -3,6 +3,9 @@ import {
   changePasswordRoute,
   adminResetPasswordRoute,
   adminUpdateUserRoute,
+  registerPushTokenRoute,
+  unregisterAllPushTokensRoute,
+  unregisterPushTokenRoute,
   updateMeRoute,
 } from "./mutations";
 import {
@@ -26,6 +29,9 @@ export const usersRoutes = {
   me: meRoute,
   changePassword: changePasswordRoute,
   updateMe: updateMeRoute,
+  registerPushToken: registerPushTokenRoute,
+  unregisterPushToken: unregisterPushTokenRoute,
+  unregisterAllPushTokens: unregisterAllPushTokensRoute,
   adminList: adminListUsersRoute,
   adminSearch: adminSearchUsersRoute,
   adminDetail: adminUserDetailRoute,
