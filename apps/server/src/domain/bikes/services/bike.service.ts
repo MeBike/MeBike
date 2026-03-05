@@ -6,6 +6,8 @@ import type { BikeStatus } from "generated/prisma/client";
 import { Prisma } from "@/infrastructure/prisma";
 
 import type {
+  BikeStationNotFound,
+  BikeSupplierNotFound,
   BikeRepositoryError,
   DuplicateChipId,
 } from "../domain-errors";
@@ -20,6 +22,8 @@ import {
   BikeCurrentlyRented,
   BikeCurrentlyReserved,
   BikeNotFound,
+  BikeStationNotFound as BikeStationNotFoundError,
+  BikeSupplierNotFound as BikeSupplierNotFoundError,
 } from "../domain-errors";
 import { BikeRepository } from "../repository/bike.repository";
 
@@ -31,7 +35,10 @@ export type BikeService = {
       supplierId: string;
       status?: BikeStatus;
     },
-  ) => Effect.Effect<BikeRow, BikeRepositoryError | DuplicateChipId>;
+  ) => Effect.Effect<
+    BikeRow,
+    BikeRepositoryError | DuplicateChipId | BikeStationNotFound | BikeSupplierNotFound
+  >;
 
   listBikes: (
     filter: BikeFilter,
@@ -64,11 +71,31 @@ function makeBikeService(
 ): BikeService {
   return {
     createBike: input =>
-      repo.create({
-        chipId: input.chipId,
-        stationId: input.stationId,
-        supplierId: input.supplierId,
-        status: input.status ?? "AVAILABLE",
+      Effect.gen(function* () {
+        const station = yield* Effect.promise(() =>
+          client.station.findUnique({
+            where: { id: input.stationId },
+            select: { id: true },
+          }));
+        if (!station) {
+          return yield* Effect.fail(new BikeStationNotFoundError({ stationId: input.stationId }));
+        }
+
+        const supplier = yield* Effect.promise(() =>
+          client.supplier.findUnique({
+            where: { id: input.supplierId },
+            select: { id: true },
+          }));
+        if (!supplier) {
+          return yield* Effect.fail(new BikeSupplierNotFoundError({ supplierId: input.supplierId }));
+        }
+
+        return yield* repo.create({
+          chipId: input.chipId,
+          stationId: input.stationId,
+          supplierId: input.supplierId,
+          status: input.status ?? "AVAILABLE",
+        });
       }),
 
     listBikes: (filter, pageReq) =>

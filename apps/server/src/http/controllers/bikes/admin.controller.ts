@@ -43,6 +43,22 @@ const createBike: RouteHandler<BikesRoutes["createBike"]> = async (c) => {
           error: bikeErrorMessages.DUPLICATE_CHIP_ID,
           details: { code: BikeErrorCodeSchema.enum.DUPLICATE_CHIP_ID },
         }, 400)),
+      Match.tag("BikeStationNotFound", ({ stationId }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_STATION_NOT_FOUND,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_STATION_NOT_FOUND,
+            stationId,
+          },
+        }, 400)),
+      Match.tag("BikeSupplierNotFound", ({ supplierId }) =>
+        c.json<BikeUpdateConflictResponse, 400>({
+          error: bikeErrorMessages.BIKE_SUPPLIER_NOT_FOUND,
+          details: {
+            code: BikeErrorCodeSchema.enum.BIKE_SUPPLIER_NOT_FOUND,
+            supplierId,
+          },
+        }, 400)),
       Match.orElse((err) => {
         throw err;
       }),
