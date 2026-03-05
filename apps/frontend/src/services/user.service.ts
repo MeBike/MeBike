@@ -1,7 +1,7 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { DetailUser } from "@/types";
-import { UserProfile } from "@/schemas/userSchema";
+import { CreateUserFormData, UserProfile } from "@/schemas/userSchema";
 import { ResetPasswordRequest } from "@/schemas/userSchema";
 import { ApiResponse } from "@/types";
 import {ENDPOINT} from "@/constants/end-point";
@@ -107,7 +107,7 @@ export const userService = {
     return response;
   },
   createUser: async (
-    data: UserProfile
+    data: CreateUserFormData
   ): Promise<AxiosResponse<DetailUser>> => {
     const response = await fetchHttpClient.post<DetailUser>(
       ENDPOINT.USER.CREATE_USER,

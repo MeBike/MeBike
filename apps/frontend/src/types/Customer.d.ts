@@ -1,5 +1,5 @@
 export type UserRole = "ADMIN" | "STAFF" | "USER" | "SOS";
-export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
+export type VerifyStatus = "VERIFIED" | "UNVERIFIED" | "BANNED" | "" ;
 
 export interface DetailUser {
   id: string;

@@ -12,7 +12,7 @@ import { useGetSearchUserQuery } from "./query/Refund/useGetSearchUserQuery";
 import { useCreateUserMutation } from "./mutations/User/useCreateUserMutation";
 import { useGetDetailUserQuery } from "./query/User/useGetDetailUserQuery";
 import { useGetDashboardStatsQuery } from "./query/User/useGetDashboardStatsQuery";
-import { ResetPasswordRequest } from "@/schemas/userSchema";
+import { CreateUserFormData, ResetPasswordRequest } from "@/schemas/userSchema";
 import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
@@ -136,7 +136,7 @@ export const useUserActions = ({
   const users =
     searchQuery && searchQuery.length > 0 ? searchData?.data : data?.data;
   const createUser = useCallback(
-    async (userData: UserProfile) => {
+    async (userData: CreateUserFormData) => {
       if (!hasToken) {
         router.push("/login");
         return;
