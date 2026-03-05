@@ -76,20 +76,22 @@ function makeBikeService(
   return {
     createBike: input =>
       Effect.gen(function* () {
-        const station = yield* Effect.promise(() =>
-          client.station.findUnique({
-            where: { id: input.stationId },
-            select: { id: true },
-          }));
+        const [station, supplier] = yield* Effect.all([
+          Effect.promise(() =>
+            client.station.findUnique({
+              where: { id: input.stationId },
+              select: { id: true },
+            })),
+          Effect.promise(() =>
+            client.supplier.findUnique({
+              where: { id: input.supplierId },
+              select: { id: true },
+            })),
+        ]);
+
         if (!station) {
           return yield* Effect.fail(new BikeStationNotFound({ stationId: input.stationId }));
         }
-
-        const supplier = yield* Effect.promise(() =>
-          client.supplier.findUnique({
-            where: { id: input.supplierId },
-            select: { id: true },
-          }));
         if (!supplier) {
           return yield* Effect.fail(new BikeSupplierNotFound({ supplierId: input.supplierId }));
         }
