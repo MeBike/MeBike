@@ -24,6 +24,7 @@ import logger from "@/lib/logger";
 import { handleEmailJob } from "./email-worker";
 import { handleFixedSlotAssign } from "./fixed-slot-worker";
 import { startOutboxDispatcher } from "./outbox-dispatcher";
+import { handlePushSend } from "./push-worker";
 import {
   handleReservationExpireHold,
   handleReservationNotifyNearExpiry,
@@ -108,6 +109,7 @@ async function main() {
   WorkerLog.emailVerified();
 
   await setupQueue(boss, JobTypes.EmailSend);
+  await setupQueue(boss, JobTypes.PushSend);
   await setupQueue(boss, JobTypes.SubscriptionAutoActivate);
   await setupQueue(boss, JobTypes.SubscriptionExpireSweep);
   await setupQueue(boss, JobTypes.ReservationFixedSlotAssign);
@@ -140,29 +142,46 @@ async function main() {
 
   const autoActivateWorkerId = await boss.work(
     JobTypes.SubscriptionAutoActivate,
+    { batchSize: 1 },
     handleAutoActivate,
   );
   WorkerLog.workerRegistered(JobTypes.SubscriptionAutoActivate, autoActivateWorkerId);
 
   const expireSweepWorkerId = await boss.work(
     JobTypes.SubscriptionExpireSweep,
+    { batchSize: 1 },
     handleExpireSweep,
   );
   WorkerLog.workerRegistered(JobTypes.SubscriptionExpireSweep, expireSweepWorkerId);
 
-  const emailWorkerId = await boss.work(JobTypes.EmailSend, async (jobs) => {
-    await handleEmailJob(jobs[0], email);
-  });
+  const emailWorkerId = await boss.work(
+    JobTypes.EmailSend,
+    { batchSize: 1 },
+    async (jobs) => {
+      await handleEmailJob(jobs[0], email);
+    },
+  );
   WorkerLog.workerRegistered(JobTypes.EmailSend, emailWorkerId);
+
+  const pushWorkerId = await boss.work(
+    JobTypes.PushSend,
+    { batchSize: 1 },
+    async (jobs) => {
+      await handlePushSend(jobs[0]);
+    },
+  );
+  WorkerLog.workerRegistered(JobTypes.PushSend, pushWorkerId);
 
   const fixedSlotWorkerId = await boss.work(
     JobTypes.ReservationFixedSlotAssign,
+    { batchSize: 1 },
     handleFixedSlotAssign,
   );
   WorkerLog.workerRegistered(JobTypes.ReservationFixedSlotAssign, fixedSlotWorkerId);
 
   const notifyWorkerId = await boss.work(
     JobTypes.ReservationNotifyNearExpiry,
+    { batchSize: 1 },
     async (jobs) => {
       await handleReservationNotifyNearExpiry(jobs[0], boss);
     },
@@ -171,6 +190,7 @@ async function main() {
 
   const expireWorkerId = await boss.work(
     JobTypes.ReservationExpireHold,
+    { batchSize: 1 },
     async (jobs) => {
       await handleReservationExpireHold(jobs[0], boss);
     },
@@ -179,6 +199,7 @@ async function main() {
 
   const withdrawalWorkerId = await boss.work(
     JobTypes.WalletWithdrawalExecute,
+    { batchSize: 1 },
     async (jobs) => {
       await handleWithdrawalExecute(jobs[0]);
     },
@@ -187,6 +208,7 @@ async function main() {
 
   const withdrawalSweepWorkerId = await boss.work(
     JobTypes.WalletWithdrawalSweep,
+    { batchSize: 1 },
     async (jobs) => {
       await handleWithdrawalSweep(jobs[0]);
     },
@@ -194,6 +216,7 @@ async function main() {
   WorkerLog.workerRegistered(JobTypes.WalletWithdrawalSweep, withdrawalSweepWorkerId);
 
   await setupDLQWorker(boss, JobTypes.EmailSend, "Email job");
+  await setupDLQWorker(boss, JobTypes.PushSend, "Push notification job");
   await setupDLQWorker(boss, JobTypes.SubscriptionAutoActivate, "Subscription auto-activate job");
   await setupDLQWorker(boss, JobTypes.ReservationFixedSlotAssign, "Fixed-slot assignment job");
   await setupDLQWorker(boss, JobTypes.ReservationNotifyNearExpiry, "Reservation near-expiry job");
