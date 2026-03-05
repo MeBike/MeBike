@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 type StationMapMarkerProps = {
   count: number;
+  isSelected?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -31,6 +32,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  markerSelected: {
+    transform: [{ scale: 1.12 }],
+    borderWidth: 3,
+    borderColor: "#BFDBFE",
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 7,
+  },
   markerZero: {
     backgroundColor: BikeColors.error,
     borderColor: BikeColors.background,
@@ -49,6 +58,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: BikeColors.divider,
   },
+  badgeSelected: {
+    borderColor: "#93C5FD",
+  },
   markerText: {
     color: BikeColors.primary,
     fontSize: 11,
@@ -56,10 +68,10 @@ const styles = StyleSheet.create({
   },
 });
 
-export function StationMapMarker({ count }: StationMapMarkerProps) {
+export function StationMapMarker({ count, isSelected = false }: StationMapMarkerProps) {
   return (
     <View style={[styles.markerContainer, count === 0 && styles.markerContainerZero]}>
-      <View style={[styles.marker, count === 0 && styles.markerZero]}>
+      <View style={[styles.marker, isSelected && styles.markerSelected, count === 0 && styles.markerZero]}>
         <Ionicons
           name="bicycle"
           size={18}
@@ -68,7 +80,7 @@ export function StationMapMarker({ count }: StationMapMarkerProps) {
       </View>
       {count > 0
         ? (
-            <View style={styles.badge}>
+            <View style={[styles.badge, isSelected && styles.badgeSelected]}>
               <Text style={styles.markerText}>{count}</Text>
             </View>
           )

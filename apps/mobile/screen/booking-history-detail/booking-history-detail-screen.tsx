@@ -16,6 +16,8 @@ import type { Rental } from "@/types/rental-types";
 import BookingDetailHeader from "./components/BookingDetailHeader";
 import ErrorState from "./components/ErrorState";
 import LoadingState from "./components/LoadingState";
+import RatingSection from "./components/RatingSection";
+import { useBookingRating } from "./hooks/use-booking-rating";
 import { useRentalDetailData } from "./hooks/use-rental-detail-data";
 import { useRentalStatusWatcher } from "./hooks/use-rental-status-watcher";
 import { RentalActionButtons } from "./v1/action-buttons";
@@ -24,7 +26,6 @@ import { RentalBookingIdCard } from "./v1/booking-id-card";
 import { RentalPaymentInfoCard } from "./v1/payment-info-card";
 import { RentalStatusCard } from "./v1/status-card";
 import { RentalTimeInfoCard } from "./v1/time-info-card";
-import { RentalUserInfoCard } from "./v1/user-info-card";
 
 type RouteParams = {
   bookingId: string;
@@ -33,11 +34,12 @@ type RouteParams = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F3F5F9",
   },
   content: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 14,
   },
 });
 
@@ -45,7 +47,7 @@ function BookingHistoryDetail() {
   const navigation = useNavigation();
   const route = useRoute();
   const { bookingId } = route.params as RouteParams;
-  const { isAuthenticated, user } = useAuthNext();
+  const { isAuthenticated } = useAuthNext();
   const hasToken = isAuthenticated;
 
   const {
@@ -70,6 +72,11 @@ function BookingHistoryDetail() {
 
   const bikeId = booking?.bikeId ?? "";
   const bikeQuery = useGetBikeByIDAllQuery(bikeId);
+
+  const { ratingState } = useBookingRating({
+    bookingId,
+    booking,
+  });
 
   useRentalStatusWatcher({
     booking: booking as Rental | undefined,
@@ -121,12 +128,43 @@ function BookingHistoryDetail() {
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
-        <RentalStatusCard status={resolvedBooking.status} />
-        <RentalBikeInfoCard rental={resolvedBooking} stationsById={stationsById} bike={bike} />
+        <RentalStatusCard
+          status={resolvedBooking.status}
+          startTime={resolvedBooking.startTime}
+          duration={resolvedBooking.duration}
+          totalPrice={resolvedBooking.totalPrice}
+        />
         <RentalTimeInfoCard rental={resolvedBooking} />
+        <RentalBikeInfoCard rental={resolvedBooking} stationsById={stationsById} bike={bike} />
         <RentalPaymentInfoCard rental={resolvedBooking} />
         <RentalBookingIdCard rentalId={resolvedBooking.id} />
-        <RentalUserInfoCard rental={resolvedBooking} currentUser={user ?? undefined} />
+        <RatingSection
+          booking={resolvedBooking}
+          hasRated={ratingState.hasRated}
+          existingRating={ratingState.existingRating ?? undefined}
+          canOpenRatingForm={ratingState.canOpenRatingForm}
+          ratingWindowExpired={ratingState.ratingWindowExpired}
+          showRatingForm={ratingState.showRatingForm}
+          ratingValue={ratingState.ratingValue}
+          selectedReasons={ratingState.selectedReasons}
+          ratingComment={ratingState.ratingComment}
+          ratingError={ratingState.ratingError}
+          showAllReasons={ratingState.showAllReasons}
+          ratingReasons={ratingState.ratingReasons}
+          isRatingReasonsLoading={ratingState.isRatingReasonsLoading}
+          isSubmittingRating={ratingState.isSubmittingRating}
+          displayReasons={ratingState.displayReasons}
+          filteredReasons={ratingState.filteredReasons}
+          setRatingValue={ratingState.setRatingValue}
+          setRatingError={ratingState.setRatingError}
+          setShowAllReasons={ratingState.setShowAllReasons}
+          handleToggleReason={ratingState.handleToggleReason}
+          setRatingComment={ratingState.setRatingComment}
+          handleCancelRating={ratingState.handleCancelRating}
+          handleSubmitRating={ratingState.handleSubmitRating}
+          handleOpenRatingForm={ratingState.handleOpenRatingForm}
+          getAppliesTo={ratingState.getAppliesTo}
+        />
         <RentalActionButtons rental={resolvedBooking} />
       </ScrollView>
     </View>

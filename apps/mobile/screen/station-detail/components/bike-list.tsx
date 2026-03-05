@@ -110,6 +110,9 @@ function BikeListItem({
   onPress: (bike: Bike) => void;
 }) {
   const isAvailable = bike.status === "CÓ SẴN";
+  const chipDisplay = bike.chip_id
+    ? `#${bike.chip_id.slice(-6)}`
+    : `#${bike._id.slice(-6)}`;
 
   return (
     <TouchableOpacity
@@ -130,9 +133,10 @@ function BikeListItem({
           ]}
         />
         <View>
-          <Text style={styles.bikeId}>
-            ChipID: #
-            {bike.chip_id || bike._id.slice(-4)}
+          <Text style={styles.bikeId} selectable>
+            ChipID:
+            {" "}
+            {chipDisplay}
           </Text>
           <Text style={styles.bikeType}>Xe thường</Text>
           {bike.total_ratings !== undefined

@@ -10,4 +10,12 @@ export const RatingDetailSchema = z.object({
   updatedAt: z.string(),
 });
 
+export const RatingReasonSchema = z.object({
+  id: z.uuidv7(),
+  type: z.enum(["ISSUE", "COMPLIMENT"]),
+  appliesTo: z.enum(["bike", "station", "app"]),
+  messages: z.string(),
+});
+
 export type RatingDetail = z.infer<typeof RatingDetailSchema>;
+export type RatingReason = z.infer<typeof RatingReasonSchema>;

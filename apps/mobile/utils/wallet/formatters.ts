@@ -21,13 +21,13 @@ export function formatWalletStatus(status: string): string {
 export function formatTransactionType(type: string): string {
   switch (type) {
     case "DEPOSIT":
-      return "NẠP TIỀN";
+      return "Nạp tiền";
     case "DEBIT":
-      return "THANH TOÁN";
+      return "Thanh toán";
     case "REFUND":
-      return "HOÀN TIỀN";
+      return "Hoàn tiền";
     case "ADJUSTMENT":
-      return "ĐIỀU CHỈNH";
+      return "Điều chỉnh";
     default:
       return type;
   }
@@ -36,11 +36,11 @@ export function formatTransactionType(type: string): string {
 export function formatTransactionStatus(status: string): string {
   switch (status) {
     case "SUCCESS":
-      return "THÀNH CÔNG";
+      return "Thành công";
     case "PENDING":
-      return "ĐANG XỬ LÝ";
+      return "Đang xử lý";
     case "FAILED":
-      return "THẤT BẠI";
+      return "Thất bại";
     default:
       return status;
   }

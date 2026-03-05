@@ -27,7 +27,15 @@ export function WithdrawalsTab({
   onLoadMore,
 }: WithdrawalsTabProps) {
   const renderRequest = ({ item }: { item: WithdrawalRequest }) => (
-    <TransactionItem type="withdrawal" item={item} />
+    <TransactionItem
+      type="withdrawal"
+      item={{
+        id: item._id,
+        amount: item.amount,
+        createdAt: item.created_at,
+        status: item.status,
+      }}
+    />
   );
 
   const renderFooter = () => {

@@ -19,6 +19,8 @@ export type RegisterRequest = z.output<typeof AuthContracts.RegisterRequestSchem
 
 export type RefreshRequest = z.output<typeof AuthContracts.RefreshRequestSchema>;
 
+export type VerifyResetPasswordOtpRequest = z.output<typeof AuthContracts.VerifyResetPasswordOtpRequestSchema>;
+
 async function parseAuthError(response: Response): Promise<AuthError> {
   try {
     const data = await readJson(response);
@@ -43,6 +45,17 @@ async function parseTokens(response: Response): Promise<Result<Tokens, AuthError
     const data = await readJson(response);
     const parsed = decodeWithSchema(AuthContracts.TokensEnvelopeSchema, data);
     return parsed.ok ? ok(parsed.value.data) : err({ _tag: "DecodeError" });
+  }
+  catch {
+    return err({ _tag: "DecodeError" });
+  }
+}
+
+async function parseResetToken(response: Response): Promise<Result<string, AuthError>> {
+  try {
+    const data = await readJson(response);
+    const parsed = decodeWithSchema(AuthContracts.ResetPasswordTokenEnvelopeSchema, data);
+    return parsed.ok ? ok(parsed.value.data.resetToken) : err({ _tag: "DecodeError" });
   }
   catch {
     return err({ _tag: "DecodeError" });
@@ -219,6 +232,29 @@ export const authService = {
 
       if (response.status === StatusCodes.OK) {
         return ok(undefined);
+      }
+
+      return err(await parseAuthError(response));
+    }
+    catch (error) {
+      return err({
+        _tag: "NetworkError",
+        message: error instanceof Error ? error.message : undefined,
+      });
+    }
+  },
+
+  verifyResetPasswordOtp: async (payload: VerifyResetPasswordOtpRequest): Promise<Result<{ resetToken: string }, AuthError>> => {
+    try {
+      const response = await kyClient.post(routePath(ServerRoutes.auth.verifyResetPasswordOtp), {
+        json: payload,
+        throwHttpErrors: false,
+        skipAuth: true,
+      });
+
+      if (response.status === StatusCodes.OK) {
+        const resetToken = await parseResetToken(response);
+        return resetToken.ok ? ok({ resetToken: resetToken.value }) : err(resetToken.error);
       }
 
       return err(await parseAuthError(response));

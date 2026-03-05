@@ -22,27 +22,25 @@ export function ReservationHeader({
         borderBottomRightRadius: 32,
       }}
     >
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 18,
-          backgroundColor: "rgba(255,255,255,0.2)",
-          justifyContent: "center",
-          alignItems: "center",
-          marginBottom: 12,
-        }}
-      >
-        <TouchableOpacity onPress={onGoBack}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <TouchableOpacity
+          onPress={onGoBack}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 18,
+            backgroundColor: "rgba(255,255,255,0.2)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          activeOpacity={0.8}
+        >
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>
+        <Text style={{ fontSize: 24, fontWeight: "700", color: "#fff" }}>
+          Chi tiết đặt trước
+        </Text>
       </View>
-      <Text style={{ fontSize: 24, fontWeight: "700", color: "#fff" }}>
-        Chi tiết đặt trước
-      </Text>
-      <Text style={{ marginTop: 6, fontSize: 14, color: "rgba(255,255,255,0.85)" }}>
-        Kiểm tra thông tin và bắt đầu chuyến đi của bạn.
-      </Text>
     </View>
   );
 }
@@ -86,6 +84,10 @@ type ReservationSummaryProps = {
 };
 
 export function ReservationSummary({ status, bikeId, reservationId }: ReservationSummaryProps) {
+  const shortReservationId = reservationId.length > 20
+    ? `${reservationId.slice(0, 8)}...${reservationId.slice(-6)}`
+    : reservationId;
+
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
       <Ionicons name="bicycle" size={24} color="#0066FF" />
@@ -97,9 +99,9 @@ export function ReservationSummary({ status, bikeId, reservationId }: Reservatio
           </Text>
         </View>
         <StatusBadge status={status} />
-        <Text style={{ marginTop: 4, fontSize: 13, color: "#607D8B" }}>
+        <Text style={{ marginTop: 4, fontSize: 13, color: "#607D8B" }} selectable>
           Mã đặt:
-          {reservationId}
+          {shortReservationId}
         </Text>
       </View>
     </View>

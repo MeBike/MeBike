@@ -13,6 +13,7 @@ import EmptyBookingState from "./empty-booking-state";
 
 type BookingHistoryListProps = {
   bookings: Rental[];
+  stationNameById: Map<string, string>;
   refreshing: boolean;
   onRefresh: () => void;
   onLoadMore: () => void;
@@ -22,8 +23,9 @@ type BookingHistoryListProps = {
 
 const styles = StyleSheet.create({
   listContent: {
-    padding: 16,
-    paddingBottom: 24,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 26,
   },
   emptyContent: {
     flex: 1,
@@ -42,6 +44,7 @@ const styles = StyleSheet.create({
 
 function BookingHistoryList({
   bookings,
+  stationNameById,
   refreshing,
   onRefresh,
   onLoadMore,
@@ -59,7 +62,11 @@ function BookingHistoryList({
     <FlatList
       data={bookings}
       renderItem={({ item }) => (
-        <BookingCard booking={item} onPress={onSelectBooking} />
+        <BookingCard
+          booking={item}
+          stationNameById={stationNameById}
+          onPress={onSelectBooking}
+        />
       )}
       keyExtractor={(item) => item.id}
       contentContainerStyle={[

@@ -51,29 +51,29 @@ const styles = StyleSheet.create({
   paymentRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#f8f9fa",
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 8,
+    alignItems: "flex-start",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EDEFF3",
   },
   methodRow: {
     marginTop: 0,
-    marginBottom: 8,
   },
   paymentLabel: {
-    fontSize: 16,
-    color: "#333",
+    fontSize: 13,
+    color: "#6B7280",
     fontWeight: "500",
   },
   paymentAmount: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "700",
     color: "#0066FF",
   },
   paymentMethod: {
     fontSize: 16,
     fontWeight: "600",
+    textAlign: "right",
+    marginLeft: 16,
   },
   walletMethod: {
     color: "#0066FF",
@@ -82,8 +82,8 @@ const styles = StyleSheet.create({
     color: "#0C8A2A",
   },
   subscriptionNote: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#4B5563",
+    marginTop: 10,
+    fontSize: 12,
+    color: "#64748B",
   },
 });

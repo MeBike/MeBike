@@ -189,7 +189,7 @@ export function useEmailVerification() {
     if (!canResend) {
       return;
     }
-    if (!user?.id || !user?.email || !user?.fullname) {
+    if (!user?.id || !user?.email || !user?.fullName) {
       Alert.alert("Lỗi", "Không tìm thấy thông tin tài khoản để gửi lại OTP");
       return;
     }
@@ -197,7 +197,7 @@ export function useEmailVerification() {
     const result = await resendMutation.mutateAsync({
       userId: user.id,
       email: user.email,
-      fullName: user.fullname,
+      fullName: user.fullName,
     });
 
     if (!result.ok) {
@@ -217,7 +217,7 @@ export function useEmailVerification() {
     setTimeLeft(OTP_EXPIRY_SECONDS);
     setResendTimeLeft(RESEND_COOLDOWN_SECONDS);
     setOtp(Array.from({ length: OTP_LENGTH }, () => ""));
-  }, [canResend, resendMutation, user?.email, user?.fullname, user?.id]);
+  }, [canResend, resendMutation, user?.email, user?.fullName, user?.id]);
 
   const skip = useCallback(() => {
     Alert.alert(

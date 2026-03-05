@@ -1,5 +1,8 @@
-import { useNavigation, useRoute } from "@react-navigation/native";
+import type { RouteProp } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
+
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { authService } from "@services/auth/auth-service";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
@@ -15,11 +18,10 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import type { RouteProp } from "@react-navigation/native";
 import type { RootStackParamList } from "../types/navigation";
+
 import { IconSymbol } from "../components/IconSymbol";
 import { BikeColors } from "../constants/BikeColors";
-import { authService } from "@services/auth/auth-service";
 
 type ResetPasswordFormRouteProp = RouteProp<
   RootStackParamList,
@@ -120,7 +122,7 @@ const styles = StyleSheet.create({
 export default function ResetPasswordFormScreen() {
   const navigation = useNavigation<ResetPasswordFormNavigationProp>();
   const route = useRoute<ResetPasswordFormRouteProp>();
-  const { email, otp } = route.params;
+  const { resetToken } = route.params;
   const [isReseting, setIsReseting] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -138,8 +140,7 @@ export default function ResetPasswordFormScreen() {
     try {
       setIsReseting(true);
       const result = await authService.resetPassword({
-        email,
-        otp,
+        resetToken,
         newPassword,
       });
 
@@ -158,9 +159,11 @@ export default function ResetPasswordFormScreen() {
 
       Alert.alert("Thành công", "Đặt lại mật khẩu thành công");
       navigation.navigate("Login");
-    } catch (error) {
+    }
+    catch (error) {
       console.log("Reset password error:", error);
-    } finally {
+    }
+    finally {
       setIsReseting(false);
     }
   };

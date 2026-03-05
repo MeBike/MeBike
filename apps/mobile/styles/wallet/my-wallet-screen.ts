@@ -3,23 +3,30 @@ import { StyleSheet } from "react-native";
 export const myWalletScreenStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#F3F6FB",
   },
   gradient: {
-    paddingTop: 32,
-    paddingBottom: 38,
-    paddingHorizontal: 24,
-    marginBottom: 8,
-    alignItems: "center",
-    elevation: 8,
-  },
-  content: {
+    paddingTop: 14,
+    paddingBottom: 16,
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    marginBottom: 2,
+    alignItems: "center",
+    elevation: 0,
+    borderBottomLeftRadius: 26,
+    borderBottomRightRadius: 26,
+  },
+  sectionHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 2,
+    paddingBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#1E293B",
   },
   listContainer: {
-    paddingBottom: 16,
-    
+    paddingBottom: 20,
   },
   loadingFooter: {
     paddingVertical: 16,

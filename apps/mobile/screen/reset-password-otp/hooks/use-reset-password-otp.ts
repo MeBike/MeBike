@@ -152,9 +152,26 @@ export function useResetPasswordOtp() {
 
     setIsVerifying(true);
     try {
-      navigation.navigate("ResetPasswordForm", {
+      const result = await authService.verifyResetPasswordOtp({
         email,
         otp: otpCode,
+      });
+
+      if (!result.ok) {
+        if (result.error._tag === "ApiError") {
+          Alert.alert("Lỗi", result.error.message ?? "OTP không hợp lệ hoặc đã hết hạn");
+          return;
+        }
+        if (result.error._tag === "NetworkError") {
+          Alert.alert("Lỗi", "Không thể kết nối tới máy chủ");
+          return;
+        }
+        Alert.alert("Lỗi", "Không thể xác thực OTP");
+        return;
+      }
+
+      navigation.navigate("ResetPasswordForm", {
+        resetToken: result.value.resetToken,
       });
     }
     finally {

@@ -1,4 +1,5 @@
 import React from "react";
+import { formatSupportCode, shortenId } from "@utils/id";
 
 import type { Bike } from "@/types/BikeTypes";
 import type { Rental } from "@/types/rental-types";
@@ -19,32 +20,35 @@ export function RentalBikeInfoCard({
   const startStation = stationsById.get(rental.startStation);
   const endStation = rental.endStation ? stationsById.get(rental.endStation) : undefined;
 
+  const bikeDisplayId = rental.bikeId
+    ? formatSupportCode(rental.bikeId)
+    : "Không có dữ liệu";
+  const chipDisplayId = bike?.chip_id
+    ? `#${shortenId(bike.chip_id, { head: 6, tail: 5 })}`
+    : "Chưa có";
+  const startStationLabel = startStation?.name ?? formatSupportCode(rental.startStation);
+  const endStationLabel = rental.endStation
+    ? (endStation?.name ?? formatSupportCode(rental.endStation))
+    : "Xe chưa được trả";
+
   return (
     <InfoCard title="Thông tin xe" icon="bicycle">
-      <InfoRow label="Mã xe:" value={rental.bikeId ?? "Không có dữ liệu"} />
+      <InfoRow label="Mã xe:" value={bikeDisplayId} />
       <InfoRow
         label="Chip:"
-        value={bike?.chip_id ? `Chip #${bike.chip_id}` : "Chưa có"}
+        value={chipDisplayId}
       />
       <InfoRow
         label="Trạm bắt đầu:"
-        value={startStation?.name ?? rental.startStation}
+        value={startStationLabel}
       />
-      {rental.endStation
-        ? (
-            <>
-              <InfoRow
-                label="Trạm kết thúc:"
-                value={endStation?.name ?? rental.endStation}
-              />
-              {endStation?.address && (
-                <InfoRow label="Địa chỉ kết thúc:" value={endStation.address} />
-              )}
-            </>
-          )
-        : (
-            <InfoRow label="Trạm kết thúc:" value="Xe chưa được trả" />
-          )}
+      <InfoRow
+        label="Trạm kết thúc:"
+        value={endStationLabel}
+      />
+      {endStation?.address
+        ? <InfoRow label="Địa chỉ kết thúc:" value={endStation.address} />
+        : null}
     </InfoCard>
   );
 }

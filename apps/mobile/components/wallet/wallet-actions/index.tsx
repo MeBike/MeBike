@@ -20,7 +20,7 @@ export function WalletActions({ onTopUp, onWithdraw }: WalletActionsProps) {
           colors={WALLET_CONSTANTS.GRADIENT_COLORS.TOP_UP}
           style={styles.gradient}
         >
-          <Ionicons name="arrow-down" size={24} color="#fff" />
+          <Ionicons name="arrow-down" size={22} color="#fff" style={styles.icon} />
           <Text style={styles.buttonText}>Nạp tiền</Text>
         </LinearGradient>
       </TouchableOpacity>
@@ -32,7 +32,7 @@ export function WalletActions({ onTopUp, onWithdraw }: WalletActionsProps) {
                 colors={WALLET_CONSTANTS.GRADIENT_COLORS.WITHDRAW}
                 style={styles.gradient}
               >
-                <Ionicons name="arrow-up" size={24} color="#fff" />
+                <Ionicons name="arrow-up" size={22} color="#fff" style={styles.icon} />
                 <Text style={styles.buttonText}>Rút tiền</Text>
               </LinearGradient>
             </TouchableOpacity>

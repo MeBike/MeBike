@@ -2,24 +2,18 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
 import { FlatList, RefreshControl, StatusBar, Text, View } from "react-native";
 
-import type { TabType } from "../utils/wallet/constants";
-
 import { LoadingSpinner } from "../components/wallet/loading-spinner";
 import { QRModal } from "../components/wallet/qr-modal";
 import { TransactionDetailModal } from "../components/wallet/transaction-detail-modal";
 import { TransactionItem } from "../components/wallet/transaction-item";
 import { WalletActions } from "../components/wallet/wallet-actions";
 import { WalletBalance } from "../components/wallet/wallet-balance";
-import { WalletHeader } from "../components/wallet/wallet-header";
-import { WalletTabs } from "../components/wallet/wallet-tabs";
 import { useWallet } from "../hooks/wallet/use-wallet";
 import { myWalletScreenStyles as styles } from "../styles/wallet/my-wallet-screen";
-import { TAB_TYPES } from "../utils/wallet/constants";
 
 function MyWalletScreen() {
   const [showQR, setShowQR] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>(TAB_TYPES.TRANSACTIONS);
   const [showTransactionDetail, setShowTransactionDetail] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
@@ -62,7 +56,6 @@ function MyWalletScreen() {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
-        <WalletHeader />
         <WalletBalance
           balance={wallet.myWallet?.balance || "0"}
           status={wallet.myWallet?.status || ""}
@@ -73,11 +66,8 @@ function MyWalletScreen() {
         onTopUp={handleTopUp}
       />
 
-      <View style={styles.content}>
-        <WalletTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Giao dịch gần đây</Text>
       </View>
     </>
   );
@@ -175,7 +165,7 @@ function MyWalletScreen() {
         ListHeaderComponent={renderListHeader}
         ListFooterComponent={renderFooter}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[styles.listContainer]}
         onEndReached={() => {
           if (getCurrentHasNextPage() && !getCurrentIsFetching()) {
             getCurrentLoadMore()();
