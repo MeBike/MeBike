@@ -33,7 +33,7 @@ export const ENDPOINT = {
         BASE : "/users/manage-users/get-all",
         DETAIL : (id : string) => `/users/manage-users/${id}`,
         MANAGE_USER : "/users/manage",
-        SEARCH_USER : "/users/search",
+        SEARCH_USER : "/users/manage-users/search",
         UPDATE : (id: string) => `/users/manage-users/${id}`, 
         STATS_ACTIVE_USER : "/users/manage-users/stats/active-users",
         STATS_TOP_RENTER : "/users/manage-users/stats/top-renters",
