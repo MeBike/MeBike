@@ -19,7 +19,7 @@ export const userService = {
     pageSize,
     verify,
     role,
-    fullname,
+    fullName,
     sortBy,
     sortDir,
   }: {
@@ -27,7 +27,7 @@ export const userService = {
     pageSize?: number;
     verify?: "VERIFIED" | "UNVERIFIED" | "BANNED" | "";
     role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
-    fullname?: string;
+    fullName?: string;
     sortBy?: "fullname" | "email" | "role" | "verify" | "updatedAt";
     sortDir?: "asc" | "desc";
   }): Promise<AxiosResponse<ApiResponse<DetailUser[]>>> => {
@@ -37,7 +37,7 @@ export const userService = {
         page: page,
         pageSize: pageSize,
         verify: verify,
-        fullname: fullname,
+        fullName: fullName,
         role: role,
         sortBy: sortBy,
         sortDir: sortDir,

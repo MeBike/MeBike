@@ -53,8 +53,8 @@ export default function CustomersClient() {
     page: currentPage,
     verify: verifyFilter === "all" ? "" : verifyFilter,
     role: roleFilter === "all" ? "" : (roleFilter as UserRole),
-    searchQuery: searchQuery,
     id: selectedUserId || "",
+    fullName: searchQuery,
   });
   useEffect(() => {
     getAllUsers();

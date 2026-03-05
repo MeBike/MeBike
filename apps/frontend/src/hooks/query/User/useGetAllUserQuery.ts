@@ -7,11 +7,13 @@ const fetchAllUserRequests = async ({
   pageSize,
   verify,
   role,
+  fullName,
 }: {
   page?: number;
   pageSize?: number;
   verify?: VerifyStatus;
   role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+  fullName?: string;
 }) => {
   try {
     const query: Record<string, number | string> = {
@@ -20,6 +22,7 @@ const fetchAllUserRequests = async ({
     };
     if (verify) query.verify = verify;
     if (role) query.role = role;
+    if (fullName) query.fullName = fullName;
     const response = await userService.getAllUsers(query);
     if (response.status === 200) {
       return response.data;
@@ -34,14 +37,16 @@ export const useGetAllUserQuery = ({
   pageSize,
   verify,
   role,
+  fullName,
 }: {
   page?: number;
   pageSize?: number;
   verify?: VerifyStatus;
   role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
+  fullName?: string;
 }) => {
   return useQuery({
-    queryKey: QUERY_KEYS.USER.ALL(page, pageSize, verify, role),
-    queryFn: () => fetchAllUserRequests({ page, pageSize, verify, role }),
+    queryKey: QUERY_KEYS.USER.ALL(page, pageSize, verify, role, fullName),
+    queryFn: () => fetchAllUserRequests({ page, pageSize, verify, role, fullName }),
   });
 };

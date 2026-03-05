@@ -26,6 +26,7 @@ export const useUserActions = ({
   limit,
   page,
   searchQuery,
+  fullName,
   id,
 }: {
   hasToken: boolean;
@@ -35,6 +36,7 @@ export const useUserActions = ({
   page?: number;
   searchQuery?: string;
   id?: string;
+  fullName?: string;
 }) => {
   const router = useRouter();
   const useCreateUser = useCreateUserMutation();
@@ -49,6 +51,7 @@ export const useUserActions = ({
     pageSize: limit,
     role: role || "",
     verify: verify || "",
+    fullName: fullName || "",
   });
   const {
     data: statisticsData,
