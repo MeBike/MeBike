@@ -829,7 +829,7 @@ export default function SOSPage() {
                           <option value="">Chọn nhân viên SOS</option>
                           {sosAgents?.map((agent) => (
                             <option key={agent.id} value={agent.id}>
-                              {agent.fullname} - {agent.email}
+                              {agent.fullName} - {agent.email}
                             </option>
                           ))}
                         </select>

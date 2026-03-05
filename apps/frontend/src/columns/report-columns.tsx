@@ -71,7 +71,7 @@ export const reportColumns = ({
       const assigneeId = row.getValue("assignee_id") as string;
       if (!assigneeId) return <div>Chưa có</div>;
       const staff = staffList.find(s => s.id === assigneeId);
-      return <div>{staff ? `${staff.fullname} (${staff.email})` : assigneeId}</div>;
+      return <div>{staff ? `${staff.fullName} (${staff.email})` : assigneeId}</div>;
     },
   },
   {

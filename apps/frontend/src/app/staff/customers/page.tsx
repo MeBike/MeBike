@@ -261,7 +261,7 @@ export default function CustomersPage() {
                         <div>
                           <p className="text-sm text-muted-foreground">ID</p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.id}
+                            {detailUserData.data.id}
                           </p>
                         </div>
 
@@ -270,14 +270,14 @@ export default function CustomersPage() {
                             Họ tên
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.fullname}
+                            {detailUserData.data.fullName}
                           </p>
                         </div>
 
                         <div>
                           <p className="text-sm text-muted-foreground">Email</p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.email}
+                            {detailUserData.data.email}
                           </p>
                         </div>
 
@@ -286,7 +286,7 @@ export default function CustomersPage() {
                             Số điện thoại
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.phoneNumber}
+                            {detailUserData.data.phoneNumber}
                           </p>
                         </div>
 
@@ -295,7 +295,7 @@ export default function CustomersPage() {
                             Username
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.username}
+                            {detailUserData.data.username}
                           </p>
                         </div>
 
@@ -305,14 +305,14 @@ export default function CustomersPage() {
                           </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData?.data?.result?.role === "ADMIN"
+                              detailUserData.data.role === "ADMIN"
                                 ? "bg-red-100 text-red-800"
-                                : detailUserData?.data?.result?.role === "STAFF"
+                                : detailUserData.data.role === "STAFF"
                                   ? "bg-blue-100 text-blue-800"
                                   : "bg-green-100 text-green-800"
                             }`}
                           >
-                            {detailUserData?.data?.result?.role}
+                            {detailUserData.data.role}
                           </span>
                         </div>
 
@@ -322,16 +322,16 @@ export default function CustomersPage() {
                           </p>
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              detailUserData?.data?.result?.verify ===
+                              detailUserData.data.verify ===
                               "VERIFIED"
                                 ? "bg-green-100 text-green-800"
-                                : detailUserData?.data?.result?.verify ===
+                                : detailUserData.data.verify ===
                                     "UNVERIFIED"
                                   ? "bg-yellow-100 text-yellow-800"
                                   : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {detailUserData?.data?.result?.verify}
+                            {detailUserData.data.verify}
                           </span>
                         </div>
 
@@ -340,7 +340,7 @@ export default function CustomersPage() {
                             Địa chỉ
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.location ||
+                            {detailUserData.data.location ||
                               "Chưa có"}
                           </p>
                         </div>
@@ -350,7 +350,7 @@ export default function CustomersPage() {
                             NFC Card UID
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.nfcCardUid ||
+                            {detailUserData.data.nfcCardUid ||
                               "Chưa có"}
                           </p>
                         </div>
@@ -360,9 +360,9 @@ export default function CustomersPage() {
                             Ngày tạo
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.createdAt
+                            {detailUserData.data.createdAt
                               ? new Date(
-                                  detailUserData?.data?.result?.createdAt
+                                  detailUserData.data.createdAt
                                 ).toLocaleString("vi-VN")
                               : "-"}
                           </p>
@@ -373,9 +373,9 @@ export default function CustomersPage() {
                             Lần cập nhật cuối
                           </p>
                           <p className="text-foreground font-medium">
-                            {detailUserData?.data?.result?.updatedAt
+                            {detailUserData.data.updatedAt
                               ? new Date(
-                                  detailUserData?.data?.result?.updatedAt
+                                  detailUserData.data.updatedAt
                                 ).toLocaleString("vi-VN")
                               : "-"}
                           </p>
@@ -400,21 +400,21 @@ export default function CustomersPage() {
                                 ID Người dùng
                               </p>
                               <p className="text-2xl font-bold text-primary">
-                                {detailUserData?.data?.result?.id.slice(0, 8)}
+                                {detailUserData.data.id.slice(0, 8)}
                               </p>
                             </div>
 
                             <div className="bg-blue-100 border border-blue-300 rounded p-3">
                               <p className="text-xs text-blue-600">Email</p>
                               <p className="text-sm font-bold text-blue-800">
-                                {detailUserData?.data?.result?.email}
+                                {detailUserData.data.email}
                               </p>
                             </div>
 
                             <div className="bg-green-100 border border-green-300 rounded p-3">
                               <p className="text-xs text-green-600">Vai trò</p>
                               <p className="text-lg font-bold text-green-800">
-                                {detailUserData?.data?.result?.role}
+                                {detailUserData.data.role}
                               </p>
                             </div>
 
@@ -423,7 +423,7 @@ export default function CustomersPage() {
                                 Trạng thái
                               </p>
                               <p className="text-lg font-bold text-yellow-800">
-                                {detailUserData?.data?.result?.verify}
+                                {detailUserData.data.verify}
                               </p>
                             </div>
                           </div>

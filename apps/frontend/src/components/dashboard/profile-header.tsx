@@ -44,17 +44,17 @@ export function ProfileHeader({ user, avatarPreview }: ProfileHeaderProps) {
         <Avatar className="w-24 h-24 border-4 border-primary/20">
           <AvatarImage
             src={avatarPreview || user.avatar || "/placeholder.svg"}
-            alt={user.fullname}
+            alt={user.fullName}
           />
           <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
-            {getInitials(user.fullname)}
+            {getInitials(user.fullName)}
           </AvatarFallback>
         </Avatar>
 
         <div className="flex-1 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center gap-3">
             <h2 className="text-2xl font-bold text-foreground">
-              {user.fullname}
+              {user.fullName}
             </h2>
             <Badge variant={getRoleBadgeVariant(user.role)} className="w-fit">
               {user.role.toUpperCase()}

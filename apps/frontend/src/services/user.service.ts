@@ -99,10 +99,10 @@ export const userService = {
   //   return response;
   // },
   getTopRenter: async (): Promise<
-    AxiosResponse<GetTopRentersResponse>
+    AxiosResponse<GetTopRentersResponse[]>
   > => {
     const response = await fetchHttpClient.get<
-      GetTopRentersResponse
+      GetTopRentersResponse[]
     >(ENDPOINT.USER.STATS_TOP_RENTER);
     return response;
   },

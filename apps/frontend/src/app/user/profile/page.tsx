@@ -122,7 +122,7 @@ export default function ProfilePage() {
     
     // Kiểm tra các field text
     const textFields: (keyof UpdateProfileSchemaFormData)[] = [
-      "fullname",
+      "fullName",
       "username",
       "phoneNumber",
       "location",
@@ -288,7 +288,7 @@ export default function ProfilePage() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">
-                  {formData?.fullname || ""}
+                  {formData?.fullName || ""}
                 </p>
                 <p
                   className={cn(
@@ -315,9 +315,9 @@ export default function ProfilePage() {
                   <Input
                     id="fullname"
                     placeholder="Chưa có họ và tên"
-                    value={formData?.fullname || ""}
+                    value={formData?.fullName || ""}
                     onChange={(e) =>
-                      handleInputChange("fullname", e.target.value)
+                      handleInputChange("fullName", e.target.value)
                     }
                     disabled={!isEditing}
                     className={cn(

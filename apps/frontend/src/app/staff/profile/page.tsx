@@ -117,7 +117,7 @@ export default function ProfilePage() {
     setIsSaving(true);
     
     const fields: (keyof UpdateProfileSchemaFormData)[] = [
-      "fullname",
+      "fullName",
       "username",
       "phoneNumber",
       "location",
@@ -282,7 +282,7 @@ export default function ProfilePage() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">
-                  {formData?.fullname || "Chưa có tên"}
+                  {formData?.fullName || "Chưa có tên"}
                 </p>
                 <p
                   className={cn(
@@ -308,10 +308,9 @@ export default function ProfilePage() {
                   </Label>
                   <Input
                     id="fullname"
-                    value={formData?.fullname || ""}
+                    value={formData?.fullName || ""}
                     onChange={(e) =>
-                      handleInputChange("fullname", e.target.value)
-                    }
+                      handleInputChange("fullName", e.target.value)                    }
                     disabled={!isEditing}
                     className={cn(
                       "bg-background border-border",
