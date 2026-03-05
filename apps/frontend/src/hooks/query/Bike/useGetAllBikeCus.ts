@@ -4,19 +4,20 @@ import type { BikeStatus } from "@/types";
 import { QUERY_KEYS } from "@/constants/queryKey";
 const getAllBikes = async (
   page?: number,
-  limit?: number,
-  station_id?: string,
-  supplier_id?: string,
+  pageSize?: number,
+  stationId?: string,
+  supplierId?: string,
   status?: BikeStatus
 ) => {
   try {
-    const response = await bikeService.getAllBikes({
-      page: page,
-      limit: limit,
-      station_id: station_id,
-      supplier_id: supplier_id,
-      status: status,
-    });
+    const query: Record<string, number | string> = {
+      page: page ?? 1,
+      pageSize: pageSize ?? 5,
+    };
+    if(stationId) query.stationId = stationId;
+    if(supplierId) query.supplierId = supplierId;
+    if(status) query.status = status;
+    const response = await bikeService.getAllBikes(query);
     if (response.status === 200) {
       return response.data;
     }
@@ -27,19 +28,19 @@ const getAllBikes = async (
 };
 export const useGetAllBikeQuery = ({
   page,
-  limit,
-  station_id,
-  supplier_id,
+  pageSize,
+  stationId,
+  supplierId,
   status,
 }: {
   page?: number;
-  limit?: number;
-  station_id?: string;
-  supplier_id?: string;
+  pageSize?: number;
+  stationId?: string;
+  supplierId?: string;
   status?: BikeStatus;
 }) => {
   return useQuery({
-    queryKey: QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id),
-    queryFn: () => getAllBikes(page, limit, station_id, supplier_id, status),
+    queryKey: QUERY_KEYS.BIKE.ALL(page, pageSize, status, stationId, supplierId),
+    queryFn: () => getAllBikes(page, pageSize, stationId, supplierId, status),
   });
 };

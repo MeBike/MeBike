@@ -23,10 +23,10 @@ export default function BikesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newBike, setNewBike] = useState({
-    station_id: "",
-    supplier_id: "",
-    chip_id: "",
-    status: "CÓ SẴN" as BikeStatus,
+    stationId: "",
+    supplierId: "",
+    chipId: "",
+    status: "AVAILABLE" as BikeStatus,
   });
   const {responseStationBikeRevenue, getStationBikeRevenue} = useStationActions({ hasToken: true });
   const [editBike, setEditBike] = useState<Bike | null>(null);
@@ -102,30 +102,30 @@ export default function BikesPage() {
   const handleUpdateBike = () => {
     if (!editBike) return;
     updateBike({
-      station_id: editBike.station_id,
-      supplier_id: editBike.supplier_id || "",
+      stationId: editBike.stationId,
+      supplierId: editBike.supplierId || "",
       status: editBike.status,
-      chip_id: editBike.chip_id,
-    }, editBike._id);
+      chipId: editBike.chipId,
+    }, editBike.id);
     setIsEditModalOpen(false);
   };
   const handleCreateBike = () => {
-    if (!newBike.station_id || !newBike.chip_id) {
+    if (!newBike.stationId || !newBike.chipId) {
       alert("Vui lòng điền đầy đủ thông tin");
       return;
     }
     createBike({
-      station_id: newBike.station_id,
-      supplier_id: newBike.supplier_id,
+      stationId: newBike.stationId,
+      supplierId: newBike.supplierId || "",
       status: newBike.status,
-      chip_id: newBike.chip_id,
+      chipId: newBike.chipId,
     });
     setIsCreateModalOpen(false);
     setNewBike({
-      station_id: "",
-      supplier_id: "",
-      chip_id: "",
-      status: "CÓ SẴN",
+      stationId: "",
+      supplierId: "",
+      chipId: "",
+      status: "AVAILABLE",
     });
   };
   useEffect(() => {
@@ -145,10 +145,10 @@ export default function BikesPage() {
       getBikeByID();
     }
   }, [editId , getBikeByID]);
-  const available = statisticData?.result["CÓ SẴN"] || 0;
-  const renting = statisticData?.result["ĐANG ĐƯỢC THUÊ"] || 0;
-  const broken = statisticData?.result["BỊ HỎNG"] || 0;
-  const reserved = statisticData?.result["ĐÃ ĐẶT TRƯỚC"] || 0;
+  const available = statisticData?.AVAILABLE || 0;
+  const renting = statisticData?.RENTED || 0;
+  const broken = statisticData?.BROKEN || 0;
+  const reserved = statisticData?.RESERVED || 0;
   const total =
   Number(available) + Number(renting) + Number(broken) + Number(reserved);
   if (isLoadingStatistics) {
@@ -773,9 +773,9 @@ export default function BikesPage() {
                     Trạm xe
                   </label>
                   <select
-                    value={newBike.station_id}
+                    value={newBike.stationId}
                     onChange={(e) =>
-                      setNewBike({ ...newBike, station_id: e.target.value })
+                      setNewBike({ ...newBike, stationId: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
@@ -792,9 +792,9 @@ export default function BikesPage() {
                     Nhà cung cấp
                   </label>
                   <select
-                    value={newBike.supplier_id}
+                    value={newBike.supplierId}
                     onChange={(e) =>
-                      setNewBike({ ...newBike, supplier_id: e.target.value })
+                      setNewBike({ ...newBike, supplierId: e.target.value })
                     }
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
                   >
@@ -813,9 +813,9 @@ export default function BikesPage() {
                   </label>
                   <input
                     type="text"
-                    value={newBike.chip_id}
+                    value={newBike.chipId}
                     onChange={(e) =>
-                      setNewBike({ ...newBike, chip_id: e.target.value })
+                      setNewBike({ ...newBike, chipId: e.target.value })
                     }
                     placeholder="Nhập Chip ID"
                     className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground mt-1"
@@ -915,19 +915,19 @@ export default function BikesPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">ID Xe</p>
                     <p className="text-foreground font-medium">
-                      {detailBike._id}
+                      {detailBike.id}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Chip ID</p>
                     <p className="text-foreground font-medium">
-                      {detailBike.chip_id}
+                      {detailBike.chipId}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Trạm</p>
                     <p className="text-foreground font-medium">
-                      {detailBike.station_id}
+                      {detailBike.stationId}
                     </p>
                   </div>
                   <div>
@@ -935,7 +935,7 @@ export default function BikesPage() {
                       Nhà cung cấp
                     </p>
                     <p className="text-foreground font-medium">
-                      {detailBike.supplier_id || "-"}
+                      {detailBike.supplierId || "-"}
                     </p>
                   </div>
                   <div>
@@ -951,7 +951,7 @@ export default function BikesPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Ngày tạo</p>
                     <p className="text-foreground font-medium">
-                      {formatDateUTC(detailBike.created_at)}
+                      {formatDateUTC(detailBike.createdAt)}
                     </p>
                   </div>
                   <div>
@@ -959,7 +959,7 @@ export default function BikesPage() {
                       Ngày cập nhật
                     </p>
                     <p className="text-foreground font-medium">
-                      {formatDateUTC(detailBike.updated_at)}
+                      {formatDateUTC(detailBike.updatedAt)}
                     </p>
                   </div>
                 </div>
@@ -983,7 +983,7 @@ export default function BikesPage() {
                         {bikeRentals.map(
                           (rental: BikeRentalHistory, index: number) => (
                             <div
-                              key={rental._id}
+                              key={rental.id}
                               className="flex justify-between items-center py-2 border-b border-border last:border-b-0"
                             >
                               <div className="flex-1">
@@ -998,18 +998,18 @@ export default function BikesPage() {
                                   </span>
                                 </div>
                                 <div className="text-xs text-muted-foreground mt-1">
-                                  Từ {rental.start_station.name} →{" "}
-                                  {rental.end_station.name}
+                                  Từ {rental.startStation.name} →{" "}
+                                  {rental.endStation.name}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  {formatDateUTC(rental.start_time)} -{" "}
-                                  {formatDateUTC(rental.end_time)}
+                                  {formatDateUTC(rental.startTime)} -{" "}
+                                  {formatDateUTC(rental.endTime)}
                                 </div>
                               </div>
                               <div className="text-right">
                                 <div className="text-sm font-medium text-foreground">
                                   {parseFloat(
-                                    rental.total_price.$numberDecimal
+                                    rental.totalPrice.toString()
                                   ).toLocaleString()}{" "}
                                   VND
                                 </div>
@@ -1040,11 +1040,11 @@ export default function BikesPage() {
                       <div className="bg-primary/10 border border-primary rounded p-3">
                         <p className="text-xs text-primary">ID xe</p>
                         <p className="text-2xl font-bold text-primary">
-                          {bikeActivityStats?.bike_id.slice(0, 8)}
+                          {bikeActivityStats?.bikeId.slice(0, 8)}
                         </p>
                       </div>
                       {/* Doanh thu từng tháng */}
-                      {bikeActivityStats?.monthly_stats?.map((stat, idx) => (
+                      {bikeActivityStats?.monthlyStats?.map((stat, idx) => (
                         <div
                           key={idx}
                           className="bg-yellow-100 border border-yellow-300 rounded p-3 mb-2"
@@ -1056,10 +1056,10 @@ export default function BikesPage() {
                             {stat.revenue.toLocaleString()} VND
                           </p>
                           <p className="text-xs text-yellow-600">
-                            Số lượt thuê: {stat.rentals_count}
+                            Số lượt thuê: {stat.rentalsCount}
                           </p>
                           <p className="text-xs text-yellow-600">
-                            Phút hoạt động: {stat.minutes_active}
+                            Phút hoạt động: {stat.minutesActive}
                           </p>
                         </div>
                       ))}
@@ -1069,7 +1069,7 @@ export default function BikesPage() {
                           Thời gian sử dụng
                         </p>
                         <p className="text-2xl font-bold text-blue-800">
-                          {bikeActivityStats?.total_minutes_active || 0} phút
+                          {bikeActivityStats?.totalMinutesActive || 0} phút
                         </p>
                       </div>
                       {/* Phần trăm thời gian hoạt động - màu green */}
@@ -1078,7 +1078,7 @@ export default function BikesPage() {
                           Phần trăm thời gian hoạt động
                         </p>
                         <p className="text-2xl font-bold text-green-800">
-                          {bikeActivityStats?.uptime_percentage}%
+                          {bikeActivityStats?.uptimePercentage}%
                         </p>
                       </div>
                       {/* Số lượng báo hỏng - màu red */}
@@ -1087,7 +1087,7 @@ export default function BikesPage() {
                           Số lượng báo hỏng
                         </p>
                         <p className="text-2xl font-bold text-red-800">
-                          {bikeActivityStats?.total_reports || 0} báo hỏng
+                          {bikeActivityStats?.totalReports || 0} báo hỏng
                         </p>
                       </div>
                       {/* Đánh giá trung bình - màu gray nếu chưa có đánh giá */}
@@ -1096,8 +1096,8 @@ export default function BikesPage() {
                           Đánh giá trung bình
                         </p>
                         <p className="text-2xl font-bold text-gray-800">
-                          {detailBike.average_rating && detailBike.average_rating > 0
-                            ? `${detailBike.average_rating.toFixed(1)} ⭐ (${detailBike.total_ratings || 0} đánh giá)`
+                          {detailBike.averageRating && detailBike.averageRating > 0
+                            ? `${detailBike.averageRating.toFixed(1)} ⭐ (${detailBike.totalRatings || 0} đánh giá)`
                             : "Chưa có đánh giá"
                           }
                         </p>
@@ -1124,7 +1124,7 @@ export default function BikesPage() {
                             Tổng thời gian hoạt động
                           </span>
                           <span className="text-sm font-medium">
-                            {bikeStats?.total_duration_minutes} phút
+                            {bikeStats?.totalDurationMinutes} phút
                           </span>
                         </div>
                         <div className="flex justify-between items-center py-2 border-b border-border">
@@ -1132,7 +1132,7 @@ export default function BikesPage() {
                             Tổng lượt thuê
                           </span>
                           <span className="text-sm font-medium">
-                            {bikeStats?.total_rentals}
+                            {bikeStats?.totalRentals}
                           </span>
                         </div>
                         <div className="flex justify-between items-center py-2 border-b border-border">
@@ -1140,7 +1140,7 @@ export default function BikesPage() {
                             Tổng lợi nhuận
                           </span>
                           <span className="text-sm font-medium">
-                            {bikeStats?.total_revenue?.toLocaleString()} VND
+                            {bikeStats?.totalRevenue?.toLocaleString()} VND
                           </span>
                         </div>
                         <div className="flex justify-between items-center py-2 border-b border-border">
@@ -1148,7 +1148,7 @@ export default function BikesPage() {
                             Tổng báo cáo
                           </span>
                           <span className="text-sm font-medium">
-                            {bikeStats?.total_reports}
+                            {bikeStats?.totalReports}
                           </span>
                         </div>
                         {/* {bikeActivityStats.monthly_stats.length > 0 && (
@@ -1210,11 +1210,11 @@ export default function BikesPage() {
                     Trạm xe
                   </label>
                   <select
-                    value={editBike?.station_id || ""}
+                    value={editBike?.stationId || ""}
                     onChange={(e) =>
                       setEditBike(
                         editBike
-                          ? { ...editBike, station_id: e.target.value }
+                          ? { ...editBike, stationId: e.target.value }
                           : null
                       )
                     }
@@ -1233,11 +1233,11 @@ export default function BikesPage() {
                     Nhà cung cấp
                   </label>
                   <select
-                    value={editBike?.supplier_id || ""}
+                    value={editBike?.supplierId || ""}
                     onChange={(e) =>
                       setEditBike(
                         editBike
-                          ? { ...editBike, supplier_id: e.target.value }
+                          ? { ...editBike, supplierId: e.target.value }
                           : null
                       )
                     }
@@ -1258,11 +1258,11 @@ export default function BikesPage() {
                   </label>
                   <input
                     type="text"
-                    value={editBike?.chip_id || ""}
+                    value={editBike?.chipId || ""}
                     onChange={(e) =>
                       setEditBike(
                         editBike
-                          ? { ...editBike, chip_id: e.target.value }
+                          ? { ...editBike, chipId: e.target.value }
                           : null
                       )
                     }

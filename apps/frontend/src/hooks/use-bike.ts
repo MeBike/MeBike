@@ -17,16 +17,16 @@ import { useRouter } from "next/navigation";
 import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
-import { QUERY_KEYS } from "@/constants/queryKey";
-import getErrorMessage from "@/utils/error-message";
+import getAxiosErrorCodeMessage from "@/utils/error-util";
+import { getErrorMessageFromBikeCode } from "@/utils/map-message";
 export const useBikeActions = (
   hasToken: boolean,
   bike_detail_id?: string,
-  station_id?: string,
-  supplier_id?: string,
+  stationId?: string,
+  supplierId?: string,
   status?: BikeStatus,
-  limit?: number,
-  page?: number
+  pageSize?: number,
+  page?: number,
 ) => {
   const router = useRouter();
   const {
@@ -77,16 +77,15 @@ export const useBikeActions = (
     isFetching: isLoading,
   } = useGetAllBikeQuery({
     page: page,
-    limit: limit,
-    station_id: station_id || "",
-    supplier_id: supplier_id || "",
+    pageSize: pageSize,
+    stationId: stationId || "",
+    supplierId: supplierId || "",
     status: status || "",
   });
   const useCreateBike = useCreateBikeMutation();
   const updateBikeMutation = useUpdateBike();
   const {
-    data: 
-    statisticData,
+    data: statisticData,
     refetch: refetchStatistics,
     isFetching: isLoadingStatistics,
   } = useGetStatisticsBikeQuery();
@@ -113,133 +112,107 @@ export const useBikeActions = (
     refetchStatistics();
   }, [refetchStatistics, hasToken, router]);
   const createBike = useCallback(
-    (data: BikeSchemaFormData) => {
+    async (data: BikeSchemaFormData) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
-      useCreateBike.mutate(data, {
-        onSuccess: (result: {
-          status: number;
-          data?: { message?: string };
-        }) => {
-          if (result.status === 201) {
-            toast.success(result.data?.message || "Xe đạp được tạo thành công");
-            queryClient.invalidateQueries({
-              queryKey:QUERY_KEYS.BIKE.ALL()
-            });
-          } else {
-            const errorMessage = result.data?.message || "Lỗi khi tạo xe đạp";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi tạo xe đạp");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await useCreateBike.mutateAsync(data);
+        if (result.status === 201) {
+          toast.success("Tạo xe đạp thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["bikes","all"]
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromBikeCode(error_code));
+      }
     },
     [
       useCreateBike,
       hasToken,
       router,
       page,
-      limit,
-      station_id,
-      supplier_id,
+      pageSize,
+      stationId,
+      supplierId,
       status,
       queryClient,
-    ]
+    ],
   );
   const updateBike = useCallback(
-    (data: UpdateBikeSchemaFormData, id: string) => {
+    async (data: UpdateBikeSchemaFormData, id: string) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
-      updateBikeMutation.mutate(
-        { id, data },
-        {
-          onSuccess: (result: {
-            status: number;
-            data?: { message?: string };
-          }) => {
-            if (result.status === 200) {
-              toast.success(result.data?.message || "Cập nhật xe đạp thành công");
-              queryClient.invalidateQueries({
-                queryKey:QUERY_KEYS.BIKE.ALL(page, limit, status, station_id, supplier_id)
-              });
-            } else {
-              const errorMessage =
-                result.data?.message || "Lỗi khi cập nhật xe đạp";
-              toast.error(errorMessage);
-            }
-          },
-          onError: (error) => {
-            const errorMessage = getErrorMessage(error, "Lỗi khi cập nhật xe đạp");
-            toast.error(errorMessage);
-          },
+      try {
+        const result = await updateBikeMutation.mutateAsync({ id, data });
+        if (result.status === 200) {
+          toast.success("Cập nhật xe đạp thành công");
+          queryClient.invalidateQueries({
+            queryKey:["bikes","all"]
+          });
         }
-      );
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromBikeCode(error_code));
+      }
     },
     [
       updateBikeMutation,
       hasToken,
       router,
       page,
-      limit,
-      station_id,
-      supplier_id,
+      pageSize,
+      stationId,
+      supplierId,
       status,
       queryClient,
-    ]
+    ],
   );
   const deleteBike = useCallback(
-    (id: string) => {
+    async (id: string) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
-      deleteBikeMutation.mutate(id, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Xóa xe đạp thành công");
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.BIKE.ALL() });
-          } else {
-            const errorMessage = result.data?.message || "Lỗi khi xóa xe đạp";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Lỗi khi xóa xe đạp");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await deleteBikeMutation.mutateAsync(id);
+        if (result.status === 200) {
+          toast.success(result.data?.message || "Xóa xe đạp thành công");
+          queryClient.invalidateQueries({
+            queryKey: ["bikes","all"]
+          });
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromBikeCode(error_code));
+        throw error;
+      }
     },
-    [deleteBikeMutation, hasToken, router, queryClient]
+    [deleteBikeMutation, hasToken, router, queryClient],
   );
   const reportBike = useCallback(
-    (id: string) => {
+    async (id: string) => {
       if (!hasToken) {
         router.push("/login");
         return;
       }
-      reportBikeMutation.mutate(id, {
-        onSuccess: (result) => {
-          if (result.status === 200) {
-            toast.success(result.data?.message || "Báo cáo xe đạp thành công");
-          } else {
-            const errorMessage = result.data?.message || "Error reporting bike";
-            toast.error(errorMessage);
-          }
-        },
-        onError: (error) => {
-          const errorMessage = getErrorMessage(error, "Error reporting bike");
-          toast.error(errorMessage);
-        },
-      });
+      try {
+        const result = await reportBikeMutation.mutateAsync(id);
+        if (result.status === 200) {
+          toast.success(result.data?.message || "Báo cáo xe đạp thành công");
+        }
+      } catch (error) {
+        const error_code = getAxiosErrorCodeMessage(error);
+        toast.error(getErrorMessageFromBikeCode(error_code));
+        throw error;
+      }
     },
-    [reportBikeMutation, hasToken, router]
+    [reportBikeMutation, hasToken, router],
   );
   const getBikeByID = useCallback(() => {
     if (bike_detail_id) {
@@ -256,7 +229,7 @@ export const useBikeActions = (
     paginationBikes: data?.pagination,
     isFetchingBikeDetail: isLoading,
     isLoadingDetail,
-    detailBike: detailBike?.result,
+    detailBike: detailBike,
     isReportingBike: reportBikeMutation.isPending,
     isDeletingBike: deleteBikeMutation.isPending,
     isUpdatingBike: updateBikeMutation.isPending,
@@ -267,13 +240,13 @@ export const useBikeActions = (
     isLoadingStatistics,
     statisticData,
     paginationOfBikes: data?.pagination,
-    bikeActivityStats: bikeActivityStats?.result,
+    bikeActivityStats: bikeActivityStats,
     getBikeActivityStats,
     isFetchingBikeActivityStats,
     getBikeStats,
-    bikeStats: bikeStats?.result,
+    bikeStats: bikeStats,
     isFetchingBikeStats,
-    bikeRentals: bikeRentals?.result.data,
+    bikeRentals: bikeRentals,
     getRentalBikes,
     isFetchingRentalBikes,
     totalRecord: data?.pagination.totalRecords || 0,
