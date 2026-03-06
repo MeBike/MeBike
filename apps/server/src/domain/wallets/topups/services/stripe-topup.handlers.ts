@@ -1,14 +1,21 @@
 import type Stripe from "stripe";
 
+import { JobTypes } from "@mebike/shared/contracts/server/jobs";
 import { Effect, Match } from "effect";
 
+import { enqueueOutboxJobInTx } from "@/infrastructure/jobs/outbox-enqueue";
 import { Prisma } from "@/infrastructure/prisma";
 import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 
 import type { WalletNotFound, WalletRepositoryError } from "../../domain-errors";
 import type { IncreaseBalanceInput } from "../../models";
 import type { InvalidTopupRequest, PaymentAttemptRepositoryError, PaymentAttemptUniqueViolation } from "../domain-errors";
-import type { StripeCheckoutAttemptInput, StripeTopupSessionResult, StripeWebhookOutcome } from "../services/stripe-topup.service";
+import type {
+  StripeCheckoutAttemptInput,
+  StripeTopupPaymentSheetResult,
+  StripeTopupSessionResult,
+  StripeWebhookOutcome,
+} from "../services/stripe-topup.service";
 
 import { WalletNotFound as WalletNotFoundError } from "../../domain-errors";
 import { makeWalletRepository } from "../../repository/wallet.repository";
@@ -48,6 +55,11 @@ export type CreateStripeCheckoutSessionInput = Omit<
   readonly cancelUrl: string;
 };
 
+export type CreateStripePaymentSheetInput = Omit<
+  StripeCheckoutAttemptInput,
+  "walletId"
+>;
+
 export function createStripeCheckoutSessionUseCase(
   input: CreateStripeCheckoutSessionInput,
 ): Effect.Effect<
@@ -68,7 +80,6 @@ export function createStripeCheckoutSessionUseCase(
 
     const session = yield* service.createCheckoutSession({
       attempt: prepared.attempt,
-      walletId: wallet.id,
       successUrl: input.successUrl,
       cancelUrl: input.cancelUrl,
     });
@@ -78,6 +89,37 @@ export function createStripeCheckoutSessionUseCase(
     return {
       paymentAttemptId: prepared.attempt.id,
       checkoutUrl: session.checkoutUrl,
+    };
+  });
+}
+
+export function createStripePaymentSheetUseCase(
+  input: CreateStripePaymentSheetInput,
+): Effect.Effect<
+  StripeTopupPaymentSheetResult,
+  InvalidTopupRequest | TopupProviderError | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation | WalletNotFound | WalletRepositoryError,
+  StripeTopupServiceTag | WalletServiceTag
+> {
+  return Effect.gen(function* () {
+    const service = yield* StripeTopupServiceTag;
+    const walletService = yield* WalletServiceTag;
+    const wallet = yield* walletService.getByUserId(input.userId);
+
+    const prepared = yield* service.preparePaymentSheetAttempt({
+      userId: input.userId,
+      walletId: wallet.id,
+      amountMinor: input.amountMinor,
+    });
+
+    const paymentIntent = yield* service.createPaymentIntent({
+      attempt: prepared.attempt,
+    });
+
+    yield* service.attachProviderRef(prepared.attempt.id, paymentIntent.paymentIntentId);
+
+    return {
+      paymentAttemptId: prepared.attempt.id,
+      paymentIntentClientSecret: paymentIntent.clientSecret,
     };
   });
 }
@@ -96,6 +138,110 @@ function creditWallet(
             ? Effect.succeed(maybeWallet.value)
             : Effect.fail(new WalletNotFoundError({ userId: input.userId }))),
       )),
+  );
+}
+
+function matchAttemptOption<A>(
+  effect: Effect.Effect<{ _tag: "Some"; value: A } | { _tag: "None" }, PaymentAttemptRepositoryError>,
+) {
+  return Effect.flatMap(effect, attemptOpt =>
+    Match.value(attemptOpt).pipe(
+      Match.tag("Some", ({ value }) => Effect.succeed(value)),
+      Match.tag("None", () => Effect.succeed(null)),
+      Match.exhaustive,
+    ));
+}
+
+function formatAmountForCurrency(amountMinor: bigint, currency: string) {
+  const normalized = currency.toUpperCase();
+  const isZeroDecimal = normalized === "VND";
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: normalized,
+    minimumFractionDigits: isZeroDecimal ? 0 : 2,
+    maximumFractionDigits: isZeroDecimal ? 0 : 2,
+  }).format(isZeroDecimal ? Number(amountMinor) : Number(amountMinor) / 100);
+}
+
+function settleSuccessfulTopup(
+  client: import("generated/prisma/client").PrismaClient,
+  attempt: {
+    readonly id: string;
+    readonly userId: string;
+    readonly currency: string;
+  },
+  input: {
+    readonly providerRef: string;
+    readonly amountMinor: bigint;
+    readonly description: string;
+    readonly hash: string;
+    readonly errorOperation: string;
+  },
+): Effect.Effect<StripeWebhookOutcome, TopupProviderError | PaymentAttemptRepositoryError> {
+  return runPrismaTransaction(client, tx =>
+    Effect.gen(function* () {
+      const txPaymentAttemptRepo = makePaymentAttemptRepository(tx);
+      const txWalletRepo = makeWalletRepository(tx);
+
+      const updated = yield* txPaymentAttemptRepo.markSucceededIfPending(attempt.id, input.providerRef);
+      if (!updated) {
+        return { status: "ignored", reason: "already_processed" } as StripeWebhookOutcome;
+      }
+
+      const creditResult = yield* creditWallet(txWalletRepo, {
+        userId: attempt.userId,
+        amount: input.amountMinor,
+        description: input.description,
+        hash: input.hash,
+        type: "DEPOSIT",
+      }).pipe(Effect.either);
+
+      return yield* Match.value(creditResult).pipe(
+        Match.tag("Right", () =>
+          enqueueOutboxJobInTx(tx, {
+            type: JobTypes.PushSend,
+            payload: {
+              version: 1,
+              userId: attempt.userId,
+              event: "wallets.topupSucceeded",
+              title: "Top-up successful",
+              body: `Your wallet has been credited with ${formatAmountForCurrency(input.amountMinor, attempt.currency)}.`,
+              channelId: "default",
+              data: {
+                paymentAttemptId: attempt.id,
+                amountMinor: input.amountMinor.toString(),
+                currency: attempt.currency.toLowerCase(),
+                providerRef: input.providerRef,
+                provider: "stripe",
+              },
+            },
+            runAt: new Date(),
+            dedupeKey: `wallet:topup:push:${attempt.id}`,
+          }).pipe(
+            Effect.as({ status: "succeeded", paymentAttemptId: attempt.id } as StripeWebhookOutcome),
+          )),
+        Match.tag("Left", ({ left }) => {
+          if (left._tag === "WalletNotFound") {
+            return txPaymentAttemptRepo.markFailedIfPending(attempt.id, "wallet_missing").pipe(
+              Effect.as({
+                status: "failed",
+                paymentAttemptId: attempt.id,
+                reason: "wallet_missing",
+              } as StripeWebhookOutcome),
+            );
+          }
+
+          return Effect.fail(new TopupProviderError({
+            operation: input.errorOperation,
+            provider: "stripe",
+            cause: left,
+          }));
+        }),
+        Match.exhaustive,
+      );
+    })).pipe(
+    Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
   );
 }
 
@@ -143,7 +289,7 @@ export function handleStripeTopupWebhookEventUseCase(
     const receivedMinor = BigInt(amountTotal);
     const receivedCurrency = currency.toLowerCase();
 
-    if (receivedMinor !== attempt.amountMinor || receivedCurrency !== "usd") {
+    if (receivedMinor !== attempt.amountMinor || receivedCurrency !== attempt.currency.toLowerCase()) {
       const reason = "amount_or_currency_mismatch";
       yield* Effect.tryPromise({
         try: () =>
@@ -161,47 +307,97 @@ export function handleStripeTopupWebhookEventUseCase(
       return { status: "failed", paymentAttemptId: attempt.id, reason };
     }
 
-    return yield* runPrismaTransaction(client, tx =>
-      Effect.gen(function* () {
-        const txPaymentAttemptRepo = makePaymentAttemptRepository(tx);
-        const txWalletRepo = makeWalletRepository(tx);
+    return yield* settleSuccessfulTopup(client, attempt, {
+      providerRef: session.id,
+      amountMinor: receivedMinor,
+      description: "Stripe top-up",
+      hash: `stripe:checkout:${session.id}`,
+      errorOperation: "stripe.webhook.handleCheckoutSession",
+    });
+  });
+}
 
-        const updated = yield* txPaymentAttemptRepo.markSucceededIfPending(attempt.id, session.id);
-        if (!updated) {
-          return { status: "ignored", reason: "already_processed" } as StripeWebhookOutcome;
-        }
+export function handleStripePaymentIntentWebhookEventUseCase(
+  event: Stripe.Event,
+): Effect.Effect<
+  StripeWebhookOutcome,
+  TopupProviderError | PaymentAttemptRepositoryError,
+  StripeTopupServiceTag | Prisma
+> {
+  return Effect.gen(function* () {
+    const service = yield* StripeTopupServiceTag;
+    const { client } = yield* Prisma;
 
-        const creditResult = yield* creditWallet(txWalletRepo, {
-          userId: attempt.userId,
-          amount: receivedMinor,
-          description: "Stripe top-up",
-          hash: `stripe:checkout:${session.id}`,
-          type: "DEPOSIT",
-        }).pipe(Effect.either);
+    if (event.type !== "payment_intent.succeeded" && event.type !== "payment_intent.payment_failed") {
+      return { status: "ignored", reason: `unsupported_event:${event.type}` };
+    }
 
-        return yield* Match.value(creditResult).pipe(
-          Match.tag("Right", () =>
-            Effect.succeed({ status: "succeeded", paymentAttemptId: attempt.id } as StripeWebhookOutcome)),
-          Match.tag("Left", ({ left }) => {
-            if (left._tag === "WalletNotFound") {
-              return txPaymentAttemptRepo.markFailedIfPending(attempt.id, "wallet_missing").pipe(
-                Effect.as({
-                  status: "failed",
-                  paymentAttemptId: attempt.id,
-                  reason: "wallet_missing",
-                } as StripeWebhookOutcome),
-              );
-            }
-            return Effect.fail(new TopupProviderError({
-              operation: "stripe.webhook.handleCheckoutSession",
-              provider: "stripe",
-              cause: left,
-            }));
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+    const attempt = yield* matchAttemptOption(service.resolveAttemptForPaymentIntent(paymentIntent));
+
+    if (!attempt) {
+      return paymentIntent.metadata?.paymentAttemptId
+        ? { status: "missing", providerRef: paymentIntent.id }
+        : { status: "ignored", reason: "untracked_payment_intent" };
+    }
+
+    if (attempt.status !== "PENDING") {
+      return { status: "ignored", reason: `already_${attempt.status.toLowerCase()}` };
+    }
+
+    if (event.type === "payment_intent.payment_failed") {
+      const reason = paymentIntent.last_payment_error?.message ?? "payment_failed";
+      yield* Effect.tryPromise({
+        try: () =>
+          client.$transaction(async (tx) => {
+            const txRepo = makePaymentAttemptRepository(tx);
+            await Effect.runPromise(txRepo.markFailedIfPending(attempt.id, reason));
           }),
-          Match.exhaustive,
-        );
-      })).pipe(
-      Effect.catchTag("PrismaTransactionError", err => Effect.die(err)),
-    );
+        catch: cause =>
+          new TopupProviderError({
+            operation: "stripe.webhook.paymentIntentFailed",
+            provider: "stripe",
+            cause,
+          }),
+      });
+
+      return { status: "failed", paymentAttemptId: attempt.id, reason };
+    }
+
+    const amountReceived = paymentIntent.amount_received;
+    const currency = paymentIntent.currency;
+    if (typeof amountReceived !== "number" || !currency) {
+      return { status: "ignored", reason: "missing_amount_or_currency" };
+    }
+
+    const receivedMinor = BigInt(amountReceived);
+    const receivedCurrency = currency.toLowerCase();
+
+    if (receivedMinor !== attempt.amountMinor || receivedCurrency !== attempt.currency.toLowerCase()) {
+      const reason = "amount_or_currency_mismatch";
+      yield* Effect.tryPromise({
+        try: () =>
+          client.$transaction(async (tx) => {
+            const txRepo = makePaymentAttemptRepository(tx);
+            await Effect.runPromise(txRepo.markFailedIfPending(attempt.id, reason));
+          }),
+        catch: cause =>
+          new TopupProviderError({
+            operation: "stripe.webhook.paymentIntentMismatch",
+            provider: "stripe",
+            cause,
+          }),
+      });
+
+      return { status: "failed", paymentAttemptId: attempt.id, reason };
+    }
+
+    return yield* settleSuccessfulTopup(client, attempt, {
+      providerRef: paymentIntent.id,
+      amountMinor: receivedMinor,
+      description: "Stripe top-up via PaymentSheet",
+      hash: `stripe:payment_intent:${paymentIntent.id}`,
+      errorOperation: "stripe.webhook.handlePaymentIntent",
+    });
   });
 }

@@ -177,6 +177,9 @@ export type FixedSlotTemplate = {
     status: Generated<FixedSlotStatus>;
     updated_at: Generated<Timestamp>;
 };
+export type GeoBoundary = {
+    code: string;
+};
 export type JobOutbox = {
     id: string;
     type: string;
@@ -359,6 +362,10 @@ export type WalletWithdrawal = {
     wallet_id: string;
     amount: string;
     currency: string;
+    payout_amount: string | null;
+    payout_currency: string | null;
+    fx_rate: string | null;
+    fx_quoted_at: Timestamp | null;
     status: Generated<WalletWithdrawalStatus>;
     idempotency_key: string;
     stripe_transfer_id: string | null;
@@ -372,6 +379,7 @@ export type DB = {
     Bike: Bike;
     FixedSlotDate: FixedSlotDate;
     FixedSlotTemplate: FixedSlotTemplate;
+    GeoBoundary: GeoBoundary;
     job_outbox: JobOutbox;
     payment_attempts: PaymentAttempt;
     push_tokens: PushToken;

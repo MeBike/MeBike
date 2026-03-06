@@ -41,6 +41,7 @@ const EmailSendPayloadV1Schema = z.discriminatedUnion("kind", [
 const PushSendEventSchema = z.enum([
   "reservations.nearExpiry",
   "reservations.expired",
+  "wallets.topupSucceeded",
 ]);
 
 const PushChannelIdSchema = z.enum([

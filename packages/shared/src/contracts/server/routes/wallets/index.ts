@@ -1,4 +1,5 @@
 import {
+  createStripeTopupPaymentSheetRoute,
   createStripeTopupSessionRoute,
   createWalletWithdrawalRoute,
   creditMyWalletRoute,
@@ -19,5 +20,6 @@ export const walletsRoutes = {
   creditMyWallet: creditMyWalletRoute,
   debitMyWallet: debitMyWalletRoute,
   createStripeTopupSession: createStripeTopupSessionRoute,
+  createStripeTopupPaymentSheet: createStripeTopupPaymentSheetRoute,
   createWalletWithdrawal: createWalletWithdrawalRoute,
 } as const;

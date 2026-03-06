@@ -6,6 +6,10 @@ export type WalletWithdrawalRow = {
   readonly walletId: string;
   readonly amount: bigint;
   readonly currency: string;
+  readonly payoutAmount: bigint | null;
+  readonly payoutCurrency: string | null;
+  readonly fxRate: bigint | null;
+  readonly fxQuotedAt: Date | null;
   readonly status: WalletWithdrawalStatus;
   readonly idempotencyKey: string;
   readonly stripeTransferId: string | null;
@@ -20,6 +24,10 @@ export type CreateWalletWithdrawalInput = {
   readonly walletId: string;
   readonly amount: bigint;
   readonly currency: string;
+  readonly payoutAmount?: bigint | null;
+  readonly payoutCurrency?: string | null;
+  readonly fxRate?: bigint | null;
+  readonly fxQuotedAt?: Date | null;
   readonly idempotencyKey: string;
 };
 

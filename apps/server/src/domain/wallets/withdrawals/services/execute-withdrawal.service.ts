@@ -16,6 +16,7 @@ import { runPrismaTransaction } from "@/lib/effect/prisma-tx";
 import type { WithdrawalProviderError, WithdrawalRepositoryError } from "../domain-errors";
 
 import { WithdrawalNotFound, WithdrawalUserNotFound } from "../domain-errors";
+import { convertVndToUsdMinor } from "../fx";
 import { makeWithdrawalRepository, WithdrawalRepository } from "../repository/withdrawal.repository";
 import { StripeWithdrawalServiceTag } from "../services/stripe-withdrawal.service";
 
@@ -38,6 +39,23 @@ function toMinorAmountNumber(amount: bigint): number | null {
     return null;
   }
   return Number(amount);
+}
+
+function resolvePayoutAmountMinor(withdrawal: import("../models").WalletWithdrawalRow): number | null {
+  if (withdrawal.payoutAmount && withdrawal.payoutCurrency?.toLowerCase() === "usd") {
+    return toMinorAmountNumber(withdrawal.payoutAmount);
+  }
+
+  if (withdrawal.currency.toLowerCase() === "vnd") {
+    const converted = convertVndToUsdMinor(withdrawal.amount);
+    return converted ? toMinorAmountNumber(converted) : null;
+  }
+
+  if (withdrawal.currency.toLowerCase() === "usd") {
+    return toMinorAmountNumber(withdrawal.amount);
+  }
+
+  return null;
 }
 
 function getStripeErrorCode(cause: unknown): string | undefined {
@@ -154,7 +172,7 @@ export function executeWithdrawalUseCase(
             );
           }
 
-          const amountMinor = toMinorAmountNumber(withdrawal.amount);
+          const amountMinor = resolvePayoutAmountMinor(withdrawal);
           if (!amountMinor) {
             return yield* markFailedAndReleaseHold(
               client,
@@ -173,14 +191,6 @@ export function executeWithdrawalUseCase(
 
           if (!marked) {
             return { status: "ignored", withdrawalId, reason: "already_processing" } satisfies ExecuteWithdrawalOutcome;
-          }
-
-          if (withdrawal.currency.toLowerCase() !== "usd") {
-            return yield* markFailedAndReleaseHold(
-              client,
-              withdrawal,
-              "unsupported_currency",
-            );
           }
 
           const providerResult = yield* Effect.gen(function* () {
