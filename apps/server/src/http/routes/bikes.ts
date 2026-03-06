@@ -7,7 +7,10 @@ import {
   BikePublicController,
   BikeStatsController,
 } from "@/http/controllers/bikes";
-import { requireAdminMiddleware } from "@/http/middlewares/auth";
+import {
+  requireAdminMiddleware,
+  requireAdminOrStaffMiddleware,
+} from "@/http/middlewares/auth";
 
 export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
   const bikes = serverRoutes.bikes;
@@ -20,21 +23,57 @@ export function registerBikeRoutes(app: import("@hono/zod-openapi").OpenAPIHono)
 
   app.openapi(bikes.listBikes, BikePublicController.listBikes);
 
-  app.openapi(bikes.getBike, BikePublicController.getBike);
-
   app.openapi(bikes.updateBike, BikeAdminController.updateBike);
 
   app.openapi(bikes.reportBrokenBike, BikePublicController.reportBrokenBike);
 
   app.openapi(bikes.deleteBike, BikeAdminController.deleteBike);
 
-  app.openapi(bikes.getBikeStats, BikeStatsController.getBikeStats);
+  const getBikeStatsRoute = {
+    ...bikes.getBikeStats,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
 
-  app.openapi(bikes.getHighestRevenueBike, BikeStatsController.getHighestRevenueBike);
+  app.openapi(getBikeStatsRoute, BikeStatsController.getBikeStats);
 
-  app.openapi(bikes.getBikeActivityStats, BikeStatsController.getBikeActivityStats);
+  const getBikeStatisticsRoute = {
+    ...bikes.getBikeStatistics,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
 
-  app.openapi(bikes.getBikeRentalHistory, BikeStatsController.getBikeRentalHistory);
+  app.openapi(getBikeStatisticsRoute, BikeStatsController.getBikeStatistics);
+
+  const getBikeStatsByIdRoute = {
+    ...bikes.getBikeStatsById,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(getBikeStatsByIdRoute, BikeStatsController.getBikeStatsById);
+
+  const getHighestRevenueBikeRoute = {
+    ...bikes.getHighestRevenueBike,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(getHighestRevenueBikeRoute, BikeStatsController.getHighestRevenueBike);
+
+  const getBikeActivityStatsRoute = {
+    ...bikes.getBikeActivityStats,
+    middleware: [requireAdminOrStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(getBikeActivityStatsRoute, BikeStatsController.getBikeActivityStats);
+
+  const getBikeRentalHistoryRoute = {
+    ...bikes.getBikeRentalHistory,
+    middleware: [requireAdminOrStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(getBikeRentalHistoryRoute, BikeStatsController.getBikeRentalHistory);
+
+  // Keep single-segment dynamic route last to avoid accidental shadowing
+  // if future static endpoints are added under /v1/bikes/*.
+  app.openapi(bikes.getBike, BikePublicController.getBike);
 
   // Analytics endpoints implemented above.
 }

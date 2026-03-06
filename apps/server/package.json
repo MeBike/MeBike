@@ -44,6 +44,7 @@
     "dotenv": "^17.2.3",
     "effect": "^3.19.10",
     "expo": "~54.0.31",
+    "expo-server-sdk": "^6.0.0",
     "hono": "^4.9.4",
     "ioredis": "5.8.2",
     "jsonwebtoken": "^9.0.2",

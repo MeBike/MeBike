@@ -46,7 +46,7 @@ describe("user-stats mappers", () => {
 
     expect(vip).toEqual({
       userId: "user-1",
-      fullname: "User One",
+      fullName: "User One",
       totalDuration: 120,
     });
   });

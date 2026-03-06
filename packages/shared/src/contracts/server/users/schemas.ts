@@ -13,6 +13,7 @@ export const UserErrorCodeSchema = z.enum([
   "DUPLICATE_EMAIL",
   "DUPLICATE_PHONE_NUMBER",
   "INVALID_CURRENT_PASSWORD",
+  "INVALID_PUSH_TOKEN",
 ]).openapi("UserErrorCode");
 
 export const userErrorMessages = {
@@ -20,6 +21,7 @@ export const userErrorMessages = {
   DUPLICATE_EMAIL: "Email already in use",
   DUPLICATE_PHONE_NUMBER: "Phone number already in use",
   INVALID_CURRENT_PASSWORD: "Current password is incorrect",
+  INVALID_PUSH_TOKEN: "Invalid push token",
 } as const;
 
 export const UserStatsErrorCodeSchema = z.enum([

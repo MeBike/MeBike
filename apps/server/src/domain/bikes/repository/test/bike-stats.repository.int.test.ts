@@ -147,6 +147,20 @@ describe("bikeStatsRepository Integration", () => {
     expect(result.percentage).toBe(50);
   });
 
+  it("getBikeStatistics returns status counts", async () => {
+    const { id: stationId } = await createStation("Status Station");
+    await createBike(stationId, "AVAILABLE");
+    await createBike(stationId, "BOOKED");
+    await createBike(stationId, "UNAVAILABLE");
+
+    const result = await Effect.runPromise(repo.getBikeStatistics());
+    expect(result.AVAILABLE).toBe(1);
+    expect(result.RENTED).toBe(1);
+    expect(result.UNAVAILABLE).toBe(1);
+    expect(result.RESERVED).toBe(0);
+    expect(result.BROKEN).toBe(0);
+  });
+
   it("getHighestRevenueBike returns top bike", async () => {
     const { id: userId } = await createUser();
     const { id: stationId } = await createStation("Revenue Station");
@@ -227,6 +241,40 @@ describe("bikeStatsRepository Integration", () => {
     expect(result.totalMinutesActive).toBe(90);
     expect(result.totalRevenue).toBe(150);
     expect(result.monthly).toHaveLength(2);
+  });
+
+  it("getBikeStatsById returns aggregate totals for a bike", async () => {
+    const { id: userId } = await createUser();
+    const { id: stationId } = await createStation("Bike Summary Station");
+    const { id: bikeId } = await createBike(stationId, "AVAILABLE");
+
+    await createRental({
+      userId,
+      bikeId,
+      startStationId: stationId,
+      endStationId: stationId,
+      startTime: new Date("2024-03-01T08:00:00Z"),
+      endTime: new Date("2024-03-01T08:30:00Z"),
+      duration: 30,
+      totalPrice: "25",
+    });
+    await createRental({
+      userId,
+      bikeId,
+      startStationId: stationId,
+      endStationId: stationId,
+      startTime: new Date("2024-03-02T08:00:00Z"),
+      endTime: new Date("2024-03-02T09:00:00Z"),
+      duration: 60,
+      totalPrice: "75",
+    });
+
+    const result = await Effect.runPromise(repo.getBikeStatsById(bikeId));
+    expect(result.id).toBe(bikeId);
+    expect(result.totalRentals).toBe(2);
+    expect(result.totalRevenue).toBe(100);
+    expect(result.totalDurationMinutes).toBe(90);
+    expect(result.totalReports).toBe(0);
   });
 
   it("getBikeRentalHistory returns history items", async () => {

@@ -5,6 +5,7 @@ export type UserErrorCode
     | "USER_NOT_FOUND"
     | "DUPLICATE_EMAIL"
     | "DUPLICATE_PHONE_NUMBER"
+    | "INVALID_PUSH_TOKEN"
     | "UNKNOWN";
 
 export type ApiUserError = {

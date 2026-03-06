@@ -103,6 +103,8 @@ export function makeBikeRepository(
     stationId: true,
     supplierId: true,
     status: true,
+    createdAt: true,
+    updatedAt: true,
   } as const;
 
   const findById = (

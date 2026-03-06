@@ -45,6 +45,12 @@ export const PaymentStatus = {
     CANCELLED: "CANCELLED"
 } as const;
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+export const PushTokenPlatform = {
+    ANDROID: "ANDROID",
+    IOS: "IOS",
+    UNKNOWN: "UNKNOWN"
+} as const;
+export type PushTokenPlatform = (typeof PushTokenPlatform)[keyof typeof PushTokenPlatform];
 export const RatingReasonType = {
     ISSUE: "ISSUE",
     COMPLIMENT: "COMPLIMENT"
@@ -202,6 +208,18 @@ export type PaymentAttempt = {
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
+export type PushToken = {
+    id: string;
+    user_id: string;
+    token: string;
+    platform: Generated<PushTokenPlatform>;
+    device_id: string | null;
+    app_version: string | null;
+    is_active: Generated<boolean>;
+    last_seen_at: Generated<Timestamp>;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
 export type Rating = {
     id: string;
     user_id: string;
@@ -356,6 +374,7 @@ export type DB = {
     FixedSlotTemplate: FixedSlotTemplate;
     job_outbox: JobOutbox;
     payment_attempts: PaymentAttempt;
+    push_tokens: PushToken;
     Rating: Rating;
     RatingReason: RatingReason;
     RatingReasonLink: RatingReasonLink;

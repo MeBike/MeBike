@@ -7,4 +7,7 @@ export function registerUserSelfRoutes(app: import("@hono/zod-openapi").OpenAPIH
   app.openapi(users.me, UsersController.me);
   app.openapi(users.updateMe, UsersController.updateMe);
   app.openapi(users.changePassword, UsersController.changePassword);
+  app.openapi(users.registerPushToken, UsersController.registerPushToken);
+  app.openapi(users.unregisterPushToken, UsersController.unregisterPushToken);
+  app.openapi(users.unregisterAllPushTokens, UsersController.unregisterAllPushTokens);
 }
