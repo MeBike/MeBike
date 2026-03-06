@@ -4,9 +4,9 @@ import type {
   BikeActivityStats,
   BikeRentalHistoryItem,
   BikeRentalStats,
+  BikeRow,
   BikeStatistics,
   BikeStats,
-  BikeRow,
   HighestRevenueBike,
 } from "@/domain/bikes";
 
