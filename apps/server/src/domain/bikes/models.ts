@@ -6,6 +6,8 @@ export type BikeRow = {
   stationId: string | null;
   supplierId: string | null;
   status: BikeStatus;
+  createdAt: Date;
+  updatedAt: Date;
 };
 export type BikeFilter = {
   stationId?: string;
@@ -68,6 +70,22 @@ export type BikeRentalStats = {
   totalActiveBikes: number;
   rentedBikes: number;
   percentage: number;
+};
+
+export type BikeStatistics = {
+  RESERVED: number;
+  AVAILABLE: number;
+  RENTED: number;
+  UNAVAILABLE: number;
+  BROKEN: number;
+};
+
+export type BikeStats = {
+  id: string;
+  totalRentals: number;
+  totalRevenue: number;
+  totalDurationMinutes: number;
+  totalReports: number;
 };
 
 export type HighestRevenueBike = {

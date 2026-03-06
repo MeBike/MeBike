@@ -11,10 +11,13 @@ import {
 } from "../../users/schemas";
 import {
   AdminCreateUserRequestSchema,
-  ChangePasswordRequestSchema,
   AdminResetPasswordRequestSchema,
   AdminUpdateUserRequestSchema,
   AdminUserDetailResponseSchema,
+  ChangePasswordRequestSchema,
+  PushTokenSummarySchema,
+  RegisterPushTokenRequestSchema,
+  UnregisterPushTokenRequestSchema,
   UpdateMeRequestSchema,
   UpdateMeResponseSchema,
   UserErrorResponseSchema,
@@ -158,6 +161,141 @@ export const updateMeRoute = createRoute({
               value: {
                 error: userErrorMessages.DUPLICATE_PHONE_NUMBER,
                 details: { code: UserErrorCodeSchema.enum.DUPLICATE_PHONE_NUMBER },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const registerPushTokenRoute = createRoute({
+  method: "post",
+  path: "/v1/users/me/push-tokens",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: RegisterPushTokenRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Push token registered",
+      content: {
+        "application/json": {
+          schema: PushTokenSummarySchema,
+        },
+      },
+    },
+    400: {
+      description: "Invalid push token",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            InvalidPushToken: {
+              value: {
+                error: userErrorMessages.INVALID_PUSH_TOKEN,
+                details: { code: UserErrorCodeSchema.enum.INVALID_PUSH_TOKEN },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const unregisterPushTokenRoute = createRoute({
+  method: "delete",
+  path: "/v1/users/me/push-tokens",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: UnregisterPushTokenRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    204: { description: "Push token unregistered" },
+    400: {
+      description: "Invalid push token",
+      content: {
+        "application/json": {
+          schema: UserErrorResponseSchema,
+          examples: {
+            InvalidPushToken: {
+              value: {
+                error: userErrorMessages.INVALID_PUSH_TOKEN,
+                details: { code: UserErrorCodeSchema.enum.INVALID_PUSH_TOKEN },
+              },
+            },
+          },
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+});
+
+export const unregisterAllPushTokensRoute = createRoute({
+  method: "delete",
+  path: "/v1/users/me/push-tokens/all",
+  tags: ["Users"],
+  security: [{ bearerAuth: [] }],
+  responses: {
+    204: { description: "All push tokens unregistered" },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+          examples: {
+            Unauthorized: {
+              value: {
+                error: unauthorizedErrorMessages.UNAUTHORIZED,
+                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
               },
             },
           },

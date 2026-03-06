@@ -1,4 +1,5 @@
 node_modules
+.tmp-screens/
 AGENTS.md
 .turbo
 .alchemy

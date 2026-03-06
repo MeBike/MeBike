@@ -1,6 +1,7 @@
 import { AuthProviderNext } from "@providers/auth-provider-next";
 import { BikeStatusStreamProvider } from "@providers/bike-status-stream-provider";
 import Providers from "@providers/providers";
+import { PushNotificationsProvider } from "@providers/push-notifications-provider";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
@@ -22,10 +23,12 @@ export default function App() {
     <Providers>
       <NavigationContainer>
         <AuthProviderNext>
-          <BikeStatusStreamProvider>
-            <StatusBar style="auto" />
-            <RootNavigator />
-          </BikeStatusStreamProvider>
+          <PushNotificationsProvider>
+            <BikeStatusStreamProvider>
+              <StatusBar style="auto" />
+              <RootNavigator />
+            </BikeStatusStreamProvider>
+          </PushNotificationsProvider>
         </AuthProviderNext>
       </NavigationContainer>
     </Providers>

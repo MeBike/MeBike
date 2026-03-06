@@ -14,6 +14,8 @@ import type {
   BikeRentalHistoryItem,
   BikeRentalHistorySortField,
   BikeRentalStats,
+  BikeStatistics,
+  BikeStats,
   HighestRevenueBike,
 } from "../models";
 import type { RentalHistoryRowRaw } from "./bike-stats.mapper";
@@ -23,6 +25,8 @@ import { toBikeRentalHistoryItem } from "./bike-stats.mapper";
 
 export type BikeStatsRepo = {
   readonly getRentalStats: () => Effect.Effect<BikeRentalStats, BikeRepositoryError>;
+  readonly getBikeStatistics: () => Effect.Effect<BikeStatistics, BikeRepositoryError>;
+  readonly getBikeStatsById: (bikeId: string) => Effect.Effect<BikeStats, BikeRepositoryError>;
   readonly getHighestRevenueBike: () => Effect.Effect<HighestRevenueBike | null, BikeRepositoryError>;
   readonly getBikeActivityStats: (args: {
     bikeId: string;
@@ -78,6 +82,49 @@ export function makeBikeStatsRepository(db: Kysely<DB>): BikeStatsRepo {
             : (rentedBikes / totalActiveBikes) * 100;
 
         return { totalActiveBikes, rentedBikes, percentage };
+      }),
+
+    getBikeStatistics: () =>
+      withOp("stats.bikeStatistics", async () => {
+        const row = await db
+          .selectFrom("Bike")
+          .select([
+            sql<number>`count(*) filter (where status = 'RESERVED')`.as("reserved"),
+            sql<number>`count(*) filter (where status = 'AVAILABLE')`.as("available"),
+            sql<number>`count(*) filter (where status = 'BOOKED')`.as("rented"),
+            sql<number>`count(*) filter (where status = 'UNAVAILABLE')`.as("unavailable"),
+            sql<number>`count(*) filter (where status = 'BROKEN')`.as("broken"),
+          ])
+          .executeTakeFirst();
+
+        return {
+          RESERVED: Number(row?.reserved ?? 0),
+          AVAILABLE: Number(row?.available ?? 0),
+          RENTED: Number(row?.rented ?? 0),
+          UNAVAILABLE: Number(row?.unavailable ?? 0),
+          BROKEN: Number(row?.broken ?? 0),
+        };
+      }),
+
+    getBikeStatsById: bikeId =>
+      withOp("stats.bikeStatsById", async () => {
+        const row = await db
+          .selectFrom("Rental")
+          .select([
+            sql<number>`count(*)`.as("total_rentals"),
+            sql<number>`coalesce(sum("total_price"::numeric), 0)`.as("total_revenue"),
+            sql<number>`coalesce(sum("duration"), 0)`.as("total_duration_minutes"),
+          ])
+          .where("bike_id", "=", bikeId)
+          .executeTakeFirst();
+
+        return {
+          id: bikeId,
+          totalRentals: Number(row?.total_rentals ?? 0),
+          totalRevenue: Number(row?.total_revenue ?? 0),
+          totalDurationMinutes: Number(row?.total_duration_minutes ?? 0),
+          totalReports: 0,
+        };
       }),
 
     getHighestRevenueBike: () =>

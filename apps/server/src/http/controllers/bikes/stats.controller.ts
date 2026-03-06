@@ -8,10 +8,21 @@ import {
   toBikeActivityStats,
   toBikeRentalHistoryItem,
   toBikeRentalStats,
+  toBikeStatistics,
+  toBikeStats,
   toHighestRevenueBike,
 } from "@/http/presenters/bikes.presenter";
 
-import type { BikeActivityStatsResponse, BikeNotFoundResponse, BikeRentalHistoryResponse, BikeRentalStatsResponse, BikesRoutes, HighestRevenueBikeResponse } from "./shared";
+import type {
+  BikeActivityStatsResponse,
+  BikeNotFoundResponse,
+  BikeRentalHistoryResponse,
+  BikeRentalStatsResponse,
+  BikesRoutes,
+  BikeStatisticsResponse,
+  BikeStatsResponse,
+  HighestRevenueBikeResponse,
+} from "./shared";
 
 import {
 
@@ -56,6 +67,55 @@ const getHighestRevenueBike: RouteHandler<BikesRoutes["getHighestRevenueBike"]> 
     Match.tag("Left", ({ left }) => {
       throw left;
     }),
+    Match.exhaustive,
+  );
+};
+
+const getBikeStatistics: RouteHandler<BikesRoutes["getBikeStatistics"]> = async (c) => {
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const svc = yield* BikeStatsServiceTag;
+      return yield* svc.getBikeStatistics();
+    }),
+    "GET /v1/bikes/stats/status-counts",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<BikeStatisticsResponse, 200>(toBikeStatistics(right), 200)),
+    Match.tag("Left", ({ left }) => {
+      throw left;
+    }),
+    Match.exhaustive,
+  );
+};
+
+const getBikeStatsById: RouteHandler<BikesRoutes["getBikeStatsById"]> = async (c) => {
+  const { id } = c.req.valid("param");
+
+  const eff = withLoggedCause(
+    Effect.gen(function* () {
+      const svc = yield* BikeStatsServiceTag;
+      return yield* svc.getBikeStatsById(id);
+    }),
+    "GET /v1/bikes/{id}/stats/summary",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<BikeStatsResponse, 200>(toBikeStats(right), 200)),
+    Match.tag("Left", ({ left }) => Match.value(left).pipe(
+      Match.tag("BikeNotFound", () =>
+        c.json<BikeNotFoundResponse, 404>({
+          error: bikeErrorMessages.BIKE_NOT_FOUND,
+          details: { code: BikeErrorCodeSchema.enum.BIKE_NOT_FOUND },
+        }, 404)),
+      Match.orElse((err) => {
+        throw err;
+      }),
+    )),
     Match.exhaustive,
   );
 };
@@ -134,6 +194,8 @@ const getBikeRentalHistory: RouteHandler<BikesRoutes["getBikeRentalHistory"]> = 
 
 export const BikeStatsController = {
   getBikeStats,
+  getBikeStatistics,
+  getBikeStatsById,
   getHighestRevenueBike,
   getBikeActivityStats,
   getBikeRentalHistory,
