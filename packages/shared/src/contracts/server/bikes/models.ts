@@ -7,6 +7,8 @@ export const BikeSummarySchema = z.object({
   stationId: z.uuidv7().nullable(),
   supplierId: z.uuidv7().nullable(),
   status: BikeStatusSchema,
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
 });
 
 export const BikeRentalHistoryItemSchema = z.object({
@@ -53,6 +55,22 @@ export const BikeRentalStatsSchema = z.object({
   percentage: z.number(),
 });
 
+export const BikeStatisticsSchema = z.object({
+  RESERVED: z.number(),
+  AVAILABLE: z.number(),
+  RENTED: z.number(),
+  UNAVAILABLE: z.number(),
+  BROKEN: z.number(),
+});
+
+export const BikeStatsSchema = z.object({
+  id: z.uuidv7(),
+  totalRentals: z.number(),
+  totalRevenue: z.number(),
+  totalDurationMinutes: z.number(),
+  totalReports: z.number(),
+});
+
 export const HighestRevenueBikeSchema = z.object({
   bikeId: z.uuidv7(),
   bikeChipId: z.string(),
@@ -68,4 +86,6 @@ export type BikeSummary = z.infer<typeof BikeSummarySchema>;
 export type BikeRentalHistoryItem = z.infer<typeof BikeRentalHistoryItemSchema>;
 export type BikeActivityStats = z.infer<typeof BikeActivityStatsSchema>;
 export type BikeRentalStats = z.infer<typeof BikeRentalStatsSchema>;
+export type BikeStatistics = z.infer<typeof BikeStatisticsSchema>;
+export type BikeStats = z.infer<typeof BikeStatsSchema>;
 export type HighestRevenueBike = z.infer<typeof HighestRevenueBikeSchema>;

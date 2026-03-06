@@ -4,6 +4,8 @@ import type {
   BikeActivityStats,
   BikeRentalHistoryItem,
   BikeRentalStats,
+  BikeStatistics,
+  BikeStats,
   BikeRow,
   HighestRevenueBike,
 } from "@/domain/bikes";
@@ -15,6 +17,8 @@ export function toBikeSummary(row: BikeRow): BikesContracts.BikeSummary {
     stationId: row.stationId,
     supplierId: row.supplierId,
     status: row.status,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }
 
@@ -25,6 +29,30 @@ export function toBikeRentalStats(
     totalActiveBikes: row.totalActiveBikes,
     rentedBikes: row.rentedBikes,
     percentage: row.percentage,
+  };
+}
+
+export function toBikeStatistics(
+  row: BikeStatistics,
+): BikesContracts.BikeStatistics {
+  return {
+    RESERVED: row.RESERVED,
+    AVAILABLE: row.AVAILABLE,
+    RENTED: row.RENTED,
+    UNAVAILABLE: row.UNAVAILABLE,
+    BROKEN: row.BROKEN,
+  };
+}
+
+export function toBikeStats(
+  row: BikeStats,
+): BikesContracts.BikeStats {
+  return {
+    id: row.id,
+    totalRentals: row.totalRentals,
+    totalRevenue: row.totalRevenue,
+    totalDurationMinutes: row.totalDurationMinutes,
+    totalReports: row.totalReports,
   };
 }
 

@@ -11,6 +11,8 @@ import {
   BikeRentalHistoryQuerySchema,
   BikeRentalHistoryResponseSchema,
   BikeRentalStatsResponseSchema,
+  BikeStatisticsResponseSchema,
+  BikeStatsResponseSchema,
   BikeSummarySchemaOpenApi,
   HighestRevenueBikeResponseSchema,
 } from "./shared";
@@ -122,6 +124,43 @@ export const getHighestRevenueBike = createRoute({
       description: "Bike with highest revenue",
       content: {
         "application/json": { schema: HighestRevenueBikeResponseSchema },
+      },
+    },
+  },
+});
+
+export const getBikeStatistics = createRoute({
+  method: "get",
+  path: "/v1/bikes/stats/status-counts",
+  tags: ["Bikes"],
+  responses: {
+    200: {
+      description: "Bike status distribution",
+      content: {
+        "application/json": { schema: BikeStatisticsResponseSchema },
+      },
+    },
+  },
+});
+
+export const getBikeStatsById = createRoute({
+  method: "get",
+  path: "/v1/bikes/{id}/stats/summary",
+  tags: ["Bikes"],
+  request: {
+    params: BikeIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Summary stats for a bike",
+      content: {
+        "application/json": { schema: BikeStatsResponseSchema },
+      },
+    },
+    404: {
+      description: "Bike not found",
+      content: {
+        "application/json": { schema: BikeNotFoundResponseSchema },
       },
     },
   },
