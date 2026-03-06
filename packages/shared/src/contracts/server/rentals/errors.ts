@@ -7,6 +7,8 @@ export const rentalErrorCodes = [
   "ACCESS_DENIED",
   "CANNOT_CREATE_RENTAL_WITH_SOS_STATUS",
   "CANNOT_END_RENTAL_WITH_SOS_STATUS",
+  "CANNOT_REQUEST_SWAP_THIS_RENTAL_WITH_STATUS",
+  "CANNOT_APPROVE_SWAP_THIS_RENTAL_WITH_STATUS",
 
   // Not Found Errors
   "RENTAL_NOT_FOUND",
@@ -117,8 +119,14 @@ export type RentalErrorResponse = z.infer<typeof RentalErrorResponseSchema>;
 export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   CANNOT_END_OTHER_RENTAL: "Cannot end another user's rental",
   ACCESS_DENIED: "Access denied",
-  CANNOT_CREATE_RENTAL_WITH_SOS_STATUS: "Cannot create rental from SOS with this status",
-  CANNOT_END_RENTAL_WITH_SOS_STATUS: "Cannot end rental from SOS with this status",
+  CANNOT_CREATE_RENTAL_WITH_SOS_STATUS:
+    "Cannot create rental from SOS with this status",
+  CANNOT_END_RENTAL_WITH_SOS_STATUS:
+    "Cannot end rental from SOS with this status",
+  CANNOT_REQUEST_SWAP_THIS_RENTAL_WITH_STATUS:
+    "Cannot request bike swap in this status",
+  CANNOT_APPROVE_SWAP_THIS_RENTAL_WITH_STATUS:
+    "Cannot approve bike swap in this status",
 
   RENTAL_NOT_FOUND: "Rental not found",
   NOT_FOUND_RENTED_RENTAL: "No active rental found",
@@ -156,7 +164,8 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
 
   CANNOT_END_WITHOUT_END_STATION: "End station is required",
   CANNOT_END_WITHOUT_END_TIME: "End time is required",
-  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON: "Provide at least one field to update",
+  PROVIDE_AT_LEAST_ONE_UPDATED_FIELD_BESIDES_REASON:
+    "Provide at least one field to update",
   MUST_END_AT_START_STATION: "Must end at the start station",
 
   CARD_RENTAL_ACTIVE_EXISTS: "Active rental already exists for this card",

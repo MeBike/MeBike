@@ -10,6 +10,8 @@ export {
   processCardTapRental,
   staffCreateRental,
   updateRental,
+  requestBikeSwap,
+  approveBikeSwapRequest
 } from "./mutations";
 
 export {

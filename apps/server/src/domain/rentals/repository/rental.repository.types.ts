@@ -8,6 +8,7 @@ import type {
   AdminRentalDetail,
   AdminRentalFilter,
   AdminRentalListItem,
+  BikeSwapRequestRow,
   MyRentalFilter,
   RentalCountsRow,
   RentalRow,
@@ -132,4 +133,10 @@ export type RentalRepo = {
     phoneNumber: string,
     pageReq: PageRequest<RentalSortField>,
   ) => Effect.Effect<PageResult<AdminRentalListItem>, RentalRepositoryError>;
+
+  requestBikeSwap: (
+    rentalId: string,
+    userId: string,
+    oldBikeId: string,
+  ) => Effect.Effect<BikeSwapRequestRow, RentalRepositoryError>;
 };

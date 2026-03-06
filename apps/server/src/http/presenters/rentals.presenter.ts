@@ -3,6 +3,7 @@ import type { RentalsContracts } from "@mebike/shared";
 import type {
   AdminRentalDetail,
   AdminRentalListItem,
+  BikeSwapRequestRow,
   RentalRow,
 } from "@/domain/rentals";
 
@@ -141,5 +142,21 @@ export function toContractAdminRentalDetail(
     subscriptionId: detail.subscriptionId ?? undefined,
     status: detail.status,
     updatedAt: detail.updatedAt.toISOString(),
+  };
+}
+
+export function toContractBikeSwapRequest(
+  row: BikeSwapRequestRow,
+): RentalsContracts.BikeSwapRequest {
+  return {
+    id: row.id,
+    rentalId: row.rentalId,
+    userId: row.userId,
+    oldBikeId: row.oldBikeId,
+    newBikeId: row.newBikeId,
+    reason: row.reason || null,
+    status: row.status,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
   };
 }

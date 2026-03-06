@@ -3,6 +3,7 @@ import type { Prisma as PrismaTypes } from "generated/prisma/client";
 
 import type {
   AdminRentalFilter,
+  BikeSwapRequestRow,
   MyRentalFilter,
   RentalRow,
   RentalSortField,
@@ -65,7 +66,9 @@ export const rentalSelect = {
   updatedAt: true,
 } as const;
 
-type RentalSelectRow = PrismaTypes.RentalGetPayload<{ select: typeof rentalSelect }>;
+type RentalSelectRow = PrismaTypes.RentalGetPayload<{
+  select: typeof rentalSelect;
+}>;
 
 export function mapToRentalRow(raw: RentalSelectRow): RentalRow {
   return {
@@ -80,6 +83,38 @@ export function mapToRentalRow(raw: RentalSelectRow): RentalRow {
     totalPrice: raw.totalPrice === null ? null : Number(raw.totalPrice),
     subscriptionId: raw.subscriptionId,
     status: raw.status,
+    updatedAt: raw.updatedAt,
+  };
+}
+
+export const bikeSwapRequestSelect = {
+  id: true,
+  rentalId: true,
+  userId: true,
+  oldBikeId: true,
+  newBikeId: true,
+  reason: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+type BikeSwapSelect = PrismaTypes.BikeSwapRequestGetPayload<{
+  select: typeof bikeSwapRequestSelect;
+}>;
+
+export function mapToBikeSwapRequestRow(
+  raw: BikeSwapSelect,
+): BikeSwapRequestRow {
+  return {
+    id: raw.id,
+    userId: raw.userId,
+    oldBikeId: raw.oldBikeId,
+    newBikeId: raw.newBikeId,
+    rentalId: raw.rentalId,
+    reason: raw.reason ?? "",
+    status: raw.status,
+    createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
   };
 }

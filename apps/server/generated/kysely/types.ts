@@ -8,6 +8,13 @@ export const AuthEventType = {
     SESSION_ISSUED: "SESSION_ISSUED"
 } as const;
 export type AuthEventType = (typeof AuthEventType)[keyof typeof AuthEventType];
+export const BikeSwapStatus = {
+    PENDING: "PENDING",
+    CONFIRMED: "CONFIRMED",
+    REJECTED: "REJECTED",
+    CANCELLED: "CANCELLED"
+} as const;
+export type BikeSwapStatus = (typeof BikeSwapStatus)[keyof typeof BikeSwapStatus];
 export const BikeStatus = {
     AVAILABLE: "AVAILABLE",
     BOOKED: "BOOKED",
@@ -155,6 +162,17 @@ export type Bike = {
     stationId: string | null;
     supplierId: string | null;
     status: BikeStatus;
+    created_at: Generated<Timestamp>;
+    updated_at: Timestamp;
+};
+export type BikeSwapRequest = {
+    id: string;
+    rental_id: string;
+    user_id: string;
+    old_bike_id: string;
+    new_bike_id: string | null;
+    reason: string | null;
+    status: Generated<BikeSwapStatus>;
     created_at: Generated<Timestamp>;
     updated_at: Timestamp;
 };
@@ -352,6 +370,7 @@ export type WalletWithdrawal = {
 export type DB = {
     AuthEvent: AuthEvent;
     Bike: Bike;
+    BikeSwapRequest: BikeSwapRequest;
     FixedSlotDate: FixedSlotDate;
     FixedSlotTemplate: FixedSlotTemplate;
     job_outbox: JobOutbox;

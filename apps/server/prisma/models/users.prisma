@@ -31,15 +31,16 @@ model User {
   createdAt                DateTime         @default(now()) @map("created_at") @db.Timestamptz
   updatedAt                DateTime         @updatedAt @map("updated_at") @db.Timestamptz
 
-  authEvents      AuthEvent[]
-  subscriptions   Subscription[]
-  fixedSlots      FixedSlotTemplate[]
-  reservations    Reservation[]
-  rentals         Rental[]
-  ratings         Rating[]
-  wallet          Wallet?
-  paymentAttempts PaymentAttempt[]
-  withdrawals     WalletWithdrawal[]
+  authEvents       AuthEvent[]
+  subscriptions    Subscription[]
+  fixedSlots       FixedSlotTemplate[]
+  reservations     Reservation[]
+  rentals          Rental[]
+  ratings          Rating[]
+  wallet           Wallet?
+  paymentAttempts  PaymentAttempt[]
+  withdrawals      WalletWithdrawal[]
+  bikeSwapRequests BikeSwapRequest[]
 
   @@index([email], name: "idx_users_email")
   @@index([phoneNumber], name: "idx_users_phone")

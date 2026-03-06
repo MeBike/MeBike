@@ -10,6 +10,13 @@ export const RentalStatusSchema = z.enum([
   "RESERVED",
 ]);
 
+export const BikeSwapStatusSchema = z.enum([
+  "PENDING",
+  "CONFIRMED",
+  "REJECTED",
+  "CANCELLED",
+]);
+
 export const RentalIsoDateTimeSchema = z.iso.datetime();
 
 export const RentalSchema = z.object({
@@ -64,10 +71,12 @@ export const RentalStationSchema = z.object({
   longitude: z.number(),
   capacity: z.number(),
   updatedAt: z.iso.datetime(),
-  locationGeo: z.object({
-    type: z.literal("Point"),
-    coordinates: z.tuple([z.number(), z.number()]),
-  }).optional(),
+  locationGeo: z
+    .object({
+      type: z.literal("Point"),
+      coordinates: z.tuple([z.number(), z.number()]),
+    })
+    .optional(),
 });
 
 // Rental with price (for creation/response)
@@ -227,6 +236,10 @@ export const CancelRentalRequestSchema = z.object({
   reason: z.string(),
 });
 
+export const RequestBikeSwapRequestSchema = z.object({
+  rentalId: z.uuidv7(),
+});
+
 export const AdminRentalListItemSchema = z.object({
   id: z.uuidv7(),
   user: RentalUserSummarySchema,
@@ -240,6 +253,18 @@ export const AdminRentalListItemSchema = z.object({
   duration: z.number(),
   totalPrice: z.number(),
   subscriptionId: z.uuidv7().optional(),
+  updatedAt: z.iso.datetime(),
+});
+
+export const BikeSwapRequestSchema = z.object({
+  id: z.uuidv7(),
+  rentalId: z.uuidv7(),
+  userId: z.uuidv7(),
+  oldBikeId: z.uuidv7(),
+  newBikeId: z.uuidv7().nullable(),
+  reason: z.string().nullable(),
+  status: BikeSwapStatusSchema,
+  createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
 
@@ -266,20 +291,32 @@ export type CreateRentalResponse = {
   message: string;
   result: RentalWithPrice;
 };
+export type BikeSwapStatus = z.infer<typeof BikeSwapStatusSchema>;
+export type BikeSwapRequest = z.infer<typeof BikeSwapRequestSchema>;
+export type BikeSwapRequestResponse = {
+  message: string;
+  result: BikeSwapRequest;
+};
 export type RentalListItem = z.infer<typeof RentalListItemSchema>;
 export type RentalDetail = z.infer<typeof RentalDetailSchema>;
 export type RentalWithPricing = z.infer<typeof RentalWithPricingSchema>;
 export type RentalRevenueResponse = z.infer<typeof RentalRevenueResponseSchema>;
-export type StationActivityResponse = z.infer<typeof StationActivityResponseSchema>;
+export type StationActivityResponse = z.infer<
+  typeof StationActivityResponseSchema
+>;
 export type DashboardResponse = z.infer<typeof DashboardResponseSchema>;
 export type RentalStatusCounts = z.infer<typeof RentalStatusCountsSchema>;
 export type RentalCountsResponse = z.infer<typeof RentalCountsResponseSchema>;
 export type CreateRentalRequest = z.infer<typeof CreateRentalRequestSchema>;
-export type StaffCreateRentalRequest = z.infer<typeof StaffCreateRentalRequestSchema>;
+export type StaffCreateRentalRequest = z.infer<
+  typeof StaffCreateRentalRequestSchema
+>;
 export type CardTapRentalRequest = z.infer<typeof CardTapRentalRequestSchema>;
 export type EndRentalRequest = z.infer<typeof EndRentalRequestSchema>;
 export type UpdateRentalRequest = z.infer<typeof UpdateRentalRequestSchema>;
 export type CancelRentalRequest = z.infer<typeof CancelRentalRequestSchema>;
 export type RentalListResponse = z.infer<typeof RentalListResponseSchema>;
-export type AdminRentalsListResponse = z.infer<typeof AdminRentalsListResponseSchema>;
+export type AdminRentalsListResponse = z.infer<
+  typeof AdminRentalsListResponseSchema
+>;
 export type MyRentalListResponse = z.infer<typeof MyRentalListResponseSchema>;

@@ -31,7 +31,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[prisma]": {
-    "editor.defaultFormatter": "Prisma.prisma"
+    "editor.defaultFormatter": "Prisma.prisma-insider"
   },
   "files.associations": {
     "*.css": "tailwindcss"

@@ -1,3 +1,4 @@
+import { BikeSwapStatus } from "generated/kysely/types";
 import type {
   BikeStatus,
   RentalStatus,
@@ -116,4 +117,16 @@ export type RentalStatusCounts = {
   COMPLETED: number;
   CANCELLED: number;
   RESERVED: number;
+};
+
+export type BikeSwapRequestRow = {
+  id: string;
+  rentalId: string;
+  userId: string;
+  oldBikeId: string;
+  newBikeId: string | null;
+  reason: string;
+  status: BikeSwapStatus;
+  createdAt: Date;
+  updatedAt: Date;
 };

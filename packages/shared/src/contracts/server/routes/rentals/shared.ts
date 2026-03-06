@@ -12,6 +12,7 @@ import {
   RentalStatusSchema,
   RentalWithPriceSchema,
   RentalWithPricingSchema,
+  RequestBikeSwapRequestSchema,
   StationActivityResponseSchema,
 } from "../../rentals";
 import { paginationQueryFields, PaginationSchema } from "../../schemas";
@@ -107,9 +108,12 @@ export const RentalWithPriceSchemaOpenApi = RentalWithPriceSchema.openapi(
   },
 );
 
-export const RentalDetailSchemaOpenApi = RentalDetailSchema.openapi("RentalDetail", {
-  description: "Detailed rental with populated user, bike, and station data",
-});
+export const RentalDetailSchemaOpenApi = RentalDetailSchema.openapi(
+  "RentalDetail",
+  {
+    description: "Detailed rental with populated user, bike, and station data",
+  },
+);
 
 export const RentalWithPricingSchemaOpenApi = RentalWithPricingSchema.openapi(
   "RentalWithPricing",
@@ -117,6 +121,11 @@ export const RentalWithPricingSchemaOpenApi = RentalWithPricingSchema.openapi(
     description: "Detailed rental with enhanced pricing information",
   },
 );
+
+export const RequestBikeSwapRequestSchemaOpenApi =
+  RequestBikeSwapRequestSchema.openapi("RequestBikeSwapRequest", {
+    description: "Request bike swap",
+  });
 
 export const RentalListItemSchemaOpenApi = RentalListItemSchema.openapi(
   "RentalListItem",
@@ -143,7 +152,10 @@ export const MyRentalListResponseSchema = z
     description: "Paginated user rental list",
   });
 
-export function createSuccessResponse<T extends z.ZodType>(dataSchema: T, description: string) {
+export function createSuccessResponse<T extends z.ZodType>(
+  dataSchema: T,
+  description: string,
+) {
   return z
     .object({
       message: z.string(),

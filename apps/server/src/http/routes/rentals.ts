@@ -2,17 +2,28 @@ import type { RouteConfig } from "@hono/zod-openapi";
 
 import { serverRoutes } from "@mebike/shared";
 
-import { RentalAdminController, RentalMeController } from "@/http/controllers/rentals";
-import { requireAdminMiddleware, requireAdminOrStaffMiddleware } from "@/http/middlewares/auth";
+import {
+  RentalAdminController,
+  RentalMeController,
+} from "@/http/controllers/rentals";
+import {
+  requireAdminMiddleware,
+  requireAdminOrStaffMiddleware,
+} from "@/http/middlewares/auth";
 
-export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHono) {
+export function registerRentalRoutes(
+  app: import("@hono/zod-openapi").OpenAPIHono,
+) {
   const rentals = serverRoutes.rentals;
 
   app.openapi(rentals.createRental, RentalMeController.createRental);
 
   app.openapi(rentals.getMyRentals, RentalMeController.getMyRentals);
 
-  app.openapi(rentals.getMyCurrentRentals, RentalMeController.getMyCurrentRentals);
+  app.openapi(
+    rentals.getMyCurrentRentals,
+    RentalMeController.getMyCurrentRentals,
+  );
 
   app.openapi(rentals.getMyRentalCounts, RentalMeController.getMyRentalCounts);
 
@@ -25,7 +36,10 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
     middleware: [requireAdminOrStaffMiddleware] as const,
   } satisfies RouteConfig;
 
-  app.openapi(activeByPhoneRoute, RentalAdminController.getActiveRentalsByPhone);
+  app.openapi(
+    activeByPhoneRoute,
+    RentalAdminController.getActiveRentalsByPhone,
+  );
 
   const staffGetRoute = {
     ...rentals.staffGetRental,
@@ -54,4 +68,16 @@ export function registerRentalRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   } satisfies RouteConfig;
 
   app.openapi(adminGetRoute, RentalAdminController.adminGetRental);
+
+  const requestSwapRoute = {
+    ...rentals.requestBikeSwap,
+    middleware: [requireAdminOrStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(requestSwapRoute, RentalMeController.requestBikeSwap);
+
+  const approveSwapRoute = {
+    ...rentals.approveBikeSwapRequest,
+    middleware: [requireAdminOrStaffMiddleware] as const,
+  } satisfies RouteConfig;
 }
