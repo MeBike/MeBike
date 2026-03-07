@@ -489,7 +489,7 @@ const requestBikeSwap: RouteHandler<RentalsRoutes["requestBikeSwap"]> = async (
       const service = yield* RentalServiceTag;
       return yield* service.requestBikeSwap({ userId, rentalId });
     }),
-    "POST /v1/rentals/me/{rentalId}/swap",
+    "POST /v1/rentals/{rentalId}/request-bike-swap",
   );
 
   const result = await c.var.runPromise(eff.pipe(Effect.either));

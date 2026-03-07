@@ -71,7 +71,6 @@ export function registerRentalRoutes(
 
   const requestSwapRoute = {
     ...rentals.requestBikeSwap,
-    middleware: [requireAdminOrStaffMiddleware] as const,
   } satisfies RouteConfig;
 
   app.openapi(requestSwapRoute, RentalMeController.requestBikeSwap);
