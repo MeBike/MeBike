@@ -27,6 +27,7 @@ import {
   StripePayoutsNotEnabled,
   WithdrawalUserNotFound,
 } from "../domain-errors";
+import { convertVndToUsdMinor, VND_PER_USD } from "../fx";
 import { makeWithdrawalRepository } from "../repository/withdrawal.repository";
 
 function createPendingWithdrawal(
@@ -105,15 +106,22 @@ export function requestWithdrawalUseCase(
       }));
     }
 
-    if (input.currency && input.currency.toLowerCase() !== "usd") {
+    if (input.currency && input.currency.toLowerCase() !== "vnd") {
       return yield* Effect.fail(new InvalidWithdrawalRequest({
-        message: "currency must be usd",
+        message: "currency must be vnd",
       }));
     }
 
-    const currency = "usd";
+    const currency = "vnd";
     const now = input.now ?? new Date();
     const idempotencyKey = input.idempotencyKey ?? `withdraw:${uuidv7()}`;
+    const payoutAmount = convertVndToUsdMinor(input.amount);
+
+    if (!payoutAmount) {
+      return yield* Effect.fail(new InvalidWithdrawalRequest({
+        message: "amount too small after VND to USD conversion",
+      }));
+    }
 
     const withdrawal = yield* runPrismaTransaction(client, tx =>
       Effect.gen(function* () {
@@ -133,6 +141,10 @@ export function requestWithdrawalUseCase(
           walletId: wallet.id,
           amount: input.amount,
           currency,
+          payoutAmount,
+          payoutCurrency: "usd",
+          fxRate: VND_PER_USD,
+          fxQuotedAt: now,
           idempotencyKey,
         });
 

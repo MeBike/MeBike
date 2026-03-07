@@ -22,6 +22,11 @@ export type StripeTopupSessionResult = {
   readonly checkoutUrl: string;
 };
 
+export type StripeTopupPaymentSheetResult = {
+  readonly paymentAttemptId: string;
+  readonly paymentIntentClientSecret: string;
+};
+
 export type StripeWebhookOutcome
   = | { readonly status: "ignored"; readonly reason: string }
     | { readonly status: "missing"; readonly providerRef: string }
@@ -35,20 +40,36 @@ export type StripeTopupService = {
     { readonly attempt: PaymentAttemptRow },
     InvalidTopupRequest | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation
   >;
+  preparePaymentSheetAttempt: (
+    input: StripeCheckoutAttemptInput,
+  ) => Effect.Effect<
+    { readonly attempt: PaymentAttemptRow },
+    InvalidTopupRequest | PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation
+  >;
   createCheckoutSession: (
     input: {
       readonly attempt: PaymentAttemptRow;
-      readonly walletId: string;
       readonly successUrl: string;
       readonly cancelUrl: string;
     },
   ) => Effect.Effect<{ readonly sessionId: string; readonly checkoutUrl: string }, TopupProviderError>;
+  createPaymentIntent: (
+    input: {
+      readonly attempt: PaymentAttemptRow;
+    },
+  ) => Effect.Effect<
+    { readonly paymentIntentId: string; readonly clientSecret: string },
+    TopupProviderError
+  >;
   attachProviderRef: (
     attemptId: string,
     providerRef: string,
   ) => Effect.Effect<PaymentAttemptRow, PaymentAttemptRepositoryError | PaymentAttemptUniqueViolation>;
   resolveAttemptForSession: (
     session: Stripe.Checkout.Session,
+  ) => Effect.Effect<Option.Option<PaymentAttemptRow>, PaymentAttemptRepositoryError>;
+  resolveAttemptForPaymentIntent: (
+    paymentIntent: Stripe.PaymentIntent,
   ) => Effect.Effect<Option.Option<PaymentAttemptRow>, PaymentAttemptRepositoryError>;
 };
 
@@ -61,11 +82,11 @@ function isValidMinorAmount(amount: number) {
   return Number.isInteger(amount) && amount > 0;
 }
 
-function buildSessionMetadata(attempt: PaymentAttemptRow, walletId: string) {
+function buildAttemptMetadata(attempt: PaymentAttemptRow) {
   return {
     paymentAttemptId: attempt.id,
     userId: attempt.userId,
-    walletId,
+    walletId: attempt.walletId,
     kind: attempt.kind,
   };
 }
@@ -76,7 +97,10 @@ export const StripeTopupServiceLive = Layer.effect(
     const stripe = (yield* StripeClient).client;
     const repo = yield* PaymentAttemptRepository;
 
-    const prepareCheckoutAttempt: StripeTopupService["prepareCheckoutAttempt"] = input =>
+    const prepareAttempt = (
+      input: StripeCheckoutAttemptInput,
+      mode: "checkout" | "payment_sheet",
+    ) =>
       Effect.gen(function* () {
         if (!isValidMinorAmount(input.amountMinor)) {
           return yield* Effect.fail(new InvalidTopupRequest({
@@ -84,7 +108,7 @@ export const StripeTopupServiceLive = Layer.effect(
           }));
         }
 
-        const currency = "usd";
+        const currency = "vnd";
 
         const attempt = yield* repo.create({
           userId: input.userId,
@@ -93,15 +117,21 @@ export const StripeTopupServiceLive = Layer.effect(
           kind: "TOPUP",
           amountMinor: BigInt(input.amountMinor),
           currency,
-          metadata: { mode: "checkout" },
+          metadata: { mode },
         });
 
         return { attempt };
       });
 
+    const prepareCheckoutAttempt: StripeTopupService["prepareCheckoutAttempt"] = input =>
+      prepareAttempt(input, "checkout");
+
+    const preparePaymentSheetAttempt: StripeTopupService["preparePaymentSheetAttempt"] = input =>
+      prepareAttempt(input, "payment_sheet");
+
     const createCheckoutSession: StripeTopupService["createCheckoutSession"] = input =>
       Effect.gen(function* () {
-        const currency = "usd";
+        const currency = "vnd";
         const amountMinor = Number(input.attempt.amountMinor);
 
         const session = yield* Effect.tryPromise({
@@ -122,7 +152,7 @@ export const StripeTopupServiceLive = Layer.effect(
                   },
                 },
               ],
-              metadata: buildSessionMetadata(input.attempt, input.walletId),
+              metadata: buildAttemptMetadata(input.attempt),
             }, { idempotencyKey: input.attempt.id }),
           catch: cause =>
             new TopupProviderError({
@@ -143,6 +173,39 @@ export const StripeTopupServiceLive = Layer.effect(
         return { sessionId: session.id, checkoutUrl: session.url };
       });
 
+    const createPaymentIntent: StripeTopupService["createPaymentIntent"] = input =>
+      Effect.gen(function* () {
+        const paymentIntent = yield* Effect.tryPromise({
+          try: () =>
+            stripe.paymentIntents.create({
+              amount: Number(input.attempt.amountMinor),
+              currency: input.attempt.currency,
+              automatic_payment_methods: { enabled: true },
+              metadata: buildAttemptMetadata(input.attempt),
+              description: "Wallet top-up",
+            }, { idempotencyKey: input.attempt.id }),
+          catch: cause =>
+            new TopupProviderError({
+              operation: "stripe.paymentIntents.create",
+              provider: "stripe",
+              cause,
+            }),
+        });
+
+        if (!paymentIntent.client_secret) {
+          return yield* Effect.fail(new TopupProviderError({
+            operation: "stripe.paymentIntents.create",
+            provider: "stripe",
+            message: "Stripe PaymentIntent did not return a client secret.",
+          }));
+        }
+
+        return {
+          paymentIntentId: paymentIntent.id,
+          clientSecret: paymentIntent.client_secret,
+        };
+      });
+
     const attachProviderRef: StripeTopupService["attachProviderRef"] = (attemptId, providerRef) =>
       repo.setProviderRef(attemptId, providerRef);
 
@@ -154,11 +217,22 @@ export const StripeTopupServiceLive = Layer.effect(
         : repo.findByProviderRef("STRIPE", providerRef);
     };
 
+    const resolveAttemptForPaymentIntent: StripeTopupService["resolveAttemptForPaymentIntent"] = (paymentIntent) => {
+      const providerRef = paymentIntent.id;
+      const metadataAttemptId = paymentIntent.metadata?.paymentAttemptId;
+      return metadataAttemptId
+        ? repo.findById(metadataAttemptId)
+        : repo.findByProviderRef("STRIPE", providerRef);
+    };
+
     const service: StripeTopupService = {
       prepareCheckoutAttempt,
+      preparePaymentSheetAttempt,
       createCheckoutSession,
+      createPaymentIntent,
       attachProviderRef,
       resolveAttemptForSession,
+      resolveAttemptForPaymentIntent,
     };
 
     return service;

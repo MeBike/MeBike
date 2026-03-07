@@ -5,7 +5,11 @@ import { Effect, Match } from "effect";
 
 import { withLoggedCause } from "@/domain/shared";
 import { toMinorUnit } from "@/domain/shared/money";
-import { createStripeCheckoutSessionUseCase, requestWithdrawalUseCase } from "@/domain/wallets";
+import {
+  createStripeCheckoutSessionUseCase,
+  createStripePaymentSheetUseCase,
+  requestWithdrawalUseCase,
+} from "@/domain/wallets";
 import { WalletServiceTag } from "@/domain/wallets/services/wallet.service";
 import {
   toWalletDetail,
@@ -16,6 +20,11 @@ import {
 import type { WalletsRoutes } from "./shared";
 
 import { unauthorizedBody, WalletErrorCodeSchema, walletErrorMessages } from "./shared";
+
+const invalidTopupBody = {
+  error: walletErrorMessages.TOPUP_INVALID_REQUEST,
+  details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
+} as const;
 
 const getMyWallet: RouteHandler<WalletsRoutes["getMyWallet"]> = async (c) => {
   const userId = c.var.currentUser?.userId ?? null;
@@ -195,32 +204,20 @@ const createStripeTopupSession: RouteHandler<WalletsRoutes["createStripeTopupSes
 
   const body = c.req.valid("json");
   if (!/^\d+$/.test(body.amount)) {
-    return c.json<WalletsContracts.WalletErrorResponse, 400>({
-      error: walletErrorMessages.TOPUP_INVALID_REQUEST,
-      details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
-    }, 400);
+    return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
   const amountMinor = BigInt(body.amount);
   if (amountMinor < 5000n) {
-    return c.json<WalletsContracts.WalletErrorResponse, 400>({
-      error: walletErrorMessages.TOPUP_INVALID_REQUEST,
-      details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
-    }, 400);
+    return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
-  if (body.currency.toLowerCase() !== "usd") {
-    return c.json<WalletsContracts.WalletErrorResponse, 400>({
-      error: walletErrorMessages.TOPUP_INVALID_REQUEST,
-      details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
-    }, 400);
+  if (body.currency.toLowerCase() !== "vnd") {
+    return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
   if (amountMinor > BigInt(Number.MAX_SAFE_INTEGER)) {
-    return c.json<WalletsContracts.WalletErrorResponse, 400>({
-      error: walletErrorMessages.TOPUP_INVALID_REQUEST,
-      details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
-    }, 400);
+    return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
   }
 
   const eff = withLoggedCause(
@@ -241,6 +238,75 @@ const createStripeTopupSession: RouteHandler<WalletsRoutes["createStripeTopupSes
         data: {
           paymentAttemptId: right.paymentAttemptId,
           checkoutUrl: right.checkoutUrl,
+        },
+      }, 200)),
+    Match.tag("Left", ({ left }) =>
+      Match.value(left).pipe(
+        Match.tag("InvalidTopupRequest", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 400>({
+            error: walletErrorMessages.TOPUP_INVALID_REQUEST,
+            details: { code: WalletErrorCodeSchema.enum.TOPUP_INVALID_REQUEST },
+          }, 400)),
+        Match.tag("WalletNotFound", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 404>({
+            error: walletErrorMessages.WALLET_NOT_FOUND,
+            details: { code: WalletErrorCodeSchema.enum.WALLET_NOT_FOUND },
+          }, 404)),
+        Match.tag("TopupProviderError", () =>
+          c.json<WalletsContracts.WalletErrorResponse, 502>({
+            error: walletErrorMessages.TOPUP_PROVIDER_ERROR,
+            details: { code: WalletErrorCodeSchema.enum.TOPUP_PROVIDER_ERROR },
+          }, 502)),
+        Match.orElse(() =>
+          c.json<WalletsContracts.WalletErrorResponse, 500>({
+            error: walletErrorMessages.TOPUP_INTERNAL_ERROR,
+            details: { code: WalletErrorCodeSchema.enum.TOPUP_INTERNAL_ERROR },
+          }, 500)),
+      )),
+    Match.exhaustive,
+  );
+};
+
+const createStripeTopupPaymentSheet: RouteHandler<WalletsRoutes["createStripeTopupPaymentSheet"]> = async (c) => {
+  const userId = c.var.currentUser?.userId ?? null;
+  if (!userId) {
+    return c.json(unauthorizedBody, 401);
+  }
+
+  const body = c.req.valid("json");
+  if (!/^\d+$/.test(body.amount)) {
+    return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
+  }
+
+  const amountMinor = BigInt(body.amount);
+  if (amountMinor < 5000n) {
+    return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
+  }
+
+  if (body.currency.toLowerCase() !== "vnd") {
+    return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
+  }
+
+  if (amountMinor > BigInt(Number.MAX_SAFE_INTEGER)) {
+    return c.json<WalletsContracts.WalletErrorResponse, 400>(invalidTopupBody, 400);
+  }
+
+  const eff = withLoggedCause(
+    createStripePaymentSheetUseCase({
+      userId,
+      amountMinor: Number(amountMinor),
+    }),
+    "POST /v1/wallets/me/topups/stripe/payment-sheet",
+  );
+
+  const result = await c.var.runPromise(eff.pipe(Effect.either));
+
+  return Match.value(result).pipe(
+    Match.tag("Right", ({ right }) =>
+      c.json<WalletsContracts.StripeTopupPaymentSheetResponse, 200>({
+        data: {
+          paymentAttemptId: right.paymentAttemptId,
+          paymentIntentClientSecret: right.paymentIntentClientSecret,
         },
       }, 200)),
     Match.tag("Left", ({ left }) =>
@@ -292,7 +358,7 @@ const createWalletWithdrawal: RouteHandler<WalletsRoutes["createWalletWithdrawal
     }, 400);
   }
 
-  if (body.currency && body.currency.toLowerCase() !== "usd") {
+  if (body.currency && body.currency.toLowerCase() !== "vnd") {
     return c.json<WalletsContracts.WalletErrorResponse, 400>({
       error: walletErrorMessages.WITHDRAWAL_INVALID_REQUEST,
       details: { code: WalletErrorCodeSchema.enum.WITHDRAWAL_INVALID_REQUEST },
@@ -354,6 +420,7 @@ const createWalletWithdrawal: RouteHandler<WalletsRoutes["createWalletWithdrawal
 };
 
 export const WalletMeController = {
+  createStripeTopupPaymentSheet,
   createStripeTopupSession,
   createWalletWithdrawal,
   creditMyWallet,

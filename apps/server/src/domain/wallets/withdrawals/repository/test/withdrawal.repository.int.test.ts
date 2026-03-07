@@ -9,6 +9,27 @@ import { PrismaClient } from "generated/prisma/client";
 
 import { makeWithdrawalRepository } from "../withdrawal.repository";
 
+const FX_RATE = 26000n;
+
+function makeVndWithdrawalData(input: {
+  userId: string;
+  walletId: string;
+  amount: bigint;
+  idempotencyKey: string;
+}) {
+  return {
+    userId: input.userId,
+    walletId: input.walletId,
+    amount: input.amount,
+    currency: "vnd",
+    payoutAmount: (input.amount * 100n) / FX_RATE,
+    payoutCurrency: "usd",
+    fxRate: FX_RATE,
+    fxQuotedAt: new Date("2026-03-06T00:00:00.000Z"),
+    idempotencyKey: input.idempotencyKey,
+  } as const;
+}
+
 describe("withdrawalRepository Integration", () => {
   let container: { stop: () => Promise<void>; url: string };
   let client: PrismaClient;
@@ -71,13 +92,12 @@ describe("withdrawalRepository Integration", () => {
     const idempotencyKey = `withdraw:${uuidv7()}`;
 
     const withdrawal = await Effect.runPromise(
-      repo.createPending({
+      repo.createPending(makeVndWithdrawalData({
         userId,
         walletId,
         amount: 50000n,
-        currency: "usd",
         idempotencyKey,
-      }),
+      })),
     );
 
     expect(withdrawal.userId).toBe(userId);
@@ -87,7 +107,7 @@ describe("withdrawalRepository Integration", () => {
     expect(withdrawal.idempotencyKey).toBe(idempotencyKey);
   });
 
-  it("createPending rejects non-usd currency via db constraint", async () => {
+  it("createPending rejects unsupported currency via db constraint", async () => {
     const { userId, walletId } = await createUserAndWallet();
     const idempotencyKey = `withdraw:${uuidv7()}`;
 
@@ -96,7 +116,11 @@ describe("withdrawalRepository Integration", () => {
         userId,
         walletId,
         amount: 50000n,
-        currency: "vnd",
+        currency: "eur",
+        payoutAmount: 192n,
+        payoutCurrency: "usd",
+        fxRate: FX_RATE,
+        fxQuotedAt: new Date("2026-03-06T00:00:00.000Z"),
         idempotencyKey,
       }).pipe(Effect.either),
     );
@@ -112,29 +136,27 @@ describe("withdrawalRepository Integration", () => {
     const idempotencyKey = `withdraw:${uuidv7()}`;
 
     const first = await Effect.runPromise(
-      repo.createPending({
+      repo.createPending(makeVndWithdrawalData({
         userId,
         walletId,
         amount: 25000n,
-        currency: "usd",
         idempotencyKey,
-      }),
+      })),
     );
 
     // Second call with same idempotencyKey should return the existing record
     const second = await Effect.runPromise(
-      repo.createPending({
+      repo.createPending(makeVndWithdrawalData({
         userId,
         walletId,
-        amount: 99999n, // Different amount
-        currency: "usd", // Different currency
-        idempotencyKey, // Same key
-      }),
+        amount: 99999n,
+        idempotencyKey,
+      })),
     );
 
     expect(second.id).toBe(first.id);
     expect(second.amount).toBe(25000n);
-    expect(second.currency).toBe("usd");
+    expect(second.currency).toBe("vnd");
   });
 
   it("findById returns Some for existing record", async () => {
@@ -142,11 +164,12 @@ describe("withdrawalRepository Integration", () => {
 
     const created = await Effect.runPromise(
       repo.createPending({
-        userId,
-        walletId,
-        amount: 10000n,
-        currency: "usd",
-        idempotencyKey: `withdraw:${uuidv7()}`,
+        ...makeVndWithdrawalData({
+          userId,
+          walletId,
+          amount: 10000n,
+          idempotencyKey: `withdraw:${uuidv7()}`,
+        }),
       }),
     );
 
@@ -168,11 +191,12 @@ describe("withdrawalRepository Integration", () => {
 
     await Effect.runPromise(
       repo.createPending({
-        userId,
-        walletId,
-        amount: 15000n,
-        currency: "usd",
-        idempotencyKey,
+        ...makeVndWithdrawalData({
+          userId,
+          walletId,
+          amount: 15000n,
+          idempotencyKey,
+        }),
       }),
     );
 
@@ -195,11 +219,12 @@ describe("withdrawalRepository Integration", () => {
 
     const created = await Effect.runPromise(
       repo.createPending({
-        userId,
-        walletId,
-        amount: 20000n,
-        currency: "usd",
-        idempotencyKey: `withdraw:${uuidv7()}`,
+        ...makeVndWithdrawalData({
+          userId,
+          walletId,
+          amount: 20000n,
+          idempotencyKey: `withdraw:${uuidv7()}`,
+        }),
       }),
     );
 
@@ -229,11 +254,12 @@ describe("withdrawalRepository Integration", () => {
 
     const created = await Effect.runPromise(
       repo.createPending({
-        userId,
-        walletId,
-        amount: 20000n,
-        currency: "usd",
-        idempotencyKey: `withdraw:${uuidv7()}`,
+        ...makeVndWithdrawalData({
+          userId,
+          walletId,
+          amount: 20000n,
+          idempotencyKey: `withdraw:${uuidv7()}`,
+        }),
       }),
     );
 
@@ -261,11 +287,12 @@ describe("withdrawalRepository Integration", () => {
 
     const created = await Effect.runPromise(
       repo.createPending({
-        userId,
-        walletId,
-        amount: 30000n,
-        currency: "usd",
-        idempotencyKey: `withdraw:${uuidv7()}`,
+        ...makeVndWithdrawalData({
+          userId,
+          walletId,
+          amount: 30000n,
+          idempotencyKey: `withdraw:${uuidv7()}`,
+        }),
       }),
     );
 
@@ -295,11 +322,12 @@ describe("withdrawalRepository Integration", () => {
 
     const created = await Effect.runPromise(
       repo.createPending({
-        userId,
-        walletId,
-        amount: 30000n,
-        currency: "usd",
-        idempotencyKey: `withdraw:${uuidv7()}`,
+        ...makeVndWithdrawalData({
+          userId,
+          walletId,
+          amount: 30000n,
+          idempotencyKey: `withdraw:${uuidv7()}`,
+        }),
       }),
     );
 
@@ -327,11 +355,12 @@ describe("withdrawalRepository Integration", () => {
 
     const created = await Effect.runPromise(
       repo.createPending({
-        userId,
-        walletId,
-        amount: 40000n,
-        currency: "usd",
-        idempotencyKey: `withdraw:${uuidv7()}`,
+        ...makeVndWithdrawalData({
+          userId,
+          walletId,
+          amount: 40000n,
+          idempotencyKey: `withdraw:${uuidv7()}`,
+        }),
       }),
     );
 
@@ -361,11 +390,12 @@ describe("withdrawalRepository Integration", () => {
 
     const created = await Effect.runPromise(
       repo.createPending({
-        userId,
-        walletId,
-        amount: 40000n,
-        currency: "usd",
-        idempotencyKey: `withdraw:${uuidv7()}`,
+        ...makeVndWithdrawalData({
+          userId,
+          walletId,
+          amount: 40000n,
+          idempotencyKey: `withdraw:${uuidv7()}`,
+        }),
       }),
     );
 

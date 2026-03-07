@@ -145,7 +145,7 @@ function MyWalletScreen() {
         <QRModal
           visible={showQR}
           onClose={() => setShowQR(false)}
-          userId={wallet.myWallet?.userId || ""}
+          onSuccess={onRefresh}
         />
         <TransactionDetailModal
           visible={showTransactionDetail}
@@ -184,7 +184,7 @@ function MyWalletScreen() {
       <QRModal
         visible={showQR}
         onClose={() => setShowQR(false)}
-        userId={wallet.myWallet?.userId || ""}
+        onSuccess={onRefresh}
       />
       <TransactionDetailModal
         visible={showTransactionDetail}
