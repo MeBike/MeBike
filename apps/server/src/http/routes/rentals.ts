@@ -5,6 +5,7 @@ import { serverRoutes } from "@mebike/shared";
 import {
   RentalAdminController,
   RentalMeController,
+  RentalStaffController,
 } from "@/http/controllers/rentals";
 import {
   requireAdminMiddleware,
@@ -74,6 +75,16 @@ export function registerRentalRoutes(
   } satisfies RouteConfig;
 
   app.openapi(requestSwapRoute, RentalMeController.requestBikeSwap);
+
+  const staffListSwapRequestsRoute = {
+    ...rentals.staffListBikeSwapRequests,
+    middleware: [requireAdminOrStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    staffListSwapRequestsRoute,
+    RentalStaffController.staffListBikeSwapRequests,
+  );
 
   const approveSwapRoute = {
     ...rentals.approveBikeSwapRequest,

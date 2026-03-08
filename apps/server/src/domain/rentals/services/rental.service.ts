@@ -12,6 +12,9 @@ import type {
   RentalRow,
   RentalSortField,
   RentalStatusCounts,
+  StaffBikeSwapRequestFilter,
+  StaffBikeSwapRequestRow,
+  StaffBikeSwapRequestSortField,
 } from "../models";
 import type { RentalRepo } from "../repository/rental.repository";
 
@@ -64,7 +67,14 @@ export type RentalService = {
     BikeSwapRequestRow,
     RentalServiceFailure | UnauthorizedRentalAccess
   >;
+
+  staffListBikeSwapRequests: (
+    filter: StaffBikeSwapRequestFilter,
+    page: PageRequest<StaffBikeSwapRequestSortField>,
+  ) => Effect.Effect<PageResult<StaffBikeSwapRequestRow>, never>;
 };
+
+
 
 const makeRentalServiceEffect = Effect.gen(function* () {
   const repo = yield* RentalRepository;
@@ -190,7 +200,18 @@ function makeRentalService(
             ),
           );
       }),
+
+    staffListBikeSwapRequests(filter, pageReq) {
+      return repo
+        .staffListBikeSwapRequests(filter, pageReq)
+        .pipe(
+          Effect.catchTag("RentalRepositoryError", (error) =>
+            Effect.die(error),
+          ),
+        );
+    },
   };
+
 
   return service;
 }

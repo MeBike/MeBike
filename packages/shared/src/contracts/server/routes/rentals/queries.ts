@@ -1,7 +1,11 @@
 import { createRoute } from "@hono/zod-openapi";
 
 import { z } from "../../../../zod";
-import { AdminRentalsListResponseSchema } from "../../rentals";
+import {
+  AdminRentalsListResponseSchema,
+  BikeSwapRequestListResponseSchema,
+  BikeSwapStatusSchema,
+} from "../../rentals";
 import {
   paginationQueryFields,
   SortDirectionSchema,
@@ -56,7 +60,9 @@ export const getMyRentals = createRoute({
             Unauthorized: {
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+                details: {
+                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
+                },
               },
             },
           },
@@ -92,7 +98,9 @@ export const getMyCurrentRentals = createRoute({
             Unauthorized: {
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+                details: {
+                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
+                },
               },
             },
           },
@@ -130,7 +138,9 @@ export const getMyRentalCounts = createRoute({
             Unauthorized: {
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+                details: {
+                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
+                },
               },
             },
           },
@@ -169,7 +179,9 @@ export const getMyRental = createRoute({
             Unauthorized: {
               value: {
                 error: unauthorizedErrorMessages.UNAUTHORIZED,
-                details: { code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED },
+                details: {
+                  code: UnauthorizedErrorCodeSchema.enum.UNAUTHORIZED,
+                },
               },
             },
           },
@@ -432,7 +444,9 @@ export const adminListRentals = createRoute({
         endStation: z.uuidv7().optional(),
         status: RentalStatusSchema.optional(),
         ...paginationQueryFields,
-        sortBy: z.enum(["startTime", "endTime", "status", "updatedAt"]).optional(),
+        sortBy: z
+          .enum(["startTime", "endTime", "status", "updatedAt"])
+          .optional(),
         sortDir: SortDirectionSchema.optional(),
       })
       .openapi("AdminRentalsListQuery", {
@@ -555,6 +569,52 @@ export const staffGetRental = createRoute({
       content: {
         "application/json": {
           schema: RentalErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const staffListBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/staff/bike-swap-requests",
+  tags: ["Staff", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    query: z
+      .object({
+        userId: z.uuidv7().optional(),
+        status: BikeSwapStatusSchema.optional(),
+        ...paginationQueryFields,
+        sortBy: z.enum(["status", "updatedAt"]).optional(),
+        sortDir: SortDirectionSchema.optional(),
+      })
+      .openapi("StaffBikeSwapRequestsListQuery", {
+        description: "Query parameters for staff bike swap requests listing",
+      }),
+  },
+  responses: {
+    200: {
+      description: "List of bike swap requests",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestListResponseSchema,
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Admin access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
         },
       },
     },

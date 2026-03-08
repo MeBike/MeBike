@@ -39,6 +39,16 @@ export type AdminRentalFilter = {
   status?: RentalStatus;
 };
 
+export type StaffBikeSwapRequestFilter = {
+  userId?: string;
+  status?: BikeSwapStatus;
+};
+
+export type StaffBikeSwapRequestSortField =
+  | "status"
+  | "updatedAt"
+  | "createdAt";
+
 export type AdminRentalListItem = {
   id: string;
   user: {
@@ -130,3 +140,43 @@ export type BikeSwapRequestRow = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type StaffBikeSwapRequestRow = {
+  id: string;
+  rentalId: string;
+  user: {
+    id: string;
+    fullName: string;
+  };
+  oldBike: {
+    id: string;
+    chipId: string;
+    station: {
+      id: string;
+      name: string;
+      address: string;
+    };
+    supplier: {
+      id: string;
+      name: string;
+    };
+  };
+  newBike: {
+    id: string;
+    chipId: string;
+    station: {
+      id: string;
+      name: string;
+      address: string;
+    };
+    supplier: {
+      id: string;
+      name: string;
+    };
+  } | null;
+  reason: string;
+  status: BikeSwapStatus;
+  createdAt: Date;
+  updatedAt: Date;
+};
+

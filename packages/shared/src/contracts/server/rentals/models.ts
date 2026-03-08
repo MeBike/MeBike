@@ -240,6 +240,60 @@ export const RequestBikeSwapRequestSchema = z.object({
   rentalId: z.uuidv7(),
 });
 
+export const BikeSwapUserSchema = z.object({
+  id: z.uuidv7(),
+  fullName: z.string(),
+});
+
+export const BikeSwapStationSchema = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+  address: z.string(),
+});
+
+export const BikeSwapSupplierSchema = z.object({
+  id: z.uuidv7(),
+  name: z.string(),
+});
+
+export const BikeSwapBikeSchema = z.object({
+  id: z.uuidv7(),
+  chipId: z.string(),
+  station: BikeSwapStationSchema,
+  supplier: BikeSwapSupplierSchema,
+});
+
+export const BikeSwapRequestSchema = z.object({
+  id: z.uuidv7(),
+  rentalId: z.uuidv7(),
+  userId: z.uuidv7(),
+  oldBikeId: z.uuidv7(),
+  newBikeId: z.uuidv7().nullable(),
+  reason: z.string().nullable(),
+  status: BikeSwapStatusSchema,
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+export const BikeSwapRequestDetailSchema = z.object({
+  id: z.uuidv7(),
+  rentalId: z.uuidv7(),
+  user: BikeSwapUserSchema,
+  oldBike: BikeSwapBikeSchema,
+  newBike: BikeSwapBikeSchema.nullable(),
+  reason: z.string().nullable(),
+  status: BikeSwapStatusSchema,
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+export const BikeSwapRequestListResponseSchema = z.object({
+  data: z.array(BikeSwapRequestDetailSchema),
+  pagination: PaginationSchema,
+});
+
+
+
 export const AdminRentalListItemSchema = z.object({
   id: z.uuidv7(),
   user: RentalUserSummarySchema,
@@ -253,18 +307,6 @@ export const AdminRentalListItemSchema = z.object({
   duration: z.number(),
   totalPrice: z.number(),
   subscriptionId: z.uuidv7().optional(),
-  updatedAt: z.iso.datetime(),
-});
-
-export const BikeSwapRequestSchema = z.object({
-  id: z.uuidv7(),
-  rentalId: z.uuidv7(),
-  userId: z.uuidv7(),
-  oldBikeId: z.uuidv7(),
-  newBikeId: z.uuidv7().nullable(),
-  reason: z.string().nullable(),
-  status: BikeSwapStatusSchema,
-  createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
 
@@ -291,12 +333,6 @@ export type CreateRentalResponse = {
   message: string;
   result: RentalWithPrice;
 };
-export type BikeSwapStatus = z.infer<typeof BikeSwapStatusSchema>;
-export type BikeSwapRequest = z.infer<typeof BikeSwapRequestSchema>;
-export type BikeSwapRequestResponse = {
-  message: string;
-  result: BikeSwapRequest;
-};
 export type RentalListItem = z.infer<typeof RentalListItemSchema>;
 export type RentalDetail = z.infer<typeof RentalDetailSchema>;
 export type RentalWithPricing = z.infer<typeof RentalWithPricingSchema>;
@@ -320,3 +356,11 @@ export type AdminRentalsListResponse = z.infer<
   typeof AdminRentalsListResponseSchema
 >;
 export type MyRentalListResponse = z.infer<typeof MyRentalListResponseSchema>;
+export type BikeSwapStatus = z.infer<typeof BikeSwapStatusSchema>;
+export type BikeSwapRequest = z.infer<typeof BikeSwapRequestSchema>;
+export type BikeSwapRequestDetail = z.infer<typeof BikeSwapRequestDetailSchema>;
+export type BikeSwapRequestListResponse = z.infer<
+  typeof BikeSwapRequestListResponseSchema
+>;
+
+

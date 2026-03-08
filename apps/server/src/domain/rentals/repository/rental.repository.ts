@@ -11,7 +11,11 @@ import { Prisma } from "@/infrastructure/prisma";
 import { isPrismaUniqueViolation } from "@/infrastructure/prisma-errors";
 import { uniqueTargets } from "@/infrastructure/prisma-unique-violation";
 
-import type { AdminRentalListItem } from "../models";
+import {
+  AdminRentalListItem,
+  BikeSwapRequestRow,
+  StaffBikeSwapRequestRow,
+} from "../models";
 import type { CreateRentalInput, RentalRepo } from "./rental.repository.types";
 
 import { RentalRepositoryError, RentalUniqueViolation } from "../domain-errors";
@@ -25,10 +29,14 @@ import {
   bikeSwapRequestSelect,
   mapToBikeSwapRequestRow,
   mapToRentalRow,
+  mapToStaffBikeSwapRequestRow,
   rentalSelect,
+  staffBikeSwapRequestSelect,
   toAdminRentalsWhere,
   toMyRentalsWhere,
   toRentalOrderBy,
+  toStaffBikeSwapRequestsOrderBy,
+  toStaffBikeSwapRequestsWhere,
 } from "./rental.repository.query";
 import { BikeSwapStatus } from "generated/kysely/types";
 
@@ -537,6 +545,47 @@ export function makeRentalRepository(
             cause: e,
           }),
       }).pipe(Effect.map(mapToBikeSwapRequestRow));
+    },
+
+    staffListBikeSwapRequests(filter, pageReq) {
+      return Effect.gen(function* () {
+        const { page, pageSize, skip, take } = normalizedPage(pageReq);
+        const orderBy = toStaffBikeSwapRequestsOrderBy(pageReq);
+
+        const where = toStaffBikeSwapRequestsWhere(filter);
+
+        const [total, items] = yield* Effect.all([
+          Effect.tryPromise({
+            try: () => client.bikeSwapRequest.count({ where }),
+            catch: (e) =>
+              new RentalRepositoryError({
+                operation: "staffListBikeSwapRequests.count",
+                cause: e,
+              }),
+          }),
+          Effect.tryPromise({
+            try: () =>
+              client.bikeSwapRequest.findMany({
+                where,
+                skip,
+                take,
+                orderBy,
+                select: staffBikeSwapRequestSelect,
+              }),
+            catch: (e) =>
+              new RentalRepositoryError({
+                operation: "staffListBikeSwapRequests.findMany",
+                cause: e,
+              }),
+          }),
+        ]);
+
+        const mappedItems: StaffBikeSwapRequestRow[] = items.map(
+          mapToStaffBikeSwapRequestRow,
+        );
+
+        return makePageResult(mappedItems, total, page, pageSize);
+      });
     },
   };
 }

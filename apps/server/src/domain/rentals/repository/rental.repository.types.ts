@@ -13,6 +13,9 @@ import type {
   RentalCountsRow,
   RentalRow,
   RentalSortField,
+  StaffBikeSwapRequestFilter,
+  StaffBikeSwapRequestRow,
+  StaffBikeSwapRequestSortField,
 } from "../models";
 
 export type CreateRentalInput = {
@@ -139,4 +142,12 @@ export type RentalRepo = {
     userId: string,
     oldBikeId: string,
   ) => Effect.Effect<BikeSwapRequestRow, RentalRepositoryError>;
+
+  staffListBikeSwapRequests: (
+    filter: StaffBikeSwapRequestFilter,
+    pageReq: PageRequest<StaffBikeSwapRequestSortField>,
+  ) => Effect.Effect<
+    PageResult<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
 };

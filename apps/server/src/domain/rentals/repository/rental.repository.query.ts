@@ -7,6 +7,9 @@ import type {
   MyRentalFilter,
   RentalRow,
   RentalSortField,
+  StaffBikeSwapRequestFilter,
+  StaffBikeSwapRequestRow,
+  StaffBikeSwapRequestSortField,
 } from "../models";
 
 export function toMyRentalsWhere(
@@ -48,6 +51,31 @@ export function toRentalOrderBy(
     case "startTime":
     default:
       return { startTime: sortDir };
+  }
+}
+
+export function toStaffBikeSwapRequestsWhere(
+  filter: StaffBikeSwapRequestFilter,
+): PrismaTypes.BikeSwapRequestWhereInput {
+  return {
+    ...(filter.status ? { status: filter.status } : {}),
+    ...(filter.userId ? { userId: filter.userId } : {}),
+  };
+}
+
+export function toStaffBikeSwapRequestsOrderBy(
+  req: PageRequest<StaffBikeSwapRequestSortField>,
+): PrismaTypes.BikeSwapRequestOrderByWithRelationInput {
+  const sortBy = req.sortBy ?? "createdAt";
+  const sortDir = req.sortDir ?? "desc";
+  switch (sortBy) {
+    case "status":
+      return { status: sortDir };
+    case "updatedAt":
+      return { updatedAt: sortDir };
+    case "createdAt":
+    default:
+      return { createdAt: sortDir };
   }
 }
 
@@ -108,12 +136,105 @@ export function mapToBikeSwapRequestRow(
 ): BikeSwapRequestRow {
   return {
     id: raw.id,
+    rentalId: raw.rentalId,
     userId: raw.userId,
     oldBikeId: raw.oldBikeId,
     newBikeId: raw.newBikeId,
-    rentalId: raw.rentalId,
     reason: raw.reason ?? "",
-    status: raw.status,
+    status: raw.status as any,
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
+  };
+}
+
+export const staffBikeSwapRequestSelect = {
+  id: true,
+  rentalId: true,
+  user: {
+    select: {
+      id: true,
+      fullname: true,
+    },
+  },
+  oldBike: {
+    select: {
+      id: true,
+      chipId: true,
+      station: {
+        select: {
+          id: true,
+          name: true,
+          address: true,
+        },
+      },
+      supplier: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
+  newBike: {
+    select: {
+      id: true,
+      chipId: true,
+      station: {
+        select: {
+          id: true,
+          name: true,
+          address: true,
+        },
+      },
+      supplier: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
+  reason: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+type StaffBikeSwapSelect = PrismaTypes.BikeSwapRequestGetPayload<{
+  select: typeof staffBikeSwapRequestSelect;
+}>;
+
+function mapBikeInfo(bike: any) {
+  if (!bike) return null;
+  return {
+    id: bike.id,
+    chipId: bike.chipId,
+    station: {
+      id: bike.station?.id ?? "",
+      name: bike.station?.name ?? "Unknown",
+      address: bike.station?.address ?? "Unknown",
+    },
+    supplier: {
+      id: bike.supplier?.id ?? "",
+      name: bike.supplier?.name ?? "Unknown",
+    },
+  };
+}
+
+export function mapToStaffBikeSwapRequestRow(
+  raw: StaffBikeSwapSelect,
+): StaffBikeSwapRequestRow {
+  return {
+    id: raw.id,
+    rentalId: raw.rentalId,
+    user: {
+      id: raw.user.id,
+      fullName: raw.user.fullname,
+    },
+    oldBike: mapBikeInfo(raw.oldBike)!,
+    newBike: mapBikeInfo(raw.newBike),
+    reason: raw.reason ?? "",
+    status: raw.status as any,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
   };

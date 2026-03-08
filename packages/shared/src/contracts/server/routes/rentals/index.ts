@@ -11,7 +11,7 @@ export {
   staffCreateRental,
   updateRental,
   requestBikeSwap,
-  approveBikeSwapRequest
+  approveBikeSwapRequest,
 } from "./mutations";
 
 export {
@@ -30,6 +30,7 @@ export {
   getRentalSummary,
   getStationActivity,
   staffGetRental,
+  staffListBikeSwapRequests,
 } from "./queries";
 
 export const rentalsRoutes = {
