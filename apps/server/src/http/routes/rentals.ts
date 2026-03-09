@@ -10,6 +10,7 @@ import {
 import {
   requireAdminMiddleware,
   requireAdminOrStaffMiddleware,
+  requireStaffMiddleware,
 } from "@/http/middlewares/auth";
 
 export function registerRentalRoutes(
@@ -88,6 +89,6 @@ export function registerRentalRoutes(
 
   const approveSwapRoute = {
     ...rentals.approveBikeSwapRequest,
-    middleware: [requireAdminOrStaffMiddleware] as const,
+    middleware: [requireStaffMiddleware] as const,
   } satisfies RouteConfig;
 }
