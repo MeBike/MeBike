@@ -1,10 +1,14 @@
 import { walletTopupErrorMessage, walletTopupService } from "@services/wallet-topup.service";
-import React, { useCallback, useMemo, useState } from "react";
+import {
+  initPaymentSheet,
+  PaymentSheetError,
+  presentPaymentSheet,
+} from "@stripe/stripe-react-native";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Linking,
   Modal,
   Platform,
   Text,
@@ -13,62 +17,83 @@ import {
   View,
 } from "react-native";
 
+import { hasStripePublishableKey, STRIPE_RETURN_URL } from "../../../lib/stripe";
 import { styles } from "./styles";
 
 type QRModalProps = {
   visible: boolean;
   onClose: () => void;
-  userId: string;
+  onSuccess?: () => Promise<void> | void;
 };
 
-export function QRModal({ visible, onClose, userId }: QRModalProps) {
+export function QRModal({ visible, onClose, onSuccess }: QRModalProps) {
   const [amount, setAmount] = useState("5000");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const successUrl = useMemo(
-    () => `https://example.com/stripe-success?userId=${encodeURIComponent(userId)}`,
-    [userId],
-  );
-
-  const cancelUrl = useMemo(
-    () => `https://example.com/stripe-cancel?userId=${encodeURIComponent(userId)}`,
-    [userId],
-  );
-
   const handleStartTopup = useCallback(async () => {
+    if (!hasStripePublishableKey()) {
+      Alert.alert(
+        "Chưa cấu hình Stripe",
+        "Cần thiết lập EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY và build lại dev client trước khi nạp tiền.",
+      );
+      return;
+    }
+
     const trimmed = amount.trim();
     if (!/^\d+$/.test(trimmed)) {
-      Alert.alert("So tien khong hop le", "Vui long nhap so tien dang so (don vi cent). ");
+      Alert.alert("Số tiền không hợp lệ", "Vui lòng nhập số tiền bằng VND.");
       return;
     }
 
     if (Number(trimmed) < 5000) {
-      Alert.alert("So tien qua nho", "So tien toi thieu la 5000 (don vi cent). ");
+      Alert.alert("Số tiền quá nhỏ", "Số tiền tối thiểu là 5.000 VND.");
       return;
     }
 
     setIsSubmitting(true);
-    const result = await walletTopupService.createStripeCheckoutSession({
+    const result = await walletTopupService.createStripePaymentSheet({
       amount: trimmed,
-      currency: "usd",
-      successUrl,
-      cancelUrl,
+      currency: "vnd",
     });
-    setIsSubmitting(false);
 
     if (!result.ok) {
-      Alert.alert("Khong the tao phien thanh toan", walletTopupErrorMessage(result.error));
+      setIsSubmitting(false);
+      Alert.alert("Không thể tạo phiên thanh toán", walletTopupErrorMessage(result.error));
+      return;
+    }
+
+    const initialized = await initPaymentSheet({
+      merchantDisplayName: "MeBike",
+      paymentIntentClientSecret: result.value.paymentIntentClientSecret,
+      returnURL: STRIPE_RETURN_URL,
+    });
+
+    if (initialized.error) {
+      setIsSubmitting(false);
+      Alert.alert("Không thể khởi tạo thanh toán", initialized.error.message);
+      return;
+    }
+
+    const presented = await presentPaymentSheet();
+    setIsSubmitting(false);
+
+    if (presented.error) {
+      if (presented.error.code === PaymentSheetError.Canceled) {
+        return;
+      }
+
+      Alert.alert("Thanh toán thất bại", presented.error.message);
       return;
     }
 
     onClose();
     try {
-      await Linking.openURL(result.value.checkoutUrl);
+      await onSuccess?.();
     }
     catch {
-      Alert.alert("Khong the mo trinh duyet", "Vui long thu lai sau.");
+      // Ignore wallet refresh failures; webhook remains source of truth.
     }
-  }, [amount, cancelUrl, onClose, successUrl]);
+  }, [amount, onClose, onSuccess]);
 
   return (
     <Modal
@@ -84,7 +109,10 @@ export function QRModal({ visible, onClose, userId }: QRModalProps) {
         >
           <Text style={styles.title}>Nạp tiền bằng Stripe (dev)</Text>
           <Text style={styles.instruction}>
-            Nhap so tien theo don vi cent (USD). Toi thieu 5000.
+            Nhập số tiền bằng VND. Số tiền tối thiểu là 5.000 VND.
+          </Text>
+          <Text style={styles.instruction}>
+            Sau khi thanh toán thành công, số dư ví sẽ được cập nhật trong giây lát.
           </Text>
           <TextInput
             value={amount}
@@ -101,11 +129,11 @@ export function QRModal({ visible, onClose, userId }: QRModalProps) {
           >
             {isSubmitting
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.primaryText}>Mo Stripe Checkout</Text>}
+              : <Text style={styles.primaryText}>Mở Stripe PaymentSheet</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeText}>Dong</Text>
+            <Text style={styles.closeText}>Đóng</Text>
           </TouchableOpacity>
         </KeyboardAvoidingView>
       </View>

@@ -3,6 +3,7 @@
     "name": "mobile",
     "slug": "mobile",
     "version": "1.0.0",
+    "scheme": "mebike",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -45,7 +46,11 @@
           "cameraPermission": "Cho phép MeBike truy cập máy ảnh của bạn để quét mã QR."
         }
       ],
-      "@rnmapbox/maps"
+      "@rnmapbox/maps",
+      [
+        "@stripe/stripe-react-native",
+        {}
+      ]
     ],
     "extra": {
       "eas": {

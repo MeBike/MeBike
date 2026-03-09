@@ -10,5 +10,6 @@ export function registerWalletRoutes(app: import("@hono/zod-openapi").OpenAPIHon
   // app.openapi(wallets.creditMyWallet, WalletMeController.creditMyWallet);
   // app.openapi(wallets.debitMyWallet, WalletMeController.debitMyWallet);
   app.openapi(wallets.createStripeTopupSession, WalletMeController.createStripeTopupSession);
+  app.openapi(wallets.createStripeTopupPaymentSheet, WalletMeController.createStripeTopupPaymentSheet);
   app.openapi(wallets.createWalletWithdrawal, WalletMeController.createWalletWithdrawal);
 }

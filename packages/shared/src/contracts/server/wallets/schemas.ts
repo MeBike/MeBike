@@ -71,7 +71,7 @@ export const WalletDebitRequestSchema = z.object({
 
 export const StripeTopupSessionRequestSchema = z.object({
   amount: z.string().min(1).openapi({ example: "100000" }),
-  currency: z.literal("usd").openapi({ example: "usd" }),
+  currency: z.literal("vnd").openapi({ example: "vnd" }),
   successUrl: z.string().url(),
   cancelUrl: z.string().url(),
 }).openapi("StripeTopupSessionRequest");
@@ -83,9 +83,21 @@ export const StripeTopupSessionResponseSchema = z.object({
   }),
 }).openapi("StripeTopupSessionResponse");
 
+export const StripeTopupPaymentSheetRequestSchema = z.object({
+  amount: z.string().min(1).openapi({ example: "100000" }),
+  currency: z.literal("vnd").openapi({ example: "vnd" }),
+}).openapi("StripeTopupPaymentSheetRequest");
+
+export const StripeTopupPaymentSheetResponseSchema = z.object({
+  data: z.object({
+    paymentAttemptId: z.string(),
+    paymentIntentClientSecret: z.string(),
+  }),
+}).openapi("StripeTopupPaymentSheetResponse");
+
 export const WalletWithdrawalRequestSchema = z.object({
   amount: z.string().min(1).openapi({ example: "50000" }),
-  currency: z.literal("usd").optional().openapi({ example: "usd" }),
+  currency: z.literal("vnd").optional().openapi({ example: "vnd" }),
   idempotencyKey: z.string().optional(),
 }).openapi("WalletWithdrawalRequest");
 
@@ -107,6 +119,8 @@ export type WalletCreditRequest = z.infer<typeof WalletCreditRequestSchema>;
 export type WalletDebitRequest = z.infer<typeof WalletDebitRequestSchema>;
 export type StripeTopupSessionRequest = z.infer<typeof StripeTopupSessionRequestSchema>;
 export type StripeTopupSessionResponse = z.infer<typeof StripeTopupSessionResponseSchema>;
+export type StripeTopupPaymentSheetRequest = z.infer<typeof StripeTopupPaymentSheetRequestSchema>;
+export type StripeTopupPaymentSheetResponse = z.infer<typeof StripeTopupPaymentSheetResponseSchema>;
 export type WalletWithdrawalRequest = z.infer<typeof WalletWithdrawalRequestSchema>;
 export type WalletWithdrawalResponse = z.infer<typeof WalletWithdrawalResponseSchema>;
 export type ListMyWalletTransactionsResponse = z.infer<typeof ListMyWalletTransactionsResponseSchema>;

@@ -76,7 +76,7 @@ describe("paymentAttemptRepository Integration", () => {
         provider: "STRIPE",
         kind: "TOPUP",
         amountMinor: 10000n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -87,7 +87,7 @@ describe("paymentAttemptRepository Integration", () => {
     expect(attempt.amountMinor).toBe(10000n);
   });
 
-  it("create rejects non-usd currency via db constraint", async () => {
+  it("create rejects unsupported currency via db constraint", async () => {
     const { userId, walletId } = await createUserAndWallet();
 
     const result = await Effect.runPromise(
@@ -97,7 +97,7 @@ describe("paymentAttemptRepository Integration", () => {
         provider: "STRIPE",
         kind: "TOPUP",
         amountMinor: 10000n,
-        currency: "vnd",
+        currency: "eur",
       }).pipe(Effect.either),
     );
 
@@ -117,7 +117,7 @@ describe("paymentAttemptRepository Integration", () => {
         provider: "STRIPE",
         kind: "TOPUP",
         amountMinor: 5000n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -145,7 +145,7 @@ describe("paymentAttemptRepository Integration", () => {
         providerRef,
         kind: "TOPUP",
         amountMinor: 7500n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -165,7 +165,7 @@ describe("paymentAttemptRepository Integration", () => {
         provider: "STRIPE",
         kind: "TOPUP",
         amountMinor: 2500n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -191,7 +191,7 @@ describe("paymentAttemptRepository Integration", () => {
         providerRef,
         kind: "TOPUP",
         amountMinor: 1000n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -203,7 +203,7 @@ describe("paymentAttemptRepository Integration", () => {
         providerRef, // same providerRef
         kind: "TOPUP",
         amountMinor: 2000n,
-        currency: "usd",
+        currency: "vnd",
       }).pipe(Effect.either),
     );
 
@@ -223,7 +223,7 @@ describe("paymentAttemptRepository Integration", () => {
         providerRef: existingRef,
         kind: "TOPUP",
         amountMinor: 1000n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -235,7 +235,7 @@ describe("paymentAttemptRepository Integration", () => {
         provider: "STRIPE",
         kind: "TOPUP",
         amountMinor: 2000n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -257,7 +257,7 @@ describe("paymentAttemptRepository Integration", () => {
         provider: "STRIPE",
         kind: "TOPUP",
         amountMinor: 5000n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -290,7 +290,7 @@ describe("paymentAttemptRepository Integration", () => {
         provider: "STRIPE",
         kind: "TOPUP",
         amountMinor: 5000n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -323,7 +323,7 @@ describe("paymentAttemptRepository Integration", () => {
         provider: "STRIPE",
         kind: "TOPUP",
         amountMinor: 3000n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
@@ -356,7 +356,7 @@ describe("paymentAttemptRepository Integration", () => {
         provider: "STRIPE",
         kind: "TOPUP",
         amountMinor: 3000n,
-        currency: "usd",
+        currency: "vnd",
       }),
     );
 
