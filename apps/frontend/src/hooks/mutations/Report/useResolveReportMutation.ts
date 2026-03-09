@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { reportService } from "@/services/report.service";
-import type { ResolveReportSchemaFormData } from "@/schemas/reportSchema";
+import type { ResolveReportSchemaFormData } from "@/schemas/report-schema";
 export function useResolveReportMutation(){
     return useMutation({
       mutationFn: ({

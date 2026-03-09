@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   CreateSupplierSchema,
   createSupplierSchema,
-} from "@/schemas/supplier.schema";
+} from "@/schemas/supplier-schema";
 import { useSupplierActions } from "@/hooks/use-supplier";
 import { toast } from "sonner";
 

@@ -14,7 +14,7 @@ import { userService } from "@/services/user.service";
 import {
   UpdateReportSchema,
   type UpdateReportSchemaFormData,
-} from "@/schemas/reportSchema";
+} from "@/schemas/report-schema";
 import type { Report } from "@custom-types";
 import type { ReportStatus } from "@/types";
 import type { DetailUser } from "@custom-types";

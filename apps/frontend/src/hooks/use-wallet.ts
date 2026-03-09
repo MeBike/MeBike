@@ -6,7 +6,7 @@ import { useDebitWalletMutation } from "./mutations/Wallet/useDebitWalletMutatio
 import {
   DecreaseSchemaFormData,
   TopUpSchemaFormData,
-} from "@/schemas/walletSchema";
+} from "@/schemas/wallet-schema";
 import { toast } from "sonner";
 import { useGetManageTransactionQuery } from "./query/Wallet/useGetManageTransactionQuery";
 import { useGetWalletOverviewQuery } from "./query/Wallet/useGetWalletOverviewQuery";

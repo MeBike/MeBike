@@ -14,7 +14,7 @@ import { useAuth } from "@/providers/auth-providers";
 import { Progress } from "@radix-ui/react-progress";
 import { useAuthActions } from "@/hooks/useAuthAction";
 import Image from "next/image";
-import { UpdateProfileSchemaFormData } from "@/schemas/authSchema";
+import { UpdateProfileSchemaFormData } from "@/schemas/auth-schema";
 import Link from "next/link";
 import { VerifyEmailModal } from "@/components/modals/VerifyEmailModal";
 import { uploadImageToFirebase } from "@/lib/firebase";

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useGetAllSupplierQuery } from "@hooks/query/Supplier/useGetAllSupplier";
 import { useGetAllStatsSupplierQuery } from "./query/Supplier/useGetAllStatsSupplier";
 import { useCreateSupplierMutation } from "./mutations/Supplier/useCreateSupplierMutation";
-import { CreateSupplierSchema } from "@/schemas/supplier.schema";
+import { CreateSupplierSchema } from "@/schemas/supplier-schema";
 import { toast } from "sonner";
 import { useGetBikeStatsSupplierQuery } from "./query/Supplier/useGetBikeStatsSupplierQuery";
 import { useChangeStatusSupplierMutation } from "./mutations/Supplier/useChangeStatusSupplierMutation";

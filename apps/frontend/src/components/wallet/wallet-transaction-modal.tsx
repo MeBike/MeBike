@@ -19,7 +19,7 @@ import {
   topUpWalletSchema,
   DecreaseSchemaFormData,
   decreaseWalletSchema,
-} from "@/schemas/walletSchema";
+} from "@/schemas/wallet-schema";
 interface WalletTransactionModalProps {
   isOpen: boolean;
   user: UserWallet | null;

@@ -5,7 +5,7 @@ import type {
   AssignSOSSchema,
   ResolveSOSSchema,
   CancelSOSSchema,
-} from "@/schemas/sosSchema";
+} from "@/schemas/sos-schema";
 import type {
   DetailApiResponse,
   ApiResponse,

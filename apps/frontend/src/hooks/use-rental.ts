@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useGetRevenueQuery } from "./query/Rent/useGetRevenueQuery";
 import { useGetDetailRentalAdminQuery } from "./query/Rent/useGetDetailRentalAdminQuery";
 import { usePutUpdateRentalMutation } from "./mutations/Rentals/usePutUpdateRentalMutation";
-import { EndRentalSchema, UpdateRentalSchema } from "@/schemas/rentalSchema";
+import { EndRentalSchema, UpdateRentalSchema } from "@/schemas/rental-schema";
 import { toast } from "sonner";
 import { useGetDashboardSummaryQuery } from "./query/Rent/useGetDashboardSummaryQuery";
 import useEndCurrentRental from "./mutations/Rentals/useEndCurrentRentalMutation";

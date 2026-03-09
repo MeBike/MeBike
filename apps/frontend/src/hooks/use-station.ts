@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useGetAllStation } from "./query/Station/useGetAllStationQuery";
 import { useGetStationByIDQuery } from "./query/Station/useGetStationByIDQuery";
-import { StationSchemaFormData } from "@/schemas/stationSchema";
+import { StationSchemaFormData } from "@/schemas/station-schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useCreateStationMutation } from "./mutations/Station/useCreateStationQuery";

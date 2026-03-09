@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 
-import type { RentalSchemaFormData } from "@schemas/rentalSchema";
+import type { RentalSchemaFormData } from "@/schemas/rental-schema";
 
 import { rentalService } from "@services/rental.service";
 // const usePostRent = () => {

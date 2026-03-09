@@ -1,7 +1,7 @@
 "use client";
 
 import { UseFormReturn } from "react-hook-form";
-import { StationSchemaFormData } from "@/schemas/stationSchema";
+import { StationSchemaFormData } from "@/schemas/station-schema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";

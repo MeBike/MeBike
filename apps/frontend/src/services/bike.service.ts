@@ -3,7 +3,7 @@ import type { AxiosResponse } from "axios";
 import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
-} from "@schemas/bikeSchema";
+} from "@/schemas/bike-schema";
 import { BikeStats ,Bike , BikeRentalHistory , BikeStatus , BikeActivityStats , BikeStatistics } from "@custom-types";
 import { ENDPOINT } from "@/constants/end-point";
 import { ApiResponse } from "@custom-types";

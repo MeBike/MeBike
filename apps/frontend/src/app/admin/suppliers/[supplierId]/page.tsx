@@ -21,7 +21,7 @@ import { useSupplierActions } from "@/hooks/use-supplier";
 import {
   CreateSupplierSchema,
   createSupplierSchema,
-} from "@/schemas/supplier.schema";
+} from "@/schemas/supplier-schema";
 import type { Supplier } from "@/types";
 export default function SupplierDetailPage() {
   const router = useRouter();

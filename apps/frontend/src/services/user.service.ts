@@ -1,8 +1,8 @@
 import fetchHttpClient from "@/lib/httpClient";
 import type { AxiosResponse } from "axios";
 import type { DetailUser } from "@/types";
-import { CreateUserFormData, UserProfile } from "@/schemas/userSchema";
-import { ResetPasswordRequest } from "@/schemas/userSchema";
+import { CreateUserFormData, UserProfile } from "@/schemas/user-schema";
+import { ResetPasswordRequest } from "@/schemas/user-schema";
 import { ApiResponse } from "@/types";
 import {ENDPOINT} from "@/constants/end-point";
 import { GetActiveUserStatisticsResponse , GetNewRegistrationStats , GetUserStatisticsResponse  , GetUserDashboardStatsResponse , GetTopRentersResponse} from "@/types";

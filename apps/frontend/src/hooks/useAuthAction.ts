@@ -16,7 +16,7 @@ import {
   UpdateProfileSchemaFormData,
   VerifyEmailSchemaFormData,
   VerifyOTPForForgotPasswordSchemaFormData,
-} from "@/schemas/authSchema";
+} from "@/schemas/auth-schema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
 import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutation";
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";

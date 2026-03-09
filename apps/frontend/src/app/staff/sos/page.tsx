@@ -13,8 +13,8 @@ import { sosColumns } from "@/columns/sos-columns";
 import { formatDateUTC } from "@/utils/formatDateTime";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { assignSOSSchema, type AssignSOSSchema } from "@/schemas/sosSchema";
-import { endRentalSchema, type EndRentalSchema } from "@/schemas/rentalSchema";
+import { assignSOSSchema, type AssignSOSSchema } from "@/schemas/sos-schema";
+import { endRentalSchema, type EndRentalSchema } from "@/schemas/rental-schema";
 import {
   Form,
   FormControl,

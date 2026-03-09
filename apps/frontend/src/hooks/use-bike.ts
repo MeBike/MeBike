@@ -6,7 +6,7 @@ import { useCreateBikeMutation } from "./mutations/Bike/useCreateBike";
 import type {
   BikeSchemaFormData,
   UpdateBikeSchemaFormData,
-} from "@/schemas/bikeSchema";
+} from "@/schemas/bike-schema";
 import type { BikeStatus } from "@/types";
 import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
 import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";

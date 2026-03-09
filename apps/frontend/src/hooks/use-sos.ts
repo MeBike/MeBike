@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   AssignSOSSchema,
   ResolveSOSSchema,
-} from "@/schemas/sosSchema";
+} from "@/schemas/sos-schema";
 import { toast } from "sonner";
 import { useAssignSOSRequestMutation } from "./mutations/SOS/useAssignSOSRequestMutation";
 import { useConfirmSOSRequestMutation } from "./mutations/SOS/useConfirmSOSRequestMutation";
