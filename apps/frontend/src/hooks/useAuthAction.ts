@@ -18,7 +18,7 @@ import {
   VerifyOTPForForgotPasswordSchemaFormData,
 } from "@/schemas/authSchema";
 import { useVerifyEmailMutation } from "./mutations/Auth/useVerifyEmail";
-import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutaiton";
+import { useResendVerifyEmailMutation } from "./mutations/Auth/useResendVerifyEmailMutation";
 import { useForgotPasswordMutation } from "./mutations/Auth/Password/useForgotPasswordMutation";
 import { useConfirmResetPasswordMutation } from "./mutations/Auth/Password/useConfirmResetPasswordMutation";
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
