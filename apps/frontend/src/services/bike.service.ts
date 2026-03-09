@@ -7,10 +7,7 @@ import type {
 import { BikeStats ,Bike , BikeRentalHistory , BikeStatus , BikeActivityStats , BikeStatistics } from "@custom-types";
 import { ENDPOINT } from "@/constants/end-point";
 import { ApiResponse } from "@custom-types";
-// interface ApiResponse<T> {
-//   data: T;
-//   message: string;
-// }
+
 export const bikeService = {
   //for admin
 

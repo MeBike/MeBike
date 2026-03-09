@@ -17,9 +17,9 @@ import { useRouter } from "next/navigation";
 import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
 import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
-import getAxiosErrorCodeMessage from "@/utils/error-util";
-import { getErrorMessageFromBikeCode } from "@/utils/map-message";
-import HTTP_STATUS from "@/constants/http-status";
+import getAxiosErrorCodeMessage from "@utils/error-util";
+import { getErrorMessageFromBikeCode } from "@utils/map-message";
+import HTTP_STATUS from "@constants/http-status";
 export const useBikeActions = (
   hasToken: boolean,
   bike_detail_id?: string,
