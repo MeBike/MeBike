@@ -17,6 +17,7 @@ import getAxiosErrorCodeMessage from "@/utils/error-util";
 import {
   getErrorMessageFromStationCode,
 } from "@/utils/map-message";
+import HTTP_STATUS from "@/constants/http-status";
 interface StationActionProps {
   hasToken?: boolean;
   stationId?: string;
@@ -80,7 +81,7 @@ export const useStationActions = ({
       }
       try {
         const result = await useCreateStation.mutateAsync(data);
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.CREATED) {
           toast.success(result.data?.message || "Đã tạo trạm thành công");
           queryClient.invalidateQueries({
             queryKey: ["stations", "all"],
@@ -103,7 +104,7 @@ export const useStationActions = ({
       }
       useSoftDeleteStation.mutate(stationId, {
         onSuccess: (result) => {
-          if (result.status === 200) {
+          if (result.status === HTTP_STATUS.OK) {
             toast.success(result.data?.message || "Đã xóa trạm thành công");
             queryClient.invalidateQueries({
               queryKey: QUERY_KEYS.STATION.ALL(page, limit, name),
@@ -127,7 +128,7 @@ export const useStationActions = ({
       }
       try {
         const result = await useUpdateStation.mutateAsync(data);
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success(result.data?.message || "Đã cập nhật trạm thành công");
           queryClient.invalidateQueries({
             queryKey: ["stations", "all"],

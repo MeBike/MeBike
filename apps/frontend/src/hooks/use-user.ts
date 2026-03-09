@@ -16,8 +16,8 @@ import { CreateUserFormData, ResetPasswordRequest } from "@/schemas/userSchema";
 import { useResetPasswordUserMutation } from "./mutations/User/useResetPasswordMutation";
 import { UserProfile } from "@/schemas/userSchema";
 import { useUpdateProfileUserMutation } from "./mutations/User/useUpdateProfileUserMutation";
-import { QUERY_KEYS } from "@/constants/queryKey";
 import getAxiosErrorCodeMessage from "@/utils/error-util";
+import HTTP_STATUS from "@/constants/http-status";
 import { getErrorMessageFromCustomerCode } from "@/utils/map-message";
 export const useUserActions = ({
   hasToken,
@@ -146,7 +146,7 @@ export const useUserActions = ({
       }
       try {
         const result = await useCreateUser.mutateAsync(userData);
-        if (result?.status === 201) {
+        if (result?.status === HTTP_STATUS.CREATED) {
           queryClient.invalidateQueries({
             queryKey: ["user", "all"],
           });
@@ -193,7 +193,7 @@ export const useUserActions = ({
           id: id || "",
           data: userData,
         });
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK ) {
           toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
         }
         queryClient.invalidateQueries({
@@ -219,7 +219,7 @@ export const useUserActions = ({
           id: id || "",
           data: userData,
         });
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success(
             result.data?.message || "Cập nhật thông tin thành công",
           );

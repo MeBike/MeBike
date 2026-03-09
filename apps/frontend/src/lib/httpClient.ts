@@ -1,13 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import {clearTokens,getAccessToken,getRefreshToken,setTokens} from "@utils/tokenManager"
-export const HTTP_STATUS = {
-  OK: 200,
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  INTERNAL_SERVER_ERROR: 500,
-  SERVICE_UNAVAILABLE: 503,
-};
+import HTTP_STATUS from "@/constants/http-status";
+
 
 export class FetchHttpClient {
   private baseURL: string;
@@ -42,8 +36,6 @@ export class FetchHttpClient {
       async (error) => {
         console.log('API Error:', error.response?.status, error.config?.url, error.response?.data);
         const originalRequest = error.config;
-        
-        // Các endpoint không cần retry token refresh
         const noAuthRetryEndpoints = [
           '/auth/login',
           '/users/verify-email',
@@ -53,11 +45,9 @@ export class FetchHttpClient {
           '/users/refresh-token',
           '/users/change-password',
         ];
-        
         const shouldSkipTokenRefresh = noAuthRetryEndpoints.some(endpoint => 
           originalRequest?.url?.includes(endpoint)
         );
-        
         if (error.response?.status === HTTP_STATUS.UNAUTHORIZED && !shouldSkipTokenRefresh) {
           if (this.isRefreshing) {
             return new Promise((resolve, reject) => {
@@ -73,7 +63,6 @@ export class FetchHttpClient {
                 return Promise.reject(err);
               });
           }
-
           this.isRefreshing = true;
           try {
             const newToken = await this.refreshAccessToken();
@@ -91,26 +80,6 @@ export class FetchHttpClient {
             this.isRefreshing = false;
           }
         }
-        // switch (error.response?.status) {
-        //   case HTTP_STATUS.FORBIDDEN:
-        //     console.log("API: 403 Forbidden");
-        //     window.location.href = `/error/${HTTP_STATUS.FORBIDDEN}`;
-        //     break;
-        //   case HTTP_STATUS.NOT_FOUND:
-        //     console.log("API: 404 Not Found");
-        //     break;
-        //   // case HTTP_STATUS.INTERNAL_SERVER_ERROR:
-        //   //   console.log("API: 500 Internal Server Error");
-        //   //   window.location.href = `/error/${HTTP_STATUS.INTERNAL_SERVER_ERROR}`;
-        //   //   break;
-        //   case HTTP_STATUS.SERVICE_UNAVAILABLE:
-        //     console.log("API: 503 Service Unavailable");
-        //     window.location.href = `/error/${HTTP_STATUS.SERVICE_UNAVAILABLE}`;
-        //     break;
-        //   default:
-        //     console.error(`API Error: ${error.response?.status}`);
-        // }
-
         return Promise.reject(error);
       }
     );

@@ -19,6 +19,7 @@ import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
 import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
 import getAxiosErrorCodeMessage from "@/utils/error-util";
 import { getErrorMessageFromBikeCode } from "@/utils/map-message";
+import HTTP_STATUS from "@/constants/http-status";
 export const useBikeActions = (
   hasToken: boolean,
   bike_detail_id?: string,
@@ -119,7 +120,7 @@ export const useBikeActions = (
       }
       try {
         const result = await useCreateBike.mutateAsync(data);
-        if (result.status === 201) {
+        if (result.status === HTTP_STATUS.CREATED) {
           toast.success("Tạo xe đạp thành công");
           queryClient.invalidateQueries({
             queryKey: ["bikes","all"]
@@ -150,7 +151,7 @@ export const useBikeActions = (
       }
       try {
         const result = await updateBikeMutation.mutateAsync({ id, data });
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success("Cập nhật xe đạp thành công");
           queryClient.invalidateQueries({
             queryKey:["bikes","all"]
@@ -181,7 +182,7 @@ export const useBikeActions = (
       }
       try {
         const result = await deleteBikeMutation.mutateAsync(id);
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success(result.data?.message || "Xóa xe đạp thành công");
           queryClient.invalidateQueries({
             queryKey: ["bikes","all"]
@@ -203,7 +204,7 @@ export const useBikeActions = (
       }
       try {
         const result = await reportBikeMutation.mutateAsync(id);
-        if (result.status === 200) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success(result.data?.message || "Báo cáo xe đạp thành công");
         }
       } catch (error) {

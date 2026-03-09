@@ -13,6 +13,7 @@ import { useGetSupplierByIDQuery } from "./query/Supplier/useGetSupplierByIDQuer
 import getErrorMessage from "@/utils/error-message";
 import { SUPPLIER_MESSAGE } from "@/constants/messages";
 import getAxiosErrorCodeMessage from "@/utils/error-util";
+import HTTP_STATUS from "@/constants/http-status";
 import { getErrorMessageFromSupplierCode } from "@/utils/map-message";
 export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) => {
   const router = useRouter();
@@ -51,7 +52,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
       }
       try {
         const result = await useCreateSupplier.mutateAsync(supplierData);
-        if(result.status === 200){
+        if(result.status === HTTP_STATUS.OK){
           toast.success(SUPPLIER_MESSAGE.CREATE_SUCCESS);
           queryClient.invalidateQueries({ queryKey : ["suppliers", "all"]})
         }
@@ -74,7 +75,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
         { id, newStatus },
         {
           onSuccess: (result) => {
-            if (result.status === 200) {
+            if (result.status === HTTP_STATUS.OK) {
               toast.success(SUPPLIER_MESSAGE.UPDATE_SUCCESS|| "Trạng thái nhà cung cấp đã được thay đổi thành công");
               queryClient.invalidateQueries({
                 queryKey: ["suppliers", "all", 1, 10],
@@ -101,7 +102,7 @@ export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) =>
     }
     try {
       const result = await useUpdateSupplier.mutateAsync({id, data});
-      if(result.status === 200){
+      if(result.status === HTTP_STATUS.OK){
         toast.success(SUPPLIER_MESSAGE.UPDATE_SUCCESS);
         queryClient.invalidateQueries({ queryKey : ["suppliers", "all"]})
         queryClient.invalidateQueries({ queryKey: ["supplier", id] });
