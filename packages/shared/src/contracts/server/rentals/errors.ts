@@ -69,7 +69,13 @@ export const rentalErrorCodes = [
   "BIKE_NOT_AVAILABLE_FOR_RENTAL",
 ] as const;
 
+export const bikeSwapRequestErrorCodes = [
+  "BIKE_SWAP_REQUEST_NOT_FOUND",
+] as const;
+
 export const RentalErrorCodeSchema = z.enum(rentalErrorCodes);
+
+export const BikeSwapRequestErrorCodeSchema = z.enum(bikeSwapRequestErrorCodes);
 
 export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   code: RentalErrorCodeSchema,
@@ -105,15 +111,41 @@ export const RentalErrorDetailSchema = ServerErrorDetailSchema.extend({
   },
 });
 
+export const BikeSwapRequestErrorDetailSchema = ServerErrorDetailSchema.extend({
+  code: BikeSwapRequestErrorCodeSchema,
+  bikeSwapRequestId: z.uuidv7().optional(),
+}).openapi({
+  description: "Bike swap request-specific error detail",
+  example: {
+    code: "BIKE_SWAP_REQUEST_NOT_FOUND",
+    bikeSwapRequestId: "665fd6e36b7e5d53f8f3d2c9",
+  },
+});
+
 export const RentalErrorResponseSchema = ServerErrorResponseSchema.extend({
   details: RentalErrorDetailSchema.optional(),
 }).openapi("RentalErrorResponse", {
   description: "Standard error payload for rental endpoints",
 });
 
+export const BikeSwapRequestErrorResponseSchema =
+  ServerErrorResponseSchema.extend({
+    details: BikeSwapRequestErrorDetailSchema.optional(),
+  }).openapi("BikeSwapRequestErrorResponse", {
+    description: "Standard error payload for bike swap request endpoints",
+  });
+
 export type RentalErrorCode = (typeof rentalErrorCodes)[number];
 export type RentalErrorDetail = z.infer<typeof RentalErrorDetailSchema>;
 export type RentalErrorResponse = z.infer<typeof RentalErrorResponseSchema>;
+export type BikeSwapRequestErrorCode =
+  (typeof bikeSwapRequestErrorCodes)[number];
+export type BikeSwapRequestErrorDetail = z.infer<
+  typeof BikeSwapRequestErrorDetailSchema
+>;
+export type BikeSwapRequestErrorResponse = z.infer<
+  typeof BikeSwapRequestErrorResponseSchema
+>;
 
 // Basic message map (feel free to localize downstream)
 export const rentalErrorMessages: Record<RentalErrorCode, string> = {
@@ -178,3 +210,11 @@ export const rentalErrorMessages: Record<RentalErrorCode, string> = {
   BIKE_MISSING_STATION: "Bike is missing station information",
   BIKE_NOT_AVAILABLE_FOR_RENTAL: "Bike is not available for rental",
 };
+
+export const bikeSwapRequestErrorMessages: Record<
+  BikeSwapRequestErrorCode,
+  string
+> = {
+  BIKE_SWAP_REQUEST_NOT_FOUND: "Bike swap request not found",
+};
+

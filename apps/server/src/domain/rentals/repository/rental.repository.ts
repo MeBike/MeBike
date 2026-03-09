@@ -587,8 +587,31 @@ export function makeRentalRepository(
         return makePageResult(mappedItems, total, page, pageSize);
       });
     },
+
+    staffGetBikeSwapRequests(bikeSwapRequestId) {
+      return Effect.gen(function* () {
+        const raw = yield* Effect.tryPromise({
+          try: () =>
+            client.bikeSwapRequest.findUnique({
+              where: { id: bikeSwapRequestId },
+              select: staffBikeSwapRequestSelect,
+            }),
+          catch: (e) =>
+            new RentalRepositoryError({
+              operation: "staffGetBikeSwapRequests",
+              cause: e,
+            }),
+        });
+
+        if (!raw) {
+          return Option.none();
+        }
+        return Option.some(mapToStaffBikeSwapRequestRow(raw));
+      });
+    },
   };
 }
+
 
 const makeRentalRepositoryEffect = Effect.gen(function* () {
   const { client } = yield* Prisma;

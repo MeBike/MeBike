@@ -31,6 +31,8 @@ export {
   getStationActivity,
   staffGetRental,
   staffListBikeSwapRequests,
+  adminGetBikeSwapRequests,
+  staffGetBikeSwapRequests,
 } from "./queries";
 
 export const rentalsRoutes = {

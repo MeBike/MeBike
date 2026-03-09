@@ -42,6 +42,7 @@ export type AdminRentalFilter = {
 export type StaffBikeSwapRequestFilter = {
   userId?: string;
   status?: BikeSwapStatus;
+  stationId?: string;
 };
 
 export type StaffBikeSwapRequestSortField =
@@ -179,4 +180,3 @@ export type StaffBikeSwapRequestRow = {
   createdAt: Date;
   updatedAt: Date;
 };
-

@@ -102,6 +102,12 @@ export class CannotRequestSwap extends Data.TaggedError("CannotRequestSwap")<{
   readonly status: string;
 }> {}
 
+export class BikeSwapRequestNotFound extends Data.TaggedError(
+  "BikeSwapRequestNotFound",
+)<{
+  readonly bikeSwapRequestId: string;
+}> {}
+
 export type RentalServiceFailure =
   | RentalNotFound
   | ActiveRentalExists
@@ -121,5 +127,6 @@ export type RentalServiceFailure =
   | SubscriptionNotFound
   | SubscriptionNotUsable
   | SubscriptionUsageExceeded
-  | CannotRequestSwap;
+  | CannotRequestSwap
+  | BikeSwapRequestNotFound;
 export type RentalRepoError = RentalRepositoryError | RentalUniqueViolation;

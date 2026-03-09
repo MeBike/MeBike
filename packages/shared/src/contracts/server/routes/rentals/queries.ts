@@ -3,6 +3,7 @@ import { createRoute } from "@hono/zod-openapi";
 import { z } from "../../../../zod";
 import {
   AdminRentalsListResponseSchema,
+  BikeSwapRequestErrorResponseSchema,
   BikeSwapRequestListResponseSchema,
   BikeSwapStatusSchema,
 } from "../../rentals";
@@ -14,6 +15,8 @@ import {
   UnauthorizedErrorResponseSchema,
 } from "../../schemas";
 import {
+  BikeSwapRequestDetailSchemaOpenApi,
+  BikeSwapRequestIdParamSchema,
   createSuccessResponse,
   DashboardResponseSchema,
   MyRentalListResponseSchema,
@@ -615,6 +618,100 @@ export const staffListBikeSwapRequests = createRoute({
       content: {
         "application/json": {
           schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const adminGetBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/admin/bike-swap-requests/{bikeSwapRequestId}",
+  tags: ["Admin", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Detailed rental with all populated data (admin view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            BikeSwapRequestDetailSchemaOpenApi,
+            "Get admin bike swap request detail response",
+          ),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Admin access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Bike swap request not found",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestErrorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const staffGetBikeSwapRequests = createRoute({
+  method: "get",
+  path: "/v1/staff/bike-swap-requests/{bikeSwapRequestId}",
+  tags: ["Staff", "Bike Swap"],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: BikeSwapRequestIdParamSchema,
+  },
+  responses: {
+    200: {
+      description: "Detailed rental with all populated data (staff view)",
+      content: {
+        "application/json": {
+          schema: createSuccessResponse(
+            BikeSwapRequestDetailSchemaOpenApi,
+            "Get staff bike swap request detail response",
+          ),
+        },
+      },
+    },
+    401: {
+      description: "Unauthorized",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    403: {
+      description: "Forbidden - Staff access required",
+      content: {
+        "application/json": {
+          schema: UnauthorizedErrorResponseSchema,
+        },
+      },
+    },
+    404: {
+      description: "Bike swap request not found",
+      content: {
+        "application/json": {
+          schema: BikeSwapRequestErrorResponseSchema,
         },
       },
     },

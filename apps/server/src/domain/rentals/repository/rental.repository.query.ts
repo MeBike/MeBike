@@ -60,6 +60,7 @@ export function toStaffBikeSwapRequestsWhere(
   return {
     ...(filter.status ? { status: filter.status } : {}),
     ...(filter.userId ? { userId: filter.userId } : {}),
+    ...(filter.stationId ? { oldBike: { stationId: filter.stationId } } : {}),
   };
 }
 

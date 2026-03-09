@@ -292,7 +292,14 @@ export const BikeSwapRequestListResponseSchema = z.object({
   pagination: PaginationSchema,
 });
 
-
+export type BikeSwapRequestResponse = {
+  message: string;
+  result: BikeSwapRequest;
+};
+export type BikeSwapRequestDetailResponse = {
+  message: string;
+  result: BikeSwapRequestDetail;
+};
 
 export const AdminRentalListItemSchema = z.object({
   id: z.uuidv7(),
@@ -362,5 +369,3 @@ export type BikeSwapRequestDetail = z.infer<typeof BikeSwapRequestDetailSchema>;
 export type BikeSwapRequestListResponse = z.infer<
   typeof BikeSwapRequestListResponseSchema
 >;
-
-

@@ -91,4 +91,24 @@ export function registerRentalRoutes(
     ...rentals.approveBikeSwapRequest,
     middleware: [requireStaffMiddleware] as const,
   } satisfies RouteConfig;
+
+  const staffGetSwapRequestRoute = {
+    ...rentals.staffGetBikeSwapRequests,
+    middleware: [requireStaffMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    staffGetSwapRequestRoute,
+    RentalStaffController.staffGetBikeSwapRequests,
+  );
+
+  const adminGetSwapRequestRoute = {
+    ...rentals.adminGetBikeSwapRequests,
+    middleware: [requireAdminMiddleware] as const,
+  } satisfies RouteConfig;
+
+  app.openapi(
+    adminGetSwapRequestRoute,
+    RentalAdminController.adminGetBikeSwapRequests,
+  );
 }

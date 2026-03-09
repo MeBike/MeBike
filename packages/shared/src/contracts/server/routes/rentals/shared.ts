@@ -1,5 +1,7 @@
 import { z } from "../../../../zod";
 import {
+  BikeSwapRequestDetailSchema,
+  BikeSwapRequestSchema,
   DashboardResponseSchema,
   RentalCountsResponseSchema,
   RentalDetailSchema,
@@ -45,6 +47,17 @@ export const RentalIdParamSchema = z
   })
   .openapi("RentalIdParam", {
     description: "Path params for rental id",
+  });
+
+export const BikeSwapRequestIdParamSchema = z
+  .object({
+    bikeSwapRequestId: z.uuidv7().openapi({
+      example: "019b17bd-d130-7e7d-be69-91ceef7b6959",
+      description: "Bike swap request identifier",
+    }),
+  })
+  .openapi("BikeSwapRequestIdParam", {
+    description: "Path params for bike swap request id",
   });
 
 export const UserIdParamSchema = z
@@ -112,6 +125,20 @@ export const RentalDetailSchemaOpenApi = RentalDetailSchema.openapi(
   "RentalDetail",
   {
     description: "Detailed rental with populated user, bike, and station data",
+  },
+);
+
+export const BikeSwapRequestDetailSchemaOpenApi = BikeSwapRequestDetailSchema.openapi(
+  "BikeSwapRequestDetail",
+  {
+    description: "Detailed bike swap request with populated user, bike, and station data",
+  },
+);
+
+export const BikeSwapRequestSchemaOpenApi = BikeSwapRequestSchema.openapi(
+  "BikeSwapRequest",
+  {
+    description: "Basic bike swap request information",
   },
 );
 

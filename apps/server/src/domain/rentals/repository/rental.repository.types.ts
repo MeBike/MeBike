@@ -150,4 +150,11 @@ export type RentalRepo = {
     PageResult<StaffBikeSwapRequestRow>,
     RentalRepositoryError
   >;
+
+  staffGetBikeSwapRequests: (
+    bikeSwapRequestId: string,
+  ) => Effect.Effect<
+    Option.Option<StaffBikeSwapRequestRow>,
+    RentalRepositoryError
+  >;
 };
