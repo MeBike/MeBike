@@ -3,14 +3,31 @@ import { useGetAllUserQuery } from "./query/User/useGetAllUserQuery";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { VerifyStatus } from "@custom-types";
-import {useGetDetailUserQuery,useGetAllStatisticsUserQuery,useGetActiveUserQuery,useGetNewRegistrationStatsQuery,useGetTopRenterQuery
-  ,useGetSearchUserQuery,useGetDashboardStatsQuery
+import {
+  useGetDetailUserQuery,
+  useGetAllStatisticsUserQuery,
+  useGetActiveUserQuery,
+  useGetNewRegistrationStatsQuery,
+  useGetTopRenterQuery,
+  useGetSearchUserQuery,
+  useGetDashboardStatsQuery,
 } from "@queries";
-import {useCreateUserMutation,useResetPasswordUserMutation,useUpdateProfileUserMutation} from "@mutations";
-import { UserProfile , CreateUserFormData,ResetPasswordSchemaFormData} from "@schemas";
-import {HTTP_STATUS} from "@constants";
-import { getErrorMessageFromCustomerCode , getAxiosErrorCodeMessage } from "@utils";
+import {
+  useCreateUserMutation,
+  useResetPasswordUserMutation,
+  useUpdateProfileUserMutation,
+} from "@mutations";
+import {
+  UserProfile,
+  CreateUserFormData,
+  ResetPasswordSchemaFormData,
+} from "@schemas";
+import { HTTP_STATUS } from "@constants";
+import {
+  getErrorMessageFromCustomerCode,
+  getAxiosErrorCodeMessage,
+} from "@utils";
+import type { UserActionProps } from "@custom-types";
 export const useUserActions = ({
   hasToken,
   verify,
@@ -20,16 +37,7 @@ export const useUserActions = ({
   searchQuery,
   fullName,
   id,
-}: {
-  hasToken: boolean;
-  verify?: VerifyStatus;
-  role?: "ADMIN" | "USER" | "STAFF" | "SOS" | "";
-  limit?: number;
-  page?: number;
-  searchQuery?: string;
-  id?: string;
-  fullName?: string;
-}) => {
+}: UserActionProps) => {
   const router = useRouter();
   const useCreateUser = useCreateUserMutation();
   const queryClient = useQueryClient();
@@ -185,7 +193,7 @@ export const useUserActions = ({
           id: id || "",
           data: userData,
         });
-        if (result.status === HTTP_STATUS.OK ) {
+        if (result.status === HTTP_STATUS.OK) {
           toast.success(result.data?.message || "Đặt lại mật khẩu thành công");
         }
         queryClient.invalidateQueries({

@@ -75,3 +75,12 @@ export interface BikeStatistics {
   "UNAVAILABLE": number;
   "BROKEN": number;
 }
+export interface BikeActionProps {
+  hasToken: boolean,
+  bike_detail_id?: string,
+  stationId?: string,
+  supplierId?: string,
+  status?: BikeStatus,
+  pageSize?: number,
+  page?: number,
+}

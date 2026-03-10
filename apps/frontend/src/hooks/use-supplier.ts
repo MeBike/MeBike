@@ -7,7 +7,8 @@ import {useUpdateSupplierMutation,useChangeStatusSupplierMutation,useCreateSuppl
 import {useGetSupplierByIDQuery,useGetBikeStatsSupplierQuery,useGetAllSupplierQuery,useGetAllStatsSupplierQuery} from "@queries"
 import { getErrorMessageFromSupplierCode , getAxiosErrorCodeMessage } from "@utils";
 import {HTTP_STATUS , SUPPLIER_MESSAGE} from "@constants";
-export const useSupplierActions = (hasToken: boolean , supplier_id ?: string) => {
+import { SupplierActionProps } from "@custom-types";
+export const useSupplierActions = ({hasToken,supplier_id}: SupplierActionProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const {

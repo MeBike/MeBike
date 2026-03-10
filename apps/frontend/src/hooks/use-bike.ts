@@ -3,32 +3,32 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { useGetAllBikeQuery } from "./query/Bike/useGetAllBikeCus";
 import { useCreateBikeMutation } from "./mutations/Bike/useCreateBike";
-import type {
-  BikeSchemaFormData,
-  UpdateBikeSchemaFormData,
-} from "@/schemas/bike-schema";
-import type { BikeStatus } from "@/types";
-import { useUpdateBike } from "./mutations/Bike/useUpdateBike";
-import { useSoftDeleteBikeMutation } from "./mutations/Bike/useSoftDeleteBike";
-import { useReportBike } from "./mutations/Bike/useReportBike";
-import { useGetBikeByIDAllQuery } from "./query/Bike/useGetBIkeByIDAll";
-import { useGetStatisticsBikeQuery } from "./query/Bike/useGetStatusBike";
+import type { BikeSchemaFormData, UpdateBikeSchemaFormData } from "@schemas";
+import type { BikeStatus, BikeActionProps } from "@custom-types";
+import {
+  useReportBike,
+  useSoftDeleteBikeMutation,
+  useUpdateBike,
+} from "@mutations";
 import { useRouter } from "next/navigation";
-import { useGetBikeActivityStatsQuery } from "./query/Bike/useGetBikeActivityStatsQuery";
-import { useGetBikeStatsQuery } from "./query/Bike/useGetStatsBikeQuery";
-import { useGetRentalBikeQuery } from "./query/Bike/useGetRentalBikeQuery";
-import getAxiosErrorCodeMessage from "@utils/error-util";
-import { getErrorMessageFromBikeCode } from "@utils/map-message";
-import HTTP_STATUS from "@constants/http-status";
-export const useBikeActions = (
-  hasToken: boolean,
-  bike_detail_id?: string,
-  stationId?: string,
-  supplierId?: string,
-  status?: BikeStatus,
-  pageSize?: number,
-  page?: number,
-) => {
+import {
+  useGetBikeStatsQuery,
+  useGetBikeActivityStatsQuery,
+  useGetBikeByIDAllQuery,
+  useGetRentalBikeQuery,
+  useGetStatisticsBikeQuery,
+} from "@queries";
+import { HTTP_STATUS } from "@constants";
+import { getErrorMessageFromBikeCode, getAxiosErrorCodeMessage } from "@utils";
+export const useBikeActions = ({
+  hasToken,
+  bike_detail_id,
+  stationId,
+  supplierId,
+  status,
+  pageSize,
+  page,
+}: BikeActionProps) => {
   const router = useRouter();
   const {
     data: bikeActivityStats,
@@ -123,7 +123,7 @@ export const useBikeActions = (
         if (result.status === HTTP_STATUS.CREATED) {
           toast.success("Tạo xe đạp thành công");
           queryClient.invalidateQueries({
-            queryKey: ["bikes","all"]
+            queryKey: ["bikes", "all"],
           });
         }
       } catch (error) {
@@ -154,7 +154,7 @@ export const useBikeActions = (
         if (result.status === HTTP_STATUS.OK) {
           toast.success("Cập nhật xe đạp thành công");
           queryClient.invalidateQueries({
-            queryKey:["bikes","all"]
+            queryKey: ["bikes", "all"],
           });
         }
       } catch (error) {
@@ -185,7 +185,7 @@ export const useBikeActions = (
         if (result.status === HTTP_STATUS.OK) {
           toast.success(result.data?.message || "Xóa xe đạp thành công");
           queryClient.invalidateQueries({
-            queryKey: ["bikes","all"]
+            queryKey: ["bikes", "all"],
           });
         }
       } catch (error) {

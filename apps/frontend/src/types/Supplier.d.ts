@@ -18,3 +18,6 @@ export interface StatsSupplierBike {
   maintained: number;
   unavailable : number;
 }
+export interface SupplierActionProps {
+  hasToken: boolean , supplier_id ?: string
+}

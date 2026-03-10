@@ -7,15 +7,7 @@ import { QUERY_KEYS , HTTP_STATUS } from "@constants";
 import { useCreateStationMutation,useSoftDeleteStationMutation,useUpdateStationMutation} from "@mutations"
 import {useGetNearestAvailableBike,useGetStationRevenue,useGetStationBikeRevenue,useGetStationStatsReservationQuery,useGetStationByIDQuery,useGetAllStation} from "@queries";
 import {getAxiosErrorCodeMessage , getErrorMessageFromStationCode} from "@utils";
-interface StationActionProps {
-  hasToken?: boolean;
-  stationId?: string;
-  page?: number;
-  limit?: number;
-  latitude?: number;
-  name?: string;
-  longitude?: number;
-}
+import type { StationActionProps } from "@custom-types";
 export const useStationActions = ({
   hasToken,
   stationId,

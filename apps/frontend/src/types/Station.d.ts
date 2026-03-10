@@ -92,3 +92,12 @@ export interface NearestStationResponse {
   station_address: string;
   distance_km: number;
 }
+export interface StationActionProps {
+  hasToken?: boolean;
+  stationId?: string;
+  page?: number;
+  limit?: number;
+  latitude?: number;
+  name?: string;
+  longitude?: number;
+}
