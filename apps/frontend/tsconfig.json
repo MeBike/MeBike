@@ -36,6 +36,7 @@
       "@queries": ["./src/hooks/query/index"],
       "@schemas": ["./src/schemas/index"],
       "@utils": ["./src/utils/index"],
+      "@constants/*": ["./src/constants/*"],
 
 
     }

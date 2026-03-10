@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import {clearTokens,getAccessToken,getRefreshToken,setTokens} from "@utils/tokenManager"
-import HTTP_STATUS from "@/constants/http-status";
+import {clearTokens,getAccessToken,getRefreshToken,setTokens} from "@utils"
+import {HTTP_STATUS} from "@constants";
 
 
 export class FetchHttpClient {

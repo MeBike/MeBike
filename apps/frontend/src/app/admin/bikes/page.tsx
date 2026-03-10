@@ -11,8 +11,8 @@ import { DataTable } from "@/components/TableCustom";
 import { PaginationDemo } from "@/components/PaginationCustomer";
 import { useStationActions } from "@/hooks/use-station";
 import { useSupplierActions } from "@/hooks/use-supplier";
-import { getStatusColor } from "@utils/bike-status";
-import { formatDateUTC } from "@/utils/formatDateTime";
+import { getStatusColor } from "@utils";
+import { formatDateUTC } from "@utils";
 export default function BikesPage() {
   const [detailId, setDetailId] = useState<string>("");
   const [editId, setEditId] = useState<string>("");
@@ -31,7 +31,7 @@ export default function BikesPage() {
   const {responseStationBikeRevenue, getStationBikeRevenue} = useStationActions({ hasToken: true });
   const [editBike, setEditBike] = useState<Bike | null>(null);
   const { stations } = useStationActions({ hasToken: true });
-  const { allSupplier } = useSupplierActions(true);
+  const { allSupplier } = useSupplierActions({hasToken: true});
   const [detailTab, setDetailTab] = useState<
     "info" | "rentals" | "stats" | "activity"
   >("info");
@@ -57,13 +57,13 @@ export default function BikesPage() {
     getBikeStats,
     
   } = useBikeActions(
-    true,
-    detailId,
-    undefined,
-    undefined,
-    statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
-    limit,
-    page
+    {
+      hasToken : true,
+      bike_detail_id: detailId,
+      status : statusFilter !== "all" ? (statusFilter as BikeStatus) : undefined,
+      pageSize:limit,
+      page: page,
+    }
   );
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [showBikeRevenue, setShowBikeRevenue] = useState(false);
@@ -99,6 +99,9 @@ export default function BikesPage() {
       setIsEditModalOpen(true);
     }
   }, [isLoadingDetail, detailBike, editId]);
+  useEffect(() => {
+    console.log(statisticData)
+  },[statisticData]);
   const handleUpdateBike = () => {
     if (!editBike) return;
     updateBike({
@@ -678,7 +681,7 @@ export default function BikesPage() {
             <div className="bg-card border border-border rounded-lg p-4">
               <p className="text-sm text-muted-foreground">Đang thuê</p>
               <p className="text-2xl font-bold text-blue-500 mt-1">
-                {renting || ""}
+                {renting || 0}
               </p>
             </div>
             <div className="bg-card border border-border rounded-lg p-4">

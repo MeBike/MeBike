@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { rentalService } from "@services/rental.service";
 import { GetAllRentalsForStaffAdminProps } from "@services/rental.service";
-import { QUERY_KEYS } from "@constants/queryKey";
+import { QUERY_KEYS } from "@constants";
 
 const getAllRentalsForStaffAdmin = async ({
   page,

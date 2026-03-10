@@ -5,3 +5,4 @@ export * from "./dateFormat";
 export * from "./error-message";
 export * from "./bike-status";
 export * from "./error-util";
+export * from "./formatDateTime";

@@ -45,8 +45,8 @@ export const ENDPOINT = {
     },
     BIKE : {
         BASE : "/bikes",
-        STATS_SUMMARY : "/bikes/stats/summary",
-        STATS_BIKE : (id : string) => `/bikes/${id}/stats`,
+        STATS_SUMMARY : "/bikes/stats/status-counts",
+        STATS_BIKE : (id : string) => `/bikes/${id}/stats/summary`,
         STATS_HIGHEST_REVENUE : "/bikes/stats/highest-revenue",
         ID : (id : string) => `/bikes/${id}`,
         RENTAL_HISTORY : (id : string) => `/bikes/${id}/rental-history`,

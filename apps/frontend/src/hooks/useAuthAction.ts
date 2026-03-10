@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { clearTokens, setTokens } from "@utils/tokenManager";
+import { clearTokens, setTokens , getAxiosErrorCodeMessage} from "@utils";
 import { useChangePasswordMutation } from "./mutations/Auth/Password/useChangePasswordMutation";
 import { useLoginMutation } from "./mutations/Auth/useLoginMutation";
 import { useRegisterMutation } from "./mutations/Auth/useRegisterMutation";
@@ -24,7 +24,6 @@ import { useConfirmResetPasswordMutation } from "./mutations/Auth/Password/useCo
 import { useUpdateProfileMutation } from "./mutations/Auth/useUpdateProfileMutation";
 import getErrorMessage from "@/utils/error-message";
 import { AxiosError } from "axios";
-import getAxiosErrorCodeMessage from "@/utils/error-util";
 import { USERS_MESSAGES } from "@/constants/messages";
 import { getErrorMessageUserFromCode } from "@/utils/map-message";
 import { useVerifyOTPResetPasswordMutation } from "./mutations/Auth/Password/useVerifyOTPResetPasswordMutation";
